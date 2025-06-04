@@ -1,0 +1,258 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:docsera/screens/doctors/doctor_panel/doctor_drawer.dart';
+import 'package:flutter/material.dart';
+import 'package:docsera/app/const.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+import 'package:intl/intl.dart';
+
+class DoctorDashboard extends StatefulWidget {
+  Map<String, dynamic>? doctorData;
+
+  DoctorDashboard({Key? key,this.doctorData}) : super(key: key);
+
+  @override
+  State<DoctorDashboard> createState() => _DoctorDashboardState();
+}
+
+class _DoctorDashboardState extends State<DoctorDashboard> {
+  Map<String, dynamic>? doctorData;
+  bool isExpanded = false;
+  String? doctorId;
+  List<Map<String, dynamic>> appointments = [];
+
+  @override
+  void initState() {
+    super.initState();
+    _fetchDoctorData();
+  }
+
+  /// **🔹 Fetch logged-in doctor data from Firestore**
+  Future<void> _fetchDoctorData() async {
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    String? storedDoctorId = prefs.getString('doctorId');
+
+    if (storedDoctorId == null) return;
+
+    try {
+      DocumentSnapshot doctorDoc = await FirebaseFirestore.instance
+          .collection('doctors')
+          .doc(storedDoctorId)
+          .get();
+
+      if (doctorDoc.exists) {
+        setState(() {
+          doctorId = storedDoctorId;
+          doctorData = doctorDoc.data() as Map<String, dynamic>?;
+        });
+        _fetchAppointments();
+      }
+    } catch (e) {
+      print("❌ Error fetching doctor data: $e");
+    }
+  }
+
+  /// **🔹 Fetch doctor's appointments**
+  Future<void> _fetchAppointments() async {
+    if (doctorId == null) return;
+
+    try {
+      QuerySnapshot querySnapshot = await FirebaseFirestore.instance
+          .collection('doctors')
+          .doc(doctorId)
+          .collection('appointments')
+          .orderBy('timestamp', descending: false)
+          .get();
+
+      setState(() {
+        appointments = querySnapshot.docs.map((doc) => doc.data() as Map<String, dynamic>).toList();
+      });
+    } catch (e) {
+      print("❌ Error fetching appointments: $e");
+    }
+  }
+
+  /// **🔹 Build Appointment Card**
+  Widget _buildAppointmentCard(Map<String, dynamic> appointment) {
+    bool isBooked = appointment['booked'] ?? false;
+    bool isExpanded = false; // ✅ Expand/Collapse state
+
+    return StatefulBuilder(
+      builder: (context, setState) {
+        return Card(
+          elevation: 0,
+          color: AppColors.background2, // ✅ Updated Background Color
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(8),
+            side: BorderSide(color: Colors.grey.shade300, width: 0.8), // ✅ Thin Border
+          ),
+          child: Column(
+            children: [
+              // 🔹 **Main Row**
+              Padding(
+                padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 16),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    // 🔹 Status Icon & Time
+                    Row(
+                      children: [
+                        Icon(
+                          isBooked ? Icons.event_busy : Icons.event_available,
+                          color: isBooked ? AppColors.red : AppColors.main,
+                        ),
+                        const SizedBox(width: 10),
+                        Text(
+                          appointment['time'] ?? "Unknown Time",
+                          style: const TextStyle(fontSize: 14, fontWeight: FontWeight.bold),
+                        ),
+                      ],
+                    ),
+
+                    // 🔹 "Show Details >" Button (Only if booked)
+                    if (isBooked)
+                      GestureDetector(
+                        onTap: () {
+                          setState(() {
+                            isExpanded = !isExpanded; // ✅ Toggle expand state
+                          });
+                        },
+                        child: Text(
+                          isExpanded ? "Hide Details ▲" : "Show Details >",
+                          style: TextStyle(
+                            color: AppColors.main,
+                            fontSize: 12,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                      ),
+                  ],
+                ),
+              ),
+
+              // 🔹 **Expanded Section**
+              if (isExpanded && isBooked) _buildExpandedDetails(appointment),
+            ],
+          ),
+        );
+      },
+    );
+  }
+
+  /// 🔹 **Helper: Expanded Details**
+  Widget _buildExpandedDetails(Map<String, dynamic> appointment) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          _infoRow("Patient", appointment['patientName']),
+          _infoRow("Account Holder", appointment['accountName']),
+          _infoRow("Age", "${appointment['userAge']} years"),
+          _infoRow("Gender", appointment['userGender']),
+          _infoRow("Date", appointment['date']),
+          _infoRow("Reason", appointment['reason']),
+          _infoRow("Booking Time", _formatTimestamp(appointment['bookingTimestamp'])),
+        ],
+      ),
+    );
+  }
+
+  /// 🔹 **Helper for Formatting Timestamp**
+  String _formatTimestamp(Timestamp? timestamp) {
+    if (timestamp == null) return "Unknown";
+    return DateFormat("yyyy-MM-dd HH:mm").format(timestamp.toDate());
+  }
+
+  /// **🔹 Helper for displaying info rows**
+  Widget _infoRow(String label, String? value) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 4),
+      child: Row(
+        children: [
+          Text("$label: ", style: const TextStyle(fontWeight: FontWeight.bold)),
+          Expanded(child: Text(value ?? "Unknown", overflow: TextOverflow.ellipsis, maxLines: 2)),
+        ],
+      ),
+    );
+  }
+
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      backgroundColor: AppColors.background,
+      appBar: AppBar(
+        backgroundColor: AppColors.main,
+        leading: Builder(
+          builder: (context) => IconButton(
+            icon: const Icon(Icons.menu, color: AppColors.whiteText, size: 24),
+            onPressed: () => Scaffold.of(context).openDrawer(),
+          ),
+        ),
+        title: const Text(
+          "Doctor Dashboard",
+          style: TextStyle(
+            color: AppColors.whiteText,
+            fontWeight: FontWeight.bold,
+            fontSize: 16,
+          ),
+        ),
+        centerTitle: true,
+      ),
+
+      /// 🔹 **Drawer Menu (Burger Menu)**
+      drawer: DoctorDrawer(doctorData: doctorData), // ✅ Use Reusable Drawer
+
+      /// 🔹 **Main Content**
+      body: Padding(
+        padding: const EdgeInsets.all(16.0),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Center(
+              child: Padding(
+                padding: const EdgeInsets.only(top: 20),
+                child: CircleAvatar(
+                  backgroundColor: AppColors.main.withOpacity(0.2),
+                  radius: 50,
+                  child: ClipRRect(
+                    borderRadius: BorderRadius.circular(60),
+                    child: doctorData != null
+                        ? Image.asset(
+                      _getDoctorAvatar(doctorData!),
+                      width: 110,
+                      height: 110,
+                      fit: BoxFit.cover,
+                    )
+                        : const CircularProgressIndicator(),
+                  ),
+                ),
+              ),
+            ),
+            const SizedBox(height: 20),
+            const Text("Your Appointments", style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+            Expanded(
+              child: appointments.isEmpty
+                  ? const Center(child: Text("No appointments available"))
+                  : ListView.builder(
+                itemCount: appointments.length,
+                itemBuilder: (context, index) {
+                  return _buildAppointmentCard(appointments[index]);
+                },
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  /// **🔹 Helper: Get Doctor Avatar**
+  String _getDoctorAvatar(Map<String, dynamic> doctor) {
+    String gender = doctor['gender']?.toLowerCase() ?? 'male';
+    String title = doctor['title']?.toLowerCase() ?? '';
+    return (title == "dr.")
+        ? (gender == "female" ? 'assets/images/female-doc.png' : 'assets/images/male-doc.png')
+        : (gender == "female" ? 'assets/images/female-phys.png' : 'assets/images/male-phys.png');
+  }
+}

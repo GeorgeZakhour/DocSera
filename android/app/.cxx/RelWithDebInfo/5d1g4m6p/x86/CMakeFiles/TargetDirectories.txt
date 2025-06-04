@@ -1,0 +1,2 @@
+C:/Users/gz199/StudioProjects/doctor_booking_app/android/app/.cxx/RelWithDebInfo/5d1g4m6p/x86/CMakeFiles/edit_cache.dir
+C:/Users/gz199/StudioProjects/doctor_booking_app/android/app/.cxx/RelWithDebInfo/5d1g4m6p/x86/CMakeFiles/rebuild_cache.dir

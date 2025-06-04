@@ -1,0 +1,135 @@
+name: docsera
+description: "DoctorBookingApp is a modern and intuitive application for scheduling doctor appointments, managing medical consultations, and keeping track of healthcare needs. Empowering users to access and book healthcare services anytime, anywhere."
+publish_to: 'none'
+
+version: 1.0.0+1
+
+environment:
+  sdk: '>=3.6.0 <4.0.0'
+
+dependencies:
+  flutter:
+    sdk: flutter
+  flutter_localizations:
+    sdk: flutter
+  intl: 0.19.0
+
+  cupertino_icons: ^1.0.8
+  firebase_core: ^3.10.1
+  firebase_auth: ^5.4.1
+  share_plus: ^10.1.4
+  add_2_calendar: ^2.1.2
+  cloud_firestore: ^5.6.3
+  collection: ^1.16.0
+  crypto: ^3.0.0
+  shared_preferences: ^2.4.0
+  palette_generator: ^0.3.3+5
+  url_launcher: ^6.3.1
+  google_maps_flutter: ^2.10.0
+  table_calendar: 3.1.3
+  fl_chart: ^0.70.2
+  flutter_svg: ^2.0.17
+  path_drawing: ^1.0.1
+  svg_path_parser: ^1.0.0
+  flutter_screenutil: ^5.9.3
+  shimmer: ^3.0.0
+  flutter_bloc: ^9.1.0
+  flutter_launcher_icons: ^0.14.3
+  local_auth: ^2.3.0
+  flutter_secure_storage: ^9.2.4
+  confetti: ^0.8.0
+  file_picker: ^9.2.1
+  firebase_storage: ^12.4.4
+  path: ^1.9.1
+  syncfusion_flutter_pdfviewer: ^29.1.33
+  syncfusion_flutter_pdf: ^29.2.4
+  http: ^1.3.0
+  image_picker: ^1.1.2
+  pdf: ^3.11.3
+  pdfx: ^2.9.1
+  path_provider: ^2.1.5
+  permission_handler: ^11.4.0
+  open_file: ^3.5.10
+  flutter_quill: ^11.0.0
+  flutter_quill_extensions: ^11.0.0
+  flutter_keyboard_visibility: ^6.0.0
+  signature: ^6.0.0
+  flutter_pdfview: ^1.4.0+1
+  gallery_saver_plus: ^3.2.4
+  cached_network_image: ^3.4.1
+  transparent_image: ^2.0.0
+
+
+
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^3.0.0
+
+flutter:
+  generate: true
+  uses-material-design: true
+
+  assets:
+    - assets/images/
+    - assets/icons/
+    - assets/shapes/
+
+  fonts:
+    - family: Montserrat
+      fonts:
+        - asset: assets/fonts/Montserrat-Regular.ttf
+          weight: 400
+        - asset: assets/fonts/Montserrat-Bold.ttf
+          weight: 700
+        - asset: assets/fonts/Montserrat-Italic.ttf
+          style: italic
+        - asset: assets/fonts/Montserrat-Thin.ttf
+          weight: 100
+        - asset: assets/fonts/Montserrat-Light.ttf
+          weight: 300
+        - asset: assets/fonts/Montserrat-Medium.ttf
+          weight: 500
+        - asset: assets/fonts/Montserrat-SemiBold.ttf
+          weight: 600
+        - asset: assets/fonts/Montserrat-Black.ttf
+          weight: 900
+
+
+    - family: IndieFlower
+      fonts:
+        - asset: assets/fonts/IndieFlower-Regular.ttf
+
+
+    - family: Cairo
+      fonts:
+        - asset: assets/fonts/Cairo-Thin.ttf
+          weight: 100
+        - asset: assets/fonts/Cairo-Light.ttf
+          weight: 300
+        - asset: assets/fonts/Cairo-Regular.ttf
+          weight: 400
+        - asset: assets/fonts/Cairo-Medium.ttf
+          weight: 500
+        - asset: assets/fonts/Cairo-SemiBold.ttf
+          weight: 600
+        - asset: assets/fonts/Cairo-Bold.ttf
+          weight: 700
+        - asset: assets/fonts/Cairo-Black.ttf
+          weight: 900
+
+    - family: ArefRuqaa
+      fonts:
+        - asset: assets/fonts/ArefRuqaa-Regular.ttf
+          weight: 400
+        - asset: assets/fonts/ArefRuqaa-Bold.ttf
+          weight: 700
+
+
+flutter_icons:
+  android: true
+  ios: true
+  image_path: "assets/images/DocSera-app-icon1.png"
+  adaptive_icon_background: "#009092"
+  adaptive_icon_foreground: "assets/images/DocSera-app-icon1.png"

@@ -1,0 +1,169 @@
+import 'package:docsera/widgets/custom_bottom_navigation_bar.dart';
+import 'package:flutter/material.dart';
+import 'package:docsera/app/const.dart';
+import 'package:docsera/utils/page_transitions.dart';
+import 'package:docsera/screens/doctors/doctor_panel/doctor_dashboard.dart';
+import 'package:docsera/screens/doctors/doctor_panel/doctor_appointments.dart';
+import 'package:docsera/screens/doctors/doctor_panel/doctor_messages_page.dart';
+import 'package:docsera/screens/doctors/doctor_panel/doctor_analytics.dart';
+import 'package:docsera/screens/doctors/doctor_panel/patients_page.dart';
+import 'package:docsera/screens/doctors/doctor_panel/doctor_account_page.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+
+import '../../../Business_Logic/Doctor/Messages_page/doctor_messages_cubit.dart';
+
+class DoctorDrawer extends StatelessWidget {
+  final Map<String, dynamic>? doctorData;
+
+  const DoctorDrawer({Key? key, this.doctorData}) : super(key: key);
+
+  @override
+  Widget build(BuildContext context) {
+    return Drawer(
+      backgroundColor: AppColors.background2,
+      child: ListView(
+        padding: EdgeInsets.zero,
+        children: [
+          _buildDrawerHeader(doctorData),
+          _buildDrawerItem(Icons.dashboard, "Dashboard", context,  DoctorDashboard(doctorData: doctorData)),
+          _buildDrawerItem(Icons.event_available, "Appointments", context, DoctorAppointments(doctorData: doctorData)),
+          _buildDrawerItem(Icons.people, "Patients", context,  PatientsPage(doctorData: doctorData)),
+          _buildDrawerItem(
+            Icons.chat,
+            "Messages",
+            context,
+            BlocProvider(
+              create: (_) => DoctorMessagesCubit(doctorId: doctorData?['id'])..loadDoctorMessages(),
+              child: DoctorMessagesPage(doctorData: doctorData),
+            ),
+          ),
+          _buildDrawerItem(Icons.bar_chart, "Analytics", context,  DoctorAnalyticsPage(doctorData: doctorData)),
+          _buildDrawerItem(Icons.settings, "Account", context,  DoctorAccountPage(doctorData: doctorData)),
+
+          const Divider(),
+
+          ListTile(
+            leading: const Icon(Icons.logout, color: AppColors.red),
+            title: const Text("Log Out", style: TextStyle(color: AppColors.red)),
+            onTap: () async {
+              SharedPreferences prefs = await SharedPreferences.getInstance();
+              await prefs.remove('doctorId'); // Clear saved doctor ID
+              await prefs.setBool('isDoctorLoggedIn', false); // Mark doctor as logged out
+
+              Navigator.pushAndRemoveUntil(
+                context,
+                fadePageRoute( CustomBottomNavigationBar()), // ✅ Navigate to home page
+                    (route) => false, // Remove all previous routes
+              );
+            },
+          ),
+
+        ],
+      ),
+    );
+  }
+
+  /// **🔹 Drawer Header (Handles Null Data)**
+  Widget _buildDrawerHeader(Map<String, dynamic>? doctorData) {
+    print("🛠️ Debug: Building Drawer Header with doctorData -> $doctorData");
+
+    String doctorName = "Doctor";
+    String specialty = "Specialty";
+    String avatarImage = "assets/images/male-doc.png"; // Default image
+
+    if (doctorData != null) {
+      // ✅ Get Name & Specialty Safely
+      doctorName =
+          "${doctorData['title'] ?? ''} ${doctorData['firstName'] ?? 'Doctor'} ${doctorData['lastName'] ?? ''}".trim();
+      specialty = doctorData['specialty'] ?? "Specialty";
+
+      // ✅ Check if Profile Image Exists
+      if (doctorData['profileImage'] != null &&
+          doctorData['profileImage'].isNotEmpty) {
+        avatarImage = doctorData['profileImage']; // ✅ Use Firestore Image
+      } else {
+        // ✅ Use Default Avatar Based on Gender & Title
+        String gender = doctorData['gender']?.toLowerCase() ?? 'male';
+        String title = doctorData['title']?.toLowerCase() ?? '';
+        avatarImage = (title == "dr.")
+            ? (gender == "female"
+            ? 'assets/images/female-doc.png'
+            : 'assets/images/male-doc.png')
+            : (gender == "female"
+            ? 'assets/images/female-phys.png'
+            : 'assets/images/male-phys.png');
+      }
+    }
+
+    print("📸 Selected Avatar: $avatarImage");
+
+    return DrawerHeader(
+      decoration: BoxDecoration(color: AppColors.main),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          CircleAvatar(
+            backgroundColor: AppColors.background2.withOpacity(0.5),
+            radius: 30,
+            backgroundImage: avatarImage.startsWith("http") // Check if it's a URL
+                ? NetworkImage(avatarImage) as ImageProvider
+                : AssetImage(avatarImage),
+          ),
+          const SizedBox(height: 10),
+          Text(
+            doctorName,
+            style: const TextStyle(
+                color: AppColors.whiteText,
+                fontSize: 14,
+                fontWeight: FontWeight.bold),
+          ),
+          Text(
+            specialty,
+            style:
+            const TextStyle(color: AppColors.whiteText, fontSize: 12),
+          ),
+        ],
+      ),
+    );
+  }
+
+  /// **🔹 Drawer Item Helper**
+  Widget _buildDrawerItem(IconData icon, String title, BuildContext context, Widget page) {
+    return ListTile(
+      leading: Icon(icon, color: AppColors.mainDark),
+      title: Text(title, style: const TextStyle(fontSize: 14)),
+      onTap: () {
+        Navigator.push(context, fadePageRoute(page));
+      },
+    );
+  }
+}
+
+/// **🔹 Helper: Get Doctor Avatar**
+String _getDoctorAvatar(Map<String, dynamic>? doctor) {
+  if (doctor == null) {
+    print("❌ _getDoctorAvatar: doctor data is NULL. Using male doctor avatar.");
+    return 'assets/images/male-doc.png'; // Fallback in extreme cases
+  }
+
+  print("🔍 _getDoctorAvatar: Doctor Data -> $doctor");
+
+  // ✅ If Firestore profile image exists, use it
+  if (doctor['profileImage'] != null && doctor['profileImage'].isNotEmpty) {
+    print("✅ _getDoctorAvatar: Using Firestore profile image -> ${doctor['profileImage']}");
+    return doctor['profileImage']; // This is a network image
+  }
+
+  // ✅ If no profile image, use gender & title to determine the correct default avatar
+  String gender = doctor['gender']?.toLowerCase() ?? 'male';
+  String title = doctor['title']?.toLowerCase() ?? '';
+
+  String avatar = (title == "dr.")
+      ? (gender == "female" ? 'assets/images/female-doc.png' : 'assets/images/male-doc.png')
+      : (gender == "female" ? 'assets/images/female-phys.png' : 'assets/images/male-phys.png');
+
+  print("🔄 _getDoctorAvatar: No profile image. Using default avatar -> $avatar");
+
+  return avatar; // ✅ Uses the correct default image based on gender & title
+}
