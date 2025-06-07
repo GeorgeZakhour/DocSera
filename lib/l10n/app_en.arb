@@ -647,5 +647,12 @@
   "imagesDownloadFailed": "Failed to download images",
   "ofText": "of",
 
-  "importedFromConversationWith": "Imported from the conversation with {name} on {date}"
+  "importedFromConversationWith": "Imported from the conversation with {name} on {date}",
+
+  "documentAccessInfo": "Only you can access and manage documents stored here.",
+  "notesAccessInfo": "Only you can access and manage your notes securely.",
+  "messageAccessInfo": "You can message your doctor directly here. All your conversations are securely stored and easily accessible.",
+  "accountPrivacyInfoLine1": "Your personal data stays personal.",
+  "accountPrivacyInfoLine2": "We protect your information with industry-leading security."
+
 }

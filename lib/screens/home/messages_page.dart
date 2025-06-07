@@ -116,6 +116,37 @@
       );
     }
 
+    Widget _buildBannerCard() {
+      return Padding(
+        padding: EdgeInsets.only(left: 16.w, right: 16.w, bottom: 16.h),
+        child: Container(
+          padding: EdgeInsets.all(12.w),
+          decoration: BoxDecoration(
+            color: AppColors.main.withOpacity(0.05),
+            borderRadius: BorderRadius.circular(12.r),
+          ),
+          child: Row(
+            children: [
+              Image.asset(
+                'assets/images/messages_banner.png', // استبدلها بالصورة المناسبة
+                width: 45.w,
+                height: 45.w,
+              ),
+              SizedBox(width: 12.w),
+              Expanded(
+                child: Text(
+                  AppLocalizations.of(context)!.messageAccessInfo, // أضف هذه الترجمة في ARB
+                  style: AppTextStyles.getText3(context).copyWith(color: AppColors.blackText),
+                  maxLines: 3,
+                  overflow: TextOverflow.ellipsis,
+                ),
+              ),
+            ],
+          ),
+        ),
+      );
+    }
+
     Widget _buildMessagesList(MessagesLoaded state) {
       final Map<String, List<Conversation>> groupedByDoctor = {};
 
@@ -127,29 +158,34 @@
         groupedByDoctor[doctorId]!.add(convo);
       }
 
+      final List<Widget> children = [
+        SizedBox(height: 15.h),
+        _buildBannerCard(),
+      ];
+
+      groupedByDoctor.entries.forEach((entry) {
+        final doctorId = entry.key;
+        final convos = entry.value;
+        final firstConvo = convos.first;
+
+        final isForSelf = convos.length == 1 &&
+            (firstConvo.patientName == firstConvo.accountHolderName);
+
+        if (isForSelf) {
+          children.add(_buildConversationTile(context, firstConvo, showDoctorName: true));
+        } else {
+          children.add(_buildGroupedDoctorTile(context, convos));
+        }
+      });
+
+      children.add(SizedBox(height: 80.h));
+
       return ListView(
-        padding: EdgeInsets.only(
-          top: 32.h, // مسافة تحت الـ AppBar
-          bottom: 80.h, // بحيث يمكن تمرير العناصر فوق الزر
-        ),
-        children: groupedByDoctor.entries.map((entry) {
-          final doctorId = entry.key;
-          final convos = entry.value;
-          final firstConvo = convos.first;
-
-          // حالة واحدة فقط للمستخدم نفسه
-          final isForSelf = convos.length == 1 &&
-              (firstConvo.patientName == firstConvo.accountHolderName);
-
-          if (isForSelf) {
-            return _buildConversationTile(context, firstConvo, showDoctorName: true);
-          }
-
-
-          return _buildGroupedDoctorTile(context, convos);
-        }).toList(),
+        padding: EdgeInsets.zero,
+        children: children,
       );
     }
+
 
     Widget _buildGroupedDoctorTile(BuildContext context, List<Conversation> convos) {
       final doctor = convos.first;

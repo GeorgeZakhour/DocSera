@@ -1097,6 +1097,49 @@ class _AccountScreenState extends State<AccountScreen> {
     );
   }
 
+  Widget _buildAccountBannerCard() {
+    return Padding(
+      padding: EdgeInsets.only(top: 16.h, right: 16.w, left: 16.w),
+      child: Container(
+        padding: EdgeInsets.symmetric(vertical: 25.w, horizontal: 20.w),
+        decoration: BoxDecoration(
+          color: AppColors.main.withOpacity(0.05),
+          borderRadius: BorderRadius.circular(12.r),
+        ),
+        child: Row(
+          children: [
+            Image.asset(
+              'assets/images/account_banner.png',
+              width: 50.w,
+              height: 50.w,
+            ),
+            SizedBox(width: 18.w),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    AppLocalizations.of(context)!.accountPrivacyInfoLine1,
+                    style: AppTextStyles.getText2(context).copyWith(
+                      fontWeight: FontWeight.bold,
+                      color: AppColors.blackText,
+                    ),
+                  ),
+                  SizedBox(height: 4.h),
+                  Text(
+                    AppLocalizations.of(context)!.accountPrivacyInfoLine2,
+                    style: AppTextStyles.getText3(context).copyWith(
+                      color: AppColors.blackText,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
 
   Widget _buildAccountContent(BuildContext context, UserLoaded state) {
     return Column(
@@ -1107,6 +1150,8 @@ class _AccountScreenState extends State<AccountScreen> {
           Expanded(
             child: ListView(
               children: [
+                SizedBox(height: 5.h),
+                _buildAccountBannerCard(),
                 SizedBox(height: 5.h),
                 _buildSectionTitle(AppLocalizations.of(context)!.personalInformation),
                 Divider(color: Colors.grey[200], height: 2.h),

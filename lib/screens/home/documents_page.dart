@@ -546,7 +546,6 @@ class _DocumentsPageState extends State<DocumentsPage> with AutomaticKeepAliveCl
   }
 
 
-
   /// ✅ **Login Prompt UI**
   Widget _buildLoginPrompt() {
     return Center(
@@ -591,53 +590,51 @@ class _DocumentsPageState extends State<DocumentsPage> with AutomaticKeepAliveCl
     final notesState = context.watch<NotesCubit>().state;
     final hasNotes = notesState is NotesLoaded && notesState.notes.isNotEmpty;
 
-    return Column(
+    return Stack(
       children: [
-        if (_selectedTab == 0 && hasDocuments) // ✅ سويتشر الوثائق
-          Padding(
-            padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 8.h),
-            child: Align(
-              alignment: Directionality.of(context) == TextDirection.RTL
-                  ? Alignment.centerLeft
-                  : Alignment.centerRight,
-              child: Container(
-                padding: EdgeInsets.all(2.w),
-                decoration: BoxDecoration(
-                  color: Colors.transparent,
-                  borderRadius: BorderRadius.circular(30.r),
-                  border: Border.all(color: Colors.grey.shade200),
-                ),
-                child: Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    _buildViewModeButton(Icons.grid_view, true),
-                    SizedBox(width: 4.w),
-                    _buildViewModeButton(Icons.view_list, false),
-                  ],
-                ),
+        /// ✅ المحتوى (يمرّ خلف السويتشر)
+        _selectedTab == 0
+            ? _buildDocumentsTab(documents)
+            : _buildNotesTab(),
+
+        /// ✅ سويتشر الوثائق أو الملاحظات
+        if ((_selectedTab == 0 && hasDocuments) ||
+            (_selectedTab == 1 && hasNotes))
+          Positioned(
+            top: 0,
+            left: 0,
+            right: 0,
+            child: Padding(
+              padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 8.h),
+              child: Align(
+                alignment: Directionality.of(context) == TextDirection.RTL
+                    ? Alignment.centerLeft
+                    : Alignment.centerRight,
+                child: _selectedTab == 0
+                    ? Container(
+                  padding: EdgeInsets.all(2.w),
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.circular(30.r),
+                    border: Border.all(color: Colors.grey.shade200),
+                  ),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      _buildViewModeButton(Icons.grid_view, true),
+                      SizedBox(width: 4.w),
+                      _buildViewModeButton(Icons.view_list, false),
+                    ],
+                  ),
+                )
+                    : _buildNotesViewModeSwitcher(),
               ),
             ),
           ),
-
-        if (_selectedTab == 1 && hasNotes) // ✅ سويتشر الملاحظات
-          Padding(
-            padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 8.h),
-            child: Align(
-              alignment: Directionality.of(context) == TextDirection.RTL
-                  ? Alignment.centerLeft
-                  : Alignment.centerRight,
-              child: _buildNotesViewModeSwitcher(),
-            ),
-          ),
-
-        Expanded(
-          child: _selectedTab == 0
-              ? _buildDocumentsTab(documents)
-              : _buildNotesTab(),
-        ),
       ],
     );
   }
+
 
 
   Widget _buildViewModeButton(IconData icon, bool isGrid) {
@@ -786,19 +783,37 @@ class _DocumentsPageState extends State<DocumentsPage> with AutomaticKeepAliveCl
   }
 
   Widget _buildGridView(List<Map<String, dynamic>> displayDocs) {
-    return GridView.builder(
-      padding: EdgeInsets.all(16.w),
-      gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-        crossAxisCount: 2,
-        mainAxisSpacing: 12.h,
-        crossAxisSpacing: 12.w,
-        childAspectRatio: 1,
-      ),
-      itemCount: displayDocs.length,
-      itemBuilder: (context, index) {
-        final doc = displayDocs[index];
-        return _buildDocumentCard(doc);
-      },
+    return CustomScrollView(
+      physics: BouncingScrollPhysics(),
+      slivers: [
+        // ✅ البانر كعنصر منفصل في الأعلى
+        SliverToBoxAdapter(
+          child: Padding(
+            padding: EdgeInsets.fromLTRB(16.w, 16.h, 16.w, 12.h),
+            child: _buildDocumentsBannerCard(),
+          ),
+        ),
+
+        // ✅ الشبكة الحقيقية
+        SliverPadding(
+          padding: EdgeInsets.only(left: 16.w, right: 16.w,bottom: 70.h),
+          sliver: SliverGrid(
+            delegate: SliverChildBuilderDelegate(
+                  (context, index) {
+                final doc = displayDocs[index];
+                return _buildDocumentCard(doc);
+              },
+              childCount: displayDocs.length,
+            ),
+            gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+              crossAxisCount: 2,
+              mainAxisSpacing: 12.h,
+              crossAxisSpacing: 12.w,
+              childAspectRatio: 1,
+            ),
+          ),
+        ),
+      ],
     );
   }
 
@@ -806,174 +821,264 @@ class _DocumentsPageState extends State<DocumentsPage> with AutomaticKeepAliveCl
     final groupedDocs = _groupDocumentsByYear(displayDocs);
     final isRTL = Directionality.of(context) == TextDirection.RTL;
 
-    return ListView.builder(
-      padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 8.h),
-      itemCount: groupedDocs.length,
-      itemBuilder: (context, index) {
-        final year = groupedDocs.keys.elementAt(index);
-        final docs = groupedDocs[year]!;
+    return CustomScrollView(
+      physics: const BouncingScrollPhysics(),
+      slivers: [
+        // ✅ البانر
+        SliverToBoxAdapter(
+          child: Padding(
+            padding: EdgeInsets.fromLTRB(16.w, 16.h, 16.w, 12.h),
+            child: _buildDocumentsBannerCard(),
+          ),
+        ),
 
-        return Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Padding(
-              padding: EdgeInsets.symmetric(vertical: 5.h),
-              child: Row(
-                children: [
-                  Text(
-                    year.toString(),
-                    style: AppTextStyles.getTitle1(context).copyWith(color: AppColors.grayMain, fontSize: 12.sp),
-                  ),
-                  SizedBox(width: 8.w),
-                  const Expanded(
-                    child: Divider(
-                      color: AppColors.grayMain,
-                      thickness: 1,
-                      height: 1,
-                    ),
-                  ),
-                ],
-              ),
-            ),
-            ...docs.asMap().entries.map((entry) {
-              final index = entry.key;
-              final doc = entry.value;
-              final UserDocument userDoc = doc['doc'];
-              final appLocale = AppLocalizations.of(context)!;
-              final String subtitle = _documentTypeMap[userDoc.type]?.call(appLocale) ?? userDoc.type;
+        // ✅ المستندات حسب السنوات
+        ...groupedDocs.entries.map((entry) {
+          final year = entry.key;
+          final docs = entry.value;
 
-
-              return Dismissible(
-                key: ValueKey(userDoc.id),
-                direction: DismissDirection.endToStart, // swipe left to reveal delete
-                background: Container(
-                  alignment: Alignment.centerRight,
-                  child: FractionallySizedBox(
-                    child: Container(
-                      color: AppColors.red.withOpacity(0.7),
-                      alignment: Alignment.center,
-                      child: Icon(Icons.delete, color: Colors.white),
-                    ),
+          return SliverPadding(
+            padding: EdgeInsets.only(bottom: 70.h),
+            sliver: SliverList(
+              delegate: SliverChildListDelegate([
+                // ✅ عنوان السنة
+                Padding(
+                  padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 5.h),
+                  child: Row(
+                    children: [
+                      Text(
+                        year.toString(),
+                        style: AppTextStyles.getTitle1(context).copyWith(
+                          color: AppColors.grayMain,
+                          fontSize: 12.sp,
+                        ),
+                      ),
+                      SizedBox(width: 8.w),
+                      const Expanded(
+                        child: Divider(
+                          color: AppColors.grayMain,
+                          thickness: 1,
+                          height: 1,
+                        ),
+                      ),
+                    ],
                   ),
                 ),
 
-                confirmDismiss: (_) async {
-                  return await showDialog(
-                    context: context,
-                    builder: (context) {
-                      return AlertDialog(
-                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16.r)),
-                        contentPadding: EdgeInsets.symmetric(horizontal: 24.w, vertical: 20.h),
-                        content: Column(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            Text(
-                              AppLocalizations.of(context)!.deleteTheDocument,
-                              style: AppTextStyles.getTitle2(context),
-                              textAlign: TextAlign.center,
-                            ),
-                            SizedBox(height: 12.h),
-                            Text(
-                              AppLocalizations.of(context)!.areYouSureToDelete(userDoc.name),
-                              style: AppTextStyles.getText2(context),
-                              textAlign: TextAlign.center,
-                            ),
-                            SizedBox(height: 24.h),
-                            ElevatedButton(
-                              style: ElevatedButton.styleFrom(
-                                backgroundColor: AppColors.red,
-                                elevation: 0,
-                                padding: EdgeInsets.symmetric(horizontal: 24.w, vertical: 12.h),
-                                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10.r)),
-                              ),
-                              onPressed: () {
-                                Navigator.pop(context, true);
-                              },
-                              child: Center(
-                                child: Text(
-                                  AppLocalizations.of(context)!.delete,
-                                  style: AppTextStyles.getText2(context).copyWith(color: Colors.white),
-                                ),
-                              ),
-                            ),
-                            TextButton(
-                              onPressed: () => Navigator.pop(context, false),
-                              child: Text(
-                                AppLocalizations.of(context)!.cancel,
-                                style: AppTextStyles.getText2(context).copyWith(fontWeight: FontWeight.bold,color: AppColors.blackText),
-                              ),
-                            ),
-                          ],
-                        ),
-                      );
-                    },
-                  );
-                },
-                onDismissed: (_) {
-                  context.read<DocumentsCubit>().deleteDocument(context, userDoc);
-                },
-                child: Column(
-                  children: [
-                    InkWell(
-                      onTap: () => _openDocument(doc),
-                      child: Padding(
-                        padding: EdgeInsets.symmetric(vertical: 10.h),
-                        child: Row(
-                          children: [
-                            Column(
-                              children: [
-                                SvgPicture.asset(
-                                  'assets/icons/pdf-file.svg',
-                                  width: 24.sp,
-                                  height: 24.sp,
-                                ),
-                                SizedBox(height: 1.h),
-                                Text(
-                                  '${userDoc.pages.length} '
-                                      '${userDoc.pages.length == 1
-                                      ? AppLocalizations.of(context)!.pageSingular
-                                      : AppLocalizations.of(context)!.pagePlural}',
-                                  style: AppTextStyles.getText3(context).copyWith(color: AppColors.grayMain, fontSize: 6.sp),
-                                ),
-                              ],
-                            ),
-                            SizedBox(width: 12.w),
-                            Expanded(
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  Text(
-                                    userDoc.name,
-                                    style: AppTextStyles.getText2(context),
-                                    overflow: TextOverflow.ellipsis,
-                                  ),
-                                  SizedBox(height: 2.h),
-                                  Text(
-                                    subtitle,
-                                    style: AppTextStyles.getText3(context).copyWith(color: Colors.grey),
-                                  ),
-                                ],
-                              ),
-                            ),
-                            IconButton(
-                              icon: Icon(Icons.more_horiz, size: 20.sp),
-                              onPressed: () => _showEditOptions(doc),
-                            ),
-                          ],
+                // ✅ العناصر داخل السنة
+                ...docs.asMap().entries.map((entry) {
+                  final index = entry.key;
+                  final doc = entry.value;
+                  final UserDocument userDoc = doc['doc'];
+                  final appLocale = AppLocalizations.of(context)!;
+                  final String subtitle = _documentTypeMap[userDoc.type]?.call(appLocale) ?? userDoc.type;
+
+                  return Dismissible(
+                    key: ValueKey(userDoc.id),
+                    direction: DismissDirection.endToStart,
+                    background: Container(
+                      alignment: Alignment.centerRight,
+                      child: FractionallySizedBox(
+                        child: Container(
+                          color: AppColors.red.withOpacity(0.7),
+                          alignment: Alignment.center,
+                          child: Icon(Icons.delete, color: Colors.white),
                         ),
                       ),
                     ),
-                    if (index != docs.length - 1)
-                      Divider(color: Colors.grey.shade300, height: 1),
-                  ],
-                ),
-              );
-            }).toList(),
-          ],
-        );
-      },
+                    confirmDismiss: (_) async {
+                      return await showDialog(
+                        context: context,
+                        builder: (context) {
+                          return AlertDialog(
+                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16.r)),
+                            contentPadding: EdgeInsets.symmetric(horizontal: 24.w, vertical: 20.h),
+                            content: Column(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                Text(
+                                  AppLocalizations.of(context)!.deleteTheDocument,
+                                  style: AppTextStyles.getTitle2(context),
+                                  textAlign: TextAlign.center,
+                                ),
+                                SizedBox(height: 12.h),
+                                Text(
+                                  AppLocalizations.of(context)!.areYouSureToDelete(userDoc.name),
+                                  style: AppTextStyles.getText2(context),
+                                  textAlign: TextAlign.center,
+                                ),
+                                SizedBox(height: 24.h),
+                                ElevatedButton(
+                                  style: ElevatedButton.styleFrom(
+                                    backgroundColor: AppColors.red,
+                                    elevation: 0,
+                                    padding: EdgeInsets.symmetric(horizontal: 24.w, vertical: 12.h),
+                                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10.r)),
+                                  ),
+                                  onPressed: () {
+                                    Navigator.pop(context, true);
+                                  },
+                                  child: Center(
+                                    child: Text(
+                                      AppLocalizations.of(context)!.delete,
+                                      style: AppTextStyles.getText2(context).copyWith(color: Colors.white),
+                                    ),
+                                  ),
+                                ),
+                                TextButton(
+                                  onPressed: () => Navigator.pop(context, false),
+                                  child: Text(
+                                    AppLocalizations.of(context)!.cancel,
+                                    style: AppTextStyles.getText2(context).copyWith(
+                                      fontWeight: FontWeight.bold,
+                                      color: AppColors.blackText,
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            ),
+                          );
+                        },
+                      );
+                    },
+                    onDismissed: (_) {
+                      context.read<DocumentsCubit>().deleteDocument(context, userDoc);
+                    },
+                    child: Column(
+                      children: [
+                        InkWell(
+                          onTap: () => _openDocument(doc),
+                          child: Padding(
+                            padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 10.h),
+                            child: Row(
+                              children: [
+                                Column(
+                                  children: [
+                                    SvgPicture.asset(
+                                      'assets/icons/pdf-file.svg',
+                                      width: 24.sp,
+                                      height: 24.sp,
+                                    ),
+                                    SizedBox(height: 1.h),
+                                    Text(
+                                      '${userDoc.pages.length} '
+                                          '${userDoc.pages.length == 1
+                                          ? AppLocalizations.of(context)!.pageSingular
+                                          : AppLocalizations.of(context)!.pagePlural}',
+                                      style: AppTextStyles.getText3(context).copyWith(
+                                        color: AppColors.grayMain,
+                                        fontSize: 6.sp,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                                SizedBox(width: 12.w),
+                                Expanded(
+                                  child: Column(
+                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                    children: [
+                                      Text(
+                                        userDoc.name,
+                                        style: AppTextStyles.getText2(context),
+                                        overflow: TextOverflow.ellipsis,
+                                      ),
+                                      SizedBox(height: 2.h),
+                                      Text(
+                                        subtitle,
+                                        style: AppTextStyles.getText3(context).copyWith(color: Colors.grey),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                                IconButton(
+                                  icon: Icon(Icons.more_horiz, size: 20.sp),
+                                  onPressed: () => _showEditOptions(doc),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ),
+                        if (index != docs.length - 1)
+                          Divider(color: Colors.grey.shade300, height: 1),
+                      ],
+                    ),
+                  );
+                }).toList(),
+              ]),
+            ),
+          );
+        }).toList(),
+      ],
     );
   }
+
+  Widget _buildDocumentsBannerCard() {
+    return Padding(
+      padding: const EdgeInsets.only(top: 40.0),
+      child: Container(
+        padding: EdgeInsets.all(12.w),
+        decoration: BoxDecoration(
+          color: AppColors.main.withOpacity(0.05),
+          borderRadius: BorderRadius.circular(12.r),
+        ),
+        child: Row(
+          children: [
+            Image.asset(
+              'assets/images/document_banner.png',
+              width: 45.w,
+              height: 45.w,
+            ),
+            SizedBox(width: 12.w),
+            Expanded(
+              child: Text(
+                AppLocalizations.of(context)!.documentAccessInfo,
+                style: AppTextStyles.getText3(context).copyWith(color: AppColors.blackText),
+                maxLines: 3,
+                overflow: TextOverflow.ellipsis,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildNotesBannerCard() {
+    return Padding(
+      padding: const EdgeInsets.only(top: 40.0),
+      child: Container(
+        padding: EdgeInsets.all(12.w),
+        decoration: BoxDecoration(
+          color: AppColors.main.withOpacity(0.05),
+          borderRadius: BorderRadius.circular(12.r),
+        ),
+        child: Row(
+          children: [
+            Image.asset(
+              'assets/images/notes_banner.png', // 🖼️ صورة مختلفة للملاحظات
+              width: 45.w,
+              height: 45.w,
+            ),
+            SizedBox(width: 12.w),
+            Expanded(
+              child: Text(
+                AppLocalizations.of(context)!.notesAccessInfo, // 📝 نص مختلف من ARB
+                style: AppTextStyles.getText3(context).copyWith(color: AppColors.blackText),
+                maxLines: 3,
+                overflow: TextOverflow.ellipsis,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+
+  Widget _buildBannerListItem() => Padding(
+    padding: EdgeInsets.fromLTRB(16.w, 8.h, 16.w, 12.h),
+    child: _buildDocumentsBannerCard(),
+  );
 
   Map<int, List<Map<String, dynamic>>> _groupDocumentsByYear(List<Map<String, dynamic>> docs) {
     final Map<int, List<Map<String, dynamic>>> grouped = {};
@@ -1164,8 +1269,6 @@ class _DocumentsPageState extends State<DocumentsPage> with AutomaticKeepAliveCl
     );
   }
 
-
-
   /// ✅ **Notes Tab**
   Widget _buildNotesTab() {
     return BlocBuilder<NotesCubit, NotesState>(
@@ -1205,38 +1308,74 @@ class _DocumentsPageState extends State<DocumentsPage> with AutomaticKeepAliveCl
   }
 
   Widget _buildNotesGridView(List<Note> notes) {
-    return GridView.builder(
-      padding: EdgeInsets.all(16.w),
-      gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-        crossAxisCount: 2,
-        mainAxisSpacing: 12.h,
-        crossAxisSpacing: 12.w,
-        childAspectRatio: 1,
-      ),
-      itemCount: notes.length,
-      itemBuilder: (context, index) {
-        final note = notes[index];
-        return _buildNoteCard(note);
-      },
+    return CustomScrollView(
+      physics: BouncingScrollPhysics(),
+      slivers: [
+        // ✅ البانر
+        SliverToBoxAdapter(
+          child: Padding(
+            padding: EdgeInsets.fromLTRB(16.w, 16.h, 16.w, 12.h),
+            child: _buildNotesBannerCard(), // تأكد من أن هذه الدالة موجودة
+          ),
+        ),
+
+        // ✅ شبكة الملاحظات
+        SliverPadding(
+          padding: EdgeInsets.only(left: 16.w, right: 16.w, bottom: 70.h),
+          sliver: SliverGrid(
+            delegate: SliverChildBuilderDelegate(
+                  (context, index) {
+                final note = notes[index];
+                return _buildNoteCard(note);
+              },
+              childCount: notes.length,
+            ),
+            gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+              crossAxisCount: 2,
+              mainAxisSpacing: 12.h,
+              crossAxisSpacing: 12.w,
+              childAspectRatio: 1,
+            ),
+          ),
+        ),
+      ],
     );
   }
+
 
 
   Widget _buildNotesListView(List<Note> notes) {
-    return ListView.separated(
-      padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 8.h),
-      itemCount: notes.length,
-      separatorBuilder: (_, __) => Divider(
-        height: 1,
-        color: Colors.grey.shade300,
-        thickness: 1,
-      ),
-      itemBuilder: (context, index) {
-        final note = notes[index];
-        return _buildNoteListTile(note);
-      },
+    return CustomScrollView(
+      physics: BouncingScrollPhysics(),
+      slivers: [
+        // ✅ البانر
+        SliverToBoxAdapter(
+          child: Padding(
+            padding: EdgeInsets.fromLTRB(16.w, 16.h, 16.w, 12.h),
+            child: _buildNotesBannerCard(), // تأكد من أن هذه الدالة موجودة
+          ),
+        ),
+
+        // ✅ قائمة الملاحظات
+        SliverPadding(
+          padding: EdgeInsets.only(bottom: 70.h),
+          sliver: SliverList(
+            delegate: SliverChildBuilderDelegate(
+                  (context, index) {
+                final note = notes[index];
+                return Padding(
+                  padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 10.h),
+                  child: _buildNoteListTile(note),
+                );
+              },
+              childCount: notes.length,
+            ),
+          ),
+        ),
+      ],
     );
   }
+
 
 
   Widget _buildNoteListTile(Note note) {

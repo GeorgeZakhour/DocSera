@@ -646,11 +646,13 @@
   "imagesDownloadFailed": "فشل تحميل الصور",
   "ofText": "من",
 
-  "importedFromConversationWith": "تم الاستيراد من المحادثة مع {name} بتاريخ {date}"
+  "importedFromConversationWith": "تم الاستيراد من المحادثة مع {name} بتاريخ {date}",
 
 
-
-
-
+  "documentAccessInfo": "فقط أنت تملك صلاحية الوصول إلى هذه المستندات وإدارتها.",
+  "notesAccessInfo": "يمكنك أنت فقط الوصول إلى ملاحظاتك وإدارتها بأمان.",
+  "messageAccessInfo": "يمكنك مراسلة طبيبك مباشرة من هنا. يتم حفظ جميع محادثاتك بأمان ويمكنك الوصول إليها بسهولة.",
+  "accountPrivacyInfoLine1": "بياناتك الشخصية تبقى خاصة.",
+  "accountPrivacyInfoLine2": "نحمي معلوماتك بأعلى معايير الأمان."
 
 }
