@@ -11,6 +11,7 @@ import 'package:docsera/screens/search_page.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:flutter_svg/svg.dart';
 import 'package:http/http.dart' as http;
 import 'package:intl/intl.dart';
 import 'package:flutter_gen/gen_l10n/app_localizations.dart';
@@ -20,12 +21,130 @@ import 'package:pdf/pdf.dart';
 import 'package:pdf/widgets.dart' as pw;
 import 'package:permission_handler/permission_handler.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:docsera/screens/home/Document/document_info_screen.dart';
+import 'package:url_launcher/url_launcher.dart'; // أضف هذا إن لم يكن موجودًا
 
-void showDocumentOptionsSheet(BuildContext context, UserDocument document) {
+void showConversationPdfOptionsSheet(
+    BuildContext context,
+    UserDocument document,
+    String patientId,
+    String doctorName,
+    ) {
+  final local = AppLocalizations.of(context)!;
+  final locale = Localizations.localeOf(context).languageCode;
+  final formattedDate = DateFormat('d MMM yyyy', locale).format(document.uploadedAt);
+
+  final importedText = local.importedFromConversationWith(formattedDate,doctorName);
+
+  showModalBottomSheet(
+    context: context,
+    shape: const RoundedRectangleBorder(
+      borderRadius: BorderRadius.vertical(top: Radius.circular(25)),
+    ),
+    builder: (ctx) {
+      return Padding(
+        padding: EdgeInsets.symmetric(horizontal: 20.w, vertical: 12.h),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Padding(
+              padding: EdgeInsets.symmetric(vertical: 8.h),
+              child: Row(
+                children: [
+                  SvgPicture.asset('assets/icons/pdf-file.svg', width: 30.w),
+                  SizedBox(width: 8.w),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(document.name,
+                            style: AppTextStyles.getText2(context).copyWith(fontWeight: FontWeight.bold)),
+                        SizedBox(height: 4.h),
+                        Text(
+                          importedText,
+                          style: AppTextStyles.getText3(context).copyWith(color: AppColors.grayMain),
+                          overflow: TextOverflow.ellipsis,
+                          maxLines: 2,
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            Divider(height: 10.h, color: Colors.grey[300]),
+            _buildOption(
+              context,
+              Icons.save_alt,
+              local.save,
+              onTap: () async {
+                Navigator.pop(ctx);
+                await launchUrl(Uri.parse(document.pages.first));
+              },
+            ),
+            _buildOption(
+              context,
+              SvgPicture.asset('assets/icons/save2documents.svg', width: 20.w),
+              local.addToDocuments,
+              onTap: () async {
+                Navigator.pop(ctx);
+
+                final tempDir = await getTemporaryDirectory();
+                final tempFilePath = '${tempDir.path}/${document.name}.pdf';
+                final tempFile = File(tempFilePath);
+
+                try {
+                  final response = await http.get(Uri.parse(document.pages.first));
+                  await tempFile.writeAsBytes(response.bodyBytes);
+
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (_) => DocumentInfoScreen(
+                        images: [tempFile.path],
+                        initialName: document.name,
+                        cameFromMultiPage: false,
+                        pageCount: 1,
+                        initialPatientId: patientId,
+                        cameFromConversation: true, // 👈 ضروري
+                        conversationDoctorName: doctorName, // 👈 ضروري
+                      ),
+                    ),
+                  );
+                } catch (e) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(
+                      content: Text(local.uploadFailed),
+                      backgroundColor: Colors.red,
+                    ),
+                  );
+                }
+              },
+            ),
+            SizedBox(height: 12.h),
+          ],
+        ),
+      );
+    },
+  );
+}
+
+void showDocumentOptionsSheet(
+    BuildContext context,
+    UserDocument document, {
+      String? doctorName,
+    }) {
   final isPDF = document.type == 'pdf';
   final locale = Localizations.localeOf(context).languageCode;
   final formattedDate = DateFormat('d MMM yyyy', locale).format(document.uploadedAt);
-  final createdByText = AppLocalizations.of(context)!.createdByYou(formattedDate);
+  final local = AppLocalizations.of(context)!;
+  final importedText = local.importedFromConversationWith(
+    formattedDate,
+    document.conversationDoctorName ?? ''
+  );
+  final createdByText = document.cameFromConversation && doctorName != null
+      ? local.importedFromConversationWith(doctorName, formattedDate)
+      : local.createdByYou(formattedDate);
 
   showModalBottomSheet(
     context: context,
@@ -42,17 +161,21 @@ void showDocumentOptionsSheet(BuildContext context, UserDocument document) {
               padding: EdgeInsets.symmetric(vertical: 8.h),
               child: Row(
                 children: [
-                  Icon(isPDF ? Icons.picture_as_pdf : Icons.file_present_sharp, color: AppColors.grayMain, size: 34.sp,),
+                    SvgPicture.asset('assets/icons/pdf-file.svg', width: 30.w),
                   SizedBox(width: 8.w),
                   Expanded(
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Text(document.name, style: AppTextStyles.getText2(context).copyWith(fontWeight: FontWeight.bold)),
+                        Text(
+                          document.name,
+                          style: AppTextStyles.getText2(context).copyWith(fontWeight: FontWeight.bold),
+                        ),
                         SizedBox(height: 4.h),
                         Text(
-                          createdByText,
+                          document.cameFromConversation ? importedText : createdByText,
                           style: AppTextStyles.getText3(context).copyWith(color: AppColors.grayMain),
+                          maxLines: 2,
                           overflow: TextOverflow.ellipsis,
                         ),
                       ],
@@ -65,10 +188,9 @@ void showDocumentOptionsSheet(BuildContext context, UserDocument document) {
             _buildOption(
               context,
               Icons.email_outlined,
-              AppLocalizations.of(context)!.sendToDoctor,
+              local.sendToDoctor,
               onTap: () {
-                Navigator.pop(context); // أغلق الشيت أولاً
-
+                Navigator.pop(context);
                 Navigator.push(
                   context,
                   MaterialPageRoute(
@@ -80,65 +202,67 @@ void showDocumentOptionsSheet(BuildContext context, UserDocument document) {
             _buildOption(
               context,
               Icons.edit_outlined,
-              AppLocalizations.of(context)!.rename,
+              local.rename,
               onTap: () async {
                 Navigator.pop(context);
-
                 final prefs = await SharedPreferences.getInstance();
                 final mainUserId = prefs.getString('userId') ?? '';
-
                 showModalBottomSheet(
                   context: context,
                   isScrollControlled: true,
                   useSafeArea: true,
                   backgroundColor: Colors.white,
-                  constraints: BoxConstraints(
-                    maxHeight: MediaQuery.of(context).size.height,
-                  ),
+                  constraints: BoxConstraints(maxHeight: MediaQuery.of(context).size.height),
                   builder: (_) => EditDocumentNameSheet(
                     initialName: document.name,
                     onConfirm: (newName) async {
                       await FirebaseFirestore.instance
                           .collection('users')
-                          .doc(mainUserId) // ✅ نفس الشي مثل document details
+                          .doc(mainUserId)
                           .collection('documents')
                           .doc(document.id)
                           .update({'name': newName});
                     },
                     onNameUpdated: (newName) {
-                      Future.delayed(Duration(milliseconds: 50), () {
+                      Future.delayed(const Duration(milliseconds: 50), () {
                         context.read<DocumentsCubit>().listenToDocuments(context);
-                      });                    },
+                      });
+                    },
                   ),
                 );
               },
-
             ),
-
-            _buildOption(context, Icons.info_outline, AppLocalizations.of(context)!.viewDetails, onTap: () {
-              Navigator.pop(context); // أغلق الشيت أولاً
-              Navigator.push<UserDocument?>(
-                context,
-                MaterialPageRoute(
-                  builder: (_) => DocumentDetailsPage(document: document),
-                ),
-              ).then((_) => Future.delayed(Duration(milliseconds: 50), () {
-                context.read<DocumentsCubit>().listenToDocuments(context);
-              }));
-
-
-            }),
-            _buildOption(context, Icons.download, AppLocalizations.of(context)!.download,
+            _buildOption(
+              context,
+              Icons.info_outline,
+              local.viewDetails,
+              onTap: () {
+                Navigator.pop(context);
+                Navigator.push<UserDocument?>(
+                  context,
+                  MaterialPageRoute(
+                    builder: (_) => DocumentDetailsPage(document: document),
+                  ),
+                ).then((_) => Future.delayed(const Duration(milliseconds: 50), () {
+                  context.read<DocumentsCubit>().listenToDocuments(context);
+                }));
+              },
+            ),
+            _buildOption(
+              context,
+              Icons.download,
+              local.download,
               onTap: () async {
                 Navigator.pop(context);
                 await _downloadDocumentAsPDF(context, document);
-            }),
+              },
+            ),
             _buildOption(
               context,
               Icons.delete,
-              AppLocalizations.of(context)!.delete,
+              local.delete,
               onTap: () async {
-                Navigator.pop(context); // إغلاق الشيت
+                Navigator.pop(context);
                 await showDeleteConfirmationDialog(
                   context: context,
                   document: document,
@@ -157,7 +281,7 @@ void showDocumentOptionsSheet(BuildContext context, UserDocument document) {
   );
 }
 
-Widget _buildOption(BuildContext context, IconData icon, String title,
+Widget _buildOption(BuildContext context, dynamic icon, String title,
     {required VoidCallback onTap, bool isRed = false}) {
   return Column(
     children: [
@@ -165,11 +289,16 @@ Widget _buildOption(BuildContext context, IconData icon, String title,
         dense: true,
         minVerticalPadding: 0,
         contentPadding: EdgeInsets.zero,
-        horizontalTitleGap: 8.w, // 👈 هذا بيقلل المسافة بين الأيقونة والنص
-        leading: Icon(icon, color: isRed ? AppColors.red : AppColors.main, size: 18.sp),
+        horizontalTitleGap: 8.w,
+        leading: icon is IconData
+            ? Icon(icon, color: isRed ? AppColors.red : AppColors.main, size: 18.sp)
+            : icon, // مثلاً SvgPicture
         title: Text(
           title,
-          style: AppTextStyles.getText3(context).copyWith(color: isRed ? AppColors.red : AppColors.main, fontWeight: FontWeight.bold),
+          style: AppTextStyles.getText3(context).copyWith(
+            color: isRed ? AppColors.red : AppColors.main,
+            fontWeight: FontWeight.bold,
+          ),
         ),
         onTap: onTap,
       ),

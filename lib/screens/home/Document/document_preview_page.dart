@@ -15,7 +15,16 @@ import 'document_options_bottom_sheet.dart';
 
 class DocumentPreviewPage extends StatefulWidget {
   final UserDocument document;
-  const DocumentPreviewPage({Key? key, required this.document}) : super(key: key);
+  final bool cameFromConversation;
+  final String? doctorName;
+
+  const DocumentPreviewPage({
+    Key? key,
+    required this.document,
+    this.cameFromConversation = false,
+    this.doctorName,
+
+  }) : super(key: key);
 
   @override
   State<DocumentPreviewPage> createState() => _DocumentPreviewPageState();
@@ -39,24 +48,71 @@ class _DocumentPreviewPageState extends State<DocumentPreviewPage> {
   @override
   void initState() {
     super.initState();
-    final firstUrl = widget.document.pages.first;
-    final filename = path.basename(Uri.parse(firstUrl).path).toLowerCase();
+    final firstUrl = widget.document.pages.isNotEmpty
+        ? widget.document.pages.first
+        : widget.document.previewUrl;
 
-    isPdf = widget.document.type == 'pdf' || filename.endsWith('.pdf');
-    isImage = widget.document.type == 'image' ||
-        filename.endsWith('.jpg') ||
-        filename.endsWith('.jpeg') ||
-        filename.endsWith('.png') ||
-        filename.endsWith('.webp');
+    final filename = widget.document.pages.isNotEmpty
+        ? path.basename(Uri.parse(widget.document.pages.first).path).toLowerCase()
+        : path.basename(Uri.parse(widget.document.previewUrl).path).toLowerCase();
 
-    if (isImage) {
+    print('🔍 fileType: ${widget.document.fileType}');
+    print('📂 filename: $filename');
+    print('📄 pages count: ${widget.document.pages.length}');
+    print('📃 is from conversation: ${widget.cameFromConversation}');
+
+    final hasMultipleImagePages = widget.document.pages.length >= 1 &&
+        widget.document.pages.every((url) =>
+        url.toLowerCase().endsWith('.jpg') ||
+            url.toLowerCase().endsWith('.jpeg') ||
+            url.toLowerCase().endsWith('.png') ||
+            url.toLowerCase().endsWith('.webp'));
+
+    final isImageMasqueradingAsPdf = widget.document.fileType == 'pdf' &&
+        widget.document.pages.length == 1 &&
+        (filename.endsWith('.jpg') ||
+            filename.endsWith('.jpeg') ||
+            filename.endsWith('.png') ||
+            filename.endsWith('.webp'));
+
+    print('🖼 hasMultipleImagePages: $hasMultipleImagePages');
+    print('🖼 isImageMasqueradingAsPdf: $isImageMasqueradingAsPdf');
+
+    isImage = widget.document.fileType == 'image' || hasMultipleImagePages || isImageMasqueradingAsPdf;
+    isPdf = widget.document.fileType == 'pdf' &&
+        !hasMultipleImagePages &&
+        !isImageMasqueradingAsPdf &&
+        filename.endsWith('.pdf');
+
+    print('✅ Final type -> isImage: $isImage | isPdf: $isPdf');
+
+    if (isPdf) {
+      _downloadPdfFromUrl(firstUrl, widget.document.name).then((file) {
+        if (mounted) {
+          setState(() {
+            _localPdfFile = file;
+            _loading = false;
+          });
+        }
+      }).catchError((e) {
+        print('❌ Failed to download PDF: $e');
+        setState(() {
+          _loading = false;
+          _localPdfFile = null;
+        });
+      });
+    } else if (isImage) {
+      print('📥 Preloading images...');
       _preloadImages();
-    } else if (isPdf) {
-      _downloadAndCachePdf(firstUrl);
     }
   }
 
+
+
+
+
   void _preloadImages() async {
+    print('_preloadImages Activated!');
     final urls = widget.document.pages;
     final List<Uint8List> loaded = [];
 
@@ -76,26 +132,47 @@ class _DocumentPreviewPageState extends State<DocumentPreviewPage> {
     });
   }
 
-  Future<void> _downloadAndCachePdf(String url) async {
+  Future<File> _downloadPdfFromUrl(String url, String fileName) async {
     try {
-      final dir = await getApplicationDocumentsDirectory();
-      final file = File('${dir.path}/${widget.document.id}.pdf');
-      if (await file.exists()) {
-        print('📦 Loaded from cache: ${file.path}');
+      final response = await http.get(Uri.parse(url));
+      final contentType = response.headers['content-type'];
+      print('📦 Content-Type: $contentType');
+
+      if (response.statusCode == 200) {
+        final dir = await getTemporaryDirectory();
+        final extension = path.extension(Uri.parse(url).path);
+        final safeFileName = fileName.endsWith(extension) ? fileName : '$fileName$extension';
+        final file = File('${dir.path}/$safeFileName');
+        await file.writeAsBytes(response.bodyBytes, flush: true);
+        print('✅ File saved at: ${file.path}');
+
+        // ✅ Check actual file type
+        if (contentType != null && !contentType.contains('pdf')) {
+          print('❌ Not a real PDF, switching to image mode');
+          setState(() {
+            isPdf = false;
+            isImage = true;
+          });
+
+          // ✅ تحميل الصورة الآن
+          _preloadImages();
+        }
+
+
+        return file;
       } else {
-        print('⬇️ Downloading PDF...');
-        final response = await http.get(Uri.parse(url));
-        await file.writeAsBytes(response.bodyBytes);
+        throw Exception('Failed to load file. Status: ${response.statusCode}');
       }
-      setState(() {
-        _localPdfFile = file;
-        _loading = false;
-      });
     } catch (e) {
-      print('❌ Failed to download PDF: $e');
-      setState(() => _loading = false);
+      print('❌ Error downloading file: $e');
+      rethrow;
     }
   }
+
+
+
+
+
 
   void _handleDoubleTap() {
     final scale = _transformationController.value.getMaxScaleOnAxis();
@@ -139,10 +216,24 @@ class _DocumentPreviewPageState extends State<DocumentPreviewPage> {
           actions: [
             IconButton(
               icon: Icon(Icons.more_vert, color: Colors.white),
-              onPressed: () => showDocumentOptionsSheet(context, widget.document),
+              onPressed: () {
+                final fromConversationButNotSaved =
+                    widget.cameFromConversation && !widget.document.id.startsWith('doc_');
+
+                if (fromConversationButNotSaved) {
+                  showConversationPdfOptionsSheet(
+                    context,
+                    widget.document,
+                    widget.document.patientId,
+                    widget.doctorName ?? '',
+                  );
+                } else {
+                  showDocumentOptionsSheet(context, widget.document);
+                }
+              },
             ),
           ],
-          bottom: widget.document.type != 'pdf' && !_imagesLoaded
+          bottom: widget.document.fileType != 'pdf' && !_imagesLoaded
               ? PreferredSize(
             preferredSize: Size.fromHeight(4.h),
             child: LinearProgressIndicator(
@@ -183,7 +274,10 @@ class _DocumentPreviewPageState extends State<DocumentPreviewPage> {
           fitPolicy: FitPolicy.BOTH,
           onRender: (pages) => setState(() => _totalPages = pages ?? 0),
           onPageChanged: (page, _) => setState(() => _currentPage = page ?? 0),
-        ),
+          onViewCreated: (controller) => print('✅ PDF view created'),
+          onError: (error) => print('❌ PDF view error: $error'),
+        )
+
       );
     }
   }

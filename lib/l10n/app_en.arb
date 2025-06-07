@@ -639,14 +639,13 @@
   "maxImagesReached": "Maximum 8 images.",
   "remaining": "remaining",
 
+  "addToDocuments": "Add to Documents",
   "downloadAll": "Download All",
   "downloadCompleted": "Image downloaded successfully",
   "imagesDownloadedSuccessfully": "Images downloaded successfully",
   "downloadFailed": "Failed to download image",
   "imagesDownloadFailed": "Failed to download images",
-  "ofText": "of"
+  "ofText": "of",
 
-
-
-
+  "importedFromConversationWith": "Imported from the conversation with {name} on {date}"
 }

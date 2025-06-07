@@ -4,7 +4,9 @@ import 'dart:ui';
 import 'dart:io';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:docsera/models/document.dart';
+import 'package:docsera/screens/home/Document/document_info_screen.dart';
 import 'package:docsera/screens/home/Document/document_preview_page.dart';
+import 'package:docsera/screens/home/shimmer/shimmer_widgets.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:gallery_saver_plus/gallery_saver.dart';
@@ -18,10 +20,19 @@ import 'package:flutter/material.dart';
 import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:intl/intl.dart' as intl;
+import 'package:path/path.dart' as path;
 import 'package:path_provider/path_provider.dart';
 import 'package:transparent_image/transparent_image.dart';
 import 'package:url_launcher/url_launcher.dart';
 
+class PendingMessage {
+  final String type; // 'image' أو 'pdf'
+  final List<File> files;
+  final DateTime createdAt;
+
+  PendingMessage({required this.type, required this.files})
+      : createdAt = DateTime.now();
+}
 
 class ConversationPage extends StatefulWidget {
   final String conversationId;
@@ -52,6 +63,7 @@ class ConversationPage extends StatefulWidget {
 }
 
 class _ConversationPageState extends State<ConversationPage> {
+  final List<PendingMessage> _pendingMessages = [];
   final TextEditingController _controller = TextEditingController();
   final ScrollController _scrollController = ScrollController();
   List<File> _selectedImageFiles = [];
@@ -67,17 +79,28 @@ class _ConversationPageState extends State<ConversationPage> {
   Offset _doubleTapPosition = Offset.zero;
   final TransformationController _transformationController = TransformationController();
   bool _isZoomed = false;
+  bool _shouldAutoScroll = true;
+  bool _showScrollToBottom = false;
+  bool _isUserAtBottom = true;
+  UserDocument? _attachedDocument;
+  bool _showImageDownloadOptions = false;
+
+
+
 
   @override
   void initState() {
     super.initState();
+    print('🟠 initState called');
+    _scrollController.addListener(_handleScroll);
 
-    if (widget.attachedDocument != null) {
-      final doc = widget.attachedDocument!;
+    _attachedDocument = widget.attachedDocument;
+
+    if (_attachedDocument != null) {
+      final doc = _attachedDocument!;
       final type = doc.type;
       final fileType = doc.fileType;
       final preview = doc.previewUrl;
-      final isRealPdf = doc.fileType == 'pdf';
 
       print('🧪 Document Received in ConversationPage');
       print('📂 doc.type: $type');
@@ -85,19 +108,49 @@ class _ConversationPageState extends State<ConversationPage> {
       print('🌐 doc.previewUrl: $preview');
       print('🔍 parsed path: ${Uri.parse(preview).path}');
 
+      print('✅ Will treat as PDF (forced because from document page)');
+      _pendingFileType = 'pdf';
+      _selectedImageFiles.clear();
+      _selectedImageFiles.add(File('/tmp/${doc.name ?? 'document'}.pdf'));
+    }
 
-      if (isRealPdf) {
-        print('✅ Will treat as PDF');
-        _pendingFileType = 'pdf';
-        _selectedImageFiles.clear();
-        _selectedImageFiles.add(File('/tmp/${doc.name}.pdf'));
-      } else {
-        print('🖼️ Will treat as IMAGE');
-        _pendingFileType = 'image';
-        _selectedImageFiles.clear();
-      }
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      Future.delayed(Duration(milliseconds: 500), () {
+        if (_scrollController.hasClients) {
+          final maxScroll = _scrollController.position.maxScrollExtent;
+          print('📏 Max Scroll after delay: $maxScroll');
+          _scrollController.jumpTo(maxScroll);
+          print('📍 Jumped to bottom after delay');
+        } else {
+          print('❌ Still no clients after delay');
+        }
+      });
+    });
+
+  }
+
+
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    _scrollController.dispose();
+    super.dispose();
+  }
+
+  void _handleScroll() {
+    final threshold = 100;
+    final atBottom = _scrollController.position.pixels >= _scrollController.position.maxScrollExtent - threshold;
+
+    if (_isUserAtBottom != atBottom) {
+      setState(() {
+        _isUserAtBottom = atBottom;
+        _showScrollToBottom = !atBottom;
+      });
     }
   }
+
+
 
   void _showImageOverlayWithIndex(List<String> urls, int index) {
     setState(() {
@@ -125,8 +178,16 @@ class _ConversationPageState extends State<ConversationPage> {
     setState(() {
       _expandedImageOverlay = false;
       _expandedImageUrls = [];
+      _shouldAutoScroll = false;
+    });
+
+    // إعادة التمرير بعد وقت بسيط
+    Future.delayed(const Duration(milliseconds: 200), () {
+      _shouldAutoScroll = true;
     });
   }
+
+
 
   bool _isArabicText(String text) {
     return RegExp(r'[\u0600-\u06FF]').hasMatch(text);
@@ -199,16 +260,55 @@ class _ConversationPageState extends State<ConversationPage> {
     }
   }
 
-
   void _sendMessage() async {
     final text = _controller.text.trim();
-    if (text.isEmpty && _selectedImageFiles.isEmpty) return;
+    if (text.isEmpty && _selectedImageFiles.isEmpty && widget.attachedDocument == null) return;
 
     final conversationRef = FirebaseFirestore.instance
         .collection('conversations')
         .doc(widget.conversationId);
 
+    // ✅ أضف إلى قائمة pending
+    if (_selectedImageFiles.isNotEmpty && _pendingFileType != null) {
+      _pendingMessages.add(PendingMessage(
+        type: _pendingFileType!,
+        files: List.from(_selectedImageFiles),
+      ));
+      setState(() {});
+    }
+
     List<Map<String, dynamic>> attachments = [];
+
+    if (widget.attachedDocument != null) {
+      try {
+        final fileType = 'pdf';
+        final pdfUrl = widget.attachedDocument!.pages.first;
+        final uri = Uri.parse(pdfUrl);
+
+        final fileName = widget.attachedDocument!.name ?? 'document.pdf';
+        final response = await http.get(uri);
+        if (response.statusCode != 200) {
+          print('❌ Failed to download file: ${response.statusCode}');
+          return;
+        }
+
+        final bytes = response.bodyBytes;
+        final storageFileName = 'document_${DateTime.now().millisecondsSinceEpoch}.pdf';
+        final ref = FirebaseStorage.instance
+            .ref()
+            .child('chat_attachments/${widget.conversationId}/$storageFileName');
+        final uploadTask = await ref.putData(bytes);
+        final uploadedUrl = await uploadTask.ref.getDownloadURL();
+
+        attachments.add({
+          'fileUrl': uploadedUrl,
+          'fileName': fileName,
+          'type': fileType,
+        });
+      } catch (e) {
+        print("❌ Error during PDF attachment upload: $e");
+      }
+    }
 
     for (final file in _selectedImageFiles) {
       final fileName = file.path.split('/').last;
@@ -216,14 +316,18 @@ class _ConversationPageState extends State<ConversationPage> {
           .ref()
           .child('chat_attachments/${widget.conversationId}/$fileName');
 
-      final uploadTask = await ref.putFile(file);
-      final fileUrl = await uploadTask.ref.getDownloadURL();
+      if (await file.exists()) {
+        final uploadTask = await ref.putFile(file);
+        final fileUrl = await uploadTask.ref.getDownloadURL();
 
-      attachments.add({
-        'fileUrl': fileUrl,
-        'fileName': fileName,
-        'type': _pendingFileType,
-      });
+        attachments.add({
+          'fileUrl': fileUrl,
+          'fileName': fileName,
+          'type': _pendingFileType,
+        });
+      } else {
+        print('❌ File does not exist: ${file.path}');
+      }
     }
 
     final msgRef = conversationRef.collection('messages').doc();
@@ -257,7 +361,17 @@ class _ConversationPageState extends State<ConversationPage> {
       _controller.clear();
       _selectedImageFiles.clear();
       _pendingFileType = null;
+      _pendingMessages.clear(); // ✅ إزالة الرسائل المؤقتة بعد الإرسال
+      _attachedDocument = null; // ✅ إخفاء المرفق القادم من صفحة الوثائق
     });
+
+    if (_scrollController.hasClients && _isUserAtBottom) {
+      _scrollController.animateTo(
+        _scrollController.position.maxScrollExtent + 50,
+        duration: const Duration(milliseconds: 300),
+        curve: Curves.easeOut,
+      );
+    }
   }
 
   void _showAttachmentOptions() {
@@ -441,19 +555,65 @@ class _ConversationPageState extends State<ConversationPage> {
   Widget _buildPreviewAttachment() {
     final local = AppLocalizations.of(context)!;
 
-    print('🧪 Attachments count: ${_selectedImageFiles.length}');
-    print('🧪 Pending file type: $_pendingFileType');
-    print('🧪 File paths: ${_selectedImageFiles.map((e) => e.path).toList()}');
+    // ✅ إذا كان هناك مستند مرفق من صفحة الوثائق
+    if (widget.attachedDocument != null) {
+      final fileName = widget.attachedDocument!.name ?? 'document.pdf';
+      final shortName = fileName.length > 30 ? fileName.substring(0, 27) + '...' : fileName;
 
+      return Padding(
+        padding: EdgeInsets.symmetric(horizontal: 12.w, vertical: 4.h),
+        child: ClipRRect(
+          borderRadius: BorderRadius.circular(12.r),
+          child: BackdropFilter(
+            filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
+            child: Container(
+              padding: EdgeInsets.symmetric(horizontal: 12.w, vertical: 10.h),
+              decoration: BoxDecoration(
+                color: Colors.white.withOpacity(0.3),
+                border: Border.all(color: AppColors.main.withOpacity(0.4)),
+                borderRadius: BorderRadius.circular(12.r),
+              ),
+              child: Row(
+                children: [
+                  SvgPicture.asset(
+                    'assets/icons/pdf-file.svg',
+                    width: 24.sp,
+                    height: 24.sp,
+                  ),
+                  SizedBox(width: 10.w),
+                  Expanded(
+                    child: Text(
+                      shortName,
+                      style: AppTextStyles.getText2(context)
+                          .copyWith(fontSize: 12.sp, color: Colors.black87),
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                  ),
+                  IconButton(
+                    icon: Icon(Icons.close, size: 18.sp, color: AppColors.main),
+                    onPressed: () {
+                      setState(() {
+                        _attachedDocument  = null;
+                        _selectedImageFiles.clear();
+                        _pendingFileType = null;
+                        _showAllAttachments = false;
+                      });
+                    },
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ),
+      );
+    }
 
+    // ✅ لا يوجد مرفقات صور
     if (_selectedImageFiles.isEmpty) return const SizedBox();
 
     final isPdf = _pendingFileType == 'pdf';
 
-
-
-    print('🧪 isPdf resolved: $isPdf');
-
+    // ✅ عرض PDF مرفق من المحادثة
     if (isPdf) {
       final fileName = _selectedImageFiles.first.path.split('/').last;
       final shortName = fileName.length > 30 ? fileName.substring(0, 27) + '...' : fileName;
@@ -505,14 +665,7 @@ class _ConversationPageState extends State<ConversationPage> {
       );
     }
 
-
-    print('🧪 Rendering image preview');
-
-    // ✅ فقط في حال لم يكن PDF، نعرض الصور
-    // الكود التالي لعرض الصور كما هو بعد هذا التعليق
-
-
-    // ✅ باقي الحالات: صورة
+    // ✅ عرض صور متعددة
     final count = _selectedImageFiles.length.clamp(0, 8);
     final label = count == 1 ? '${local.attachedImage}' : '$count ${local.attachedImages}';
 
@@ -804,32 +957,75 @@ class _ConversationPageState extends State<ConversationPage> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Container(
-                      constraints: BoxConstraints(maxWidth: 0.6.sw),
-                      padding: EdgeInsets.symmetric(horizontal: 8.w, vertical: 6.h),
-                      decoration: BoxDecoration(
-                        color: Colors.white,
-                        borderRadius: BorderRadius.circular(8.r),
-                        border: Border.all(color: AppColors.main.withOpacity(0.4)),
-                      ),
-                      child: Row(
-                        children: [
-                          SvgPicture.asset('assets/icons/pdf-file.svg', width: 20.w, height: 20.w),
-                          SizedBox(width: 8.w),
-                          Expanded(
-                            child: Text(
-                              pdfs.first['fileName'] ?? 'PDF File',
-                              style: AppTextStyles.getText2(context),
-                              overflow: TextOverflow.ellipsis,
+                    if (showSenderName)
+                      Padding(
+                        padding: EdgeInsets.only(
+                          bottom: 4.h,
+                          right: isUser ? 14.w : 0,
+                          left: isUser ? 0 : 14.w,
+                        ),
+                        child: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            avatar,
+                            SizedBox(width: 6.w),
+                            Text(
+                              isUser ? widget.accountHolderName : widget.doctorName,
+                              style: AppTextStyles.getText2(context).copyWith(
+                                fontWeight: FontWeight.bold,
+                                color: Colors.black87,
+                                fontSize: 12.sp,
+                              ),
                             ),
+                          ],
+                        ),
+                      ),
+
+                    GestureDetector(
+                      onTap: () {
+                        final pdf = pdfs.first;
+                        final userDoc = UserDocument(
+                          id: '',
+                          name: pdf['fileName'] ?? 'PDF File',
+                          type: '',
+                          fileType: 'pdf',
+                          patientId: widget.patientName,
+                          previewUrl: pdf['fileUrl'],
+                          pages: [pdf['fileUrl']], // هو نفسه المستخدم للتحميل والمعاينة
+                          uploadedAt: DateTime.now(),
+                          uploadedById: '',
+                          cameFromConversation: true,
+                          conversationDoctorName: widget.doctorName,
+                        );
+
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (_) => DocumentPreviewPage(document: userDoc, cameFromConversation: true, doctorName: widget.doctorName),
                           ),
-                          IconButton(
-                            icon: Icon(Icons.open_in_new, size: 18.sp),
-                            onPressed: () {
-                              launchUrl(Uri.parse(pdfs.first['fileUrl']));
-                            },
-                          ),
-                        ],
+                        );
+                      },
+                      child: Container(
+                        constraints: BoxConstraints(minWidth: 0.3.sw, maxWidth: 0.6.sw),
+                        padding: EdgeInsets.symmetric(horizontal: 12.w, vertical: 20.h),
+                        decoration: BoxDecoration(
+                          color: Colors.white,
+                          borderRadius: BorderRadius.circular(8.r),
+                          border: Border.all(color: AppColors.main.withOpacity(0.4)),
+                        ),
+                        child: Row(
+                          children: [
+                            SvgPicture.asset('assets/icons/pdf-file.svg', width: 20.w, height: 20.w),
+                            SizedBox(width: 8.w),
+                            Expanded(
+                              child: Text(
+                                pdfs.first['fileName'] ?? 'PDF File',
+                                style: AppTextStyles.getText2(context),
+                                overflow: TextOverflow.ellipsis,
+                              ),
+                            ),
+                          ],
+                        ),
                       ),
                     ),
                     SizedBox(height: 4.h),
@@ -850,12 +1046,15 @@ class _ConversationPageState extends State<ConversationPage> {
                 ),
               ),
 
-              Positioned(
-                top: 4.h,
-                left: isUser ? null : -16.w,
-                right: isUser ? -16.w : null,
-                child: avatar,
-              ),
+              if (!showSenderName)
+                Positioned(
+                  top: 4.h,
+                  left: isUser ? null : -16.w,
+                  right: isUser ? -16.w : null,
+                  child: avatar,
+                ),
+
+
             ],
           ),
 
@@ -868,16 +1067,37 @@ class _ConversationPageState extends State<ConversationPage> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
+                    if (showSenderName)
+                      Padding(
+                        padding: EdgeInsets.only(
+                          bottom: 4.h,
+                          right: isUser ? 10.w : 0,
+                          left: isUser ? 0 : 10.w,
+                        ),
+                        child: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            avatar,
+                            SizedBox(width: 6.w),
+                            Text(
+                              isUser ? widget.accountHolderName : widget.doctorName,
+                              style: AppTextStyles.getText2(context).copyWith(
+                                fontWeight: FontWeight.bold,
+                                color: Colors.black87,
+                                fontSize: 12.sp,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
                     ClipRRect(
                       borderRadius: BorderRadius.circular(12.r),
                       child: GestureDetector(
                         onTap: () => _showImageOverlay(images.map((e) => e['fileUrl'] as String).toList()),
                         child: Container(
-                          constraints: BoxConstraints(maxWidth: 0.6.sw),
-                          padding: EdgeInsets.symmetric(horizontal: 20.w, vertical: 15.h),
+                          constraints: BoxConstraints(maxWidth: 0.5.sw),
                           decoration: BoxDecoration(
-                            color: AppColors.main.withOpacity(0.08),
-                            border: Border.all(color: AppColors.main.withOpacity(0.4)),
+                            color: Colors.transparent,
                             borderRadius: BorderRadius.circular(12.r),
                           ),
                           child: GridView.count(
@@ -967,12 +1187,14 @@ class _ConversationPageState extends State<ConversationPage> {
                   ],
                 ),
               ),
-              Positioned(
-                top: 4.h,
-                left: isUser ? null : -16.w,
-                right: isUser ? -16.w : null,
-                child: avatar,
-              ),
+              if (!showSenderName)
+                Positioned(
+                  top: 4.h,
+                  left: isUser ? null : -16.w,
+                  right: isUser ? -16.w : null,
+                  child: avatar,
+                ),
+
             ],
           ),
 
@@ -980,62 +1202,98 @@ class _ConversationPageState extends State<ConversationPage> {
     );
   }
 
-  Widget _buildTextBubble(String content, List<Map<String, dynamic>> attachments, bool isUser, Widget avatar, bool showReason, DateTime? time, bool isArabic) {
+  Widget _buildTextBubble(String content, List<Map<String, dynamic>> attachments, bool isUser, Widget avatar, bool showReason, DateTime? time, bool isArabic,  {required bool showSenderName}) {
     return ClipRect(
       child: BackdropFilter(
         filter: ImageFilter.blur(sigmaX: 1, sigmaY: 1),
-        child: Container(
-          constraints: BoxConstraints(maxWidth: 0.7.sw),
-          padding: EdgeInsets.symmetric(horizontal: 14.w, vertical: 10.h),
-          decoration: BoxDecoration(
-            color: isUser
-                ? AppColors.mainDark.withOpacity(0.9)
-                : AppColors.grayMain.withOpacity(0.25),
-            borderRadius: BorderRadius.only(
-              topLeft: Radius.circular(12.r),
-              topRight: Radius.circular(12.r),
-              bottomLeft: isUser ? Radius.circular(12.r) : Radius.zero,
-              bottomRight: isUser ? Radius.zero : Radius.circular(12.r),
+        child: IntrinsicWidth(
+          child: ConstrainedBox(
+            constraints: BoxConstraints(
+              minWidth: 0.15.sw,
+              maxWidth: 0.6.sw, // أو 0.6.sw حسب رغبتك
             ),
-          ),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Row(children: [avatar, SizedBox(width: 8.w), Text(widget.accountHolderName, style: AppTextStyles.getText2(context).copyWith(color: isUser ? Colors.white : Colors.black, fontWeight: FontWeight.bold))]),
-              SizedBox(height: 10.h),
-              Directionality(
-                textDirection: isArabic ? TextDirection.rtl : TextDirection.ltr,
-                child: Text(
-                  content,
-                  style: AppTextStyles.getText2(context).copyWith(
-                    color: isUser ? Colors.white : Colors.black87,
-                  ),
+            child: Container(
+              padding: EdgeInsets.symmetric(horizontal: 14.w, vertical: 10.h),
+              decoration: BoxDecoration(
+                color: isUser
+                    ? AppColors.mainDark.withOpacity(0.9)
+                    : AppColors.grayMain.withOpacity(0.25),
+                borderRadius: BorderRadius.only(
+                  topLeft: Radius.circular(12.r),
+                  topRight: Radius.circular(12.r),
+                  bottomLeft: isUser ? Radius.circular(12.r) : Radius.zero,
+                  bottomRight: isUser ? Radius.zero : Radius.circular(12.r),
                 ),
               ),
-              SizedBox(height: 4.h),
-              if (attachments.isEmpty)
-                Align(
-                alignment: Alignment.bottomRight,
-                child: Text(
-                  time != null ? intl.DateFormat('HH:mm').format(time) : '',
-                  style: AppTextStyles.getText3(context).copyWith(
-                    fontSize: 10.sp,
-                    color: isUser ? Colors.white70 : Colors.black54,
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  if (showSenderName)
+                    Row(children: [avatar, SizedBox(width: 8.w), Text(isUser ? widget.accountHolderName : widget.doctorName, style: AppTextStyles.getText2(context).copyWith(color: isUser ? Colors.white : Colors.black, fontWeight: FontWeight.bold))]),
+
+                  if (showSenderName) SizedBox(height: 10.h), // 👈 move the spacing inside the condition
+                  Directionality(
+                    textDirection: isArabic ? TextDirection.rtl : TextDirection.ltr,
+                    child: Text(
+                      content,
+                      style: AppTextStyles.getText2(context).copyWith(
+                        color: isUser ? Colors.white : Colors.black87,
+                      ),
+                    ),
                   ),
-                ),
+                  SizedBox(height: 4.h),
+                  if (attachments.isEmpty)
+                    Align(
+                    alignment: Alignment.bottomRight,
+                    child: Text(
+                      time != null ? intl.DateFormat('HH:mm').format(time) : '',
+                      style: AppTextStyles.getText3(context).copyWith(
+                        fontSize: 10.sp,
+                        color: isUser ? Colors.white70 : Colors.black54,
+                      ),
+                    ),
+                  ),
+                ],
               ),
-            ],
+            ),
           ),
         ),
       ),
     );
   }
 
+
+  void _navigateToDocumentInfoPage(List<String> imagePaths) {
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (_) => DocumentInfoScreen(
+          images: imagePaths,
+          cameFromMultiPage: imagePaths.length > 1,
+          initialName: imagePaths.length == 1 ? 'Document' : null,
+        ),
+      ),
+    );
+  }
+
+  Future<String> _downloadAndGetLocalPath(String url) async {
+    final response = await http.get(Uri.parse(url));
+    final tempDir = await getTemporaryDirectory();
+    final file = File('${tempDir.path}/${path.basename(url)}');
+    await file.writeAsBytes(response.bodyBytes);
+    return file.path;
+  }
+
+
+
+
   @override
   Widget build(BuildContext context) {
     final isForRelative = widget.patientName != widget.accountHolderName;
     final lang = Localizations.localeOf(context).languageCode;
     final local = AppLocalizations.of(context)!;
+    bool _isProcessingAddToDocument = false;
+    bool _isProcessingSave = false;
 
     return Scaffold(
       backgroundColor: AppColors.background,
@@ -1087,12 +1345,30 @@ class _ConversationPageState extends State<ConversationPage> {
 
                 final messages = snapshot.data!.docs;
 
-
-                if (!_expandedImageOverlay && _selectedImageFiles.isNotEmpty) {
-                  WidgetsBinding.instance.addPostFrameCallback((_) {
-                    if (_scrollController.hasClients) {
-                      _scrollController.animateTo(
+                // التمرير التلقائي عند فتح الصفحة أو تحميل الرسائل
+                if (_shouldAutoScroll && !_expandedImageOverlay) {
+                  Future.delayed(const Duration(milliseconds: 100), () {
+                    if (_shouldAutoScroll &&
+                        !_expandedImageOverlay &&
+                        _scrollController.hasClients &&
+                        _isUserAtBottom &&
+                        _scrollController.position.maxScrollExtent > 0) {
+                      _scrollController.jumpTo(
                         _scrollController.position.maxScrollExtent,
+                      );
+                    }
+                  });
+                }
+
+                if (_shouldAutoScroll && !_expandedImageOverlay && _selectedImageFiles.isNotEmpty) {
+                  Future.delayed(const Duration(milliseconds: 100), () {
+                    if (_shouldAutoScroll &&
+                        !_expandedImageOverlay &&
+                        _scrollController.hasClients &&
+                        _isUserAtBottom&&
+                        _scrollController.position.maxScrollExtent > 0) {
+                      _scrollController.animateTo(
+                        _scrollController.position.maxScrollExtent + 50,
                         duration: const Duration(milliseconds: 300),
                         curve: Curves.easeOut,
                       );
@@ -1104,12 +1380,6 @@ class _ConversationPageState extends State<ConversationPage> {
 
                 // ✅ تحديث حالة القراءة إذا كانت الرسالة الأخيرة مرسلة من الطبيب
                 if (messages.isNotEmpty) {
-                  final lastMsg = messages.last.data() as Map<String, dynamic>;
-                  final lastMsgRef = messages.last.reference;
-                  final isUser = lastMsg['isUser'] ?? false;
-                  final alreadyRead = lastMsg['readByUser'] == true;
-                  bool hasUnread = false;
-
                   int unreadCount = 0;
                   for (final doc in snapshot.data!.docs) {
                     final data = doc.data() as Map<String, dynamic>;
@@ -1134,9 +1404,6 @@ class _ConversationPageState extends State<ConversationPage> {
                       'unreadCountForUser': 0, // 👈 ضروري لتحديث الحالة في MessagesPage
                     });
                   }
-
-
-
                 }
 
 
@@ -1156,9 +1423,9 @@ class _ConversationPageState extends State<ConversationPage> {
                 return Stack(
                   children: [
                     Positioned.fill(
-                      child: ListView.builder(
-                        controller: _scrollController,
-                        padding: EdgeInsets.only(
+                        child: ListView.builder(
+                          controller: _scrollController,
+                          padding: EdgeInsets.only(
                             left: 20.w,
                             top: widget.isClosed
                                 ? 25.h
@@ -1166,177 +1433,251 @@ class _ConversationPageState extends State<ConversationPage> {
                                 ? 20.h
                                 : 12.h,
                             right: 20.w,
-                          bottom: _selectedImageFiles.isNotEmpty ? 125.h : 65.h,
-                        ),
-                        itemCount: messages.length,
-                        itemBuilder: (context, index) {
-                          final msg = messages[index].data() as Map<String, dynamic>;
-                          final isUser = msg['isUser'] ?? false;
-                          final content = msg['text'] ?? '';
-                          final attachments = (msg['attachments'] as List?)?.cast<Map<String, dynamic>>() ?? [];
-                          final timestamp = msg['timestamp'] as Timestamp?;
-                          final time = timestamp?.toDate();
-                          final readByDoctorAt = (msg['readByDoctorAt'] as Timestamp?)?.toDate();
-                          final bool isReadByDoctor = isUser && (msg['readByDoctor'] == true);
-                          final bool isLastRead = isReadByDoctor && (index == messages.length - 1);
+                            bottom: _selectedImageFiles.isNotEmpty || _pendingMessages.isNotEmpty ? 125.h : 65.h,
+                          ),
+                          itemCount: messages.length + _pendingMessages.length,
+                          itemBuilder: (context, index) {
+                            if (index >= messages.length) {
+                              final pending = _pendingMessages[index - messages.length];
+                              final isSingle = pending.files.length == 1;
 
-
-                          final avatar = isUser
-                              ? CircleAvatar(
-                            radius: 12.r,
-                            backgroundColor: AppColors.whiteText.withOpacity(0.6),
-                            child: FittedBox(
-                              fit: BoxFit.scaleDown,
-                              child: Transform.translate(
-                                offset: const Offset(0, -1.5),
-                                child: Text(
-                                  _getInitials(widget.accountHolderName),
-                                  style: AppTextStyles.getText3(context).copyWith(
-                                    fontWeight: FontWeight.bold,
-                                    color: AppColors.main,
-                                    height: 1.0,
-                                  ),
-                                  textAlign: TextAlign.center,
-                                  textHeightBehavior: const TextHeightBehavior(
-                                    applyHeightToFirstAscent: false,
-                                    applyHeightToLastDescent: false,
-                                  ),
-                                ),
-                              ),
-                            ),
-                          )
-                              : CircleAvatar(
-                            radius: 12.r,
-                            backgroundColor: AppColors.main.withOpacity(0.55),
-                            backgroundImage: AssetImage(widget.doctorImage),
-                          );
-
-                          final avatar2 = isUser
-                              ? CircleAvatar(
-                            radius: 6.r,
-                            backgroundColor: AppColors.main.withOpacity(0.8),
-                            child: FittedBox(
-                              fit: BoxFit.scaleDown,
-                              child: Transform.translate(
-                                offset: const Offset(0, -1.5),
-                                child: Text(
-                                  _getInitials(widget.accountHolderName),
-                                  style: AppTextStyles.getText3(context).copyWith(
-                                    fontWeight: FontWeight.bold,
-                                    color: AppColors.whiteText,
-                                    height: 1.0,
-                                  ),
-                                  textAlign: TextAlign.center,
-                                  textHeightBehavior: const TextHeightBehavior(
-                                    applyHeightToFirstAscent: false,
-                                    applyHeightToLastDescent: false,
-                                  ),
-                                ),
-                              ),
-                            ),
-                          )
-                              : CircleAvatar(
-                            radius: 12.r,
-                            backgroundColor: AppColors.main.withOpacity(0.55),
-                            backgroundImage: AssetImage(widget.doctorImage),
-                          );
-                          final showReason = isUser && !firstUserMessageFound;
-                          if (showReason) firstUserMessageFound = true;
-                          final isArabic = _isArabicText(content);
-
-                          // 🗓️ تحديد إذا كنا نحتاج إظهار فاصل اليوم
-                          DateTime? currentDate = time != null ? DateTime(time.year, time.month, time.day) : null;
-                          DateTime? previousDate;
-                          if (index > 0) {
-                            final previousTimestamp = (messages[index - 1].data() as Map<String, dynamic>)['timestamp'] as Timestamp?;
-                            final previousTime = previousTimestamp?.toDate();
-                            if (previousTime != null) {
-                              previousDate = DateTime(previousTime.year, previousTime.month, previousTime.day);
-                            }
-                          }
-
-                          final showDateDivider = currentDate != null && currentDate != previousDate;
-                          return Padding(
-                            padding: EdgeInsets.only(bottom: 12.h),
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.center,
-                              children: [
-                                if (showDateDivider && time != null) ...[
-                                  Padding(
-                                    padding: EdgeInsets.symmetric(vertical: 10.h),
-                                    child: Row(
-                                      children: [
-                                        Expanded(child: Divider(color: Colors.grey.shade300, thickness: 1)),
-                                        Padding(
-                                          padding: EdgeInsets.symmetric(horizontal: 8.w),
-                                          child: Text(
-                                            _getDayLabel(time, lang),
-                                            style: AppTextStyles.getText3(context).copyWith(
-                                              fontSize: 11.sp,
-                                              color: Colors.black54,
+                              return Padding(
+                                padding: EdgeInsets.only(bottom: 12.h),
+                                child: Align(
+                                  alignment: Alignment.centerRight,
+                                  child: Stack(
+                                    clipBehavior: Clip.none,
+                                    children: [
+                                      Container(
+                                        constraints: BoxConstraints(maxWidth: 0.6.sw),
+                                        decoration: BoxDecoration(
+                                          color: Colors.transparent,
+                                          borderRadius: BorderRadius.circular(12.r),
+                                        ),
+                                        child: pending.type == 'image'
+                                            ? isSingle
+                                            ? ShimmerWidget(width: 0.5.sw, height: 0.5.sw, radius: 12.r)
+                                            : GridView.builder(
+                                          shrinkWrap: true,
+                                          physics: NeverScrollableScrollPhysics(),
+                                          itemCount: pending.files.length.clamp(1, 4),
+                                          gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                                            crossAxisCount: 2,
+                                            crossAxisSpacing: 6.w,
+                                            mainAxisSpacing: 6.h,
+                                          ),
+                                          itemBuilder: (_, i) => ShimmerWidget(
+                                            width: 120.w,
+                                            height: 120.w,
+                                            radius: 10.r,
+                                          ),
+                                        )
+                                            : ShimmerWidget(width: 0.7.sw, height: 60.h, radius: 10.r),
+                                      ),
+                                      Positioned(
+                                        top: 4.h,
+                                        right: -16.w,
+                                        child: CircleAvatar(
+                                          radius: 6.r,
+                                          backgroundColor: AppColors.main.withOpacity(0.9),
+                                          child: FittedBox(
+                                            fit: BoxFit.scaleDown,
+                                            child: Transform.translate(
+                                              offset: const Offset(0, -1.5),
+                                              child: Text(
+                                                _getInitials(widget.accountHolderName),
+                                                style: AppTextStyles.getText3(context).copyWith(
+                                                  fontWeight: FontWeight.bold,
+                                                  color: AppColors.whiteText,
+                                                  fontSize: 7.sp,
+                                                  height: 1.0,
+                                                ),
+                                                textAlign: TextAlign.center,
+                                              ),
                                             ),
                                           ),
                                         ),
-                                        Expanded(child: Divider(color: Colors.grey.shade300, thickness: 1)),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                              );
+
+                            }
+
+                            // ✅ الرسائل الحقيقية (نفس الكود السابق لديك كما هو)
+                            final msg = messages[index].data() as Map<String, dynamic>;
+                            final isUser = msg['isUser'] ?? false;
+                            final content = msg['text'] ?? '';
+                            final attachments = (msg['attachments'] as List?)?.cast<Map<String, dynamic>>() ?? [];
+                            final timestamp = msg['timestamp'] as Timestamp?;
+                            final time = timestamp?.toDate();
+                            final readByDoctorAt = (msg['readByDoctorAt'] as Timestamp?)?.toDate();
+                            final bool isReadByDoctor = isUser && (msg['readByDoctor'] == true);
+                            final bool isLastRead = isReadByDoctor && (index == messages.length - 1);
+                            bool showSenderName = true;
+                            if (index > 0) {
+                              final prev = messages[index - 1].data() as Map<String, dynamic>;
+                              final prevSender = prev['isUser'] ?? false;
+                              if (prevSender == isUser) {
+                                showSenderName = false;
+                              }
+                            }
+
+                            final avatar = isUser
+                                ? CircleAvatar(
+                              radius: 12.r,
+                              backgroundColor: AppColors.whiteText.withOpacity(0.6),
+                              child: FittedBox(
+                                fit: BoxFit.scaleDown,
+                                child: Transform.translate(
+                                  offset: const Offset(0, -1.5),
+                                  child: Text(
+                                    _getInitials(widget.accountHolderName),
+                                    style: AppTextStyles.getText3(context).copyWith(
+                                      fontWeight: FontWeight.bold,
+                                      color: AppColors.main,
+                                      height: 1.0,
+                                    ),
+                                    textAlign: TextAlign.center,
+                                    textHeightBehavior: const TextHeightBehavior(
+                                      applyHeightToFirstAscent: false,
+                                      applyHeightToLastDescent: false,
+                                    ),
+                                  ),
+                                ),
+                              ),
+                            )
+                                : CircleAvatar(
+                              radius: 12.r,
+                              backgroundColor: AppColors.main.withOpacity(0.55),
+                              backgroundImage: AssetImage(widget.doctorImage),
+                            );
+
+                            final avatar2 = isUser
+                                ? CircleAvatar(
+                              radius: 6.r,
+                              backgroundColor: AppColors.main.withOpacity(0.8),
+                              child: FittedBox(
+                                fit: BoxFit.scaleDown,
+                                child: Transform.translate(
+                                  offset: const Offset(0, -1.5),
+                                  child: Text(
+                                    _getInitials(widget.accountHolderName),
+                                    style: AppTextStyles.getText3(context).copyWith(
+                                      fontWeight: FontWeight.bold,
+                                      color: AppColors.whiteText,
+                                      height: 1.0,
+                                    ),
+                                    textAlign: TextAlign.center,
+                                    textHeightBehavior: const TextHeightBehavior(
+                                      applyHeightToFirstAscent: false,
+                                      applyHeightToLastDescent: false,
+                                    ),
+                                  ),
+                                ),
+                              ),
+                            )
+                                : CircleAvatar(
+                              radius: 12.r,
+                              backgroundColor: AppColors.main.withOpacity(0.55),
+                              backgroundImage: AssetImage(widget.doctorImage),
+                            );
+
+                            final showReason = isUser && !firstUserMessageFound;
+                            if (showReason) firstUserMessageFound = true;
+                            final isArabic = _isArabicText(content);
+
+                            DateTime? currentDate = time != null ? DateTime(time.year, time.month, time.day) : null;
+                            DateTime? previousDate;
+                            if (index > 0) {
+                              final previousTimestamp = (messages[index - 1].data() as Map<String, dynamic>)['timestamp'] as Timestamp?;
+                              final previousTime = previousTimestamp?.toDate();
+                              if (previousTime != null) {
+                                previousDate = DateTime(previousTime.year, previousTime.month, previousTime.day);
+                              }
+                            }
+                            final showDateDivider = currentDate != null && currentDate != previousDate;
+
+                            return Padding(
+                              padding: EdgeInsets.only(bottom: 12.h),
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.center,
+                                children: [
+                                  if (showDateDivider && time != null) ...[
+                                    Padding(
+                                      padding: EdgeInsets.symmetric(vertical: 10.h),
+                                      child: Row(
+                                        children: [
+                                          Expanded(child: Divider(color: Colors.grey.shade300, thickness: 1)),
+                                          Padding(
+                                            padding: EdgeInsets.symmetric(horizontal: 8.w),
+                                            child: Text(
+                                              _getDayLabel(time, lang),
+                                              style: AppTextStyles.getText3(context).copyWith(
+                                                fontSize: 11.sp,
+                                                color: Colors.black54,
+                                              ),
+                                            ),
+                                          ),
+                                          Expanded(child: Divider(color: Colors.grey.shade300, thickness: 1)),
+                                        ],
+                                      ),
+                                    ),
+                                  ],
+                                  Align(
+                                    alignment: isUser ? Alignment.centerRight : Alignment.centerLeft,
+                                    child: Column(
+                                      crossAxisAlignment: isUser ? CrossAxisAlignment.start : CrossAxisAlignment.end,
+                                      children: [
+                                        Align(
+                                          alignment: isUser ? Alignment.centerRight : Alignment.centerLeft,
+                                          child: Column(
+                                            crossAxisAlignment: isUser ? CrossAxisAlignment.start : CrossAxisAlignment.end,
+                                            children: [
+                                              if (content.trim().isNotEmpty)
+                                                _buildTextBubble(content, attachments, isUser, avatar, showReason, time, isArabic, showSenderName: showSenderName),
+
+                                              if (attachments.isNotEmpty)
+                                                Padding(
+                                                  padding: EdgeInsets.only(top: 6.h),
+                                                  child: _buildAttachmentBubble(attachments, isUser, avatar2, time, showSenderName: showSenderName),
+                                                ),
+
+                                              if (isLastRead) ...[
+                                                SizedBox(height: 4.h),
+                                                Align(
+                                                  alignment: lang == 'ar' ? Alignment.centerRight : Alignment.centerLeft,
+                                                  child: Row(
+                                                    mainAxisSize: MainAxisSize.min,
+                                                    children: [
+                                                      CircleAvatar(
+                                                        radius: 7.r,
+                                                        backgroundImage: AssetImage(widget.doctorImage),
+                                                        backgroundColor: AppColors.main.withOpacity(0.5),
+                                                      ),
+                                                      SizedBox(width: 4.w),
+                                                      Text(
+                                                        '${local.read} • ${_formatReadTime(readByDoctorAt, lang)}',
+                                                        style: AppTextStyles.getText3(context).copyWith(fontSize: 9.sp, color: Colors.grey),
+                                                      ),
+                                                    ],
+                                                  ),
+                                                ),
+                                              ],
+                                            ],
+                                          ),
+                                        ),
                                       ],
                                     ),
                                   ),
                                 ],
-                                Align(
-                                  alignment: isUser ? Alignment.centerRight : Alignment.centerLeft,
-                                  child: Column(
-                                    crossAxisAlignment: isUser ? CrossAxisAlignment.start : CrossAxisAlignment.end,
-                                    children: [
-                                      Align(
-                                        alignment: isUser ? Alignment.centerRight : Alignment.centerLeft,
-                                        child: Column(
-                                          crossAxisAlignment: isUser ? CrossAxisAlignment.start : CrossAxisAlignment.end,
-                                          children: [
-                                            if (content.trim().isNotEmpty)
-                                              _buildTextBubble(content, attachments, isUser, avatar, showReason, time, isArabic),
-
-                                            if (attachments.isNotEmpty)
-                                              Padding(
-                                                padding: EdgeInsets.only(top: 6.h),
-                                                child: _buildAttachmentBubble(attachments, isUser, avatar2, time, showSenderName: content.trim().isEmpty &&
-                                                    (index == 0 || messages[index - 1]['isUser'] != isUser)),
-                                              ),
-
-                                            if (isLastRead) ...[
-                                              SizedBox(height: 4.h,),
-                                              Align(
-                                                alignment: lang == 'ar' ? Alignment.centerRight : Alignment.centerLeft,
-                                                child: Row(
-                                                  mainAxisSize: MainAxisSize.min,
-                                                  children: [
-                                                    CircleAvatar(
-                                                      radius: 7.r,
-                                                      backgroundImage: AssetImage(widget.doctorImage),
-                                                      backgroundColor: AppColors.main.withOpacity(0.5),
-                                                    ),
-                                                    SizedBox(width: 4.w),
-                                                    Text(
-                                                      '${local.read} • ${_formatReadTime(readByDoctorAt, lang)}',
-                                                      style: AppTextStyles.getText3(context).copyWith(fontSize: 9.sp, color: Colors.grey),
-                                                    ),
-                                                  ],
-                                                ),
-                                              ),
-                                            ],                                          ],
-                                        ),
-                                      ),
-
-                                    ],
-                                  ),
-                                ),
-                              ],
-                            ),
-                          );
-
-                        },
-                      ),
+                              ),
+                            );
+                          },
+                        )
                     ),
-                    if (!widget.isClosed && doctorHasReplied && _selectedImageFiles.isNotEmpty)
+                    if (!widget.isClosed && doctorHasReplied && _selectedImageFiles.isNotEmpty && _pendingMessages.isEmpty)
                       Positioned(
                         bottom: 55.h,
                         left: 0,
@@ -1367,6 +1708,41 @@ class _ConversationPageState extends State<ConversationPage> {
                         right: 0,
                         child: _buildWaitingDoctorReply(context),
                       ),
+
+                    Positioned(
+                      bottom: (_selectedImageFiles.isNotEmpty || _pendingMessages.isNotEmpty) ? 150.h : 70.h,
+                      left: 0,
+                      right: 0,
+                      child: AnimatedOpacity(
+                        duration: Duration(milliseconds: 200),
+                        opacity: _showScrollToBottom ? 1 : 0,
+                        child: Visibility(
+                          visible: _showScrollToBottom,
+                          child: Center(
+                            child: GestureDetector(
+                              onTap: () {
+                                _scrollController.animateTo(
+                                  _scrollController.position.maxScrollExtent,
+                                  duration: Duration(milliseconds: 300),
+                                  curve: Curves.easeOut,
+                                );
+                              },
+                              child: Container(
+                                width: 26.w,
+                                height: 26.w,
+                                decoration: BoxDecoration(
+                                  shape: BoxShape.circle,
+                                  color: AppColors.main.withOpacity(0.3),
+                                  border: Border.all(color: AppColors.main, width: 1.w),
+                                ),
+                                child: Icon(Icons.keyboard_arrow_down_rounded, color: AppColors.main, size: 20.sp),
+                              ),
+                            ),
+                          ),
+                        ),
+                      ),
+                    ),
+
                   ],
                 );
               },
@@ -1399,7 +1775,7 @@ class _ConversationPageState extends State<ConversationPage> {
                 ),
               ),
 
-            if (isForRelative)
+            if (isForRelative && !widget.isClosed)
               ClipRect(
                 child: BackdropFilter(
                   filter: ImageFilter.blur(sigmaX: 20, sigmaY: 20),
@@ -1493,314 +1869,528 @@ class _ConversationPageState extends State<ConversationPage> {
                   ),),),
             if (_expandedImageOverlay)
               Positioned.fill(
-                child: Container(
-                  color: Colors.black.withOpacity(0.85),
-                  child: SafeArea(
-                    child: Column(
-                      children: [
-                        Padding(
-                          padding: EdgeInsets.symmetric(horizontal: 12.w, vertical: 10.h),
-                          child: Stack(
-                            alignment: Alignment.center,
-                            children: [
-                              // زر الإغلاق (يسار في العربية)
-                              Align(
-                                alignment: lang == 'ar' ? Alignment.centerRight : Alignment.centerLeft,
-                                child: ClipRRect(
-                                  borderRadius: BorderRadius.circular(24.r),
-                                  child: BackdropFilter(
-                                    filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
-                                    child: Container(
-                                      padding: EdgeInsets.symmetric(horizontal: 4.w),
-                                      decoration: BoxDecoration(
-                                        color: Colors.white.withOpacity(0.1),
-                                        borderRadius: BorderRadius.circular(24.r),
-                                      ),
-                                      child: IconButton(
-                                        icon: Icon(Icons.close, color: Colors.white, size: 18.sp),
-                                        onPressed: _hideImageOverlay,
+                child: GestureDetector(
+                  behavior: HitTestBehavior.translucent,
+                  onTap: () {
+                    if (_showImageDownloadOptions) {
+                      setState(() => _showImageDownloadOptions = false);
+                    }
+                  },
+                  child: Container(
+                    color: Colors.black.withOpacity(0.85),
+                    child: SafeArea(
+                      child: Column(
+                        children: [
+                          Padding(
+                            padding: EdgeInsets.symmetric(horizontal: 12.w, vertical: 10.h),
+                            child: Stack(
+                              alignment: Alignment.center,
+                              children: [
+                                // زر الإغلاق (يسار في العربية)
+                                Align(
+                                  alignment: lang == 'ar' ? Alignment.centerRight : Alignment.centerLeft,
+                                  child: ClipRRect(
+                                    borderRadius: BorderRadius.circular(24.r),
+                                    child: BackdropFilter(
+                                      filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
+                                      child: Container(
+                                        padding: EdgeInsets.symmetric(horizontal: 4.w),
+                                        decoration: BoxDecoration(
+                                          color: Colors.white.withOpacity(0.1),
+                                          borderRadius: BorderRadius.circular(24.r),
+                                        ),
+                                        child: IconButton(
+                                          icon: Icon(Icons.close, color: Colors.white, size: 18.sp),
+                                          onPressed: _hideImageOverlay,
+                                        ),
                                       ),
                                     ),
                                   ),
                                 ),
-                              ),
 
-                              // النص في الوسط
-                              if (!_showAsGrid)
-                                Align(
-                                  alignment: Alignment.center,
-                                  child: Text(
-                                    '${_initialImageIndex + 1} ${AppLocalizations.of(context)!.ofText} ${_expandedImageUrls.length}',
-                                    style: AppTextStyles.getText1(context).copyWith(color: Colors.white),
+                                // النص في الوسط
+                                if (!_showAsGrid && !_showImageDownloadOptions)
+                                  Align(
+                                    alignment: Alignment.center,
+                                    child: Text(
+                                      '${_initialImageIndex + 1} ${AppLocalizations.of(context)!.ofText} ${_expandedImageUrls.length}',
+                                      style: AppTextStyles.getText1(context).copyWith(color: Colors.white),
+                                    ),
                                   ),
-                                ),
 
-                              // الأزرار الجانبية (يمين في العربية)
-                              Align(
-                                alignment: lang == 'ar' ? Alignment.centerLeft : Alignment.centerRight,
-                                child: Row(
-                                  mainAxisSize: MainAxisSize.min,
-                                  children: [
-                                    if (!_showAsGrid)
-                                      ClipRRect(
-                                        borderRadius: BorderRadius.circular(24.r),
-                                        child: BackdropFilter(
-                                          filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
-                                          child: Container(
-                                            padding: EdgeInsets.symmetric(horizontal: 4.w),
-                                            decoration: BoxDecoration(
-                                              color: Colors.white.withOpacity(0.1),
-                                              borderRadius: BorderRadius.circular(24.r),
-                                            ),
-                                            child:IconButton(
-                                              icon: _isDownloadingSingle
-                                                  ? SizedBox(
-                                                width: 16.sp,
-                                                height: 16.sp,
-                                                child: CircularProgressIndicator(
-                                                  color: Colors.white,
-                                                  strokeWidth: 2,
-                                                ),
-                                              )
-                                                  : Icon(Icons.download, color: Colors.white, size: 16.sp),
-                                              onPressed: _isDownloadingSingle
-                                                  ? null
-                                                  : () async {
-                                                setState(() => _isDownloadingSingle = true);
-                                                try {
-                                                  final url = _expandedImageUrls[_initialImageIndex];
-                                                  await GallerySaver.saveImage(url);
-                                                  ScaffoldMessenger.of(context).showSnackBar(
-                                                    SnackBar(
-                                                      content: Text(AppLocalizations.of(context)!.downloadCompleted),
-                                                      backgroundColor: AppColors.main.withOpacity(0.9),
-                                                    ),
-                                                  );
-                                                } catch (_) {
-                                                  ScaffoldMessenger.of(context).showSnackBar(
-                                                    SnackBar(
-                                                      content: Text(AppLocalizations.of(context)!.downloadFailed),
-                                                      backgroundColor: AppColors.red.withOpacity(0.9),
-                                                    ),
-                                                  );
-                                                } finally {
-                                                  if (mounted) setState(() => _isDownloadingSingle = false);
-                                                }
-                                              },
+                                // الأزرار الجانبية (يمين في العربية)
+                                Align(
+                                  alignment: lang == 'ar' ? Alignment.centerLeft : Alignment.centerRight,
+                                  child: Row(
+                                    mainAxisSize: MainAxisSize.min,
+                                    children: [
+                                      if (!_showAsGrid)
+                                        Align(
+                                          alignment: Alignment.bottomRight,
+                                          child: AnimatedSwitcher(
+                                            duration: const Duration(milliseconds: 250),
+                                            child: _showImageDownloadOptions
+                                                ? Container(
+                                              key: const ValueKey('expanded'),
+                                              padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 12.h),
+                                              decoration: BoxDecoration(
+                                                color: Colors.white.withOpacity(0.15),
+                                                borderRadius: BorderRadius.circular(24.r),
+                                              ),
+                                              child: Row(
+                                                mainAxisSize: MainAxisSize.min,
+                                                children: [
+                                                  Tooltip(
+                                                    message: AppLocalizations.of(context)!.addToDocuments,
+                                                    waitDuration: const Duration(milliseconds: 500),
+                                                    child: StatefulBuilder(
+                                                      builder: (context, setLocalState) {
+                                                        return GestureDetector(
+                                                          onTap: _isProcessingAddToDocument
+                                                              ? null
+                                                              : () {
+                                                            print('>>> Add single to document pressed');
+                                                            setLocalState(() => _isProcessingAddToDocument = true);
 
+                                                            Future.delayed(Duration(milliseconds: 50), () async {
+                                                              final imageUrl = _expandedImageUrls[_initialImageIndex];
+                                                              final localPath = await _downloadAndGetLocalPath(imageUrl);
+
+                                                              if (!context.mounted) return;
+
+                                                              setLocalState(() => _isProcessingAddToDocument = false);
+                                                              print('>>> Navigating with: $localPath');
+
+                                                              _navigateToDocumentInfoPage([localPath]);
+                                                            });
+                                                          },
+                                                          child: _isProcessingAddToDocument
+                                                              ? SizedBox(
+                                                            width: 18.sp,
+                                                            height: 18.sp,
+                                                            child: CircularProgressIndicator(
+                                                              color: Colors.white,
+                                                              strokeWidth: 2,
+                                                            ),
+                                                          )
+                                                              : SvgPicture.asset(
+                                                            'assets/icons/add2document_white.svg',
+                                                            width: 22.sp,
+                                                            height: 22.sp,
+                                                            color: Colors.white,
+                                                          ),
+                                                        );
+                                                      },
+                                                    ),
+                                                  ),
+
+                                                  SizedBox(width: 20.w),
+                                                  /// زر "الحفظ" لصورة واحدة
+                                                  Tooltip(
+                                                    message: AppLocalizations.of(context)!.save,
+                                                    waitDuration: const Duration(milliseconds: 500),
+                                                    child: StatefulBuilder(
+                                                      builder: (context, setLocalState) {
+                                                        return GestureDetector(
+                                                          onTap: _isProcessingSave
+                                                              ? null
+                                                              : () {
+                                                            print('>>> Save single image pressed');
+                                                            setLocalState(() => _isProcessingSave = true);
+
+                                                            Future.delayed(Duration(milliseconds: 50), () async {
+                                                              try {
+                                                                final url = _expandedImageUrls[_initialImageIndex];
+                                                                await GallerySaver.saveImage(url);
+
+                                                                if (!context.mounted) return;
+
+                                                                ScaffoldMessenger.of(context).showSnackBar(
+                                                                  SnackBar(
+                                                                    content: Text(AppLocalizations.of(context)!.downloadCompleted),
+                                                                    backgroundColor: AppColors.main.withOpacity(0.9),
+                                                                  ),
+                                                                );
+                                                              } catch (_) {
+                                                                if (context.mounted) {
+                                                                  ScaffoldMessenger.of(context).showSnackBar(
+                                                                    SnackBar(
+                                                                      content: Text(AppLocalizations.of(context)!.downloadFailed),
+                                                                      backgroundColor: AppColors.red.withOpacity(0.9),
+                                                                    ),
+                                                                  );
+                                                                }
+                                                              } finally {
+                                                                if (context.mounted) {
+                                                                  setLocalState(() => _isProcessingSave = false);
+                                                                }
+                                                              }
+                                                            });
+                                                          },
+                                                          child: _isProcessingSave
+                                                              ? SizedBox(
+                                                            width: 18.sp,
+                                                            height: 18.sp,
+                                                            child: CircularProgressIndicator(
+                                                              color: Colors.white,
+                                                              strokeWidth: 2,
+                                                            ),
+                                                          )
+                                                              : Icon(Icons.save_alt, color: Colors.white, size: 22.sp),
+                                                        );
+                                                      },
+                                                    ),
+                                                  ),
+
+                                                ],
+                                              ),
                                             )
-
-
-                                          ),
-                                        ),
-                                      ),
-                                    if (!_showAsGrid) ...[
-                                      SizedBox(width: 6.w),
-                                      ClipRRect(
-                                        borderRadius: BorderRadius.circular(24.r),
-                                        child: BackdropFilter(
-                                          filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
-                                          child: Container(
-                                            padding: EdgeInsets.symmetric(horizontal: 4.w),
-                                            decoration: BoxDecoration(
-                                              color: Colors.white.withOpacity(0.1),
-                                              borderRadius: BorderRadius.circular(24.r),
-                                            ),
-                                            child: IconButton(
-                                              icon: Icon(Icons.grid_view, color: Colors.white, size: 16.sp),
-                                              onPressed: () {
-                                                setState(() {
-                                                  _showAsGrid = true;
-                                                });
+                                                : GestureDetector(
+                                              key: const ValueKey('collapsed'),
+                                              onTap: () {
+                                                setState(() => _showImageDownloadOptions = true);
                                               },
+                                              child: Container(
+                                                padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 10.h),
+                                                decoration: BoxDecoration(
+                                                  color: Colors.white.withOpacity(0.15),
+                                                  borderRadius: BorderRadius.circular(24.r),
+                                                ),
+                                                child: Column(
+                                                  mainAxisSize: MainAxisSize.min,
+                                                  children: [
+                                                    Icon(Icons.download, color: Colors.white, size: 14.sp),
+                                                    SizedBox(width: 6.w),
+                                                    Text(
+                                                      AppLocalizations.of(context)!.download,
+                                                      style: TextStyle(color: Colors.white, fontSize: 9.sp),
+                                                    ),
+                                                  ],
+                                                ),
+                                              ),
                                             ),
                                           ),
                                         ),
-                                      ),
-                                    ],
-                                    if (_showAsGrid) ...[
-                                      SizedBox(width: 6.w),
-                                      GestureDetector(
-                                        onTap: _isDownloadingAll
-                                            ? null
-                                            : () async {
-                                          setState(() => _isDownloadingAll = true);
-                                          try {
-                                            for (final url in _expandedImageUrls) {
-                                              await GallerySaver.saveImage(url);
-                                            }
-                                            ScaffoldMessenger.of(context).showSnackBar(
-                                              SnackBar(
-                                                content: Text('${_expandedImageUrls.length} ${AppLocalizations.of(context)!.imagesDownloadedSuccessfully}'),
-                                                backgroundColor: AppColors.main.withOpacity(0.9),
-                                              ),
-                                            );
-                                          } catch (_) {
-                                            ScaffoldMessenger.of(context).showSnackBar(
-                                              SnackBar(
-                                                content: Text(AppLocalizations.of(context)!.imagesDownloadFailed),
-                                                backgroundColor: AppColors.red.withOpacity(0.9),
-                                              ),
-                                            );
-                                          } finally {
-                                            if (mounted) setState(() => _isDownloadingAll = false);
-                                          }
-                                        },
 
-                                        child: Container(
-                                          padding: EdgeInsets.symmetric(horizontal: 15.w, vertical: 12.h),
+
+
+                                      if (!_showAsGrid) ...[
+                                        SizedBox(width: 6.w),
+                                        ClipRRect(
+                                          borderRadius: BorderRadius.circular(24.r),
+                                          child: BackdropFilter(
+                                            filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
+                                            child: Container(
+                                              padding: EdgeInsets.symmetric(horizontal: 4.w),
+                                              decoration: BoxDecoration(
+                                                color: Colors.white.withOpacity(0.1),
+                                                borderRadius: BorderRadius.circular(24.r),
+                                              ),
+                                              child: IconButton(
+                                                icon: Icon(Icons.grid_view, color: Colors.white, size: 16.sp),
+                                                onPressed: () {
+                                                  setState(() {
+                                                    if (_showImageDownloadOptions) {
+                                                      setState(() => _showImageDownloadOptions = false);
+                                                    }
+                                                    _showAsGrid = true;
+                                                  });
+                                                },
+                                              ),
+                                            ),
+                                          ),
+                                        ),
+                                      ],
+                                      if (_showAsGrid) ...[
+                                        SizedBox(width: 6.w),
+                                        _showImageDownloadOptions
+                                            ? Container(
+                                          key: const ValueKey('expanded'),
+                                          padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 12.h),
                                           decoration: BoxDecoration(
-                                            color: Colors.white.withOpacity(0.1),
+                                            color: Colors.white.withOpacity(0.15),
                                             borderRadius: BorderRadius.circular(24.r),
                                           ),
                                           child: Row(
                                             mainAxisSize: MainAxisSize.min,
                                             children: [
-                                              _isDownloadingAll
-                                                  ? SizedBox(
-                                                width: 16.sp,
-                                                height: 16.sp,
-                                                child: CircularProgressIndicator(
-                                                  color: Colors.white,
-                                                  strokeWidth: 2,
+                                              Tooltip(
+                                                message: AppLocalizations.of(context)!.addToDocuments,
+                                                waitDuration: const Duration(milliseconds: 500),
+                                                child: StatefulBuilder(
+                                                  builder: (context, setLocalState) {
+                                                    return GestureDetector(
+                                                      onTap: _isProcessingAddToDocument
+                                                          ? null
+                                                          : () {
+                                                        print('>>> AddToDocument pressed');
+                                                        setLocalState(() => _isProcessingAddToDocument = true); // ✅ تحديث سريع
+
+                                                        Future.delayed(Duration(milliseconds: 50), () async {
+                                                          print('>>> Now performing download logic...');
+                                                          List<String> localPaths = [];
+                                                          for (final url in _expandedImageUrls) {
+                                                            final path = await _downloadAndGetLocalPath(url);
+                                                            localPaths.add(path);
+                                                          }
+
+                                                          if (!mounted) return;
+
+                                                          setLocalState(() => _isProcessingAddToDocument = false); // ✅ إيقاف اللودر
+                                                          print('>>> AddToDocument done, navigating...');
+                                                          _navigateToDocumentInfoPage(localPaths);
+                                                        });
+                                                      },
+                                                      child: _isProcessingAddToDocument
+                                                          ? SizedBox(
+                                                        width: 18.sp,
+                                                        height: 18.sp,
+                                                        child: CircularProgressIndicator(
+                                                          color: Colors.white,
+                                                          strokeWidth: 2,
+                                                        ),
+                                                      )
+                                                          : SvgPicture.asset(
+                                                        'assets/icons/add2document_white.svg',
+                                                        width: 22.sp,
+                                                        height: 22.sp,
+                                                        color: Colors.white,
+                                                      ),
+                                                    );
+                                                  },
+                                                )
+
+                                              ),
+
+                                              SizedBox(width: 20.w),
+
+                                              Tooltip(
+                                                message: AppLocalizations.of(context)!.save,
+                                                waitDuration: const Duration(milliseconds: 500),
+                                                child: StatefulBuilder(
+                                                  builder: (context, setLocalState) {
+                                                    return GestureDetector(
+                                                      onTap: _isProcessingSave
+                                                          ? null
+                                                          : () async {
+                                                        print('>>> Save pressed');
+                                                        setLocalState(() => _isProcessingSave = true);
+
+                                                        try {
+                                                          for (final url in _expandedImageUrls) {
+                                                            await GallerySaver.saveImage(url);
+                                                          }
+
+                                                          if (mounted) {
+                                                            ScaffoldMessenger.of(context).showSnackBar(
+                                                              SnackBar(
+                                                                content: Text(
+                                                                  '${_expandedImageUrls.length} ${AppLocalizations.of(context)!.imagesDownloadedSuccessfully}',
+                                                                ),
+                                                                backgroundColor: AppColors.main.withOpacity(0.9),
+                                                              ),
+                                                            );
+                                                          }
+                                                        } catch (_) {
+                                                          if (mounted) {
+                                                            ScaffoldMessenger.of(context).showSnackBar(
+                                                              SnackBar(
+                                                                content: Text(AppLocalizations.of(context)!.imagesDownloadFailed),
+                                                                backgroundColor: AppColors.red.withOpacity(0.9),
+                                                              ),
+                                                            );
+                                                          }
+                                                        } finally {
+                                                          if (mounted) {
+                                                            setLocalState(() => _isProcessingSave = false);
+                                                            setState(() => _showImageDownloadOptions = false);
+                                                          }
+                                                        }
+                                                      },
+                                                      child: _isProcessingSave
+                                                          ? SizedBox(
+                                                        width: 18.sp,
+                                                        height: 18.sp,
+                                                        child: CircularProgressIndicator(
+                                                          color: Colors.white,
+                                                          strokeWidth: 2,
+                                                        ),
+                                                      )
+                                                          : Icon(Icons.save_alt, color: Colors.white, size: 22.sp),
+                                                    );
+                                                  },
                                                 ),
                                               )
-                                                  : Icon(Icons.download, color: Colors.white, size: 16.sp),
-                                              SizedBox(width: 4.w),
-                                              Text(
-                                                AppLocalizations.of(context)!.downloadAll,
-                                                style: AppTextStyles.getText3(context).copyWith(
-                                                  color: Colors.white,
-                                                  fontSize: 10.sp,
-                                                ),
-                                              ),
                                             ],
                                           ),
-                                        ),
-                                      )                                    ],
-                                  ],
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                        Expanded(
-                          child: _showAsGrid
-                              ? GridView.builder(
-                            gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-                              crossAxisCount: 3,
-                              crossAxisSpacing: 8.w,
-                              mainAxisSpacing: 8.h,
-                            ),
-                            padding: EdgeInsets.all(16.w),
-                            itemCount: _expandedImageUrls.length,
-                            itemBuilder: (context, index) {
-                              final url = _expandedImageUrls[index];
-                              return GestureDetector(
-                                onTap: () {
-                                  setState(() {
-                                    _initialImageIndex = index;
-                                    _showAsGrid = false;
-                                  });
-                                },
-                                child: ClipRRect(
-                                  borderRadius: BorderRadius.circular(12.r),
-                                  child: _imageCache.containsKey(url)
-                                      ? Image(image: _imageCache[url]!, fit: BoxFit.cover)
-                                      : FadeInImage(
-                                    placeholder: MemoryImage(kTransparentImage),
-                                    image: CachedNetworkImageProvider(url),
-                                    fadeInDuration: const Duration(milliseconds: 100),
-                                    fit: BoxFit.cover,
-                                    placeholderFit: BoxFit.cover,
-                                    imageErrorBuilder: (_, __, ___) => const Icon(Icons.error),
-                                  )
-
-                                ),
-                              );
-                            },
-                          )
-                              : PageView.builder(
-                            controller: PageController(initialPage: _initialImageIndex),
-                            physics: _isZoomed ? const NeverScrollableScrollPhysics() : null,
-                            onPageChanged: (index) {
-                              setState(() {
-                                _initialImageIndex = index;
-                                _transformationController.value = Matrix4.identity(); // تصفير عند التبديل
-                                _isZoomed = false;
-                              });
-                            },
-                            itemCount: _expandedImageUrls.length,
-                            itemBuilder: (_, index) {
-                              final url = _expandedImageUrls[index];
-                              return LayoutBuilder(
-                                  builder: (context, constraints) {
-                                  return GestureDetector(
-                                    onDoubleTapDown: (details) {
-                                      _doubleTapPosition = details.localPosition;
-                                    },
-                                    onDoubleTap: () {
-                                      final zoomed =  _transformationController.value != Matrix4.identity();
-
-                                      if (zoomed) {
-                                        _transformationController.value = Matrix4.identity();
-                                      } else {
-                                        final tap = _doubleTapPosition;
-                                        final scale = 2.5;
-
-                                        final x = -tap.dx * (scale - 1);
-                                        final y = -tap.dy * (scale - 1);
-
-                                        _transformationController.value = Matrix4.identity()
-                                          ..translate(x, y)
-                                          ..scale(scale);
-                                      }
-                                    },
-                                    child: InteractiveViewer(
-                                      transformationController: _transformationController,
-                                      minScale: 1,
-                                      maxScale: 4,
-                                      onInteractionUpdate: (details) {
-                                        final scale = _transformationController.value.getMaxScaleOnAxis();
-                                        if (mounted) {
-                                          setState(() {
-                                            _isZoomed = scale > 1.0;
-                                          });
-                                        }
-                                      },
-                                      onInteractionEnd: (details) {
-                                        final scale = _transformationController.value.getMaxScaleOnAxis();
-                                        if (mounted) {
-                                          setState(() {
-                                            _isZoomed = scale > 1.0;
-                                          });
-                                        }
-                                      },
-
-                                      child: Center(
-                                        child: _imageCache.containsKey(url)
-                                            ? Image(image: _imageCache[url]!, fit: BoxFit.cover)
-                                            : FadeInImage(
-                                          placeholder: MemoryImage(kTransparentImage),
-                                          image: CachedNetworkImageProvider(url),
-                                          fadeInDuration: const Duration(milliseconds: 100),
-                                          fit: BoxFit.cover,
-                                          placeholderFit: BoxFit.cover,
-                                          imageErrorBuilder: (_, __, ___) => const Icon(Icons.error),
                                         )
+                                            : GestureDetector(
+                                          key: const ValueKey('collapsed'),
+                                          onTap: () {
+                                            setState(() => _showImageDownloadOptions = true);
+                                          },
+                                          child: Container(
+                                            padding: EdgeInsets.symmetric(horizontal: 14.w, vertical: 15.h),
+                                            decoration: BoxDecoration(
+                                              color: Colors.white.withOpacity(0.1),
+                                              borderRadius: BorderRadius.circular(24.r),
+                                            ),
+                                            child: Row(
+                                              mainAxisSize: MainAxisSize.min,
+                                              children: [
+                                                _isDownloadingAll
+                                                    ? SizedBox(
+                                                  width: 16.sp,
+                                                  height: 16.sp,
+                                                  child: CircularProgressIndicator(
+                                                    color: Colors.white,
+                                                    strokeWidth: 2,
+                                                  ),
+                                                )
+                                                    : Icon(Icons.download, color: Colors.white, size: 16.sp),
+                                                SizedBox(width: 4.w),
+                                                Text(
+                                                  AppLocalizations.of(context)!.downloadAll,
+                                                  style: AppTextStyles.getText3(context).copyWith(
+                                                    color: Colors.white,
+                                                    fontSize: 10.sp,
+                                                  ),
+                                                ),
+                                              ],
+                                            ),
+                                          ),
+                                        )
+                                      ],
+                                    ],
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                          Expanded(
+                            child: _showAsGrid
+                                ? GridView.builder(
+                              gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                                crossAxisCount: 3,
+                                crossAxisSpacing: 8.w,
+                                mainAxisSpacing: 8.h,
+                              ),
+                              padding: EdgeInsets.all(16.w),
+                              itemCount: _expandedImageUrls.length,
+                              itemBuilder: (context, index) {
+                                final url = _expandedImageUrls[index];
+                                return GestureDetector(
+                                  onTap: () {
+                                    setState(() {
+                                      if (_showImageDownloadOptions) {
+                                        setState(() => _showImageDownloadOptions = false);
+                                      }
+                                      _initialImageIndex = index;
+                                      _showAsGrid = false;
+                                    });
+                                  },
+                                  child: ClipRRect(
+                                    borderRadius: BorderRadius.circular(12.r),
+                                    child: _imageCache.containsKey(url)
+                                        ? Image(image: _imageCache[url]!, fit: BoxFit.cover)
+                                        : FadeInImage(
+                                      placeholder: MemoryImage(kTransparentImage),
+                                      image: CachedNetworkImageProvider(url),
+                                      fadeInDuration: const Duration(milliseconds: 100),
+                                      fit: BoxFit.cover,
+                                      placeholderFit: BoxFit.cover,
+                                      imageErrorBuilder: (_, __, ___) => const Icon(Icons.error),
+                                    )
 
+                                  ),
+                                );
+                              },
+                            )
+                                : PageView.builder(
+                              controller: PageController(initialPage: _initialImageIndex),
+                              physics: _isZoomed ? const NeverScrollableScrollPhysics() : null,
+                              onPageChanged: (index) {
+                                setState(() {
+                                  if (_showImageDownloadOptions) {
+                                    setState(() => _showImageDownloadOptions = false);
+                                  }
+                                  _initialImageIndex = index;
+                                  _transformationController.value = Matrix4.identity(); // تصفير عند التبديل
+                                  _isZoomed = false;
+                                });
+                              },
+                              itemCount: _expandedImageUrls.length,
+                              itemBuilder: (_, index) {
+                                final url = _expandedImageUrls[index];
+                                return LayoutBuilder(
+                                    builder: (context, constraints) {
+                                    return GestureDetector(
+                                      onDoubleTapDown: (details) {
+                                        _doubleTapPosition = details.localPosition;
+                                      },
+                                      onDoubleTap: () {
+                                        final zoomed =  _transformationController.value != Matrix4.identity();
+
+                                        if (zoomed) {
+                                          _transformationController.value = Matrix4.identity();
+                                        } else {
+                                          final tap = _doubleTapPosition;
+                                          final scale = 2.5;
+
+                                          final x = -tap.dx * (scale - 1);
+                                          final y = -tap.dy * (scale - 1);
+
+                                          _transformationController.value = Matrix4.identity()
+                                            ..translate(x, y)
+                                            ..scale(scale);
+                                        }
+                                      },
+                                      child: InteractiveViewer(
+                                        transformationController: _transformationController,
+                                        minScale: 1,
+                                        maxScale: 4,
+                                        onInteractionUpdate: (details) {
+                                          final scale = _transformationController.value.getMaxScaleOnAxis();
+                                          if (mounted) {
+                                            setState(() {
+                                              _isZoomed = scale > 1.0;
+                                            });
+                                          }
+                                        },
+                                        onInteractionEnd: (details) {
+                                          final scale = _transformationController.value.getMaxScaleOnAxis();
+                                          if (mounted) {
+                                            setState(() {
+                                              _isZoomed = scale > 1.0;
+                                            });
+                                          }
+                                        },
+
+                                        child: Center(
+                                          child: _imageCache.containsKey(url)
+                                              ? Image(image: _imageCache[url]!, fit: BoxFit.cover)
+                                              : FadeInImage(
+                                            placeholder: MemoryImage(kTransparentImage),
+                                            image: CachedNetworkImageProvider(url),
+                                            fadeInDuration: const Duration(milliseconds: 100),
+                                            fit: BoxFit.cover,
+                                            placeholderFit: BoxFit.cover,
+                                            imageErrorBuilder: (_, __, ___) => const Icon(Icons.error),
+                                          )
+
+                                        ),
                                       ),
-                                    ),
-                                  );
-                                }
-                              );
-                            },
+                                    );
+                                  }
+                                );
+                              },
+                            ),
+
+
                           ),
 
-
-                        ),
-
-                      ],
+                        ],
+                      ),
                     ),
                   ),
                 ),

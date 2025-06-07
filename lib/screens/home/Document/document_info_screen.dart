@@ -16,6 +16,9 @@ class DocumentInfoScreen extends StatefulWidget {
   final String? initialName; // ← أضف هذا
   final bool cameFromMultiPage;
   final int? pageCount;
+  final String? initialPatientId; // أضف هذا السطر
+  final bool cameFromConversation;
+  final String? conversationDoctorName;
 
   const DocumentInfoScreen({
     Key? key,
@@ -23,6 +26,10 @@ class DocumentInfoScreen extends StatefulWidget {
     this.initialName,
     this.pageCount,
     this.cameFromMultiPage = false,
+    this.initialPatientId,
+    this.cameFromConversation = false,
+    this.conversationDoctorName,
+
   }) : super(key: key);
 
 
@@ -334,7 +341,7 @@ class _DocumentInfoScreenState extends State<DocumentInfoScreen> {
       final List<String> uploadedUrls = [];
 
       final isPdf = widget.images.first.toLowerCase().endsWith('.pdf');
-      final fileType =  'pdf';
+      final fileType = isPdf ? 'pdf' : 'image';
       final docType = _selectedType ?? 'أخرى'; // التسمية الظاهرة للمستخدم
 
       for (int i = 0; i < widget.images.length; i++) {
@@ -378,6 +385,8 @@ class _DocumentInfoScreenState extends State<DocumentInfoScreen> {
             : uploadedUrls,
         uploadedAt: uploadedAt,
         uploadedById: userId,
+        cameFromConversation: widget.cameFromConversation,
+        conversationDoctorName: widget.conversationDoctorName,
       );
 
 

@@ -638,12 +638,15 @@
   "maxImagesReached": "8 صور حد أقصى.",
   "remaining": "باقي",
 
+  "addToDocuments": "إضافة إلى المستندات",
   "downloadAll": "تحميل الكل",
   "downloadCompleted": "تم تحميل الصورة بنجاح",
   "imagesDownloadedSuccessfully": "تم تحميل الصور بنجاح",
   "downloadFailed": "فشل تحميل الصورة",
   "imagesDownloadFailed": "فشل تحميل الصور",
-  "ofText": "من"
+  "ofText": "من",
+
+  "importedFromConversationWith": "تم الاستيراد من المحادثة مع {name} بتاريخ {date}"
 
 
 

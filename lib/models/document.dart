@@ -10,6 +10,8 @@ class UserDocument {
   final List<String> pages;
   final DateTime uploadedAt;
   final String uploadedById;
+  final bool cameFromConversation;
+  final String? conversationDoctorName;
 
   UserDocument({
     required this.id,
@@ -21,6 +23,8 @@ class UserDocument {
     required this.pages,
     required this.uploadedAt,
     required this.uploadedById,
+    this.cameFromConversation = false,
+    this.conversationDoctorName,
   });
 
   factory UserDocument.fromFirestore(DocumentSnapshot doc) {
@@ -41,6 +45,8 @@ class UserDocument {
           ? (data['uploadedAt'] as Timestamp).toDate()
           : DateTime.parse(data['uploadedAt']),
       uploadedById: data['uploadedById'] ?? '',
+      cameFromConversation: data['cameFromConversation'] ?? false,
+      conversationDoctorName: data['conversationDoctorName'],
     );
   }
 
@@ -54,6 +60,8 @@ class UserDocument {
       'pages': pages,
       'uploadedAt': Timestamp.fromDate(uploadedAt),
       'uploadedById': uploadedById,
+      'cameFromConversation': cameFromConversation,
+      if (conversationDoctorName != null) 'conversationDoctorName': conversationDoctorName,
     };
   }
 
@@ -62,6 +70,8 @@ class UserDocument {
     String? type,
     String? previewUrl,
     List<String>? pages,
+    bool? cameFromConversation,
+    String? conversationDoctorName,
   }) {
     return UserDocument(
       id: id,
@@ -73,6 +83,8 @@ class UserDocument {
       pages: pages ?? this.pages,
       uploadedAt: uploadedAt,
       uploadedById: uploadedById,
+      cameFromConversation: cameFromConversation ?? this.cameFromConversation,
+      conversationDoctorName: conversationDoctorName ?? this.conversationDoctorName,
     );
   }
 }
