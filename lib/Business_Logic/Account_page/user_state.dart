@@ -1,5 +1,6 @@
 import 'package:equatable/equatable.dart';
 
+
 /// ✅ **Base class for all user states**
 abstract class UserState extends Equatable {
   @override
@@ -16,11 +17,13 @@ class UserLoading extends UserState {}
 class UserLoaded extends UserState {
   final String userId;
   final String userName;
-  final String userEmail;
+  final String? userEmail;
   final String userFakeEmail;
   final String userPhone;
   final bool isPhoneVerified;
   final bool isEmailVerified;
+  final bool is2FAEnabled;
+
 
   UserLoaded({
     required this.userId,
@@ -30,10 +33,11 @@ class UserLoaded extends UserState {
     required this.userPhone,
     required this.isPhoneVerified,
     required this.isEmailVerified,
+    required this.is2FAEnabled,
   });
 
   @override
-  List<Object?> get props => [userId, userName, userEmail, userPhone, isPhoneVerified, isEmailVerified];
+  List<Object?> get props => [userId, userName, userEmail, userPhone, isPhoneVerified, isEmailVerified, is2FAEnabled];
 
 
   UserLoaded copyWith({
@@ -44,6 +48,7 @@ class UserLoaded extends UserState {
     String? userPhone,
     bool? isPhoneVerified,
     bool? isEmailVerified,
+    bool? is2FAEnabled,
   }) {
     return UserLoaded(
       userId: userId ?? this.userId,
@@ -53,8 +58,10 @@ class UserLoaded extends UserState {
       userPhone: userPhone ?? this.userPhone,
       isPhoneVerified: isPhoneVerified ?? this.isPhoneVerified,
       isEmailVerified: isEmailVerified ?? this.isEmailVerified,
+      is2FAEnabled: is2FAEnabled ?? this.is2FAEnabled,
     );
   }
+
 
 }
 

@@ -107,14 +107,70 @@
 
     Widget _buildLoginPrompt() {
       return Center(
-        child: ElevatedButton(
-          onPressed: () {
-            Navigator.push(context, fadePageRoute(const IdentificationPage()));
-          },
-          child: Text(AppLocalizations.of(context)!.logInCapital),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Image.asset("assets/images/messages.png", height: 100.h),
+            SizedBox(height: 20.h),
+            Text(
+              AppLocalizations.of(context)!.sendMessageTitle,
+              style: AppTextStyles.getTitle2(context).copyWith(color: AppColors.mainDark),
+            ),
+            SizedBox(height: 8.h),
+            Padding(
+              padding: EdgeInsets.symmetric(horizontal: 32.w),
+              child: Text(
+                AppLocalizations.of(context)!.sendMessagesDescription,
+                textAlign: TextAlign.center,
+                style: AppTextStyles.getText2(context).copyWith(color: Colors.black54),
+              ),
+            ),
+            SizedBox(height: 20.h),
+            ElevatedButton(
+              onPressed: () {
+                Navigator.push(context, fadePageRoute(const IdentificationPage()));
+              },
+              style: ElevatedButton.styleFrom(
+                backgroundColor: AppColors.main,
+                padding: EdgeInsets.symmetric(horizontal: 30.w, vertical: 12.h),
+              ),
+              child: Text(
+                AppLocalizations.of(context)!.logIn,
+                style: AppTextStyles.getText1(context).copyWith(color: Colors.white),
+              ),
+            ),
+          ],
         ),
       );
     }
+
+
+    Widget _buildInitialMessagesPage() {
+      return Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Image.asset("assets/images/messages.png", height: 100.h),
+            SizedBox(height: 20.h),
+            Text(
+              AppLocalizations.of(context)!.sendMessageTitle,
+              style: AppTextStyles.getTitle2(context).copyWith(color: AppColors.grayMain),
+            ),
+            SizedBox(height: 8.h),
+            Padding(
+              padding: EdgeInsets.symmetric(horizontal: 32.w),
+              child: Text(
+                AppLocalizations.of(context)!.sendMessagesDescription,
+                textAlign: TextAlign.center,
+                style: AppTextStyles.getText2(context).copyWith(color: Colors.black54),
+              ),
+            ),
+          ],
+        ),
+      );
+    }
+
+
 
     Widget _buildBannerCard() {
       return Padding(
@@ -148,6 +204,9 @@
     }
 
     Widget _buildMessagesList(MessagesLoaded state) {
+      if (state.conversations.isEmpty) {
+        return _buildInitialMessagesPage();
+      }
       final Map<String, List<Conversation>> groupedByDoctor = {};
 
       for (final convo in state.conversations) {

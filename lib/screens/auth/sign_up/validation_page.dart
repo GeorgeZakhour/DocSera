@@ -38,14 +38,14 @@ class _ValidationPageState extends State<ValidationPage> {
 
   bool canResend = false;
 
-
-
   @override
   void initState() {
     super.initState();
     _sendOTP(); // Send OTP when the page loads
     // _startResendTimer();
   }
+
+
 
   /// Send OTP based on the validation type (SMS or Email)
   Future<void> _sendOTP() async {

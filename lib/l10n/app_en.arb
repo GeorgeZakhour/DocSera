@@ -200,6 +200,12 @@
 
   "invalidPhoneNumber": "Invalid phone number. It should start with 9 or 09 and be 9–10 digits long.",
 
+  "addEmailTitle": "Add Email",
+
+  "samePhone": "This phone number is already in use.",
+  "sameEmail": "This email is already in use.",
+
+  "invalidEmail": "Invalid email address",
 
   "loginSection": "Login",
   "phone": "Phone",
@@ -227,6 +233,8 @@
   "confidentiality": "Confidentiality",
   "myPreferences": "My preferences",
   "legalInformation": "Legal information",
+  "deleteMyAccount": "Delete my account",
+
 
   "editPhoneNumber": "Edit Phone Number",
   "editEmail": "Edit Email",
@@ -265,8 +273,25 @@
   "notVerified": "Not Verified",
   "addressNotEntered": "Address not entered",
 
+  "myPreferences": "My preferences",
+  "personalizedServices": "Personalized services",
+  "serviceImprovements": "Service improvements",
+  "map": "Map",
+  "notifications": "Notifications",
+  "cookieManagement": "Cookie Management",
 
-"@searchPage================================": {
+  "termsAndConditionsOfUse": "Terms and conditions of use",
+  "termsOfUseAgreement": "Terms of use agreement",
+  "personalDataProtectionPolicy": "Personal data protection policy",
+  "cookiePolicy": "Cookie policy",
+  "legalNotice": "Legal notice",
+  "reportIllicitContent": "Report illicit content",
+
+  "deleteAccountWarningText": "You can delete your DocSera account and associated data at any time. This will not automatically delete your personal data from the databases of the healthcare professionals with whom you have booked appointments. Healthcare professionals may have a legitimate interest in keeping your personal data. You are free to exercise your rights of access, rectification or deletion and contact them directly.",
+  "confirmDeleteMyAccount": "DELETE MY ACCOUNT",
+
+
+  "@searchPage================================": {
 "description": "👤search Page"
 },
 
@@ -653,6 +678,28 @@
   "notesAccessInfo": "Only you can access and manage your notes securely.",
   "messageAccessInfo": "You can message your doctor directly here. All your conversations are securely stored and easily accessible.",
   "accountPrivacyInfoLine1": "Your personal data stays personal.",
-  "accountPrivacyInfoLine2": "We protect your information with industry-leading security."
+  "accountPrivacyInfoLine2": "We protect your information with industry-leading security.",
+
+  "forgotPasswordButton": "Forget your password?",
+  "resetPassword": "Reset Password",
+  "confirmPassword": "Confirm Password",
+
+  "activated": "Activated",
+  "notActivated": "Not activated",
+
+  "encryptedDocumentsFullDescription": "Your medical documents are securely stored with advanced encryption, ensuring that only you can access and manage them safely.",
+
+  "twoFactorAuthHeadline": "Extra security beyond your password",
+  "twoFactorAuthFullDescription": "For extra protection, a verification code is sent to you by email or SMS when you log in from a new device.",
+
+  "activate2FA": "Activate Two-Factor Authentication",
+  "deactivate2FA": "Deactivate Two-Factor Authentication",
+
+  "twoFactorDeactivateWarning": "Disabling 2FA will make your account less secure. Are you sure you want to proceed?"
+
+
+
+
+
 
 }

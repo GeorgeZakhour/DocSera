@@ -40,7 +40,19 @@ class TopSection extends StatelessWidget {
                     width: 60,
                     height: 60,
                     decoration: BoxDecoration(
-                      color: Colors.orangeAccent.withOpacity(0.7),
+                      color: AppColors.orange.withOpacity(0.7),
+                      shape: BoxShape.circle,
+                    ),
+                  ),
+                ),
+                Positioned(
+                  top: 40,
+                  right: 60,
+                  child: Container(
+                    width: 15,
+                    height: 15,
+                    decoration: BoxDecoration(
+                      color: AppColors.orange.withOpacity(0.4),
                       shape: BoxShape.circle,
                     ),
                   ),
@@ -49,13 +61,43 @@ class TopSection extends StatelessWidget {
                   top: 80,
                   left: 120,
                   child: Transform.rotate(
-                    angle: -0.4,
+                    angle: -0.5,
                     child: ClipPath(
                       clipper: OrganicCircleClipper(),
                       child: Container(
                         width: 100,
                         height: 120,
-                        color: Colors.blueAccent.withOpacity(0.4),
+                        color: Colors.white.withOpacity(0.1),
+                      ),
+                    ),
+                  ),
+                ),
+                Positioned(
+                  top: 150,
+                  right: -70,
+                  child: Transform.rotate(
+                    angle: -0.9,
+                    child: ClipPath(
+                      clipper: OrganicCircleClipper(),
+                      child: Container(
+                        width: 200,
+                        height: 150,
+                        color: AppColors.mainDark.withOpacity(0.4),
+                      ),
+                    ),
+                  ),
+                ),
+                Positioned(
+                  top: 100,
+                  left: -60,
+                  child: Transform.rotate(
+                    angle: -0.1,
+                    child: ClipPath(
+                      clipper: OrganicCircleClipper(),
+                      child: Container(
+                        width: 120,
+                        height: 200,
+                        color: AppColors.whiteText.withOpacity(0.4),
                       ),
                     ),
                   ),
@@ -82,7 +124,7 @@ class TopSection extends StatelessWidget {
               Text(
                 AppLocalizations.of(context)!.anytime,
                 style: AppTextStyles.getTitle4(context).copyWith(
-                  color: Colors.orangeAccent,
+                  color: AppColors.orange,
                   fontWeight: FontWeight.w800
                 ),
               ),

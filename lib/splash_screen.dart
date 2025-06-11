@@ -3,14 +3,16 @@ import 'package:docsera/screens/home/shimmer/shimmer_widgets.dart';
 import 'package:docsera/utils/custom_clippers.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:docsera/widgets/custom_bottom_navigation_bar.dart';
 import 'dart:async';
 import 'dart:math';
-
 import 'Business_Logic/Authentication/auth_cubit.dart';
 import 'Business_Logic/Authentication/auth_state.dart';
 import 'app/const.dart';
+import 'package:package_info_plus/package_info_plus.dart';
+
 
 class SplashScreen extends StatefulWidget {
   @override
@@ -39,11 +41,20 @@ class _SplashScreenState extends State<SplashScreen> with TickerProviderStateMix
   double screenHeight = 0;
   double screenWidth = 0;
 
+  String appVersion = '';
+
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
     screenHeight = MediaQuery.of(context).size.height;
     screenWidth = MediaQuery.of(context).size.width;
+
+    PackageInfo.fromPlatform().then((info) {
+      setState(() {
+        appVersion = 'v${info.version}';
+      });
+    });
+
 
     // ✅ Step 1: Shape Appears (Fade In)
     _fadeInController = AnimationController(
@@ -253,7 +264,15 @@ class _SplashScreenState extends State<SplashScreen> with TickerProviderStateMix
             child: AnimatedOpacity(
               opacity: _bottomTextFadeAnimation.value,
               duration: const Duration(milliseconds: 600),
-              child: Text("v1.0.0", textAlign: TextAlign.center, style: AppTextStyles.getText4(context).copyWith(color: AppColors.grayMain, fontWeight: FontWeight.w300)),
+              child: Text(
+                appVersion.isEmpty ? '' : appVersion,
+                textAlign: TextAlign.center,
+                style: AppTextStyles.getText4(context).copyWith(
+                  color: AppColors.grayMain,
+                  fontWeight: FontWeight.w300,
+                  fontSize: 8
+                ),
+              ),
             ),
           ),
           Positioned(
@@ -263,7 +282,7 @@ class _SplashScreenState extends State<SplashScreen> with TickerProviderStateMix
             child: AnimatedOpacity(
               opacity: _bottomTextFadeAnimation.value,
               duration: const Duration(milliseconds: 600),
-              child: Text("Powered by TechSpearz", textAlign: TextAlign.center, style: AppTextStyles.getText4(context).copyWith(color: AppColors.grayMain)),
+              child: Text("Powered by TechSpearz", textAlign: TextAlign.center, style: AppTextStyles.getText4(context).copyWith(color: AppColors.grayMain, fontSize: 8)),
             ),
           ),
         ],

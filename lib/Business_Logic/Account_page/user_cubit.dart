@@ -24,7 +24,8 @@ class UserCubit extends Cubit<UserState> {
       return;
     }
 
-    final userId = (authState as AuthAuthenticated).user.uid;
+    if (authState is! AuthAuthenticated) return;
+    final userId = authState.user.uid;
 
     try {
       print("📌 [DEBUG] Loaded userId from AuthCubit: $userId");
@@ -46,12 +47,14 @@ class UserCubit extends Cubit<UserState> {
         emit(UserLoaded(
           userId: userId,
           userName: _prefs.getString('userName') ?? "Guest",
-          userEmail: _prefs.getString('userEmail') ?? "Not provided",
+          userEmail: _prefs.getString('userEmail'),
           userFakeEmail: _prefs.getString('userFakeEmail') ?? "Not provided",
-          userPhone: _prefs.getString('userPhone') ?? "Not provided",
-          isPhoneVerified: _prefs.getBool('isPhoneVerified') ?? false,
+          userPhone: _prefs.getString('userPhone') ?? '',
+          isPhoneVerified: _prefs.getBool('phoneVerified') ?? false,
           isEmailVerified: _prefs.getBool('isEmailVerified') ?? false,
+          is2FAEnabled: false, // لا يوجد بيانات مؤقتة عن 2FA فاجعلها false
         ));
+
 
         await Future.delayed(const Duration(milliseconds: 100));
       }
@@ -66,16 +69,20 @@ class UserCubit extends Cubit<UserState> {
       String firstName = userData['firstName'] ?? '';
       String lastName = userData['lastName'] ?? '';
       String userName = "$firstName $lastName".trim();
-      String userEmail = userData['email'] ?? 'Not provided';
-      String userPhone = userData['phoneNumber'] ?? 'Not provided';
+      String? userEmail = userData['email'];
+      String userPhone = userData['phoneNumber'] ?? '';
       bool isPhoneVerified = userData['phoneVerified'] ?? false;
       bool isEmailVerified = userData['emailVerified'] ?? false;
 
       await _prefs.setString('userName', userName);
-      await _prefs.setString('userEmail', userEmail);
-      await _prefs.setString('userFakeEmail', userData['fakeEmail'] ?? '');
+      if (userEmail != null) {
+        await _prefs.setString('userEmail', userEmail);
+      } else {
+        await _prefs.remove('userEmail');
+      }
       await _prefs.setString('userPhone', userPhone);
-      await _prefs.setBool('isPhoneVerified', isPhoneVerified);
+      await _prefs.setString('userFakeEmail', userData['fakeEmail'] ?? '');
+      await _prefs.setBool('phoneVerified', isPhoneVerified);
       await _prefs.setBool('isEmailVerified', isEmailVerified);
 
       print("✅ [DEBUG] Firestore Data Updated & Saved in SharedPreferences!");
@@ -88,7 +95,9 @@ class UserCubit extends Cubit<UserState> {
         userPhone: userPhone,
         isPhoneVerified: isPhoneVerified,
         isEmailVerified: isEmailVerified,
+        is2FAEnabled: userData['twoFactorAuthEnabled'] ?? false, // أضف هذا السطر
       ));
+
 
     } catch (e) {
       emit(UserError("Failed to load user data: $e"));
@@ -107,11 +116,13 @@ class UserCubit extends Cubit<UserState> {
         userId: state.userId,
         userName: state.userName,
         userEmail: field == 'email' ? newValue : state.userEmail,
-        userFakeEmail: state.userFakeEmail, // ✅ أضف هذا
+        userFakeEmail: state.userFakeEmail,
         userPhone: field == 'phoneNumber' ? newValue : state.userPhone,
         isPhoneVerified: field == 'phoneNumber' ? isVerified ?? state.isPhoneVerified : state.isPhoneVerified,
         isEmailVerified: field == 'email' ? isVerified ?? state.isEmailVerified : state.isEmailVerified,
+        is2FAEnabled: (state as UserLoaded).is2FAEnabled, // ✅ أضف هذا السطر
       );
+
 
       emit(updatedState);
 
@@ -124,7 +135,7 @@ class UserCubit extends Cubit<UserState> {
 
       // ✅ Save to SharedPreferences AFTER UI update
       await _prefs.setString(field, newValue);
-      if (field == 'phoneNumber') await _prefs.setBool('isPhoneVerified', isVerified ?? state.isPhoneVerified);
+      if (field == 'phoneNumber') await _prefs.setBool('phoneVerified', isVerified ?? state.isPhoneVerified);
       if (field == 'email') await _prefs.setBool('isEmailVerified', isVerified ?? state.isEmailVerified);
 
     } catch (e) {
@@ -139,7 +150,7 @@ class UserCubit extends Cubit<UserState> {
     try {
       await FirebaseFirestore.instance.collection('users').doc(userId).update({
         'phoneNumber': phone,
-        'isPhoneVerified': isVerified,
+        'phoneVerified': isVerified,
       });
 
       emit((state as UserLoaded).copyWith(
@@ -169,21 +180,32 @@ class UserCubit extends Cubit<UserState> {
 
         final prefs = await SharedPreferences.getInstance();
         await prefs.setString('userName', "${data['firstName'] ?? ''} ${data['lastName'] ?? ''}".trim());
-        await prefs.setString('userEmail', data['email'] ?? 'Not provided');
+        if (data['email'] != null) {
+          await prefs.setString('userEmail', data['email']);
+        } else {
+          await prefs.remove('userEmail');
+        }
         await prefs.setString('userFakeEmail', data['fakeEmail'] ?? 'Not provided');
-        await prefs.setString('userPhone', data['phoneNumber'] ?? 'Not provided');
-        await prefs.setBool('isPhoneVerified', data['phoneVerified'] ?? false);
+        if (data['phoneNumber'] != null) {
+          await prefs.setString('userPhone', data['phoneNumber']);
+        } else {
+          await prefs.remove('userPhone');
+        }
+        await prefs.setBool('phoneVerified', data['phoneVerified'] ?? false);
         await prefs.setBool('isEmailVerified', data['emailVerified'] ?? false);
+        bool is2FAEnabled = data['twoFactorAuthEnabled'] ?? false;
 
         emit(UserLoaded(
           userId: userId,
           userName: prefs.getString('userName')!,
-          userEmail: prefs.getString('userEmail')!,
+          userEmail: prefs.getString('userEmail'),
           userFakeEmail: prefs.getString('userFakeEmail')!,
           userPhone: prefs.getString('userPhone')!,
-          isPhoneVerified: prefs.getBool('isPhoneVerified')!,
+          isPhoneVerified: prefs.getBool('phoneVerified')!,
           isEmailVerified: prefs.getBool('isEmailVerified')!,
+          is2FAEnabled: is2FAEnabled,
         ));
+
       }
     });
   }

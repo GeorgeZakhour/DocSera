@@ -1,0 +1,2 @@
+C:/Users/gz199/StudioProjects/DocSera/android/app/.cxx/RelWithDebInfo/3k2m6w18/arm64-v8a/CMakeFiles/edit_cache.dir
+C:/Users/gz199/StudioProjects/DocSera/android/app/.cxx/RelWithDebInfo/3k2m6w18/arm64-v8a/CMakeFiles/rebuild_cache.dir

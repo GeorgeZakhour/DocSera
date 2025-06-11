@@ -1,8 +1,12 @@
 import 'dart:async';
 import 'dart:io';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:docsera/Business_Logic/Authentication/auth_cubit.dart';
+import 'package:docsera/Business_Logic/Authentication/auth_state.dart';
 import 'package:docsera/main.dart';
+import 'package:docsera/screens/home/account/legal_information.dart';
 import 'package:docsera/screens/home/shimmer/shimmer_widgets.dart';
+import 'package:docsera/services/firestore/firestore_user_service.dart';
 import 'package:docsera/utils/custom_clippers.dart';
 import 'package:docsera/utils/text_direction_utils.dart';
 import 'package:firebase_auth/firebase_auth.dart';
@@ -21,9 +25,11 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:docsera/utils/input_decoration.dart';
 import 'dart:convert';
 import 'package:crypto/crypto.dart';
-
 import '../../Business_Logic/Account_page/user_cubit.dart';
 import '../../Business_Logic/Account_page/user_state.dart';
+import 'package:package_info_plus/package_info_plus.dart';
+
+import 'account/preferences.dart';
 
 
 
@@ -43,10 +49,18 @@ class _AccountScreenState extends State<AccountScreen> {
   IconData biometricIcon = Icons.fingerprint; // Default icon
   bool _biometricChecked = false;
   String currentLocale = "en"; // Default
+  String appVersion = '';
 
   @override
   void initState() {
     super.initState();
+    PackageInfo.fromPlatform().then((info) {
+      setState(() {
+        appVersion = 'v${info.version}';
+      });
+      print("✅ App Version Loaded: v${info.version}"); // ✅ DEBUG
+    });
+
     _loadFaceIdPreference();
 
     Future.delayed(Duration.zero, () async {
@@ -203,32 +217,40 @@ class _AccountScreenState extends State<AccountScreen> {
   }
 
 
-  void _showEditFieldSheet(BuildContext context, String fieldType, String currentValue) {
+  void _showEditFieldSheet(BuildContext context, String fieldType, String currentValue, {String? customTitle}) {
     final state = context.read<UserCubit>().state;
     if (state is! UserLoaded) return;
 
+    String formatPhoneForDisplay(String phone) {
+      if (phone.startsWith('00963')) return '0${phone.substring(5)}';
+      return phone;
+    }
+
+    String normalizePhoneNumber(String phone) {
+      phone = phone.trim();
+      if (phone.startsWith('00963')) return phone;
+      if (phone.startsWith('09')) return '00963${phone.substring(1)}';
+      if (phone.startsWith('9') && phone.length == 9) return '00963$phone';
+      return phone;
+    }
+
+    final RegExp emailRegex = RegExp(r'^[^@]+@[^@]+\.[^@]+$');
+    String formattedCurrentValue = fieldType == 'phoneNumber' ? formatPhoneForDisplay(state.userPhone) : currentValue;
+    final originalNormalizedValue = fieldType == 'phoneNumber' ? state.userPhone : currentValue;
+
     final TextEditingController fieldController = TextEditingController(
-      text: fieldType == 'phoneNumber'
-          ? _formatPhoneForDisplay(state.userPhone)
-          : state.userEmail ?? '',
+      text: formattedCurrentValue == AppLocalizations.of(context)!.notProvided ? '' : formattedCurrentValue,
     );
 
-    bool isFieldChanged = false;
     String? errorMessage;
     bool isChecking = false;
-    bool isValidPhone = fieldType == 'phoneNumber'
-        ? _isValidPhoneNumber(fieldController.text.trim())
-        : false;
-    bool isValidEmail = fieldType == 'email'
-        ? RegExp(r'^[^@]+@[^@]+\.[^@]+\$').hasMatch(fieldController.text.trim())
-        : false;
-
-    String originalUnverifiedValue = fieldController.text;
     bool isNotVerified = (fieldType == 'phoneNumber' && !state.isPhoneVerified);
 
-    String title = fieldType == 'phoneNumber'
-        ? AppLocalizations.of(context)!.editPhoneNumber
-        : AppLocalizations.of(context)!.editEmail;
+    String title = customTitle ??
+        (fieldType == 'phoneNumber'
+            ? AppLocalizations.of(context)!.editPhoneNumber
+            : AppLocalizations.of(context)!.editEmail);
+
     String hintText = fieldType == 'phoneNumber'
         ? AppLocalizations.of(context)!.newPhoneNumber
         : AppLocalizations.of(context)!.newEmailAddress;
@@ -254,42 +276,40 @@ class _AccountScreenState extends State<AccountScreen> {
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
                         Text(title, style: AppTextStyles.getTitle1(context)),
-                        IconButton(
-                          icon: const Icon(Icons.close),
-                          onPressed: () => Navigator.pop(context),
-                        )
+                        IconButton(icon: const Icon(Icons.close), onPressed: () => Navigator.pop(context)),
                       ],
                     ),
                     SizedBox(height: 12.h),
                     TextFormField(
                       controller: fieldController,
-                      keyboardType: fieldType == 'phoneNumber'
-                          ? TextInputType.phone
-                          : TextInputType.emailAddress,
+                      keyboardType: fieldType == 'phoneNumber' ? TextInputType.number : TextInputType.emailAddress,
                       textDirection: detectTextDirection(fieldController.text),
                       textAlign: getTextAlign(context),
-                      style: AppTextStyles.getText1(context),
+                      style: AppTextStyles.getText2(context).copyWith(fontSize: 12.sp),
                       maxLength: fieldType == 'phoneNumber' ? 10 : 100,
                       decoration: getInputDecoration(hintText: hintText).copyWith(
                         errorText: errorMessage,
                         counterText: "",
+                        prefixText: fieldType == 'phoneNumber' ? "+963 | " : null,
                         suffixIcon: Row(
                           mainAxisSize: MainAxisSize.min,
                           children: [
                             if (fieldType == 'phoneNumber' &&
                                 fieldController.text.isNotEmpty &&
-                                fieldController.text.trim() != _formatPhoneForDisplay(state.userPhone))
+                                normalizePhoneNumber(fieldController.text.trim()) != originalNormalizedValue)
                               Padding(
                                 padding: EdgeInsets.symmetric(horizontal: 6.w),
                                 child: Container(
                                   width: 20.w,
                                   height: 20.w,
                                   decoration: BoxDecoration(
-                                    color: isValidPhone ? AppColors.main.withOpacity(0.8) : AppColors.red.withOpacity(0.8),
+                                    color: _isValidPhoneNumber(fieldController.text.trim())
+                                        ? AppColors.main.withOpacity(0.8)
+                                        : AppColors.red.withOpacity(0.8),
                                     shape: BoxShape.circle,
                                   ),
                                   child: Icon(
-                                    isValidPhone ? Icons.check : Icons.close,
+                                    _isValidPhoneNumber(fieldController.text.trim()) ? Icons.check : Icons.close,
                                     color: Colors.white,
                                     size: 14.sp,
                                   ),
@@ -306,60 +326,39 @@ class _AccountScreenState extends State<AccountScreen> {
                                 child: Text(
                                   AppLocalizations.of(context)!.notVerified,
                                   style: AppTextStyles.getText3(context).copyWith(
-                                      color: AppColors.yellow,
-                                      fontSize: 8,
-                                      fontWeight: FontWeight.bold),
+                                    color: AppColors.yellow,
+                                    fontSize: 8,
+                                    fontWeight: FontWeight.bold,
+                                  ),
                                 ),
                               ),
                           ],
                         ),
                       ),
-                      onChanged: (value) {
-                        setState(() {
-                          isFieldChanged = value.trim().isNotEmpty;
-                          errorMessage = null;
-                          isValidPhone = fieldType == 'phoneNumber'
-                              ? _isValidPhoneNumber(value.trim())
-                              : false;
-
-                          isNotVerified = (value.trim() == originalUnverifiedValue &&
-                              fieldType == 'phoneNumber' &&
-                              !state.isPhoneVerified);
-                        });
+                      onChanged: (_) {
+                        setState(() => errorMessage = null);
                       },
                     ),
                     SizedBox(height: 16.h),
                     ElevatedButton(
-                      onPressed: !isChecking
-                          ? () async {
-                        String newValue = fieldController.text.trim();
+                      onPressed: () async {
+                        final newRaw = fieldController.text.trim();
+                        final newNormalized = fieldType == 'phoneNumber'
+                            ? normalizePhoneNumber(newRaw)
+                            : newRaw;
 
-                        if (fieldType == 'phoneNumber' &&
-                            !_isValidPhoneNumber(newValue)) {
-                          setState(() {
-                            errorMessage = AppLocalizations.of(context)!
-                                .invalidPhoneNumber;
-                          });
+                        if (fieldType == 'phoneNumber' && !_isValidPhoneNumber(newRaw)) {
+                          setState(() => errorMessage = AppLocalizations.of(context)!.invalidPhoneNumber);
                           return;
                         }
 
-                        if (newValue == originalUnverifiedValue &&
-                            isNotVerified &&
-                            fieldType == 'phoneNumber') {
-                          Navigator.pop(context);
-                          _sendOTPAndShowSheet(context, newValue, fieldType,
-                              originalUnverifiedValue,
-                              allowSkip: true);
+                        if (fieldType == 'email' && !emailRegex.hasMatch(newRaw)) {
+                          setState(() => errorMessage = AppLocalizations.of(context)!.invalidEmail);
                           return;
                         }
 
-                        if (newValue == originalUnverifiedValue &&
-                            !isNotVerified) {
-                          setState(() {
-                            errorMessage = fieldType == 'phoneNumber'
-                                ? 'This phone is the one you are currently using'
-                                : 'This email is the one you are currently using';
-                          });
+                        if (newNormalized == originalNormalizedValue) {
+                          setState(() => errorMessage = AppLocalizations.of(context)!.samePhone);
                           return;
                         }
 
@@ -367,33 +366,32 @@ class _AccountScreenState extends State<AccountScreen> {
 
                         bool isDuplicate = false;
                         if (fieldType == 'phoneNumber') {
-                          isDuplicate = await _isPhoneNumberDuplicate(newValue);
+                          isDuplicate = await _isPhoneNumberDuplicate(newNormalized);
+                        } else {
+                          isDuplicate = await FirestoreUserService().doesUserExist(email: newRaw);
                         }
 
                         setState(() => isChecking = false);
 
                         if (isDuplicate) {
-                          setState(() {
-                            errorMessage = fieldType == 'phoneNumber'
-                                ? AppLocalizations.of(context)!.alreadyExistsPhone
-                                : AppLocalizations.of(context)!.alreadyExistsEmail;
-                          });
+                          setState(() => errorMessage = fieldType == 'phoneNumber'
+                              ? AppLocalizations.of(context)!.alreadyExistsPhone
+                              : AppLocalizations.of(context)!.alreadyExistsEmail);
                         } else {
                           Navigator.pop(context);
-                          _sendOTPAndShowSheet(context, newValue, fieldType,
-                              originalUnverifiedValue,
-                              allowSkip: fieldType == 'phoneNumber');
+                          _sendOTPAndShowSheet(
+                            context,
+                            newRaw,
+                            fieldType,
+                            originalNormalizedValue,
+                          );
                         }
-                      }
-                          : null,
+                      },
                       style: ElevatedButton.styleFrom(
-                        backgroundColor:
-                        isNotVerified && fieldType == 'phoneNumber'
-                            ? AppColors.mainDark
-                            : AppColors.main,
+                        backgroundColor: AppColors.main,
+                        foregroundColor: Colors.white,
                         padding: EdgeInsets.symmetric(vertical: 14.h),
-                        shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(8)),
+                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
                         minimumSize: Size(double.infinity, 50.h),
                       ),
                       child: isChecking
@@ -402,16 +400,16 @@ class _AccountScreenState extends State<AccountScreen> {
                         height: 16.h,
                         child: const CircularProgressIndicator(
                           strokeWidth: 2,
-                          valueColor:
-                          AlwaysStoppedAnimation<Color>(Colors.white),
+                          valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
                         ),
                       )
                           : Text(
-                        isNotVerified && fieldType == 'phoneNumber'
+                        (fieldType == 'phoneNumber' && isNotVerified)
                             ? AppLocalizations.of(context)!.verify
+                            : (fieldType == 'email' && originalNormalizedValue.isEmpty)
+                            ? AppLocalizations.of(context)!.add
                             : AppLocalizations.of(context)!.save,
-                        style: AppTextStyles.getTitle2(context)
-                            .copyWith(color: Colors.white),
+                        style: AppTextStyles.getTitle1(context).copyWith(color: Colors.white),
                       ),
                     ),
                   ],
@@ -424,7 +422,7 @@ class _AccountScreenState extends State<AccountScreen> {
     );
   }
 
-  void _sendOTPAndShowSheet(BuildContext context, String newValue, String fieldType, String oldValue, {bool allowSkip = false}) async {
+  void _sendOTPAndShowSheet(BuildContext context, String newValue, String fieldType, String oldValue) async {
     final otpService = FirestoreOTPService();
     String sentOTP = fieldType == 'phoneNumber'
         ? await otpService.sendOTPToPhone(newValue)
@@ -588,40 +586,6 @@ class _AccountScreenState extends State<AccountScreen> {
                       child: Text(AppLocalizations.of(context)!.continueButton,
                           style: AppTextStyles.getTitle1(context).copyWith(color: Colors.white)),
                     ),
-                    if (allowSkip)
-                      TextButton(
-                        onPressed: () async {
-                          resendTimer?.cancel();
-                          if (context.mounted) {
-                            Navigator.pop(context);
-
-                            // ✅ Ensure Firestore updates immediately
-                            await context.read<UserCubit>().updateUserData(fieldType, newValue, isVerified: false);
-
-                            // 🔥 Force UI to update instantly
-                            await context.read<UserCubit>().loadUserData(context);
-
-                            // ✅ Ensure UI feedback appears
-                            if (context.mounted) {
-                              ScaffoldMessenger.of(context).showSnackBar(
-                                SnackBar(
-                                  content: Text(AppLocalizations.of(context)!.phoneUpdatedWithoutVerification),
-                                  backgroundColor: AppColors.yellow.withOpacity(0.8),
-                                ),
-                              );
-                            }
-                          }
-                        },
-                        child: Text(
-                          AppLocalizations.of(context)!.verifyLater,
-                          style: const TextStyle(color: AppColors.mainDark, fontSize: 11),
-                        ),
-                      ),
-
-
-
-
-
                   ],
                 ),
               ),
@@ -782,44 +746,53 @@ class _AccountScreenState extends State<AccountScreen> {
                     // ✅ Current Password Field with Smaller Eye Icon
                     TextFormField(
                       controller: currentPasswordController,
-                      textDirection: detectTextDirection(currentPasswordController.text), // ✅ ضبط الاتجاه ديناميكيًا
+                      style: AppTextStyles.getText2(context).copyWith(fontSize: 12.sp),
+                      textDirection: detectTextDirection(currentPasswordController.text),
                       textAlign: getTextAlign(context),
                       obscureText: !isCurrentPasswordVisible,
-                      onChanged: (value) => _checkPasswordsDifference(setState),
                       decoration: getInputDecoration(hintText: AppLocalizations.of(context)!.currentPassword).copyWith(
+                        contentPadding: EdgeInsets.symmetric(vertical: 10.h, horizontal: 12.w),
                         errorText: isCurrentPasswordValid ? null : AppLocalizations.of(context)!.incorrectCurrentPassword,
+                        hintStyle: AppTextStyles.getText3(context).copyWith(fontSize: 11.sp, color: Colors.grey),
                         suffixIcon: IconButton(
                           icon: Icon(
                             isCurrentPasswordVisible ? Icons.visibility : Icons.visibility_off,
-                            size: 16.sp, // Smaller icon
+                            size: 16.sp,
                           ),
                           onPressed: () => setState(() => isCurrentPasswordVisible = !isCurrentPasswordVisible),
                         ),
                       ),
                     ),
+
                     SizedBox(height: 12.h),
 
                     // ✅ New Password Field with Smaller Eye Icon
                     TextFormField(
                       controller: newPasswordController,
-                      textDirection: detectTextDirection(newPasswordController.text), // ✅ ضبط الاتجاه ديناميكيًا
+                      textDirection: detectTextDirection(newPasswordController.text),
                       textAlign: getTextAlign(context),
                       obscureText: !isNewPasswordVisible,
+                      style: AppTextStyles.getText2(context).copyWith(fontSize: 12.sp),
                       onChanged: (value) {
                         _validateNewPassword(value, setState);
                         _checkPasswordsDifference(setState);
                       },
-                      decoration: getInputDecoration(hintText: AppLocalizations.of(context)!.newPassword).copyWith(
+                      decoration: getInputDecoration(
+                        hintText: AppLocalizations.of(context)!.newPassword,
+                      ).copyWith(
+                        contentPadding: EdgeInsets.symmetric(vertical: 10.h, horizontal: 12.w),
+                        hintStyle: AppTextStyles.getText3(context).copyWith(fontSize: 11.sp, color: Colors.grey),
                         errorText: isNewPasswordDifferent ? null : AppLocalizations.of(context)!.passwordMatchError,
                         suffixIcon: IconButton(
                           icon: Icon(
                             isNewPasswordVisible ? Icons.visibility : Icons.visibility_off,
-                            size: 16.sp, // Smaller icon
+                            size: 16.sp,
                           ),
                           onPressed: () => setState(() => isNewPasswordVisible = !isNewPasswordVisible),
                         ),
                       ),
                     ),
+
 
                     SizedBox(height: 6.h),
                     Text(newPasswordStrength, style: TextStyle(color: newPasswordStrengthColor, fontSize: 12)),
@@ -839,8 +812,8 @@ class _AccountScreenState extends State<AccountScreen> {
                           return;
                         }
 
-                        bool isValidCurrentPassword = await _validateCurrentPassword(currentPassword);
-                        if (!isValidCurrentPassword) {
+                        bool reauthSuccess = await _reauthenticateUser(currentPassword);
+                        if (!reauthSuccess) {
                           setState(() {
                             isCurrentPasswordValid = false;
                             isUpdating = false;
@@ -848,8 +821,8 @@ class _AccountScreenState extends State<AccountScreen> {
                           return;
                         }
 
-                        await _updatePassword(newPassword);
-                        Navigator.pop(context);
+                        await _updatePasswordFirebase(newPassword);
+                        if (mounted) Navigator.pop(context);
                       },
                       style: ElevatedButton.styleFrom(
                         backgroundColor: AppColors.main,
@@ -858,14 +831,18 @@ class _AccountScreenState extends State<AccountScreen> {
                         minimumSize: Size(double.infinity, 50.h),
                       ),
                       child: isUpdating
-                          ?  SizedBox(
+                          ? SizedBox(
                         width: 16.w,
                         height: 16.h,
                         child: const CircularProgressIndicator(
-                            strokeWidth: 2, valueColor: AlwaysStoppedAnimation<Color>(Colors.white)),
+                          strokeWidth: 2,
+                          valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                        ),
                       )
-                          : Text(AppLocalizations.of(context)!.save
-                          ,style: AppTextStyles.getTitle2(context).copyWith(color: Colors.white)),
+                          : Text(
+                        AppLocalizations.of(context)!.save,
+                        style: AppTextStyles.getTitle1(context).copyWith(color: Colors.white),
+                      ),
                     ),
                   ],
                 ),
@@ -877,43 +854,249 @@ class _AccountScreenState extends State<AccountScreen> {
     );
   }
 
-  Future<bool> _validateCurrentPassword(String enteredPassword) async {
+  void _showResetPasswordViaOTPSheet(BuildContext context) async {
+    final userState = context.read<UserCubit>().state;
+    final phone = userState is UserLoaded ? userState.userPhone : '';
+    final formattedPhone = _formatPhoneForBackend(phone);
+
+
+    final otpService = FirestoreOTPService();
+    await otpService.sendOTPToPhone(formattedPhone);
+
+    final TextEditingController otpController = TextEditingController();
+    bool isCodeValid = true;
+    int timerSeconds = 60;
+    bool canResend = false;
+    Timer? resendTimer;
+
+    void startTimer(Function updateUI) {
+      resendTimer?.cancel();
+      resendTimer = Timer.periodic(const Duration(seconds: 1), (timer) {
+        if (timerSeconds > 0) {
+          updateUI(() => timerSeconds--);
+        } else {
+          timer.cancel();
+          updateUI(() => canResend = true);
+        }
+      });
+    }
+
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: AppColors.background2,
+      isScrollControlled: true,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
+      ),
+      builder: (context) {
+        return StatefulBuilder(
+          builder: (context, setState) {
+            if (resendTimer == null) startTimer(setState);
+
+            return Padding(
+              padding: EdgeInsets.only(bottom: MediaQuery.of(context).viewInsets.bottom),
+              child: Container(
+                padding: EdgeInsets.all(16.w),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Text(AppLocalizations.of(context)!.pleaseConfirm(AppLocalizations.of(context)!.phone),
+                            style: AppTextStyles.getTitle1(context)),
+                        IconButton(
+                          icon: const Icon(Icons.close),
+                          onPressed: () {
+                            resendTimer?.cancel();
+                            Navigator.pop(context);
+                          },
+                        )
+                      ],
+                    ),
+                    SizedBox(height: 12.h),
+                    TextFormField(
+                      controller: otpController,
+                      textDirection: detectTextDirection(otpController.text),
+                      textAlign: getTextAlign(context),
+                      style: AppTextStyles.getText1(context),
+                      keyboardType: TextInputType.number,
+                      maxLength: 6,
+                      decoration: getInputDecoration(hintText: AppLocalizations.of(context)!.sixDigitCode)
+                          .copyWith(errorText: isCodeValid ? null : 'Invalid code'),
+                    ),
+                    SizedBox(height: 16.h),
+                    ElevatedButton(
+                      onPressed: () async {
+                        bool isValid = await otpService.validateOTP(phone, otpController.text.trim());
+                        if (isValid) {
+                          resendTimer?.cancel();
+                          Navigator.pop(context); // ✅ أغلق شيت OTP
+                          _showEnterNewPasswordSheet(context); // ✅ افتح شيت تغيير كلمة المرور الجديدة
+                        } else {
+                          setState(() => isCodeValid = false);
+                        }
+                      },
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: AppColors.main,
+                        padding: EdgeInsets.symmetric(vertical: 12.h),
+                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8.r)),
+                        minimumSize: Size(double.infinity, 50.h),
+                      ),
+                      child: Text(AppLocalizations.of(context)!.continueButton,
+                          style: AppTextStyles.getTitle1(context).copyWith(color: Colors.white)),
+                    ),
+                  ],
+                ),
+              ),
+            );
+          },
+        );
+      },
+    );
+  }
+
+  void _showEnterNewPasswordSheet(BuildContext context) {
+    final TextEditingController pass1 = TextEditingController();
+    final TextEditingController pass2 = TextEditingController();
+    bool isVisible1 = false;
+    bool isVisible2 = false;
+    bool isValid = false;
+    bool isMatching = true;
+    bool isUpdating = false;
+
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: AppColors.background2,
+      isScrollControlled: true,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
+      ),
+      builder: (context) {
+        return StatefulBuilder(
+          builder: (context, setState) {
+            return Padding(
+              padding: EdgeInsets.only(bottom: MediaQuery.of(context).viewInsets.bottom),
+              child: Container(
+                padding: EdgeInsets.all(16.w),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Text(AppLocalizations.of(context)!.resetPassword,
+                            style: AppTextStyles.getTitle1(context)),
+                        IconButton(icon: const Icon(Icons.close), onPressed: () => Navigator.pop(context))
+                      ],
+                    ),
+                    SizedBox(height: 12.h),
+                    TextFormField(
+                      controller: pass1,
+                      obscureText: !isVisible1,
+                      onChanged: (_) => setState(() {
+                        isValid = pass1.text.length >= 8;
+                        isMatching = pass1.text == pass2.text;
+                      }),
+                      decoration: getInputDecoration(
+                        hintText: AppLocalizations.of(context)!.newPassword,
+                      ).copyWith(
+                        suffixIcon: IconButton(
+                          icon: Icon(isVisible1 ? Icons.visibility : Icons.visibility_off, size: 16.sp),
+                          onPressed: () => setState(() => isVisible1 = !isVisible1),
+                        ),
+                      ),
+                    ),
+                    SizedBox(height: 12.h),
+                    TextFormField(
+                      controller: pass2,
+                      obscureText: !isVisible2,
+                      onChanged: (_) => setState(() {
+                        isMatching = pass1.text == pass2.text;
+                      }),
+                      decoration: getInputDecoration(
+                        hintText: AppLocalizations.of(context)!.confirmPassword,
+                      ).copyWith(
+                        errorText: isMatching ? null : AppLocalizations.of(context)!.passwordMatchError,
+                        suffixIcon: IconButton(
+                          icon: Icon(isVisible2 ? Icons.visibility : Icons.visibility_off, size: 16.sp),
+                          onPressed: () => setState(() => isVisible2 = !isVisible2),
+                        ),
+                      ),
+                    ),
+                    SizedBox(height: 16.h),
+                    ElevatedButton(
+                      onPressed: (!isValid || !isMatching || isUpdating)
+                          ? null
+                          : () async {
+                        setState(() => isUpdating = true);
+                        try {
+                          await FirebaseAuth.instance.currentUser?.updatePassword(pass1.text.trim());
+                          Navigator.pop(context);
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            SnackBar(
+                              content: Text(AppLocalizations.of(context)!.passwordUpdatedSuccess),
+                              backgroundColor: AppColors.main,
+                            ),
+                          );
+                        } catch (e) {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            SnackBar(
+                              content: Text(AppLocalizations.of(context)!.passwordUpdatedFailed(e.toString())),
+                              backgroundColor: AppColors.red,
+                            ),
+                          );
+                        }
+                      },
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: AppColors.main,
+                        padding: EdgeInsets.symmetric(vertical: 12.h),
+                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8.r)),
+                        minimumSize: Size(double.infinity, 50.h),
+                      ),
+                      child: isUpdating
+                          ? const CircularProgressIndicator(color: Colors.white, strokeWidth: 2)
+                          : Text(AppLocalizations.of(context)!.save,
+                          style: AppTextStyles.getTitle1(context).copyWith(color: Colors.white)),
+                    ),
+                  ],
+                ),
+              ),
+            );
+          },
+        );
+      },
+    );
+  }
+
+  Future<bool> _reauthenticateUser(String currentPassword) async {
     try {
-      final state = context.read<UserCubit>().state; // ✅ Get latest state
+      final state = context.read<UserCubit>().state;
+      if (state is! UserLoaded) return false;
 
-      if (state is! UserLoaded) return false; // ✅ Ensure user is loaded
+      final user = FirebaseAuth.instance.currentUser;
+      if (user == null) return false;
 
-      DocumentSnapshot userDoc = await FirebaseFirestore.instance.collection('users').doc(state.userId).get();
+      final credential = EmailAuthProvider.credential(
+        email: state.userFakeEmail,
+        password: currentPassword,
+      );
 
-      if (!userDoc.exists) return false;
-
-      String storedPasswordHash = userDoc['password']; // ✅ Get hashed password from Firestore
-      String enteredPasswordHash = _hashPassword(enteredPassword); // ✅ Hash user input
-
-      print("🔍 Entered Password Hash: $enteredPasswordHash");
-      print("🔍 Stored Password Hash: $storedPasswordHash");
-
-      return enteredPasswordHash == storedPasswordHash; // ✅ Compare hashes
+      await user.reauthenticateWithCredential(credential);
+      return true;
     } catch (e) {
-      print("❌ Error validating password: $e");
+      print("❌ Re-authentication failed: $e");
       return false;
     }
   }
 
-
-  Future<void> _updatePassword(String newPassword) async {
+  Future<void> _updatePasswordFirebase(String newPassword) async {
     try {
-      final state = context.read<UserCubit>().state; // ✅ Get latest state
+      final user = FirebaseAuth.instance.currentUser;
+      if (user == null) return;
 
-      if (state is! UserLoaded) return; // ✅ Ensure user is loaded
-
-      String hashedNewPassword = _hashPassword(newPassword); // ✅ Hash new password
-
-      await FirebaseFirestore.instance.collection('users').doc(state.userId).update({
-        'password': hashedNewPassword, // ✅ Store hashed password
-      });
-
-      print("✅ Password updated successfully!");
+      await user.updatePassword(newPassword);
+      print("✅ Password updated successfully");
 
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
@@ -931,6 +1114,7 @@ class _AccountScreenState extends State<AccountScreen> {
       );
     }
   }
+
 
 
   String _hashPassword(String password) {
@@ -1035,6 +1219,302 @@ class _AccountScreenState extends State<AccountScreen> {
     Navigator.pop(context); // ✅ Close the Bottom Sheet
   }
 
+  void _showEncryptedDocumentsInfoSheet() {
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: Colors.white,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      builder: (_) {
+        return Padding(
+          padding: EdgeInsets.symmetric(horizontal: 20.w, vertical: 24.h),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Stack(
+                alignment: Alignment.center,
+                children: [
+                  Center(
+                    child: Text(
+                      AppLocalizations.of(context)!.encryptedDocuments,
+                      textAlign: TextAlign.center,
+                      style: AppTextStyles.getTitle1(context).copyWith(
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                  ),
+                  Positioned(
+                    right: 0,
+                    child: IconButton(
+                      icon: const Icon(Icons.close),
+                      onPressed: () => Navigator.pop(context),
+                    ),
+                  ),
+                ],
+              ),
+              SizedBox(height: 20.h),
+              Image.asset(
+                'assets/images/encrypted.png',
+                height: 100.h,
+              ),
+              SizedBox(height: 20.h),
+              Container(
+                padding: EdgeInsets.symmetric(horizontal: 14.w, vertical: 6.h),
+                decoration: BoxDecoration(
+                  color: const Color(0xFFDFF6F3),
+                  borderRadius: BorderRadius.circular(30.r),
+                ),
+                child: Text(
+                  AppLocalizations.of(context)!.activated,
+                  style: TextStyle(
+                    color: const Color(0xFF00B7A0),
+                    fontWeight: FontWeight.bold,
+                    fontSize: 12.sp,
+                  ),
+                ),
+              ),
+              SizedBox(height: 16.h),
+              Text(
+                AppLocalizations.of(context)!.encryptedDocumentsFullDescription,
+                textAlign: TextAlign.center,
+                style: AppTextStyles.getText3(context),
+              ),
+              SizedBox(height: 10.h),
+            ],
+          ),
+        );
+      },
+    );
+  }
+
+  void _showTwoFactorAuthInfoSheet(bool is2FAEnabled) {
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: Colors.white,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      builder: (_) {
+        return Padding(
+          padding: EdgeInsets.symmetric(horizontal: 20.w, vertical: 24.h),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Stack(
+                alignment: Alignment.center,
+                children: [
+                  Center(
+                    child: Text(
+                      AppLocalizations.of(context)!.twoFactorAuth,
+                      style: AppTextStyles.getTitle1(context).copyWith(fontWeight: FontWeight.bold),
+                    ),
+                  ),
+                  Positioned(
+                    right: 0,
+                    child: IconButton(
+                      icon: const Icon(Icons.close),
+                      onPressed: () => Navigator.pop(context),
+                    ),
+                  ),
+                ],
+              ),
+              SizedBox(height: 20.h),
+              Image.asset('assets/images/two_factor.png', height: 100.h),
+              SizedBox(height: 20.h),
+              Container(
+                padding: EdgeInsets.symmetric(horizontal: 14.w, vertical: 6.h),
+                decoration: BoxDecoration(
+                  color: is2FAEnabled ? const Color(0xFFDFF6F3) : const Color(0xFFFFEAE6),
+                  borderRadius: BorderRadius.circular(30.r),
+                ),
+                child: Text(
+                  is2FAEnabled
+                      ? AppLocalizations.of(context)!.activated
+                      : AppLocalizations.of(context)!.notActivated,
+                  style: TextStyle(
+                    color: is2FAEnabled ? const Color(0xFF00B7A0) : const Color(0xFFFF6B6B),
+                    fontWeight: FontWeight.bold,
+                    fontSize: 12.sp,
+                  ),
+                ),
+              ),
+              SizedBox(height: 16.h),
+              Text(
+                AppLocalizations.of(context)!.twoFactorAuthHeadline,
+                textAlign: TextAlign.center,
+                style: AppTextStyles.getText2(context).copyWith(fontWeight: FontWeight.bold, fontSize: 12.sp),
+              ),
+              SizedBox(height: 6.h),
+              Text(
+                AppLocalizations.of(context)!.twoFactorAuthFullDescription,
+                textAlign: TextAlign.center,
+                style: AppTextStyles.getText3(context),
+              ),
+              SizedBox(height: 20.h),
+              ElevatedButton(
+                onPressed: () async {
+                  final userId = (context.read<AuthCubit>().state as AuthAuthenticated).user.uid;
+                  final newValue = !is2FAEnabled;
+
+                  if (!newValue) {
+                    final confirm = await showDialog<bool>(
+                      context: context,
+                      builder: (_) => AlertDialog(
+                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16.r)),
+                        contentPadding: EdgeInsets.symmetric(horizontal: 24.w, vertical: 20.h),
+                        content: Column(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Text(
+                              AppLocalizations.of(context)!.deactivate2FA,
+                              style: AppTextStyles.getTitle2(context),
+                              textAlign: TextAlign.center,
+                            ),
+                            SizedBox(height: 12.h),
+                            Text(
+                              AppLocalizations.of(context)!.twoFactorDeactivateWarning,
+                              style: AppTextStyles.getText2(context),
+                              textAlign: TextAlign.center,
+                            ),
+                            SizedBox(height: 24.h),
+                            ElevatedButton(
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor: AppColors.red,
+                                elevation: 0,
+                                padding: EdgeInsets.symmetric(horizontal: 24.w, vertical: 12.h),
+                                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10.r)),
+                              ),
+                              onPressed: () {
+                                Navigator.pop(context, true);
+                              },
+                              child: Center(
+                                child: Text(
+                                  AppLocalizations.of(context)!.deactivate2FA,
+                                  style: AppTextStyles.getText2(context).copyWith(color: Colors.white),
+                                ),
+                              ),
+                            ),
+                            TextButton(
+                              onPressed: () => Navigator.pop(context, false),
+                              child: Text(
+                                AppLocalizations.of(context)!.cancel,
+                                style: AppTextStyles.getText2(context).copyWith(
+                                  fontWeight: FontWeight.bold,
+                                  color: AppColors.blackText,
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    );
+
+                    if (confirm != true) return;
+                  }
+
+                  await FirebaseFirestore.instance
+                      .collection('users')
+                      .doc(userId)
+                      .update({'twoFactorAuthEnabled': newValue});
+
+                  Navigator.pop(context);
+                  await context.read<UserCubit>().loadUserData(context, useCache: false);
+                },
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: AppColors.main,
+                  padding: EdgeInsets.symmetric(vertical: 14.h),
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12.r)),
+                ),
+                child: Center(
+                  child: Text(
+                    is2FAEnabled
+                        ? AppLocalizations.of(context)!.deactivate2FA
+                        : AppLocalizations.of(context)!.activate2FA,
+                    style: AppTextStyles.getText2(context).copyWith(
+                      color: Colors.white,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                ),
+              ),
+            ],
+          ),
+        );
+      },
+    );
+  }
+
+  void showDeleteAccountSheet(BuildContext context) {
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: Colors.white,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20.r)),
+      ),
+      isScrollControlled: true,
+      builder: (_) {
+        return Padding(
+          padding: EdgeInsets.symmetric(horizontal: 20.w, vertical: 24.h),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Stack(
+                alignment: Alignment.center,
+                children: [
+                  Center(
+                    child: Text(
+                      AppLocalizations.of(context)!.deleteMyAccount,
+                      style: AppTextStyles.getTitle1(context).copyWith(fontWeight: FontWeight.bold),
+                      textAlign: TextAlign.center,
+                    ),
+                  ),
+                  Positioned(
+                    right: 0,
+                    child: IconButton(
+                      icon: const Icon(Icons.close),
+                      onPressed: () => Navigator.pop(context),
+                    ),
+                  ),
+                ],
+              ),
+              SizedBox(height: 20.h),
+              Text(
+                AppLocalizations.of(context)!.deleteAccountWarningText,
+                style: AppTextStyles.getText2(context).copyWith(color: Colors.black87),
+                textAlign: TextAlign.center,
+              ),
+              SizedBox(height: 16.h),
+              TextButton(
+                onPressed: () => Navigator.pop(context),
+                style: TextButton.styleFrom(padding: EdgeInsets.zero),
+                child: Text(
+                  AppLocalizations.of(context)!.cancel,
+                  style: AppTextStyles.getText2(context).copyWith(
+                    fontWeight: FontWeight.bold,
+                    color: AppColors.blackText,
+                  ),
+                ),
+              ),
+              TextButton(
+                onPressed: () {
+                  // TODO: تنفيذ الحذف الفعلي
+                },
+                style: TextButton.styleFrom(padding: EdgeInsets.zero),
+                child: Text(
+                  AppLocalizations.of(context)!.confirmDeleteMyAccount,
+                  style: AppTextStyles.getText2(context).copyWith(
+                    fontWeight: FontWeight.bold,
+                    color: Colors.red,
+                  ),
+                ),
+              ),
+            ],
+          ),
+        );
+      },
+    );
+  }
 
   ///====================================================///
 
@@ -1110,8 +1590,8 @@ class _AccountScreenState extends State<AccountScreen> {
           children: [
             Image.asset(
               'assets/images/account_banner.png',
-              width: 50.w,
-              height: 50.w,
+              width: 45.w,
+              height: 45.w,
             ),
             SizedBox(width: 18.w),
             Expanded(
@@ -1159,13 +1639,21 @@ class _AccountScreenState extends State<AccountScreen> {
                 Divider(color: Colors.grey[200], height: 2.h),
                 _buildEditableListTile(Icons.people, AppLocalizations.of(context)!.myRelatives, AppLocalizations.of(context)!.myRelativesDescription, 'firstName'),
                 Divider(color: Colors.grey[200], height: 2.h),
-
                 const SizedBox(height: 15),
                 _buildSectionTitle(AppLocalizations.of(context)!.loginSection),
                 Divider(color: Colors.grey[200], height: 2.h),
                 _buildEditableListTile(Icons.phone, AppLocalizations.of(context)!.phone, _formatPhoneForDisplay(state.userPhone), 'phoneNumber', isVerified: state.isPhoneVerified),
                 Divider(color: Colors.grey[200], height: 2.h),
-                _buildEditableListTile(Icons.email, AppLocalizations.of(context)!.email, state.userEmail, 'email', isVerified: state.isEmailVerified),
+                _buildEditableListTile(
+                  Icons.email,
+                  AppLocalizations.of(context)!.email,
+                  (state.userEmail == null || state.userEmail!.isEmpty)
+                      ? AppLocalizations.of(context)!.notProvided
+                      : state.userEmail!,
+                  'email',
+                  isVerified: state.isEmailVerified,
+                ),
+
                 Divider(color: Colors.grey[200], height: 2.h),
                 _buildEditableListTile(Icons.lock, AppLocalizations.of(context)!.password, AppLocalizations.of(context)!.passwordHidden, 'password'),
                 Divider(color: Colors.grey[200], height: 2.h),
@@ -1178,9 +1666,59 @@ class _AccountScreenState extends State<AccountScreen> {
                   style: AppTextStyles.getText2(context).copyWith(fontWeight: FontWeight.w500, color: AppColors.grayMain),
                 ),),
                 Divider(color: Colors.grey[200], height: 2.h),
-                _buildEditableListTile(Icons.key, AppLocalizations.of(context)!.twoFactorAuth, AppLocalizations.of(context)!.twoFactorAuthActivated, 'Activated'),
+                if (state is UserLoaded)
+                  _buildEditableListTile(
+                    Icons.key,
+                    AppLocalizations.of(context)!.twoFactorAuth,
+                    state.is2FAEnabled
+                        ? AppLocalizations.of(context)!.activated
+                        : AppLocalizations.of(context)!.notActivated,
+                    '2fa',
+                    trailingWidget: Container(
+                      padding: EdgeInsets.symmetric(horizontal: 8.w, vertical: 4.h),
+                      decoration: BoxDecoration(
+                        color: state.is2FAEnabled
+                            ? const Color(0xFFDFF6F3)
+                            : const Color(0xFFFFF4D9),
+                        borderRadius: BorderRadius.circular(12.r),
+                      ),
+                      child: Text(
+                        state.is2FAEnabled
+                            ? AppLocalizations.of(context)!.activated
+                            : AppLocalizations.of(context)!.notActivated,
+                        style: AppTextStyles.getText3(context).copyWith(
+                          color: state.is2FAEnabled
+                              ? const Color(0xFF00B7A0)
+                              : AppColors.yellow,
+                          fontWeight: FontWeight.w400,
+                          fontSize: 8,
+                        ),
+                      ),
+                    ),
+                  ),
+
                 Divider(color: Colors.grey[200], height: 2.h),
-                _buildEditableListTile(Icons.security, AppLocalizations.of(context)!.encryptedDocuments, AppLocalizations.of(context)!.encryptedDocumentsDescription,'Activated'),
+                _buildEditableListTile(
+                  Icons.security,
+                  AppLocalizations.of(context)!.encryptedDocuments,
+                  AppLocalizations.of(context)!.encryptedDocumentsDescription,
+                  'encrypted',
+                  trailingWidget: Container(
+                    padding: EdgeInsets.symmetric(horizontal: 8.w, vertical: 4.h),
+                    decoration: BoxDecoration(
+                      color: const Color(0xFFDFF6F3),
+                      borderRadius: BorderRadius.circular(12.r),
+                    ),
+                    child: Text(
+                      AppLocalizations.of(context)!.activated,
+                      style: AppTextStyles.getText3(context).copyWith(
+                        color: const Color(0xFF00B7A0),
+                        fontWeight: FontWeight.w400,
+                        fontSize: 8,
+                      ),
+                    ),
+                  ),
+                ),
                 Divider(color: Colors.grey[200], height: 2.h),
                 _buildEditableListTile(
                     biometricIcon,
@@ -1196,10 +1734,28 @@ class _AccountScreenState extends State<AccountScreen> {
                 SizedBox(height: 15.h),
                 _buildSectionTitle(AppLocalizations.of(context)!.confidentiality),
                 Divider(color: Colors.grey[200], height: 2.h),
-                _buildEditableListTile(Icons.settings, AppLocalizations.of(context)!.myPreferences, '', ''),
+                _buildPrivacyItem(
+                  AppLocalizations.of(context)!.myPreferences,
+                      () {
+                        Navigator.push(context, fadePageRoute(const MyPreferencesPage()));
+                  },
+                ),
                 Divider(color: Colors.grey[200], height: 2.h),
-                _buildEditableListTile(Icons.info, AppLocalizations.of(context)!.legalInformation, '', ''),
+                _buildPrivacyItem(
+                  AppLocalizations.of(context)!.legalInformation,
+                      () {
+                        Navigator.push(context, fadePageRoute(const LegalInformation()));
+                  },
+                ),
                 Divider(color: Colors.grey[200], height: 2.h),
+                _buildPrivacyItem(
+                  AppLocalizations.of(context)!.deleteMyAccount,
+                      () => showDeleteAccountSheet(context),
+                ),
+
+                Divider(color: Colors.grey[200], height: 2.h),
+
+
 
                 SizedBox(height: 25.h),
                 Center(
@@ -1220,7 +1776,19 @@ class _AccountScreenState extends State<AccountScreen> {
                 ),
 
 
-                SizedBox(height: 25.h),
+                if (appVersion.isNotEmpty)
+                  Padding(
+                    padding: EdgeInsets.only(top: 10.h, bottom: 20.h),
+                    child: Center(
+                      child: Text(
+                        appVersion,
+                        style: AppTextStyles.getText3(context).copyWith(
+                          color: Colors.grey,
+                          fontSize: 9.sp,
+                        ),
+                      ),
+                    ),
+                  ),
               ],
             ),
           ),
@@ -1397,11 +1965,24 @@ class _AccountScreenState extends State<AccountScreen> {
         } else if (title == AppLocalizations.of(context)!.phone) {
           _showEditFieldSheet(context, 'phoneNumber', state.userPhone);
         } else if (title == AppLocalizations.of(context)!.email) {
-          _showEditFieldSheet(context, 'email', state.userEmail);
+          final hasEmail = state.userEmail != null && state.userEmail!.isNotEmpty;
+          _showEditFieldSheet(
+            context,
+            'email',
+            state.userEmail ?? '',
+            customTitle: (state.userEmail == null || state.userEmail!.isEmpty)
+                ? AppLocalizations.of(context)!.addEmailTitle
+                : null,
+          );
+
         } else if (title == AppLocalizations.of(context)!.password) {
           _showChangePasswordSheet(context);
         } else if (title == AppLocalizations.of(context)!.language) {
           _showLanguageSelectionSheet();
+        } else if (field == 'encrypted') {
+          _showEncryptedDocumentsInfoSheet();
+        } else if (field == '2fa') {
+          _showTwoFactorAuthInfoSheet(state.is2FAEnabled);
         } else {
           _showEditDialog(field, title, subtitle);
         }
@@ -1429,17 +2010,23 @@ class _AccountScreenState extends State<AccountScreen> {
                 ],
               ),
             ),
-            if (field == 'phoneNumber' || field == 'email')
+            if ((field == 'phoneNumber') || (field == 'email' && (subtitle.isNotEmpty && subtitle != AppLocalizations.of(context)!.notProvided)))
               Container(
                 padding: EdgeInsets.symmetric(horizontal: 8.w, vertical: 4.h),
                 decoration: BoxDecoration(
-                  color: (isVerified ?? false) ? AppColors.main.withOpacity(0.1) : AppColors.yellow.withOpacity(0.1),
+                  color: (isVerified ?? false)
+                      ? AppColors.main.withOpacity(0.1)
+                      : AppColors.yellow.withOpacity(0.1),
                   borderRadius: BorderRadius.circular(12.r),
                 ),
                 child: Text(
-                  (isVerified ?? false) ? AppLocalizations.of(context)!.verified : AppLocalizations.of(context)!.notVerified,
+                  (isVerified ?? false)
+                      ? AppLocalizations.of(context)!.verified
+                      : AppLocalizations.of(context)!.notVerified,
                   style: AppTextStyles.getText3(context).copyWith(
-                    color: (isVerified ?? false) ? AppColors.main : AppColors.yellow,
+                    color: (isVerified ?? false)
+                        ? AppColors.main
+                        : AppColors.yellow,
                     fontWeight: FontWeight.w400,
                     fontSize: 8,
                   ),
@@ -1491,7 +2078,7 @@ class _AccountScreenState extends State<AccountScreen> {
               Row(
                 children: [
                   SizedBox(width: 8.w),
-                  Icon(Icons.arrow_forward_ios, size: 16.sp, color: Colors.grey),
+                  Icon(Icons.arrow_forward_ios, size: 12.sp, color: Colors.grey),
                 ],
               ),
           ],
@@ -1499,6 +2086,30 @@ class _AccountScreenState extends State<AccountScreen> {
       ),
     );
   }
+
+  Widget _buildPrivacyItem(String title, VoidCallback onTap) {
+    return InkWell(
+      onTap: onTap,
+      child: Padding(
+        padding: EdgeInsets.symmetric(vertical: 12.h, horizontal: 20.w),
+        child: Row(
+          children: [
+            Expanded(
+              child: Text(
+                title,
+                style: AppTextStyles.getText2(context).copyWith(
+                  fontWeight: FontWeight.w500,
+                  color:  AppColors.blackText,
+                ),
+              ),
+            ),
+            Icon(Icons.arrow_forward_ios, size: 12.sp, color: Colors.grey),
+          ],
+        ),
+      ),
+    );
+  }
+
 }
 
 

@@ -12,12 +12,22 @@ import 'package:shared_preferences/shared_preferences.dart';
 import '../../../models/sign_up_info.dart';
 import '../../../app/text_styles.dart';
 import 'package:flutter_gen/gen_l10n/app_localizations.dart';
+import 'package:device_info_plus/device_info_plus.dart';
+
 
 class RecapPage extends StatelessWidget {
   final SignUpInfo signUpInfo;
   final FirestoreUserService _firestoreService = FirestoreUserService();
 
   RecapPage({Key? key, required this.signUpInfo}) : super(key: key);
+
+
+  Future<String> getDeviceId() async {
+    final info = DeviceInfoPlugin();
+    final androidInfo = await info.androidInfo;
+    return androidInfo.id ?? androidInfo.device ?? '';
+  }
+
 
   /// **Auto Login after successful registration**
   Future<void> _autoLogin(BuildContext context) async {
@@ -114,10 +124,18 @@ class RecapPage extends StatelessWidget {
         'termsAccepted': signUpInfo.termsAccepted,
         'marketingChecked': signUpInfo.marketingChecked,
         'timestamp': FieldValue.serverTimestamp(),
+        'twoFactorAuthEnabled': false,
+        'trustedDevices': [],
       };
 
       // ✅ Save user data in Firestore
       await _firestoreService.addUser(userId, userData);
+
+      final deviceId = await getDeviceId();
+      await FirebaseFirestore.instance.collection('users').doc(userId).update({
+        'trustedDevices': FieldValue.arrayUnion([deviceId])
+      });
+
 
       // ✅ Store user info in SharedPreferences
       SharedPreferences prefs = await SharedPreferences.getInstance();

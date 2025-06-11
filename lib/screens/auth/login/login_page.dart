@@ -1,5 +1,6 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:docsera/app/text_styles.dart';
+import 'package:docsera/screens/auth/login/login_otp.dart';
 import 'package:docsera/utils/text_direction_utils.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:crypto/crypto.dart'; // For hashing
@@ -15,8 +16,10 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 import 'package:local_auth/local_auth.dart'; // Face ID Auth
-
 import '../../../Business_Logic/Account_page/user_cubit.dart';
+import 'package:device_info_plus/device_info_plus.dart';
+
+
 
 class LogInPage extends StatefulWidget {
   final String? preFilledInput; // Optional pre-filled email or phone number
@@ -79,6 +82,44 @@ class _LogInPageState extends State<LogInPage> {
   String _hashPassword(String password) {
     return sha256.convert(utf8.encode(password)).toString();
   }
+
+  Future<String> getDeviceId() async {
+    final info = DeviceInfoPlugin();
+    final androidInfo = await info.androidInfo;
+    return androidInfo.id ?? androidInfo.serialNumber ?? androidInfo.device ?? '';
+  }
+
+  void _showOTPVerificationSheet({
+    required String phoneOrEmail,
+    required VoidCallback onVerified,
+  }) {
+    showModalBottomSheet(
+      context: context,
+      isDismissible: false,
+      enableDrag: false,
+      isScrollControlled: true,
+      builder: (_) {
+        return Container(
+          padding: EdgeInsets.all(20.w),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Text('🔐 Verification Required'),
+              SizedBox(height: 10.h),
+              Text('We sent a code to $phoneOrEmail'),
+              SizedBox(height: 20.h),
+              ElevatedButton(
+                onPressed: onVerified, // نفترض تحقق صحيح الآن
+                child: Text('Simulate Success'),
+              ),
+            ],
+          ),
+        );
+      },
+    );
+  }
+
+
 
   // /// **🚀 Log in user using FirebaseAuth + Firestore**
   // Future<void> _logInUser() async {
@@ -210,12 +251,35 @@ class _LogInPageState extends State<LogInPage> {
 
       // ✅ الانتقال للواجهة الرئيسية
       if (context.mounted) {
-        Navigator.pushAndRemoveUntil(
-          context,
-          fadePageRoute(CustomBottomNavigationBar()),
-              (route) => false,
-        );
+        final deviceId = await getDeviceId();
+        final trustedDevices = (userData['trustedDevices'] as List?) ?? [];
+        final is2FAEnabled = userData['twoFactorAuthEnabled'] == true;
+        final isPhone = userData['phoneNumber'] != null;
+
+        if (is2FAEnabled && !trustedDevices.contains(deviceId)) {
+          // 👇 إرسال رمز OTP والتنقل إلى صفحة تحقق OTP المخصصة لتسجيل الدخول
+          final phone = userData['phoneNumber'];
+
+          Navigator.pushAndRemoveUntil(
+            context,
+            MaterialPageRoute(
+              builder: (_) => LoginOTPPage(
+                phoneNumber: phone,
+                userId: userDoc.id, // ✅ الحل هنا
+              ),
+            ),
+                (route) => false,
+          );
+        } else {
+          // 👇 المستخدم موثق مسبقًا أو تحقق بخطوتين غير مفعل
+          Navigator.pushAndRemoveUntil(
+            context,
+            fadePageRoute(CustomBottomNavigationBar()),
+                (route) => false,
+          );
+        }
       }
+
 
     } catch (e) {
       print("❌ خطأ أثناء تسجيل الدخول: $e");
