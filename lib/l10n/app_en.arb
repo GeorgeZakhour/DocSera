@@ -436,7 +436,11 @@
   "enterManually": "Enter manually",
   "useBiometricLogin": "Use Face ID or Fingerprint to log in",
   "forgotPassword": "Forgot Password?",
-
+  "biometricPrompt": "Please verify using face or fingerprint",
+  "logInFailed": "Login failed. Please check your credentials and try again.",
+  "authenticating": "Authenticating...",
+  "createAnAccount": "Create an account",
+  "continueAsGuest": "Continue as guest",
 
   "@SignUpPage================================": {
     "description": "👤Sign Up Page"
@@ -695,11 +699,7 @@
   "activate2FA": "Activate Two-Factor Authentication",
   "deactivate2FA": "Deactivate Two-Factor Authentication",
 
-  "twoFactorDeactivateWarning": "Disabling 2FA will make your account less secure. Are you sure you want to proceed?"
+  "twoFactorDeactivateWarning": "Disabling 2FA will make your account less secure. Are you sure you want to proceed?",
 
-
-
-
-
-
+  "errorOccurred": "An error occurred. Please try again"
 }

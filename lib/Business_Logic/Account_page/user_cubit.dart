@@ -224,7 +224,7 @@ class UserCubit extends Cubit<UserState> {
       // ✅ Preserve Face ID settings and credentials
       bool wasFaceIdEnabled = prefs.getBool('enableFaceID') ?? false;
       String? biometricType = prefs.getString('biometricType');
-      String? savedEmail = prefs.getString('userEmail');
+      String? savedPhone = prefs.getString('userPhone');
       String? savedPassword = prefs.getString('userPassword');
 
       print("📌 [DEBUG] Logging out. Preserving Face ID: $wasFaceIdEnabled, Biometric Type: $biometricType");
@@ -236,8 +236,8 @@ class UserCubit extends Cubit<UserState> {
       if (biometricType != null) {
         await prefs.setString('biometricType', biometricType);
       }
-      if (savedEmail != null && savedPassword != null) {
-        await prefs.setString('userEmail', savedEmail);
+      if (savedPhone != null && savedPassword != null) {
+        await prefs.setString('userPhone', savedPhone);
         await prefs.setString('userPassword', savedPassword);
       }
 
@@ -248,6 +248,7 @@ class UserCubit extends Cubit<UserState> {
       emit(UserError("Failed to log out: $e"));
     }
   }
+
 
 
 }

@@ -42,6 +42,8 @@ class _LogInPageState extends State<LogInPage> {
   String? errorMessage;
   bool isLoading = false;
   String biometricType = ""; // Default empty string
+  bool biometricAvailable = false;
+  bool isFaceID = false;
 
 
   @override
@@ -49,32 +51,29 @@ class _LogInPageState extends State<LogInPage> {
     super.initState();
     _inputController = TextEditingController(text: widget.preFilledInput);
     isValid = widget.preFilledInput != null && widget.preFilledInput!.isNotEmpty;
-    _checkFaceIdAvailability();
+    _checkBiometricType();
   }
 
-  Future<void> _checkFaceIdAvailability() async {
+
+
+
+
+
+
+  Future<void> _checkBiometricType() async {
     final prefs = await SharedPreferences.getInstance();
-    bool isEnabled = prefs.getBool('enableFaceID') ?? false;
-    String savedBiometricType = prefs.getString('biometricType') ?? AppLocalizations.of(context)!.biometricTitle;
+    final isBiometricEnabled = prefs.getBool('enableFaceID') ?? false;
 
-    // ✅ Load saved email and password
-    String? savedEmail = prefs.getString('userEmail');
-    String? savedPassword = prefs.getString('userPassword');
+    if (!isBiometricEnabled) return;
 
+    final availableBiometrics = await auth.getAvailableBiometrics();
     setState(() {
-      isFaceIdEnabled = isEnabled;
-      biometricType = savedBiometricType;
+      biometricAvailable = availableBiometrics.isNotEmpty;
+      isFaceID = availableBiometrics.contains(BiometricType.face);
     });
 
-    print("🟢 Face ID Enabled: $isFaceIdEnabled");
-    print("🟢 Biometric Type: $biometricType");
-    print("🟢 Saved Email: $savedEmail");
-    print("🟢 Saved Password: ${savedPassword != null ? 'Exists' : 'Not Found'}");
-
-    if (isEnabled && savedEmail != null && savedPassword != null) {
-      print("✅ Suggesting Face ID Login");
-      _authenticateWithFaceID();
-    }
+    print("✅ Biometric available: $biometricAvailable");
+    print("✅ Is Face ID: $isFaceID");
   }
 
 
@@ -119,74 +118,6 @@ class _LogInPageState extends State<LogInPage> {
     );
   }
 
-
-
-  // /// **🚀 Log in user using FirebaseAuth + Firestore**
-  // Future<void> _logInUser() async {
-  //   setState(() => isLoading = true);
-  //   try {
-  //     final input = _inputController.text.trim();
-  //     final hashedPassword = _hashPassword(_passwordController.text);
-  //
-  //     final userDoc = await _firestoreService.getUserByEmailOrPhone(input);
-  //     if (userDoc.exists) {
-  //       final userData = userDoc.data();
-  //       final storedPassword = userData?['password'];
-  //
-  //       if (storedPassword == hashedPassword) {
-  //         SharedPreferences prefs = await SharedPreferences.getInstance();
-  //
-  //         // ✅ Preserve Face ID settings
-  //         bool wasFaceIdEnabled = prefs.getBool('enableFaceID') ?? false;
-  //         String? biometricType = prefs.getString('biometricType');
-  //
-  //         // ✅ Ensure credentials are saved
-  //         await prefs.setBool('isLoggedIn', true);
-  //         await prefs.setString('userId', userDoc.id);
-  //         await prefs.setString('userName', '${userData?['firstName']} ${userData?['lastName']}');
-  //         await prefs.setString('userEmail', userData?['email'] ?? '');
-  //         await prefs.setString('userPhone', userData?['phoneNumber'] ?? '');
-  //         await prefs.setString('userPassword', _passwordController.text); // ✅ Store plain password for biometric login
-  //
-  //         // ✅ Restore Face ID settings
-  //         await prefs.setBool('enableFaceID', wasFaceIdEnabled);
-  //         if (biometricType != null) {
-  //           await prefs.setString('biometricType', biometricType);
-  //         }
-  //
-  //         print("✅ [DEBUG] Saved Credentials for Face ID: Email = ${prefs.getString('userEmail')}, Password Exists: ${prefs.getString('userPassword') != null}");
-  //
-  //         // ✅ Reload user data
-  //         context.read<UserCubit>().loadUserData(context);
-  //
-  //         // ✅ Navigate to Home
-  //         if (mounted) {
-  //           Navigator.pushAndRemoveUntil(
-  //             context,
-  //             fadePageRoute(CustomBottomNavigationBar()),
-  //                 (route) => false,
-  //           );
-  //         }
-  //       }
-  //
-  //       else {
-  //         setState(() {
-  //           errorMessage = AppLocalizations.of(context)!.incorrectPassword;
-  //         });
-  //       }
-  //     } else {
-  //       setState(() {
-  //         errorMessage = AppLocalizations.of(context)!.userNotFound;
-  //       });
-  //     }
-  //   } catch (e) {
-  //     setState(() {
-  //       errorMessage = AppLocalizations.of(context)!.loginError(e.toString());
-  //     });
-  //   } finally {
-  //     setState(() => isLoading = false);
-  //   }
-  // }
 
   /// ✅ تنسيق الرقم لصيغة 00963 كما في صفحة التسجيل
   String getFormattedPhoneNumber(String phone) {
@@ -294,53 +225,51 @@ class _LogInPageState extends State<LogInPage> {
 
 
 
-  Future<void> _authenticateWithFaceID({bool allowDismiss = false}) async {
+  Future<void> _authenticateWithFaceID() async {
     try {
-      SharedPreferences prefs = await SharedPreferences.getInstance();
-      String? savedEmail = prefs.getString('userEmail');
-      String? savedPassword = prefs.getString('userPassword');
+      final prefs = await SharedPreferences.getInstance();
+      final savedPhone = prefs.getString('userPhone');
+      final savedPassword = prefs.getString('userPassword');
 
-      // ✅ Debugging: Check if credentials are stored properly
-      print("🟢 [DEBUG] Checking Saved Credentials for Face ID Login");
-      print("🔹 Email: ${savedEmail ?? 'Not Found'}");
+      print("🟢 [DEBUG] Checking Saved Credentials for Biometric Login");
+      print("🔹 Saved Phone: ${savedPhone ?? 'Not Found'}");
       print("🔹 Password Exists: ${savedPassword != null}");
 
-      if (savedEmail == null || savedPassword == null) {
-        print("❌ No saved credentials for Face ID login.");
+      if (savedPhone == null || savedPassword == null) {
+        print("❌ No saved credentials.");
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text(AppLocalizations.of(context)!.faceIdNoCredentials)),
         );
         return;
       }
 
-      bool authenticated = await auth.authenticate(
+      final authenticated = await auth.authenticate(
         localizedReason: biometricType == AppLocalizations.of(context)!.faceIdTitle
             ? AppLocalizations.of(context)!.faceIdPrompt
             : AppLocalizations.of(context)!.fingerprintPrompt,
-        options: AuthenticationOptions(
-          biometricOnly: true,
-          useErrorDialogs: true,
-          stickyAuth: true,
-        ),
+        options: const AuthenticationOptions(biometricOnly: true),
       );
 
       if (authenticated) {
+        final formattedDisplayPhone = savedPhone.startsWith('00963')
+            ? '0${savedPhone.substring(5)}'
+            : savedPhone;
+
+        print("✅ Auto-filled from biometric: $formattedDisplayPhone");
+
         setState(() {
-          _inputController.text = savedEmail;
+          _inputController.text = formattedDisplayPhone;
           _passwordController.text = savedPassword;
           isValid = true;
         });
 
-        print("✅ Auto-filled credentials with Face ID");
+        await _logInUser(); // ✅ نفذ تسجيل الدخول تلقائيًا بعد تعبئة الحقول
       }
     } catch (e) {
-      print("❌ Face ID Authentication Error: $e");
-
-      if (allowDismiss) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(AppLocalizations.of(context)!.faceIdFailed)),
-        );
-      }
+      print("❌ Biometric Authentication Error: $e");
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(AppLocalizations.of(context)!.faceIdFailed)),
+      );
     }
   }
 
@@ -479,42 +408,26 @@ class _LogInPageState extends State<LogInPage> {
               ),
             ),
 
-            if (isFaceIdEnabled)
+            if (biometricAvailable)
               Expanded(
-                child: Center(
+                child: Align(
+                  alignment: Alignment.bottomCenter,
                   child: GestureDetector(
                     onTap: _authenticateWithFaceID,
-                    child: Container(
-                      width: 150.w,
-                      height: 150.h,
-                      decoration: const BoxDecoration(
-                        shape: BoxShape.circle,
-                        color: Colors.transparent,
-                      ),
-                      child: Column(
-                        mainAxisAlignment: MainAxisAlignment.center, // ✅ توسيط كل شيء داخل الدائرة
-                        crossAxisAlignment: CrossAxisAlignment.center,
-                        children: [
-                          Icon(
-                            biometricType == AppLocalizations.of(context)!.faceIdTitle
-                                ? Icons.face
-                                : Icons.fingerprint,
-                            size: 70.w, // ✅ أيقونة كبيرة
-                            color: AppColors.main,
-                          ),
-                          SizedBox(height: 8.h),
-                          Flexible(
-                            child: Text(
-                              biometricType == AppLocalizations.of(context)!.faceIdTitle
-                                  ? AppLocalizations.of(context)!.logInWithFaceId
-                                  : AppLocalizations.of(context)!.logInWithFingerprint,
-                              style: AppTextStyles.getText3(context).copyWith(
-                                color: AppColors.main,
-                              ),
-                              textAlign: TextAlign.center, // ✅ توسيط النص داخل الدائرة
-                            ),
-                          ),
-                        ],
+                    child: Padding(
+                      padding: EdgeInsets.only(bottom: 50.h),
+                      child: isFaceID
+                          ? Image.asset(
+                        'assets/images/face_Id.png',
+                        width: 65.w,
+                        height: 65.w,
+                        color: AppColors.main,
+                      )
+                          : Image.asset(
+                        'assets/images/fingerprint.png',
+                        width: 55.w,
+                        height: 55.w,
+                        color: AppColors.main,
                       ),
                     ),
                   ),

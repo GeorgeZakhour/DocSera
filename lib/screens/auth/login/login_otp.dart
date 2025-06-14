@@ -58,6 +58,16 @@ class _LoginOTPPageState extends State<LoginOTPPage> {
         isLoading = false;
       });
       _startResendTimer();
+
+      // ✅ عرض الـ OTP كـ Snackbar (للديفيلوبر فقط)
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('OTP: $sentCode'),
+          backgroundColor: AppColors.main.withOpacity(0.9),
+          duration: const Duration(seconds: 3),
+        ),
+      );
+
     } catch (e) {
       setState(() {
         isLoading = false;
@@ -76,6 +86,7 @@ class _LoginOTPPageState extends State<LoginOTPPage> {
       );
     }
   }
+
 
   Future<void> _validateCode() async {
     setState(() {

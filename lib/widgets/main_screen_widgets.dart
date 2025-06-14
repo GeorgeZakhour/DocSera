@@ -124,7 +124,7 @@ class TopSection extends StatelessWidget {
               Text(
                 AppLocalizations.of(context)!.anytime,
                 style: AppTextStyles.getTitle4(context).copyWith(
-                  color: AppColors.orange,
+                  color: AppColors.orangeText,
                   fontWeight: FontWeight.w800
                 ),
               ),

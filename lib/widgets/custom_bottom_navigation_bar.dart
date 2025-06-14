@@ -400,7 +400,7 @@ class _CustomBottomNavigationBarState extends State<CustomBottomNavigationBar>
               isLoggedIn ? 'assets/icons/account-on.svg' : 'assets/icons/login-on.svg',
               isLoggedIn ? AppLocalizations.of(context)!.account : AppLocalizations.of(context)!.logIn,
               4,
-              22.h,
+              isLoggedIn ? 22.h : 17.h,
             ),
           ],
         ),

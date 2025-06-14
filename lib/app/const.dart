@@ -6,6 +6,7 @@ class AppColors {
   static const Color mainDark = Color(0xFF007474); // Darker Green color
   static const Color yellow = Color(0xFFFFC107); // Yellow color
   static const Color orange = Color(0xFFFFB494); // Orange color
+  static const Color orangeText = Color(0xFFFFA070); // Orange color
   static const Color red = Color(0xFFD32F2F); // Matching red tone
   static const Color background = Color(0xFFF7FBFB); // Lighter green background
   static const Color background3 = Color(0xFFF7FDFC); // Softer light green background

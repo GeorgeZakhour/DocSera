@@ -14,6 +14,7 @@ class FirestoreOTPService {
       });
 
       print('OTP sent to phone: $phoneNumber, Code: $otp');
+
       return otp;
     } catch (e) {
       throw Exception('Failed to send OTP to phone: $e');

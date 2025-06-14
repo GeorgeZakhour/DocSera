@@ -4,6 +4,8 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:docsera/Business_Logic/Authentication/auth_cubit.dart';
 import 'package:docsera/Business_Logic/Authentication/auth_state.dart';
 import 'package:docsera/main.dart';
+import 'package:docsera/models/sign_up_info.dart';
+import 'package:docsera/screens/auth/sign_up/sign_up_phone.dart';
 import 'package:docsera/screens/home/account/legal_information.dart';
 import 'package:docsera/screens/home/shimmer/shimmer_widgets.dart';
 import 'package:docsera/services/firestore/firestore_user_service.dart';
@@ -519,9 +521,18 @@ class _AccountScreenState extends State<AccountScreen> {
                         });
                         startTimer(setState);
 
-                        fieldType == 'phoneNumber'
+                        final otp = fieldType == 'phoneNumber'
                             ? await otpService.sendOTPToPhone(newValue)
                             : await otpService.sendOTPToEmail(newValue);
+                        if (context.mounted) {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            SnackBar(
+                              content: Text('OTP: $otp'),
+                              backgroundColor: AppColors.main.withOpacity(0.9),
+                              duration: const Duration(seconds: 3),
+                            ),
+                          );
+                        }
                       }
                           : null,
                       child: Text(
@@ -1497,8 +1508,43 @@ class _AccountScreenState extends State<AccountScreen> {
                 ),
               ),
               TextButton(
-                onPressed: () {
-                  // TODO: تنفيذ الحذف الفعلي
+                onPressed: () async {
+                  Navigator.pop(context); // إغلاق الشيت
+
+                  final user = FirebaseAuth.instance.currentUser;
+                  final userId = user?.uid;
+
+                  String? phone;
+                  String? email;
+
+                  if (userId != null) {
+                    // ✅ جلب بيانات Firestore
+                    final userDoc = await FirebaseFirestore.instance.collection('users').doc(userId).get();
+                    phone = userDoc.data()?['phoneNumber']?.toString();
+                    email = userDoc.data()?['email']?.toString();
+
+                    print("🧾 [DEBUG] userId: $userId");
+                    print("📞 [DEBUG] phone from Firestore: $phone");
+                    print("📧 [DEBUG] email from Firestore: $email");
+
+                    final service = FirestoreUserService();
+
+                    showDialog(
+                      context: context,
+                      barrierDismissible: false,
+                      builder: (_) => Center(child: CircularProgressIndicator(color: AppColors.grayMain)),
+                    );
+
+                    try {
+                      await service.deleteUserAccount(userId, phoneNumber: phone, email: email);
+                      Navigator.popUntil(context, (route) => route.isFirst);
+                    } catch (e) {
+                      Navigator.pop(context);
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(content: Text(AppLocalizations.of(context)!.errorOccurred)),
+                      );
+                    }
+                  }
                 },
                 style: TextButton.styleFrom(padding: EdgeInsets.zero),
                 child: Text(
@@ -1509,6 +1555,7 @@ class _AccountScreenState extends State<AccountScreen> {
                   ),
                 ),
               ),
+
             ],
           ),
         );
@@ -1839,8 +1886,11 @@ class _AccountScreenState extends State<AccountScreen> {
             // ✅ رابط لإنشاء حساب جديد
             TextButton(
               onPressed: () {
-                Navigator.pushNamed(context, '/signup');
-              },
+                Navigator.push(
+                  context,
+                  fadePageRoute(SignUpFirstPage(signUpInfo: SignUpInfo())),
+                );
+                },
               child: Text(AppLocalizations.of(context)!.signup_button,
                   style: AppTextStyles.getText2(context).copyWith(color: Colors.white)), // 🔸 Applied responsive text
             ),

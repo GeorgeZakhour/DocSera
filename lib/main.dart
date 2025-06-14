@@ -67,7 +67,7 @@ void main() async {
 
 Future<String> getSavedLocale() async {
   SharedPreferences prefs = await SharedPreferences.getInstance();
-  return prefs.getString('locale') ?? 'en'; // ✅ تعيين اللغة الافتراضية إلى الإنجليزية
+  return prefs.getString('locale') ?? 'ar';// ✅ تعيين اللغة الافتراضية إلى الإنجليزية
 }
 
 class MyApp extends StatefulWidget {

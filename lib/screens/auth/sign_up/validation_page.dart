@@ -67,6 +67,16 @@ class _ValidationPageState extends State<ValidationPage> {
       _startResendTimer();
 
       print('Sent OTP: $sentCode'); // Debugging message
+
+      // ✅ عرض OTP في Snackbar (لأغراض الديباغ فقط)
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('OTP: $sentCode'),
+          backgroundColor: AppColors.main.withOpacity(0.9),
+          duration: const Duration(seconds: 10),
+        ),
+      );
+
     } catch (e) {
       setState(() {
         isLoading = false;

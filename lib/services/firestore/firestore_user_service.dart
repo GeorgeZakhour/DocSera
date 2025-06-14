@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:docsera/utils/shared_prefs_service.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:firebase_storage/firebase_storage.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 class FirestoreUserService {
@@ -456,6 +457,108 @@ class FirestoreUserService {
     print("🛑 Appointments listener canceled.");
   }
 
+  Future<void> deleteUserAccount(String userId, {String? phoneNumber, String? email}) async {
+    try {
+      print("🔍 Starting account deletion for userId: $userId");
+
+      // 👤 جلب اسم المستخدم
+      final userSnapshot = await _firestore.collection('users').doc(userId).get();
+      final userName = userSnapshot.data()?['firstName'] ?? 'Unknown';
+
+      // 🗂️ حذف subcollections
+      final List<String> subcollections = ['appointments', 'documents', 'notes', 'relatives'];
+      for (final sub in subcollections) {
+        final snapshot = await _firestore.collection('users').doc(userId).collection(sub).get();
+        print("📁 Deleting subcollection [$sub]: ${snapshot.docs.length} items");
+        for (final doc in snapshot.docs) {
+          await doc.reference.delete();
+          print("   ✅ Deleted: $sub/${doc.id}");
+        }
+      }
+
+      await _deleteAllFilesUnderUser(userId);
+
+      // 🗑️ حذف مستند المستخدم
+      await _firestore.collection('users').doc(userId).delete();
+      print("🧾 Firestore user document deleted");
+
+      final cleanedPhone = phoneNumber?.trim();
+      final cleanedEmail = email?.trim();
+
+      if (cleanedPhone != null) {
+        print("📞 [DEBUG] Looking for OTP with phone: '$cleanedPhone'");
+        final otpDoc = await _firestore.collection('otp').doc(cleanedPhone).get();
+        if (otpDoc.exists) {
+          await otpDoc.reference.delete();
+          print("📞 Deleted phone OTP for $cleanedPhone");
+        } else {
+          print("ℹ️ No phone OTP found for $cleanedPhone");
+        }
+      }
+
+      if (cleanedEmail != null) {
+        print("📧 [DEBUG] Looking for email OTP with email: '$cleanedEmail'");
+        final emailOtpDoc = await _firestore.collection('email_otp').doc(cleanedEmail).get();
+        if (emailOtpDoc.exists) {
+          await emailOtpDoc.reference.delete();
+          print("📧 Deleted email OTP for $cleanedEmail");
+        } else {
+          print("ℹ️ No email OTP found for $cleanedEmail");
+        }
+      }
+
+
+      // 🔐 حذف من Firebase Auth
+      final user = FirebaseAuth.instance.currentUser;
+      if (user != null && user.uid == userId) {
+        await user.delete();
+        print("✅ Firebase Auth user deleted");
+      }
+
+      // 🧽 تنظيف SharedPreferences
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.clear();
+      print("🧼 SharedPreferences cleared");
+
+      print("🗑️ User account for [$userName] ($userId) and all related subcollections, OTP, and storage deleted.");
+
+    } catch (e) {
+      print("❌ Error deleting user account: $e");
+      throw Exception("Failed to delete account");
+    }
+  }
+
+  Future<void> _deleteAllFilesUnderUser(String userId) async {
+    final userStorageRef = FirebaseStorage.instance.ref().child('users/$userId');
+    final level1 = await userStorageRef.listAll();
+
+    for (final folder in level1.prefixes) {
+      print("📁 Deleting inside folder: ${folder.fullPath}");
+      final level2 = await folder.listAll();
+
+      for (final subfolder in level2.prefixes) {
+        print("   📂 Deleting inside subfolder: ${subfolder.fullPath}");
+        final subItems = await subfolder.listAll();
+        for (final file in subItems.items) {
+          await file.delete();
+          print("     🗑️ Deleted file: ${file.fullPath}");
+        }
+      }
+
+      for (final file in level2.items) {
+        await file.delete();
+        print("   🗑️ Deleted file: ${file.fullPath}");
+      }
+    }
+
+    // حذف أي ملفات مباشرة داخل users/$userId
+    for (final file in level1.items) {
+      await file.delete();
+      print("🗑️ Deleted direct file: ${file.fullPath}");
+    }
+
+    print("✅ All files under users/$userId deleted. Folder will disappear automatically.");
+  }
 
 
 }

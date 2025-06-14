@@ -1,5 +1,5 @@
 import 'package:docsera/app/text_styles.dart';
-import 'package:docsera/screens/home/shimmer/shimmer_widgets.dart';
+import 'package:docsera/screens/auth/login/login_start.dart';
 import 'package:docsera/utils/custom_clippers.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -12,7 +12,6 @@ import 'Business_Logic/Authentication/auth_cubit.dart';
 import 'Business_Logic/Authentication/auth_state.dart';
 import 'app/const.dart';
 import 'package:package_info_plus/package_info_plus.dart';
-
 
 class SplashScreen extends StatefulWidget {
   @override
@@ -55,97 +54,67 @@ class _SplashScreenState extends State<SplashScreen> with TickerProviderStateMix
       });
     });
 
-
-    // ✅ Step 1: Shape Appears (Fade In)
-    _fadeInController = AnimationController(
-      duration: const Duration(milliseconds: 800),
-      vsync: this,
-    );
-
+    _fadeInController = AnimationController(duration: const Duration(milliseconds: 800), vsync: this);
     _fadeInAnimation = Tween<double>(begin: 0, end: 1).animate(CurvedAnimation(parent: _fadeInController, curve: Curves.easeIn));
 
-    // ✅ Step 2: Shape Rotates Slowly & Shrinks
-    _rotationController = AnimationController(
-      duration: const Duration(seconds: 3),
-      vsync: this,
-    );
-
+    _rotationController = AnimationController(duration: const Duration(seconds: 3), vsync: this);
     _rotationAnimation = Tween<double>(begin: 0, end: 2 * pi * 2).animate(CurvedAnimation(parent: _rotationController, curve: Curves.easeOut));
 
-    _sizeController = AnimationController(
-      duration: const Duration(milliseconds: 2000),
-      vsync: this,
-    );
-
+    _sizeController = AnimationController(duration: const Duration(milliseconds: 2000), vsync: this);
     _sizeAnimation = Tween<double>(begin: 160, end: 50).animate(CurvedAnimation(parent: _sizeController, curve: Curves.easeOut));
 
-    // ✅ Step 3: Shape Moves Left AFTER Rotation Stops
-    _shiftController = AnimationController(
-      duration: const Duration(milliseconds: 800),
-      vsync: this,
-    );
-
+    _shiftController = AnimationController(duration: const Duration(milliseconds: 800), vsync: this);
     _shiftAnimation = Tween<double>(begin: 0, end: -screenWidth * 0.25).animate(CurvedAnimation(parent: _shiftController, curve: Curves.easeInOut));
 
-    // ✅ Step 4: Text Logo Appears AFTER Shape Moves
-    _textFadeController = AnimationController(
-      duration: const Duration(milliseconds: 600),
-      vsync: this,
-    );
-
+    _textFadeController = AnimationController(duration: const Duration(milliseconds: 600), vsync: this);
     _textFadeAnimation = Tween<double>(begin: 0, end: 1).animate(CurvedAnimation(parent: _textFadeController, curve: Curves.easeIn));
 
-    // ✅ Step 5: Fade Out Both Elements Before Background Moves
-    _fadeOutController = AnimationController(
-      duration: const Duration(milliseconds: 600),
-      vsync: this,
-    );
-
+    _fadeOutController = AnimationController(duration: const Duration(milliseconds: 600), vsync: this);
     _fadeOutAnimation = Tween<double>(begin: 1, end: 0).animate(CurvedAnimation(parent: _fadeOutController, curve: Curves.easeIn));
 
-    // ✅ Step 6: Move Background Upwards & Keep Bottom White
-    _backgroundShiftController = AnimationController(
-      duration: const Duration(milliseconds: 800),
-      vsync: this,
-    );
-
+    _backgroundShiftController = AnimationController(duration: const Duration(milliseconds: 800), vsync: this);
     _backgroundHeightAnimation = Tween<double>(
       begin: screenHeight * 0.95,
       end: screenHeight * 0.411,
     ).animate(CurvedAnimation(parent: _backgroundShiftController, curve: Curves.easeInOut));
 
-    // ✅ Step 7: Fade Out Bottom Texts when Background Moves
-    _bottomTextFadeController = AnimationController(
-      duration: const Duration(milliseconds: 600),
-      vsync: this,
-    );
-
+    _bottomTextFadeController = AnimationController(duration: const Duration(milliseconds: 600), vsync: this);
     _bottomTextFadeAnimation = Tween<double>(begin: 1, end: 0).animate(CurvedAnimation(parent: _bottomTextFadeController, curve: Curves.easeIn));
 
     _startAnimations();
   }
 
   Future<void> _startAnimations() async {
-    _fadeInController.forward(); // 1️⃣ Fade In the Shape
-    await Future.delayed(const Duration(milliseconds: 600)); // ⬅️ تم تقليل الزمن
-
+    _fadeInController.forward();
+    await Future.delayed(const Duration(milliseconds: 600));
     _rotationController.forward();
     _sizeController.forward();
-    await Future.delayed(const Duration(milliseconds: 1200)); // ⬅️ تقليل الزمن هنا أيضًا
-
+    await Future.delayed(const Duration(milliseconds: 1200));
     _shiftController.forward();
-    await Future.delayed(const Duration(milliseconds: 400)); // ⬅️ تقليل زمن الانتظار
-
+    await Future.delayed(const Duration(milliseconds: 400));
     _textFadeController.forward();
-    await Future.delayed(const Duration(milliseconds: 1000)); // ⬅️ تقليل الزمن
-
+    await Future.delayed(const Duration(milliseconds: 1000));
     _fadeOutController.forward();
     _bottomTextFadeController.forward();
     _backgroundShiftController.forward();
-    await Future.delayed(const Duration(milliseconds: 800)); // ⬅️ تعديل المدة
-
+    await Future.delayed(const Duration(milliseconds: 800));
     await _waitForAuthReady();
-    _navigateToHomeScreen();
+
+    final authCubit = context.read<AuthCubit>();
+    final state = authCubit.state;
+    final biometricRequired = await _isBiometricRequired();
+
+    if (state is AuthAuthenticated && !biometricRequired) {
+      _navigateToHomeScreen();
+    } else {
+      Navigator.of(context).pushReplacement(
+        MaterialPageRoute(
+          builder: (_) => LoginPage(
+            backgroundHeightAnimation: _backgroundHeightAnimation,
+          ),
+        ),
+      );
+    }
   }
 
   void _navigateToHomeScreen() {
@@ -162,6 +131,20 @@ class _SplashScreenState extends State<SplashScreen> with TickerProviderStateMix
   }
 
 
+  Future<void> _waitForAuthReady() async {
+    final authCubit = context.read<AuthCubit>();
+    AuthState state = authCubit.state;
+    if (state is AuthInitial || state is AuthLoading) {
+      await authCubit.stream.firstWhere((newState) =>
+      newState is AuthAuthenticated || newState is AuthUnauthenticated);
+    }
+  }
+
+  Future<bool> _isBiometricRequired() async {
+    // بدل هذا بقراءة من SharedPreferences أو SecureStorage أو AuthCubit
+    return false;
+  }
+
   @override
   void dispose() {
     _fadeInController.dispose();
@@ -175,26 +158,12 @@ class _SplashScreenState extends State<SplashScreen> with TickerProviderStateMix
     super.dispose();
   }
 
-  Future<void> _waitForAuthReady() async {
-    final authCubit = context.read<AuthCubit>();
-    AuthState state = authCubit.state;
-
-    // ✅ إذا AuthCubit ما خلّص بعد (ما زال AuthInitial أو AuthLoading)
-    if (state is AuthInitial || state is AuthLoading) {
-      // انتظر حتى يطلق حالة AuthAuthenticated أو AuthUnauthenticated
-      await authCubit.stream.firstWhere((newState) =>
-      newState is AuthAuthenticated || newState is AuthUnauthenticated);
-    }
-  }
-
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Colors.white,
       body: Stack(
         children: [
-          // ✅ Move Background Up
           AnimatedBuilder(
             animation: _backgroundShiftController,
             builder: (context, child) {
@@ -211,8 +180,6 @@ class _SplashScreenState extends State<SplashScreen> with TickerProviderStateMix
               );
             },
           ),
-
-          // ✅ Shape & Text Logo Animation
           Center(
             child: AnimatedBuilder(
               animation: Listenable.merge([
@@ -255,8 +222,6 @@ class _SplashScreenState extends State<SplashScreen> with TickerProviderStateMix
               },
             ),
           ),
-
-          // ✅ **Bottom Texts (Version & Powered by TechSpearz)**
           Positioned(
             bottom: 25,
             left: 0,
@@ -270,7 +235,7 @@ class _SplashScreenState extends State<SplashScreen> with TickerProviderStateMix
                 style: AppTextStyles.getText4(context).copyWith(
                   color: AppColors.grayMain,
                   fontWeight: FontWeight.w300,
-                  fontSize: 8
+                  fontSize: 8,
                 ),
               ),
             ),
@@ -282,7 +247,14 @@ class _SplashScreenState extends State<SplashScreen> with TickerProviderStateMix
             child: AnimatedOpacity(
               opacity: _bottomTextFadeAnimation.value,
               duration: const Duration(milliseconds: 600),
-              child: Text("Powered by TechSpearz", textAlign: TextAlign.center, style: AppTextStyles.getText4(context).copyWith(color: AppColors.grayMain, fontSize: 8)),
+              child: Text(
+                "Powered by TechSpearz",
+                textAlign: TextAlign.center,
+                style: AppTextStyles.getText4(context).copyWith(
+                  color: AppColors.grayMain,
+                  fontSize: 8,
+                ),
+              ),
             ),
           ),
         ],
