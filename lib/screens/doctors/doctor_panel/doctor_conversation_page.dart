@@ -212,7 +212,6 @@ class _DoctorConversationPageState extends State<DoctorConversationPage> {
                     });
 
 
-                    bool hasUnread = false;
                     int unreadCount = 0;
 
                     for (final doc in messages) {
@@ -676,26 +675,6 @@ class _DoctorConversationPageState extends State<DoctorConversationPage> {
               ),
             ],
           ),
-        ),
-      ),
-    );
-  }
-
-
-  void _showBottomMenu() {
-    showModalBottomSheet(
-      context: context,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(16.r))),
-      builder: (context) => Padding(
-        padding: EdgeInsets.symmetric(vertical: 20.h, horizontal: 24.w),
-        child: ListTile(
-          title: Center(
-            child: Text('إغلاق المحادثة', style: AppTextStyles.getText2(context).copyWith(color: Colors.red)),
-          ),
-          onTap: () {
-            Navigator.pop(context);
-            _showCloseDialog();
-          },
         ),
       ),
     );

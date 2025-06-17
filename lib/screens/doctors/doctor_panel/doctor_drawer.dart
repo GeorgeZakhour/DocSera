@@ -140,30 +140,3 @@ class DoctorDrawer extends StatelessWidget {
   }
 }
 
-/// **🔹 Helper: Get Doctor Avatar**
-String _getDoctorAvatar(Map<String, dynamic>? doctor) {
-  if (doctor == null) {
-    print("❌ _getDoctorAvatar: doctor data is NULL. Using male doctor avatar.");
-    return 'assets/images/male-doc.png'; // Fallback in extreme cases
-  }
-
-  print("🔍 _getDoctorAvatar: Doctor Data -> $doctor");
-
-  // ✅ If Firestore profile image exists, use it
-  if (doctor['profileImage'] != null && doctor['profileImage'].isNotEmpty) {
-    print("✅ _getDoctorAvatar: Using Firestore profile image -> ${doctor['profileImage']}");
-    return doctor['profileImage']; // This is a network image
-  }
-
-  // ✅ If no profile image, use gender & title to determine the correct default avatar
-  String gender = doctor['gender']?.toLowerCase() ?? 'male';
-  String title = doctor['title']?.toLowerCase() ?? '';
-
-  String avatar = (title == "dr.")
-      ? (gender == "female" ? 'assets/images/female-doc.png' : 'assets/images/male-doc.png')
-      : (gender == "female" ? 'assets/images/female-phys.png' : 'assets/images/male-phys.png');
-
-  print("🔄 _getDoctorAvatar: No profile image. Using default avatar -> $avatar");
-
-  return avatar; // ✅ Uses the correct default image based on gender & title
-}

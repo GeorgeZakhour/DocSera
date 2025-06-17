@@ -1,5 +1,5 @@
+import 'package:docsera/app/const.dart';
 import 'package:docsera/utils/text_direction_utils.dart';
-import 'package:firebase_auth/firebase_auth.dart';
 import 'package:crypto/crypto.dart'; // For hashing
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:docsera/screens/doctors/doctor_panel/doctor_dashboard.dart';
@@ -8,7 +8,6 @@ import 'package:flutter/material.dart';
 import 'package:docsera/widgets/base_scaffold.dart';
 import 'package:docsera/utils/page_transitions.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import '../../../../app/const.dart';
 
 class DoctorLoginPage extends StatefulWidget {
   const DoctorLoginPage({super.key});
@@ -20,7 +19,6 @@ class DoctorLoginPage extends StatefulWidget {
 class _DoctorLoginPageState extends State<DoctorLoginPage> {
   final TextEditingController _inputController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
-  final FirebaseAuth _auth = FirebaseAuth.instance; // ✅ Firebase Authentication
   bool isPasswordVisible = false;
   bool isValid = false;
   String? errorMessage;

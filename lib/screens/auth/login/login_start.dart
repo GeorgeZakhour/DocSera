@@ -237,7 +237,6 @@ class _LoginPageState extends State<LoginPage> {
 
       if (uid == null) throw Exception("Invalid user");
 
-      final prefs = await SharedPreferences.getInstance();
       await _saveUserDataToPrefs({...userData, 'uid': uid}, password);
 
 

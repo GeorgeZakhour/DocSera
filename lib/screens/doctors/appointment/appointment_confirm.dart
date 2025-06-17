@@ -4,7 +4,6 @@ import 'package:docsera/app/text_styles.dart';
 import 'package:docsera/models/appointment_details.dart';
 import 'package:docsera/screens/doctors/appointment/confirmation_page.dart';
 import 'package:docsera/utils/page_transitions.dart';
-import 'package:docsera/widgets/custom_bottom_navigation_bar.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:flutter_gen/gen_l10n/app_localizations.dart';

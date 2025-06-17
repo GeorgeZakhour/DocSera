@@ -8,6 +8,7 @@ import 'package:docsera/screens/home/Document/document_info_screen.dart';
 import 'package:docsera/screens/home/Document/document_preview_page.dart';
 import 'package:docsera/screens/home/shimmer/shimmer_widgets.dart';
 import 'package:file_picker/file_picker.dart';
+import 'package:flutter_image_compress/flutter_image_compress.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:gallery_saver_plus/gallery_saver.dart';
 import 'package:http/http.dart' as http;
@@ -260,6 +261,81 @@ class _ConversationPageState extends State<ConversationPage> {
     }
   }
 
+  Future<List<File>> compressImages(List<File> imageFiles) async {
+    int totalOriginalSize = 0;
+    int totalCompressedSize = 0;
+    List<File> compressedImages = [];
+
+    for (final file in imageFiles) {
+      final realFile = File(file.absolute.path);
+      final int originalSize = await realFile.length();
+      totalOriginalSize += originalSize;
+
+      debugPrint("🖼️ Real image path: ${realFile.path}");
+      debugPrint("📄 Real image size: ${(originalSize / 1024).toStringAsFixed(2)} KB");
+
+      if (originalSize <= 200 * 1024) {
+        debugPrint("📷 Skipped compression (small file)");
+        totalCompressedSize += originalSize;
+        compressedImages.add(realFile);
+        continue;
+      }
+
+      int quality = 50;
+      if (originalSize <= 500 * 1024) {
+        quality = 75;
+      } else if (originalSize <= 1000 * 1024) {
+        quality = 50;
+      } else if (originalSize <= 2000 * 1024) {
+        quality = 35;
+      } else {
+        quality = 25; // fallback للصور الكبيرة
+      }
+
+      final targetPath = '${realFile.path}_compressed.jpg';
+
+      final XFile? compressed = await FlutterImageCompress.compressAndGetFile(
+        realFile.absolute.path,
+        targetPath,
+        quality: quality,
+        keepExif: true,
+        format: CompressFormat.jpeg,
+      );
+
+      if (compressed != null) {
+        final File compressedFile = File(compressed.path);
+        final int compressedSize = await compressedFile.length();
+
+        final int maxAllowedSize = 2 * 1024 * 1024; // 2MB (or any threshold you want per image)
+
+        if (compressedSize >= originalSize || compressedSize > maxAllowedSize) {
+          debugPrint("📷 Compression skipped (inefficient or too big): original ${originalSize / 1024} KB, compressed ${compressedSize / 1024} KB");
+          totalCompressedSize += originalSize;
+          compressedImages.add(realFile);
+        } else {
+          debugPrint("📉 Compressed size: ${(compressedSize / 1024).toStringAsFixed(2)} KB");
+          debugPrint("🗜️ Compression saved: ${(100 - (compressedSize / originalSize * 100)).toStringAsFixed(2)}%");
+          totalCompressedSize += compressedSize;
+          compressedImages.add(compressedFile);
+        }
+      } else {
+        debugPrint("⚠️ Compression failed, using original");
+        totalCompressedSize += originalSize;
+        compressedImages.add(realFile);
+      }
+    }
+
+    debugPrint("📦 Total original size: ${(totalOriginalSize / 1024).toStringAsFixed(2)} KB");
+    debugPrint("📦 Total compressed size: ${(totalCompressedSize / 1024).toStringAsFixed(2)} KB");
+
+    if (totalCompressedSize > 4 * 1024 * 1024) {
+      throw Exception("💥 Document too large after compression: ${(totalCompressedSize / 1024).toStringAsFixed(2)} KB");
+    }
+
+    return compressedImages;
+  }
+
+
   void _sendMessage() async {
     final text = _controller.text.trim();
     if (text.isEmpty && _selectedImageFiles.isEmpty && widget.attachedDocument == null) return;
@@ -268,11 +344,27 @@ class _ConversationPageState extends State<ConversationPage> {
         .collection('conversations')
         .doc(widget.conversationId);
 
+    // ✅ ضغط الصور إذا موجودة
+    List<File> filesToUpload = [];
+    if (_pendingFileType == 'image' && _selectedImageFiles.isNotEmpty) {
+      try {
+        filesToUpload = await compressImages(_selectedImageFiles);
+      } catch (e) {
+        print('❌ Compression failed or total size too big: $e');
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(AppLocalizations.of(context)!.fileTooLarge), backgroundColor: AppColors.red.withOpacity(0.9)),
+        );
+        return;
+      }
+    } else {
+      filesToUpload = List.from(_selectedImageFiles);
+    }
+
     // ✅ أضف إلى قائمة pending
-    if (_selectedImageFiles.isNotEmpty && _pendingFileType != null) {
+    if (filesToUpload.isNotEmpty && _pendingFileType != null) {
       _pendingMessages.add(PendingMessage(
         type: _pendingFileType!,
-        files: List.from(_selectedImageFiles),
+        files: List.from(filesToUpload),
       ));
       setState(() {});
     }
@@ -293,6 +385,18 @@ class _ConversationPageState extends State<ConversationPage> {
         }
 
         final bytes = response.bodyBytes;
+
+          // ✅ تحقق من الحجم قبل الرفع
+        if (bytes.length > 1 * 1024 * 1024) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(AppLocalizations.of(context)!.fileTooLarge),
+              backgroundColor: AppColors.red.withOpacity(0.9),
+            ),
+          );
+          return;
+        }
+
         final storageFileName = 'document_${DateTime.now().millisecondsSinceEpoch}.pdf';
         final ref = FirebaseStorage.instance
             .ref()
@@ -310,7 +414,7 @@ class _ConversationPageState extends State<ConversationPage> {
       }
     }
 
-    for (final file in _selectedImageFiles) {
+    for (final file in filesToUpload) {
       final fileName = file.path.split('/').last;
       final ref = FirebaseStorage.instance
           .ref()
@@ -1341,7 +1445,7 @@ class _ConversationPageState extends State<ConversationPage> {
                   .orderBy('timestamp')
                   .snapshots(),
               builder: (context, snapshot) {
-                if (!snapshot.hasData) return const Center(child: CircularProgressIndicator());
+                if (!snapshot.hasData) return const Center(child: CircularProgressIndicator(color: AppColors.main));
 
                 final messages = snapshot.data!.docs;
 

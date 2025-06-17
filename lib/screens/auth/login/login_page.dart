@@ -1,4 +1,3 @@
-import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:docsera/app/text_styles.dart';
 import 'package:docsera/screens/auth/login/login_otp.dart';
 import 'package:docsera/utils/text_direction_utils.dart';
@@ -88,35 +87,6 @@ class _LogInPageState extends State<LogInPage> {
     return androidInfo.id ?? androidInfo.serialNumber ?? androidInfo.device ?? '';
   }
 
-  void _showOTPVerificationSheet({
-    required String phoneOrEmail,
-    required VoidCallback onVerified,
-  }) {
-    showModalBottomSheet(
-      context: context,
-      isDismissible: false,
-      enableDrag: false,
-      isScrollControlled: true,
-      builder: (_) {
-        return Container(
-          padding: EdgeInsets.all(20.w),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Text('🔐 Verification Required'),
-              SizedBox(height: 10.h),
-              Text('We sent a code to $phoneOrEmail'),
-              SizedBox(height: 20.h),
-              ElevatedButton(
-                onPressed: onVerified, // نفترض تحقق صحيح الآن
-                child: Text('Simulate Success'),
-              ),
-            ],
-          ),
-        );
-      },
-    );
-  }
 
 
   /// ✅ تنسيق الرقم لصيغة 00963 كما في صفحة التسجيل
@@ -185,7 +155,6 @@ class _LogInPageState extends State<LogInPage> {
         final deviceId = await getDeviceId();
         final trustedDevices = (userData['trustedDevices'] as List?) ?? [];
         final is2FAEnabled = userData['twoFactorAuthEnabled'] == true;
-        final isPhone = userData['phoneNumber'] != null;
 
         if (is2FAEnabled && !trustedDevices.contains(deviceId)) {
           // 👇 إرسال رمز OTP والتنقل إلى صفحة تحقق OTP المخصصة لتسجيل الدخول

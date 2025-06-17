@@ -6,9 +6,9 @@ import 'package:docsera/Business_Logic/Documents_page/documents/documents_cubit.
 import 'package:docsera/Business_Logic/Documents_page/notes/notes_cubit.dart';
 import 'package:docsera/Business_Logic/Main_page/main_screen_cubit.dart';
 import 'package:docsera/Business_Logic/Messages_page/messages_cubit.dart';
-import 'package:docsera/app/text_styles.dart';
 import 'package:docsera/services/firestore/firestore_user_service.dart';
 import 'package:docsera/splash_screen.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 import 'package:docsera/screens/auth/login/login_page.dart';
@@ -21,11 +21,23 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'Business_Logic/Authentication/auth_cubit.dart';
 import 'app/const.dart';
+import 'package:firebase_app_check/firebase_app_check.dart';
 
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await Firebase.initializeApp();
+
+  await FirebaseAppCheck.instance.activate(
+    androidProvider: kReleaseMode
+        ? AndroidProvider.playIntegrity
+        : AndroidProvider.debug,
+  );
+
+  // ✅ اطبع التوكين لتتأكد إنو App Check شغال
+  FirebaseAppCheck.instance.getToken(true).then((token) =>
+      print("🔒 AppCheck token: $token"));
+
   SharedPreferences prefs = await SharedPreferences.getInstance();
   FirestoreUserService firestoreService = FirestoreUserService();
   // ✅ تحميل اللغة المحفوظة مسبقًا

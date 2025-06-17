@@ -32,9 +32,6 @@ class DoctorMessagesPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final String doctorId = doctorData?['id'] ?? '';
-    final lang = Localizations.localeOf(context).languageCode;
-
     return Scaffold(
       drawer: DoctorDrawer(doctorData: doctorData),
       appBar: AppBar(

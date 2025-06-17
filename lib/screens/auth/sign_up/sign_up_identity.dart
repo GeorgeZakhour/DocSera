@@ -1,9 +1,6 @@
 import 'package:docsera/app/text_styles.dart';
-import 'package:docsera/screens/auth/sign_up/create_password.dart';
 import 'package:docsera/models/sign_up_info.dart';
-import 'package:docsera/screens/auth/sign_up/doctor_extra_info_page.dart';
 import 'package:docsera/screens/auth/sign_up/sign_up_email.dart';
-import 'package:docsera/screens/auth/sign_up/sign_up_phone.dart';
 import 'package:docsera/utils/page_transitions.dart';
 import 'package:docsera/utils/text_direction_utils.dart';
 import 'package:docsera/widgets/base_scaffold.dart';

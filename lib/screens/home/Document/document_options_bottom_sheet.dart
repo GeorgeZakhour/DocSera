@@ -134,7 +134,6 @@ void showDocumentOptionsSheet(
     UserDocument document, {
       String? doctorName,
     }) {
-  final isPDF = document.type == 'pdf';
   final locale = Localizations.localeOf(context).languageCode;
   final formattedDate = DateFormat('d MMM yyyy', locale).format(document.uploadedAt);
   final local = AppLocalizations.of(context)!;

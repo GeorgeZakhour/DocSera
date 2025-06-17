@@ -41,7 +41,6 @@ class _DocumentPreviewPageState extends State<DocumentPreviewPage> {
   File? _localPdfFile;
   int _totalPages = 0;
   int _currentPage = 0;
-
   late bool isPdf;
   late bool isImage;
 
@@ -197,8 +196,6 @@ class _DocumentPreviewPageState extends State<DocumentPreviewPage> {
 
   @override
   Widget build(BuildContext context) {
-    final locale = AppLocalizations.of(context)!;
-
     return Scaffold(
       backgroundColor: const Color(0xFFF6F6F6),
       appBar: PreferredSize(

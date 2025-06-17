@@ -97,102 +97,7 @@ class _DoctorAppointmentsState extends State<DoctorAppointments> {
     }
   }
 
-  /// **🔹 Add Available Slot (Date & Time Picker)**
-  Future<void> _addAvailableSlot() async {
-    DateTime? pickedDate;
-    TimeOfDay? pickedTime;
 
-    // ✅ Pick Date
-    pickedDate = await showDatePicker(
-      context: context,
-      initialDate: DateTime.now(),
-      firstDate: DateTime.now(),
-      lastDate: DateTime(2100),
-      builder: (context, child) {
-        return Theme(
-          data: ThemeData.light().copyWith(
-            primaryColor: AppColors.main,
-            colorScheme: ColorScheme.light(primary: AppColors.main),
-            buttonTheme: const ButtonThemeData(textTheme: ButtonTextTheme.primary),
-          ),
-          child: child!,
-        );
-      },
-    );
-
-    if (pickedDate == null) return;
-
-    // ✅ Pick Time
-    pickedTime = await showTimePicker(
-      context: context,
-      initialTime: TimeOfDay.now(),
-      builder: (context, child) {
-        return Theme(
-          data: ThemeData.light().copyWith(
-            primaryColor: AppColors.main,
-            colorScheme: ColorScheme.light(primary: AppColors.main),
-            buttonTheme: const ButtonThemeData(textTheme: ButtonTextTheme.primary),
-          ),
-          child: child!,
-        );
-      },
-    );
-
-    if (pickedTime == null) return;
-
-    // ✅ Format Date & Time
-    String formattedDate = DateFormat('yyyy-MM-dd').format(pickedDate);
-    String formattedTime = pickedTime.format(context);
-
-    // ✅ Save to Firestore
-    try {
-      await FirebaseFirestore.instance
-          .collection('doctors')
-          .doc(doctorId)
-          .collection('appointments')
-          .add({
-        'date': formattedDate,
-        'time': formattedTime,
-        'booked': false,
-        'timestamp': Timestamp.fromDate(DateTime(pickedDate.year, pickedDate.month, pickedDate.day, pickedTime.hour, pickedTime.minute)),
-      });
-
-      print("✅ Appointment Slot Added: $formattedDate at $formattedTime");
-
-      // ✅ Refresh List
-      _fetchDoctorAppointments();
-    } catch (e) {
-      print("❌ Error adding appointment: $e");
-    }
-  }
-
-
-  /// **🔹 Delete an Appointment**
-  Future<void> _deleteAppointment(String date, int index) async {
-    String appointmentId = _appointmentsByDay[date]![index]['id'];
-
-    try {
-      await FirebaseFirestore.instance
-          .collection('doctors')
-          .doc(doctorId)
-          .collection('appointments')
-          .doc(appointmentId)
-          .delete();
-
-      setState(() {
-        _appointmentsByDay[date]?.removeAt(index);
-        if (_appointmentsByDay[date]?.isEmpty ?? false) {
-          _appointmentsByDay.remove(date);
-        }
-      });
-
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text("Appointment Deleted Successfully!")),
-      );
-    } catch (e) {
-      print("❌ Error deleting appointment: $e");
-    }
-  }
 
   Widget _toggleButton({
     required bool isLeft, // ✅ Use `bool` instead of `int`
@@ -395,9 +300,7 @@ class _DoctorAppointmentsState extends State<DoctorAppointments> {
     String selectedDay = "Monday";
     TimeOfDay startTime = TimeOfDay(hour: 8, minute: 0);
     TimeOfDay endTime = TimeOfDay(hour: 12, minute: 0);
-    int interval = 30;
-    DateTime? startRange;
-    DateTime? endRange;
+
 
     showDialog(
       context: context,
@@ -478,7 +381,6 @@ class _DoctorAppointmentsState extends State<DoctorAppointments> {
 
   @override
   Widget build(BuildContext context) {
-
     return Scaffold(
       drawer: DoctorDrawer(doctorData: widget.doctorData),
       appBar: AppBar(

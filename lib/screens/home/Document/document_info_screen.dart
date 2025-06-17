@@ -10,6 +10,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:flutter_image_compress/flutter_image_compress.dart';
 
 class DocumentInfoScreen extends StatefulWidget {
   final List<String> images;
@@ -317,15 +318,96 @@ class _DocumentInfoScreenState extends State<DocumentInfoScreen> {
     }
   }
 
+  Future<List<File>> compressImages(List<File> imageFiles) async {
+    int totalOriginalSize = 0;
+    int totalCompressedSize = 0;
+    List<File> compressedImages = [];
+
+    for (final file in imageFiles) {
+      final realFile = File(file.absolute.path);
+      final int originalSize = await realFile.length();
+      totalOriginalSize += originalSize;
+
+      debugPrint("🖼️ Real image path: ${realFile.path}");
+      debugPrint("📄 Real image size: ${(originalSize / 1024).toStringAsFixed(2)} KB");
+
+      if (originalSize <= 200 * 1024) {
+        debugPrint("📷 Skipped compression (small file)");
+        totalCompressedSize += originalSize;
+        compressedImages.add(realFile);
+        continue;
+      }
+
+      int quality = 50;
+      if (originalSize <= 500 * 1024) {
+        quality = 75;
+      } else if (originalSize <= 1000 * 1024) {
+        quality = 50;
+      } else if (originalSize <= 2000 * 1024) {
+        quality = 35;
+      } else {
+        quality = 25; // fallback للصور الكبيرة
+      }
+
+      final targetPath = '${realFile.path}_compressed.jpg';
+
+      final XFile? compressed = await FlutterImageCompress.compressAndGetFile(
+        realFile.absolute.path,
+        targetPath,
+        quality: quality,
+        keepExif: true,
+        format: CompressFormat.jpeg,
+      );
+
+      if (compressed != null) {
+        final File compressedFile = File(compressed.path);
+        final int compressedSize = await compressedFile.length();
+
+        final int maxAllowedSize = 2 * 1024 * 1024; // 2MB (or any threshold you want per image)
+
+        if (compressedSize >= originalSize || compressedSize > maxAllowedSize) {
+          debugPrint("📷 Compression skipped (inefficient or too big): original ${originalSize / 1024} KB, compressed ${compressedSize / 1024} KB");
+          totalCompressedSize += originalSize;
+          compressedImages.add(realFile);
+        } else {
+          debugPrint("📉 Compressed size: ${(compressedSize / 1024).toStringAsFixed(2)} KB");
+          debugPrint("🗜️ Compression saved: ${(100 - (compressedSize / originalSize * 100)).toStringAsFixed(2)}%");
+          totalCompressedSize += compressedSize;
+          compressedImages.add(compressedFile);
+        }
+      } else {
+        debugPrint("⚠️ Compression failed, using original");
+        totalCompressedSize += originalSize;
+        compressedImages.add(realFile);
+      }
+    }
+
+    debugPrint("📦 Total original size: ${(totalOriginalSize / 1024).toStringAsFixed(2)} KB");
+    debugPrint("📦 Total compressed size: ${(totalCompressedSize / 1024).toStringAsFixed(2)} KB");
+
+    if (totalCompressedSize > 2 * 1024 * 1024) {
+      throw Exception("💥 Document too large after compression: ${(totalCompressedSize / 1024).toStringAsFixed(2)} KB");
+    }
+
+    return compressedImages;
+  }
+
   void _submitDocument() async {
     setState(() => _isUploading = true);
+    final locale = AppLocalizations.of(context)!;
 
     try {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(locale.uploadingDocument),
+          backgroundColor: AppColors.main.withOpacity(0.7),
+          duration: const Duration(seconds: 2),
+        ),
+      );
+
       final prefs = await SharedPreferences.getInstance();
       final userId = prefs.getString('userId');
-      if (userId == null || userId.isEmpty) {
-        throw Exception("User ID not found");
-      }
+      if (userId == null || userId.isEmpty) throw Exception("User ID not found");
 
       final docRef = FirebaseFirestore.instance
           .collection('users')
@@ -339,16 +421,28 @@ class _DocumentInfoScreenState extends State<DocumentInfoScreen> {
 
       final uploadedAt = DateTime.now();
       final List<String> uploadedUrls = [];
-
       final isPdf = widget.images.first.toLowerCase().endsWith('.pdf');
       final fileType = isPdf ? 'pdf' : 'image';
-      final docType = _selectedType ?? 'أخرى'; // التسمية الظاهرة للمستخدم
+      final docType = _selectedType ?? 'أخرى';
 
-      for (int i = 0; i < widget.images.length; i++) {
-        final file = File(widget.images[i]);
-        final fileName = isPdf
-            ? 'file.pdf'
-            : 'page_$i.jpg';
+      final List<File> filesToUpload;
+
+      if (isPdf) {
+        final File pdfFile = File(widget.images.first);
+        final int sizeInBytes = await pdfFile.length();
+        if (sizeInBytes > 2 * 1024 * 1024) {
+          throw Exception("PDF too large");
+        }
+        filesToUpload = [pdfFile];
+      } else {
+        filesToUpload = await compressImages(
+          widget.images.map((e) => File(File(e).absolute.path)).toList(),
+        );
+      }
+
+      for (int i = 0; i < filesToUpload.length; i++) {
+        final fileToUpload = filesToUpload[i];
+        final fileName = isPdf ? 'file.pdf' : 'page_$i.jpg';
 
         final storageRef = FirebaseStorage.instance
             .ref()
@@ -358,7 +452,8 @@ class _DocumentInfoScreenState extends State<DocumentInfoScreen> {
             .child(docRef.id)
             .child(fileName);
 
-        final uploadTask = await storageRef.putFile(file);
+        final uploadTask = await storageRef.putFile(fileToUpload);
+        await Future.delayed(const Duration(milliseconds: 300));
         final url = await uploadTask.ref.getDownloadURL();
         uploadedUrls.add(url);
       }
@@ -389,11 +484,9 @@ class _DocumentInfoScreenState extends State<DocumentInfoScreen> {
         conversationDoctorName: widget.conversationDoctorName,
       );
 
-
       await docRef.set(userDocument.toMap());
 
       if (!mounted) return;
-
       context.read<DocumentsCubit>().listenToDocuments(context);
 
       Navigator.pop(context);
@@ -404,19 +497,24 @@ class _DocumentInfoScreenState extends State<DocumentInfoScreen> {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           backgroundColor: AppColors.main.withOpacity(0.8),
-          content: Text(AppLocalizations.of(context)!.documentUploadedSuccessfully),
+          content: Text(locale.documentUploadedSuccessfully),
         ),
       );
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            backgroundColor: Colors.red,
-            content: Text(AppLocalizations.of(context)!.uploadFailed),
+            backgroundColor: AppColors.red.withOpacity(0.8),
+            content: Text(
+              e.toString().contains("PDF too large")
+                  ? locale.pdfTooLarge
+                  : e.toString().contains("Document too large")
+                  ? locale.documentTooLarge
+                  : locale.uploadFailed,
+            ),
           ),
         );
       }
-      print("❌ Upload error: $e");
     } finally {
       if (mounted) setState(() => _isUploading = false);
     }

@@ -1,0 +1,6 @@
+package com.techspearz.docsera
+
+import io.flutter.embedding.android.FlutterFragmentActivity
+
+class MainActivity: FlutterFragmentActivity() {
+}

@@ -85,6 +85,9 @@
   "takeNotesTitle": "Take important notes\n about your health",
   "takeNotesDescription": "For example, track symptoms, note mental health concerns, and prepare questions for your practitioners.",
   "addDocument": "Add Document",
+  "uploadingDocument": "Uploading document...",
+  "documentTooLarge": "The compressed file exceeds 2 MB. Please reduce the number of images or use smaller ones.",
+  "pdfTooLarge": "The PDF file is too large. Please use a file smaller than 2MB.",
   "chooseAddDocumentMethod": "Choose a method",
   "createNote": "Create Note",
 
@@ -98,6 +101,7 @@
   "sendMessage": "Send a message",
   "easilySendMessages": "Easily send messages to practitioners",
   "sendMessagesDescription": "Start a conversation with your practitioners. Ask about exam results, request referral letters, and more.",
+  "fileTooLarge": "The total size of images is too large (max 4MB). Please reduce the number or size of images.",
 
   "@accountPage================================": {
     "description": "👤 Account Page"

@@ -5,16 +5,12 @@ import 'package:docsera/models/appointment_details.dart';
 import 'package:docsera/models/patient_profile.dart';
 import 'package:docsera/screens/doctors/appointment/appointment_confirm.dart';
 import 'package:docsera/screens/home/shimmer/shimmer_widgets.dart';
-import 'package:docsera/services/firestore/firestore_user_service.dart';
 import 'package:docsera/utils/page_transitions.dart';
-import 'package:docsera/utils/shared_prefs_service.dart';
 import 'package:docsera/widgets/base_scaffold.dart';
 import 'package:flutter/material.dart';
 import 'package:docsera/app/const.dart';
-import 'package:intl/intl.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:flutter_gen/gen_l10n/app_localizations.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
 
@@ -41,8 +37,7 @@ class _DoctorAppointmentsPageState extends State<DoctorAppointmentsPage> {
   int maxDisplayedDates = 6;
   bool _isFetched = false; // ✅ متغير لضمان استدعاء الفيتش مرة واحدة
 
-  final FirestoreUserService _firestoreService = FirestoreUserService();
-  final SharedPrefsService _sharedPrefsService = SharedPrefsService();
+
 
   @override
   void initState() {
@@ -60,52 +55,7 @@ class _DoctorAppointmentsPageState extends State<DoctorAppointmentsPage> {
   }
 
 
-  Future<void> _fetchAvailableAppointments() async {
-    try {
-      DateTime now = DateTime.now(); // ✅ الحصول على التاريخ والوقت الحالي
-      QuerySnapshot querySnapshot = await FirebaseFirestore.instance
-          .collection('doctors')
-          .doc(widget.appointmentDetails.doctorId)
-          .collection('appointments')
-          .where('booked', isEqualTo: false)
-          .where('timestamp', isGreaterThan: Timestamp.fromDate(now)) // ✅ تصفية المواعيد المستقبلية فقط
-          .orderBy('timestamp', descending: false)
-          .get();
 
-      Map<String, List<Map<String, dynamic>>> groupedAppointments = {};
-
-      for (var doc in querySnapshot.docs) {
-        Map<String, dynamic> data = doc.data() as Map<String, dynamic>;
-        DateTime appointmentDate = (data['timestamp'] as Timestamp).toDate();
-
-        String dateKey = DateFormat('EEEE, d MMMM', Localizations.localeOf(context).toString()).format(appointmentDate);
-
-        if (!groupedAppointments.containsKey(dateKey)) {
-          groupedAppointments[dateKey] = [];
-        }
-
-        groupedAppointments[dateKey]!.add({
-          'id': doc.id,
-          'time': DateFormat('HH:mm').format(appointmentDate),
-          'timestamp': data['timestamp'],
-        });
-      }
-
-      setState(() {
-        categorizedAppointments = groupedAppointments;
-      });
-
-      print("✅ Loaded future appointments: ${categorizedAppointments.length}");
-    } catch (e) {
-      print("❌ Error fetching available appointments: $e");
-    }
-  }
-
-  void _loadMoreDates() {
-    setState(() {
-      maxDisplayedDates += 3; // ✅ زيادة عدد التواريخ المعروضة بمقدار 3 في كل مرة
-    });
-  }
 
   void _onSlotSelected(String slotId, Timestamp timestamp, String time) {
     Navigator.push(

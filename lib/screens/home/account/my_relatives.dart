@@ -167,11 +167,7 @@ class _MyRelativesPageState extends State<MyRelativesPage> {
         ? normalizeArabicInitial(firstName).toUpperCase()
         : "${firstName.isNotEmpty ? firstName[0].toUpperCase() : ""}${lastName.isNotEmpty ? lastName[0].toUpperCase() : ""}";
 
-    String dob = relative['dateOfBirth'] ?? "";
-
-
     bool isArabicLocale = Localizations.localeOf(context).languageCode == 'ar';
-    String displayedDob = isArabicLocale ? convertToArabicNumbers(dob) : dob;
 
     int age = _calculateAge(relative['dateOfBirth'] ?? "Unknown");
     String formattedDate = formatLocalizedDate(relative['dateOfBirth'] ?? "", context);

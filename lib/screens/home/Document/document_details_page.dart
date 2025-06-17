@@ -39,33 +39,6 @@ class _DocumentDetailsPageState extends State<DocumentDetailsPage> {
     documentName = widget.document.name; // نسخة قابلة للتعديل
   }
 
-  void _showRenameDocumentSheet(BuildContext context) {
-    showModalBottomSheet(
-      context: context,
-      isScrollControlled: true,
-      backgroundColor: Colors.white,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
-      ),
-      builder: (_) => EditDocumentNameSheet(
-        initialName: documentName,
-        onConfirm: (newName) async {
-          await FirebaseFirestore.instance
-              .collection('users')
-              .doc(widget.document.patientId)
-              .collection('documents')
-              .doc(widget.document.id)
-              .update({'name': newName});
-        },
-        onNameUpdated: (newName) {
-          setState(() {
-            documentName = newName;
-          });
-        },
-      ),
-    );
-  }
-
   @override
   Widget build(BuildContext context) {
     final locale = AppLocalizations.of(context)!;

@@ -125,56 +125,6 @@ class _UserProfilePageState extends State<UserProfilePage> {
   }
 
 
-
-  /// ✅ Edit field dialog
-  void _showEditDialog(String field, String title, String currentValue) {
-    TextEditingController controller = TextEditingController(text: currentValue);
-
-    showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: Text('Edit $title'),
-        content: TextField(
-          controller: controller,
-          decoration: InputDecoration(labelText: 'New $title'),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: const Text('Cancel'),
-          ),
-          TextButton(
-            onPressed: () {
-              _updateUserData(field, controller.text.trim());
-              Navigator.pop(context);
-            },
-            child: const Text('Save', style: TextStyle(color: AppColors.main)),
-          ),
-        ],
-      ),
-    );
-  }
-
-  /// ✅ Update Firestore with new data
-  Future<void> _updateUserData(String field, String newValue) async {
-    if (userId.isEmpty) return;
-
-    try {
-      await FirebaseFirestore.instance.collection('users').doc(userId).update({
-        field: newValue,
-      });
-
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('$field updated successfully!'), backgroundColor: Colors.green),
-      );
-    } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Failed to update $field: $e'), backgroundColor: AppColors.red),
-      );
-    }
-  }
-
-
   String convertToArabicNumbers(String input) {
     const english = ['0', '1', '2', '3', '4', '5', '6', '7', '8', '9'];
     const arabic = ['٠', '١', '٢', '٣', '٤', '٥', '٦', '٧', '٨', '٩'];
