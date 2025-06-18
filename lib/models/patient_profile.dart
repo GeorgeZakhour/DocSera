@@ -44,4 +44,20 @@ class PatientProfile {
       reason: reason ?? this.reason,
     );
   }
+
+
+  factory PatientProfile.fromMap(Map<String, dynamic> map) {
+    return PatientProfile(
+      patientId: map['userId'] ?? '',
+      doctorId: map['doctorId'] ?? '',
+      patientName: map['patientName'] ?? '',
+      patientGender: map['userGender'] ?? '',
+      patientAge: map['userAge'] ?? 0,
+      patientDOB: '', // 🔸 مو موجود بالمصدر، حط قيمة مؤقتة أو احذف الحقل إذا مو مستخدم
+      patientPhoneNumber: '', // 🔸 نفس الشيء
+      patientEmail: '',
+      reason: map['reason'] ?? '',
+    );
+  }
+
 }

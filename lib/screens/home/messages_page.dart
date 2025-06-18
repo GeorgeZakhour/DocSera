@@ -56,13 +56,19 @@
                 onPressed: () {
                   Navigator.push(context, fadePageRoute(const SearchPage(mode: "message")));
                 },
-                elevation: 0,
-                icon: Icon(Icons.edit, color: Colors.white),
+                icon: Icon(Icons.edit, color: AppColors.whiteText, size: 16.sp),
                 label: Text(
                   AppLocalizations.of(context)!.sendMessage,
-                  style: AppTextStyles.getText2(context).copyWith(color: Colors.white),
+                  style: AppTextStyles.getText2(context).copyWith(
+                    color: AppColors.whiteText,
+                    fontWeight: FontWeight.bold,
+                  ),
                 ),
+                elevation: 0,
                 backgroundColor: AppColors.main,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(25.r),
+                ),
               );
             }
             return const SizedBox.shrink();

@@ -45,6 +45,8 @@ class ConfirmationPage extends StatelessWidget {
           .collection('appointments')
           .doc(appointmentId)
           .update({
+        'appointmentId': appointmentId, // ✅ إضافة الـ ID
+        'userId': userId,               // ✅ حفظ الـ userId ضمن الموعد
         'booked': true,
         'accountName': accountName,
         'patientName': appointmentDetails.patientName,
@@ -62,6 +64,8 @@ class ConfirmationPage extends StatelessWidget {
           .collection('appointments')
           .doc(appointmentId)
           .set({
+        'appointmentId': appointmentId, // ✅ إضافة الـ ID
+        'userId': userId,               // ✅ حفظ الـ userId ضمن الموعد
         'booked': true,
         'doctorId': appointmentDetails.doctorId,
         'doctorName': appointmentDetails.doctorName,

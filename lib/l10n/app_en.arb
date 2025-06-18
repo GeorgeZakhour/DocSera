@@ -73,6 +73,25 @@
   "loadMoreAppointments": "Load more..",
   "unknownDate": "Unknown Date",
   "unknownTime": "Unknown Time",
+  "somethingWentWrong": "Something went wrong. Please try again.",
+  "cancelReasonQuestion": "Why do you want to cancel this appointment?",
+  "typeReasonHere": "Type your reason here...",
+  "reasonRequired": "You must provide a reason to cancel.",
+  "tooLateToCancel": "It's too late to cancel this appointment now.",
+  "notAllowed": "Not allowed",
+  "cancelTimeLimitNote": "For the respect of doctors' time and other patients, appointments must be cancelled at least 24 hours before the scheduled time. Late cancellations are not allowed.",
+  "appointmentCancelledMessage": "The appointment has been successfully cancelled. You can book a new appointment at any time.",
+  "toAppointmentPage": "Back to Appointments Page",
+  "tooLateToReschedule": "Too late to reschedule this appointment.",
+  "rescheduleTimeLimitNote": "For the respect of doctors' time and other patients, appointments must be rescheduled at least 24 hours before the scheduled time. Late rescheduling is not allowed.",
+  "appointmentRescheduleNoWarning": "You can now proceed to reschedule.",
+  "noAvailableAppointmentsRes": "No other appointments are available for rescheduling.",
+  "cancelInsteadNote": "You can cancel this appointment instead if needed.",
+  "rescheduleReasonQuestion": "Why do you want to reschedule this appointment?",
+  "confirmReschedule": "Confirm Reschedule",
+  "currentAppointment": "Current Appointment",
+  "newAppointment": "New Appointment",
+
 
 
   "@documentsPage================================": {
@@ -404,7 +423,6 @@
   "cancelAppointmentAction": "CANCEL APPOINTMENT",
   "appointmentRescheduled": "Reschedule confirmed",
   "appointmentCancelled": "Appointment canceled",
-  "appointmentRescheduleNoWarning": "Reschedule directly without warning",
   "appointmentCancelNoWarning": "Appointment canceled without warning",
   "doctorIdMissingError": "Doctor ID is missing. Unable to open profile.",
   "rescheduleWarningTitle": "You're about to move your appointment at the last minute",

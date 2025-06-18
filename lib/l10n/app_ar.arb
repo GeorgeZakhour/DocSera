@@ -78,6 +78,25 @@
   "unknownDate": "التاريخ غير معروف",
   "unknownTime": "الوقت غير معروف",
   "unknown": "غير معروف",
+  "somethingWentWrong": "حدث خطأ ما. يرجى المحاولة مرة أخرى.",
+  "cancelReasonQuestion": "لماذا تريد إلغاء هذا الموعد؟",
+  "typeReasonHere": "اكتب السبب هنا...",
+  "reasonRequired": "يجب إدخال سبب للإلغاء.",
+  "tooLateToCancel": "لقد فات الأوان لإلغاء هذا الموعد الآن.",
+  "notAllowed": "غير مسموح",
+  "cancelTimeLimitNote": "احتراماً لوقت الطبيب والمرضى الآخرين، يجب إلغاء الموعد قبل ٢٤ ساعة على الأقل من الوقت المحدد. لا يُسمح بالإلغاء المتأخر.",
+  "appointmentCancelledMessage": "تم إلغاء الموعد بنجاح. يمكنك حجز موعد جديد في أي وقت.",
+  "toAppointmentPage": "العودة إلى صفحة المواعيد",
+  "tooLateToReschedule": "تجاوزت المهلة لإعادة جدولة هذا الموعد.",
+  "rescheduleTimeLimitNote": "احتراماً لوقت الطبيب والمرضى الآخرين، يجب إعادة جدولة الموعد قبل ٢٤ ساعة على الأقل من الوقت المحدد. لا يُسمح بإعادة الجدولة المتأخرة.",
+  "appointmentRescheduleNoWarning": "يمكنك الآن متابعة إعادة الجدولة.",
+  "noAvailableAppointmentsRes": "لا توجد مواعيد أخرى متاحة لإعادة الجدولة.",
+  "cancelInsteadNote": "يمكنك إلغاء هذا الموعد بدلاً من ذلك إذا لزم الأمر.",
+  "rescheduleReasonQuestion": "لماذا تريد إعادة جدولة هذا الموعد؟",
+  "confirmReschedule": "تأكيد إعادة الجدولة",
+  "currentAppointment": "الموعد الحالي",
+  "newAppointment": "الموعد الجديد",
+
 
 
   "@documentsPage================================": {
@@ -406,7 +425,6 @@
   "cancelAppointmentAction": "إلغاء الموعد",
   "appointmentRescheduled": "تم تأكيد إعادة الجدولة",
   "appointmentCancelled": "تم إلغاء الموعد",
-  "appointmentRescheduleNoWarning": "إعادة الجدولة مباشرة دون تحذير",
   "appointmentCancelNoWarning": "تم إلغاء الموعد دون تحذير",
   "doctorIdMissingError": "رقم تعريف الطبيب غير موجود. لا يمكن فتح الملف الشخصي.",
   "rescheduleWarningTitle": "أنت على وشك تأجيل موعدك في اللحظة الأخيرة",

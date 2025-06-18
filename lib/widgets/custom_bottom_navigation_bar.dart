@@ -21,6 +21,10 @@ import 'package:docsera/main.dart';
 
 
 class CustomBottomNavigationBar extends StatefulWidget {
+  final int initialIndex;
+
+  const CustomBottomNavigationBar({Key? key, this.initialIndex = 0}) : super(key: key);
+
   @override
   _CustomBottomNavigationBarState createState() =>
       _CustomBottomNavigationBarState();
@@ -42,6 +46,7 @@ class _CustomBottomNavigationBarState extends State<CustomBottomNavigationBar>
   @override
   void initState() {
     super.initState();
+    _currentIndex = widget.initialIndex;
     // _checkLoginStatus();
 
     // ✅ تفعيل الاستماع مباشرة في البداية

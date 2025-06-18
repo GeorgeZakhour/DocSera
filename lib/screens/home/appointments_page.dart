@@ -472,31 +472,16 @@ import 'package:docsera/screens/home/shimmer/shimmer_widgets.dart';
             GestureDetector(
               behavior: HitTestBehavior.opaque, // ✅ Makes blank space clickable
               onTap: () {
-                // Determine if the appointment is upcoming based on _selectedTab
                 bool isUpcoming = _selectedTab == 0;
 
                 Navigator.push(
-                context,
-                fadePageRoute(AppointmentDetailsPage(
-                  appointment: {
-                    "doctorId": appointment["doctorId"] ?? "",
-                    "doctorName": appointment["doctorName"] ?? "Unknown",
-                    "doctorTitle": appointment["doctorTitle"] ?? "",
-                    "specialty": appointment["specialty"] ?? "General Practice",
-                    "doctorImage": appointment["doctorImage"] ?? "assets/images/male-doc.png",
-                    "patientName": appointment["patientName"] ?? "Unknown",
-                    "reason": appointment["reason"] ?? "No reason provided",
-                    "clinicName": appointment["clinicName"] ?? "Unknown Clinic",
-                    "clinicAddress": appointment["clinicAddress"] ?? "No Address",
-                    "timestamp": appointment["timestamp"] ?? Timestamp.now(),
-                    "bookingTimestamp": appointment["bookingTimestamp"] ?? Timestamp.now(),
-                  },
-                  isUpcoming: isUpcoming, // 🔹 Pass the flag to the details page
-
-                )),
-              );
-
-      },
+                  context,
+                  fadePageRoute(AppointmentDetailsPage(
+                    appointment: appointment, // ✅ تمرير كامل البيانات كما هي
+                    isUpcoming: isUpcoming,
+                  )),
+                );
+              },
               child: Column(
                 children: [
                   Padding(

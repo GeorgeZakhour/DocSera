@@ -30,12 +30,6 @@ class FirestoreUserService {
     });
   }
 
-
-
-
-
-
-
   Future<bool> isFakeEmailUsedInAuth(String fakeEmail) async {
     try {
       final methods = await FirebaseAuth.instance.fetchSignInMethodsForEmail(fakeEmail);
@@ -44,8 +38,6 @@ class FirestoreUserService {
       return false;
     }
   }
-
-
 
   /// ✅ التحقق مما إذا كان رقم الهاتف موجود مسبقًا في Firestore
   Future<bool> isPhoneNumberExists(String phoneNumber) async {
