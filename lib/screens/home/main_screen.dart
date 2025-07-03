@@ -1,12 +1,12 @@
 import 'dart:async';
 import 'dart:convert';
-import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:docsera/Business_Logic/Authentication/auth_cubit.dart';
 import 'package:docsera/Business_Logic/Authentication/auth_state.dart';
 import 'package:docsera/Business_Logic/Main_page/main_screen_cubit.dart';
 import 'package:docsera/Business_Logic/Main_page/main_screen_state.dart';
 import 'package:docsera/app/text_styles.dart';
 import 'package:docsera/screens/home/shimmer/shimmer_widgets.dart';
+import 'package:docsera/services/supabase/supabase_user_service.dart';
 import 'package:docsera/utils/custom_clippers.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
@@ -14,13 +14,13 @@ import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 import 'package:docsera/screens/doctors/appointment/select_patient_page.dart';
 import 'package:docsera/screens/doctors/auth/doctor_identification_page.dart';
 import 'package:docsera/screens/doctors/doctor_profile_page.dart';
-import 'package:docsera/services/firestore/firestore_user_service.dart';
 import 'package:docsera/utils/page_transitions.dart';
 import 'package:docsera/utils/shared_prefs_service.dart';
 import 'package:flutter/material.dart';
 import 'package:docsera/app/const.dart';
 import 'package:docsera/widgets/main_screen_widgets.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../../models/sign_up_info.dart';
 import '../auth/sign_up/WelcomePage.dart';
@@ -39,7 +39,7 @@ class _MainScreenState extends State<MainScreen> with AutomaticKeepAliveClientMi
 
   static bool _bannersLoadedOnce = false; // ✅ يبقى محفوظ بعد التنقل
   bool _bannerColorsReady = false;
-  final FirestoreUserService _firestoreService = FirestoreUserService();
+  final SupabaseUserService _supabaseService = SupabaseUserService();
   final SharedPrefsService _sharedPrefsService = SharedPrefsService();
   List<Map<String, dynamic>> favoriteDoctors = [];
   // bool isLoggedIn = false;
@@ -76,52 +76,6 @@ class _MainScreenState extends State<MainScreen> with AutomaticKeepAliveClientMi
     super.dispose();
   }
 
-
-  // /// **🔹 التحقق مما إذا كان المستخدم مسجّل الدخول**
-  // Future<void> _checkLoginStatus() async {
-  //   if (_isFetchingFavorites) return;
-  //   _isFetchingFavorites = true;
-  //
-  //   isLoggedIn = await _sharedPrefsService.isLoggedIn();
-  //   if (!isLoggedIn) {
-  //     _isFetchingFavorites = false;
-  //     if (mounted) setState(() {}); // ✅ Only update if still in widget tree
-  //     return;
-  //   }
-  //
-  //   String? userId = await _sharedPrefsService.getUserId();
-  //   if (userId == null) {
-  //     _isFetchingFavorites = false;
-  //     return;
-  //   }
-  //
-  //   // ✅ Load from cache FIRST, and show instantly
-  //   var cachedDoctors = await _sharedPrefsService.loadData('favoriteDoctors');
-  //   if (cachedDoctors != null) {
-  //     favoriteDoctors = List<Map<String, dynamic>>.from(cachedDoctors);
-  //     print("⚡ Loaded favorite doctors from **cache**: ${favoriteDoctors.length} doctors.");
-  //     setState(() {});
-  //   }
-  //
-  //   // ✅ Fetch from Firestore ONLY if cache is outdated
-  //   if (_favoritesListener != null) {
-  //     _isFetchingFavorites = false;
-  //     return;
-  //   }
-  //
-  //   _favoritesListener = _firestoreService.listenToFavoriteDoctors(userId).listen((updatedDoctors) async {
-  //     print("🔥 Favorite doctors list updated from Firestore (${updatedDoctors.length} doctors).");
-  //     setState(() {
-  //       favoriteDoctors = updatedDoctors;
-  //     });
-  //
-  //     await _sharedPrefsService.saveData('favoriteDoctors', updatedDoctors);
-  //     print("💾 Updated favorite doctors in **cache**.");
-  //   });
-  //
-  //   _isFetchingFavorites = false;
-  // }
-
   Future<void> _checkLoginStatus(BuildContext context) async {
     if (_isFetchingFavorites) return;
     _isFetchingFavorites = true;
@@ -132,22 +86,20 @@ class _MainScreenState extends State<MainScreen> with AutomaticKeepAliveClientMi
       return;
     }
 
-    final userId = authState.user.uid;
+    final userId = authState.user.id;
 
-    // ✅ Load cached favorite doctors first
     var cachedDoctors = await _sharedPrefsService.loadData('favoriteDoctors');
     if (cachedDoctors != null) {
       favoriteDoctors = List<Map<String, dynamic>>.from(cachedDoctors);
       if (mounted) setState(() {});
     }
 
-    // ✅ Setup Firestore listener once
     if (_favoritesListener != null) {
       _isFetchingFavorites = false;
       return;
     }
 
-    _favoritesListener = _firestoreService.listenToFavoriteDoctors(userId).listen((updatedDoctors) async {
+    _favoritesListener = _supabaseService.listenToFavoriteDoctors(userId).listen((updatedDoctors) async {
       favoriteDoctors = updatedDoctors;
       if (mounted) setState(() {});
       await _sharedPrefsService.saveData('favoriteDoctors', updatedDoctors);
@@ -155,6 +107,7 @@ class _MainScreenState extends State<MainScreen> with AutomaticKeepAliveClientMi
 
     _isFetchingFavorites = false;
   }
+
 
 
 
@@ -218,9 +171,25 @@ class _MainScreenState extends State<MainScreen> with AutomaticKeepAliveClientMi
 
   /// **🔹 Doctor Card Widget**
   Widget _buildDoctorCard(Map<String, dynamic> doctor) {
-    ImageProvider profileImageProvider = (doctor['profileImage'] != null && doctor['profileImage'].toString().startsWith("http"))
-        ? NetworkImage(doctor['profileImage'])
-        : AssetImage(doctor['profileImage']) as ImageProvider;
+    String gender = (doctor['gender'] ?? 'male').toLowerCase();
+    String title = (doctor['title'] ?? '').toLowerCase();
+    String? imageUrl = doctor['profile_image'];
+
+    ImageProvider profileImageProvider;
+
+    if (imageUrl != null && imageUrl.startsWith('http')) {
+      profileImageProvider = NetworkImage(imageUrl);
+    } else {
+      String avatarPath = (title == 'dr.')
+          ? (gender == 'female'
+          ? 'assets/images/female-doc.png'
+          : 'assets/images/male-doc.png')
+          : (gender == 'female'
+          ? 'assets/images/female-phys.png'
+          : 'assets/images/male-phys.png');
+      profileImageProvider = AssetImage(avatarPath);
+    }
+
 
     return GestureDetector(
       onTap: () {
@@ -238,7 +207,7 @@ class _MainScreenState extends State<MainScreen> with AutomaticKeepAliveClientMi
             ),
             SizedBox(height: 6.h),
             Text(
-              "${doctor['title']} ${doctor['firstName']} ${doctor['lastName']}".trim(),
+              "${doctor['title']} ${doctor['first_name']} ${doctor['last_name']}".trim(),
               textAlign: TextAlign.center,
               style: AppTextStyles.getText2(context).copyWith(fontWeight: FontWeight.bold),
               maxLines: 2,
@@ -278,7 +247,7 @@ class _MainScreenState extends State<MainScreen> with AutomaticKeepAliveClientMi
                       : AssetImage(doctor['profileImage']) as ImageProvider,
                 ),
                 title: Text(
-                  "${doctor['title']} ${doctor['firstName']} ${doctor['lastName']}".trim(),
+                  "${doctor['title']} ${doctor['first_name']} ${doctor['last_name']}".trim(),
                   style: AppTextStyles.getText2(context).copyWith(fontWeight: FontWeight.bold),
                 ),
                 subtitle: Text(doctor['specialty'] ?? "Unknown Specialty", style: AppTextStyles.getText2(context) ,),
@@ -296,7 +265,7 @@ class _MainScreenState extends State<MainScreen> with AutomaticKeepAliveClientMi
                     MaterialPageRoute(
                       builder: (context) => SelectPatientPage(
                         doctorId: doctor['id'],
-                        doctorName: "${doctor['firstName']} ${doctor['lastName']}",
+                        doctorName: "${doctor['first_name']} ${doctor['last_name']}",
                         doctorGender: doctor['gender'],
                         doctorTitle: doctor['title'],
                         specialty: doctor['specialty'],
@@ -321,16 +290,16 @@ class _MainScreenState extends State<MainScreen> with AutomaticKeepAliveClientMi
                     fadePageRoute(DoctorProfilePage(doctor: {
                       "id": doctor["id"] ?? "",
                       "title": doctor["title"] ?? "",
-                      "firstName": doctor["firstName"] ?? "Unknown",
-                      "lastName": doctor["lastName"] ?? "",
+                      "first_name": doctor["firstName"] ?? "Unknown",
+                      "last_name": doctor["last_name"] ?? "",
                       "specialty": doctor["specialty"] ?? "General Practice",
-                      "profileDescription": doctor["profileDescription"] ?? "No Description",
+                      "profile_description": doctor["profile_description"] ?? "No Description",
                       "clinic": doctor["clinic"] ?? "Unknown Clinic",
                       "address": doctor["address"] ?? "No Address",
-                      "phoneNumber": doctor["phoneNumber"] ?? "Not Provided",
+                      "phone_number": doctor["phoneNumber"] ?? "Not Provided",
                       "languages": doctor["languages"] ?? [],
                       "email": doctor["email"] ?? "Not Provided",
-                      "doctorImage": doctor["profileImage"] ?? "assets/images/male-doc.png",
+                      "doctor_image": doctor["profileImage"] ?? "assets/images/male-doc.png",
                     }, doctorId: doctor["id"],)),
                   );
 
@@ -358,8 +327,8 @@ class _MainScreenState extends State<MainScreen> with AutomaticKeepAliveClientMi
   }
 
   Future<void> _removeFromFavorites(String doctorId) async {
-    final SharedPreferences prefs = await SharedPreferences.getInstance();
-    final String? userId = prefs.getString('userId');
+    final authState = context.read<AuthCubit>().state;
+    final userId = (authState is AuthAuthenticated) ? authState.user.id : null;
 
     if (userId == null || doctorId.isEmpty) {
       print("❌ Error: User ID or Doctor ID is missing!");
@@ -367,31 +336,18 @@ class _MainScreenState extends State<MainScreen> with AutomaticKeepAliveClientMi
     }
 
     try {
-      final userRef = FirebaseFirestore.instance.collection('users').doc(userId);
-      DocumentSnapshot userDoc = await userRef.get();
+      await _supabaseService.removeDoctorFromFavorites(userId, doctorId);
 
-      if (!userDoc.exists || !userDoc.data().toString().contains('favorites')) {
-        print("📄 No favorites field found, skipping removal.");
-        return;
-      }
+      setState(() {
+        favoriteDoctors.removeWhere((doc) => doc['id'] == doctorId);
+      });
 
-      List<dynamic> favorites = List.from(userDoc.get('favorites') ?? []);
-
-      if (favorites.contains(doctorId)) {
-        await userRef.update({
-          'favorites': FieldValue.arrayRemove([doctorId]),
-        });
-
-        setState(() {
-          favoriteDoctors.removeWhere((doc) => doc['id'] == doctorId);
-        });
-
-        print("❌ Doctor removed from favorites -> Updating Firestore...");
-      }
+      print("❌ Doctor removed from favorites -> Supabase updated.");
     } catch (e) {
       print("❌ Error removing doctor from favorites: $e");
     }
   }
+
 
 
   @override
@@ -668,6 +624,15 @@ class _MainScreenState extends State<MainScreen> with AutomaticKeepAliveClientMi
               showSecondShape: true,
             ),
 
+            ElevatedButton(
+              onPressed: () async {
+                final prefs = await SharedPreferences.getInstance();
+                await prefs.clear();
+                Supabase.instance.client.auth.signOut(); // ⛔ اختياري فقط
+                // أعد تشغيل التطبيق أو انتقل لشاشة البداية
+              },
+              child: Text('🧹 Reset Session'),
+            ),
 
 
 

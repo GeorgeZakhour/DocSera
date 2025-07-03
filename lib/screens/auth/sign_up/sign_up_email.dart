@@ -1,7 +1,7 @@
 import 'package:docsera/app/text_styles.dart';
 import 'package:docsera/screens/auth/login/login_page.dart';
 import 'package:docsera/screens/auth/sign_up/create_password.dart';
-import 'package:docsera/services/firestore/firestore_user_service.dart';
+import 'package:docsera/services/supabase/supabase_user_service.dart';
 import 'package:docsera/utils/page_transitions.dart';
 import 'package:docsera/utils/text_direction_utils.dart';
 import 'package:docsera/widgets/base_scaffold.dart';
@@ -23,7 +23,7 @@ class EnterEmailPage extends StatefulWidget {
 
 class _EnterEmailPageState extends State<EnterEmailPage> {
   final TextEditingController _emailController = TextEditingController();
-  final FirestoreUserService _firestoreService = FirestoreUserService();
+  final SupabaseUserService _supabaseOTPService = SupabaseUserService();
   bool isValid = false;
   bool hasInput = false;
   bool isChecking = false;
@@ -39,7 +39,7 @@ class _EnterEmailPageState extends State<EnterEmailPage> {
     });
 
     try {
-      final isDuplicate = await _firestoreService.doesUserExist(email: _emailController.text.trim());
+      final isDuplicate = await _supabaseOTPService.doesUserExist(email: _emailController.text.trim());
 
       setState(() {
         isChecking = false;
@@ -254,26 +254,25 @@ class _EnterEmailPageState extends State<EnterEmailPage> {
               ),
 
               SizedBox(height: 10.h),
-
-              Center(
-                child: TextButton(
-                  onPressed: () {
-                    widget.signUpInfo.email = null;
-                    Navigator.push(
-                      context,
-                      fadePageRoute(CreatePasswordPage(signUpInfo: widget.signUpInfo)),
-                    );
-                  },
-                  style: TextButton.styleFrom(
-                    foregroundColor: AppColors.main,
-                    textStyle: AppTextStyles.getText3(context).copyWith(
-                      decoration: TextDecoration.underline,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                  child: Text(AppLocalizations.of(context)!.skipEmail),
-                ),
-              ),
+              // Center(
+              //   child: TextButton(
+              //     onPressed: () {
+              //       widget.signUpInfo.email = null;
+              //       Navigator.push(
+              //         context,
+              //         fadePageRoute(CreatePasswordPage(signUpInfo: widget.signUpInfo)),
+              //       );
+              //     },
+              //     style: TextButton.styleFrom(
+              //       foregroundColor: AppColors.main,
+              //       textStyle: AppTextStyles.getText3(context).copyWith(
+              //         decoration: TextDecoration.underline,
+              //         fontWeight: FontWeight.bold,
+              //       ),
+              //     ),
+              //     child: Text(AppLocalizations.of(context)!.skipEmail),
+              //   ),
+              // ),
 
             ],
           ),

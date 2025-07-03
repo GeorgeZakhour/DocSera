@@ -1,5 +1,3 @@
-import 'package:cloud_firestore/cloud_firestore.dart';
-
 class Message {
   final String id;
   final String senderId;
@@ -15,25 +13,23 @@ class Message {
     required this.isSeen,
   });
 
-  factory Message.fromMap(String id, Map<String, dynamic> data) {
+
+  factory Message.fromMap(Map<String, dynamic> data) {
     return Message(
-      id: id,
+      id: data['id'].toString(),
       senderId: data['senderId'] ?? '',
       text: data['text'] ?? '',
-      timestamp: (data['timestamp'] as Timestamp).toDate(),
+      timestamp: DateTime.parse(data['timestamp']),
       isSeen: data['isSeen'] ?? false,
     );
   }
 
-  factory Message.fromFirestore(DocumentSnapshot doc) {
-    return Message.fromMap(doc.id, doc.data() as Map<String, dynamic>);
-  }
-
   Map<String, dynamic> toMap() {
     return {
+      'id': id,
       'senderId': senderId,
       'text': text,
-      'timestamp': Timestamp.fromDate(timestamp),
+      'timestamp': timestamp.toIso8601String(),
       'isSeen': isSeen,
     };
   }

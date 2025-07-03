@@ -1,9 +1,9 @@
-import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:docsera/app/const.dart';
 import 'package:docsera/screens/doctors/doctor_panel/doctor_drawer.dart';
 import 'package:docsera/screens/doctors/doctor_panel/patient_profile_page.dart';
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 
 class PatientsPage extends StatefulWidget {
   final Map<String, dynamic>? doctorData;
@@ -38,24 +38,24 @@ class _PatientsPageState extends State<PatientsPage> {
     SharedPreferences prefs = await SharedPreferences.getInstance();
     doctorId = prefs.getString('doctorId');
 
-    if (doctorId == null) {
+    final localDoctorId = doctorId;
+    if (localDoctorId == null) {
       print("❌ Doctor ID not found.");
       return;
     }
 
     try {
-      QuerySnapshot querySnapshot = await FirebaseFirestore.instance
-          .collection('doctors')
-          .doc(doctorId)
-          .collection('patients')
-          .get();
+      final response = await Supabase.instance.client
+          .from('patients')
+          .select('id, patientName, userGender, userAge')
+          .eq('doctorId', localDoctorId);
 
-      List<Map<String, dynamic>> patientList = querySnapshot.docs.map((doc) {
+      List<Map<String, dynamic>> patientList = (response as List<dynamic>).map((data) {
         return {
-          'id': doc.id,
-          'patientName': doc['patientName'],
-          'userGender': doc['userGender'],
-          'userAge': doc['userAge'].toString(),
+          'id': data['id'],
+          'patientName': data['patientName'],
+          'userGender': data['userGender'],
+          'userAge': data['userAge'].toString(),
         };
       }).toList();
 

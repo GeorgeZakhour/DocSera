@@ -1,5 +1,3 @@
-import 'package:cloud_firestore/cloud_firestore.dart';
-
 class Note {
   final String id;
   final String title;
@@ -15,23 +13,23 @@ class Note {
     required this.userId,
   });
 
-  factory Note.fromFirestore(DocumentSnapshot doc) {
-    final data = doc.data() as Map<String, dynamic>;
+  factory Note.fromMap(Map<String, dynamic> data) {
     return Note(
-      id: doc.id,
+      id: data['id'].toString(),
       title: data['title'] ?? '',
       content: data['content'] ?? [],
-      createdAt: (data['createdAt'] as Timestamp).toDate(),
-      userId: data['userId'] ?? '',
+      createdAt: DateTime.parse(data['created_at']),
+      userId: data['user_id'] ?? '',
     );
   }
 
   Map<String, dynamic> toMap() {
     return {
+      'id': id,
       'title': title,
       'content': content,
-      'createdAt': Timestamp.fromDate(createdAt),
-      'userId': userId,
+      'created_at': createdAt.toIso8601String(),
+      'user_id': userId,
     };
   }
 

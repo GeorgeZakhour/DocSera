@@ -89,10 +89,12 @@ class _SignUpSecondPageState extends State<SignUpSecondPage> {
         isUnderage = age < 16;
         _dobController.text =
         '${picked.day.toString().padLeft(2, '0')}.${picked.month.toString().padLeft(2, '0')}.${picked.year}';
-        widget.signUpInfo.dateOfBirth = _dobController.text; // ✅ حفظ التاريخ
+        widget.signUpInfo.dateOfBirth =
+        '${picked.year}-${picked.month.toString().padLeft(2, '0')}-${picked.day.toString().padLeft(2, '0')}';
       });
       _validateForm();
     }
+
   }
   /// ✅ تحويل الرقم من 00963XXXXXXXX إلى 09XXXXXXXX للعرض فقط
   String _getDisplayPhoneNumber(String input) {
@@ -144,8 +146,8 @@ class _SignUpSecondPageState extends State<SignUpSecondPage> {
                 value: _selectedGender,
                 hint: AppLocalizations.of(context)!.selectGender,
                 items:  [
-                  DropdownMenuItem(value: "Male", child: Text(AppLocalizations.of(context)!.male, style: AppTextStyles.getText1(context),)),
-                  DropdownMenuItem(value: "Female", child: Text(AppLocalizations.of(context)!.female, style: AppTextStyles.getText1(context),)),
+                  DropdownMenuItem(value: "ذكر", child: Text(AppLocalizations.of(context)!.male, style: AppTextStyles.getText1(context),)),
+                  DropdownMenuItem(value: "أنثى", child: Text(AppLocalizations.of(context)!.female, style: AppTextStyles.getText1(context),)),
                 ],
                 onChanged: (value) {
                   setState(() {
@@ -368,11 +370,7 @@ class _SignUpSecondPageState extends State<SignUpSecondPage> {
       menuMaxHeight: 250.h, // ✅ منع القائمة من أن تصبح طويلة جدًا
       icon: Icon(Icons.arrow_drop_down, color: AppColors.main, size: 22.sp), // ✅ تغيير أيقونة السهم
       items: items,
-      onChanged: (val) {
-        setState(() {
-          onChanged(val);
-        });
-      },
+      onChanged: onChanged,
     );
   }
 

@@ -1,13 +1,12 @@
-import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:docsera/app/const.dart';
 import 'package:docsera/screens/auth/sign_up/WelcomePage.dart';
+import 'package:docsera/services/supabase/supabase_user_service.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
-import 'package:docsera/services/firestore/firestore_user_service.dart';
 import 'package:docsera/widgets/base_scaffold.dart';
 import 'package:docsera/utils/page_transitions.dart';
-import 'package:firebase_auth/firebase_auth.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 import '../../../models/sign_up_info.dart';
 import '../../../app/text_styles.dart';
 import 'package:flutter_gen/gen_l10n/app_localizations.dart';
@@ -16,7 +15,7 @@ import 'package:device_info_plus/device_info_plus.dart';
 
 class RecapPage extends StatelessWidget {
   final SignUpInfo signUpInfo;
-  final FirestoreUserService _firestoreService = FirestoreUserService();
+  final SupabaseUserService _supabaseUserService = SupabaseUserService();
 
   RecapPage({Key? key, required this.signUpInfo}) : super(key: key);
 
@@ -31,8 +30,8 @@ class RecapPage extends StatelessWidget {
   /// **Auto Login after successful registration**
   Future<void> _autoLogin(BuildContext context) async {
     try {
-      UserCredential userCredential = await FirebaseAuth.instance.signInWithEmailAndPassword(
-        email: signUpInfo.fakeEmail!,
+      await Supabase.instance.client.auth.signInWithPassword(
+        email: signUpInfo.email!,
         password: signUpInfo.password!,
       );
 
@@ -55,85 +54,64 @@ class RecapPage extends StatelessWidget {
   }
 
   /// **Register user in Firebase and store data in Firestore**
-  Future<void> _saveToFirestore(BuildContext context) async {
+  Future<void> _registerUserWithSupabase(BuildContext context) async {
     try {
-// 🔁 توليد إيميل وهمي جديد إذا كان الحالي موجود فعلاً
-      String finalFakeEmail = signUpInfo.fakeEmail!;
-
-      QuerySnapshot existingFakeEmails = await FirebaseFirestore.instance
-          .collection('users')
-          .where('fakeEmail', isEqualTo: finalFakeEmail)
-          .get();
-
-      if (existingFakeEmails.docs.isNotEmpty) {
-        finalFakeEmail = await _firestoreService.generateNextFakeEmail();
-        print("🔁 Generated new fake email: $finalFakeEmail");
-      }
 
 
 // ✅ تحقق من الإيميل الحقيقي فقط إذا تم إدخاله
-      if (signUpInfo.email != null) {
-        QuerySnapshot existingEmails = await FirebaseFirestore.instance
-            .collection('users')
-            .where('email', isEqualTo: signUpInfo.email)
-            .get();
+      final existingEmail = await Supabase.instance.client
+          .from('users')
+          .select('email')
+          .eq('email', signUpInfo.email!)
+          .maybeSingle();
 
-        if (existingEmails.docs.isNotEmpty) {
-          throw Exception(AppLocalizations.of(context)!.emailAlreadyRegistered);
-        }
+      if (existingEmail != null) {
+        throw Exception(AppLocalizations.of(context)!.emailAlreadyRegistered);
       }
 
 
-      // QuerySnapshot existingPhoneUsers = await FirebaseFirestore.instance
-      //     .collection('users')
-      //     .where('phoneNumber', isEqualTo: signUpInfo.phoneNumber)
-      //     .get();
-      //
-      // if (existingPhoneUsers.docs.isNotEmpty) {
-      //   throw Exception(AppLocalizations.of(context)!.phoneAlreadyRegistered);
-      // }
 
-      print("📧 Fake email being used: ${signUpInfo.fakeEmail}");
 
-      // ✅ Register user in FirebaseAuth
-      UserCredential userCredential = await FirebaseAuth.instance.createUserWithEmailAndPassword(
-        email: signUpInfo.fakeEmail!,
+
+      // ✅ Register user in Supabase Auth
+      final response = await Supabase.instance.client.auth.signUp(
+        email: signUpInfo.email!,
         password: signUpInfo.password!,
       );
 
-
-      final user = userCredential.user;
+      final user = response.user;
       if (user == null) {
         throw Exception(AppLocalizations.of(context)!.registrationFailed);
       }
 
-      final userId = user.uid; // Get FirebaseAuth user ID
+      final userId = user?.id;
 
-      // ✅ Prepare user data
       final userData = {
-        'firstName': signUpInfo.firstName,
-        'lastName': signUpInfo.lastName,
-        'fakeEmail': signUpInfo.fakeEmail,
+        'id': userId, // ✅ أضف هذا السطر
+        'first_name': signUpInfo.firstName,
+        'last_name': signUpInfo.lastName,
         'email': signUpInfo.email,
-        'phoneNumber': signUpInfo.phoneNumber,
-        'emailVerified': signUpInfo.emailVerified,
-        'phoneVerified': signUpInfo.phoneVerified,
-        'gender': signUpInfo.gender,
-        'dateOfBirth': signUpInfo.dateOfBirth,
-        'termsAccepted': signUpInfo.termsAccepted,
-        'marketingChecked': signUpInfo.marketingChecked,
-        'timestamp': FieldValue.serverTimestamp(),
-        'twoFactorAuthEnabled': false,
-        'trustedDevices': [],
+        'phone_number': signUpInfo.phoneNumber,
+        'email_verified': signUpInfo.emailVerified,
+        'phone_verified': signUpInfo.phoneVerified,
+        'gender': signUpInfo.gender == "ذكر" ? "ذكر" : "أنثى",
+        'date_of_birth': signUpInfo.dateOfBirth,
+        'terms_accepted': signUpInfo.termsAccepted,
+        'marketing_checked': signUpInfo.marketingChecked,
+        'two_factor_auth_enabled': false,
+        'trusted_devices': [],
       };
 
       // ✅ Save user data in Firestore
-      await _firestoreService.addUser(userId, userData);
+      if (userId == null) throw Exception('User ID is null');
+      await _supabaseUserService.addUser(userId, userData);
 
       final deviceId = await getDeviceId();
-      await FirebaseFirestore.instance.collection('users').doc(userId).update({
-        'trustedDevices': FieldValue.arrayUnion([deviceId])
-      });
+      await Supabase.instance.client
+          .from('users')
+          .update({'trusted_devices': [deviceId]})
+          .eq('id', userId);
+
 
 
       // ✅ Store user info in SharedPreferences
@@ -243,7 +221,7 @@ class RecapPage extends StatelessWidget {
 
             // **Register Button**
             ElevatedButton(
-              onPressed: () => _saveToFirestore(context),
+              onPressed: () => _registerUserWithSupabase(context),
               style: ElevatedButton.styleFrom(
                 backgroundColor: AppColors.main,
                 padding: EdgeInsets.symmetric(vertical: 12.h),

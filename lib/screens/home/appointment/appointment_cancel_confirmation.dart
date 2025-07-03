@@ -1,7 +1,5 @@
 import 'package:docsera/app/text_styles.dart';
 import 'package:docsera/screens/doctors/appointment/select_patient_page.dart';
-import 'package:docsera/screens/home/appointment/appointment_details_page.dart';
-import 'package:docsera/screens/home/appointments_page.dart';
 import 'package:docsera/widgets/custom_bottom_navigation_bar.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
@@ -24,165 +22,187 @@ class AppointmentCancelledPage extends StatelessWidget {
     String formattedDate = DateFormat("EEEE, d MMMM yyyy", locale).format(appointmentDate);
     String formattedTime = DateFormat("HH:mm", locale).format(appointmentDate);
 
-    return Scaffold(
-      backgroundColor: AppColors.background3,
-      appBar: AppBar(
-        centerTitle: true,
-        backgroundColor: AppColors.main,
-        title: Padding(
-          padding: EdgeInsets.only(top: 8.h),
-          child: SvgPicture.asset('assets/images/docsera_white.svg', height: 16.h),
-        ),
-        leading: IconButton(
-          icon: Icon(Icons.close, color: Colors.white, size: 24.sp),
-          onPressed: () {
-            Navigator.pushAndRemoveUntil(
-              context,
-              fadePageRoute(CustomBottomNavigationBar()),
-                  (route) => false,
-            );
-          },
-        ),
-      ),
-      body: Padding(
-        padding: EdgeInsets.all(16.w),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.center,
-          children: [
-            Icon(Icons.cancel, color: AppColors.red, size: 35.sp),
-            SizedBox(height: 8.h),
-            Text(AppLocalizations.of(context)!.appointmentCancelled,
-                style: AppTextStyles.getTitle1(context)),
-            Text(
-              AppLocalizations.of(context)!.appointmentCancelledMessage,
-              style: AppTextStyles.getText2(context).copyWith(fontSize: 12.sp, color: Colors.black87),
-            ),
-            SizedBox(height: 20.h),
+    final imagePath = (appointment['doctor_image'] != null && appointment['doctor_image'].toString().isNotEmpty)
+        ? appointment['doctor_image']
+        : (appointment['doctor_title'].toString().toLowerCase() == "dr."
+        ? (appointment['doctor_gender'].toString().toLowerCase() == "female"
+        ? 'assets/images/female-doc.png'
+        : 'assets/images/male-doc.png')
+        : (appointment['doctor_gender'].toString().toLowerCase() == "male"
+        ? 'assets/images/male-phys.png'
+        : 'assets/images/female-phys.png'));
 
-            Card(
-              elevation: 0,
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(8.r),
-                side: BorderSide(color: Colors.grey.shade200, width: 0.4),
+    return WillPopScope(
+      onWillPop: () async {
+        Navigator.pushAndRemoveUntil(
+          context,
+          fadePageRoute(const CustomBottomNavigationBar()),
+              (route) => false,
+        );
+        return false; // يمنع الرجوع العادي
+      },
+      child: Scaffold(
+        backgroundColor: AppColors.background3,
+        appBar: AppBar(
+          centerTitle: true,
+          backgroundColor: AppColors.main,
+          title: Padding(
+            padding: EdgeInsets.only(top: 8.h),
+            child: SvgPicture.asset('assets/images/docsera_white.svg', height: 16.h),
+          ),
+          leading: IconButton(
+            icon: Icon(Icons.close, color: Colors.white, size: 24.sp),
+            onPressed: () {
+              Navigator.pushAndRemoveUntil(
+                context,
+                fadePageRoute(CustomBottomNavigationBar()),
+                    (route) => false,
+              );
+            },
+          ),
+        ),
+        body: Padding(
+          padding: EdgeInsets.all(16.w),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.center,
+            children: [
+              Icon(Icons.cancel, color: AppColors.red, size: 35.sp),
+              SizedBox(height: 8.h),
+              Text(AppLocalizations.of(context)!.appointmentCancelled,
+                  style: AppTextStyles.getTitle1(context)),
+              Text(
+                AppLocalizations.of(context)!.appointmentCancelledMessage,
+                style: AppTextStyles.getText2(context).copyWith(fontSize: 12.sp, color: Colors.black87),
               ),
-              color: AppColors.background2,
-              child: Column(
-                children: [
-                  Container(
-                    padding: EdgeInsets.symmetric(vertical: 10.h, horizontal: 16.w),
-                    decoration: BoxDecoration(
-                      color: AppColors.mainDark.withOpacity(0.9),
-                      borderRadius: BorderRadius.vertical(top: Radius.circular(12.r)),
-                    ),
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        Row(
-                          children: [
-                            Icon(Icons.calendar_today, color: Colors.white, size: 14.sp),
-                            SizedBox(width: 6.w),
-                            Text(formattedDate,
-                                style: AppTextStyles.getText3(context).copyWith(
-                                    color: Colors.white, fontWeight: FontWeight.w600)),
-                          ],
-                        ),
-                        Row(
-                          children: [
-                            Icon(Icons.access_time, color: Colors.white, size: 14.sp),
-                            SizedBox(width: 6.w),
-                            Text(formattedTime,
-                                style: AppTextStyles.getText3(context).copyWith(
-                                    color: Colors.white, fontWeight: FontWeight.w600)),
-                          ],
-                        ),
-                      ],
-                    ),
-                  ),
-                  Padding(
-                    padding: EdgeInsets.all(12.w),
-                    child: GestureDetector(
-                      onTap: () {
-                        Navigator.push(
-                          context,
-                          fadePageRoute(DoctorProfilePage(doctorId: appointment['doctorId'])),
-                        );
-                      },
+              SizedBox(height: 20.h),
+
+              Card(
+                elevation: 0,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(8.r),
+                  side: BorderSide(color: Colors.grey.shade200, width: 0.4),
+                ),
+                color: AppColors.background2,
+                child: Column(
+                  children: [
+                    Container(
+                      padding: EdgeInsets.symmetric(vertical: 10.h, horizontal: 16.w),
+                      decoration: BoxDecoration(
+                        color: AppColors.mainDark.withOpacity(0.9),
+                        borderRadius: BorderRadius.vertical(top: Radius.circular(12.r)),
+                      ),
                       child: Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
-                          CircleAvatar(
-                            radius: 22.r,
-                            backgroundColor: AppColors.main.withOpacity(0.2),
-                            backgroundImage: AssetImage(
-                                appointment['doctorImage'] ?? 'assets/images/male-doc.png'),
-                          ),
-                          SizedBox(width: 12.w),
-                          Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
+                          Row(
                             children: [
-                              Text(
-                                "${appointment['doctorTitle'] ?? ''} ${appointment['doctorName'] ?? ''}".trim(),
-                                style: AppTextStyles.getTitle1(context).copyWith(fontSize: 13.sp),
-                              ),
-                              Text(
-                                appointment['specialty'] ?? "التخصص غير محدد",
-                                style: AppTextStyles.getText2(context).copyWith(color: Colors.black54),
-                              ),
+                              Icon(Icons.calendar_today, color: Colors.white, size: 14.sp),
+                              SizedBox(width: 6.w),
+                              Text(formattedDate,
+                                  style: AppTextStyles.getText3(context).copyWith(
+                                      color: Colors.white, fontWeight: FontWeight.w600)),
                             ],
                           ),
-                          const Spacer(),
-                          Icon(Icons.arrow_forward_ios, color: Colors.grey, size: 12.sp),
+                          Row(
+                            children: [
+                              Icon(Icons.access_time, color: Colors.white, size: 14.sp),
+                              SizedBox(width: 6.w),
+                              Text(formattedTime,
+                                  style: AppTextStyles.getText3(context).copyWith(
+                                      color: Colors.white, fontWeight: FontWeight.w600)),
+                            ],
+                          ),
                         ],
                       ),
                     ),
-                  ),
-                  Divider(color: Colors.grey[200], height: 1.h),
-                  _buildCardOption(context, Icons.person,
-                      appointment['patientName'] ?? AppLocalizations.of(context)!.unknown),
-                  Divider(color: Colors.grey[200], height: 1.h),
-                  _buildCardOption(
-                    context,
-                    Icons.refresh,
-                    AppLocalizations.of(context)!.bookAgain,
-                    onTap: () {
-                      Navigator.pushReplacement(
-                        context,
-                        fadePageRoute(
-                          SelectPatientPage(
-                            doctorId: appointment["doctorId"] ?? "",
-                            doctorName: appointment["doctorName"] ?? "Unknown",
-                            doctorTitle: appointment["doctorTitle"] ?? "",
-                            doctorGender: appointment["doctorGender"] ?? "",
-                            specialty: appointment["specialty"] ?? "General Practice",
-                            image: appointment["doctorImage"] ?? "assets/images/female-doc.png",
-                            clinicName: appointment['clinicName'] ?? "Unknown Clinic",
-                            clinicAddress: appointment['clinicAddress'] ?? {},
-                          ),
+                    Padding(
+                      padding: EdgeInsets.all(12.w),
+                      child: GestureDetector(
+                        onTap: () {
+                          Navigator.push(
+                            context,
+                            fadePageRoute(DoctorProfilePage(doctorId: appointment['doctor_id'])),
+                          );
+                        },
+                        child: Row(
+                          children: [
+                            CircleAvatar(
+                              radius: 22.r,
+                              backgroundColor: AppColors.main.withOpacity(0.2),
+                              backgroundImage: imagePath.toString().startsWith("http")
+                                  ? NetworkImage(imagePath) as ImageProvider
+                                  : AssetImage(imagePath),
+                            ),
+
+                            SizedBox(width: 12.w),
+                            Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  "${appointment['doctor_title'] ?? ''} ${appointment['doctor_name'] ?? ''}".trim(),
+                                  style: AppTextStyles.getTitle1(context).copyWith(fontSize: 13.sp),
+                                ),
+                                Text(
+                                  appointment['doctor_specialty'] ?? "التخصص غير محدد",
+                                  style: AppTextStyles.getText2(context).copyWith(color: Colors.black54),
+                                ),
+                              ],
+                            ),
+                            const Spacer(),
+                            Icon(Icons.arrow_forward_ios, color: Colors.grey, size: 12.sp),
+                          ],
                         ),
-                      );
-                    },
-                    isBold: true,
-                    hasArrow: true,
-                  ),
+                      ),
+                    ),
+                    Divider(color: Colors.grey[200], height: 1.h),
+                    _buildCardOption(context, Icons.person,
+                        appointment['patient_name'] ?? AppLocalizations.of(context)!.unknown),
+                    Divider(color: Colors.grey[200], height: 1.h),
+                    _buildCardOption(
+                      context,
+                      Icons.refresh,
+                      AppLocalizations.of(context)!.bookAgain,
+                      onTap: () {
+                        Navigator.pushReplacement(
+                          context,
+                          fadePageRoute(
+                            SelectPatientPage(
+                              doctorId: appointment["doctor_id"] ?? "",
+                              doctorName: appointment["doctor_name"] ?? "Unknown",
+                              doctorTitle: appointment["doctor_title"] ?? "",
+                              doctorGender: appointment["doctor_gender"] ?? "",
+                              specialty: appointment["doctor_specialty"] ?? "General Practice",
+                              image: appointment["doctor_image"] ?? "assets/images/female-doc.png",
+                              clinicName: appointment['clinic'] ?? "Unknown Clinic",
+                              clinicAddress: appointment['clinic_address'] ?? {},
+                            ),
+                          ),
+                        );
+                      },
+                      isBold: true,
+                      hasArrow: true,
+                    ),
 
-                ],
+                  ],
+                ),
               ),
-            ),
-            SizedBox(height: 5.h),
+              SizedBox(height: 5.h),
 
-            _buildInfoCard(
-              context,
-              AppLocalizations.of(context)!.toAppointmentPage.toUpperCase(),
-              onTap: () {
-                Navigator.pushAndRemoveUntil(
-                  context,
-                  fadePageRoute(const CustomBottomNavigationBar(initialIndex: 1)),
-                      (route) => false,
-                );
+              _buildInfoCard(
+                context,
+                AppLocalizations.of(context)!.toAppointmentPage.toUpperCase(),
+                onTap: () {
+                  Navigator.pushAndRemoveUntil(
+                    context,
+                    fadePageRoute(const CustomBottomNavigationBar(initialIndex: 1)),
+                        (route) => false,
+                  );
 
-              },
-              isCentered: true,
-            ),
-          ],
+                },
+                isCentered: true,
+              ),
+            ],
+          ),
         ),
       ),
     );

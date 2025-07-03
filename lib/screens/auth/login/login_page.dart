@@ -1,7 +1,7 @@
 import 'package:docsera/app/text_styles.dart';
 import 'package:docsera/screens/auth/login/login_otp.dart';
+import 'package:docsera/services/supabase/supabase_user_service.dart';
 import 'package:docsera/utils/text_direction_utils.dart';
-import 'package:firebase_auth/firebase_auth.dart';
 import 'package:crypto/crypto.dart'; // For hashing
 import 'package:docsera/app/const.dart';
 import 'package:docsera/widgets/custom_bottom_navigation_bar.dart';
@@ -9,12 +9,12 @@ import 'dart:convert'; // For utf8 encoding
 import 'package:flutter/material.dart';
 import 'package:docsera/widgets/base_scaffold.dart';
 import 'package:docsera/utils/page_transitions.dart';
-import 'package:docsera/services/firestore/firestore_user_service.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 import 'package:local_auth/local_auth.dart'; // Face ID Auth
+import 'package:supabase_flutter/supabase_flutter.dart';
 import '../../../Business_Logic/Account_page/user_cubit.dart';
 import 'package:device_info_plus/device_info_plus.dart';
 
@@ -32,8 +32,7 @@ class LogInPage extends StatefulWidget {
 class _LogInPageState extends State<LogInPage> {
   late TextEditingController _inputController;
   final TextEditingController _passwordController = TextEditingController();
-  final FirestoreUserService _firestoreService = FirestoreUserService();
-  final FirebaseAuth _auth = FirebaseAuth.instance; // ✅ Use FirebaseAuth
+  final SupabaseUserService _supabaseUserService = SupabaseUserService();
   final LocalAuthentication auth = LocalAuthentication();
   bool isPasswordVisible = false;
   bool isValid = false;
@@ -118,25 +117,26 @@ class _LogInPageState extends State<LogInPage> {
       }
 
       // ✅ جلب بيانات المستخدم من Firestore
-      final userDoc = await _firestoreService.getUserByEmailOrPhone(isPhone ? formattedPhone! : input);
-      final userData = userDoc.data();
-
+      final userDoc = await _supabaseUserService.getUserByEmailOrPhone(isPhone ? formattedPhone! : input);
+      final userData = userDoc;
       if (userData == null) throw Exception("❌ لم يتم العثور على بيانات المستخدم");
 
-      // ✅ استخراج الإيميل الوهمي لتسجيل الدخول
-      final fakeEmail = userData['fakeEmail'];
-      if (fakeEmail == null || fakeEmail.isEmpty) throw Exception("❌ الإيميل الوهمي غير موجود");
+      // ✅ استخراج الإيميل  لتسجيل الدخول
+      final email = userData['email'];
+      if (email == null || email.isEmpty) throw Exception("❌ الإيميل غير متوفر");
 
-      print("📨 الإيميل الوهمي الذي سيتم استخدامه لتسجيل الدخول: $fakeEmail");
+      print("📨 الإيميل  الذي سيتم استخدامه لتسجيل الدخول: $email");
 
-      // ✅ تسجيل الدخول باستخدام FirebaseAuth
-      UserCredential userCredential = await _auth.signInWithEmailAndPassword(
-        email: fakeEmail,
+      // ✅ تسجيل الدخول في Supabase Auth
+      final response = await Supabase.instance.client.auth.signInWithPassword(
+        email: email,
         password: password,
       );
 
-      final userId = userCredential.user?.uid;
-      if (userId == null) throw Exception("❌ لم يتم العثور على معرف المستخدم");
+      final supabaseUser = response.user;
+      if (supabaseUser == null) throw Exception("❌ فشل تسجيل الدخول");
+
+      final userId = supabaseUser.id;
 
       // ✅ تخزين البيانات في SharedPreferences
       SharedPreferences prefs = await SharedPreferences.getInstance();
@@ -144,7 +144,7 @@ class _LogInPageState extends State<LogInPage> {
       await prefs.setString('userId', userId);
       await prefs.setString('userName', '${userData['firstName']} ${userData['lastName']}');
       await prefs.setString('userEmail', userData['email'] ?? '');
-      await prefs.setString('userPhone', userData['phoneNumber'] ?? '');
+      await prefs.setString('userPhone', userData['phone_number'] ?? '');
       await prefs.setString('userPassword', password); // للبصمة
 
       // ✅ تحديث الـ Cubit
@@ -158,14 +158,14 @@ class _LogInPageState extends State<LogInPage> {
 
         if (is2FAEnabled && !trustedDevices.contains(deviceId)) {
           // 👇 إرسال رمز OTP والتنقل إلى صفحة تحقق OTP المخصصة لتسجيل الدخول
-          final phone = userData['phoneNumber'];
+          final phone = userData['phone_number'];
 
           Navigator.pushAndRemoveUntil(
             context,
             MaterialPageRoute(
               builder: (_) => LoginOTPPage(
                 phoneNumber: phone,
-                userId: userDoc.id, // ✅ الحل هنا
+                userId: userId,
               ),
             ),
                 (route) => false,
@@ -179,8 +179,6 @@ class _LogInPageState extends State<LogInPage> {
           );
         }
       }
-
-
     } catch (e) {
       print("❌ خطأ أثناء تسجيل الدخول: $e");
       setState(() {

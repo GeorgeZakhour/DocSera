@@ -1,13 +1,13 @@
 import 'dart:async';
-import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:docsera/app/text_styles.dart';
-import 'package:docsera/services/firestore/firestore_otp_service.dart';
+import 'package:docsera/services/supabase/supabase_otp_service.dart';
 import 'package:docsera/utils/page_transitions.dart';
 import 'package:docsera/utils/text_direction_utils.dart';
 import 'package:docsera/widgets/base_scaffold.dart';
 import 'package:docsera/widgets/custom_bottom_navigation_bar.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 import '../../../app/const.dart';
 import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 import 'package:device_info_plus/device_info_plus.dart';
@@ -23,7 +23,7 @@ class LoginOTPPage extends StatefulWidget {
 }
 
 class _LoginOTPPageState extends State<LoginOTPPage> {
-  final FirestoreOTPService _firestoreService = FirestoreOTPService();
+  final SupabaseOTPService _supabaseService = SupabaseOTPService();
   final TextEditingController _codeController = TextEditingController();
 
   String sentCode = '';
@@ -52,7 +52,7 @@ class _LoginOTPPageState extends State<LoginOTPPage> {
     });
 
     try {
-      sentCode = await _firestoreService.sendOTPToPhone(widget.phoneNumber);
+      sentCode = await _supabaseService.sendOTPToPhone(widget.phoneNumber);
       setState(() {
         isLoading = false;
       });
@@ -95,9 +95,16 @@ class _LoginOTPPageState extends State<LoginOTPPage> {
     if (isCodeValid) {
       final deviceId = await getDeviceId();
 
-      await FirebaseFirestore.instance.collection('users').doc(widget.userId).update({
-        'trustedDevices': FieldValue.arrayUnion([deviceId])
-      });
+      await Supabase.instance.client
+          .from('users')
+          .update({
+        'trustedDevices': Supabase.instance.client.rpc('array_append_distinct', params: {
+          'array': 'trustedDevices',
+          'value': deviceId,
+        })
+      })
+          .eq('id', widget.userId);
+
 
       Navigator.pushAndRemoveUntil(
         context,

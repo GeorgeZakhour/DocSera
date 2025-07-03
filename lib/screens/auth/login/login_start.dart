@@ -1,16 +1,13 @@
-// LoginPage.dart
-
 import 'dart:async';
 import 'dart:math';
 import 'package:docsera/app/const.dart';
 import 'package:docsera/app/text_styles.dart';
 import 'package:docsera/models/sign_up_info.dart';
 import 'package:docsera/screens/auth/sign_up/sign_up_phone.dart';
+import 'package:docsera/services/supabase/supabase_user_service.dart';
 import 'package:docsera/utils/text_direction_utils.dart';
 import 'package:docsera/widgets/custom_bottom_navigation_bar.dart';
 import 'package:docsera/utils/custom_clippers.dart';
-import 'package:docsera/services/firestore/firestore_user_service.dart';
-import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:flutter_svg/flutter_svg.dart';
@@ -20,6 +17,7 @@ import 'package:package_info_plus/package_info_plus.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:docsera/Business_Logic/Account_page/user_cubit.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 
 class LoginPage extends StatefulWidget {
   final Animation<double> backgroundHeightAnimation;
@@ -33,8 +31,7 @@ class _LoginPageState extends State<LoginPage> {
   final _inputController = TextEditingController();
   final _passwordController = TextEditingController();
   final _localAuth = LocalAuthentication();
-  final _firestoreService = FirestoreUserService();
-  final _auth = FirebaseAuth.instance;
+  final SupabaseUserService _supabaseUserService = SupabaseUserService();
 
   bool _isAuthenticating = false;
   bool _authFailed = false;
@@ -126,7 +123,7 @@ class _LoginPageState extends State<LoginPage> {
     await prefs.setString('userId', userData['uid']);
     await prefs.setString('userName', '${userData['firstName']} ${userData['lastName']}');
     await prefs.setString('userEmail', userData['email'] ?? '');
-    final rawPhone = userData['phoneNumber'] ?? '';
+    final rawPhone = userData['phone_number'] ?? '';
     final displayPhone = rawPhone.startsWith('00963') ? '0${rawPhone.substring(5)}' : rawPhone;
     await prefs.setString('userPhone', displayPhone);
     await prefs.setString('userPassword', password);
@@ -194,7 +191,7 @@ class _LoginPageState extends State<LoginPage> {
     print("🟢 Biometric Enabled: $isBiometricEnabled");
     print("🟢 Saved Password: $savedPassword");
 
-    if (isBiometricEnabled && savedPhone != null && savedPassword != null && FirebaseAuth.instance.currentUser == null) {
+    if (isBiometricEnabled && savedPhone != null && savedPassword != null && Supabase.instance.client.auth.currentUser == null) {
       Future.delayed(const Duration(milliseconds: 300), _authenticateBiometric);
     }
   }
@@ -220,24 +217,27 @@ class _LoginPageState extends State<LoginPage> {
       final isPhone = RegExp(r'^0\d{9}$').hasMatch(input) || input.startsWith('00963');
       final formattedPhone = isPhone ? _formatPhone(input) : input;
 
-      final userDoc = await _firestoreService.getUserByEmailOrPhone(formattedPhone);
-      final userData = userDoc.data();
+      final userDoc = await _supabaseUserService.getUserByEmailOrPhone(formattedPhone);
+      final userData = userDoc;
       if (userData == null) throw Exception("User not found");
 
-      final fakeEmail = userData['fakeEmail'];
-      if (fakeEmail == null) throw Exception("Fake email not found");
+      final email = userData['email'];
+      if (email == null) throw Exception("email not found");
 
-      final credential = await _auth.signInWithEmailAndPassword(
-        email: fakeEmail,
+      // ✅ تسجيل الدخول في Supabase Auth
+      final response = await Supabase.instance.client.auth.signInWithPassword(
+        email: email,
         password: password,
       );
 
+      final supabaseUser = response.user;
+      if (supabaseUser == null) throw Exception("❌ فشل تسجيل الدخول");
 
-      final uid = credential.user?.uid;
+      final userId = supabaseUser.id;
 
-      if (uid == null) throw Exception("Invalid user");
+      if (userId == null) throw Exception("Invalid user");
 
-      await _saveUserDataToPrefs({...userData, 'uid': uid}, password);
+      await _saveUserDataToPrefs({...userData, 'uid': userId}, password);
 
 
 
@@ -424,7 +424,7 @@ class _LoginPageState extends State<LoginPage> {
                     ),
                   ),
 
-                  if (_auth.currentUser == null) ...[
+                  if (Supabase.instance.client.auth.currentUser == null) ...[
                     SizedBox(height: 12.h),
                     TextButton(
                       onPressed: () {
@@ -461,8 +461,8 @@ class _LoginPageState extends State<LoginPage> {
                 FocusScope.of(context).unfocus(); // إغلاق الكيبورد
                 await Future.delayed(const Duration(milliseconds: 150));
 
-                if (_auth.currentUser != null) {
-                  await _auth.signOut();
+                if (Supabase.instance.client.auth.currentUser != null) {
+                  await Supabase.instance.client.auth.signOut();
                   final prefs = await SharedPreferences.getInstance();
                   await prefs.remove('isLoggedIn');
                   await prefs.remove('userId');
@@ -478,7 +478,7 @@ class _LoginPageState extends State<LoginPage> {
               },
               child: Padding(
                 padding: const EdgeInsets.all(8.0),
-                child: _auth.currentUser == null
+                child: Supabase.instance.client.auth.currentUser == null
                     ? Row(
                   mainAxisSize: MainAxisSize.min,
                   children: [

@@ -1,5 +1,3 @@
-import 'package:cloud_firestore/cloud_firestore.dart';
-
 class Conversation {
   final String id;
   final String patientId;
@@ -48,48 +46,42 @@ class Conversation {
   factory Conversation.fromMap(String id, Map<String, dynamic> data) {
     return Conversation(
       id: id,
-      patientId: data['patientId'] ?? '',
-      doctorId: data['doctorId'] ?? '',
+      patientId: data['patient_id'] ?? '',
+      doctorId: data['doctor_id'] ?? '',
       participants: List<String>.from(data['participants'] ?? []),
-      lastMessage: data['lastMessage'] ?? '',
-      lastSenderId: data['lastSenderId'] ?? '',
-      updatedAt: data['updatedAt'] is Timestamp
-          ? (data['updatedAt'] as Timestamp).toDate()
-          : DateTime.now(),
-      doctorName: data['doctorName'],
-      doctorSpecialty: data['doctorSpecialty'],
-      doctorImage: data['doctorImage'],
-      isClosed: data['isClosed'] ?? false,
-      patientName: data['patientName'],
-      accountHolderName: data['accountHolderName'],
-      selectedReason: data['selectedReason'],
-      unreadCountForUser: data['unreadCountForUser'],
-      unreadCountForDoctor: data['unreadCountForDoctor'],
+      lastMessage: data['last_message'] ?? '',
+      lastSenderId: data['last_sender_id'] ?? '',
+      updatedAt: DateTime.tryParse(data['updated_at'] ?? '') ?? DateTime.now(),
+      doctorName: data['doctor_name'],
+      doctorSpecialty: data['doctor_specialty'],
+      doctorImage: data['doctor_image'],
+      isClosed: data['is_closed'] ?? false,
+      patientName: data['patient_name'],
+      accountHolderName: data['account_holder_name'],
+      selectedReason: data['selected_reason'],
+      unreadCountForUser: data['unread_count_for_user'],
+      unreadCountForDoctor: data['unread_count_for_doctor'],
       messages: [],
     );
   }
 
-  factory Conversation.fromFirestore(DocumentSnapshot doc) {
-    return Conversation.fromMap(doc.id, doc.data() as Map<String, dynamic>);
-  }
-
   Map<String, dynamic> toMap() {
     return {
-      'patientId': patientId,
-      'doctorId': doctorId,
+      'patient_id': patientId,
+      'doctor_id': doctorId,
       'participants': participants,
-      'lastMessage': lastMessage,
-      'lastSenderId': lastSenderId,
-      'updatedAt': Timestamp.fromDate(updatedAt),
-      'doctorName': doctorName,
-      'doctorSpecialty': doctorSpecialty,
-      'doctorImage': doctorImage,
-      'isClosed': isClosed,
-      'patientName': patientName,
-      'accountHolderName': accountHolderName,
-      'selectedReason': selectedReason,
-      'unreadCountForUser': unreadCountForUser,
-      'unreadCountForDoctor': unreadCountForDoctor,
+      'last_message': lastMessage,
+      'last_sender_id': lastSenderId,
+      'updated_at': updatedAt.toIso8601String(),
+      'doctor_name': doctorName,
+      'doctor_specialty': doctorSpecialty,
+      'doctor_image': doctorImage,
+      'is_closed': isClosed,
+      'patient_name': patientName,
+      'account_holder_name': accountHolderName,
+      'selected_reason': selectedReason,
+      'unread_count_for_user': unreadCountForUser,
+      'unread_count_for_doctor': unreadCountForDoctor,
     };
   }
 

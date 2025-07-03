@@ -1,4 +1,3 @@
-import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:docsera/app/const.dart';
 import 'package:docsera/app/text_styles.dart';
 import 'package:docsera/models/document.dart';
@@ -13,6 +12,7 @@ import 'package:flutter_svg/svg.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 
 class SelectPatientForMessagePage extends StatefulWidget {
   final String doctorId;
@@ -63,14 +63,22 @@ class _SelectPatientForMessagePageState extends State<SelectPatientForMessagePag
 
     if (userId == null) return;
 
-    final userDoc = await FirebaseFirestore.instance.collection('users').doc(userId).get();
-    final userData = userDoc.data();
+    final String currentUserId = userId!;
+
+    final response = await Supabase.instance.client
+        .from('users')
+        .select()
+        .eq('id', currentUserId)
+        .maybeSingle();
+
+    final userData = response;
+
 
     if (userData != null) {
-      String firstName = userData['firstName'] ?? "";
-      String lastName = userData['lastName'] ?? "";
+      String firstName = userData['first_name'] ?? "";
+      String lastName = userData['last_name'] ?? "";
       String gender = userData['gender'] ?? "Unknown";
-      String? dobString = userData['dateOfBirth'];
+      String? dobString = userData['date_of_birth'];
 
       int age = _calculateAge(dobString);
 
@@ -87,45 +95,42 @@ class _SelectPatientForMessagePageState extends State<SelectPatientForMessagePag
   Future<void> _loadRelatives() async {
     if (userId == null) return;
 
-    final snapshot = await FirebaseFirestore.instance
-        .collection('users')
-        .doc(userId)
-        .collection('relatives')
-        .get();
+    final String currentUserId = userId!;
+
+    final response = await Supabase.instance.client
+        .from('relatives')
+        .select()
+        .eq('user_id', currentUserId);
 
     setState(() {
-      relatives = snapshot.docs.map((doc) {
-        final data = doc.data();
+      relatives = response.map<Map<String, dynamic>>((data) {
         return {
-          "id": doc.id,
-          "firstName": data["firstName"] ?? "",
-          "lastName": data["lastName"] ?? "",
+          "id": data["id"] ?? "",
+          "firstName": data["first_name"] ?? "",
+          "lastName": data["last_name"] ?? "",
           "gender": data["gender"] ?? "",
-          "age": _calculateAge(data["dateOfBirth"]),
+          "age": _calculateAge(data["date_of_birth"]) ?? 0,
         };
       }).toList();
     });
   }
 
+
   int _calculateAge(String? dobString) {
     if (dobString == null || dobString.isEmpty) return 0;
 
     try {
-      List<String> parts = dobString.split('.');
-      if (parts.length == 3) {
-        int day = int.parse(parts[0]);
-        int month = int.parse(parts[1]);
-        int year = int.parse(parts[2]);
-        DateTime dob = DateTime(year, month, day);
-        DateTime today = DateTime.now();
-        int age = today.year - dob.year;
-        if (today.month < dob.month || (today.month == dob.month && today.day < dob.day)) {
-          age--;
-        }
-        return age;
+      DateTime dob = DateTime.parse(dobString);
+      DateTime today = DateTime.now();
+      int age = today.year - dob.year;
+      if (today.month < dob.month || (today.month == dob.month && today.day < dob.day)) {
+        age--;
       }
-    } catch (e) {}
-    return 0;
+      return age;
+    } catch (e) {
+      print("⚠️ Failed to parse DOB: $dobString - $e");
+      return 0;
+    }
   }
 
   String normalizeArabicInitial(String input) {
@@ -199,13 +204,15 @@ class _SelectPatientForMessagePageState extends State<SelectPatientForMessagePag
                       ],
                     ),
                     Text(
-                          "${gender.toLowerCase() == 'male' ? AppLocalizations.of(context)!.male : AppLocalizations.of(context)!.female} , "
-                              "$age ${AppLocalizations.of(context)!.yearsOld}",
+                      (gender.toLowerCase().contains('male') || gender == 'ذكر')
+                          ? "${AppLocalizations.of(context)!.male} , $age ${AppLocalizations.of(context)!.yearsOld}"
+                          : "${AppLocalizations.of(context)!.female} , $age ${AppLocalizations.of(context)!.yearsOld}",
                       style: AppTextStyles.getText2(context).copyWith(
                         color: Colors.black87,
                         fontSize: 10.sp,
                       ),
                     ),
+
 
                   ],
                 ),
@@ -236,11 +243,11 @@ class _SelectPatientForMessagePageState extends State<SelectPatientForMessagePag
 
       patientTiles.add(
         _buildPatientTile(
-          relatives[i]["id"],
-          relatives[i]["firstName"],
-          relatives[i]["lastName"],
-          relatives[i]["gender"],
-          relatives[i]["age"],
+          relatives[i]["id"] ?? "",
+          relatives[i]["firstName"] ?? "",
+          relatives[i]["lastName"] ?? "",
+          relatives[i]["gender"] ?? "",
+          relatives[i]["age"] ?? 0,
           false,
           isFirst,
           isLast,
@@ -326,17 +333,18 @@ class _SelectPatientForMessagePageState extends State<SelectPatientForMessagePag
             GestureDetector(
               onTap: selectedPatientId != null
                   ? () async {
-                final conversationQuery = await FirebaseFirestore.instance
-                    .collection('conversations')
-                    .where('doctorId', isEqualTo: widget.doctorId)
-                    .where('patientId', isEqualTo: selectedPatientId)
-                    .where('isClosed', isEqualTo: false)
+                final response = await Supabase.instance.client
+                    .from('conversations')
+                    .select()
+                    .eq('doctor_id', widget.doctorId)
+                    .eq('patient_id', selectedPatientId!)
+                    .eq('is_closed', false)
                     .limit(1)
-                    .get();
+                    .maybeSingle();
 
-                if (conversationQuery.docs.isNotEmpty) {
-                  final docData = conversationQuery.docs.first.data();
-                  final conversationId = conversationQuery.docs.first.id;
+                if (response != null) {
+                  final docData = response;
+                  final conversationId = docData['id'];
 
                   Navigator.push(
                     context,
@@ -346,15 +354,16 @@ class _SelectPatientForMessagePageState extends State<SelectPatientForMessagePag
                         doctorName: widget.doctorName,
                         doctorSpecialty: widget.specialty,
                         doctorImage: widget.image,
-                        isClosed: docData['isClosed'] ?? false,
-                        patientName: docData['patientName'] ?? selectedPatientName,
+                        isClosed: docData['is_closed'] ?? false,
+                        patientName: docData['patient_name'] ?? selectedPatientName,
                         accountHolderName: userName,
-                        selectedReason: docData['selectedReason'] ?? '',
+                        selectedReason: docData['selected_reason'] ?? '',
                         attachedDocument: widget.attachedDocument,
                       ),
                     ),
                   );
-                } else {
+                }
+                else {
                   final patientProfile = PatientProfile(
                     patientId: selectedPatientId!,
                     doctorId: widget.doctorId,

@@ -417,7 +417,7 @@
     Widget _buildConversationTile(BuildContext context, Conversation convo, {int? groupCount, bool showDoctorName = false}){
       final isClosed = convo.isClosed;
       DateTime? lastMessageTime = convo.messages.isNotEmpty
-          ? convo.messages.last['timestamp']
+          ? convo.messages.first['timestamp']
           : convo.updatedAt;
 
       String trailingText = '';

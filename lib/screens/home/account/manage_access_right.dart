@@ -1,4 +1,3 @@
-import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:docsera/app/text_styles.dart';
 import 'package:docsera/widgets/base_scaffold.dart';
 import 'package:flutter/material.dart';
@@ -6,6 +5,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:docsera/app/const.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:flutter_gen/gen_l10n/app_localizations.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 
 class ManageAccessRightsPage extends StatefulWidget {
   final String relativeId;
@@ -39,18 +39,18 @@ class _ManageAccessRightsPageState extends State<ManageAccessRightsPage> {
     setState(() {});
   }
 
-  /// ✅ حذف القريب من Firestore
   void _removeRelative() async {
     try {
-      await FirebaseFirestore.instance
-          .collection('users')
-          .doc(userId)
-          .collection('relatives')
-          .doc(widget.relativeId) // Delete based on passed ID
-          .delete();
+      final response = await Supabase.instance.client
+          .from('relatives')
+          .delete()
+          .eq('id', widget.relativeId)
+          .eq('user_id', userId);
 
-      Navigator.pop(context); // Close confirmation dialog
-      Navigator.pop(context); // Return to MyRelativesPage
+
+      if (!mounted) return;
+      Navigator.pop(context, true); // Close confirmation dialog
+      Navigator.pop(context, true); // Return to MyRelativesPage
 
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
@@ -67,6 +67,7 @@ class _ManageAccessRightsPageState extends State<ManageAccessRightsPage> {
       );
     }
   }
+
 
 
   /// ✅ إظهار نافذة التأكيد عند حذف القريب
@@ -136,13 +137,21 @@ class _ManageAccessRightsPageState extends State<ManageAccessRightsPage> {
 
   // Function to get initials from the full name
   String _getInitials(String name) {
-    List<String> words = name.trim().split(' '); // Split by spaces
-    if (words.isEmpty) return "A"; // Default if empty
-    String firstInitial = words[0].isNotEmpty ? words[0][0].toUpperCase() : ""; // First letter of first word
-    String lastInitial = words.length > 1 && words.last.isNotEmpty ? words.last[0].toUpperCase() : ""; // First letter of last word
+    List<String> words = name.trim().split(' ');
+    if (words.isEmpty) return "أ";
 
-    return (firstInitial + lastInitial).isNotEmpty ? (firstInitial + lastInitial) : "A"; // Ensure fallback
+    String firstChar = words[0].isNotEmpty ? words[0][0] : "";
+
+    bool isArabic = RegExp(r'[\u0600-\u06FF]').hasMatch(firstChar);
+    if (isArabic) {
+      return firstChar == 'ه' ? 'هـ' : firstChar;
+    }
+
+    String firstInitial = words[0].isNotEmpty ? words[0][0].toUpperCase() : "";
+    String lastInitial = words.length > 1 && words.last.isNotEmpty ? words.last[0][0].toUpperCase() : "";
+    return (firstInitial + lastInitial).isNotEmpty ? (firstInitial + lastInitial) : "A";
   }
+
 
 
   @override
@@ -182,7 +191,7 @@ class _ManageAccessRightsPageState extends State<ManageAccessRightsPage> {
                       children: [
                         CircleAvatar(
                           radius: 15.r,
-                          backgroundColor: AppColors.main.withOpacity(0.5),
+                          backgroundColor: AppColors.orangeText,
                           child: Text(
                             _getInitials(userName),
                             style: AppTextStyles.getText3(context).copyWith(

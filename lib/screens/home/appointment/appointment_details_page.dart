@@ -1,30 +1,38 @@
+import 'dart:convert';
+import 'dart:io';
+import 'dart:ui';
+
 import 'package:add_2_calendar/add_2_calendar.dart';
-import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:docsera/Business_Logic/Available_appointments_page/doctor_schedule_cubit.dart';
 import 'package:docsera/models/appointment_details.dart';
+import 'package:docsera/models/document.dart';
 import 'package:docsera/models/patient_profile.dart';
 import 'package:docsera/screens/doctors/appointment/select_patient_page.dart';
 import 'package:docsera/screens/home/appointment/reschedule_confirmation_page.dart';
+import 'package:docsera/screens/home/appointment/send_document.dart';
 import 'package:docsera/screens/home/shimmer/shimmer_widgets.dart';
 import 'package:docsera/utils/text_direction_utils.dart';
 import 'package:docsera/widgets/base_scaffold.dart';
+import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:flutter_svg/svg.dart';
+import 'package:image_picker/image_picker.dart';
 import 'package:intl/intl.dart';
 import 'package:docsera/app/const.dart';
 import 'package:docsera/utils/page_transitions.dart';
 import 'package:docsera/screens/doctors/doctor_profile_page.dart';
 import 'package:share_plus/share_plus.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 
 import '../../../app/text_styles.dart';
-import '../../doctors/appointment/appointment_confirm.dart';
 import 'appointment_cancel_confirmation.dart' show AppointmentCancelledPage;
 
 
-class AppointmentDetailsPage extends StatelessWidget {
+class AppointmentDetailsPage extends StatefulWidget {
 
   final Map<String, dynamic> appointment;
   final bool isUpcoming; // 🔹 New flag to differentiate
@@ -35,6 +43,21 @@ class AppointmentDetailsPage extends StatelessWidget {
     required this.appointment,
     required this.isUpcoming, // Defaults to false (for past appointments)
   }) : super(key: key);
+
+  @override
+  State<AppointmentDetailsPage> createState() => _AppointmentDetailsPageState();
+}
+
+class _AppointmentDetailsPageState extends State<AppointmentDetailsPage> {
+  // List<File> _selectedImageFiles = [];
+  // String? _pendingFileType;
+  // bool _showAllAttachments = false;
+  // UserDocument? _attachedDocument;
+  // bool _expandedImageOverlay = false;
+  // List<String> _expandedImageUrls = [];
+  // int _initialImageIndex = 0;
+  // bool _shouldAutoScroll = true;
+  // bool _isSending = false;
 
 
   /// 🔹 Open Google Maps with the given address
@@ -50,13 +73,13 @@ class AppointmentDetailsPage extends StatelessWidget {
   }
 
   void _addToCalendar(BuildContext context) {
-    DateTime startTime = DateTime.parse(appointment['timestamp']);
+    DateTime startTime = DateTime.parse(widget.appointment['timestamp']);
     DateTime endTime = startTime.add(Duration(minutes: 30)); // Assuming a 30 min appointment
 
     final Event event = Event(
-      title: 'Appointment with ${appointment['doctorTitle'] ?? ''}${appointment['doctorName'] ?? 'Doctor'}',
-      description: 'Reason: ${appointment['reason'] ?? 'No reason provided'}',
-      location: "${appointment['clinicAddress']['street'] ?? ''}, ${appointment['clinicAddress']['city'] ?? ''}",
+      title: 'Appointment with ${widget.appointment['doctor_title'] ?? ''}${widget.appointment['doctor_name'] ?? 'Doctor'}',
+      description: 'Reason: ${widget.appointment['reason'] ?? 'No reason provided'}',
+      location: "${widget.appointment['clinic_address']['street'] ?? ''}, ${widget.appointment['clinic_address']['city'] ?? ''}",
       startDate: startTime,
       endDate: endTime,
       allDay: false,
@@ -82,12 +105,12 @@ class AppointmentDetailsPage extends StatelessWidget {
   }
 
   void _shareAppointmentDetails() {
-    DateTime appointmentDate = DateTime.parse(appointment['timestamp']);
+    DateTime appointmentDate = DateTime.parse(widget.appointment['timestamp']);
     String formattedDate = DateFormat("EEEE, d MMMM yyyy").format(appointmentDate);
     String formattedTime = DateFormat("HH:mm").format(appointmentDate);
 
-    String doctorName = "${appointment['doctorTitle'] ?? ''} ${appointment['doctorName'] ?? 'Doctor'}".trim();
-    Map<String, dynamic> clinicAddress = appointment['clinicAddress'] ?? {};
+    String doctorName = "${widget.appointment['doctor_title'] ?? ''} ${widget.appointment['doctor_name'] ?? 'Doctor'}".trim();
+    Map<String, dynamic> clinicAddress = widget.appointment['clinicAddress'] ?? {};
 
     String formattedAddress = "${clinicAddress['street'] ?? ''} ${clinicAddress['buildingNr'] ?? ''}, "
         "${clinicAddress['city'] ?? ''}, ${clinicAddress['country'] ?? ''}";
@@ -96,11 +119,11 @@ class AppointmentDetailsPage extends StatelessWidget {
 📅 **Appointment Details**:
 
 👨‍⚕️ Doctor: $doctorName
-📍 Location: ${appointment['clinicName'] ?? 'Clinic not specified'}
+📍 Location: ${widget.appointment['clinic'] ?? 'Clinic not specified'}
 🏡 Address: $formattedAddress
 📅 Date: $formattedDate
 🕑 Time: $formattedTime
-📝 Reason: ${appointment['reason'] ?? 'No reason provided'}
+📝 Reason: ${widget.appointment['reason'] ?? 'No reason provided'}
 
 Shared from DocSera App
 """;
@@ -109,7 +132,7 @@ Shared from DocSera App
   }
 
   void _showRescheduleAppointmentSheet(BuildContext context) async {
-    DateTime appointmentDate = DateTime.parse(appointment['timestamp']);
+    DateTime appointmentDate = DateTime.parse(widget.appointment['timestamp']);
     DateTime now = DateTime.now();
     Duration difference = appointmentDate.difference(now);
 
@@ -117,15 +140,15 @@ Shared from DocSera App
     final bool isShortNotice = difference >= const Duration(hours: 24) && difference <= const Duration(hours: 48);
 
     // 🔍 تحقق من وجود مواعيد متاحة
-    final availableSlots = await FirebaseFirestore.instance
-        .collection('doctors')
-        .doc(appointment['doctorId'])
-        .collection('appointments')
-        .where('booked', isEqualTo: false)
-        .where('timestamp', isGreaterThan: Timestamp.now())
-        .get();
+    final availableSlots = await Supabase.instance.client
+        .from('appointments')
+        .select()
+        .eq('doctor_id', widget.appointment['doctor_id'])
+        .eq('booked', false)
+        .gt('timestamp', DateTime.now());
 
-    final hasAvailable = availableSlots.docs.isNotEmpty;
+    final hasAvailable = availableSlots.isNotEmpty;
+
 
     if (isTooLate) {
       // ⛔️ أقل من 24 ساعة – ممنوع إعادة الجدولة
@@ -167,7 +190,7 @@ Shared from DocSera App
                   clipBehavior: Clip.none,
                   children: [
                     Image.asset('assets/images/empty_calendar.png', height: 70, width: 70),
-                    Positioned(
+                    const Positioned(
                       bottom: -10,
                       right: -10,
                       child: Icon(Icons.access_time, color: AppColors.orangeText, size: 35),
@@ -478,7 +501,7 @@ Shared from DocSera App
                             final screenHeight = MediaQuery.of(context).size.height;
 
                             final doctorScheduleCubit = context.read<DoctorScheduleCubit>()
-                              ..fetchDoctorAppointments(appointment['doctorId'] ?? '', context);
+                              ..fetchDoctorAppointments(widget.appointment['doctor_id'] ?? '', context);
 // افتح الشيت يلي يعرض المواعيد المتاحة
                             showModalBottomSheet(
                               context: context,
@@ -494,35 +517,33 @@ Shared from DocSera App
                                     value: doctorScheduleCubit,
                                     child: DoctorAppointmentsBottomSheet(
                                       patientProfile: PatientProfile(
-                                        patientId: appointment['userId'] ?? '',
-                                        doctorId: appointment['doctorId'] ?? '',
-                                        patientName: appointment['patientName'] ?? '',
-                                        patientGender: appointment['userGender'] ?? '',
-                                        patientAge: appointment['userAge'] ?? 0,
+                                        patientId: widget.appointment['user_id'] ?? '',
+                                        doctorId: widget.appointment['doctor_id'] ?? '',
+                                        patientName: widget.appointment['patient_name'] ?? '',
+                                        patientGender: widget.appointment['user_gender'] ?? '',
+                                        patientAge: widget.appointment['user_age'] ?? 0,
                                         patientDOB: '',
                                         patientPhoneNumber: '',
                                         patientEmail: '',
-                                        reason: appointment['reason'] ?? '',
+                                        reason: widget.appointment['reason'] ?? '',
                                       ),
                                       appointmentDetails: AppointmentDetails(
-                                        doctorId: appointment['doctorId'] ?? '',
-                                        doctorName: appointment['doctorName'] ?? '',
-                                        doctorGender: appointment['doctorGender'] ?? '',
-                                        doctorTitle: appointment['doctorTitle'] ?? '',
-                                        specialty: appointment['specialty'] ?? '',
-                                        image: appointment['doctorImage'] ?? '',
-                                        patientName: appointment['patientName'] ?? '',
-                                        patientGender: appointment['userGender'] ?? '',
-                                        patientAge: appointment['userAge'] ?? 0,
-                                        newPatient: appointment['newPatient'] ?? false,
-                                        reason: appointment['reason'] ?? '',
-                                        clinicName: appointment['clinicName'] ?? '',
-                                        clinicAddress: appointment['clinicAddress'] ?? {},
+                                        doctorId: widget.appointment['doctor_id'] ?? '',
+                                        doctorName: widget.appointment['doctor_name'] ?? '',
+                                        doctorGender: widget.appointment['doctor_gender'] ?? '',
+                                        doctorTitle: widget.appointment['doctor_title'] ?? '',
+                                        specialty: widget.appointment['doctor_specialty'] ?? '',
+                                        image: widget.appointment['doctor_image'] ?? '',
+                                        patientName: widget.appointment['patient_name'] ?? '',
+                                        patientGender: widget.appointment['user_gender'] ?? '',
+                                        patientAge: widget.appointment['user_age'] ?? 0,
+                                        newPatient: widget.appointment['new_patient'] ?? false,
+                                        reason: widget.appointment['reason'] ?? '',
+                                        clinicName: widget.appointment['clinic'] ?? '',
+                                        clinicAddress: widget.appointment['clinic_address'] ?? {},
                                       ),
-                                      oldAppointmentId: appointment['appointmentId'] ?? '',
-                                      oldTimestamp: appointment['timestamp'] is Timestamp
-                                          ? appointment['timestamp']
-                                          : Timestamp.fromDate(DateTime.parse(appointment['timestamp'])),
+                                      oldAppointmentId: widget.appointment['id'] ?? '',
+                                      oldTimestamp: DateTime.parse(widget.appointment['timestamp']),
                                     ),
 
                                   ),
@@ -560,7 +581,7 @@ Shared from DocSera App
   }
 
   void _showCancelAppointmentSheet(BuildContext context) {
-    DateTime appointmentDate = DateTime.parse(appointment['timestamp']);
+    DateTime appointmentDate = DateTime.parse(widget.appointment['timestamp']);
     DateTime now = DateTime.now();
     Duration difference = appointmentDate.difference(now);
 
@@ -693,7 +714,6 @@ Shared from DocSera App
                           ],
                         ),
                         SizedBox(height: 35.h),
-
                           Column(
                             children: [
                               if (!isShortNotice)
@@ -818,15 +838,16 @@ Shared from DocSera App
                             try {
                               await _cancelAppointment(
                                 context,
-                                userId: appointment['userId'],
-                                appointmentId: appointment['appointmentId'],
-                                doctorId: appointment['doctorId'],
+                                userId: widget.appointment['user_id'],
+                                appointmentId: widget.appointment['id'],
+                                doctorId: widget.appointment['doctor_id'],
                               );
+                              Navigator.pop(currentContext);
 
                               // ✅ التنقل لصفحة التأكيد بعد الإلغاء
                               Navigator.pushReplacement(
                                 currentContext,
-                                fadePageRoute(AppointmentCancelledPage(appointment: appointment)),
+                                fadePageRoute(AppointmentCancelledPage(appointment: widget.appointment)),
                               );
                             } catch (e) {
                               // ✅ عرض رسالة الخطأ بسياق صالح
@@ -871,33 +892,22 @@ Shared from DocSera App
         required String doctorId,
       }) async {
     try {
-      // حذف الموعد من حساب المستخدم
-      await FirebaseFirestore.instance
-          .collection('users')
-          .doc(userId)
-          .collection('appointments')
-          .doc(appointmentId)
-          .delete();
-
       // تحديث الموعد عند الطبيب ليصير غير محجوز
-      await FirebaseFirestore.instance
-          .collection('doctors')
-          .doc(doctorId)
-          .collection('appointments')
-          .doc(appointmentId)
+      await Supabase.instance.client
+          .from('appointments')
           .update({
         'booked': false,
-        'accountName': null,
-        'patientName': null,
-        'userGender': null,
-        'userAge': null,
-        'newPatient': null,
+        'account_name': null,
+        'patient_name': null,
+        'user_gender': null,
+        'user_age': null,
+        'new_patient': null,
         'reason': null,
-        'bookingTimestamp': null,
-      });
+        'user_id': null,
+        'booking_timestamp': null,
+      })
+          .eq('id', appointmentId);
 
-      // رجوع وإظهار تأكيد
-      Navigator.pop(context);
       ScaffoldMessenger.of(context).showSnackBar(SnackBar(
         content: Text(AppLocalizations.of(context)!.appointmentCancelled),
         backgroundColor: AppColors.red.withOpacity(0.8),
@@ -911,11 +921,314 @@ Shared from DocSera App
     }
   }
 
+  // void _showAttachmentOptions() {
+  //   final local = AppLocalizations.of(context)!;
+  //   final imagesCount = _selectedImageFiles .length;
+  //   final isImageMode = _pendingFileType == 'image';
+  //
+  //   final isPdfOptionDisabled = isImageMode && imagesCount > 0;
+  //   final isCameraDisabled = isImageMode && imagesCount >= 8;
+  //   final isGalleryDisabled = isImageMode && imagesCount >= 8;
+  //
+  //   showModalBottomSheet(
+  //     context: context,
+  //     backgroundColor: Colors.white,
+  //     shape: RoundedRectangleBorder(
+  //       borderRadius: BorderRadius.vertical(top: Radius.circular(16.r)),
+  //     ),
+  //     builder: (_) {
+  //       return Padding(
+  //         padding: EdgeInsets.symmetric(horizontal: 24.w, vertical: 24.h),
+  //         child: Column(
+  //           mainAxisSize: MainAxisSize.min,
+  //           children: [
+  //             Text(
+  //               local.chooseAttachmentType,
+  //               style: AppTextStyles.getTitle1(context).copyWith(fontSize: 12.sp, color: AppColors.grayMain),
+  //             ),
+  //             SizedBox(height: 10.h),
+  //             Divider(height: 1.h, color: Colors.grey[200]),
+  //             SizedBox(height: 20.h),
+  //             Row(
+  //               mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+  //               children: [
+  //                 _buildIconAction(
+  //                   iconPath: 'assets/icons/camera.svg',
+  //                   label: local.takePhoto,
+  //                   onTap: isCameraDisabled
+  //                       ? null
+  //                       : () async {
+  //                     Navigator.pop(context);
+  //                     final picked = await ImagePicker().pickImage(source: ImageSource.camera);
+  //                     if (picked != null) {
+  //                       setState(() {
+  //                         _selectedImageFiles.add(File(picked.path));
+  //                         _pendingFileType = 'image';
+  //                         _attachedDocument = null;
+  //                       });
+  //                     }
+  //                   },
+  //                 ),
+  //                 _buildIconAction(
+  //                   iconPath: 'assets/icons/gallery.svg',
+  //                   label: local.chooseFromLibrary2,
+  //                   onTap: isGalleryDisabled
+  //                       ? null
+  //                       : () async {
+  //                     Navigator.pop(context);
+  //                     final result = await FilePicker.platform.pickFiles(
+  //                       type: FileType.image,
+  //                       allowMultiple: true,
+  //                     );
+  //                     if (result != null && result.files.isNotEmpty) {
+  //                       final pickedFiles = result.files
+  //                           .where((file) => file.path != null)
+  //                           .map((file) => File(file.path!))
+  //                           .toList();
+  //
+  //                       final totalFiles = _selectedImageFiles.length + pickedFiles.length;
+  //                       final available = 8 - _selectedImageFiles.length;
+  //                       final filesToAdd = pickedFiles.take(available).toList();
+  //
+  //                       setState(() {
+  //                         _selectedImageFiles.addAll(filesToAdd);
+  //                         _pendingFileType = 'image';
+  //                         _attachedDocument = null;
+  //                       });
+  //                     }
+  //                   },
+  //                 ),
+  //                 _buildIconAction(
+  //                   iconPath: 'assets/icons/file.svg',
+  //                   label: local.chooseFile,
+  //                   onTap: isPdfOptionDisabled
+  //                       ? null
+  //                       : () async {
+  //                     Navigator.pop(context);
+  //                     final result = await FilePicker.platform.pickFiles(
+  //                       type: FileType.custom,
+  //                       allowedExtensions: ['pdf'],
+  //                     );
+  //                     if (result != null && result.files.isNotEmpty) {
+  //                       final pickedFile = File(result.files.first.path!);
+  //                       setState(() {
+  //                         _selectedImageFiles = [pickedFile];
+  //                         _pendingFileType = 'pdf';
+  //                         _attachedDocument = null;
+  //                       });
+  //                     }
+  //                   },
+  //                 ),
+  //               ],
+  //             ),
+  //             SizedBox(height: 12.h),
+  //           ],
+  //         ),
+  //       );
+  //     },
+  //   );
+  // }
+  //
+  // Widget _buildIconAction({
+  //   required String iconPath,
+  //   required String label,
+  //   required VoidCallback? onTap,
+  // }) {
+  //   return GestureDetector(
+  //     onTap: onTap,
+  //     child: Column(
+  //       children: [
+  //         Container(
+  //           padding: EdgeInsets.all(12.r),
+  //           decoration: BoxDecoration(
+  //             color: onTap == null ? Colors.grey.shade200 : AppColors.main.withOpacity(0.1),
+  //             shape: BoxShape.circle,
+  //           ),
+  //           child: SvgPicture.asset(
+  //             iconPath,
+  //             width: 24.sp,
+  //             height: 24.sp,
+  //             color: onTap == null ? Colors.grey : AppColors.main,
+  //           ),
+  //         ),
+  //         SizedBox(height: 6.h),
+  //         Text(
+  //           label,
+  //           style: AppTextStyles.getText3(context).copyWith(
+  //             fontSize: 10.sp,
+  //             color: onTap == null ? Colors.grey : Colors.black,
+  //           ),
+  //           textAlign: TextAlign.center,
+  //         ),
+  //       ],
+  //     ),
+  //   );
+  // }
+  //
+  // Widget _buildPreviewAttachment() {
+  //   final local = AppLocalizations.of(context)!;
+  //
+  //   if (_selectedImageFiles.isEmpty) return const SizedBox();
+  //   final isPdf = _pendingFileType == 'pdf';
+  //
+  //   Widget buildBlurredContainer(Widget child) {
+  //     return ClipRRect(
+  //       borderRadius: BorderRadius.circular(12.r),
+  //       child: BackdropFilter(
+  //         filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
+  //         child: Container(
+  //           width: double.infinity,
+  //           padding: EdgeInsets.symmetric(horizontal: 12.w, vertical: 10.h),
+  //           decoration: BoxDecoration(
+  //             color: Colors.white.withOpacity(0.3),
+  //             border: Border.all(color: AppColors.main.withOpacity(0.4)),
+  //             borderRadius: BorderRadius.circular(12.r),
+  //           ),
+  //           child: child,
+  //         ),
+  //       ),
+  //     );
+  //   }
+  //
+  //   if (isPdf) {
+  //     final fileName = _selectedImageFiles.first.path.split('/').last;
+  //     final shortName = fileName.length > 30 ? fileName.substring(0, 27) + '...' : fileName;
+  //
+  //     return Padding(
+  //       padding: EdgeInsets.symmetric(horizontal: 0, vertical: 6.h),
+  //       child: buildBlurredContainer(
+  //         Row(
+  //           children: [
+  //             SvgPicture.asset('assets/icons/pdf-file.svg', width: 24.sp, height: 24.sp),
+  //             SizedBox(width: 10.w),
+  //             Expanded(
+  //               child: Text(
+  //                 shortName,
+  //                 style: AppTextStyles.getText2(context).copyWith(fontSize: 12.sp, color: Colors.black87),
+  //                 overflow: TextOverflow.ellipsis,
+  //               ),
+  //             ),
+  //             IconButton(
+  //               icon: Icon(Icons.close, size: 18.sp, color: AppColors.main),
+  //               onPressed: () {
+  //                 setState(() {
+  //                   _selectedImageFiles.clear();
+  //                   _pendingFileType = null;
+  //                 });
+  //               },
+  //             ),
+  //           ],
+  //         ),
+  //       ),
+  //     );
+  //   }
+  //
+  //   final count = _selectedImageFiles.length;
+  //   final imageSize = 36.w;
+  //   final spacing = 6.w;
+  //   final label = count == 1 ? local.attachedImage : '$count ${local.attachedImages}';
+  //
+  //   return Padding(
+  //     padding: EdgeInsets.symmetric(horizontal: 0, vertical: 6.h),
+  //     child: buildBlurredContainer(
+  //       Row(
+  //         crossAxisAlignment: CrossAxisAlignment.center,
+  //         children: [
+  //           Wrap(
+  //             spacing: spacing,
+  //             children: List.generate(
+  //               count > 3 ? 4 : count,
+  //                   (i) {
+  //                 if (i == 3 && count > 4) {
+  //                   return Container(
+  //                     width: imageSize,
+  //                     height: imageSize,
+  //                     decoration: BoxDecoration(
+  //                       border: Border.all(color: Colors.grey.shade300, width: 0.5),
+  //                       borderRadius: BorderRadius.circular(6.r),
+  //                       color: AppColors.main.withOpacity(0.15),
+  //                     ),
+  //                     alignment: Alignment.center,
+  //                     child: Text(
+  //                       '+${count - 3}',
+  //                       style: AppTextStyles.getText2(context).copyWith(
+  //                         fontSize: 11.sp,
+  //                         color: AppColors.main,
+  //                       ),
+  //                     ),
+  //                   );
+  //                 } else {
+  //                   return Container(
+  //                     width: imageSize,
+  //                     height: imageSize,
+  //                     decoration: BoxDecoration(
+  //                       border: Border.all(color: Colors.grey.shade300, width: 0.5),
+  //                       borderRadius: BorderRadius.circular(6.r),
+  //                     ),
+  //                     child: ClipRRect(
+  //                       borderRadius: BorderRadius.circular(6.r),
+  //                       child: GestureDetector(
+  //                         onTap: () {
+  //                           print('tapped');
+  //                           final filePaths = _selectedImageFiles.map((f) => f.path).toList();
+  //                           _showLocalImageOverlayWithIndex(filePaths, i);
+  //                         },
+  //                         child: Image.file(
+  //                           _selectedImageFiles[i],
+  //                           fit: BoxFit.cover,
+  //                         ),
+  //                       ),
+  //
+  //                     ),
+  //                   );
+  //                 }
+  //               },
+  //             ),
+  //           ),
+  //           const Spacer(),
+  //           Row(
+  //             children: [
+  //               Text(
+  //                 label,
+  //                 style: AppTextStyles.getText2(context).copyWith(fontSize: 10.sp, color: Colors.black87),
+  //               ),
+  //               SizedBox(width: 4.w),
+  //               IconButton(
+  //                 icon: Icon(Icons.close, size: 18.sp, color: AppColors.main),
+  //                 onPressed: () {
+  //                   setState(() {
+  //                     _selectedImageFiles.clear();
+  //                     _pendingFileType = null;
+  //                   });
+  //                 },
+  //               ),
+  //             ],
+  //           ),
+  //         ],
+  //       ),
+  //     ),
+  //   );
+  // }
+  //
+  // void _showLocalImageOverlayWithIndex(List<String> paths, int index) {
+  //   setState(() {
+  //     _expandedImageUrls = paths;
+  //     _initialImageIndex = index;
+  //     _expandedImageOverlay = true;
+  //   });
+  // }
+  //
+  //
+  // void _hideImageOverlay() {
+  //   setState(() {
+  //     _expandedImageOverlay = false;
+  //   });
+  // }
 
 
   @override
   Widget build(BuildContext context) {
-    DateTime appointmentDate = DateTime.parse(appointment['timestamp']);
+    DateTime appointmentDate = DateTime.parse(widget.appointment['timestamp']);
     String locale = Localizations.localeOf(context).languageCode; // ✅ Get the current locale
 
 // ✅ Format date normally
@@ -925,7 +1238,8 @@ Shared from DocSera App
     String formattedTime = DateFormat("h:mm a", locale).format(appointmentDate);
 
 
-    Map<String, dynamic> clinicAddress = appointment['clinicAddress'] ?? {};
+    final Map<String, dynamic> clinicAddress = widget.appointment['clinic_address'] ?? {};
+
 
     String formattedAddress = "${clinicAddress['street'] ?? ''} ${clinicAddress['buildingNr'] ?? ''}\n"
         "${clinicAddress['city'] ?? ''}\n"
@@ -933,10 +1247,21 @@ Shared from DocSera App
         "${clinicAddress['details'] ?? ''}";
 
     // Create the doctorName variable (handles empty title)
-    String doctorName = "${appointment['doctorTitle'] ?? ''} ${appointment['doctorName'] ?? ''}".trim();
-    print("🚀🚀🚀🚀🚀🚀🚀 TEST TEST TEST: '$appointment['doctorId']'");
+    String doctorName = "${widget.appointment['doctor_title'] ?? ''} ${widget.appointment['doctor_name'] ?? ''}".trim();
+    print("🚀🚀🚀🚀🚀🚀🚀 TEST TEST TEST: '${widget.appointment}'");
 
+    String gender = (widget.appointment['doctor_gender'] ?? '').toLowerCase();
+    String title = (widget.appointment['doctor_title'] ?? '').toLowerCase();
+    String? doctorImage = widget.appointment['doctor_image'];
 
+    String avatarPath;
+    if (doctorImage != null && doctorImage.trim().isNotEmpty) {
+      avatarPath = doctorImage; // إذا كانت الصورة موجودة (مسار Asset حقيقي)
+    } else {
+      avatarPath = (title == "dr.")
+          ? (gender == "female" ? 'assets/images/female-doc.png' : 'assets/images/male-doc.png')
+          : (gender == "male" ? 'assets/images/male-phys.png' : 'assets/images/female-phys.png');
+    }
 
 
     return BaseScaffold(
@@ -975,10 +1300,10 @@ Shared from DocSera App
                             child: GestureDetector(
                               behavior: HitTestBehavior.opaque, // ✅ Makes blank space clickable
                               onTap: () {
-                                final doctorId = appointment['doctorId']?.toString() ?? '';
+                                final doctorId = widget.appointment['doctor_id']?.toString() ?? '';
 
                                 print("🚀 Navigating to DoctorProfilePage with doctorId: '$doctorId'");
-                                print("💡 Full appointment object: $appointment");
+                                print("💡 Full appointment object: ${widget.appointment}");
 
                                 if (doctorId.isEmpty) {
                                   print("❌ ERROR: doctorId is missing or empty.");
@@ -999,7 +1324,7 @@ Shared from DocSera App
                                   CircleAvatar(
                                     backgroundColor: AppColors.main.withOpacity(0.3),
                                     radius: 20.sp,
-                                    backgroundImage: AssetImage(appointment['doctorImage'] ?? 'assets/images/male-doc.png'),
+                                    backgroundImage: AssetImage(avatarPath),
                                   ),
                                   SizedBox(width: 20.w),
                                   Column(
@@ -1011,7 +1336,7 @@ Shared from DocSera App
                                       ),
 
                                       Text(
-                                        appointment['specialty'] ?? AppLocalizations.of(context)!.unknownSpecialty,
+                                        widget.appointment['doctor_specialty'] ?? AppLocalizations.of(context)!.unknownSpecialty,
                                           style: AppTextStyles.getText2(context).copyWith( color: Colors.black54),
                                       ),
                                     ],
@@ -1032,7 +1357,7 @@ Shared from DocSera App
                               children:  [
                                 Icon(Icons.local_hospital_outlined, color: AppColors.main, size: 16.sp),
                                 SizedBox(width: 15.w),
-                                Expanded(child: Text(appointment['reason'] ?? AppLocalizations.of(context)!.notSpecified,
+                                Expanded(child: Text(widget.appointment['reason'] ?? AppLocalizations.of(context)!.notSpecified,
                                      style: AppTextStyles.getText2(context).copyWith(fontSize: 11.sp))),
                               ],
                             ),
@@ -1040,7 +1365,7 @@ Shared from DocSera App
                           Divider(color: Colors.grey[200],height: 2),
 
                           // 🔹 Reschedule & Cancel Buttons
-                          if (isUpcoming) // Show only for upcoming appointments
+                          if (widget.isUpcoming) // Show only for upcoming appointments
                             Padding(
                               padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 5.h),
                               child: Row(
@@ -1094,7 +1419,7 @@ Shared from DocSera App
                       padding: EdgeInsets.symmetric(horizontal: 8.0.w),
                       child: Column(
                         children: [
-                          if (isUpcoming)
+                          if (widget.isUpcoming)
                           Card(
                             color: AppColors.background2, // ✅ Light background like in the design
                             shape: RoundedRectangleBorder(
@@ -1103,7 +1428,14 @@ Shared from DocSera App
                             elevation: 0, // ✅ No shadow to match the UI
                             child: InkWell(
                               onTap: () {
-                                // ✅ Navigate to booking screen
+                                Navigator.push(
+                                  context,
+                                  fadePageRoute(
+                                    SendDocumentToDoctorPage(
+                                      doctorName: doctorName, // متوفر في المتغيرات
+                                    ),
+                                  ),
+                                );
                               },
                               borderRadius: BorderRadius.circular(12.r),
                               child: Padding(
@@ -1140,7 +1472,10 @@ Shared from DocSera App
                             ),
                           ),
 
-                          if (isUpcoming) SizedBox  (height: 8.h),
+                          // if (_selectedImageFiles.isNotEmpty) _buildPreviewAttachment(),
+
+
+                          if (widget.isUpcoming) SizedBox  (height: 8.h),
 
                           Card(
                             color: AppColors.background2, // ✅ Light background like in the design
@@ -1154,14 +1489,14 @@ Shared from DocSera App
                                   context,
                                   fadePageRoute(
                                     SelectPatientPage(
-                                      doctorId: appointment["doctorId"] ?? "",
-                                      doctorName: appointment["doctorName"] ?? "Unknown",
-                                      doctorTitle: appointment["doctorTitle"] ?? "",
-                                      doctorGender: appointment["doctorGender"] ?? "",
-                                      specialty: appointment["specialty"] ?? "General Practice",
-                                      image: appointment["doctorImage"] ?? "assets/images/female-doc.png",
-                                      clinicName: appointment['clinicName'] ?? "Unknown Clinic",
-                                      clinicAddress: appointment['clinicAddress'] ?? {},
+                                      doctorId: widget.appointment["doctor_id"] ?? "",
+                                      doctorName: widget.appointment["doctor_name"] ?? "Unknown",
+                                      doctorTitle: widget.appointment["doctor_title"] ?? "",
+                                      doctorGender: widget.appointment["doctor_gender"] ?? "",
+                                      specialty: widget.appointment["doctor_specialty"] ?? "General Practice",
+                                      image: widget.appointment["doctor_image"] ?? "assets/images/female-doc.png",
+                                      clinicName: widget.appointment['clinic'] ?? "Unknown Clinic",
+                                      clinicAddress: widget.appointment['clinic_address'] ?? {},
                                     ),
                                   ),
                                 );                              },
@@ -1213,7 +1548,7 @@ Shared from DocSera App
                                       Icon(Icons.person, color: AppColors.main, size: 18.sp),
                                       SizedBox(width: 12.w),
                                       Text(
-                                        (appointment['patientName'] ?? "Unknown").toUpperCase(), // ✅ Convert to uppercase
+                                        (widget.appointment['patient_name'] ?? "Unknown").toUpperCase(), // ✅ Convert to uppercase
                                           style: AppTextStyles.getText2(context).copyWith(fontSize: 12.sp, fontWeight: FontWeight.w500),
                                       ),
                                     ],
@@ -1285,7 +1620,7 @@ Shared from DocSera App
                                           crossAxisAlignment: CrossAxisAlignment.start,
                                           children: [
                                             Text(
-                                              appointment['clinicName'] ?? AppLocalizations.of(context)!.clinicNotAvailable,
+                                              widget.appointment['clinic'] ?? AppLocalizations.of(context)!.clinicNotAvailable,
                                               style: AppTextStyles.getText2(context).copyWith(color: AppColors.blackText, fontWeight: FontWeight.bold),
                                             ),
                                             SizedBox(height: 4.h),
@@ -1363,7 +1698,7 @@ Shared from DocSera App
                                 InkWell(
                                   // In AppointmentDetailsPage (onTap for navigation)
                                   onTap: () {
-                                    final doctorId = appointment['doctorId']?.toString() ?? '';
+                                    final doctorId = widget.appointment['doctor_id']?.toString() ?? '';
 
                                     print("🚀 Navigating to DoctorProfilePage with doctorId: '$doctorId'");
 
@@ -1450,7 +1785,7 @@ class DoctorAppointmentsBottomSheet extends StatelessWidget {
   final PatientProfile patientProfile;
   final AppointmentDetails appointmentDetails;
   final String oldAppointmentId;
-  final Timestamp oldTimestamp;
+  final DateTime oldTimestamp;
 
   const DoctorAppointmentsBottomSheet({
     Key? key,
@@ -1507,7 +1842,7 @@ class DoctorAppointmentsBottomSheet extends StatelessWidget {
                               color: Colors.white,
                               borderRadius: BorderRadius.circular(12.r),
                               boxShadow: [
-                                BoxShadow(color: AppColors.main.withOpacity(0.10), blurRadius: 5, spreadRadius: 2),
+                                BoxShadow(color: AppColors.main.withOpacity(0.1), blurRadius: 5, spreadRadius: 2),
                               ],
                             ),
                             child: Column(
@@ -1536,6 +1871,8 @@ class DoctorAppointmentsBottomSheet extends StatelessWidget {
                                     children: times.map((slot) {
                                       return GestureDetector(
                                           onTap: () {
+                                            print("📦 clinicAddress = ${appointmentDetails.clinicAddress} (type: ${appointmentDetails.clinicAddress.runtimeType})");
+
                                             Navigator.push(
                                               context,
                                               fadePageRoute(RescheduleConfirmationPage(

@@ -1,9 +1,10 @@
-import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:docsera/screens/doctors/auth/register/doctor_create_password.dart';
 import 'package:docsera/utils/page_transitions.dart';
 import 'package:docsera/widgets/base_scaffold.dart';
 import 'package:flutter/material.dart';
 import 'package:docsera/app/const.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
+import 'package:uuid/uuid.dart';
 
 class DoctorRegistrationPage extends StatefulWidget {
   @override
@@ -38,19 +39,30 @@ class _DoctorRegistrationPageState extends State<DoctorRegistrationPage> {
   List<String> _specialties = [];
   String _selectedCountry = "Syria";
   List<String> _selectedLanguages = [];
-  final List<String> _availableLanguages = ["Arabic", "English", "French", "German", "Other"];
+  final List<String> _availableLanguages = ["العربية", "الإنجليزية", "الفرنسية", "الألمانية", "أخرى"];
   bool _isOtherLanguage = false;
 
 
 
   // List of specialties
   final List<String> _popularSpecialties = [
-    "General Medicine", "Orthopedic Surgeon", "Cardiology", "Neurology",
-    "Dermatology", "Pediatrics", "Psychiatry", "ENT", "Ophthalmology",
-    "Gynecology", "Oncology", "Endocrinology", "Radiology", "Urology",
-    "Dentistry", "Other"
+    "الطب العام",
+    "جراحة العظام",
+    "أمراض القلب",
+    "الأعصاب",
+    "الأمراض الجلدية",
+    "طب الأطفال",
+    "الطب النفسي",
+    "الأنف والأذن والحنجرة",
+    "طب العيون",
+    "أمراض النساء",
+    "الأورام",
+    "الغدد الصماء",
+    "الأشعة",
+    "المسالك البولية",
+    "طب أسنان",
+    "أخرى"
   ];
-
   InputDecoration _inputDecoration(String label) {
     return InputDecoration(
       labelText: label,
@@ -133,21 +145,21 @@ class _DoctorRegistrationPageState extends State<DoctorRegistrationPage> {
     if (_formKey.currentState!.validate()) {
       try {
         // ✅ Create a document reference with an auto-generated ID
-        DocumentReference docRef = FirebaseFirestore.instance.collection('doctors').doc();
+        final doctorId = const Uuid().v4(); // أو أي توليد ID
 
-        await docRef.set({
-          "id": docRef.id, // 🔥 Store ID at creation time
+        await Supabase.instance.client.from('doctors').insert({
+          "id": doctorId,
           "title": _selectedTitle,
           "gender": _selectedGender,
-          "firstName": _firstNameController.text.trim(),
-          "lastName": _lastNameController.text.trim(),
+          "first_name": _firstNameController.text.trim(),
+          "last_name": _lastNameController.text.trim(),
           "clinic": _clinicController.text.trim(),
           "email": _emailController.text.trim(),
-          "phoneNumber": int.tryParse(_phoneController.text.trim()) ?? 0,
+          "phone_number": _phoneController.text.trim(),
           "specialty": _selectedSpecialty == "Other"
               ? _otherSpecialtyController.text.trim()
               : _selectedSpecialty,
-          "profileDescription": _profileDescriptionController.text.trim(),
+          "profile_description": _profileDescriptionController.text.trim(),
           "address": {
             "street": _streetController.text.trim(),
             "buildingNr": _buildingNrController.text.trim(),
@@ -157,23 +169,19 @@ class _DoctorRegistrationPageState extends State<DoctorRegistrationPage> {
           },
           "specialties": _specialties,
           "languages": _selectedLanguages,
-          "openingHours": _openingHours,
-          "createdAt": FieldValue.serverTimestamp(), // ✅ Store creation time
-          "lastUpdated": FieldValue.serverTimestamp(), // ✅ Initialize lastUpdated timestamp
+          "opening_hours": _openingHours,
+          "created_at": DateTime.now().toIso8601String(),
+          "last_updated": DateTime.now().toIso8601String(),
         });
-
         // ✅ Show success message
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(content: Text("Doctor Registered Successfully!")),
         );
 
-        // ✅ Save the generated ID inside the document
-        await docRef.update({"id": docRef.id});
-
         // ✅ Navigate to password creation page
         Navigator.push(
           context,
-          fadePageRoute(DoctorCreatePasswordPage(doctorId: docRef.id, email: _emailController.text.trim())),
+            fadePageRoute(DoctorCreatePasswordPage(doctorId: doctorId, email: _emailController.text.trim()))
         );
 
       } catch (e) {

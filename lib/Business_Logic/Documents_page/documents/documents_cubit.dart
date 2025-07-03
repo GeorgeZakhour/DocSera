@@ -1,26 +1,25 @@
 import 'dart:async';
 import 'dart:io';
 import 'package:bloc/bloc.dart';
-import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:docsera/models/document.dart';
 import 'package:file_picker/file_picker.dart';
-import 'package:firebase_auth/firebase_auth.dart';
-import 'package:firebase_storage/firebase_storage.dart';
 import 'package:flutter/widgets.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:path/path.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 import '../../Authentication/auth_cubit.dart';
 import '../../Authentication/auth_state.dart';
 import 'documents_state.dart';
 import 'package:pdfx/pdfx.dart';
+import 'package:uuid/uuid.dart';
 
 
 class DocumentsCubit extends Cubit<DocumentsState> {
   DocumentsCubit() : super(DocumentsLoading());
 
-  StreamSubscription? _documentsSubscription;
+  RealtimeChannel? _documentsRealtimeChannel;
 
   /// ✅ Start listening to document updates in real-time
   void listenToDocuments(BuildContext context) {
@@ -30,37 +29,84 @@ class DocumentsCubit extends Cubit<DocumentsState> {
       return;
     }
 
-    final userId = authState.user.uid;
+    final userId = authState.user.id;
 
-    _documentsSubscription?.cancel();
+    _documentsRealtimeChannel?.unsubscribe();
     emit(DocumentsLoading());
 
-    _documentsSubscription = FirebaseFirestore.instance
-        .collection('users')
-        .doc(userId)
-        .collection('documents')
-        .orderBy('uploadedAt', descending: true)
-        .snapshots()
-        .listen((snapshot) {
-      final docs = snapshot.docs
-          .map((doc) => UserDocument.fromFirestore(doc))
-          .toList();
+    _documentsRealtimeChannel = Supabase.instance.client
+        .channel('public:documents')
+        .onPostgresChanges(
+      event: PostgresChangeEvent.insert,
+      schema: 'public',
+      table: 'documents',
+      filter: PostgresChangeFilter(
+        type: PostgresChangeFilterType.eq,
+        column: 'patient_id',
+        value: userId,
+      ),
+      callback: (payload) {
+        _fetchDocuments(userId);
+      },
+    )
+        .onPostgresChanges(
+      event: PostgresChangeEvent.delete,
+      schema: 'public',
+      table: 'documents',
+      filter: PostgresChangeFilter(
+        type: PostgresChangeFilterType.eq,
+        column: 'patient_id',
+        value: userId,
+      ),
+      callback: (payload) {
+        _fetchDocuments(userId);
+      },
+    )
+        .onPostgresChanges(
+      event: PostgresChangeEvent.update,
+      schema: 'public',
+      table: 'documents',
+      filter: PostgresChangeFilter(
+        type: PostgresChangeFilterType.eq,
+        column: 'patient_id',
+        value: userId,
+      ),
+      callback: (payload) {
+        _fetchDocuments(userId);
+      },
+    )
+        .subscribe();
+
+    _fetchDocuments(userId); // تحميل أولي
+  }
+
+  void _fetchDocuments(String userId) async {
+    emit(DocumentsLoading());
+
+    try {
+      final response = await Supabase.instance.client
+          .from('documents')
+          .select()
+          .eq('patient_id', userId)
+          .order('uploaded_at', ascending: false);
+
+      final docs = response.map((e) => UserDocument.fromMap(e)).toList();
       emit(DocumentsLoaded(docs));
-    }, onError: (e) {
-      emit(DocumentsError("Listen error: $e"));
-    });
+    } catch (e) {
+      emit(DocumentsError("فشل تحميل الوثائق: $e"));
+    }
   }
 
   /// ✅ Upload document (PDF or multiple images)
   Future<void> uploadDocument() async {
     try {
-      final currentUser = FirebaseAuth.instance.currentUser;
+      final currentUser = Supabase.instance.client.auth.currentUser;
       if (currentUser == null) {
         emit(DocumentsError("User not authenticated."));
         return;
       }
 
-      final userId = currentUser.uid;
+      final userId = currentUser.id;
       final picked = await FilePicker.platform.pickFiles(
         allowMultiple: true,
         type: FileType.custom,
@@ -73,13 +119,7 @@ class DocumentsCubit extends Cubit<DocumentsState> {
       final isPdf = firstPath.toLowerCase().endsWith('.pdf');
 
 
-      final docRef = FirebaseFirestore.instance
-          .collection('users')
-          .doc(userId)
-          .collection('documents')
-          .doc();
-
-      final uploadedAt = DateTime.now();
+      final uploadedAt = DateTime.now().toUtc();
       final prefs = await SharedPreferences.getInstance();
       final docCounterKey = 'lastUploadedDocNumber';
       int docCounter = prefs.getInt(docCounterKey) ?? 0;
@@ -90,32 +130,34 @@ class DocumentsCubit extends Cubit<DocumentsState> {
           ? autoName
           : picked.files.first.name;
 
+      final docId = const Uuid().v4(); // ✅ يولّد UUID جديد
+
+
       if (isPdf) {
         final file = File(picked.files.first.path!);
         final fileName = picked.files.first.name;
+        final path = 'documents/$userId/${DateTime.now().millisecondsSinceEpoch}-$fileName';
 
-        final storageRef = FirebaseStorage.instance
-            .ref()
-            .child("users/$userId/documents/${docRef.id}/$fileName");
+        final storage = Supabase.instance.client.storage;
 
-        await storageRef.putFile(file);
-        final url = await storageRef.getDownloadURL();
+        final res = await storage.from('documents').upload(path, file);
+        final url = storage.from('documents').getPublicUrl(path);
 
-        final previewUrl = await generatePdfThumbnail(file.path, docRef.id, userId);
+        final previewUrl = await generatePdfThumbnail(file.path, path, userId);
 
-        final doc = UserDocument(
-          id: docRef.id,
-          name: docName,
-          type: "pdf",
-          fileType: "pdf",
-          patientId: userId,
-          previewUrl: previewUrl ?? url, // 👈 هذا المهم
-          pages: [url],
-          uploadedAt: uploadedAt,
-          uploadedById: userId,
-        );
+        final docData = {
+          'id': docId,
+          'name': docName,
+          'type': 'pdf',
+          'file_type': 'pdf',
+          'patient_id': userId,
+          'preview_url': previewUrl ?? url,
+          'pages': [url],
+          'uploaded_at': uploadedAt.toIso8601String(),
+          'uploaded_by_id': userId,
+        };
 
-        await docRef.set(doc.toMap());
+        await Supabase.instance.client.from('documents').insert(docData);
         return;
       }
 
@@ -125,31 +167,27 @@ class DocumentsCubit extends Cubit<DocumentsState> {
       for (int i = 0; i < picked.files.length; i++) {
         final file = File(picked.files[i].path!);
         final fileName = 'page_$i.jpg';
+        final path = 'documents/$userId/${DateTime.now().millisecondsSinceEpoch}-$fileName';
 
-        final storageRef = FirebaseStorage.instance
-            .ref()
-            .child("users/$userId/documents/${docRef.id}/$fileName");
+        final storage = Supabase.instance.client.storage;
 
-        await storageRef.putFile(file);
-        final url = await storageRef.getDownloadURL();
+        await storage.from('documents').upload(path, file);
+        final url = storage.from('documents').getPublicUrl(path);
         uploadedUrls.add(url);
       }
 
-      final doc = UserDocument(
-        id: docRef.id,
-        name: docName,
-        fileType: "image", // ✅ أضف هذا
-        type: "image",
-        patientId: userId,
-        previewUrl: uploadedUrls.first,
-        pages: uploadedUrls,
-        uploadedAt: uploadedAt,
-        uploadedById: userId, // ✅ أضف هذا
-      );
+      final docData = {
+        'name': docName,
+        'type': 'image',
+        'file_type': 'image',
+        'patient_id': userId,
+        'preview_url': uploadedUrls.first,
+        'pages': uploadedUrls,
+        'uploaded_at': uploadedAt.toIso8601String(),
+        'uploaded_by_id': userId,
+      };
 
-
-      await docRef.set(doc.toMap());
-
+      await Supabase.instance.client.from('documents').insert(docData);
     } catch (e) {
       emit(DocumentsError("Upload failed: $e"));
     }
@@ -157,19 +195,15 @@ class DocumentsCubit extends Cubit<DocumentsState> {
 
   Future<void> uploadPdfDirectly(String path) async {
     try {
-      final currentUser = FirebaseAuth.instance.currentUser;
+      final currentUser = Supabase.instance.client.auth.currentUser;
       if (currentUser == null) throw "User not authenticated.";
 
-      final userId = currentUser.uid;
-      final docRef = FirebaseFirestore.instance
-          .collection('users')
-          .doc(userId)
-          .collection('documents')
-          .doc();
+      final userId = currentUser.id;
+      final docId = const Uuid().v4();
 
       final uploadedAt = DateTime.now();
       final prefs = await SharedPreferences.getInstance();
-      final docCounterKey = 'lastUploadedDocNumber';
+      const docCounterKey = 'lastUploadedDocNumber';
       int docCounter = prefs.getInt(docCounterKey) ?? 0;
       final autoName = 'Document ${++docCounter}';
       await prefs.setInt(docCounterKey, docCounter);
@@ -177,27 +211,33 @@ class DocumentsCubit extends Cubit<DocumentsState> {
       final file = File(path);
       final fileName = basename(path);
 
-      final storageRef = FirebaseStorage.instance
-          .ref()
-          .child("users/$userId/documents/${docRef.id}/$fileName");
+      final storagePath = 'users/$userId/documents/$docId/$fileName';
+      final fileBytes = await file.readAsBytes();
 
-      await storageRef.putFile(file);
-      final url = await storageRef.getDownloadURL();
-      final previewUrl = await generatePdfThumbnail(path, docRef.id, userId);
+      final storageRes = await Supabase.instance.client.storage
+          .from('documents')
+          .uploadBinary(storagePath, fileBytes);
 
-      final doc = UserDocument(
-        id: docRef.id,
-        name: fileName.trim().isEmpty ? autoName : fileName,
-        type: "pdf",
-        fileType: "pdf", // ✅ أضف هذا
-        patientId: userId,
-        previewUrl: previewUrl ?? url, // استخدم الصورة إن وُجدت، وإلا الرابط
-        pages: [url],
-        uploadedAt: uploadedAt,
-        uploadedById: userId,
-      );
+      final url = Supabase.instance.client.storage
+          .from('documents')
+          .getPublicUrl(storagePath);
 
-      await docRef.set(doc.toMap());
+
+      final previewUrl = await generatePdfThumbnail(path, docId, userId);
+
+      final docData = {
+        'id': docId,
+        'name': fileName.trim().isEmpty ? autoName : fileName,
+        'type': 'pdf',
+        'file_type': 'pdf',
+        'patient_id': userId,
+        'preview_url': previewUrl ?? url,
+        'pages': [url],
+        'uploaded_at': uploadedAt.toIso8601String(),
+        'uploaded_by_id': userId,
+      };
+
+      await Supabase.instance.client.from('documents').insert(docData);
     } catch (e) {
       emit(DocumentsError("Upload failed: $e"));
     }
@@ -225,11 +265,17 @@ class DocumentsCubit extends Cubit<DocumentsState> {
       await imageFile.writeAsBytes(bytes);
 
 
-      final ref = FirebaseStorage.instance
-          .ref()
-          .child('users/$userId/documents/$docId/preview.png');
-      await ref.putFile(imageFile);
-      final url = await ref.getDownloadURL();
+      final storageResponse = await Supabase.instance.client.storage
+          .from('documents')
+          .upload(
+        'users/$userId/$docId/preview.png',
+        imageFile,
+        fileOptions: const FileOptions(upsert: true),
+      );
+      if (storageResponse.isEmpty) throw Exception('Upload failed');
+      final url = Supabase.instance.client.storage
+          .from('documents')
+          .getPublicUrl('users/$userId/$docId/preview.png');
 
       await page.close();
       await doc.close();
@@ -246,27 +292,27 @@ class DocumentsCubit extends Cubit<DocumentsState> {
   /// ✅ Delete document and its files
   Future<void> deleteDocument(BuildContext context, UserDocument document) async {
     try {
-      final userId = FirebaseAuth.instance.currentUser?.uid;
+      final userId = Supabase.instance.client.auth.currentUser?.id;
       if (userId == null) throw "User not authenticated.";
 
-      final docRef = FirebaseFirestore.instance
-          .collection('users')
-          .doc(userId)
-          .collection('documents')
-          .doc(document.id);
+      // حذف من قاعدة البيانات
+      await Supabase.instance.client
+          .from('documents')
+          .delete()
+          .eq('id', document.id!)
+          .eq('patient_id', userId);
 
-      await docRef.delete();
-
+      // حذف من التخزين
       for (final url in document.pages) {
         try {
-          final ref = FirebaseStorage.instance.refFromURL(url);
-          await ref.delete();
+          final path = Uri.parse(url).path.split('/storage/v1/object/public/documents/').last;
+          await Supabase.instance.client.storage.from('documents').remove([path]);
         } catch (e) {
           print("⚠️ Failed to delete file from storage: $e");
         }
       }
+      // إعادة تحميل البيانات
       listenToDocuments(context);
-
     } catch (e) {
       emit(DocumentsError("Delete failed: $e"));
     }
@@ -274,7 +320,7 @@ class DocumentsCubit extends Cubit<DocumentsState> {
 
   @override
   Future<void> close() {
-    _documentsSubscription?.cancel();
+    _documentsRealtimeChannel?.unsubscribe();
     return super.close();
   }
 }

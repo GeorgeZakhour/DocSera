@@ -1,4 +1,3 @@
-import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:docsera/screens/home/account/edit_profile.dart';
 import 'package:docsera/screens/home/account/my_relatives.dart';
 import 'package:docsera/utils/page_transitions.dart';
@@ -10,6 +9,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:docsera/app/text_styles.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 
 
 class UserProfilePage extends StatefulWidget {
@@ -30,6 +30,7 @@ class _UserProfilePageState extends State<UserProfilePage> {
   void initState() {
     super.initState();
     _loadUserId();
+
   }
 
   /// ✅ Load userId from SharedPreferences
@@ -41,79 +42,60 @@ class _UserProfilePageState extends State<UserProfilePage> {
     }
   }
 
-  /// ✅ Fetch user data from Firestore
-  void _fetchUserData() {
-    FirebaseFirestore.instance.collection('users').doc(userId).snapshots().listen((docSnapshot) {
-      if (docSnapshot.exists) {
-        Map<String, dynamic> userData = docSnapshot.data()!;
+  /// ✅ Fetch user data from Supabase
+  void _fetchUserData() async {
+    final data = await Supabase.instance.client
+        .from('users')
+        .select()
+        .eq('id', userId)
+        .maybeSingle();
 
-        String firstName = userData['firstName'] ?? '';
-        String lastName = userData['lastName'] ?? '';
-        String fullName = "$firstName $lastName".trim();
+    if (data == null || !mounted) return;
 
-        String birthDateStr = userData['dateOfBirth'] ?? "Not provided";
-        int userAge = _calculateAge(birthDateStr);
+    String firstName = data['first_name'] ?? '';
+    String lastName = data['last_name'] ?? '';
+    String fullName = "$firstName $lastName".trim();
 
-        // ✅ Handle the address properly if it's stored as a Map
-        String formattedAddress = "Address not entered";
-        if (userData['address'] is Map<String, dynamic>) {
-          Map<String, dynamic> addressMap = userData['address'];
-          String street = addressMap['street'] ?? '';
-          String buildingNr = addressMap['buildingNr'] ?? '';
-          String city = addressMap['city'] ?? '';
-          String country = addressMap['country'] ?? '';
+    String birthDateStr = data['date_of_birth'] ?? "Not provided";
+    int userAge = _calculateAge(birthDateStr);
 
-          formattedAddress = [street, buildingNr, city, country]
-              .where((part) => part.isNotEmpty)
-              .join(", ");
-        } else if (userData['address'] is String) {
-          formattedAddress = userData['address'];
-        }
+    // ✅ Handle address properly if it's stored as a Map (json column)
+    String formattedAddress = AppLocalizations.of(context)!.addressNotProvided;
+    if (data['address'] is Map<String, dynamic>) {
+      Map<String, dynamic> addressMap = data['address'];
+      String street = addressMap['street'] ?? '';
+      String buildingNr = addressMap['buildingNr'] ?? '';
+      String city = addressMap['city'] ?? '';
+      String country = addressMap['country'] ?? '';
 
-        if (!mounted) return; // ✅ Prevent setState after dispose
+      formattedAddress = [street, buildingNr, city, country]
+          .where((part) => part.isNotEmpty)
+          .join(", ");
+    } else if (data['address'] is String) {
+      formattedAddress = data['address'];
+    }
 
-        setState(() {
-          userName = fullName.isNotEmpty ? fullName : "No name provided";
-          birthDate = birthDateStr;
-          age = userAge;
-          address = formattedAddress;
-        });
-      }
+    setState(() {
+      userName = fullName.isNotEmpty ? fullName : "No name provided";
+      birthDate = birthDateStr;
+      age = userAge;
+      address = address = formattedAddress.isNotEmpty
+          ? formattedAddress
+          : AppLocalizations.of(context)!.addressNotProvided;
+      ;
     });
   }
 
 
   /// ✅ Calculate age from birth date with enhanced parsing
   int _calculateAge(String birthDateStr) {
-    if (birthDateStr == "Not provided") return 0;
-
     try {
-      List<String> parts;
-
-      // Handle both "dd/MM/yyyy" and "dd.MM.yyyy" formats
-      if (birthDateStr.contains('/')) {
-        parts = birthDateStr.split('/');
-      } else if (birthDateStr.contains('.')) {
-        parts = birthDateStr.split('.');
-      } else {
-        print("❌ Unsupported date format: $birthDateStr");
-        return 0;
-      }
-
-      if (parts.length != 3) return 0;
-
-      int day = int.parse(parts[0]);
-      int month = int.parse(parts[1]);
-      int year = int.parse(parts[2]);
-      DateTime dob = DateTime(year, month, day);
-
+      // ✅ parse as ISO-8601 format
+      DateTime dob = DateTime.parse(birthDateStr);
       DateTime today = DateTime.now();
-      int years = today.year - dob.year;
-      int months = today.month - dob.month;
-      int days = today.day - dob.day;
 
-      // 🔹 Adjust if the birthday hasn't occurred yet this year
-      if (months < 0 || (months == 0 && days < 0)) {
+      int years = today.year - dob.year;
+      if (today.month < dob.month || (today.month == dob.month && today.day < dob.day)) {
         years--;
       }
 
@@ -231,15 +213,18 @@ class _UserProfilePageState extends State<UserProfilePage> {
 
                 // ✅ Edit Button
                 InkWell(
-                  onTap: () {
-                    showModalBottomSheet(
-                      context: context,
-                      isScrollControlled: true,
-                      backgroundColor: Colors.transparent, // Makes it full-screen with rounded corners
-                      builder: (context) => const EditProfilePage(),
-                    );
+                    onTap: () async {
+                      final result = await showModalBottomSheet<bool>(
+                        context: context,
+                        isScrollControlled: true,
+                        backgroundColor: Colors.transparent,
+                        builder: (context) => const EditProfilePage(),
+                      );
 
-                  },
+                      if (result == true) {
+                        _fetchUserData();
+                      }
+                    },
                   child: Row(
                     children: [
                       Icon(Icons.edit, color: AppColors.mainDark, size: 16.sp),

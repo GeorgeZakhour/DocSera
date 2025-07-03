@@ -1,9 +1,9 @@
-import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:docsera/screens/doctors/doctor_panel/doctor_drawer.dart';
 import 'package:flutter/material.dart';
 import 'package:docsera/app/const.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:intl/intl.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 
 class DoctorDashboard extends StatefulWidget {
   Map<String, dynamic>? doctorData;
@@ -34,15 +34,16 @@ class _DoctorDashboardState extends State<DoctorDashboard> {
     if (storedDoctorId == null) return;
 
     try {
-      DocumentSnapshot doctorDoc = await FirebaseFirestore.instance
-          .collection('doctors')
-          .doc(storedDoctorId)
-          .get();
+      final response = await Supabase.instance.client
+          .from('doctors')
+          .select()
+          .eq('id', storedDoctorId)
+          .maybeSingle();
 
-      if (doctorDoc.exists) {
+      if (response != null) {
         setState(() {
           doctorId = storedDoctorId;
-          doctorData = doctorDoc.data() as Map<String, dynamic>?;
+          doctorData = response;
         });
         _fetchAppointments();
       }
@@ -53,23 +54,24 @@ class _DoctorDashboardState extends State<DoctorDashboard> {
 
   /// **🔹 Fetch doctor's appointments**
   Future<void> _fetchAppointments() async {
-    if (doctorId == null) return;
+    final String? id = doctorId;
+    if (id == null) return;
 
     try {
-      QuerySnapshot querySnapshot = await FirebaseFirestore.instance
-          .collection('doctors')
-          .doc(doctorId)
-          .collection('appointments')
-          .orderBy('timestamp', descending: false)
-          .get();
+      final response = await Supabase.instance.client
+          .from('appointments')
+          .select()
+          .eq('doctorId', id)
+          .order('timestamp', ascending: true);
 
       setState(() {
-        appointments = querySnapshot.docs.map((doc) => doc.data() as Map<String, dynamic>).toList();
+        appointments = List<Map<String, dynamic>>.from(response);
       });
     } catch (e) {
       print("❌ Error fetching appointments: $e");
     }
   }
+
 
   /// **🔹 Build Appointment Card**
   Widget _buildAppointmentCard(Map<String, dynamic> appointment) {
@@ -157,11 +159,21 @@ class _DoctorDashboardState extends State<DoctorDashboard> {
     );
   }
 
-  /// 🔹 **Helper for Formatting Timestamp**
-  String _formatTimestamp(Timestamp? timestamp) {
+  String _formatTimestamp(dynamic timestamp) {
     if (timestamp == null) return "Unknown";
-    return DateFormat("yyyy-MM-dd HH:mm").format(timestamp.toDate());
+    try {
+      if (timestamp is String) {
+        return DateFormat("yyyy-MM-dd HH:mm").format(DateTime.parse(timestamp));
+      } else if (timestamp is DateTime) {
+        return DateFormat("yyyy-MM-dd HH:mm").format(timestamp);
+      } else {
+        return "Invalid date";
+      }
+    } catch (e) {
+      return "Invalid date";
+    }
   }
+
 
   /// **🔹 Helper for displaying info rows**
   Widget _infoRow(String label, String? value) {

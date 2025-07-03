@@ -1,12 +1,12 @@
+import 'dart:async';
 import 'dart:ui';
-
-import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:docsera/app/const.dart';
 import 'package:docsera/app/text_styles.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:intl/intl.dart' as intl;
+import 'package:supabase_flutter/supabase_flutter.dart';
 
 class DoctorConversationPage extends StatefulWidget {
   final String conversationId;
@@ -35,6 +35,7 @@ class DoctorConversationPage extends StatefulWidget {
 class _DoctorConversationPageState extends State<DoctorConversationPage> {
   final TextEditingController _controller = TextEditingController();
   final ScrollController _scrollController = ScrollController();
+  late final StreamController<List<Map<String, dynamic>>> _messageStreamController;
 
   bool showReplyOptions = true;
   bool hasResponded = false;
@@ -42,20 +43,29 @@ class _DoctorConversationPageState extends State<DoctorConversationPage> {
   @override
   void initState() {
     super.initState();
-    FirebaseFirestore.instance
-        .collection('conversations')
-        .doc(widget.conversationId)
-        .get()
-        .then((doc) {
-      final data = doc.data();
-      if (data != null && data['hasDoctorResponded'] == true) {
+    Supabase.instance.client
+        .from('conversations')
+        .select('has_doctor_responded')
+        .eq('id', widget.conversationId)
+        .maybeSingle()
+        .then((data) {
+      if (data != null && data['has_doctor_responded'] == true) {
         setState(() {
           showReplyOptions = false;
           hasResponded = true;
         });
       }
     });
+    _messageStreamController = StreamController<List<Map<String, dynamic>>>.broadcast();
+    _listenToMessages();
   }
+
+  @override
+  void dispose() {
+    _messageStreamController.close();
+    super.dispose();
+  }
+
 
   bool _isArabic(String text) => RegExp(r'[\u0600-\u06FF]').hasMatch(text);
 
@@ -93,37 +103,38 @@ class _DoctorConversationPageState extends State<DoctorConversationPage> {
     final text = _controller.text.trim();
     if (text.isEmpty) return;
 
-    final conversationRef = FirebaseFirestore.instance
-        .collection('conversations')
-        .doc(widget.conversationId);
+    final supabase = Supabase.instance.client;
+    final now = DateTime.now();
 
-    final msgRef = conversationRef.collection('messages').doc();
-
-    await msgRef.set({
+    // ✅ Add message to messages sub-table
+    await supabase.from('messages').insert({
+      'conversation_id': widget.conversationId,
       'text': text,
-      'isUser': false,
-      'senderName': widget.doctorName,
-      'timestamp': FieldValue.serverTimestamp(),
-      'readByUser': false,
-      'readByDoctor': true,
-      'readByDoctorAt': FieldValue.serverTimestamp(),
-      'readByUserAt': null,
+      'is_user': false,
+      'sender_name': widget.doctorName,
+      'timestamp': now.toIso8601String(),
+      'read_by_user': false,
+      'read_by_doctor': true,
+      'read_by_doctor_at': now.toIso8601String(),
+      'read_by_user_at': null,
     });
 
-    // ✅ تحديث معلومات المحادثة ليتفعل الـ snapshot في MessagesCubit
-    await conversationRef.update({
-      'lastMessage': text,
-      'lastSenderId': 'doctor', // أو uid حسب الحاجة
-      'updatedAt': FieldValue.serverTimestamp(),
-      'lastMessageReadByUser': false,
-      'lastMessageReadByDoctor': true,
-      'unreadCountForUser': FieldValue.increment(1), // ✅ مضاف
-    });
+    // ✅ Update conversation metadata
+    await supabase.from('conversations').update({
+      'last_message': text,
+      'last_sender_id': 'doctor',
+      'updated_at': now.toIso8601String(),
+      'last_message_read_by_user': false,
+      'last_message_read_by_doctor': true,
+    }).eq('id', widget.conversationId);
 
+    // زيد العداد من خلال RPC بشكل منفصل
+    await supabase.rpc('increment_unread_user', params: {
+      'conversation_id_param': widget.conversationId,
+    });
 
     _controller.clear();
   }
-
 
   void _showCloseDialog() {
     showDialog(
@@ -142,11 +153,12 @@ class _DoctorConversationPageState extends State<DoctorConversationPage> {
             ),
             SizedBox(height: 16.h),
             ElevatedButton(
-              onPressed: () {
-                FirebaseFirestore.instance
-                    .collection('conversations')
-                    .doc(widget.conversationId)
-                    .update({'isClosed': true});
+              onPressed: () async {
+                await Supabase.instance.client
+                    .from('conversations')
+                    .update({'is_closed': true})
+                    .eq('id', widget.conversationId);
+
                 Navigator.pop(context);
               },
               style: ElevatedButton.styleFrom(
@@ -164,6 +176,43 @@ class _DoctorConversationPageState extends State<DoctorConversationPage> {
       ),
     );
   }
+
+  void _listenToMessages() async {
+    final client = Supabase.instance.client;
+
+    client
+        .channel('public:messages')
+        .onPostgresChanges(
+      event: PostgresChangeEvent.all,
+      schema: 'public',
+      table: 'messages',
+      filter: PostgresChangeFilter(
+        type: PostgresChangeFilterType.eq,
+        column: 'conversation_id',
+        value: widget.conversationId,
+      ),
+      callback: (payload) async {
+        final response = await Supabase.instance.client
+            .from('messages')
+            .select()
+            .eq('conversation_id', widget.conversationId)
+            .order('timestamp', ascending: true);
+
+        _messageStreamController.add(List<Map<String, dynamic>>.from(response));
+      },
+    )
+        .subscribe();
+
+    // أول تحميل للرسائل
+    final response = await Supabase.instance.client
+        .from('messages')
+        .select()
+        .eq('conversation_id', widget.conversationId)
+        .order('timestamp', ascending: true);
+
+    _messageStreamController.add(List<Map<String, dynamic>>.from(response));
+  }
+
 
   @override
   Widget build(BuildContext context) {
@@ -190,16 +239,11 @@ class _DoctorConversationPageState extends State<DoctorConversationPage> {
           Column(
             children: [
               Expanded(
-                child: StreamBuilder<QuerySnapshot>(
-                  stream: FirebaseFirestore.instance
-                      .collection('conversations')
-                      .doc(widget.conversationId)
-                      .collection('messages')
-                      .orderBy('timestamp')
-                      .snapshots(),
+                child: StreamBuilder<List<Map<String, dynamic>>>(
+                  stream: _messageStreamController.stream,
                   builder: (context, snapshot) {
                     if (!snapshot.hasData) return const Center(child: CircularProgressIndicator());
-                    final messages = snapshot.data!.docs;
+                    final messages = snapshot.data!;
 
                     WidgetsBinding.instance.addPostFrameCallback((_) {
                       if (_scrollController.hasClients) {
@@ -211,71 +255,41 @@ class _DoctorConversationPageState extends State<DoctorConversationPage> {
                       }
                     });
 
-
-                    int unreadCount = 0;
-
-                    for (final doc in messages) {
-                      final data = doc.data() as Map<String, dynamic>;
-                      final isUser = data['isUser'] ?? false;
-                      final alreadyRead = data['readByDoctor'] == true;
-
-                      if (isUser && !alreadyRead) {
-                        doc.reference.update({
-                          'readByDoctor': true,
-                          'readByDoctorAt': FieldValue.serverTimestamp(),
-                        });
-                        unreadCount++;
-                      }
-                    }
-
-                    if (unreadCount > 0) {
-                      FirebaseFirestore.instance
-                          .collection('conversations')
-                          .doc(widget.conversationId)
-                          .update({
-                        'lastMessageReadByDoctor': true,
-                        'unreadCountForDoctor': 0, // ✅ هذا الحقل هو ما يظهر عدد غير المقروء في DoctorMessagesPage
-                      });
-                    }
-
-
-
-
                     return Stack(
                       children: [
                         Positioned.fill(
                           child: ListView.builder(
                             controller: _scrollController,
                             padding: EdgeInsets.only(
-                                left: 16.w,
-                                right: 16.w,
-                                top: widget.isClosed
-                                    ? 25.h
-                                    : widget.patientName != widget.accountHolderName
-                                ? 20.h
-                                    : 12.h,
-                                bottom: 65.h),
+                              left: 16.w,
+                              right: 16.w,
+                              top: widget.isClosed
+                                  ? 25.h
+                                  : widget.patientName != widget.accountHolderName
+                                  ? 20.h
+                                  : 12.h,
+                              bottom: 65.h,
+                            ),
                             itemCount: messages.length,
                             itemBuilder: (context, index) {
-                              final msg = messages[index].data() as Map<String, dynamic>;
-                              final time = (msg['timestamp'] as Timestamp?)?.toDate();
-                              final isUser = msg['isUser'] ?? false;
+                              final msg = messages[index];
+                              final time = msg['timestamp'] != null ? DateTime.tryParse(msg['timestamp']) : null;
+                              final isUser = msg['is_user'] ?? false;
                               final content = msg['text'] ?? '';
-                              final senderName = msg['senderName'] ?? '';
+                              final senderName = msg['sender_name'] ?? '';
 
-                              final bool isReadByUser = !isUser && (msg['readByUser'] == true);
+                              final bool isReadByUser = !isUser && (msg['read_by_user'] == true);
                               final bool isLastRead = isReadByUser && (index == messages.length - 1);
-                              final readByUserAt = (msg['readByUserAt'] as Timestamp?)?.toDate();
-
+                              final readByUserAt = msg['read_by_user_at'] != null ? DateTime.tryParse(msg['read_by_user_at']) : null;
 
                               // ✅ منطق فاصل التاريخ
                               DateTime? currentDate = time != null ? DateTime(time.year, time.month, time.day) : null;
                               DateTime? previousDate;
                               if (index > 0) {
-                                final prevTime = (messages[index - 1].data() as Map<String, dynamic>)['timestamp'] as Timestamp?;
-                                final prevDate = prevTime?.toDate();
-                                if (prevDate != null) {
-                                  previousDate = DateTime(prevDate.year, prevDate.month, prevDate.day);
+                                final prev = messages[index - 1];
+                                final prevTime = prev['timestamp'] != null ? DateTime.tryParse(prev['timestamp']) : null;
+                                if (prevTime != null) {
+                                  previousDate = DateTime(prevTime.year, prevTime.month, prevTime.day);
                                 }
                               }
                               final showDivider = previousDate != currentDate;
@@ -300,7 +314,6 @@ class _DoctorConversationPageState extends State<DoctorConversationPage> {
                                       ),
                                     ),
 
-                                  // ✅ الرسالة نفسها
                                   Align(
                                     alignment: isUser ? Alignment.centerLeft : Alignment.centerRight,
                                     child: Container(
@@ -358,11 +371,9 @@ class _DoctorConversationPageState extends State<DoctorConversationPage> {
                                       ),
                                     ),
                                   ],
-
                                 ],
                               );
                             },
-
                           ),
                         ),
 
@@ -387,7 +398,6 @@ class _DoctorConversationPageState extends State<DoctorConversationPage> {
                             right: 0,
                             child: _buildSendMessageBar(context),
                           ),
-
                       ],
                     );
                   },
@@ -566,20 +576,30 @@ class _DoctorConversationPageState extends State<DoctorConversationPage> {
               Expanded(
                 child: ElevatedButton(
                   onPressed: () async {
-                    await FirebaseFirestore.instance
-                        .collection('conversations')
-                        .doc(widget.conversationId)
-                        .update({'hasDoctorResponded': true});
-                    setState(() {
-                      showReplyOptions = false;
-                      hasResponded = true;
-                    });
+                    try {
+                      await Supabase.instance.client
+                          .from('conversations')
+                          .update({'has_doctor_responded': true})
+                          .eq('id', widget.conversationId);
+
+                      setState(() {
+                        showReplyOptions = false;
+                        hasResponded = true;
+                      });
+
+                      print("✅ Conversation marked as responded by doctor");
+                    } catch (e) {
+                      print("❌ Error updating conversation: $e");
+                    }
                   },
                   style: ElevatedButton.styleFrom(
                     backgroundColor: AppColors.main,
                     shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20.r)),
                   ),
-                  child: Text('الرد على المحادثة', style: AppTextStyles.getText3(context).copyWith(color: Colors.white)),
+                  child: Text(
+                    'الرد على المحادثة',
+                    style: AppTextStyles.getText3(context).copyWith(color: Colors.white),
+                  ),
                 ),
               ),
             ],

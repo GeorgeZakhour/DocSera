@@ -1,6 +1,4 @@
 import 'dart:io';
-
-import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:docsera/Business_Logic/Documents_page/documents/documents_cubit.dart';
 import 'package:docsera/app/const.dart';
 import 'package:docsera/app/text_styles.dart';
@@ -22,7 +20,8 @@ import 'package:pdf/widgets.dart' as pw;
 import 'package:permission_handler/permission_handler.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:docsera/screens/home/Document/document_info_screen.dart';
-import 'package:url_launcher/url_launcher.dart'; // أضف هذا إن لم يكن موجودًا
+import 'package:supabase_flutter/supabase_flutter.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 void showConversationPdfOptionsSheet(
     BuildContext context,
@@ -215,12 +214,11 @@ void showDocumentOptionsSheet(
                   builder: (_) => EditDocumentNameSheet(
                     initialName: document.name,
                     onConfirm: (newName) async {
-                      await FirebaseFirestore.instance
-                          .collection('users')
-                          .doc(mainUserId)
-                          .collection('documents')
-                          .doc(document.id)
-                          .update({'name': newName});
+                      await Supabase.instance.client
+                          .from('documents')
+                          .update({'name': newName})
+                          .eq('id', document.id!)
+                          .eq('user_id', mainUserId);
                     },
                     onNameUpdated: (newName) {
                       Future.delayed(const Duration(milliseconds: 50), () {

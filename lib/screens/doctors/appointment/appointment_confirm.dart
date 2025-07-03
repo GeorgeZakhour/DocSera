@@ -1,4 +1,3 @@
-import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:docsera/app/const.dart';
 import 'package:docsera/app/text_styles.dart';
 import 'package:docsera/models/appointment_details.dart';
@@ -9,13 +8,14 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:intl/intl.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../../../widgets/base_scaffold.dart';
 
 class ConfirmationPage extends StatelessWidget {
   final AppointmentDetails appointmentDetails;
   final String appointmentId;
-  final Timestamp appointmentTimestamp;
+  final DateTime appointmentTimestamp;
   final String appointmentTime;
 
   const ConfirmationPage({
@@ -28,7 +28,8 @@ class ConfirmationPage extends StatelessWidget {
 
   Future<void> _confirmBooking(BuildContext context) async {
     SharedPreferences prefs = await SharedPreferences.getInstance();
-    String? userId = prefs.getString('userId');
+    final userId = prefs.getString('userId');
+    final userName = prefs.getString('userName') ?? "Unknown";
 
     if (userId == null) {
       print("❌ Error: User not logged in!");
@@ -36,52 +37,22 @@ class ConfirmationPage extends StatelessWidget {
     }
 
     try {
-      Timestamp bookingTimestamp = Timestamp.now();
-      String accountName = prefs.getString('userName') ?? "Unknown";
+      final bookingTimestamp = DateTime.now();
+      final supabase = Supabase.instance.client;
 
-      await FirebaseFirestore.instance
-          .collection('doctors')
-          .doc(appointmentDetails.doctorId)
-          .collection('appointments')
-          .doc(appointmentId)
-          .update({
-        'appointmentId': appointmentId, // ✅ إضافة الـ ID
-        'userId': userId,               // ✅ حفظ الـ userId ضمن الموعد
-        'booked': true,
-        'accountName': accountName,
-        'patientName': appointmentDetails.patientName,
-        'userGender': appointmentDetails.patientGender,
-        'userAge': appointmentDetails.patientAge,
-        'newPatient': appointmentDetails.newPatient,
+      await supabase.from('appointments').update({
+        'user_id': userId,
+        'account_name': userName,
+        'patient_name': appointmentDetails.patientName,
+        'user_gender': appointmentDetails.patientGender,
+        'user_age': appointmentDetails.patientAge,
+        'new_patient': appointmentDetails.newPatient,
         'reason': appointmentDetails.reason,
-        'bookingTimestamp': bookingTimestamp,
-        'timestamp': appointmentTimestamp,
-      });
-
-      await FirebaseFirestore.instance
-          .collection('users')
-          .doc(userId)
-          .collection('appointments')
-          .doc(appointmentId)
-          .set({
-        'appointmentId': appointmentId, // ✅ إضافة الـ ID
-        'userId': userId,               // ✅ حفظ الـ userId ضمن الموعد
+        'booking_timestamp': bookingTimestamp.toIso8601String(),
         'booked': true,
-        'doctorId': appointmentDetails.doctorId,
-        'doctorName': appointmentDetails.doctorName,
-        'doctorGender': appointmentDetails.doctorGender,
-        'doctorTitle': appointmentDetails.doctorTitle,
-        'doctorImage': appointmentDetails.image,
-        'specialty': appointmentDetails.specialty,
-        'clinicName': appointmentDetails.clinicName,
-        'clinicAddress': appointmentDetails.clinicAddress,
-        'patientName': appointmentDetails.patientName,
-        'reason': appointmentDetails.reason,
-        'timestamp': appointmentTimestamp,
-        'bookingTimestamp': bookingTimestamp,
-      });
+      }).eq('id', appointmentId);
 
-      // ✅ الانتقال إلى صفحة تأكيد الحجز بدلًا من الصفحة الرئيسية
+      // ✅ الانتقال إلى صفحة التأكيد
       Navigator.pushReplacement(
         context,
         fadePageRoute(
@@ -91,14 +62,14 @@ class ConfirmationPage extends StatelessWidget {
               'doctorName': appointmentDetails.doctorName,
               'doctorTitle': appointmentDetails.doctorTitle,
               'doctorGender': appointmentDetails.doctorGender,
-              'doctorImage': appointmentDetails.image,
+              'doctor_image': appointmentDetails.image,
               'specialty': appointmentDetails.specialty,
               'clinicName': appointmentDetails.clinicName,
               'clinicAddress': appointmentDetails.clinicAddress,
               'patientName': appointmentDetails.patientName,
               'reason': appointmentDetails.reason,
-              'timestamp': appointmentTimestamp.toDate().toIso8601String(),
-              'bookingTimestamp': bookingTimestamp.toDate().toIso8601String(),
+              'timestamp': appointmentTimestamp.toIso8601String(),
+              'bookingTimestamp': bookingTimestamp.toIso8601String(),
             },
           ),
         ),
@@ -115,7 +86,18 @@ class ConfirmationPage extends StatelessWidget {
 
     // ✅ Format Date & Time
     String formattedDateTime = DateFormat('EEEE, d MMMM • HH:mm', Localizations.localeOf(context).toString())
-        .format(appointmentTimestamp.toDate());
+        .format(appointmentTimestamp);
+
+    final imagePath = (appointmentDetails.image.isNotEmpty)
+        ? appointmentDetails.image
+        : (appointmentDetails.doctorTitle.toLowerCase() == "dr."
+        ? (appointmentDetails.doctorGender.toLowerCase() == "female"
+        ? 'assets/images/female-doc.png'
+        : 'assets/images/male-doc.png')
+        : (appointmentDetails.doctorGender.toLowerCase() == "male"
+        ? 'assets/images/male-phys.png'
+        : 'assets/images/female-phys.png'));
+
 
     return BaseScaffold(
       titleAlignment: 2,
@@ -132,7 +114,7 @@ class ConfirmationPage extends StatelessWidget {
                 child: ClipRRect(
                   borderRadius: BorderRadius.circular(50),
                   child: Image.asset(
-                    appointmentDetails.image,
+                    imagePath,
                     width: 40.w,
                     height: 40.h,
                     fit: BoxFit.cover,
@@ -249,12 +231,22 @@ class ConfirmationPage extends StatelessWidget {
         ? "${appointmentDetails.doctorTitle} ${appointmentDetails.doctorName}"
         : appointmentDetails.doctorName;
 
+    final imagePath = (appointmentDetails.image.isNotEmpty)
+        ? appointmentDetails.image
+        : (appointmentDetails.doctorTitle.toLowerCase() == "dr."
+        ? (appointmentDetails.doctorGender.toLowerCase() == "female"
+        ? 'assets/images/female-doc.png'
+        : 'assets/images/male-doc.png')
+        : (appointmentDetails.doctorGender.toLowerCase() == "male"
+        ? 'assets/images/male-phys.png'
+        : 'assets/images/female-phys.png'));
+
     return Row(
       children: [
         CircleAvatar(
-          backgroundColor: Colors.grey.shade200,
+          backgroundColor: AppColors.orange.withOpacity(0.3),
           radius: 25.r,
-          backgroundImage: AssetImage(appointmentDetails.image),
+          backgroundImage: AssetImage(imagePath),
         ),
         SizedBox(width: 12.w),
         Column(

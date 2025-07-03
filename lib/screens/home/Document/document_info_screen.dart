@@ -1,16 +1,15 @@
 import 'dart:io';
-import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:docsera/Business_Logic/Documents_page/documents/documents_cubit.dart';
 import 'package:docsera/app/const.dart';
 import 'package:docsera/app/text_styles.dart';
 import 'package:docsera/models/document.dart';
-import 'package:firebase_storage/firebase_storage.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:flutter_image_compress/flutter_image_compress.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 
 class DocumentInfoScreen extends StatefulWidget {
   final List<String> images;
@@ -20,6 +19,7 @@ class DocumentInfoScreen extends StatefulWidget {
   final String? initialPatientId; // أضف هذا السطر
   final bool cameFromConversation;
   final String? conversationDoctorName;
+  final bool isSendMode; // ← جديد
 
   const DocumentInfoScreen({
     Key? key,
@@ -30,7 +30,7 @@ class DocumentInfoScreen extends StatefulWidget {
     this.initialPatientId,
     this.cameFromConversation = false,
     this.conversationDoctorName,
-
+    this.isSendMode = false, // ← افتراضي رفع عادي
   }) : super(key: key);
 
 
@@ -104,27 +104,34 @@ class _DocumentInfoScreenState extends State<DocumentInfoScreen> {
     final userId = prefs.getString('userId') ?? '';
     if (userId.isEmpty) return;
 
-    final userDoc = await FirebaseFirestore.instance.collection('users').doc(userId).get();
-    if (!userDoc.exists) return;
+    final supabase = Supabase.instance.client;
 
-    final userData = userDoc.data()!;
-    final userName = "${userData['firstName'] ?? ''} ${userData['lastName'] ?? ''}".trim();
+    // ✅ جلب بيانات المستخدم الأساسي
+    final userResponse = await supabase
+        .from('users')
+        .select('first_name, last_name')
+        .eq('id', userId)
+        .maybeSingle();
+
+    if (userResponse == null) return;
+
+    final userName = "${userResponse['first_name'] ?? ''} ${userResponse['last_name'] ?? ''}".trim();
     _patients.add({'id': userId, 'name': userName});
 
-    final relatives = await FirebaseFirestore.instance
-        .collection('users')
-        .doc(userId)
-        .collection('relatives')
-        .get();
+    // ✅ جلب الأقارب من جدول relatives
+    final relativesResponse = await supabase
+        .from('relatives')
+        .select('id, first_name, last_name')
+        .eq('user_id', userId);
 
-    for (var doc in relatives.docs) {
-      final data = doc.data();
-      final name = "${data['firstName'] ?? ''} ${data['lastName'] ?? ''}".trim();
-      _patients.add({'id': doc.id, 'name': name});
+    for (var relative in relativesResponse) {
+      final name = "${relative['first_name'] ?? ''} ${relative['last_name'] ?? ''}".trim();
+      _patients.add({'id': relative['id'], 'name': name});
     }
 
     setState(() {});
   }
+
 
   @override
   Widget build(BuildContext context) {
@@ -293,12 +300,15 @@ class _DocumentInfoScreenState extends State<DocumentInfoScreen> {
                 width: double.infinity,
                 child: Center(
                   child: Text(
-                    locale.addDocument.toUpperCase(),
+                    widget.isSendMode
+                        ? locale.sendDocument.toUpperCase()
+                        : locale.addDocument.toUpperCase(),
                     style: AppTextStyles.getText2(context).copyWith(
                       color: Colors.white,
                       fontWeight: FontWeight.bold,
                     ),
                   ),
+
                 ),
               ),
             ),
@@ -396,7 +406,22 @@ class _DocumentInfoScreenState extends State<DocumentInfoScreen> {
     setState(() => _isUploading = true);
     final locale = AppLocalizations.of(context)!;
 
+    // ✅ تحقق إذا الوضع هو "إرسال فقط"
+    if (widget.isSendMode) {
+      Navigator.popUntil(context, (route) => route.isFirst);
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          backgroundColor: AppColors.orangeText.withOpacity(0.8),
+          content: Text(locale.sendDocumentsLater),
+        ),
+      );
+      return;
+    }
+
+    setState(() => _isUploading = true);
+
     try {
+      debugPrint("📤 Starting document submission...");
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text(locale.uploadingDocument),
@@ -407,69 +432,77 @@ class _DocumentInfoScreenState extends State<DocumentInfoScreen> {
 
       final prefs = await SharedPreferences.getInstance();
       final userId = prefs.getString('userId');
+      debugPrint("👤 Loaded userId: $userId");
       if (userId == null || userId.isEmpty) throw Exception("User ID not found");
 
-      final docRef = FirebaseFirestore.instance
-          .collection('users')
-          .doc(userId)
-          .collection('documents')
-          .doc();
+      final tempId = DateTime.now().millisecondsSinceEpoch.toString();
+      debugPrint("🆔 Generated temp ID used in file name: $tempId");
 
       final name = _nameController.text.trim().isEmpty
           ? await _generateAutoName(userId)
           : _nameController.text.trim();
+      debugPrint("📄 Document name: $name");
 
       final uploadedAt = DateTime.now();
       final List<String> uploadedUrls = [];
       final isPdf = widget.images.first.toLowerCase().endsWith('.pdf');
       final fileType = isPdf ? 'pdf' : 'image';
       final docType = _selectedType ?? 'أخرى';
+      debugPrint("📁 File type: $fileType, Doc type: $docType");
 
       final List<File> filesToUpload;
 
       if (isPdf) {
         final File pdfFile = File(widget.images.first);
         final int sizeInBytes = await pdfFile.length();
+        debugPrint("📄 PDF size in bytes: $sizeInBytes");
         if (sizeInBytes > 2 * 1024 * 1024) {
+          debugPrint("❌ PDF too large");
           throw Exception("PDF too large");
         }
         filesToUpload = [pdfFile];
       } else {
+        debugPrint("🗜 Compressing images...");
         filesToUpload = await compressImages(
           widget.images.map((e) => File(File(e).absolute.path)).toList(),
         );
+        debugPrint("✅ Compression done. Pages: ${filesToUpload.length}");
       }
+
+      final supabase = Supabase.instance.client;
 
       for (int i = 0; i < filesToUpload.length; i++) {
         final fileToUpload = filesToUpload[i];
         final fileName = isPdf ? 'file.pdf' : 'page_$i.jpg';
+        final filePath = '$userId/documents/$tempId/$fileName';
 
-        final storageRef = FirebaseStorage.instance
-            .ref()
-            .child('users')
-            .child(userId)
-            .child('documents')
-            .child(docRef.id)
-            .child(fileName);
+        debugPrint("📤 Uploading file: $filePath");
 
-        final uploadTask = await storageRef.putFile(fileToUpload);
-        await Future.delayed(const Duration(milliseconds: 300));
-        final url = await uploadTask.ref.getDownloadURL();
-        uploadedUrls.add(url);
+        await supabase.storage.from('documents').upload(filePath, fileToUpload);
+        final publicUrl = supabase.storage.from('documents').getPublicUrl(filePath);
+        uploadedUrls.add(publicUrl);
+
+        debugPrint("✅ Uploaded $fileName - URL: $publicUrl");
       }
 
       String previewUrl = uploadedUrls.first;
       if (isPdf) {
+        debugPrint("🖼 Generating PDF thumbnail...");
         final generated = await context.read<DocumentsCubit>().generatePdfThumbnail(
           widget.images.first,
-          docRef.id,
+          tempId,
           userId,
         );
-        if (generated != null) previewUrl = generated;
+        if (generated != null) {
+          previewUrl = generated;
+          debugPrint("✅ Thumbnail generated: $previewUrl");
+        } else {
+          debugPrint("⚠️ Thumbnail generation failed, using first URL");
+        }
       }
 
       final userDocument = UserDocument(
-        id: docRef.id,
+        id: '', // Supabase رح يولد ID تلقائيًا
         name: name,
         type: docType,
         fileType: fileType,
@@ -484,7 +517,15 @@ class _DocumentInfoScreenState extends State<DocumentInfoScreen> {
         conversationDoctorName: widget.conversationDoctorName,
       );
 
-      await docRef.set(userDocument.toMap());
+      debugPrint("📝 Inserting document into Supabase...");
+      final response = await supabase
+          .from('documents')
+          .insert(userDocument.toMap())
+          .select('id')
+          .single();
+
+      final realId = response['id']; // هذا هو UUID الحقيقي من Supabase
+      debugPrint("✅ Document inserted");
 
       if (!mounted) return;
       context.read<DocumentsCubit>().listenToDocuments(context);
@@ -501,6 +542,7 @@ class _DocumentInfoScreenState extends State<DocumentInfoScreen> {
         ),
       );
     } catch (e) {
+      debugPrint("❌ Upload error: $e");
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
@@ -521,15 +563,24 @@ class _DocumentInfoScreenState extends State<DocumentInfoScreen> {
   }
 
   Future<String> _generateAutoName(String userId) async {
-    final docsSnapshot = await FirebaseFirestore.instance
-        .collection('users')
-        .doc(userId)
-        .collection('documents')
-        .get();
+    final supabase = Supabase.instance.client;
 
-    int nextNumber = docsSnapshot.docs.length + 1;
-    return 'Document $nextNumber';
+    final response = await supabase
+        .from('documents')
+        .select('id')
+        .eq('uploaded_by_id', userId);
+
+    final count = response.length;
+    final nextNumber = count + 1;
+
+    final locale = Localizations.localeOf(context).languageCode;
+    return locale == 'ar' ? ' ملف $nextNumber' : 'Document $nextNumber';
   }
+
+
+
+
+
 
   Widget _buildDropdownField({
     required String? value,

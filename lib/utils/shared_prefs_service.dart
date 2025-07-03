@@ -1,10 +1,9 @@
 import 'dart:async';
 import 'dart:convert';
-import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:docsera/Business_Logic/Account_page/user_cubit.dart';
-import 'package:docsera/services/firestore/firestore_user_service.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 
 
 class SharedPrefsService {
@@ -114,23 +113,32 @@ class SharedPrefsService {
   void listenToFavoriteDoctors(String userId) {
     _favoritesSubscription?.cancel(); // إلغاء الاشتراك القديم قبل إنشاء اشتراك جديد
 
-    _favoritesSubscription = FirebaseFirestore.instance
-        .collection('users')
-        .doc(userId)
-        .snapshots()
-        .listen((userDoc) async {
-      if (!userDoc.exists || !userDoc.data()!.containsKey('favorites')) {
-        _favoriteDoctorsController.add([]); // إرسال قائمة فارغة إذا لم يكن هناك بيانات
+    _favoritesSubscription = Supabase.instance.client
+        .from('users')
+        .stream(primaryKey: ['id'])
+        .eq('id', userId)
+        .listen((users) async {
+      if (users.isEmpty || !(users[0] as Map).containsKey('favorites')) {
+        _favoriteDoctorsController.add([]);
         return;
       }
 
-      List<String> favoriteIds = List<String>.from(userDoc.get('favorites') ?? []);
+      final userDoc = users[0];
+
+
+      List<String> favoriteIds = List<String>.from(userDoc['favorites'] ?? []);
       List<Map<String, dynamic>> doctors = [];
 
       for (String doctorId in favoriteIds) {
-        DocumentSnapshot doctorDoc = await FirebaseFirestore.instance.collection('doctors').doc(doctorId).get();
-        if (doctorDoc.exists) {
-          Map<String, dynamic> doctorData = doctorDoc.data() as Map<String, dynamic>;
+        final response = await Supabase.instance.client
+            .from('doctors')
+            .select()
+            .eq('id', doctorId)
+            .maybeSingle();
+
+        if (response != null) {
+          final Map<String, dynamic> doctorData = response;
+
 
           // ✅ تعيين `defaultImage` حسب الجنس واللقب
           String gender = (doctorData['gender'] ?? "male").toLowerCase();
@@ -146,27 +154,27 @@ class SharedPrefsService {
 
           // ✅ التأكد من أن `lastUpdated` هو رقم `int`
           int lastUpdated = doctorData['lastUpdated'] != null
-              ? (doctorData['lastUpdated'] as Timestamp).millisecondsSinceEpoch
+              ? DateTime.tryParse(doctorData['lastUpdated'] ?? '')?.millisecondsSinceEpoch ?? 0
               : 0;
 
           doctors.add({
             'id': doctorId,
             'title': doctorData['title'] ?? "",
-            'firstName': doctorData['firstName'] ?? "Unknown",
-            'lastName': doctorData['lastName'] ?? "Doctor",
+            'first_name': doctorData['firstName'] ?? "Unknown",
+            'last_name': doctorData['lastName'] ?? "Doctor",
             'specialty': doctorData['specialty'] ?? "Unknown Specialty",
-            'profileImage': profileImage,
+            'profile_image': profileImage,
             'gender': gender,
             'clinic': doctorData['clinic'] ?? "",
-            'phoneNumber': doctorData['phoneNumber'] ?? "",
+            'phone_number': doctorData['phone_number'] ?? "",
             'email': doctorData['email'] ?? "",
-            'profileDescription': doctorData['profileDescription'] ?? "",
+            'profile_description': doctorData['profile_description'] ?? "",
             'specialties': doctorData['specialties'] ?? [],
             'website': doctorData['website'] ?? "",
             'address': doctorData['address'] ?? {},
-            'openingHours': doctorData['openingHours'] ?? {},
+            'opening_hours': doctorData['opening_hours'] ?? {},
             'languages': doctorData['languages'] ?? [],
-            'lastUpdated': lastUpdated,
+            'last_updated': lastUpdated,
           });
         }
       }
@@ -188,24 +196,25 @@ class SharedPrefsService {
   void listenToAppointments(String userId) {
     _appointmentsSubscription?.cancel();
 
-    _appointmentsSubscription = FirebaseFirestore.instance
-        .collection('users')
-        .doc(userId)
-        .collection('appointments')
-        .snapshots()
-        .listen((querySnapshot) async {
+    _appointmentsSubscription = Supabase.instance.client
+        .from('appointments')
+        .stream(primaryKey: ['id'])
+        .eq('userId', userId)
+        .listen((appointmentsData) async {
       List<Map<String, dynamic>> upcoming = [];
       List<Map<String, dynamic>> past = [];
       DateTime now = DateTime.now().toLocal();
 
-      for (var doc in querySnapshot.docs) {
-        Map<String, dynamic> appointment = doc.data();
+      for (var appointment in appointmentsData) {
+        appointment = Map<String, dynamic>.from(appointment);
 
-        if (appointment['timestamp'] is Timestamp) {
-          appointment['timestamp'] = (appointment['timestamp'] as Timestamp).toDate().toIso8601String();
+
+        if (appointment['timestamp'] is String) {
+          appointment['timestamp'] = appointment['timestamp'];
         }
-        if (appointment.containsKey('bookingTimestamp') && appointment['bookingTimestamp'] is Timestamp) {
-          appointment['bookingTimestamp'] = (appointment['bookingTimestamp'] as Timestamp).toDate().toIso8601String();
+
+        if (appointment.containsKey('bookingTimestamp') && appointment['bookingTimestamp'] is String) {
+          appointment['bookingTimestamp'] = appointment['bookingTimestamp'];
         }
 
         DateTime appointmentDate = DateTime.parse(appointment['timestamp']);
@@ -230,9 +239,14 @@ class SharedPrefsService {
 
   /// ✅ **Listen to user profile changes and broadcast updates**
   void listenToUserProfile(BuildContext context,String userId, UserCubit userCubit) {
-    FirebaseFirestore.instance.collection('users').doc(userId).snapshots().listen((docSnapshot) async {
-      if (docSnapshot.exists) {
-        Map<String, dynamic> userData = docSnapshot.data()!;
+    Supabase.instance.client
+        .from('users')
+        .stream(primaryKey: ['id'])
+        .eq('id', userId)
+        .listen((users) async {
+      if (users.isNotEmpty) {
+        Map<String, dynamic> userData = users.first;
+
         SharedPreferences prefs = await SharedPreferences.getInstance();
 
         // ✅ Read existing cached values
@@ -243,7 +257,7 @@ class SharedPrefsService {
 
         // ✅ Read Firestore values
         String newEmail = userData['email'] ?? 'Not provided';
-        String newPhone = userData['phoneNumber'] ?? 'Not provided';
+        String newPhone = userData['phone_number'] ?? 'Not provided';
         bool newPhoneVerified = userData['phoneVerified'] ?? false;
         bool newEmailVerified = userData['emailVerified'] ?? false;
 

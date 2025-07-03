@@ -1,4 +1,3 @@
-import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:docsera/app/text_styles.dart';
 import 'package:docsera/screens/home/account/add_relative.dart';
 import 'package:docsera/screens/home/account/edit_relative.dart';
@@ -10,6 +9,7 @@ import 'package:docsera/app/const.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 
 
 class MyRelativesPage extends StatefulWidget {
@@ -43,63 +43,57 @@ class _MyRelativesPageState extends State<MyRelativesPage> {
 
   /// ✅ Fetch user’s email & phone for fallback data
   void _fetchUserInfo() async {
-    FirebaseFirestore.instance.collection('users').doc(userId).get().then((doc) {
-      if (doc.exists) {
-        setState(() {
-          accountHolderEmail = doc['email'] ?? "No email provided";
-          accountHolderPhone = doc['phoneNumber'] ?? "No phone provided";
-        });
-      }
-    });
+    final data = await Supabase.instance.client
+        .from('users')
+        .select('email, phone_number')
+        .eq('id', userId)
+        .maybeSingle();
+
+    if (data != null && mounted) {
+      setState(() {
+        accountHolderEmail = data['email'] ?? "No email provided";
+        accountHolderPhone = data['phone_number'] ?? "No phone provided";
+      });
+    }
   }
 
-  /// ✅ Fetch relatives from Firestore
-  void _fetchRelatives() {
-    FirebaseFirestore.instance
-        .collection('users')
-        .doc(userId)
-        .collection('relatives')
-        .snapshots()
-        .listen((snapshot) {
-      List<Map<String, dynamic>> fetchedRelatives = snapshot.docs.map((doc) {
-        return {'id': doc.id, ...doc.data()};
-      }).toList();
 
+
+  /// ✅ Fetch relatives from Supabase
+  void _fetchRelatives() {
+    Supabase.instance.client
+        .from('relatives')
+        .stream(primaryKey: ['id'])
+        .eq('user_id', userId)
+        .listen((List<Map<String, dynamic>> data) {
       if (mounted) {
         setState(() {
-          relatives = fetchedRelatives;
+          relatives = data;
         });
       }
     });
   }
+
 
   /// ✅ Calculate age from birth date
   int _calculateAge(String birthDateStr) {
-    if (birthDateStr.isEmpty) return 0;
-
     try {
-      List<String> parts = birthDateStr.contains('/')
-          ? birthDateStr.split('/')
-          : birthDateStr.split('.');
-
-      if (parts.length != 3) return 0;
-
-      int day = int.parse(parts[0]);
-      int month = int.parse(parts[1]);
-      int year = int.parse(parts[2]);
-      DateTime dob = DateTime(year, month, day);
-
+      // ✅ parse as ISO-8601 format
+      DateTime dob = DateTime.parse(birthDateStr);
       DateTime today = DateTime.now();
-      int age = today.year - dob.year;
+
+      int years = today.year - dob.year;
       if (today.month < dob.month || (today.month == dob.month && today.day < dob.day)) {
-        age--;
+        years--;
       }
 
-      return age;
+      return years;
     } catch (e) {
+      print("❌ Error parsing birth date: $e");
       return 0;
     }
   }
+
 
   /// ✅ Empty state UI
   Widget _buildEmptyState() {
@@ -156,11 +150,18 @@ class _MyRelativesPageState extends State<MyRelativesPage> {
     }
   }
 
+  String _formatPhoneForDisplay(String phone) {
+    if (phone.startsWith('00963') && phone.length == 14) {
+      return '0${phone.substring(5)}';
+    }
+    return phone;
+  }
+
 
   /// ✅ Relative Card UI
   Widget _buildRelativeCard(Map<String, dynamic> relative) {
-    String firstName = relative['firstName'] ?? "";
-    String lastName = relative['lastName'] ?? "";
+    String firstName = relative['first_name'] ?? "";
+    String lastName = relative['last_name'] ?? "";
     bool isArabic = RegExp(r'[\u0600-\u06FF]').hasMatch(firstName);
 
     String initials = isArabic
@@ -169,15 +170,15 @@ class _MyRelativesPageState extends State<MyRelativesPage> {
 
     bool isArabicLocale = Localizations.localeOf(context).languageCode == 'ar';
 
-    int age = _calculateAge(relative['dateOfBirth'] ?? "Unknown");
-    String formattedDate = formatLocalizedDate(relative['dateOfBirth'] ?? "", context);
+    int age = _calculateAge(relative['date_of_birth'] ?? "Unknown");
+    String formattedDate = formatLocalizedDate(relative['date_of_birth'] ?? "", context);
     String formattedAge = AppLocalizations.of(context)!.yearsCount(
         isArabicLocale ? convertToArabicNumbers(age.toString()) : age.toString()
     );
 
     // ✅ Check if email or phone is missing, fallback to account holder’s info
     String email = relative['email'] ?? accountHolderEmail;
-    String phone = relative['phoneNumber'] ?? accountHolderPhone;
+    String phone = relative['phone_number'] ?? accountHolderPhone;
 
     return Container(
       margin: EdgeInsets.symmetric(vertical: 8.h, horizontal: 16.w),
@@ -208,7 +209,7 @@ class _MyRelativesPageState extends State<MyRelativesPage> {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        "${relative['firstName']} ${relative['lastName']}".toUpperCase(),
+                        "${relative['first_name']} ${relative['last_name']}".toUpperCase(),
                           style: AppTextStyles.getText2(context).copyWith(fontWeight: FontWeight.bold)),
                       SizedBox(height: 6.h),
                       Text(
@@ -219,23 +220,30 @@ class _MyRelativesPageState extends State<MyRelativesPage> {
                       SizedBox(height: 4.h),
                       Text(email, style: AppTextStyles.getText3(context).copyWith(color: Colors.black54)),
                       Text(
-                        isArabicLocale ? convertToArabicNumbers(phone) : phone,
+                        isArabicLocale
+                            ? convertToArabicNumbers(_formatPhoneForDisplay(phone))
+                            : _formatPhoneForDisplay(phone),
                         style: AppTextStyles.getText3(context).copyWith(color: Colors.black54),
                       ),
+
                     ],
                   ),
                 ),
 
                 // ✅ Edit button
                 InkWell(
-                  onTap: () {
-                    Navigator.push(
+                  onTap: () async {
+                    final result = await Navigator.push(
                       context,
                       fadePageRoute(EditRelativePage(
                         relativeId: relative['id'], // Pass the relative ID
                         relativeData: relative, // Pass all existing relative data
                       )),
                     );
+
+                    if (result == true) {
+                      _fetchRelatives(); // ✅ حمّل الأقارب من جديد
+                    }
                   },
                   child: Row(
                     children: [
@@ -252,14 +260,17 @@ class _MyRelativesPageState extends State<MyRelativesPage> {
 
           Divider(height: 1.h, color: Colors.grey[300]),
           InkWell(
-            onTap: () {
-              Navigator.push(
+            onTap: () async {
+              final result = await Navigator.push(
                 context,
                 fadePageRoute(ManageAccessRightsPage(
                   relativeId: relative['id'], // Retrieve the correct relative ID
-                  relativeName: "${relative['firstName']} ${relative['lastName']}", // Retrieve the correct relative name
+                  relativeName: "${relative['first_name']} ${relative['last_name']}", // Retrieve the correct relative name
                 )),
               );
+              if (result == true) {
+                _fetchRelatives(); // استدعِ فقط إذا صار تعديل
+              }
             },
             child: Padding(
               padding: EdgeInsets.symmetric(vertical: 14.h, horizontal: 16.w),
@@ -307,8 +318,12 @@ class _MyRelativesPageState extends State<MyRelativesPage> {
 
       // ✅ Add Relative Button
       floatingActionButton: FloatingActionButton.extended(
-        onPressed: () {
-          Navigator.push(context, fadePageRoute(const AddRelativePage()));
+        onPressed: () async {
+          final result = await Navigator.push(context, fadePageRoute(const AddRelativePage()));
+
+          if (result == true) {
+            _fetchRelatives(); // استدعِ فقط إذا صار تعديل
+          }
         },
         backgroundColor: AppColors.main,
         elevation: 0,

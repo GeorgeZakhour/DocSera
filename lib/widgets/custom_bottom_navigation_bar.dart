@@ -2,13 +2,13 @@ import 'package:docsera/Business_Logic/Authentication/auth_cubit.dart';
 import 'package:docsera/Business_Logic/Authentication/auth_state.dart';
 import 'package:docsera/Business_Logic/Messages_page/messages_cubit.dart';
 import 'package:docsera/Business_Logic/Messages_page/messages_state.dart';
+import 'package:docsera/app/text_styles.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:docsera/screens/home/appointments_page.dart';
 import 'package:docsera/screens/home/documents_page.dart';
 import 'package:docsera/screens/home/messages_page.dart';
-import 'package:firebase_auth/firebase_auth.dart';
 import 'package:docsera/screens/auth/identification_page.dart';
 import 'package:docsera/screens/home/account_page.dart';
 import 'package:docsera/screens/home/main_screen.dart';
@@ -18,6 +18,7 @@ import 'package:docsera/app/const.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:docsera/main.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 
 
 class CustomBottomNavigationBar extends StatefulWidget {
@@ -82,26 +83,9 @@ class _CustomBottomNavigationBarState extends State<CustomBottomNavigationBar>
     super.dispose();
   }
 
-  Future<void> _loadMainScreen() async {
-    await Future.delayed(const Duration(seconds: 2)); // ✅ محاكاة تحميل البيانات
-    if (mounted) {
-      setState(() {
-        _pages[0] = MainScreen(); // ✅ استبدال شاشة التحميل بـ MainScreen بعد تحميلها
-        isLoaded = true;
-      });
-    }
-  }
-
-  // Future<void> _checkLoginStatus() async {
-  //   SharedPreferences prefs = await SharedPreferences.getInstance();
-  //   setState(() {
-  //     isLoggedIn = prefs.getBool('isLoggedIn') ?? false;
-  //   });
-  // }
-
   Future<void> _logout(BuildContext context) async {
     try {
-      await FirebaseAuth.instance.signOut();
+      await Supabase.instance.client.auth.signOut(); // ✅ تسجيل الخروج من Supabase
       SharedPreferences prefs = await SharedPreferences.getInstance();
       await prefs.setBool('isLoggedIn', false);
       setState(() {
@@ -247,170 +231,258 @@ class _CustomBottomNavigationBarState extends State<CustomBottomNavigationBar>
 
     double screenWidth = MediaQuery.of(context).size.width;
     double buttonWidth = screenWidth / 5;
+    DateTime? _lastBackPressed;
 
-    return Theme(
-      data: Theme.of(context).copyWith(
-        splashColor: Colors.transparent, // 🚀 إلغاء تأثير النقر
-        highlightColor: Colors.transparent, // 🔥 إلغاء تأثير التوهج
-      ),
-      child: Scaffold(
-        backgroundColor: AppColors.main,// يجب أن يكون نفس لون الـ AppBar
-        appBar: AppBar(
-          backgroundColor: AppColors.main.withOpacity(1), // تأكد من أن الشفافية 100%
-          surfaceTintColor: Colors.transparent, // يمنع تأثير الظل الغامق الذي يظهر عند التمرير
-          shadowColor: Colors.transparent, // 🔹 إزالة الظل تمامًا
-          elevation: 0,
-          centerTitle: true,
+    return WillPopScope(
+      onWillPop: () async {
+        if (_currentIndex != 0) {
+          setState(() {
+            _currentIndex = 0;
+          });
+          return false;
+        }
 
-          title: Row(
-            children: [
-              // ✅ الجزء الأول: زر تغيير اللغة (يظهر فقط في الصفحة الرئيسية)
-              if (_currentIndex == 0)
-                Padding(
-                  padding: const EdgeInsets.only(left: 4), // 🔹 تقليل المسافة أكثر
-                  child: TextButton(
-                    onPressed: _showLanguageSelectionSheet,
-                    style: TextButton.styleFrom(
-                      padding: EdgeInsets.zero,
-                      tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                      minimumSize: const Size(40, 40), // ✅ جعل الزر صغيرًا لكنه قابل للنقر بسهولة
-                    ),
-                    child: Row(
-                      children: [
-                        const Icon(Icons.language_rounded, color: AppColors.whiteText, size: 20),
-                        const SizedBox(width: 4),
-                        Text(
-                          Localizations.localeOf(context).languageCode.toUpperCase(),
-                          style: const TextStyle(
-                            color: AppColors.whiteText,
-                            fontWeight: FontWeight.bold,
-                            fontSize: 12,
+        // ✅ تفادي الضغط المكرر خلال ثانية
+        if (_lastBackPressed != null &&
+            DateTime.now().difference(_lastBackPressed!) < const Duration(seconds: 1)) {
+          return true; // ✅ فعلاً خروج
+        }
+
+        _lastBackPressed = DateTime.now();
+
+        final shouldExit = await showGeneralDialog(
+          context: context,
+          barrierDismissible: true,
+          barrierLabel: "exit",
+          barrierColor: Colors.black.withOpacity(0.5),
+          pageBuilder: (context, animation, secondaryAnimation) {
+            return SafeArea(
+              child: Builder(
+                builder: (innerContext) => Center(
+                  child: Material(
+                    color: Colors.transparent,
+                    child: AlertDialog(
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16.r)),
+                      contentPadding: EdgeInsets.symmetric(horizontal: 24.w, vertical: 20.h),
+                      content: Column(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Text(
+                            AppLocalizations.of(innerContext)!.exitAppTitle,
+                            style: AppTextStyles.getTitle2(innerContext),
+                            textAlign: TextAlign.center,
                           ),
-                        ),
-                      ],
-                    ),
-                  ),
-                )
-              else
-                const SizedBox(width: 40), // ✅ تعويض المساحة عند إخفاء الزر
-
-              // ✅ الجزء الثاني: الشعار في المنتصف دائمًا
-              Expanded(
-                child: Center(
-                  child: _currentIndex == 0
-                      ? SvgPicture.asset(
-                    'assets/images/docsera_white.svg',
-                    height: 18,
-                  )
-                      : Text(
-                    _getTitle(_currentIndex), // ✅ العنوان من arb files
-                    style: const TextStyle(
-                      color: AppColors.whiteText,
-                      fontWeight: FontWeight.bold,
-                      fontSize: 16,
+                          SizedBox(height: 12.h),
+                          Text(
+                            AppLocalizations.of(innerContext)!.areYouSureToExit,
+                            style: AppTextStyles.getText2(innerContext),
+                            textAlign: TextAlign.center,
+                          ),
+                          SizedBox(height: 24.h),
+                          ElevatedButton(
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: AppColors.main,
+                              elevation: 0,
+                              padding: EdgeInsets.symmetric(horizontal: 24.w, vertical: 12.h),
+                              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10.r)),
+                            ),
+                            onPressed: () => Navigator.of(innerContext).pop(true),
+                            child: Center(
+                              child: Text(
+                                AppLocalizations.of(innerContext)!.exit,
+                                style: AppTextStyles.getText2(innerContext).copyWith(color: Colors.white),
+                              ),
+                            ),
+                          ),
+                          TextButton(
+                            onPressed: () => Navigator.of(innerContext).pop(false),
+                            child: Text(
+                              AppLocalizations.of(innerContext)!.cancel,
+                              style: AppTextStyles.getText2(innerContext).copyWith(
+                                fontWeight: FontWeight.bold,
+                                color: AppColors.blackText,
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
                     ),
                   ),
                 ),
               ),
+            );
+          },
+        );
 
-              // ✅ الجزء الثالث: زر تسجيل الدخول (يظهر فقط إذا لم يكن المستخدم مسجلًا الدخول)
-              if (_currentIndex == 0 && !isLoggedIn)
-                Padding(
-                  padding: const EdgeInsets.only(right: 0), // 🔹 تقليل المسافة أكثر
-                  child: TextButton(
-                    onPressed: () {
-                      Navigator.push(
-                        context,
-                        fadePageRoute(const IdentificationPage()),
-                      );
-                    },
-                    style: TextButton.styleFrom(
-                      padding: EdgeInsets.zero,
-                      tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                      minimumSize: const Size(50, 50),
+        return shouldExit == true;
+      },
+
+      child: Theme(
+        data: Theme.of(context).copyWith(
+          splashColor: Colors.transparent, // 🚀 إلغاء تأثير النقر
+          highlightColor: Colors.transparent, // 🔥 إلغاء تأثير التوهج
+        ),
+        child: Scaffold(
+          backgroundColor: AppColors.main,// يجب أن يكون نفس لون الـ AppBar
+          appBar: AppBar(
+            backgroundColor: AppColors.main.withOpacity(1), // تأكد من أن الشفافية 100%
+            surfaceTintColor: Colors.transparent, // يمنع تأثير الظل الغامق الذي يظهر عند التمرير
+            shadowColor: Colors.transparent, // 🔹 إزالة الظل تمامًا
+            elevation: 0,
+            centerTitle: true,
+      
+            title: Row(
+              children: [
+                // ✅ الجزء الأول: زر تغيير اللغة (يظهر فقط في الصفحة الرئيسية)
+                if (_currentIndex == 0)
+                  Padding(
+                    padding: const EdgeInsets.only(left: 4), // 🔹 تقليل المسافة أكثر
+                    child: TextButton(
+                      onPressed: _showLanguageSelectionSheet,
+                      style: TextButton.styleFrom(
+                        padding: EdgeInsets.zero,
+                        tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                        minimumSize: const Size(40, 40), // ✅ جعل الزر صغيرًا لكنه قابل للنقر بسهولة
+                      ),
+                      child: Row(
+                        children: [
+                          const Icon(Icons.language_rounded, color: AppColors.whiteText, size: 20),
+                          const SizedBox(width: 4),
+                          Text(
+                            Localizations.localeOf(context).languageCode.toUpperCase(),
+                            style: const TextStyle(
+                              color: AppColors.whiteText,
+                              fontWeight: FontWeight.bold,
+                              fontSize: 12,
+                            ),
+                          ),
+                        ],
+                      ),
                     ),
-                    child: Text(
-                      AppLocalizations.of(context)!.logInAppbar,
-                      style:  TextStyle(color: AppColors.whiteText,
-                        fontSize: Localizations.localeOf(context).languageCode == 'ar' ? 11 : 12, // ✅ تصغير الخط في العربية
+                  )
+                else
+                  const SizedBox(width: 40), // ✅ تعويض المساحة عند إخفاء الزر
+      
+                // ✅ الجزء الثاني: الشعار في المنتصف دائمًا
+                Expanded(
+                  child: Center(
+                    child: _currentIndex == 0
+                        ? SvgPicture.asset(
+                      'assets/images/docsera_white.svg',
+                      height: 18,
+                    )
+                        : Text(
+                      _getTitle(_currentIndex), // ✅ العنوان من arb files
+                      style: const TextStyle(
+                        color: AppColors.whiteText,
+                        fontWeight: FontWeight.bold,
+                        fontSize: 16,
                       ),
                     ),
                   ),
-                )
-              else
-                const SizedBox(width: 50), // ✅ تعويض المساحة عند إخفاء الزر
+                ),
+      
+                // ✅ الجزء الثالث: زر تسجيل الدخول (يظهر فقط إذا لم يكن المستخدم مسجلًا الدخول)
+                if (_currentIndex == 0 && !isLoggedIn)
+                  Padding(
+                    padding: const EdgeInsets.only(right: 0), // 🔹 تقليل المسافة أكثر
+                    child: TextButton(
+                      onPressed: () {
+                        Navigator.push(
+                          context,
+                          fadePageRoute(const IdentificationPage()),
+                        );
+                      },
+                      style: TextButton.styleFrom(
+                        padding: EdgeInsets.zero,
+                        tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                        minimumSize: const Size(50, 50),
+                      ),
+                      child: Text(
+                        AppLocalizations.of(context)!.logInAppbar,
+                        style:  TextStyle(color: AppColors.whiteText,
+                          fontSize: Localizations.localeOf(context).languageCode == 'ar' ? 11 : 12, // ✅ تصغير الخط في العربية
+                        ),
+                      ),
+                    ),
+                  )
+                else
+                  const SizedBox(width: 50), // ✅ تعويض المساحة عند إخفاء الزر
+              ],
+            ),
+          ),
+      
+      
+      
+          body: Stack(
+            alignment: Alignment.bottomCenter,
+            children: [
+              SafeArea(
+                child: _pages[_currentIndex],
+              ),
+      
+      
+        // ✅ **PERFECTLY CENTERED Animated Indicator**
+              AnimatedBuilder(
+                animation: _animation,
+                builder: (context, child) {
+                  bool isRtl = Directionality.of(context) == TextDirection.rtl;
+      
+                  return Positioned(
+                    bottom: 0,
+                    left: isRtl
+                        ? ((4 - _animation.value) * buttonWidth) + (buttonWidth * 0.05) // 🔹 عكس الحساب عند RTL
+                        : (_animation.value * buttonWidth) + (buttonWidth * 0.05), // الوضع الطبيعي
+                    child: Container(
+                      width: buttonWidth * 0.9,
+                      height: 2,
+                      decoration: BoxDecoration(
+                        color: AppColors.main,
+                        borderRadius: BorderRadius.circular(2),
+                      ),
+                    ),
+                  );
+                },
+              ),
+      
             ],
           ),
-        ),
-
-
-
-        body: Stack(
-          alignment: Alignment.bottomCenter,
-          children: [
-            _pages[_currentIndex],
-
-
-      // ✅ **PERFECTLY CENTERED Animated Indicator**
-            AnimatedBuilder(
-              animation: _animation,
-              builder: (context, child) {
-                bool isRtl = Directionality.of(context) == TextDirection.rtl;
-
-                return Positioned(
-                  bottom: 0,
-                  left: isRtl
-                      ? ((4 - _animation.value) * buttonWidth) + (buttonWidth * 0.05) // 🔹 عكس الحساب عند RTL
-                      : (_animation.value * buttonWidth) + (buttonWidth * 0.05), // الوضع الطبيعي
-                  child: Container(
-                    width: buttonWidth * 0.9,
-                    height: 2,
-                    decoration: BoxDecoration(
-                      color: AppColors.main,
-                      borderRadius: BorderRadius.circular(2),
-                    ),
-                  ),
-                );
-              },
+          bottomNavigationBar: BottomNavigationBar(
+            backgroundColor: AppColors.background2,
+            currentIndex: _currentIndex,
+            onTap: _onTabTapped,
+            type: BottomNavigationBarType.fixed,
+            selectedItemColor: AppColors.main,
+            unselectedItemColor: Colors.black,
+            selectedFontSize: 10,
+            unselectedFontSize: 9,
+            selectedLabelStyle: TextStyle(
+              fontFamily: Localizations.localeOf(context).languageCode == 'ar' ? 'Cairo' : 'Montserrat',
+              fontWeight: FontWeight.w600,
             ),
-
-          ],
-        ),
-        bottomNavigationBar: BottomNavigationBar(
-          backgroundColor: AppColors.background2,
-          currentIndex: _currentIndex,
-          onTap: _onTabTapped,
-          type: BottomNavigationBarType.fixed,
-          selectedItemColor: AppColors.main,
-          unselectedItemColor: Colors.black,
-          selectedFontSize: 10,
-          unselectedFontSize: 9,
-          selectedLabelStyle: TextStyle(
-            fontFamily: Localizations.localeOf(context).languageCode == 'ar' ? 'Cairo' : 'Montserrat',
-            fontWeight: FontWeight.w600,
-          ),
-          unselectedLabelStyle: TextStyle(
-            fontFamily: Localizations.localeOf(context).languageCode == 'ar' ? 'Cairo' : 'Montserrat',
-            fontWeight: FontWeight.w400,
-          ),
-          enableFeedback: false,
-          mouseCursor: SystemMouseCursors.basic,
-          items: [
-            _buildNavItem('assets/icons/home.svg', 'assets/icons/home-on_.svg', AppLocalizations.of(context)!.home, 0, 18.h),
-            _buildNavItem('assets/icons/appointment.svg', 'assets/icons/appointment-on.svg', AppLocalizations.of(context)!.appointments, 1, 22.h),
-            _buildNavItem('assets/icons/document.svg', 'assets/icons/document-on.svg', AppLocalizations.of(context)!.documents, 2, 18.h),
-            _buildMessagesNavItem(context),
-            _buildNavItem(
-              isLoggedIn ? 'assets/icons/account.svg' : 'assets/icons/login.svg',
-              isLoggedIn ? 'assets/icons/account-on.svg' : 'assets/icons/login-on.svg',
-              isLoggedIn ? AppLocalizations.of(context)!.account : AppLocalizations.of(context)!.logIn,
-              4,
-              isLoggedIn ? 22.h : 17.h,
+            unselectedLabelStyle: TextStyle(
+              fontFamily: Localizations.localeOf(context).languageCode == 'ar' ? 'Cairo' : 'Montserrat',
+              fontWeight: FontWeight.w400,
             ),
-          ],
+            enableFeedback: false,
+            mouseCursor: SystemMouseCursors.basic,
+            items: [
+              _buildNavItem('assets/icons/home.svg', 'assets/icons/home-on_.svg', AppLocalizations.of(context)!.home, 0, 18.h),
+              _buildNavItem('assets/icons/appointment.svg', 'assets/icons/appointment-on.svg', AppLocalizations.of(context)!.appointments, 1, 22.h),
+              _buildNavItem('assets/icons/document.svg', 'assets/icons/document-on.svg', AppLocalizations.of(context)!.documents, 2, 18.h),
+              _buildMessagesNavItem(context),
+              _buildNavItem(
+                isLoggedIn ? 'assets/icons/account.svg' : 'assets/icons/login.svg',
+                isLoggedIn ? 'assets/icons/account-on.svg' : 'assets/icons/login-on.svg',
+                isLoggedIn ? AppLocalizations.of(context)!.account : AppLocalizations.of(context)!.logIn,
+                4,
+                isLoggedIn ? 22.h : 17.h,
+              ),
+            ],
+          ),
+      
+      
         ),
-
-
       ),
     );
   }

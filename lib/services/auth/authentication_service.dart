@@ -1,30 +1,30 @@
-import 'package:firebase_auth/firebase_auth.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 
 class AuthenticationService {
-  final FirebaseAuth _auth = FirebaseAuth.instance;
+  final SupabaseClient _client = Supabase.instance.client;
 
   /// **Login with Email & Password**
-  Future<User?> login(String email, String password) async {
+  Future<AuthResponse?> login(String email, String password) async {
     try {
-      final userCredential = await _auth.signInWithEmailAndPassword(
+      final response = await _client.auth.signInWithPassword(
         email: email,
         password: password,
       );
-      return userCredential.user; // ✅ Login successful
+      return response;
     } catch (e) {
       print("❌ Login failed: $e");
       return null;
     }
   }
 
-  /// **Register a New User in Firebase Authentication**
-  Future<User?> register(String email, String password) async {
+  /// **Register a New User in Supabase Auth**
+  Future<AuthResponse?> register(String email, String password) async {
     try {
-      final userCredential = await _auth.createUserWithEmailAndPassword(
+      final response = await _client.auth.signUp(
         email: email,
         password: password,
       );
-      return userCredential.user;
+      return response;
     } catch (e) {
       print("❌ Registration failed: $e");
       return null;
@@ -33,11 +33,11 @@ class AuthenticationService {
 
   /// **Get Currently Logged-in User**
   User? getCurrentUser() {
-    return _auth.currentUser;
+    return _client.auth.currentUser;
   }
 
   /// **Logout User**
   Future<void> logout() async {
-    await _auth.signOut();
+    await _client.auth.signOut();
   }
 }

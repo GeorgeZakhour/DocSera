@@ -14,6 +14,11 @@
   "languageEnglish": "English",
   "languageArabic": "العربية",
 
+  "exitAppTitle": "Exit Application",
+  "areYouSureToExit": "Are you sure you want to exit the app?",
+  "exit": "Exit",
+  "cancel": "Cancel",
+
   "@mainScreen================================": {
     "description": "🏠 Main Screen"
   },
@@ -121,6 +126,7 @@
   "easilySendMessages": "Easily send messages to practitioners",
   "sendMessagesDescription": "Start a conversation with your practitioners. Ask about exam results, request referral letters, and more.",
   "fileTooLarge": "The total size of images is too large (max 4MB). Please reduce the number or size of images.",
+  "chooseAttachmentType": "Send attachment",
 
   "@accountPage================================": {
     "description": "👤 Account Page"
@@ -144,6 +150,11 @@
   "didYouKnowDesc": "You can also book appointments for your relatives by creating dedicated profiles for them.",
   "manageMyRelatives": "Manage my relatives",
 
+  "relativeAddedSuccess": "Relative added successfully!",
+  "relativeAddFailed": "Failed to add relative: {error}",
+"arabicOnlyError": "Please enter the text in Arabic only",
+  "numbersOnlyError": "Please enter numbers only",
+  "max3DigitsError": "Number must not exceed 3 digits",
   "editMyProfile": "Edit my profile",
   "gender": "Gender",
   "selectGender": "Select Gender",
@@ -167,7 +178,8 @@
   "updateSuccess": "Profile updated successfully!",
   "updateFailed": "Failed to update profile: {error}",
   "infoText": "Changes made to your profile will be shared with your practitioners.",
-  "requiredField": "  (required)",
+  "requiredField": "This field is required",
+  "minTwoLettersError": "Please enter at least two letters",
   "fillFullAddress" : "Please fill Street, City, and Country before adding a Building Number.",
   "enterPhoneOptional": "Enter phone number (optional)",
   "enterEmailOptional": "Enter email (optional)",
@@ -221,7 +233,7 @@
   "you": "you",
   "accountHolder": "Account Holder",
 
-  "invalidPhoneNumber": "Invalid phone number. It should start with 9 or 09 and be 9–10 digits long.",
+  "invalidPhoneNumber": "Invalid phone number.\nIt must either start with 9 and be 9 digits, or start with 09 and be 10 digits.",
 
   "addEmailTitle": "Add Email",
 
@@ -312,6 +324,9 @@
 
   "deleteAccountWarningText": "You can delete your DocSera account and associated data at any time. This will not automatically delete your personal data from the databases of the healthcare professionals with whom you have booked appointments. Healthcare professionals may have a legitimate interest in keeping your personal data. You are free to exercise your rights of access, rectification or deletion and contact them directly.",
   "confirmDeleteMyAccount": "DELETE MY ACCOUNT",
+  "goodbyeMessage": "We're sad to see you go 😔",
+  "goodbyeSubtext": "Your account has been successfully deleted. We hope to see you again someday.",
+
 
 
   "@searchPage================================": {
@@ -431,6 +446,17 @@
   "rescheduleRespectNotice": "Out of respect to your practitioner, you should only move if absolutely necessary",
   "cancelRespectNotice": "Out of respect to your practitioner, you should only cancel if absolutely necessary",
 
+  "sendDocuments": "Send documents",
+  "sendDocument": "Send document",
+  "sendDocumentsLater": "Sending documents will be enabled later once the doctor app is ready",
+  "sendDocumentsTo": "Send documents to",
+  "beforeConsultation": "before consultation",
+  "exampleDocuments": "For example, referral, test results, prescriptions",
+  "addDocument": "Add a document",
+  "sizeLimit": "Size",
+  "acceptedFormat": "Accepted formats",
+
+
   "@IdentificationPage================================": {
     "description": "Identification Page"
   },
@@ -542,8 +568,7 @@
   "phoneAlreadyRegistered": "This phone number is already registered!",
 
   "welcomeToDocsera": "Welcome to DocSera,",
-  "configureEnglishInfo": "We recommend configuring your account in both English and Arabic to improve accessibility and communication.",
-  "configureEnglishButton": "Configure English version of the account",
+  "welcomeMessageInfo": "Easily book your appointments, manage your medical files, and stay connected with doctors — all in one secure and fast place.",
   "goToHomepage": "Go to Homepage",
 
   "serverConnectionError": "Cannot connect to the server. Please check your internet connection and try again.",
@@ -683,7 +708,8 @@
   "read": "Read",
 
   "takePhoto": "Take a photo",
-  "chooseFromLibrary": "Choose from library",
+  "chooseFromLibrary": "Choose photo",
+  "chooseFromLibrary2": "Choose photo",
   "uploadPdf": "Upload PDF file",
   "attachedImage": "Attached image",
   "attachedImages": "Attached images",

@@ -1,9 +1,9 @@
-import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:docsera/screens/doctors/doctor_panel/doctor_drawer.dart';
 import 'package:flutter/material.dart';
 import 'package:docsera/app/const.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:intl/intl.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:table_calendar/table_calendar.dart';
 
 class DoctorAppointments extends StatefulWidget {
@@ -37,53 +37,69 @@ class _DoctorAppointmentsState extends State<DoctorAppointments> {
     doctorId = prefs.getString('doctorId');
 
     if (doctorId == null) {
-      print("❌ Doctor ID not found.");
-      return;
+      try {
+        final user = Supabase.instance.client.auth.currentUser;
+        if (user == null) {
+          print("❌ No logged-in user.");
+          return;
+        }
+
+        final response = await Supabase.instance.client
+            .from('doctors')
+            .select('id')
+            .eq('email', user.email!)
+            .maybeSingle();
+
+        if (response == null) {
+          print("❌ Doctor not found in Supabase.");
+          return;
+        }
+
+        doctorId = response['id'];
+        await prefs.setString('doctorId', doctorId!); // 🔸 cache it for later
+        print("✅ Doctor ID loaded from Supabase and cached: $doctorId");
+      } catch (e) {
+        print("❌ Failed to fetch doctor from Supabase: $e");
+        return;
+      }
     }
 
     try {
-      QuerySnapshot querySnapshot = await FirebaseFirestore.instance
-          .collection('doctors')
-          .doc(doctorId)
-          .collection('appointments')
-          .orderBy('timestamp', descending: false)
-          .get();
+      final response = await Supabase.instance.client
+          .from('appointments')
+          .select()
+          .eq('doctor_id', doctorId!)
+          .eq('booked', false) // فقط الشواغر
+          .order('timestamp', ascending: true);
 
       Map<String, List<Map<String, dynamic>>> groupedAppointments = {};
 
-      for (var doc in querySnapshot.docs) {
-        Map<String, dynamic> appointment = doc.data() as Map<String, dynamic>;
+      for (var appointment in response) {
+        String date = appointment['appointment_date'] ?? "";
+        if (date.isEmpty) continue;
 
-        // ✅ Ensure fields are not null to prevent errors
-        String date = appointment['date'] ?? "";
-        if (date.isEmpty) continue; // Skip if date is missing
-
-        bool isBooked = appointment['booked'] ?? false; // ✅ Ensure `booked` is always boolean
-        String time = appointment['time'] ?? "Unknown Time";
-        String accountName = appointment['accountName'] ?? "Unknown Holder";
-        String patientName = appointment['patientName'] ?? "Unknown Patient";
+        bool isBooked = appointment['booked'] ?? false;
+        String time = appointment['appointment_time'] ?? "Unknown Time";
+        String accountName = appointment['account_name'] ?? "Unknown Holder";
+        String patientName = appointment['patient_name'] ?? "Unknown Patient";
         String reason = appointment['reason'] ?? "No Reason Provided";
-        String userAge = (appointment['userAge'] != null) ? appointment['userAge'].toString() : "-";
-        String userGender = appointment['userGender'] ?? "-";
-        String bookingTimestamp = appointment['bookingTimestamp'] != null
-            ? _formatTimestamp(appointment['bookingTimestamp'])
+        String userAge = appointment['user_age']?.toString() ?? "-";
+        String userGender = appointment['user_gender'] ?? "-";
+        String bookingTimestamp = appointment['booking_timestamp'] != null
+            ? _formatTimestamp(appointment['booking_timestamp'])
             : "Unknown";
 
-        if (!groupedAppointments.containsKey(date)) {
-          groupedAppointments[date] = [];
-        }
-
-        groupedAppointments[date]!.add({
-          'id': doc.id, // Firebase document ID for easy deletion
-          'booked': isBooked,  // ✅ Store booked status properly
-          'date': date,
-          'time': time,
-          'patientName': patientName,
+        groupedAppointments.putIfAbsent(date, () => []).add({
+          'id': appointment['id'],
+          'booked': isBooked,
+          'appointment_date': date,
+          'appointment_time': time,
+          'patient_name': patientName,
           'reason': reason,
           'accountName': accountName,
-          'userAge': userAge,
-          'userGender': userGender,
-          'bookingTimestamp': bookingTimestamp,
+          'user_age': userAge,
+          'user_gender': userGender,
+          'booking_timestamp': bookingTimestamp,
         });
       }
 
@@ -96,8 +112,6 @@ class _DoctorAppointmentsState extends State<DoctorAppointments> {
       print("❌ Error fetching appointments: $e");
     }
   }
-
-
 
   Widget _toggleButton({
     required bool isLeft, // ✅ Use `bool` instead of `int`
@@ -274,26 +288,81 @@ class _DoctorAppointmentsState extends State<DoctorAppointments> {
     );
   }
 
-  /// **🔹 Add Multiple Slots to Firestore**
-  void _addMultipleSlots(List<DateTime> dates, List<TimeOfDay> times) {
+  /// **🔹 Add Multiple Slots to Tables Supabase**
+  Future<void> _addMultipleSlots(List<DateTime> dates, List<TimeOfDay> times) async {
+    if (doctorId == null) {
+      print("❌ doctorId is null.");
+      return;
+    }
+
+
+    final doctorResponse = await Supabase.instance.client
+        .from('doctors')
+        .select()
+        .eq('id', doctorId!)
+        .maybeSingle();
+
+    if (doctorResponse == null) {
+      print("❌ Failed to load doctor info.");
+      return;
+    }
+
+    final doctorName = "${doctorResponse['first_name']} ${doctorResponse['last_name']}".trim();
+    final doctorTitle = doctorResponse['title'] ?? "";
+    final doctorGender = doctorResponse['gender'] ?? "";
+    final doctorImage = doctorResponse['doctor_image'] ?? "";
+    final doctorSpecialty = doctorResponse['specialty'] ?? "";
+    final clinicName = doctorResponse['clinic'] ?? "";
+    final clinicAddress = doctorResponse['address'] ?? {};
+
+
+    print("👨‍⚕️ Doctor Data:");
+    print("- Name: $doctorName");
+    print("- Title: $doctorTitle");
+    print("- Gender: $doctorGender");
+    print("- Image: $doctorImage");
+    print("- Specialty: $doctorSpecialty");
+    print("- Clinic Address: $clinicAddress");
+    print("📦 Full address: ${doctorResponse['address']}");
+
     for (var date in dates) {
       for (var time in times) {
-        String formattedDate = DateFormat('yyyy-MM-dd').format(date);
-        String formattedTime = time.format(context);
+        final formattedDate = DateFormat('yyyy-MM-dd').format(date);
+        final formattedTime = '${time.hour.toString().padLeft(2, '0')}:${time.minute.toString().padLeft(2, '0')}';
 
-        FirebaseFirestore.instance.collection('doctors').doc(doctorId).collection('appointments').add({
-          'date': formattedDate,
-          'time': formattedTime,
-          'booked': false,
-          'timestamp': Timestamp.fromDate(
-            DateTime(date.year, date.month, date.day, time.hour, time.minute),
-          ),
-        });
+        final combinedTimestamp = DateTime(
+          date.year,
+          date.month,
+          date.day,
+          time.hour,
+          time.minute,
+        );
+
+        try {
+          await Supabase.instance.client.from('appointments').insert({
+            'doctor_id': doctorId,
+            'doctor_name': doctorName,
+            'doctor_title': doctorTitle,
+            'doctor_gender': doctorGender,
+            'doctor_image': doctorImage,
+            'doctor_specialty': doctorSpecialty,
+            'clinic': clinicName,
+            'clinic_address': clinicAddress,
+            'timestamp': combinedTimestamp.toIso8601String(),
+            'appointment_date': formattedDate,
+            'appointment_time': formattedTime,
+            'booked': false,
+          });
+
+          print("✅ Added slot: $formattedDate at $formattedTime");
+        } catch (e) {
+          print("❌ Failed to insert slot: $e");
+        }
       }
     }
+
     _fetchDoctorAppointments();
   }
-
 
   /// **🔹 Show Dialog for Rotation-based Slots**
   void _showRotationSlotDialog() {
@@ -666,7 +735,7 @@ class _DoctorAppointmentsState extends State<DoctorAppointments> {
                                   isBooked ? Icon(Icons.access_time, color: AppColors.main, size: 22) : SizedBox(height: 0),
                                   const SizedBox(height: 5),
                                   Text(
-                                    appointment['time'] ?? "Unknown Time",
+                                    appointment['appointment_time'] ?? "Unknown Time",
                                     style: TextStyle(
                                       fontSize: 12,
                                       fontWeight: FontWeight.bold,
@@ -751,8 +820,8 @@ class _DoctorAppointmentsState extends State<DoctorAppointments> {
                               _infoRow("Account Holder", appointment['accountName'] ?? "Unknown"),
                               _infoRow("New Patient", (appointment['newPatient'] ?? false) ? "Yes" : "No"),
                               _infoRow("Patient Name", appointment['patientName'] ?? "Unknown"),
-                              _infoRow("Date", appointment['date'] ?? "Unknown"),
-                              _infoRow("Time", appointment['time'] ?? "Unknown"),
+                              _infoRow("Date", appointment['appointment_date'] ?? "Unknown"),
+                              _infoRow("Time", appointment['appointment_time'] ?? "Unknown"),
                               _infoRow("Reason", appointment['reason'] ?? "Unknown"),
                               _infoRow("Booking Time", appointment['bookingTimestamp'] ?? "Unknown"),
                             ],
@@ -783,10 +852,23 @@ class _DoctorAppointmentsState extends State<DoctorAppointments> {
   }
 }
 
-String _formatTimestamp(Timestamp? timestamp) {
+String _formatTimestamp(dynamic timestamp) {
   if (timestamp == null) return "Unknown";
-  return DateFormat("yyyy-MM-dd HH:mm").format(timestamp.toDate());
+
+  try {
+    if (timestamp is String) {
+      return DateFormat("yyyy-MM-dd HH:mm").format(DateTime.parse(timestamp));
+    } else if (timestamp is DateTime) {
+      return DateFormat("yyyy-MM-dd HH:mm").format(timestamp);
+    } else {
+      return "Invalid Timestamp";
+    }
+  } catch (e) {
+    print("❌ Error formatting timestamp: $e");
+    return "Invalid Timestamp";
+  }
 }
+
 
 /// **🔹 Helper: Format Date (Handles String & DateTime)**
 String _formatDate(dynamic date) {

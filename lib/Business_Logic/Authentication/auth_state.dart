@@ -1,33 +1,28 @@
 import 'package:equatable/equatable.dart';
-import 'package:firebase_auth/firebase_auth.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 
 /// الحالة الأساسية للمصادقة
-abstract class AuthState extends Equatable {
+abstract class AppAuthState extends Equatable {
   @override
   List<Object?> get props => [];
 }
 
-/// الحالة المبدئية (قبل بدء أي عملية)
-class AuthInitial extends AuthState {}
+class AuthInitial extends AppAuthState {}
 
-/// حالة التحميل (مثلاً عند محاولة تسجيل الدخول أو إنشاء حساب)
-class AuthLoading extends AuthState {}
+class AuthLoading extends AppAuthState {}
 
-/// المستخدم مسجّل دخول
-class AuthAuthenticated extends AuthState {
+class AuthAuthenticated extends AppAuthState {
   final User user;
 
   AuthAuthenticated(this.user);
 
   @override
-  List<Object?> get props => [user.uid];
+  List<Object?> get props => [user.id];
 }
 
-/// المستخدم غير مسجّل دخول
-class AuthUnauthenticated extends AuthState {}
+class AuthUnauthenticated extends AppAuthState {}
 
-/// حدث خطأ أثناء تسجيل الدخول أو إنشاء حساب
-class AuthError extends AuthState {
+class AuthError extends AppAuthState {
   final String errorMessage;
 
   AuthError(this.errorMessage);

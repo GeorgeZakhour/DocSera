@@ -23,7 +23,6 @@ class DocumentPreviewPage extends StatefulWidget {
     required this.document,
     this.cameFromConversation = false,
     this.doctorName,
-
   }) : super(key: key);
 
   @override
@@ -215,7 +214,7 @@ class _DocumentPreviewPageState extends State<DocumentPreviewPage> {
               icon: Icon(Icons.more_vert, color: Colors.white),
               onPressed: () {
                 final fromConversationButNotSaved =
-                    widget.cameFromConversation && !widget.document.id.startsWith('doc_');
+                    widget.cameFromConversation && !widget.document.id!.startsWith('doc_');
 
                 if (fromConversationButNotSaved) {
                   showConversationPdfOptionsSheet(

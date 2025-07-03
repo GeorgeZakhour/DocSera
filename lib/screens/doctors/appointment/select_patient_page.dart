@@ -1,4 +1,3 @@
-import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:docsera/app/const.dart';
 import 'package:docsera/models/appointment_details.dart';
 import 'package:docsera/models/patient_profile.dart';
@@ -12,6 +11,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:docsera/app/text_styles.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:flutter_gen/gen_l10n/app_localizations.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 
 
 class SelectPatientPage extends StatefulWidget {
@@ -58,73 +58,68 @@ class _SelectPatientPageState extends State<SelectPatientPage> {
   }
 
   Future<void> _loadUserInfo() async {
-    SharedPreferences prefs = await SharedPreferences.getInstance();
-    userId = prefs.getString('userId'); // ✅ Assign class-level userId
-
-    if (userId == null) {
+    final currentUser = Supabase.instance.client.auth.currentUser;
+    if (currentUser == null) {
+      print("❌ Supabase user is not logged in.");
       return;
     }
 
+    userId = currentUser.id; // 🔄 نحفظه مباشرة في المتغير المستخدم لاحقًا
+
     try {
-      DocumentSnapshot userDoc = await FirebaseFirestore.instance
-          .collection('users')
-          .doc(userId)
-          .get();
+      final response = await Supabase.instance.client
+          .from('users')
+          .select()
+          .eq('id', userId!)
+          .maybeSingle();
 
-      if (userDoc.exists) {
-        Map<String, dynamic>? userData = userDoc.data() as Map<String, dynamic>?;
+      if (response != null) {
+        final firstName = response['first_name'] ?? "";
+        final lastName = response['last_name'] ?? "";
+        final gender = response['gender'] ?? "Unknown";
+        final dobString = response['date_of_birth'];
+        final phoneNumber = response['phone_number'] ?? "Not provided";
+        final email = response['email'] ?? "Not provided";
 
-        if (userData != null) {
-          String firstName = userData['firstName'] ?? "";
-          String lastName = userData['lastName'] ?? "";
-          String gender = userData['gender'] ?? "Unknown";
-          String? dobString = userData['dateOfBirth'];
-          String phoneNumber = userData['phoneNumber'] ?? "Not provided"; // ✅ Retrieve phone number
-          String email = userData['email'] ?? "Not provided"; // ✅ Retrieve email
+        final age = _calculateAge(dobString);
 
-          int age = _calculateAge(dobString);
+        setState(() {
+          userName = "$firstName $lastName";
+          userGender = gender;
+          userAge = age;
+          patientDOB = dobString ?? "";
+          patientPhoneNumber = phoneNumber;
+          patientEmail = email;
+        });
 
-
-          setState(() {
-            userName = "$firstName $lastName";
-            userGender = gender;
-            userAge = age;
-            patientDOB = dobString ?? ""; // ✅ Store formatted DOB
-            patientPhoneNumber = phoneNumber; // ✅ Store phone number
-            patientEmail = email; // ✅ Store email
-          });
-
-          _loadRelatives();
-
-        }
+        await _loadRelatives();
+      } else {
+        print("❌ No user found with this ID.");
+        return;
       }
     } catch (e) {
-      // Handle Firestore errors silently
+      print("❌ Error loading user info from Supabase: $e");
     }
   }
 
+
   int _calculateAge(String? dobString) {
-    if (dobString == null || dobString.isEmpty) return 0; // ✅ Ensure a default value
+    if (dobString == null || dobString.isEmpty) return 0;
 
     try {
-      List<String> parts = dobString.split('.');
-      if (parts.length == 3) {
-        int day = int.parse(parts[0]);
-        int month = int.parse(parts[1]);
-        int year = int.parse(parts[2]);
-        DateTime dob = DateTime(year, month, day);
-        DateTime today = DateTime.now();
-        int age = today.year - dob.year;
+      DateTime dob = DateTime.parse(dobString); // ✅ يقبل "2020-04-15"
+      DateTime today = DateTime.now();
+      int age = today.year - dob.year;
 
-        if (today.month < dob.month || (today.month == dob.month && today.day < dob.day)) {
-          age--;
-        }
-        return age;
+      if (today.month < dob.month || (today.month == dob.month && today.day < dob.day)) {
+        age--;
       }
+
+      return age;
     } catch (e) {
       print("❌ Error parsing dateOfBirth: $e");
+      return 0;
     }
-    return 0; // ✅ Ensure a fallback integer value
   }
 
 
@@ -132,26 +127,24 @@ class _SelectPatientPageState extends State<SelectPatientPage> {
     if (userId == null) return;
 
     try {
-      QuerySnapshot relativesSnapshot = await FirebaseFirestore.instance
-          .collection('users')
-          .doc(userId)
-          .collection('relatives')
-          .get();
+      final response = await Supabase.instance.client
+          .from('relatives')
+          .select()
+          .eq('user_id', userId!);
 
       setState(() {
-        relatives = relativesSnapshot.docs.map((doc) {
-          Map<String, dynamic> data = doc.data() as Map<String, dynamic>;
+        relatives = response.map<Map<String, dynamic>>((data) {
           return {
-            "id": doc.id,
-            "firstName": data["firstName"] ?? "Unknown",
-            "lastName": data["lastName"] ?? "",
+            "id": data["id"] ?? "",
+            "first_name": data["first_name"] ?? "Unknown",
+            "last_name": data["last_name"] ?? "",
             "gender": data["gender"] ?? "Unknown",
-            "age": _calculateAge(data["dateOfBirth"]) ?? 0, // ✅ Ensure age is always an int
+            "age": _calculateAge(data["date_of_birth"]) ?? 0,
           };
         }).toList();
       });
     } catch (e) {
-      print("❌ Error fetching relatives: $e");
+      print("❌ Error loading relatives from Supabase: $e");
     }
   }
 
@@ -197,6 +190,17 @@ class _SelectPatientPageState extends State<SelectPatientPage> {
 
   @override
   Widget build(BuildContext context) {
+    final imagePath = (widget.image.isNotEmpty)
+        ? widget.image
+        : (widget.doctorTitle.toLowerCase() == "dr."
+        ? (widget.doctorGender.toLowerCase() == "female"
+        ? 'assets/images/female-doc.png'
+        : 'assets/images/male-doc.png')
+        : (widget.doctorGender.toLowerCase() == "male"
+        ? 'assets/images/male-phys.png'
+        : 'assets/images/female-phys.png'));
+
+
     return BaseScaffold(
       titleAlignment: 2,
         height: 75.h,
@@ -210,7 +214,7 @@ class _SelectPatientPageState extends State<SelectPatientPage> {
               child: ClipRRect(
                 borderRadius: BorderRadius.circular(50),
                 child: Image.asset(
-                  widget.image,
+                  imagePath,
                   width: 40.w,
                   height: 40.h,
                   fit: BoxFit.cover,
@@ -330,7 +334,11 @@ class _SelectPatientPageState extends State<SelectPatientPage> {
 
     // إضافة المستخدم الرئيسي
     if (userId != null) {
-      patientTiles.add(_buildPatientTile(userId!, userName.split(" ")[0], userName.split(" ")[1], userGender, userAge, true, true, relatives.isEmpty));
+      final nameParts = userName.split(" ");
+      final firstName = nameParts.isNotEmpty ? nameParts[0] : "";
+      final lastName = nameParts.length > 1 ? nameParts[1] : "";
+
+      patientTiles.add(_buildPatientTile(userId!, firstName, lastName, userGender, userAge, true, true, relatives.isEmpty));
     }
 
     // إضافة الأقارب مع ضبط الأول والأخير
@@ -341,8 +349,8 @@ class _SelectPatientPageState extends State<SelectPatientPage> {
       patientTiles.add(
         _buildPatientTile(
           relatives[i]["id"],
-          relatives[i]["firstName"],
-          relatives[i]["lastName"],
+          relatives[i]["first_name"],
+          relatives[i]["last_name"],
           relatives[i]["gender"],
           relatives[i]["age"] is int ? relatives[i]["age"] : 0,
           false,
@@ -390,7 +398,7 @@ class _SelectPatientPageState extends State<SelectPatientPage> {
     bool isArabic = RegExp(r'[\u0600-\u06FF]').hasMatch(firstName);
     String avatarText = isArabic
         ? normalizeArabicInitial(firstName).toUpperCase()
-        : "${firstName[0].toUpperCase()}${lastName[0].toUpperCase()}";
+        : "${firstName.isNotEmpty ? firstName[0].toUpperCase() : ''}${lastName.isNotEmpty ? lastName[0].toUpperCase() : ''}";
 
 
     return Column(
@@ -450,8 +458,9 @@ class _SelectPatientPageState extends State<SelectPatientPage> {
                       ],
                     ),
                     Text(
-                      "${gender.toLowerCase() == 'male' ? AppLocalizations.of(context)!.male : AppLocalizations.of(context)!.female} , "
-                          "$age ${AppLocalizations.of(context)!.yearsOld}",
+                      (gender.toLowerCase().contains('male') || gender == 'ذكر')
+                          ? "${AppLocalizations.of(context)!.male} , $age ${AppLocalizations.of(context)!.yearsOld}"
+                          : "${AppLocalizations.of(context)!.female} , $age ${AppLocalizations.of(context)!.yearsOld}",
                       style: AppTextStyles.getText2(context).copyWith(
                         color: Colors.black87,
                         fontSize: 10.sp,

@@ -1,4 +1,3 @@
-import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:docsera/screens/doctors/doctor_panel/doctor_dashboard.dart';
 import 'package:docsera/utils/page_transitions.dart';
 import 'package:docsera/widgets/base_scaffold.dart';
@@ -6,6 +5,7 @@ import 'package:flutter/material.dart';
 import 'dart:convert';
 import 'package:crypto/crypto.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 import '../../../../../app/const.dart';
 
 class DoctorCreatePasswordPage extends StatefulWidget {
@@ -33,10 +33,11 @@ class _DoctorCreatePasswordPageState extends State<DoctorCreatePasswordPage> {
       final hashedPassword = _hashPassword(_passwordController.text);
 
       try {
-        await FirebaseFirestore.instance.collection('doctors').doc(widget.doctorId).update({
+        await Supabase.instance.client.from('doctors').update({
           "password": hashedPassword,
-          "lastUpdated": FieldValue.serverTimestamp(), // ✅ Update lastUpdated timestamp
-        });
+          "last_updated": DateTime.now().toIso8601String(),
+        }).eq('id', widget.doctorId);
+
 
         // ✅ Save doctor info in SharedPreferences
         SharedPreferences prefs = await SharedPreferences.getInstance();

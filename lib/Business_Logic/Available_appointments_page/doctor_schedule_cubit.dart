@@ -1,7 +1,7 @@
 import 'package:bloc/bloc.dart';
-import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 
 part 'doctor_schedule_state.dart';
 
@@ -39,41 +39,50 @@ class DoctorScheduleCubit extends Cubit<DoctorScheduleState> {
 
   Future<void> fetchDoctorAppointments(String doctorId, BuildContext context) async {
     try {
-      DateTime now = DateTime.now();
-      QuerySnapshot querySnapshot = await FirebaseFirestore.instance
-          .collection('doctors')
-          .doc(doctorId)
-          .collection('appointments')
-          .where('booked', isEqualTo: false)
-          .where('timestamp', isGreaterThan: Timestamp.fromDate(now)) // ✅ تصفية المواعيد المستقبلية فقط
-          .orderBy('timestamp', descending: false)
-          .get();
+      print('✅ Fetching appointments for doctor: $doctorId'); // 🔹 قبل الطلب
+
+      final now = DateTime.now().toIso8601String();
+
+      final response = await Supabase.instance.client
+          .from('appointments')
+          .select()
+          .eq('doctor_id', doctorId)
+          .eq('booked', false)
+          .gt('timestamp', now)
+          .order('timestamp', ascending: true);
+
+
+      print('✅ Raw appointments from Supabase: ${response.length}'); // 🔹 بعد الجلب
+
+      if (response.isEmpty) {
+        emit(DoctorScheduleEmpty());
+        return;
+      }
 
       Map<String, List<Map<String, dynamic>>> groupedAppointments = {};
 
-      for (var doc in querySnapshot.docs) {
-        Map<String, dynamic> data = doc.data() as Map<String, dynamic>;
-        DateTime appointmentDate = (data['timestamp'] as Timestamp).toDate();
+      for (final data in response) {
+        final timestampStr = data['timestamp'];
+        if (timestampStr == null) continue;
 
-        String dateKey = DateFormat('EEEE, d MMMM', Localizations.localeOf(context).toString()).format(appointmentDate);
+        final appointmentDate = DateTime.parse(timestampStr);
 
-        if (!groupedAppointments.containsKey(dateKey)) {
-          groupedAppointments[dateKey] = [];
-        }
+        final dateKey = DateFormat('EEEE, d MMMM', Localizations.localeOf(context).toString()).format(appointmentDate);
+
+        groupedAppointments.putIfAbsent(dateKey, () => []);
 
         groupedAppointments[dateKey]!.add({
-          'id': doc.id,
+          'id': data['id'],
           'time': DateFormat('HH:mm').format(appointmentDate),
-          'timestamp': data['timestamp'],
+          'timestamp': appointmentDate,
         });
       }
 
       if (groupedAppointments.isEmpty) {
         emit(DoctorScheduleEmpty());
       } else {
-        emit(DoctorScheduleLoaded(groupedAppointments, expandedDates, 6)); // ✅ بدء `maxDisplayedDates` بـ 6
+        emit(DoctorScheduleLoaded(groupedAppointments, expandedDates, 6));
       }
-
     } catch (e) {
       emit(DoctorScheduleError("❌ Error fetching appointments: $e"));
     }

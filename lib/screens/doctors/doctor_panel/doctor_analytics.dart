@@ -1,9 +1,9 @@
-import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:docsera/screens/doctors/doctor_panel/doctor_drawer.dart';
 import 'package:flutter/material.dart';
 import 'package:docsera/app/const.dart';
 import 'package:fl_chart/fl_chart.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 
 class DoctorAnalyticsPage extends StatefulWidget {
   final Map<String, dynamic>? doctorData;
@@ -37,34 +37,33 @@ class _DoctorAnalyticsPageState extends State<DoctorAnalyticsPage> {
     SharedPreferences prefs = await SharedPreferences.getInstance();
     doctorId = prefs.getString('doctorId');
 
-    if (doctorId == null) {
-      print("❌ Error: doctorId is NULL!");
+    final localDoctorId = doctorId;
+    if (localDoctorId == null) {
+      print("❌ Doctor ID not found.");
       return;
     }
 
     try {
-      print("🚀 Fetching patients for doctor ID: $doctorId");
-      QuerySnapshot patientSnapshot = await FirebaseFirestore.instance
-          .collection('doctors')
-          .doc(doctorId)
-          .collection('patients')
-          .get();
-      totalPatients = patientSnapshot.docs.length;
+      print("🚀 Fetching patients for doctor ID: $localDoctorId");
+      final patientResponse = await Supabase.instance.client
+          .from('patients')
+          .select('id')
+          .eq('doctorId', localDoctorId);
+
+      totalPatients = patientResponse.length;
       print("✅ Total Patients Loaded: $totalPatients");
 
       print("🚀 Fetching appointments...");
-      QuerySnapshot appointmentSnapshot = await FirebaseFirestore.instance
-          .collection('doctors')
-          .doc(doctorId)
-          .collection('appointments')
-          .where('booked', isEqualTo: true) // ✅ فقط المواعيد المحجوزة
-          .get();
+      final appointmentResponse = await Supabase.instance.client
+          .from('appointments')
+          .select()
+          .eq('doctorId', localDoctorId)
+          .eq('booked', true);
 
-      totalAppointments = appointmentSnapshot.docs.length;
+      totalAppointments = appointmentResponse.length;
       print("✅ Total Booked Appointments Loaded: $totalAppointments");
 
-      for (var doc in appointmentSnapshot.docs) {
-        Map<String, dynamic> data = doc.data() as Map<String, dynamic>;
+      for (var data in appointmentResponse) {
         print("📄 Appointment Data: $data");
 
         bool attended = data['attended'] == true;

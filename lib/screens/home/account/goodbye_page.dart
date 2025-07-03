@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'dart:math';
+import 'package:confetti/confetti.dart';
 import 'package:docsera/widgets/custom_bottom_navigation_bar.dart';
 import 'package:docsera/utils/page_transitions.dart';
 import 'package:flutter/material.dart';
@@ -7,74 +8,53 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import '../../../app/const.dart';
 import '../../../app/text_styles.dart';
-import '../../../models/sign_up_info.dart';
 import 'package:flutter_gen/gen_l10n/app_localizations.dart';
-import 'package:confetti/confetti.dart';
 
-class WelcomePage extends StatefulWidget {
-  final SignUpInfo signUpInfo;
-
-  const WelcomePage({Key? key, required this.signUpInfo}) : super(key: key);
+class GoodbyePage extends StatefulWidget {
+  const GoodbyePage({Key? key}) : super(key: key);
 
   @override
-  _WelcomePageState createState() => _WelcomePageState();
+  State<GoodbyePage> createState() => _GoodbyePageState();
 }
 
-class _WelcomePageState extends State<WelcomePage> {
+class _GoodbyePageState extends State<GoodbyePage> {
   final Random _random = Random();
   List<_AnimatedLogo> _logos = [];
   bool _logosVisible = true;
-  late ConfettiController _confettiController;
-
 
   @override
   void initState() {
     super.initState();
-    _confettiController = ConfettiController(duration: const Duration(seconds: 3));
-    _confettiController.play();
 
-    Future.delayed(const Duration(seconds: 5), () {
+    Future.delayed(const Duration(milliseconds: 10), () {
       _generateLogos();
       _startAnimationLoop();
       if (mounted) {
-        setState(() {
-          _logosVisible = false; // تبدأ مخفية
-        });
+        setState(() => _logosVisible = false);
       }
-
-      // ✅ ثم تظهر بسلاسة بعد نصف ثانية
       Future.delayed(const Duration(milliseconds: 300), () {
         if (mounted) {
-          setState(() {
-            _logosVisible = true;
-          });
+          setState(() => _logosVisible = true);
         }
       });
     });
-
-
   }
-
 
   @override
   void dispose() {
-    _confettiController.dispose();
     super.dispose();
   }
 
-
-  /// ✅ Generate initial logos with random properties
   void _generateLogos() {
     _logos = List.generate(10, (index) {
       return _AnimatedLogo(
         random: _random,
         logoPath: _getRandomLogo(),
-        delay: _random.nextInt(5), // ✅ Different delay for each
+        delay: _random.nextInt(5),
       );
     });
   }
 
-  /// ✅ Randomly select one of the three logos
   String _getRandomLogo() {
     List<String> logos = [
       'assets/images/DocSera-shape-main.svg',
@@ -84,21 +64,15 @@ class _WelcomePageState extends State<WelcomePage> {
     return logos[_random.nextInt(logos.length)];
   }
 
-  /// ✅ Start Animation Loop (10 sec visible → fade out → 10 sec visible → repeat)
   void _startAnimationLoop() {
     Timer.periodic(const Duration(seconds: 10), (timer) {
       if (!mounted) return;
-
-      setState(() {
-        _logosVisible = false; // ✅ Start fading out
-      });
-
+      setState(() => _logosVisible = false);
       Future.delayed(const Duration(seconds: 3), () {
         if (!mounted) return;
-
         setState(() {
-          _generateLogos(); // ✅ Generate new ones after old ones disappear
-          _logosVisible = true; // ✅ Fade new ones in
+          _generateLogos();
+          _logosVisible = true;
         });
       });
     });
@@ -106,37 +80,16 @@ class _WelcomePageState extends State<WelcomePage> {
 
   @override
   Widget build(BuildContext context) {
+    final local = AppLocalizations.of(context)!;
     return Scaffold(
       backgroundColor: AppColors.background3,
       body: Stack(
         children: [
-
-          Align(
-            alignment: Alignment.topCenter,
-            child: ConfettiWidget(
-              confettiController: _confettiController,
-              blastDirectionality: BlastDirectionality.explosive,
-              numberOfParticles: 35,
-              maximumSize: const Size(8, 8), // ✅ حجم صغير جداً
-              minimumSize: const Size(4, 4),
-              shouldLoop: false,
-              colors: [
-                AppColors.main,
-                AppColors.main.withOpacity(0.7),
-                AppColors.main.withOpacity(0.5),
-                Colors.white.withOpacity(0.6),
-              ],
-            ),
-          ),
-
-          // ✅ Animated Background Logos
           Positioned.fill(
             child: Stack(
               children: _logos.map((logo) => logo.build(context, _logosVisible)).toList(),
             ),
           ),
-
-          // ✅ Main Content
           Center(
             child: Padding(
               padding: EdgeInsets.symmetric(horizontal: 24.w),
@@ -148,31 +101,28 @@ class _WelcomePageState extends State<WelcomePage> {
                     width: 150.w,
                   ),
                   SizedBox(height: 20.h),
-
                   Text(
-                    "🎉 ${AppLocalizations.of(context)!.welcomeToDocsera} ${widget.signUpInfo.firstName}!",
+                    local.goodbyeMessage,
                     style: AppTextStyles.getTitle1(context).copyWith(
                       color: AppColors.main,
                       fontWeight: FontWeight.bold,
                     ),
                     textAlign: TextAlign.center,
                   ),
-                  SizedBox(height: 10.h),
-
+                  SizedBox(height: 12.h),
                   Text(
-                    AppLocalizations.of(context)!.welcomeMessageInfo,
+                    local.goodbyeSubtext,
                     style: AppTextStyles.getText2(context).copyWith(
                       color: AppColors.grayMain,
                     ),
                     textAlign: TextAlign.center,
                   ),
                   SizedBox(height: 50.h),
-
                   ElevatedButton(
                     onPressed: () {
                       Navigator.pushAndRemoveUntil(
                         context,
-                        fadePageRoute(CustomBottomNavigationBar()),
+                        fadePageRoute(const CustomBottomNavigationBar()),
                             (route) => false,
                       );
                     },
@@ -188,7 +138,7 @@ class _WelcomePageState extends State<WelcomePage> {
                       width: 200.w,
                       child: Center(
                         child: Text(
-                          AppLocalizations.of(context)!.goToHomepage,
+                          local.goToHomepage,
                           style: AppTextStyles.getText2(context).copyWith(
                             color: AppColors.whiteText,
                             fontSize: 11.sp,
@@ -208,8 +158,7 @@ class _WelcomePageState extends State<WelcomePage> {
   }
 }
 
-/// **🎨 Animated Logo Class**
-class _AnimatedLogo   {
+class _AnimatedLogo {
   final Random random;
   final String logoPath;
   double size;
@@ -222,13 +171,13 @@ class _AnimatedLogo   {
   int delay;
 
   _AnimatedLogo({required this.random, required this.logoPath, required this.delay})
-      : size = random.nextDouble() * 30 + 40, // ✅ أصغر: بين 40 و 80
-        opacity = random.nextDouble() * 0.5 + 0.5, // ✅ شفافية من 0.5 إلى 1
+      : size = random.nextDouble() * 30 + 40,
+        opacity = random.nextDouble() * 0.5 + 0.5,
         left = random.nextDouble() * 350,
         top = random.nextDouble() * 650,
-        moveX = random.nextDouble() * 80 - 40, // ✅ حركة أسرع (±40)
-        moveY = random.nextDouble() * 80 - 40, // ✅ حركة أسرع (±40),
-        blur = 5 + (random.nextDouble() * 10); // ✅ بلور من 5 إلى 15 حسب الحجم تقريبًا
+        moveX = random.nextDouble() * 80 - 40,
+        moveY = random.nextDouble() * 80 - 40,
+        blur = 5 + (random.nextDouble() * 10);
 
   Widget build(BuildContext context, bool isVisible) {
     return Positioned(
@@ -239,7 +188,7 @@ class _AnimatedLogo   {
         tween: Tween(begin: isVisible ? opacity : 0.0, end: isVisible ? opacity : 0.0),
         builder: (context, value, child) {
           return AnimatedContainer(
-            duration: const Duration(seconds: 8), // ✅ حركة أسرع
+            duration: const Duration(seconds: 8),
             transform: Matrix4.translationValues(moveX, moveY, 0),
             child: Opacity(
               opacity: value,

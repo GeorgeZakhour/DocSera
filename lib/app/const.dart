@@ -1,5 +1,12 @@
 import 'package:flutter/material.dart';
 
+
+class SupabaseKeys {
+  static const String supabaseUrl = 'https://fxsqfgtlkitvghwjwaeq.supabase.co';
+  static const String supabaseAnonKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZ4c3FmZ3Rsa2l0dmdod2p3YWVxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTA0MzEzOTIsImV4cCI6MjA2NjAwNzM5Mn0.6utWtX1-RRfYNMv-sJepAQj3sdjDEge0naGNJRpXgHc';
+}
+
+
 // Define your colors here
 class AppColors {
   static const Color main = Color(0xFF009092); // Dark Green color

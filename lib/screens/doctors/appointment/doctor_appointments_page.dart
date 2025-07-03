@@ -1,4 +1,3 @@
-import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:docsera/Business_Logic/Available_appointments_page/doctor_schedule_cubit.dart';
 import 'package:docsera/app/text_styles.dart';
 import 'package:docsera/models/appointment_details.dart';
@@ -32,7 +31,7 @@ class _DoctorAppointmentsPageState extends State<DoctorAppointmentsPage> {
   Map<String, List<Map<String, dynamic>>> categorizedAppointments = {};
   Set<String> expandedDates = {};
   String? selectedSlotId;
-  Timestamp? selectedTimestamp;
+  DateTime? selectedTimestamp;
   String? selectedTime;
   int maxDisplayedDates = 6;
   bool _isFetched = false; // ✅ متغير لضمان استدعاء الفيتش مرة واحدة
@@ -48,6 +47,10 @@ class _DoctorAppointmentsPageState extends State<DoctorAppointmentsPage> {
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
+    if (widget.appointmentDetails.doctorId.isEmpty) {
+      print('❌ doctorId is empty!');
+      return;
+    }
     if (!_isFetched) {
       context.read<DoctorScheduleCubit>().fetchDoctorAppointments(widget.appointmentDetails.doctorId, context);
       _isFetched = true; // ✅ منع استدعاء الفيتش أكثر من مرة
@@ -57,7 +60,7 @@ class _DoctorAppointmentsPageState extends State<DoctorAppointmentsPage> {
 
 
 
-  void _onSlotSelected(String slotId, Timestamp timestamp, String time) {
+  void _onSlotSelected(String slotId, DateTime timestamp, String time) {
     Navigator.push(
       context,
       fadePageRoute(

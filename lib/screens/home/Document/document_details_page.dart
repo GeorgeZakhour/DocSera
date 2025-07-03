@@ -1,6 +1,4 @@
-import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:docsera/screens/home/Document/edit_document_name_sheet.dart';
-import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:docsera/app/const.dart';
@@ -9,6 +7,7 @@ import 'package:docsera/models/document.dart';
 import 'package:intl/intl.dart';
 import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 
 
 class DocumentDetailsPage extends StatefulWidget {
@@ -38,6 +37,19 @@ class _DocumentDetailsPageState extends State<DocumentDetailsPage> {
     super.initState();
     documentName = widget.document.name; // نسخة قابلة للتعديل
   }
+
+  Future<Map<String, dynamic>?> _fetchUploaderInfo(String userId) async {
+    if (userId.isEmpty) return null;
+
+    final response = await Supabase.instance.client
+        .from('users')
+        .select('first_name, last_name')
+        .eq('id', userId)
+        .maybeSingle();
+
+    return response;
+  }
+
 
   @override
   Widget build(BuildContext context) {
@@ -73,19 +85,17 @@ class _DocumentDetailsPageState extends State<DocumentDetailsPage> {
             _buildRow(context, locale.nameOfTheDocument, documentName, canEdit: true),
             _buildRow(context, locale.typeOfTheDocument, localizedType),
             _buildRow(context, locale.createdAt, formattedDate),
-            FutureBuilder<DocumentSnapshot>(
-              future: widget.document.uploadedById.isNotEmpty
-                  ? FirebaseFirestore.instance.collection('users').doc(widget.document.uploadedById).get()
-                  : null,
+            FutureBuilder<Map<String, dynamic>?>(
+              future: _fetchUploaderInfo(widget.document.uploadedById),
               builder: (context, snapshot) {
-                final currentUserId = FirebaseAuth.instance.currentUser?.uid;
+                final currentUserId = Supabase.instance.client.auth.currentUser?.id;
 
                 if (snapshot.connectionState == ConnectionState.waiting) {
                   return _buildRow(context, locale.createdBy, '...');
-                } else if (snapshot.hasData && snapshot.data!.exists) {
-                  final data = snapshot.data!.data() as Map<String, dynamic>;
+                } else if (snapshot.hasData && snapshot.data != null) {
+                  final data = snapshot.data!;
                   final isCurrentUser = widget.document.uploadedById == currentUserId;
-                  final fullName = "${data['firstName'] ?? ''} ${data['lastName'] ?? ''}".trim();
+                  final fullName = "${data['first_name'] ?? ''} ${data['last_name'] ?? ''}".trim();
 
                   return _buildRowRich(
                     context,
@@ -98,6 +108,7 @@ class _DocumentDetailsPageState extends State<DocumentDetailsPage> {
                 }
               },
             ),
+
 
             _buildPatientRow(context, locale.patientConcerned, widget.document),
             SizedBox(height: 12.h),
@@ -196,12 +207,15 @@ class _DocumentDetailsPageState extends State<DocumentDetailsPage> {
                     builder: (_) => EditDocumentNameSheet(
                       initialName: documentName,
                       onConfirm: (newName) async {
-                        await FirebaseFirestore.instance
-                            .collection('users')
-                            .doc(mainUserId) // ✅ هذا هو الحساب الأساسي، وليس الـ patientId
-                            .collection('documents')
-                            .doc(widget.document.id)
-                            .update({'name': newName});
+                        await Supabase.instance.client
+                            .from('documents')
+                            .update({'name': newName})
+                            .eq('id', widget.document.id!)
+                            .eq('uploaded_by_id', mainUserId); // تأكيد أن المستخدم هو المالك
+
+                        setState(() {
+                          documentName = newName;
+                        });
                       },
                       onNameUpdated: (newName) {
                         setState(() {
@@ -211,7 +225,6 @@ class _DocumentDetailsPageState extends State<DocumentDetailsPage> {
                     ),
                   );
                 },
-
                 child: Text(
                   AppLocalizations.of(context)!.edit,
                   style: AppTextStyles.getText3(context).copyWith(
@@ -220,6 +233,8 @@ class _DocumentDetailsPageState extends State<DocumentDetailsPage> {
                   ),
                 ),
               ),
+
+
 
 
           ],
@@ -236,35 +251,38 @@ class _DocumentDetailsPageState extends State<DocumentDetailsPage> {
         SizedBox(height: 10.h),
         Text(title, style: AppTextStyles.getText3(context)),
         SizedBox(height: 6.h),
-        FutureBuilder<DocumentSnapshot>(
-          future: FirebaseFirestore.instance.collection('users').doc(doc.patientId).get(),
+        FutureBuilder(
+          future: Supabase.instance.client
+              .from('users')
+              .select('first_name, last_name')
+              .eq('id', doc.patientId)
+              .maybeSingle(),
           builder: (context, snapshot) {
             if (snapshot.connectionState == ConnectionState.waiting) {
               return _buildPatientRowUI('...', '');
-            } else if (snapshot.hasData && snapshot.data!.exists) {
-              final data = snapshot.data!.data() as Map<String, dynamic>;
-              final firstName = data['firstName'] ?? '';
-              final lastName = data['lastName'] ?? '';
+            } else if (snapshot.hasData && snapshot.data != null) {
+              final data = snapshot.data as Map<String, dynamic>;
+              final firstName = data['first_name'] ?? '';
+              final lastName = data['last_name'] ?? '';
               final fullName = "$firstName $lastName".trim();
               final avatarText = _getAvatarText(firstName, lastName);
 
               return _buildPatientRowUI(fullName, avatarText);
             } else {
-              final currentUserId = FirebaseAuth.instance.currentUser?.uid ?? '';
-              return FutureBuilder<DocumentSnapshot>(
-                future: FirebaseFirestore.instance
-                    .collection('users')
-                    .doc(currentUserId)
-                    .collection('relatives')
-                    .doc(doc.patientId)
-                    .get(),
+              // ابحث في relatives إذا لم يكن موجودًا في users
+              return FutureBuilder(
+                future: Supabase.instance.client
+                    .from('relatives')
+                    .select('first_name, last_name')
+                    .eq('id', doc.patientId)
+                    .maybeSingle(),
                 builder: (context, relativeSnapshot) {
                   if (relativeSnapshot.connectionState == ConnectionState.waiting) {
                     return _buildPatientRowUI('...', '');
-                  } else if (relativeSnapshot.hasData && relativeSnapshot.data!.exists) {
-                    final data = relativeSnapshot.data!.data() as Map<String, dynamic>;
-                    final firstName = data['firstName'] ?? '';
-                    final lastName = data['lastName'] ?? '';
+                  } else if (relativeSnapshot.hasData && relativeSnapshot.data != null) {
+                    final data = relativeSnapshot.data as Map<String, dynamic>;
+                    final firstName = data['first_name'] ?? '';
+                    final lastName = data['last_name'] ?? '';
                     final fullName = "$firstName $lastName".trim();
                     final avatarText = _getAvatarText(firstName, lastName);
 
@@ -281,6 +299,7 @@ class _DocumentDetailsPageState extends State<DocumentDetailsPage> {
       ],
     );
   }
+
 
   Widget _buildPatientRowUI(String name, String avatarText) {
     return Row(

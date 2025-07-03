@@ -1,24 +1,23 @@
 import 'dart:async';
 import 'dart:io';
-import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:docsera/Business_Logic/Authentication/auth_cubit.dart';
 import 'package:docsera/Business_Logic/Authentication/auth_state.dart';
 import 'package:docsera/main.dart';
 import 'package:docsera/models/sign_up_info.dart';
 import 'package:docsera/screens/auth/sign_up/sign_up_phone.dart';
+import 'package:docsera/screens/home/account/goodbye_page.dart';
 import 'package:docsera/screens/home/account/legal_information.dart';
 import 'package:docsera/screens/home/shimmer/shimmer_widgets.dart';
-import 'package:docsera/services/firestore/firestore_user_service.dart';
+import 'package:docsera/services/supabase/supabase_otp_service.dart';
+import 'package:docsera/services/supabase/supabase_user_service.dart';
 import 'package:docsera/utils/custom_clippers.dart';
 import 'package:docsera/utils/text_direction_utils.dart';
-import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:docsera/app/text_styles.dart'; //
 import 'package:docsera/screens/home/account/user_profile_page.dart';
 import 'package:docsera/screens/home/account/my_relatives.dart';
-import 'package:docsera/services/firestore/firestore_otp_service.dart';
 import 'package:docsera/utils/page_transitions.dart';
 import 'package:flutter/material.dart';
 import 'package:docsera/app/const.dart';
@@ -30,6 +29,7 @@ import 'package:crypto/crypto.dart';
 import '../../Business_Logic/Account_page/user_cubit.dart';
 import '../../Business_Logic/Account_page/user_state.dart';
 import 'package:package_info_plus/package_info_plus.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 
 import 'account/preferences.dart';
 
@@ -69,7 +69,7 @@ class _AccountScreenState extends State<AccountScreen> {
       final prefs = await SharedPreferences.getInstance();
       final userCubit = context.read<UserCubit>();
       await userCubit.loadUserData(context, useCache: true);
-      userCubit.startListeningToUserChanges(); // ✅ Add this
+      userCubit.startRealtimeUserListener(prefs.getString('userId') ?? '');
     });
   }
 
@@ -205,12 +205,32 @@ class _AccountScreenState extends State<AccountScreen> {
     return "00963$phone";
   }
 
+  // Future<bool> _isPhoneNumberDuplicate(String phone) async {
+  //   final String formatted = _formatPhoneForBackend(phone);
+  //   final String fakeEmail = "$formatted@docsera.com";
+  //
+  //   final response = await Supabase.instance.client
+  //       .from('users')
+  //       .select('id')
+  //       .eq('fakeEmail', fakeEmail)
+  //       .maybeSingle();
+  //
+  //   return response != null;
+  // }
+
+
   Future<bool> _isPhoneNumberDuplicate(String phone) async {
-    String formatted = _formatPhoneForBackend(phone);
-    String fakeEmail = "$formatted@docsera.com";
-    final methods = await FirebaseAuth.instance.fetchSignInMethodsForEmail(fakeEmail);
-    return methods.isNotEmpty;
+    final String formatted = _formatPhoneForBackend(phone);
+
+    final response = await Supabase.instance.client
+        .from('users')
+        .select('id')
+        .eq('phone_number', formatted)
+        .maybeSingle();
+
+    return response != null;
   }
+
 
   bool _isValidPhoneNumber(String input) {
     if (!input.startsWith('9') && !input.startsWith('09')) return false;
@@ -220,6 +240,7 @@ class _AccountScreenState extends State<AccountScreen> {
 
 
   void _showEditFieldSheet(BuildContext context, String fieldType, String currentValue, {String? customTitle}) {
+
     final state = context.read<UserCubit>().state;
     if (state is! UserLoaded) return;
 
@@ -370,7 +391,7 @@ class _AccountScreenState extends State<AccountScreen> {
                         if (fieldType == 'phoneNumber') {
                           isDuplicate = await _isPhoneNumberDuplicate(newNormalized);
                         } else {
-                          isDuplicate = await FirestoreUserService().doesUserExist(email: newRaw);
+                          isDuplicate = await SupabaseUserService().doesUserExist(email: newRaw);
                         }
 
                         setState(() => isChecking = false);
@@ -425,7 +446,7 @@ class _AccountScreenState extends State<AccountScreen> {
   }
 
   void _sendOTPAndShowSheet(BuildContext context, String newValue, String fieldType, String oldValue) async {
-    final otpService = FirestoreOTPService();
+    final otpService = SupabaseOTPService();
     String sentOTP = fieldType == 'phoneNumber'
         ? await otpService.sendOTPToPhone(newValue)
         : await otpService.sendOTPToEmail(newValue);
@@ -561,12 +582,13 @@ class _AccountScreenState extends State<AccountScreen> {
 
 
                               await context.read<UserCubit>().updateUserPhone(
+                                context,
                                 newPhoneFormatted,
                                 isVerified: true,
                               );
 
                             } else {
-                              await context.read<UserCubit>().updateUserData(fieldType, newValue, isVerified: true);
+                              await context.read<UserCubit>().updateUserData(context, fieldType, newValue, isVerified: true);
                             }
 
                           }
@@ -610,27 +632,27 @@ class _AccountScreenState extends State<AccountScreen> {
   Future<bool> _checkForDuplicate(String fieldType, String newValue) async {
     try {
       final state = context.read<UserCubit>().state;
-      if (state is! UserLoaded) return false; // ✅ Ensure user is loaded
+      if (state is! UserLoaded) return false;
 
-      print("Checking for duplicate: $fieldType - $newValue"); // ✅ Debug print
+      print("🔍 Checking for duplicate in Supabase: $fieldType - $newValue");
 
-      QuerySnapshot snapshot = await FirebaseFirestore.instance
-          .collection('users')
-          .where(fieldType, isEqualTo: newValue)
-          .get();
+      final response = await Supabase.instance.client
+          .from('users')
+          .select('id')
+          .eq(fieldType, newValue)
+          .neq('id', state.userId) // ✅ استثني المستخدم الحالي
+          .maybeSingle();
 
-      print("Found ${snapshot.docs.length} matching documents");
+      final isDuplicate = response != null;
 
-      // ✅ If there's a user with the same email/phone and it's not the current user
-      bool isDuplicate = snapshot.docs.any((doc) => doc.id != state.userId);
-
-      print("Is Duplicate: $isDuplicate");
+      print("⚠️ Is Duplicate: $isDuplicate");
       return isDuplicate;
     } catch (e) {
-      print("Error checking duplicates: $e");
+      print("❌ Supabase duplicate check error: $e");
       return false;
     }
   }
+
 
 
   ///====================================================///
@@ -832,7 +854,7 @@ class _AccountScreenState extends State<AccountScreen> {
                           return;
                         }
 
-                        await _updatePasswordFirebase(newPassword);
+                        await _updatePasswordSupabase(newPassword);
                         if (mounted) Navigator.pop(context);
                       },
                       style: ElevatedButton.styleFrom(
@@ -871,7 +893,7 @@ class _AccountScreenState extends State<AccountScreen> {
     final formattedPhone = _formatPhoneForBackend(phone);
 
 
-    final otpService = FirestoreOTPService();
+    final otpService = SupabaseOTPService();
     await otpService.sendOTPToPhone(formattedPhone);
 
     final TextEditingController otpController = TextEditingController();
@@ -939,7 +961,7 @@ class _AccountScreenState extends State<AccountScreen> {
                     SizedBox(height: 16.h),
                     ElevatedButton(
                       onPressed: () async {
-                        bool isValid = await otpService.validateOTP(phone, otpController.text.trim());
+                        bool isValid = await otpService.validateOTP(formattedPhone, otpController.text.trim());
                         if (isValid) {
                           resendTimer?.cancel();
                           Navigator.pop(context); // ✅ أغلق شيت OTP
@@ -1042,7 +1064,9 @@ class _AccountScreenState extends State<AccountScreen> {
                           : () async {
                         setState(() => isUpdating = true);
                         try {
-                          await FirebaseAuth.instance.currentUser?.updatePassword(pass1.text.trim());
+                          await Supabase.instance.client.auth.updateUser(
+                            UserAttributes(password: pass1.text.trim()),
+                          );
                           Navigator.pop(context);
                           ScaffoldMessenger.of(context).showSnackBar(
                             SnackBar(
@@ -1085,28 +1109,31 @@ class _AccountScreenState extends State<AccountScreen> {
       final state = context.read<UserCubit>().state;
       if (state is! UserLoaded) return false;
 
-      final user = FirebaseAuth.instance.currentUser;
-      if (user == null) return false;
+      final email = state.userEmail;
+      if (email == null || email.isEmpty) return false;
 
-      final credential = EmailAuthProvider.credential(
-        email: state.userFakeEmail,
+      final res = await Supabase.instance.client.auth.signInWithPassword(
+        email: email,
         password: currentPassword,
       );
 
-      await user.reauthenticateWithCredential(credential);
-      return true;
+      return res.user != null;
+    } on AuthException catch (e) {
+      print("❌ Re-authentication failed: ${e.message}");
+      return false;
     } catch (e) {
       print("❌ Re-authentication failed: $e");
       return false;
     }
   }
 
-  Future<void> _updatePasswordFirebase(String newPassword) async {
-    try {
-      final user = FirebaseAuth.instance.currentUser;
-      if (user == null) return;
 
-      await user.updatePassword(newPassword);
+  Future<void> _updatePasswordSupabase(String newPassword) async {
+    try {
+      await Supabase.instance.client.auth.updateUser(
+        UserAttributes(password: newPassword),
+      );
+
       print("✅ Password updated successfully");
 
       ScaffoldMessenger.of(context).showSnackBar(
@@ -1365,7 +1392,7 @@ class _AccountScreenState extends State<AccountScreen> {
               SizedBox(height: 20.h),
               ElevatedButton(
                 onPressed: () async {
-                  final userId = (context.read<AuthCubit>().state as AuthAuthenticated).user.uid;
+                  final userId = (context.read<AuthCubit>().state as AuthAuthenticated).user.id;
                   final newValue = !is2FAEnabled;
 
                   if (!newValue) {
@@ -1424,10 +1451,11 @@ class _AccountScreenState extends State<AccountScreen> {
                     if (confirm != true) return;
                   }
 
-                  await FirebaseFirestore.instance
-                      .collection('users')
-                      .doc(userId)
-                      .update({'twoFactorAuthEnabled': newValue});
+                  await Supabase.instance.client
+                      .from('users')
+                      .update({'two_factor_auth_enabled': newValue})
+                      .eq('id', userId);
+
 
                   Navigator.pop(context);
                   await context.read<UserCubit>().loadUserData(context, useCache: false);
@@ -1508,26 +1536,37 @@ class _AccountScreenState extends State<AccountScreen> {
                 ),
               ),
               TextButton(
+
                 onPressed: () async {
                   Navigator.pop(context); // إغلاق الشيت
 
-                  final user = FirebaseAuth.instance.currentUser;
-                  final userId = user?.uid;
+                  final user = Supabase.instance.client.auth.currentUser;
+                  final userId = user?.id;
 
                   String? phone;
                   String? email;
 
                   if (userId != null) {
-                    // ✅ جلب بيانات Firestore
-                    final userDoc = await FirebaseFirestore.instance.collection('users').doc(userId).get();
-                    phone = userDoc.data()?['phoneNumber']?.toString();
-                    email = userDoc.data()?['email']?.toString();
+                    // ✅ جلب بيانات Supabase
+                    final data = await Supabase.instance.client
+                        .from('users')
+                        .select('phone_number, email')
+                        .eq('id', userId)
+                        .maybeSingle();
+
+                    if (data == null) {
+                      print("❌ No user data found.");
+                      return;
+                    }
+
+                    phone = data['phone_number']?.toString();
+                    email = data['email']?.toString();
 
                     print("🧾 [DEBUG] userId: $userId");
-                    print("📞 [DEBUG] phone from Firestore: $phone");
-                    print("📧 [DEBUG] email from Firestore: $email");
+                    print("📞 [DEBUG] phone from Supabase: $phone");
+                    print("📧 [DEBUG] email from Supabase: $email");
 
-                    final service = FirestoreUserService();
+                    final service = SupabaseUserService();
 
                     showDialog(
                       context: context,
@@ -1537,7 +1576,11 @@ class _AccountScreenState extends State<AccountScreen> {
 
                     try {
                       await service.deleteUserAccount(userId, phoneNumber: phone, email: email);
-                      Navigator.popUntil(context, (route) => route.isFirst);
+                      Navigator.pushAndRemoveUntil(
+                        context,
+                        fadePageRoute(const GoodbyePage()),
+                            (route) => false,
+                      );
                     } catch (e) {
                       Navigator.pop(context);
                       ScaffoldMessenger.of(context).showSnackBar(
@@ -1555,6 +1598,8 @@ class _AccountScreenState extends State<AccountScreen> {
                   ),
                 ),
               ),
+
+
 
             ],
           ),

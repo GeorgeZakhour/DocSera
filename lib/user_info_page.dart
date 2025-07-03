@@ -14,7 +14,7 @@ class UserInfoPage extends StatelessWidget {
         "Name": "${userData['firstName'] ?? "Not Provided"} ${userData['lastName'] ?? ""}"
       },
       {"Email": userData['email'] ?? "Not Provided"},
-      {"Phone": userData['phoneNumber'] ?? "Not Provided"},
+      {"Phone": userData['phone_number'] ?? "Not Provided"},
       {"Gender": userData['gender'] ?? "Not Specified"},
       {"Date of Birth": userData['dateOfBirth'] ?? "Not Provided"},
       if (userData['role'] == 'Doctor') ...[

@@ -1,10 +1,8 @@
-import 'package:cloud_firestore/cloud_firestore.dart';
-
 class UserDocument {
-  final String id;
+  final String? id; // صار nullable لأنو ما رح تنشأه قبل الإدراج
   final String name;
   final String type;
-  final String fileType; // 'pdf' أو 'image'
+  final String fileType;
   final String patientId;
   final String previewUrl;
   final List<String> pages;
@@ -14,7 +12,7 @@ class UserDocument {
   final String? conversationDoctorName;
 
   UserDocument({
-    required this.id,
+    this.id,
     required this.name,
     required this.type,
     required this.fileType,
@@ -27,26 +25,19 @@ class UserDocument {
     this.conversationDoctorName,
   });
 
-  factory UserDocument.fromFirestore(DocumentSnapshot doc) {
-    final data = doc.data() as Map<String, dynamic>;
-    return UserDocument.fromMap(doc.id, data);
-  }
-
-  factory UserDocument.fromMap(String id, Map<String, dynamic> data) {
+  factory UserDocument.fromMap(Map<String, dynamic> data) {
     return UserDocument(
-      id: id,
+      id: data['id']?.toString(),
       name: data['name'] ?? '',
       type: data['type'] ?? '',
-      fileType: data['fileType'] ?? '',
-      patientId: data['patientId'] ?? '',
-      previewUrl: data['previewUrl'] ?? '',
+      fileType: data['file_type'] ?? '',
+      patientId: data['patient_id'] ?? '',
+      previewUrl: data['preview_url'] ?? '',
       pages: List<String>.from(data['pages'] ?? []),
-      uploadedAt: (data['uploadedAt'] is Timestamp)
-          ? (data['uploadedAt'] as Timestamp).toDate()
-          : DateTime.parse(data['uploadedAt']),
-      uploadedById: data['uploadedById'] ?? '',
-      cameFromConversation: data['cameFromConversation'] ?? false,
-      conversationDoctorName: data['conversationDoctorName'],
+      uploadedAt: DateTime.parse(data['uploaded_at']),
+      uploadedById: data['uploaded_by_id'] ?? '',
+      cameFromConversation: data['came_from_conversation'] ?? false,
+      conversationDoctorName: data['conversation_doctor_name'],
     );
   }
 
@@ -54,14 +45,15 @@ class UserDocument {
     return {
       'name': name,
       'type': type,
-      'fileType': fileType,
-      'patientId': patientId,
-      'previewUrl': previewUrl,
+      'file_type': fileType,
+      'patient_id': patientId,
+      'preview_url': previewUrl,
       'pages': pages,
-      'uploadedAt': Timestamp.fromDate(uploadedAt),
-      'uploadedById': uploadedById,
-      'cameFromConversation': cameFromConversation,
-      if (conversationDoctorName != null) 'conversationDoctorName': conversationDoctorName,
+      'uploaded_at': uploadedAt.toIso8601String(),
+      'uploaded_by_id': uploadedById,
+      'came_from_conversation': cameFromConversation,
+      if (conversationDoctorName != null)
+        'conversation_doctor_name': conversationDoctorName,
     };
   }
 

@@ -1,7 +1,7 @@
-import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:docsera/app/const.dart';
 import 'package:docsera/widgets/base_scaffold.dart';
 import 'package:flutter/material.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 
 class PatientProfilePage extends StatelessWidget {
   final String doctorId;
@@ -13,17 +13,18 @@ class PatientProfilePage extends StatelessWidget {
   Widget build(BuildContext context) {
     return BaseScaffold(
       title: Text("Patient Profile", style: TextStyle(color: AppColors.whiteText, fontSize: 16, fontWeight: FontWeight.bold)),
-      child: FutureBuilder<DocumentSnapshot>(
-        future: FirebaseFirestore.instance
-            .collection('doctors')
-            .doc(doctorId)
-            .collection('patients')
-            .doc(patientId)
-            .get(),
+      child: FutureBuilder(
+        future: Supabase.instance.client
+            .from('patients')
+            .select()
+            .eq('doctorId', doctorId)
+            .eq('id', patientId)
+            .maybeSingle(),
         builder: (context, snapshot) {
           if (!snapshot.hasData) return const Center(child: CircularProgressIndicator());
+          if (snapshot.data == null) return const Center(child: Text('Patient not found'));
 
-          var data = snapshot.data!.data() as Map<String, dynamic>;
+          var data = snapshot.data as Map<String, dynamic>;
           List visits = data['visits'] ?? [];
 
           return SingleChildScrollView(
@@ -59,7 +60,7 @@ class PatientProfilePage extends StatelessWidget {
                         _infoRow("Gender", data['userGender'] ?? "Unknown"),
                         _infoRow("Age", data['userAge']?.toString() ?? "Unknown"),
                         _infoRow("Date of Birth", data['dateOfBirth'] ?? "Unknown"),
-                        _infoRow("Phone Number", data['phoneNumber'] ?? "Unknown"),
+                        _infoRow("Phone Number", data['phone_number'] ?? "Unknown"),
                         _infoRow("Email", data['email'] ?? "Unknown"),
                         _infoRow("Number of Visits", visits.length.toString()),
                       ],

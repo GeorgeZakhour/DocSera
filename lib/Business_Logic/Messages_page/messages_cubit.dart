@@ -1,8 +1,7 @@
 import 'dart:async';
-import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter/widgets.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 import 'messages_state.dart';
 import '../Authentication/auth_cubit.dart';
 import '../Authentication/auth_state.dart';
@@ -11,7 +10,9 @@ import '../../models/conversation.dart';
 class MessagesCubit extends Cubit<MessagesState> {
   MessagesCubit() : super(MessagesLoading());
 
-  StreamSubscription<QuerySnapshot>? _subscription;
+  RealtimeChannel? _realtimeChannel;
+  final SupabaseClient _supabase = Supabase.instance.client;
+
 
   /// ✅ تحميل المحادثات من Firestore باستخدام AuthCubit
   void loadMessages(BuildContext context) {
@@ -22,11 +23,12 @@ class MessagesCubit extends Cubit<MessagesState> {
       return;
     }
 
-    final userId = authState.user.uid;
-    _listenToConversations(userId);
+    final userId = authState.user.id;
+    _fetchConversations(userId);
+    _startRealtimeListener(userId);
   }
 
-  Future<void> startConversation({
+  Future<String?> startConversation({
     required String patientId,
     required String doctorId,
     required String message,
@@ -38,136 +40,164 @@ class MessagesCubit extends Cubit<MessagesState> {
     required String selectedReason,
   }) async {
     try {
-      final convoRef = FirebaseFirestore.instance.collection('conversations');
+      final existing = await _supabase
+          .from('conversations')
+          .select()
+          .eq('patient_id', patientId)
+          .eq('doctor_id', doctorId)
+          .maybeSingle();
 
-      final existingQuery = await convoRef
-          .where('patientId', isEqualTo: patientId)
-          .where('doctorId', isEqualTo: doctorId)
-          .limit(1)
-          .get();
+      final now = DateTime.now().toUtc();
 
-      final messageData = {
-        'senderId': patientId,
-        'text': message,
-        'timestamp': FieldValue.serverTimestamp(),
-        'isSeen': false,
-        'senderName': patientName,
-        'isUser': true,
-      };
+      if (existing != null) {
+        final convoId = existing['id'] as String;
 
-      DocumentReference convoDoc;
-
-      if (existingQuery.docs.isNotEmpty) {
-        convoDoc = existingQuery.docs.first.reference;
-
-        final msgRef = await convoDoc.collection('messages').add(messageData);
-        final msgSnapshot = await msgRef.get();
-        final actualTimestamp = (msgSnapshot['timestamp'] as Timestamp).toDate();
-
-        await convoDoc.update({
-          'lastMessage': message,
-          'lastSenderId': patientId,
-          'updatedAt': actualTimestamp,
-          'doctorName': doctorName,
-          'doctorSpecialty': doctorSpecialty,
-          'doctorImage': doctorImage,
-          'isClosed': false,
-          'patientName': patientName,
-          'accountHolderName': accountHolderName,
-          'selectedReason': selectedReason,
+        await _supabase.from('messages').insert({
+          'conversation_id': convoId,
+          'sender_name': patientName,
+          'text': message,
+          'is_user': true,
+          'timestamp': now.toIso8601String(),
         });
+
+        await _supabase.from('conversations').update({
+          'last_message': message,
+          'last_sender_id': patientId,
+          'updated_at': now.toIso8601String(),
+          'doctor_name': doctorName,
+          'doctor_specialty': doctorSpecialty,
+          'doctor_image': doctorImage,
+          'is_closed': false,
+          'patient_name': patientName,
+          'account_holder_name': accountHolderName,
+          'selected_reason': selectedReason,
+          'unread_count_for_doctor': (existing['unread_count_for_doctor'] ?? 0) + 1,
+        }).eq('id', convoId);
+
+        return convoId; // ✅ رجّع الـ id الموجود
       } else {
-        convoDoc = await convoRef.add({
-          'patientId': patientId,
-          'doctorId': doctorId,
-          'participants': [FirebaseAuth.instance.currentUser!.uid, patientId, doctorId],
-          'lastMessage': message,
-          'lastSenderId': patientId,
-          'updatedAt': DateTime.now(), // مؤقتًا
-          'doctorName': doctorName,
-          'doctorSpecialty': doctorSpecialty,
-          'doctorImage': doctorImage,
-          'isClosed': false,
-          'patientName': patientName,
-          'accountHolderName': accountHolderName,
-          'selectedReason': selectedReason,
-          'unreadCountForDoctor': 1,
+        final authState = Supabase.instance.client.auth.currentUser;
+        final userId = authState?.id ?? patientId;
+
+        final convoInsert = await _supabase.from('conversations').insert({
+          'doctor_id': doctorId,
+          'patient_id': patientId,
+          'participants': [patientId, doctorId, userId],
+          'last_message': message,
+          'last_sender_id': patientId,
+          'updated_at': now.toIso8601String(),
+          'doctor_name': doctorName,
+          'doctor_specialty': doctorSpecialty,
+          'doctor_image': doctorImage,
+          'is_closed': false,
+          'patient_name': patientName,
+          'account_holder_name': accountHolderName,
+          'selected_reason': selectedReason,
+          'unread_count_for_doctor': 1,
+        }).select('id').single();
+
+        final convoId = convoInsert['id'] as String;
+
+        await _supabase.from('messages').insert({
+          'conversation_id': convoId,
+          'sender_name': patientName,
+          'text': message,
+          'is_user': true,
+          'timestamp': now.toIso8601String(),
         });
 
-
-        final msgRef = await convoDoc.collection('messages').add(messageData);
-        final msgSnapshot = await msgRef.get();
-        final actualTimestamp = (msgSnapshot['timestamp'] as Timestamp).toDate();
-
-        await convoDoc.update({
-          'updatedAt': actualTimestamp,
-        });
+        return convoId; // ✅ رجّع الـ id الجديد
       }
     } catch (e) {
       print("❌ Failed to start conversation: $e");
       emit(MessagesError("حدث خطأ أثناء إرسال الرسالة"));
+      return null; // لو صار خطأ
     }
   }
 
 
-
-  /// ✅ الاستماع إلى جميع المحادثات الخاصة بالمستخدم الحالي
-  void _listenToConversations(String userId) {
+  void _fetchConversations(String userId) async {
     emit(MessagesLoading());
-    _subscription?.cancel();
 
-    _subscription = FirebaseFirestore.instance
-        .collection('conversations')
-        .where('participants', arrayContains: userId)
-        .orderBy('updatedAt', descending: true)
-        .snapshots()
-        .listen((snapshot) {
-      final List<Future<Conversation>> futures = [];
+    try {
+      final response = await _supabase
+          .from('conversations')
+          .select('*, messages!messages_conversation_id_fkey(*)')
+          .contains('participants', [userId])
+          .order('updated_at', ascending: false);
 
-      for (final doc in snapshot.docs) {
-        final baseConvo = Conversation.fromFirestore(doc);
-        final unreadCount = doc.data().containsKey('unreadCountForUser')
-            ? doc['unreadCountForUser']
-            : 0;
-        final convoWithUnread = baseConvo.copyWith(unreadCountForUser: unreadCount);
+      final List<Conversation> conversations = [];
 
+      for (final convo in response) {
+          final base = Conversation.fromMap(convo['id'], convo);
+          final unread = convo['unread_count_for_user'] ?? 0;
 
-        futures.add(
-          doc.reference
-              .collection('messages')
-              .orderBy('timestamp', descending: true)
-              .limit(1)
-              .get()
-              .then((msgSnapshot) {
-            final messages = <Map<String, dynamic>>[];
+          final List messagesList = (convo['messages'] ?? [])..sort(
+                (a, b) => DateTime.parse(b['timestamp']).compareTo(DateTime.parse(a['timestamp'])),
+          );
 
-            if (msgSnapshot.docs.isNotEmpty) {
-              final data = msgSnapshot.docs.first.data();
-              messages.add({
-                'text': data['text'],
-                'timestamp': (data['timestamp'] as Timestamp?)?.toDate(),
-                'senderId': data['senderId'],
-                'readByUser': data['readByUser'] ?? false,
-                'isUser': data['isUser'] ?? false,
-              });
-            }
+          // print("📬 الرسائل بعد الترتيب:");
+          // for (var msg in messagesList) {
+          //   print("↪️ ${msg['text']} @ ${msg['timestamp']}");
+          // }
 
-            return convoWithUnread.copyWith(messages: messages);
-          }),
-        );
+          final messages = <Map<String, dynamic>>[];
+
+          if (messagesList.isNotEmpty) {
+            final latest = messagesList.first;
+            // print("↪️ $latest");
+
+            messages.insert(0, {
+              'id': latest['id'], // ✅ أضف هذا السطر
+              'text': latest['text'] ?? (latest['file_url'] != null ? '📎 ملف مرفق' : ''),
+              'timestamp': DateTime.tryParse(latest['timestamp'] ?? ''),
+              'senderId': latest['sender_id'],
+              'readByUser': latest['read_by_user'] ?? false,
+              'isUser': latest['is_user'] ?? false,
+            });
+
+          }
+
+          conversations.add(base.copyWith(
+            unreadCountForUser: unread,
+            messages: messages,
+            lastMessage: messages.isNotEmpty
+                ? (messages.first['text'].toString().isNotEmpty
+                ? messages.first['text']
+                : '📎 ملف مرفق')
+                : (base.lastMessage ?? ''),
+          ));
       }
 
-      Future.wait(futures).then((loadedConversations) {
-        emit(MessagesLoaded(loadedConversations));
-      });
-    }, onError: (e) {
-      emit(MessagesError("Failed to load messages: $e"));
-    });
+
+      emit(MessagesLoaded(conversations));
+    } catch (e) {
+      emit(MessagesError("فشل تحميل الرسائل: $e"));
+    }
   }
+
+  /// ✅ الاستماع إلى جميع المحادثات الخاصة بالمستخدم الحالي
+  void _startRealtimeListener(String userId) {
+    _realtimeChannel?.unsubscribe();
+
+    _realtimeChannel = _supabase
+        .channel('public:messages')
+        .onPostgresChanges(
+      event: PostgresChangeEvent.insert,
+      schema: 'public',
+      table: 'messages',
+      callback: (payload) {
+        print("📩 رسالة جديدة للمستخدم");
+        _fetchConversations(userId); // إعادة تحميل المحادثات وتصفية محليًا
+      },
+    )
+        .subscribe();
+  }
+
 
   @override
   Future<void> close() {
-    _subscription?.cancel();
+    _realtimeChannel?.unsubscribe();
     return super.close();
   }
 }

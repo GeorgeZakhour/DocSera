@@ -34,7 +34,7 @@ class DoctorDrawer extends StatelessWidget {
             "Messages",
             context,
             BlocProvider(
-              create: (_) => DoctorMessagesCubit(doctorId: doctorData?['id'])..loadDoctorMessages(),
+              create: (_) => DoctorMessagesCubit(doctorId: doctorData?['id']),
               child: DoctorMessagesPage(doctorData: doctorData),
             ),
           ),

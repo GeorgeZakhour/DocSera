@@ -1,13 +1,13 @@
 import 'package:docsera/app/const.dart';
 import 'package:docsera/utils/text_direction_utils.dart';
 import 'package:crypto/crypto.dart'; // For hashing
-import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:docsera/screens/doctors/doctor_panel/doctor_dashboard.dart';
 import 'dart:convert'; // For utf8 encoding
 import 'package:flutter/material.dart';
 import 'package:docsera/widgets/base_scaffold.dart';
 import 'package:docsera/utils/page_transitions.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 
 class DoctorLoginPage extends StatefulWidget {
   const DoctorLoginPage({super.key});
@@ -39,47 +39,34 @@ class _DoctorLoginPageState extends State<DoctorLoginPage> {
       final input = _inputController.text.trim();
       final hashedPassword = _hashPassword(_passwordController.text);
 
-      // ✅ Fetch doctor from Firestore (email or phone number)
-      QuerySnapshot doctorQuery = await FirebaseFirestore.instance
-          .collection('doctors')
-          .where('email', isEqualTo: input)
-          .limit(1)
-          .get();
+      // ✅ جلب بيانات الطبيب من Supabase عبر الإيميل أو رقم الهاتف
+      final response = await Supabase.instance.client
+          .from('doctors')
+          .select()
+          .or('email.eq.$input,phone_number.eq.$input')
+          .limit(1);
 
-      if (doctorQuery.docs.isEmpty) {
-        // If no doctor found with email, try phone number
-        doctorQuery = await FirebaseFirestore.instance
-            .collection('doctors')
-            .where('phoneNumber', isEqualTo: input)
-            .limit(1)
-            .get();
-      }
-
-      if (doctorQuery.docs.isNotEmpty) {
-        final doctorDoc = doctorQuery.docs.first;
-        final doctorData = doctorDoc.data() as Map<String, dynamic>;
-
+      if (response.isNotEmpty) {
+        final doctorData = response.first;
         final storedPassword = doctorData['password']?.toString();
-        final inputPassword = hashedPassword.toString();
 
-        if (storedPassword == inputPassword) {
-          // ✅ Save doctor info in SharedPreferences
-          SharedPreferences prefs = await SharedPreferences.getInstance();
+        if (storedPassword == hashedPassword) {
+          // ✅ حفظ بيانات الطبيب في SharedPreferences
+          final prefs = await SharedPreferences.getInstance();
           await prefs.setBool('isDoctorLoggedIn', true);
-          await prefs.setString('doctorId', doctorDoc.id); // 🔥 Store Doctor ID
-          await prefs.setString('doctorName', '${doctorData['firstName']} ${doctorData['lastName']}');
+          await prefs.setString('doctorId', doctorData['id']);
+          await prefs.setString('doctorName', '${doctorData['first_name']} ${doctorData['last_name']}');
           await prefs.setString('doctorEmail', doctorData['email'] ?? 'Not provided');
-          await prefs.setString('doctorPhone', doctorData['phoneNumber']?.toString() ?? 'Not provided');
+          await prefs.setString('doctorPhone', doctorData['phone_number'] ?? 'Not provided');
 
-          print("✅ Doctor ID stored in SharedPreferences: ${doctorDoc.id}");
+          print("✅ Doctor ID stored in SharedPreferences: ${doctorData['id']}");
 
-          // ✅ Navigate to `DoctorPanel` Instead of `DoctorDashboard`
+          // ✅ الانتقال إلى لوحة التحكم
           Navigator.pushAndRemoveUntil(
             context,
-            fadePageRoute(DoctorDashboard(doctorData: doctorData)), // ✅ Navigate to DoctorDashboard
-                (route) => false, // Remove previous pages
+            fadePageRoute(DoctorDashboard(doctorData: doctorData)),
+                (route) => false,
           );
-
         } else {
           print("❌ Password Mismatch! Login Failed.");
           setState(() {

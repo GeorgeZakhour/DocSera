@@ -1,6 +1,5 @@
 import 'package:docsera/models/document.dart';
 import 'package:docsera/screens/doctors/doctor_profile_page.dart';
-import 'package:docsera/screens/home/messages/conversation_page.dart';
 import 'package:docsera/utils/page_transitions.dart';
 import 'package:docsera/widgets/base_scaffold.dart';
 import 'package:flutter_gen/gen_l10n/app_localizations.dart';
@@ -8,10 +7,9 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:docsera/app/text_styles.dart'; //
 import 'package:flutter/material.dart';
 import 'package:docsera/app/const.dart';
-import 'package:docsera/services/firestore/firestore_search_service.dart';
-import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:firebase_auth/firebase_auth.dart';
+import 'package:docsera/services/supabase/supabase_search_service.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 
 import 'home/messages/message_select_patient.dart';
 
@@ -31,7 +29,7 @@ class SearchPage extends StatefulWidget {
 
 class _SearchPageState extends State<SearchPage> {
   final TextEditingController _searchController = TextEditingController();
-  final FirestoreSearchService _searchService = FirestoreSearchService();
+  final SupabaseSearchService _searchService = SupabaseSearchService();
   List<Map<String, dynamic>> _searchResults = [];
   List<Map<String, dynamic>> _favoriteDoctors = [];
   final FocusNode _focusNode = FocusNode();
@@ -62,9 +60,9 @@ class _SearchPageState extends State<SearchPage> {
 
   /// **Retrieve the logged-in user ID**
   void _loadUserId() async {
-    User? user = FirebaseAuth.instance.currentUser;
+    User? user = Supabase.instance.client.auth.currentUser;
     if (user != null) {
-      setState(() => _userId = user.uid);
+      setState(() => _userId = user.id);
       _fetchFavoriteDoctors(); // Load favorite doctors once we have the user ID
     }
   }
@@ -72,28 +70,27 @@ class _SearchPageState extends State<SearchPage> {
   /// **Fetch favorite doctors from Firestore**
   Future<void> _fetchFavoriteDoctors() async {
     try {
-      // 🔹 Try getting user ID from SharedPreferences first
+      // 🔹 جلب userId من SharedPreferences أولًا
       SharedPreferences prefs = await SharedPreferences.getInstance();
       String? userId = prefs.getString('userId');
 
-      // 🔹 If user ID is still null, try FirebaseAuth as a fallback
-      userId ??= FirebaseAuth.instance.currentUser?.uid;
+      // 🔹 إذا كان null، جرب من Supabase
+      userId ??= Supabase.instance.client.auth.currentUser?.id;
 
       if (userId == null) {
         print("❌ No user logged in! Cannot fetch favorites.");
         return;
       }
 
-      print("🔥 Fetching favorites for User ID: $userId");
+      print("🟢 Fetching favorites for User ID: $userId");
 
-      DocumentSnapshot userDoc = await FirebaseFirestore.instance.collection('users').doc(userId).get();
+      final response = await Supabase.instance.client
+          .from('users')
+          .select('favorites')
+          .eq('id', userId)
+          .single();
 
-      if (!userDoc.exists) {
-        print("❌ User document not found in Firestore.");
-        return;
-      }
-
-      List<dynamic>? favorites = userDoc['favorites'];
+      final favorites = response['favorites'] as List<dynamic>?;
 
       if (favorites == null || favorites.isEmpty) {
         print("❌ No favorite doctors found!");
@@ -105,25 +102,13 @@ class _SearchPageState extends State<SearchPage> {
 
       print("⭐ Favorite Doctor IDs: $favorites");
 
-      // ✅ Fetch doctors in parallel with `Future.wait`
-      List<Map<String, dynamic>> fetchedDoctors = [];
+      final doctorsResponse = await Supabase.instance.client
+          .from('doctors')
+          .select()
+          .inFilter('id', favorites);
 
-      await Future.wait(favorites.map((docId) async {
-        try {
-          DocumentSnapshot doc = await FirebaseFirestore.instance.collection('doctors').doc(docId).get();
-          if (doc.exists) {
-            fetchedDoctors.add(doc.data() as Map<String, dynamic>);
-          } else {
-            print("⚠️ Doctor ID $docId not found in Firestore.");
-          }
-        } catch (e) {
-          print("❌ Error fetching doctor ID $docId: $e");
-        }
-      }));
-
-      // ✅ Update state **only once** for better performance
       setState(() {
-        _favoriteDoctors = fetchedDoctors;
+        _favoriteDoctors = List<Map<String, dynamic>>.from(doctorsResponse);
       });
 
       print("✅ Total Favorite Doctors Loaded: ${_favoriteDoctors.length}");
@@ -313,7 +298,7 @@ class _SearchPageState extends State<SearchPage> {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
-            "${doctor['title']} ${doctor['firstName']} ${doctor['lastName']}".trim(),
+            "${doctor['title']} ${doctor['first_name']} ${doctor['last_name']}".trim(),
             style: AppTextStyles.getText2(context).copyWith(
               fontWeight: FontWeight.bold,
               color: AppColors.mainDark,
@@ -365,7 +350,7 @@ class _SearchPageState extends State<SearchPage> {
           Navigator.push(context, fadePageRoute(
             SelectPatientForMessagePage(
               doctorId: doctor['id'],
-              doctorName: "${doctor['title']} ${doctor['firstName']} ${doctor['lastName']}",
+              doctorName: "${doctor['title']} ${doctor['first_name']} ${doctor['last_name']}",
               doctorGender: doctor['gender'],
               doctorTitle: doctor['title'],
               specialty: doctor['specialty'],

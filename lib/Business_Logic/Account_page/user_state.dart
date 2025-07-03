@@ -17,8 +17,7 @@ class UserLoading extends UserState {}
 class UserLoaded extends UserState {
   final String userId;
   final String userName;
-  final String? userEmail;
-  final String userFakeEmail;
+  final String userEmail;
   final String userPhone;
   final bool isPhoneVerified;
   final bool isEmailVerified;
@@ -29,7 +28,6 @@ class UserLoaded extends UserState {
     required this.userId,
     required this.userName,
     required this.userEmail,
-    required this.userFakeEmail,
     required this.userPhone,
     required this.isPhoneVerified,
     required this.isEmailVerified,
@@ -54,7 +52,6 @@ class UserLoaded extends UserState {
       userId: userId ?? this.userId,
       userName: userName ?? this.userName,
       userEmail: userEmail ?? this.userEmail,
-      userFakeEmail: userFakeEmail ?? this.userFakeEmail,
       userPhone: userPhone ?? this.userPhone,
       isPhoneVerified: isPhoneVerified ?? this.isPhoneVerified,
       isEmailVerified: isEmailVerified ?? this.isEmailVerified,

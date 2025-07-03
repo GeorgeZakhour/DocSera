@@ -1,12 +1,14 @@
-import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:docsera/app/text_styles.dart';
 import 'package:docsera/utils/text_direction_utils.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:docsera/app/const.dart';
 import 'package:intl/intl.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:flutter_gen/gen_l10n/app_localizations.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
+import 'dart:ui';
 
 
 class EditProfilePage extends StatefulWidget {
@@ -18,16 +20,17 @@ class EditProfilePage extends StatefulWidget {
 
 class _EditProfilePageState extends State<EditProfilePage> {
   final _formKey = GlobalKey<FormState>();
-
   String userId = "";
   String gender = "";
   String country = "";
   bool isFormValid = false;
+  final arabicNameRegex = RegExp(r'^[\u0600-\u06FF\s]{2,}$');
 
-  final List<String> genderOptions = ["Male", "Female"];
+  final List<String> genderOptions = ["ذكر", "أنثى"];
+
   final List<String> cityOptions = [
-    "Damascus", "Aleppo", "Homs", "Hama", "Latakia", "Deir ez-Zor",
-    "Raqqa", "Idlib", "Daraa", "Tartus", "Al-Hasakah", "Qamishli", "Suwayda"
+    "دمشق", "حلب", "حمص", "حماة", "اللاذقية", "دير الزور",
+    "الرقة", "إدلب", "درعا", "طرطوس", "الحسكة", "القامشلي", "السويداء"
   ];
 
   // Controllers for form fields
@@ -67,19 +70,24 @@ class _EditProfilePageState extends State<EditProfilePage> {
     }
   }
 
-  /// ✅ Fetch user data from Firestore and populate fields
+  /// ✅ Fetch user data from Supabase and populate fields
   void _fetchUserData() async {
     if (userId.isEmpty) return;
 
-    DocumentSnapshot docSnapshot = await FirebaseFirestore.instance.collection('users').doc(userId).get();
+    final supabase = Supabase.instance.client;
+    final response = await supabase
+        .from('users')
+        .select()
+        .eq('id', userId)
+        .single();
 
-    if (docSnapshot.exists) {
-      Map<String, dynamic> userData = docSnapshot.data() as Map<String, dynamic>;
+    if (response.isNotEmpty) {
+      final userData = response;
       setState(() {
         gender = userData['gender'] ?? "";
-        firstNameController.text = userData['firstName'] ?? "";
-        lastNameController.text = userData['lastName'] ?? "";
-        dateOfBirthController.text = userData['dateOfBirth'] ?? "";
+        firstNameController.text = userData['first_name'] ?? "";
+        lastNameController.text = userData['last_name'] ?? "";
+        dateOfBirthController.text = _formatDate(userData['date_of_birth']);
         streetController.text = userData['address']?['street'] ?? "";
         buildingNrController.text = userData['address']?['buildingNr'] ?? "";
         cityController.text = userData['address']?['city'] ?? "";
@@ -89,12 +97,22 @@ class _EditProfilePageState extends State<EditProfilePage> {
     }
   }
 
-  /// ✅ Save updated user data to Firestore
-  /// ✅ Save updated user data to Firestore
+
+  String _formatDate(String? isoDate) {
+    if (isoDate == null) return "";
+    try {
+      final date = DateTime.parse(isoDate);
+      return DateFormat('dd.MM.yyyy').format(date);
+    } catch (_) {
+      return "";
+    }
+  }
+
+
+  /// ✅ Save updated user data to Supabase
   void _saveProfile() async {
     if (!_formKey.currentState!.validate()) return;
 
-    // ✅ Check if building number is alone
     if (buildingNrController.text.isNotEmpty &&
         (streetController.text.isEmpty ||
             cityController.text.isEmpty ||
@@ -108,31 +126,46 @@ class _EditProfilePageState extends State<EditProfilePage> {
       return;
     }
 
+    final supabase = Supabase.instance.client;
+
     try {
-      await FirebaseFirestore.instance.collection('users').doc(userId).update({
+      await supabase
+          .from('users')
+          .update({
         'gender': gender,
-        'firstName': firstNameController.text,
-        'lastName': lastNameController.text,
-        'dateOfBirth': dateOfBirthController.text,
+        'first_name': firstNameController.text,
+        'last_name': lastNameController.text,
+        'date_of_birth': _convertToIsoDate(dateOfBirthController.text),
         'address': {
           'street': streetController.text,
           'buildingNr': buildingNrController.text,
           'city': cityController.text,
           'country': countryController.text,
         },
-      });
+      })
+          .eq('id', userId);
 
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text(AppLocalizations.of(context)!.updateSuccess), backgroundColor: AppColors.main.withOpacity(0.7)),
       );
 
-      Navigator.pop(context);
+      Navigator.pop(context, true); // ✅ رجّع true عند نجاح الحفظ
     } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text(AppLocalizations.of(context)!.updateFailed(e.toString())), backgroundColor: AppColors.red.withOpacity(0.7)),
       );
     }
   }
+
+  String _convertToIsoDate(String formattedDate) {
+    try {
+      final date = DateFormat('dd.MM.yyyy').parse(formattedDate);
+      return date.toIso8601String();
+    } catch (_) {
+      return "";
+    }
+  }
+
 
 
   /// ✅ Date picker for date of birth
@@ -233,88 +266,136 @@ class _EditProfilePageState extends State<EditProfilePage> {
           children: [
             _buildInfoBox(),
 
-            SizedBox(height: 16.h),
-
-            _buildLabel(AppLocalizations.of(context)!.gender, isRequired: true),
-            _buildDropdown(
+            SizedBox(height: 15.h),
+            _buildLabel(AppLocalizations.of(context)!.personalInformation),
+            SizedBox(height: 5.h),
+            _buildDropdownValidatedField(
               value: gender.isEmpty ? null : gender,
-              options: genderOptions,
-              hintText: AppLocalizations.of(context)!.selectGender,
+              hint: AppLocalizations.of(context)!.selectGender,
+              items: [
+                DropdownMenuItem(
+                  value: "ذكر",
+                  child: Text(AppLocalizations.of(context)!.male, style: AppTextStyles.getText1(context)),
+                ),
+                DropdownMenuItem(
+                  value: "أنثى",
+                  child: Text(AppLocalizations.of(context)!.female, style: AppTextStyles.getText1(context)),
+                ),
+              ],
               onChanged: (value) {
                 setState(() {
                   gender = value!;
                   _validateForm();
                 });
               },
+              isRequired: true,
             ),
 
-            SizedBox(height: 12.h),
+            SizedBox(height: 15.h),
 
-            _buildLabel(AppLocalizations.of(context)!.firstName, isRequired: true),
-            _buildTextField(
+            _buildValidatedFieldArabic(
               controller: firstNameController,
-              validator: (value) => (value == null || value.isEmpty) ? AppLocalizations.of(context)!.firstNameRequired : null,
+              labelText: AppLocalizations.of(context)!.firstName,
+              isRequired: true,
+              onChanged: (value) {
+                firstNameController.text = value;
+                firstNameController.selection = TextSelection.fromPosition(
+                  TextPosition(offset: value.length),
+                );
+              },
             ),
+            SizedBox(height: 15.h),
 
-            SizedBox(height: 12.h),
-
-            _buildLabel(AppLocalizations.of(context)!.lastName, isRequired: true),
-            _buildTextField(
+            _buildValidatedFieldArabic(
               controller: lastNameController,
-              validator: (value) => (value == null || value.isEmpty) ? AppLocalizations.of(context)!.lastNameRequired : null,
+              labelText: AppLocalizations.of(context)!.lastName,
+              isRequired: true,
+              onChanged: (value) {
+                lastNameController.text = value;
+                lastNameController.selection = TextSelection.fromPosition(
+                  TextPosition(offset: value.length),
+                );
+              },
             ),
 
-            SizedBox(height: 12.h),
+            SizedBox(height: 15.h),
 
-            _buildLabel(AppLocalizations.of(context)!.dateOfBirth, isRequired: true),
-            GestureDetector(
+            _buildDateField(
+              controller: dateOfBirthController,
+              labelText: AppLocalizations.of(context)!.dateOfBirth,
+              isRequired: true,
               onTap: _pickDate,
-              child: AbsorbPointer(
-                child: _buildTextField(
-                  controller: dateOfBirthController,
-                  hintText: AppLocalizations.of(context)!.dateFormatHint,
-                  validator: (value) => (value == null || value.isEmpty) ? AppLocalizations.of(context)!.dobRequired : null,
-                ),
-              ),
             ),
 
-            SizedBox(height: 20.h),
+            SizedBox(height: 25.h),
 
-            Text(AppLocalizations.of(context)!.address,
-                style: AppTextStyles.getTitle1(context)),
+            _buildLabel(AppLocalizations.of(context)!.address),
 
-            SizedBox(height: 12.h),
-
-            _buildLabel(AppLocalizations.of(context)!.street),
-            _buildTextField(controller: streetController),
-
-            SizedBox(height: 12.h),
-
-            _buildLabel(AppLocalizations.of(context)!.buildingNr),
-            _buildTextField(controller: buildingNrController),
-
-            SizedBox(height: 12.h),
-
-            _buildLabel(AppLocalizations.of(context)!.city),
-            _buildDropdown(
+            SizedBox(height: 5.h),
+            _buildValidatedFieldArabic(
+              controller: streetController,
+              labelText: AppLocalizations.of(context)!.street,
+              isRequired: false,
+              onChanged: (value) {
+                streetController.text = value;
+                streetController.selection = TextSelection.fromPosition(TextPosition(offset: value.length));
+              },
+            ),
+            SizedBox(height: 15.h),
+            _buildValidatedNumberField(
+              controller: buildingNrController,
+              labelText: AppLocalizations.of(context)!.buildingNr,
+              isRequired: false,
+              onChanged: (value) {
+                buildingNrController.text = value;
+                buildingNrController.selection = TextSelection.fromPosition(TextPosition(offset: value.length));
+              },
+            ),
+            SizedBox(height: 15.h),
+            _buildDropdownValidatedField(
               value: cityController.text.isEmpty ? null : cityController.text,
-              options: [''] + cityOptions,
-              hintText: AppLocalizations.of(context)!.selectCity,
-              onChanged: (value) => setState(() {
-                cityController.text = value!;
+              hint: AppLocalizations.of(context)!.selectCity,
+              isRequired: false,
+              items: cityOptions.map((city) {
+                final displayText = {
+                  "دمشق": AppLocalizations.of(context)!.damascus,
+                  "حلب": AppLocalizations.of(context)!.aleppo,
+                  "حمص": AppLocalizations.of(context)!.homs,
+                  "حماة": AppLocalizations.of(context)!.hama,
+                  "اللاذقية": AppLocalizations.of(context)!.latakia,
+                  "دير الزور": AppLocalizations.of(context)!.deirEzzor,
+                  "الرقة": AppLocalizations.of(context)!.raqqa,
+                  "إدلب": AppLocalizations.of(context)!.idlib,
+                  "درعا": AppLocalizations.of(context)!.daraa,
+                  "طرطوس": AppLocalizations.of(context)!.tartus,
+                  "الحسكة": AppLocalizations.of(context)!.alHasakah,
+                  "القامشلي": AppLocalizations.of(context)!.qamishli,
+                  "السويداء": AppLocalizations.of(context)!.suwayda,
+                }[city] ?? city;
+
+                return DropdownMenuItem(
+                  value: city,
+                  child: Text(displayText, style: AppTextStyles.getText2(context)),
+                );
+              }).toList(),
+              onChanged: (val) => setState(() {
+                cityController.text = val!;
                 _validateForm();
               }),
             ),
-
-            SizedBox(height: 12.h),
-
-            _buildLabel(AppLocalizations.of(context)!.country),
-            _buildDropdown(
+            SizedBox(height: 15.h),
+            _buildDropdownValidatedField(
               value: countryController.text.isEmpty ? null : countryController.text,
-              options: [''] + ["Syria"],
-              hintText: AppLocalizations.of(context)!.selectCountry,
-              onChanged: (value) => setState(() {
-                countryController.text = value!;
+              hint: AppLocalizations.of(context)!.selectCountry,
+              isRequired: false,
+              items: [
+                DropdownMenuItem(
+                  value: "سوريا",
+                  child: Text(AppLocalizations.of(context)!.syria, style: AppTextStyles.getText2(context)),
+                ),
+              ],
+              onChanged: (val) => setState(() {
+                countryController.text = val!;
                 _validateForm();
               }),
             ),
@@ -371,16 +452,8 @@ class _EditProfilePageState extends State<EditProfilePage> {
       child: RichText(
         text: TextSpan(
           text: text,
-          style: AppTextStyles.getText2(context).copyWith(
-            color: AppColors.blackText,
-            fontWeight: FontWeight.w500,
-          ),
-          children: isRequired
-              ? [TextSpan(
-            text: AppLocalizations.of(context)!.requiredField,
-            style: AppTextStyles.getText3(context).copyWith(color: Colors.grey),
-          ),]
-              : [],
+          style: AppTextStyles.getText2(context).copyWith(color: AppColors.grayMain, fontWeight: FontWeight.bold),
+          children: isRequired ? [TextSpan(text: AppLocalizations.of(context)!.requiredField, style: AppTextStyles.getText3(context).copyWith(color: Colors.grey))] : [],
         ),
       ),
     );
@@ -411,29 +484,31 @@ class _EditProfilePageState extends State<EditProfilePage> {
   }) {
 
     final genderDisplayMap = {
-      "Male": AppLocalizations.of(context)!.male,
-      "Female": AppLocalizations.of(context)!.female,
+      "ذكر": AppLocalizations.of(context)!.male,
+      "أنثى": AppLocalizations.of(context)!.female,
     };
 
+
     final cityDisplayMap = {
-      "Damascus": AppLocalizations.of(context)!.damascus,
-      "Aleppo": AppLocalizations.of(context)!.aleppo,
-      "Homs": AppLocalizations.of(context)!.homs,
-      "Hama": AppLocalizations.of(context)!.hama,
-      "Latakia": AppLocalizations.of(context)!.latakia,
-      "Deir ez-Zor": AppLocalizations.of(context)!.deirEzzor,
-      "Raqqa": AppLocalizations.of(context)!.raqqa,
-      "Idlib": AppLocalizations.of(context)!.idlib,
-      "Daraa": AppLocalizations.of(context)!.daraa,
-      "Tartus": AppLocalizations.of(context)!.tartus,
-      "Al-Hasakah": AppLocalizations.of(context)!.alHasakah,
-      "Qamishli": AppLocalizations.of(context)!.qamishli,
-      "Suwayda": AppLocalizations.of(context)!.suwayda,
+      "دمشق": AppLocalizations.of(context)!.damascus,
+      "حلب": AppLocalizations.of(context)!.aleppo,
+      "حمص": AppLocalizations.of(context)!.homs,
+      "حماة": AppLocalizations.of(context)!.hama,
+      "اللاذقية": AppLocalizations.of(context)!.latakia,
+      "دير الزور": AppLocalizations.of(context)!.deirEzzor,
+      "الرقة": AppLocalizations.of(context)!.raqqa,
+      "إدلب": AppLocalizations.of(context)!.idlib,
+      "درعا": AppLocalizations.of(context)!.daraa,
+      "طرطوس": AppLocalizations.of(context)!.tartus,
+      "الحسكة": AppLocalizations.of(context)!.alHasakah,
+      "القامشلي": AppLocalizations.of(context)!.qamishli,
+      "السويداء": AppLocalizations.of(context)!.suwayda,
     };
 
     final countryDisplayMap = {
-      "Syria": AppLocalizations.of(context)!.syria,
+      "سوريا": AppLocalizations.of(context)!.syria,
     };
+
 
 
     return DropdownButtonFormField<String>(
@@ -478,4 +553,280 @@ class _EditProfilePageState extends State<EditProfilePage> {
       contentPadding: EdgeInsets.symmetric(horizontal: 12.w, vertical: 10.h),
     );
   }
+
+  Widget _buildValidatedFieldArabic({
+    required TextEditingController controller,
+    required String labelText,
+    required void Function(String value) onChanged,
+    bool isRequired = false,
+  }) {
+    final localizedLabel = isRequired ? '$labelText *' : labelText;
+
+    return TextFormField(
+        controller: controller,
+        autovalidateMode: AutovalidateMode.onUserInteraction,
+        inputFormatters: [
+          FilteringTextInputFormatter.allow(RegExp(r'^[\u0600-\u06FF\s]+$')),
+        ],
+        textDirection: detectTextDirection(controller.text),
+        textAlign: getTextAlign(context),
+        style: AppTextStyles.getText2(context),
+        decoration: InputDecoration(
+          labelText: localizedLabel,
+          labelStyle: AppTextStyles.getText3(context).copyWith(
+            color: Colors.grey,
+            fontWeight: isRequired ? FontWeight.bold : FontWeight.normal,
+          ),
+          floatingLabelBehavior: FloatingLabelBehavior.auto,
+          contentPadding: EdgeInsets.symmetric(vertical: 12.h, horizontal: 14.w),
+          enabledBorder: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(25.r),
+            borderSide: BorderSide(color: Colors.grey),
+          ),
+          focusedBorder: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(25.r),
+            borderSide: BorderSide(color: AppColors.main, width: 2),
+          ),
+          errorBorder: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(25.r),
+            borderSide: BorderSide(color: AppColors.red.withOpacity(0.5), width: 1),
+          ),
+          focusedErrorBorder: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(25.r),
+            borderSide: BorderSide(color: AppColors.main.withOpacity(0.5), width: 1),
+          ),
+
+          suffixIcon: controller.text.isEmpty
+              ? null
+              : Padding(
+            padding: EdgeInsets.symmetric(horizontal: 14.w),
+            child: Container(
+              width: 15.w,
+              height: 15.w,
+              decoration: BoxDecoration(
+                color: arabicNameRegex.hasMatch(controller.text)
+                    ? AppColors.main
+                    : AppColors.red,
+                shape: BoxShape.circle,
+              ),
+              child: Center(
+                child: Icon(
+                  arabicNameRegex.hasMatch(controller.text)
+                      ? Icons.check
+                      : Icons.close,
+                  color: Colors.white,
+                  size: 14.sp,
+                ),
+              ),
+            ),
+          ),
+        ),
+        onChanged: (value) {
+          onChanged(value.trim());
+          setState(() {}); // تحديث رمز التحقق
+        },
+        validator: (value) {
+          if (isRequired && (value == null || value.isEmpty)) {
+            return AppLocalizations.of(context)!.requiredField;
+          }
+
+          if (value != null && value.isNotEmpty) {
+            if (value.trim().length < 2) {
+              return AppLocalizations.of(context)!.minTwoLettersError; // أضف هذا السطر في ملف ARB
+            }
+
+            if (!RegExp(r'^[\u0600-\u06FF\s]+$').hasMatch(value)) {
+              return AppLocalizations.of(context)!.arabicOnlyError;
+            }
+          }
+
+          return null;
+        }
+
+
+    );
+  }
+
+  Widget _buildValidatedNumberField({
+    required TextEditingController controller,
+    required String labelText,
+    required void Function(String value) onChanged,
+    bool isRequired = false,
+  }) {
+    final localizedLabel = isRequired ? '$labelText *' : labelText;
+
+    final isValid = controller.text.isEmpty
+        ? null
+        : RegExp(r'^\d{1,3}$').hasMatch(controller.text);
+
+    return TextFormField(
+      controller: controller,
+      autovalidateMode: AutovalidateMode.onUserInteraction,
+      keyboardType: TextInputType.number,
+      inputFormatters: [
+        FilteringTextInputFormatter.digitsOnly,
+        LengthLimitingTextInputFormatter(3),
+      ],
+      textDirection: detectTextDirection(controller.text),
+      textAlign: getTextAlign(context),
+      style: AppTextStyles.getText2(context),
+      decoration: InputDecoration(
+        labelText: localizedLabel,
+        labelStyle: MaterialStateTextStyle.resolveWith((states) {
+          if (states.contains(MaterialState.error)) {
+            return AppTextStyles.getText3(context).copyWith(color: AppColors.red);
+          }
+          return AppTextStyles.getText3(context).copyWith(color: Colors.grey);
+        }),
+        floatingLabelBehavior: FloatingLabelBehavior.auto,
+        contentPadding: EdgeInsets.symmetric(vertical: 12.h, horizontal: 14.w),
+        enabledBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(25.r),
+          borderSide: BorderSide(color: Colors.grey),
+        ),
+        focusedBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(25.r),
+          borderSide: BorderSide(color: AppColors.main, width: 2),
+        ),
+        errorBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(25.r),
+          borderSide: BorderSide(color: AppColors.red.withOpacity(0.5), width: 1),
+        ),
+        focusedErrorBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(25.r),
+          borderSide: BorderSide(color: AppColors.main.withOpacity(0.5), width: 1),
+        ),
+      ),
+      onChanged: (value) {
+        onChanged(value.trim());
+        setState(() {});
+      },
+      validator: (value) {
+        if (value == null || value.isEmpty) return null;
+        if (!RegExp(r'^\d+$').hasMatch(value)) {
+          return AppLocalizations.of(context)!.numbersOnlyError;
+        }
+        if (value.length > 3) {
+          return AppLocalizations.of(context)!.max3DigitsError;
+        }
+        return null;
+      },
+    );
+  }
+
+  Widget _buildDropdownValidatedField({
+    required String? value,
+    required String hint,
+    required List<DropdownMenuItem<String>> items,
+    required Function(String?) onChanged,
+    bool isRequired = false,
+  }) {
+    final localizedLabel = isRequired ? '$hint *' : hint;
+
+    return DropdownButtonFormField<String>(
+      value: value,
+      autovalidateMode: AutovalidateMode.onUserInteraction,
+      validator: (val) {
+        if (isRequired && (val == null || val.isEmpty)) {
+          return AppLocalizations.of(context)!.requiredField;
+        }
+        return null;
+      },
+      decoration: InputDecoration(
+        labelText: localizedLabel,
+        labelStyle: MaterialStateTextStyle.resolveWith((states) {
+          if (states.contains(MaterialState.error)) {
+            return AppTextStyles.getText3(context).copyWith(color: AppColors.red);
+          }
+          return AppTextStyles.getText3(context).copyWith(color: Colors.grey);
+        }),
+        floatingLabelBehavior: FloatingLabelBehavior.auto,
+        contentPadding: EdgeInsets.symmetric(vertical: 12.h, horizontal: 14.w),
+        enabledBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(25.r),
+          borderSide: BorderSide(color: Colors.grey),
+        ),
+        focusedBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(25.r),
+          borderSide: BorderSide(color: AppColors.main, width: 2),
+        ),
+        errorBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(25.r),
+          borderSide: BorderSide(color: AppColors.red.withOpacity(0.5), width: 1),
+        ),
+        focusedErrorBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(25.r),
+          borderSide: BorderSide(color: AppColors.main.withOpacity(0.5), width: 1),
+        ),
+      ),
+      dropdownColor: Colors.white.withOpacity(0.95),
+      isExpanded: true,
+      borderRadius: BorderRadius.circular(15.r),
+      menuMaxHeight: 250.h,
+      icon: Icon(Icons.arrow_drop_down, color: AppColors.main, size: 22.sp),
+      items: items,
+      onChanged: (val) {
+        setState(() {
+          onChanged(val);
+        });
+      },
+    );
+  }
+
+  Widget _buildDateField({
+    required TextEditingController controller,
+    required String labelText,
+    required bool isRequired,
+    required VoidCallback onTap,
+  }) {
+    final localizedLabel = isRequired ? '$labelText *' : labelText;
+
+    return GestureDetector(
+      onTap: onTap,
+      child: AbsorbPointer(
+        child: TextFormField(
+          controller: controller,
+          autovalidateMode: AutovalidateMode.onUserInteraction,
+          readOnly: true,
+          style: AppTextStyles.getText2(context),
+          textDirection: detectTextDirection(controller.text),
+          textAlign: getTextAlign(context),
+          decoration: InputDecoration(
+            labelText: localizedLabel,
+            labelStyle: MaterialStateTextStyle.resolveWith((states) {
+              if (states.contains(MaterialState.error)) {
+                return AppTextStyles.getText3(context).copyWith(color: AppColors.red);
+              }
+              return AppTextStyles.getText3(context).copyWith(color: Colors.grey);
+            }),
+            floatingLabelBehavior: FloatingLabelBehavior.auto,
+            contentPadding: EdgeInsets.symmetric(vertical: 12.h, horizontal: 14.w),
+            enabledBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(25.r),
+              borderSide: BorderSide(color: Colors.grey),
+            ),
+            focusedBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(25.r),
+              borderSide: BorderSide(color: AppColors.main, width: 2),
+            ),
+            errorBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(25.r),
+              borderSide: BorderSide(color: AppColors.red.withOpacity(0.5), width: 1),
+            ),
+            focusedErrorBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(25.r),
+              borderSide: BorderSide(color: AppColors.main.withOpacity(0.5), width: 1),
+            ),
+          ),
+          validator: (value) {
+            if (isRequired && (value == null || value.isEmpty)) {
+              return AppLocalizations.of(context)!.dobRequired;
+            }
+            return null;
+          },
+        ),
+      ),
+    );
+  }
+
 }

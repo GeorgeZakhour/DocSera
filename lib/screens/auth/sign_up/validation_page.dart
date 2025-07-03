@@ -1,7 +1,6 @@
 import 'dart:async';
-
 import 'package:docsera/screens/auth/sign_up/recap_info.dart';
-import 'package:docsera/services/firestore/firestore_otp_service.dart';
+import 'package:docsera/services/supabase/supabase_otp_service.dart';
 import 'package:docsera/utils/text_direction_utils.dart';
 import 'package:docsera/widgets/base_scaffold.dart';
 import 'package:flutter/material.dart';
@@ -24,7 +23,7 @@ class ValidationPage extends StatefulWidget {
 }
 
 class _ValidationPageState extends State<ValidationPage> {
-  final FirestoreOTPService _firestoreService = FirestoreOTPService(); // Firestore Service
+  final SupabaseOTPService _supabaseOTPService = SupabaseOTPService(); // Firestore Service
   final TextEditingController _codeController = TextEditingController();
 
   String sentCode = ""; // Store the sent OTP
@@ -55,9 +54,9 @@ class _ValidationPageState extends State<ValidationPage> {
 
     try {
       if (widget.validationType == 'SMS') {
-        sentCode = await _firestoreService.sendOTPToPhone(widget.signUpInfo.phoneNumber!);
+        sentCode = await _supabaseOTPService.sendOTPToPhone(widget.signUpInfo.phoneNumber!);
       } else if (widget.validationType == 'Email') {
-        sentCode = await _firestoreService.sendOTPToEmail(widget.signUpInfo.email!);
+        sentCode = await _supabaseOTPService.sendOTPToEmail(widget.signUpInfo.email!);
       }
 
       setState(() {

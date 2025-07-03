@@ -2,7 +2,7 @@
 // import 'package:bloc/bloc.dart';
 // import 'package:cloud_firestore/cloud_firestore.dart';
 // import 'package:docsera/Business_Logic/Appointments_page/appointments_state.dart';
-// import 'package:docsera/services/firestore/firestore_user_service.dart';
+// import 'package:docsera/services/supabase/supabase_user_service.dart';
 // import 'package:shared_preferences/shared_preferences.dart';
 //
 // class AppointmentsCubit extends Cubit<AppointmentsState> {
@@ -147,18 +147,18 @@ import 'package:bloc/bloc.dart';
 import 'package:docsera/Business_Logic/Appointments_page/appointments_state.dart';
 import 'package:docsera/Business_Logic/Authentication/auth_cubit.dart';
 import 'package:docsera/Business_Logic/Authentication/auth_state.dart';
-import 'package:docsera/services/firestore/firestore_user_service.dart';
+import 'package:docsera/services/supabase/supabase_user_service.dart';
 import 'package:flutter/widgets.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 
 class AppointmentsCubit extends Cubit<AppointmentsState> {
-  final FirestoreUserService _firestoreService;
+  final SupabaseUserService _supabaseUserService;
   final SharedPreferences _prefs;
   StreamSubscription<List<Map<String, dynamic>>>? _appointmentsSubscription;
 
-  AppointmentsCubit(this._firestoreService, this._prefs) : super(AppointmentsLoading());
+  AppointmentsCubit(this._supabaseUserService, this._prefs) : super(AppointmentsLoading());
 
   void setAppointmentsFromStream({
     required List<Map<String, dynamic>> upcoming,
@@ -185,7 +185,7 @@ class AppointmentsCubit extends Cubit<AppointmentsState> {
     }
 
     final user = (authState as AuthAuthenticated).user;
-    final userId = user.uid;
+    final userId = user.id;
     print("✅  المستخدم مسجل دخول عبر(Appointment cubit) AuthCubit: $userId");
 
     try {
@@ -200,9 +200,9 @@ class AppointmentsCubit extends Cubit<AppointmentsState> {
 
         if (cachedUpcoming != null && cachedPast != null) {
           upcoming = List<Map<String, dynamic>>.from(
-              List<dynamic>.from(await _firestoreService.loadCachedData('upcomingAppointments')));
+              List<dynamic>.from(await _supabaseUserService.loadCachedData('upcomingAppointments')));
           past = List<Map<String, dynamic>>.from(
-              List<dynamic>.from(await _firestoreService.loadCachedData('pastAppointments')));
+              List<dynamic>.from(await _supabaseUserService.loadCachedData('pastAppointments')));
 
           emit(AppointmentsLoaded(
             upcomingAppointments: upcoming,
@@ -212,7 +212,7 @@ class AppointmentsCubit extends Cubit<AppointmentsState> {
         }
       }
 
-      final appointments = await _firestoreService.getUserAppointments(userId);
+      final appointments = await _supabaseUserService.getUserAppointments(userId);
       upcoming = appointments['upcoming'] ?? [];
       past = appointments['past'] ?? [];
 
@@ -222,8 +222,8 @@ class AppointmentsCubit extends Cubit<AppointmentsState> {
         selectedTab: lastSelectedTab,
       ));
 
-      await _firestoreService.saveCachedData('upcomingAppointments', upcoming);
-      await _firestoreService.saveCachedData('pastAppointments', past);
+      await _supabaseUserService.saveCachedData('upcomingAppointments', upcoming);
+      await _supabaseUserService.saveCachedData('pastAppointments', past);
 
       _listenToAppointments(userId);
     } catch (e) {
@@ -233,7 +233,7 @@ class AppointmentsCubit extends Cubit<AppointmentsState> {
 
   void _listenToAppointments(String userId) {
     _appointmentsSubscription?.cancel();
-    _appointmentsSubscription = _firestoreService.listenToUserAppointments(userId).listen((appointments) async {
+    _appointmentsSubscription = _supabaseUserService.listenToUserAppointments(userId).listen((appointments) async {
       List<Map<String, dynamic>> upcoming = [];
       List<Map<String, dynamic>> past = [];
 
@@ -254,8 +254,8 @@ class AppointmentsCubit extends Cubit<AppointmentsState> {
         selectedTab: lastSelectedTab,
       ));
 
-      await _firestoreService.saveCachedData('upcomingAppointments', upcoming);
-      await _firestoreService.saveCachedData('pastAppointments', past);
+      await _supabaseUserService.saveCachedData('upcomingAppointments', upcoming);
+      await _supabaseUserService.saveCachedData('pastAppointments', past);
     });
   }
 

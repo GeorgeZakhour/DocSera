@@ -24,8 +24,20 @@ class VisitedDoctorPage extends StatefulWidget {
 }
 
 class _VisitedDoctorPageState extends State<VisitedDoctorPage> {
+
   @override
   Widget build(BuildContext context) {
+    final imagePath = (widget.appointmentDetails.image.isNotEmpty)
+        ? widget.appointmentDetails.image
+        : (widget.appointmentDetails.doctorTitle.toLowerCase() == "dr."
+        ? (widget.appointmentDetails.doctorGender.toLowerCase() == "female"
+        ? 'assets/images/female-doc.png'
+        : 'assets/images/male-doc.png')
+        : (widget.appointmentDetails.doctorGender.toLowerCase() == "male"
+        ? 'assets/images/male-phys.png'
+        : 'assets/images/female-phys.png'));
+
+
     return BaseScaffold(
       titleAlignment: 2,
       height: 75.h,
@@ -39,7 +51,7 @@ class _VisitedDoctorPageState extends State<VisitedDoctorPage> {
             child: ClipRRect(
               borderRadius: BorderRadius.circular(50),
               child: Image.asset(
-                widget.appointmentDetails.image,
+                imagePath,
                 width: 40.w,
                 height: 40.h,
                 fit: BoxFit.cover,

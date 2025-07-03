@@ -12,6 +12,7 @@ import 'Business_Logic/Authentication/auth_cubit.dart';
 import 'Business_Logic/Authentication/auth_state.dart';
 import 'app/const.dart';
 import 'package:package_info_plus/package_info_plus.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 
 class SplashScreen extends StatefulWidget {
   @override
@@ -133,7 +134,7 @@ class _SplashScreenState extends State<SplashScreen> with TickerProviderStateMix
 
   Future<void> _waitForAuthReady() async {
     final authCubit = context.read<AuthCubit>();
-    AuthState state = authCubit.state;
+    AppAuthState state = authCubit.state;
     if (state is AuthInitial || state is AuthLoading) {
       await authCubit.stream.firstWhere((newState) =>
       newState is AuthAuthenticated || newState is AuthUnauthenticated);
@@ -223,7 +224,7 @@ class _SplashScreenState extends State<SplashScreen> with TickerProviderStateMix
             ),
           ),
           Positioned(
-            bottom: 25,
+            bottom: 35,
             left: 0,
             right: 0,
             child: AnimatedOpacity(
@@ -235,13 +236,13 @@ class _SplashScreenState extends State<SplashScreen> with TickerProviderStateMix
                 style: AppTextStyles.getText4(context).copyWith(
                   color: AppColors.grayMain,
                   fontWeight: FontWeight.w300,
-                  fontSize: 8,
+                  fontSize: 10,
                 ),
               ),
             ),
           ),
           Positioned(
-            bottom: 15,
+            bottom: 25,
             left: 0,
             right: 0,
             child: AnimatedOpacity(
@@ -252,7 +253,7 @@ class _SplashScreenState extends State<SplashScreen> with TickerProviderStateMix
                 textAlign: TextAlign.center,
                 style: AppTextStyles.getText4(context).copyWith(
                   color: AppColors.grayMain,
-                  fontSize: 8,
+                  fontSize: 9,
                 ),
               ),
             ),

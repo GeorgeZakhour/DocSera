@@ -11,8 +11,9 @@ import 'add_image_preview_sheet.dart';
 
 class MultiPageUploadScreen extends StatefulWidget {
   final List<String> images;
+  final bool isSendMode;
 
-  const MultiPageUploadScreen({super.key, required this.images});
+  const MultiPageUploadScreen({super.key, required this.images, this.isSendMode = false,});
 
   @override
   State<MultiPageUploadScreen> createState() => _MultiPageUploadScreenState();
@@ -326,7 +327,7 @@ class _MultiPageUploadScreenState extends State<MultiPageUploadScreen> {
                         Navigator.push(
                           context,
                           MaterialPageRoute(
-                            builder: (_) => DocumentInfoScreen(images: _pages, cameFromMultiPage: true),
+                            builder: (_) => DocumentInfoScreen(images: _pages, cameFromMultiPage: true,  isSendMode: widget.isSendMode),
                           ),
                         );                    },
                       style: ElevatedButton.styleFrom(

@@ -3,13 +3,12 @@
   import 'package:docsera/Business_Logic/Appointments_page/appointments_cubit.dart';
   import 'package:docsera/Business_Logic/Appointments_page/appointments_state.dart';
 import 'package:docsera/screens/home/shimmer/shimmer_widgets.dart';
+import 'package:docsera/services/supabase/supabase_user_service.dart';
   import 'package:flutter_bloc/flutter_bloc.dart';
   import 'package:flutter_gen/gen_l10n/app_localizations.dart';
-  import 'package:cloud_firestore/cloud_firestore.dart';
   import 'package:docsera/screens/doctors/appointment/select_patient_page.dart';
   import 'package:docsera/screens/home/appointment/appointment_details_page.dart';
   import 'package:docsera/screens/search_page.dart';
-  import 'package:docsera/services/firestore/firestore_user_service.dart';
   import 'package:docsera/utils/page_transitions.dart';
   import 'package:docsera/utils/shared_prefs_service.dart';
   import 'package:flutter/material.dart';
@@ -28,13 +27,6 @@ import 'package:docsera/screens/home/shimmer/shimmer_widgets.dart';
   }
 
   class _AppointmentsPageState extends State<AppointmentsPage> {
-    // bool isLoggedIn = false;
-    // List<Map<String, dynamic>> _upcomingAppointments = [];
-    // List<Map<String, dynamic>> _pastAppointments = [];
-    // bool _isFetchingAppointments = false; // ✅ Prevent duplicate calls
-    // StreamSubscription? _appointmentsListener; // ✅ إضافة المتغير لحفظ `listener`
-    final SharedPrefsService _sharedPrefsService = SharedPrefsService();
-    final FirestoreUserService _firestoreService = FirestoreUserService();
     int? _selectedTab; // ✅ Nullable until loaded
     int visibleAppointmentsCount = 5; // ✅ Initially show 5 appointments
     bool _isLoading = true; // ✅ Prevent flickering issue
@@ -75,68 +67,10 @@ import 'package:docsera/screens/home/shimmer/shimmer_widgets.dart';
       await prefs.setInt('selectedAppointmentsTab', tabIndex);
     }
 
-
-
-    /// ✅ التحقق مما إذا كان المستخدم مسجّل الدخول
-    // Future<void> _checkLoginStatus() async {
-    //   isLoggedIn = await _sharedPrefsService.isLoggedIn();
-    //
-    //   if (!isLoggedIn) {
-    //     print("⚠️ User is not logged in. Hiding appointments.");
-    //     setState(() {}); // تحديث الواجهة
-    //     return;
-    //   }
-    //
-    //   String? userId = await _sharedPrefsService.getUserId();
-    //   if (userId == null) {
-    //     print("❌ Error: No User ID found!");
-    //     return;
-    //   }
-    //
-    //   // ✅ تحميل البيانات من `SharedPreferences` أولًا
-    //   var cachedUpcoming = await _sharedPrefsService.loadData('upcomingAppointments');
-    //   var cachedPast = await _sharedPrefsService.loadData('pastAppointments');
-    //
-    //   if (cachedUpcoming != null && cachedPast != null) {
-    //     try {
-    //       _upcomingAppointments = List<Map<String, dynamic>>.from(cachedUpcoming);
-    //       _pastAppointments = List<Map<String, dynamic>>.from(cachedPast);
-    //
-    //       print("⚡ Loaded appointments from **cache**: ${_upcomingAppointments.length} upcoming, ${_pastAppointments.length} past.");
-    //     } catch (e) {
-    //       print("⚠️ Warning: Invalid appointment data format, clearing cache...");
-    //       await _sharedPrefsService.removeData('upcomingAppointments');
-    //       await _sharedPrefsService.removeData('pastAppointments');
-    //       _upcomingAppointments = [];
-    //       _pastAppointments = [];
-    //     }
-    //   }
-    //
-    //   setState(() {}); // تحديث الواجهة
-    //
-    //   // ✅ الاشتراك في التحديثات من Firestore
-    //   _appointmentsListener?.cancel(); // إلغاء أي اشتراك سابق
-    //   _appointmentsListener = _sharedPrefsService.appointmentsStream.listen((updatedAppointments) {
-    //     setState(() {
-    //       _upcomingAppointments = updatedAppointments['upcoming'] ?? [];
-    //       _pastAppointments = updatedAppointments['past'] ?? [];
-    //     });
-    //     print("🔥 Appointments list updated from Firestore: ${_upcomingAppointments.length} upcoming, ${_pastAppointments.length} past.");
-    //     context.read<AppointmentsCubit>().setAppointmentsFromStream(
-    //       upcoming: updatedAppointments['upcoming'] ?? [],
-    //       past: updatedAppointments['past'] ?? [],
-    //     );
-    //
-    //   });
-    //
-    //   // ✅ تشغيل الاستماع للمواعيد من Firestore
-    //   _sharedPrefsService.listenToAppointments(userId);
-    // }
-
-
     @override
     Widget build(BuildContext context) {
       return Scaffold(
+        extendBody: true,
         backgroundColor: AppColors.background3,
         body: Column(
           children: [
@@ -386,8 +320,8 @@ import 'package:docsera/screens/home/shimmer/shimmer_widgets.dart';
     Widget _buildAppointmentCard(Map<String, dynamic> appointment) {
       // ✅ Ensure `timestamp` is a `DateTime` object
       DateTime? appointmentDate;
-      if (appointment['timestamp'] is Timestamp) {
-        appointmentDate = (appointment['timestamp'] as Timestamp).toDate();
+      if (appointment['timestamp'] is String) {
+        appointmentDate = DateTime.tryParse(appointment['timestamp']);
       } else if (appointment['timestamp'] is String) {
         appointmentDate = DateTime.tryParse(appointment['timestamp']);
       } else if (appointment['timestamp'] is DateTime) {
@@ -396,12 +330,12 @@ import 'package:docsera/screens/home/shimmer/shimmer_widgets.dart';
 
       // ✅ Ensure `bookingTimestamp` is a `DateTime` object
       DateTime? bookingDate;
-      if (appointment['bookingTimestamp'] is Timestamp) {
-        bookingDate = (appointment['bookingTimestamp'] as Timestamp).toDate();
-      } else if (appointment['bookingTimestamp'] is String) {
-        bookingDate = DateTime.tryParse(appointment['bookingTimestamp']);
-      } else if (appointment['bookingTimestamp'] is DateTime) {
-        bookingDate = appointment['bookingTimestamp'];
+      if (appointment['booking_timestamp'] is String) {
+        bookingDate = DateTime.tryParse(appointment['booking_timestamp']);
+      } else if (appointment['booking_timestamp'] is String) {
+        bookingDate = DateTime.tryParse(appointment['booking_timestamp']);
+      } else if (appointment['booking_timestamp'] is DateTime) {
+        bookingDate = appointment['booking_timestamp'];
       }
 
       String locale = Localizations.localeOf(context).languageCode; // ✅ Get the current locale
@@ -421,14 +355,21 @@ import 'package:docsera/screens/home/shimmer/shimmer_widgets.dart';
           : AppLocalizations.of(context)!.unknown;
 
       // ✅ Ensure Patient Name is Retrieved
-      String patientName = appointment["patientName"] ?? "Unknown";
+      String patientName = appointment["patient_name"] ?? "Unknown";
 
       // ✅ Determine doctor's avatar based on gender & title
-      String gender = appointment['doctorGender']?.toLowerCase() ?? '';
-      String title = appointment['doctorTitle']?.toLowerCase() ?? '';
-      String avatarPath = (title == "dr.")
-          ? (gender == "female" ? 'assets/images/female-doc.png' : 'assets/images/male-doc.png')
-          : (gender == "male" ? 'assets/images/male-phys.png' : 'assets/images/female-phys.png');
+      String gender = (appointment['doctor_gender'] ?? '').toLowerCase();
+      String title = (appointment['doctor_title'] ?? '').toLowerCase();
+      String? doctorImage = appointment['doctor_image'];
+
+      String avatarPath;
+      if (doctorImage != null && doctorImage.trim().isNotEmpty) {
+        avatarPath = doctorImage; // إذا كانت الصورة موجودة (مسار Asset حقيقي)
+      } else {
+        avatarPath = (title == "dr.")
+            ? (gender == "female" ? 'assets/images/female-doc.png' : 'assets/images/male-doc.png')
+            : (gender == "male" ? 'assets/images/male-phys.png' : 'assets/images/female-phys.png');
+      }
 
       return Card(
         elevation: 0,
@@ -504,11 +445,11 @@ import 'package:docsera/screens/home/shimmer/shimmer_widgets.dart';
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
                                 Text(
-                                  "${appointment["doctorTitle"] ?? ""} ${appointment["doctorName"] ?? "Doctor Unavailable"}".trim(),
+                                  "${appointment["doctor_title"] ?? ""} ${appointment["doctor_name"] ?? "Doctor Unavailable"}".trim(),
                                   style: AppTextStyles.getText2(context).copyWith(fontWeight: FontWeight.bold),
                                 ),
                                 Text(
-                                  appointment["specialty"] ?? "General Practice",
+                                  appointment["doctor_specialty"] ?? "General Practice",
                                   style: AppTextStyles.getText3(context).copyWith(color: AppColors.textSubColor),
                                 ),
                               ],
@@ -582,14 +523,14 @@ import 'package:docsera/screens/home/shimmer/shimmer_widgets.dart';
                         context,
                         fadePageRoute(
                           SelectPatientPage(
-                            doctorId: appointment["doctorId"] ?? "",
-                            doctorName: appointment["doctorName"] ?? "Unknown",
-                            doctorTitle: appointment["doctorTitle"] ?? "",
-                            doctorGender: appointment["doctorGender"] ?? "",
-                            specialty: appointment["specialty"] ?? "General Practice",
-                            image: appointment["doctorImage"] ?? "assets/images/female-doc.png",
+                            doctorId: appointment["doctor_id"] ?? "",
+                            doctorName: appointment["doctor_name"] ?? "Unknown",
+                            doctorTitle: appointment["doctor_title"] ?? "",
+                            doctorGender: appointment["doctor_gender"] ?? "",
+                            specialty: appointment["doctor_specialty"] ?? "General Practice",
+                            image: appointment["doctor_image"] ?? "assets/images/male-doc.png",
                             clinicName: appointment['clinicName'] ?? "Unknown Clinic",
-                            clinicAddress: appointment['clinicAddress'] ?? {}, // ✅ Pass empty map if null
+                            clinicAddress: appointment['clinic_address'] ?? {}, // ✅ Pass empty map if null
                           ),
                         ),
                       );
