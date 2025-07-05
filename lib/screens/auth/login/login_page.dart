@@ -12,7 +12,7 @@ import 'package:docsera/utils/page_transitions.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
-import 'package:flutter_gen/gen_l10n/app_localizations.dart';
+import 'package:docsera/gen_l10n/app_localizations.dart';
 import 'package:local_auth/local_auth.dart'; // Face ID Auth
 import 'package:supabase_flutter/supabase_flutter.dart';
 import '../../../Business_Logic/Account_page/user_cubit.dart';

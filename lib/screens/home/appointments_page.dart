@@ -5,7 +5,7 @@
 import 'package:docsera/screens/home/shimmer/shimmer_widgets.dart';
 import 'package:docsera/services/supabase/supabase_user_service.dart';
   import 'package:flutter_bloc/flutter_bloc.dart';
-  import 'package:flutter_gen/gen_l10n/app_localizations.dart';
+import 'package:docsera/gen_l10n/app_localizations.dart';
   import 'package:docsera/screens/doctors/appointment/select_patient_page.dart';
   import 'package:docsera/screens/home/appointment/appointment_details_page.dart';
   import 'package:docsera/screens/search_page.dart';

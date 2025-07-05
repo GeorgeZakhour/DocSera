@@ -13,7 +13,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:docsera/Business_Logic/Documents_page/documents/documents_cubit.dart';
 import 'package:docsera/Business_Logic/Documents_page/documents/documents_state.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_gen/gen_l10n/app_localizations.dart';
+import 'package:docsera/gen_l10n/app_localizations.dart';
 import 'package:flutter_quill/flutter_quill.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:docsera/app/text_styles.dart';

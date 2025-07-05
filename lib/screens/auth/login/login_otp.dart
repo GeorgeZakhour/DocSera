@@ -9,7 +9,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import '../../../app/const.dart';
-import 'package:flutter_gen/gen_l10n/app_localizations.dart';
+import 'package:docsera/gen_l10n/app_localizations.dart';
 import 'package:device_info_plus/device_info_plus.dart';
 
 class LoginOTPPage extends StatefulWidget {

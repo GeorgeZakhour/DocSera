@@ -9,7 +9,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import '../../../models/sign_up_info.dart';
 import '../../../app/text_styles.dart';
-import 'package:flutter_gen/gen_l10n/app_localizations.dart';
+import 'package:docsera/gen_l10n/app_localizations.dart';
 import 'package:device_info_plus/device_info_plus.dart';
 
 

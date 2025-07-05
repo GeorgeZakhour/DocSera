@@ -26,7 +26,7 @@ import 'package:docsera/screens/doctors/doctor_profile_page.dart';
 import 'package:share_plus/share_plus.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:url_launcher/url_launcher.dart';
-import 'package:flutter_gen/gen_l10n/app_localizations.dart';
+import 'package:docsera/gen_l10n/app_localizations.dart';
 
 import '../../../app/text_styles.dart';
 import 'appointment_cancel_confirmation.dart' show AppointmentCancelledPage;

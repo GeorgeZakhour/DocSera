@@ -8,7 +8,7 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import '../../../app/const.dart';
 import '../../../app/text_styles.dart';
-import 'package:flutter_gen/gen_l10n/app_localizations.dart';
+import 'package:docsera/gen_l10n/app_localizations.dart';
 
 class GoodbyePage extends StatefulWidget {
   const GoodbyePage({Key? key}) : super(key: key);

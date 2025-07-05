@@ -8,7 +8,7 @@ import 'package:flutter_svg/flutter_svg.dart';
 import '../../../app/const.dart';
 import '../../../app/text_styles.dart';
 import '../../../models/sign_up_info.dart';
-import 'package:flutter_gen/gen_l10n/app_localizations.dart';
+import 'package:docsera/gen_l10n/app_localizations.dart';
 import 'package:confetti/confetti.dart';
 
 class WelcomePage extends StatefulWidget {

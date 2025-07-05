@@ -13,7 +13,7 @@ import 'package:docsera/services/supabase/supabase_user_service.dart';
 import 'package:docsera/utils/custom_clippers.dart';
 import 'package:docsera/utils/text_direction_utils.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:flutter_gen/gen_l10n/app_localizations.dart';
+import 'package:docsera/gen_l10n/app_localizations.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:docsera/app/text_styles.dart'; //
 import 'package:docsera/screens/home/account/user_profile_page.dart';

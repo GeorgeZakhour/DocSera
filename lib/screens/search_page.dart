@@ -2,7 +2,7 @@ import 'package:docsera/models/document.dart';
 import 'package:docsera/screens/doctors/doctor_profile_page.dart';
 import 'package:docsera/utils/page_transitions.dart';
 import 'package:docsera/widgets/base_scaffold.dart';
-import 'package:flutter_gen/gen_l10n/app_localizations.dart';
+import 'package:docsera/gen_l10n/app_localizations.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:docsera/app/text_styles.dart'; //
 import 'package:flutter/material.dart';

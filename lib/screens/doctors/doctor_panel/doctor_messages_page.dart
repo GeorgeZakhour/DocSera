@@ -7,7 +7,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:intl/intl.dart';
-import 'package:flutter_gen/gen_l10n/app_localizations.dart';
+import 'package:docsera/gen_l10n/app_localizations.dart';
 
 import '../../../Business_Logic/Doctor/Messages_page/doctor_messages_cubit.dart';
 import '../../../Business_Logic/Doctor/Messages_page/doctor_messages_state.dart';

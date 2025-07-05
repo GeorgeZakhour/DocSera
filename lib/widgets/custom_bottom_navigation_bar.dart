@@ -4,7 +4,7 @@ import 'package:docsera/Business_Logic/Messages_page/messages_cubit.dart';
 import 'package:docsera/Business_Logic/Messages_page/messages_state.dart';
 import 'package:docsera/app/text_styles.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:flutter_gen/gen_l10n/app_localizations.dart';
+import 'package:docsera/gen_l10n/app_localizations.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:docsera/screens/home/appointments_page.dart';
 import 'package:docsera/screens/home/documents_page.dart';

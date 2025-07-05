@@ -6,7 +6,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:docsera/widgets/base_scaffold.dart';
 import 'package:docsera/app/const.dart';
-import 'package:flutter_gen/gen_l10n/app_localizations.dart';
+import 'package:docsera/gen_l10n/app_localizations.dart';
 import 'package:docsera/app/text_styles.dart';
 
 class IdentificationPage extends StatelessWidget {

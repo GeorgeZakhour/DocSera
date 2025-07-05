@@ -5,7 +5,7 @@ import 'package:docsera/app/const.dart';
 import 'package:docsera/app/text_styles.dart';
 import 'package:docsera/models/document.dart';
 import 'package:intl/intl.dart';
-import 'package:flutter_gen/gen_l10n/app_localizations.dart';
+import 'package:docsera/gen_l10n/app_localizations.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
