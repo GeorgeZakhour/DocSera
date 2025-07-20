@@ -293,6 +293,8 @@ class _SelectPatientPageState extends State<SelectPatientPage> {
                         doctorTitle: widget.doctorTitle,
                         specialty: widget.specialty,
                         image: widget.image,
+                        patientId: selectedPatientId!,
+                        isRelative: selectedPatientId != userId,
                         patientName: selectedPatientName,
                         patientGender: selectedPatientGender,
                         patientAge: selectedPatientAge,

@@ -2,6 +2,7 @@ import 'package:docsera/app/const.dart';
 import 'package:docsera/app/text_styles.dart';
 import 'package:docsera/models/appointment_details.dart';
 import 'package:docsera/screens/doctors/appointment/confirmation_page.dart';
+import 'package:docsera/screens/doctors/appointment/waiting_for_confirmation_page.dart';
 import 'package:docsera/utils/page_transitions.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
@@ -40,8 +41,17 @@ class ConfirmationPage extends StatelessWidget {
       final bookingTimestamp = DateTime.now();
       final supabase = Supabase.instance.client;
 
+      final doctorInfo = await supabase
+          .from('doctors')
+          .select('require_confirmation')
+          .eq('id', appointmentDetails.doctorId)
+          .maybeSingle();
+
+      final requiresConfirmation = doctorInfo?['require_confirmation'] ?? true;
+
       await supabase.from('appointments').update({
         'user_id': userId,
+        if (appointmentDetails.isRelative) 'relative_id': appointmentDetails.patientId,
         'account_name': userName,
         'patient_name': appointmentDetails.patientName,
         'user_gender': appointmentDetails.patientGender,
@@ -50,8 +60,61 @@ class ConfirmationPage extends StatelessWidget {
         'reason': appointmentDetails.reason,
         'booking_timestamp': bookingTimestamp.toIso8601String(),
         'booked': true,
+        'is_docsera_user': true,
+        'booked_via': 'DocSera',
+        'attachments': null,
+        'is_confirmed': !requiresConfirmation, // ✅ حسب الإعداد
       }).eq('id', appointmentId);
 
+      // ✅ أضف الطبيب إلى قائمة visited doctors عند الحجز
+      final targetTable = appointmentDetails.isRelative ? 'relatives' : 'users';
+      final targetId = appointmentDetails.patientId;
+
+// ✅ احصل على قائمة الأطباء السابقة
+      final existingDoctorsResponse = await supabase
+          .from(targetTable)
+          .select('doctors')
+          .eq('id', targetId)
+          .maybeSingle();
+
+      List<String> existingDoctors = [];
+
+      if (existingDoctorsResponse != null &&
+          existingDoctorsResponse['doctors'] is List) {
+        existingDoctors = List<String>.from(existingDoctorsResponse['doctors']);
+      }
+
+// ✅ أضف الطبيب فقط إن لم يكن موجودًا مسبقًا
+      if (!existingDoctors.contains(appointmentDetails.doctorId)) {
+        existingDoctors.add(appointmentDetails.doctorId);
+
+        await supabase.from(targetTable).update({
+          'doctors': existingDoctors,
+        }).eq('id', targetId);
+      }
+
+
+      if (requiresConfirmation) {
+        Navigator.pushReplacement(
+          context,
+          fadePageRoute(WaitingForConfirmationPage(
+            appointment: {
+              'doctorId': appointmentDetails.doctorId,
+              'doctorName': appointmentDetails.doctorName,
+              'doctorTitle': appointmentDetails.doctorTitle,
+              'doctorGender': appointmentDetails.doctorGender,
+              'doctor_image': appointmentDetails.image,
+              'specialty': appointmentDetails.specialty,
+              'clinicName': appointmentDetails.clinicName,
+              'clinicAddress': appointmentDetails.clinicAddress,
+              'patientName': appointmentDetails.patientName,
+              'reason': appointmentDetails.reason,
+              'timestamp': appointmentTimestamp.toIso8601String(),
+              'bookingTimestamp': bookingTimestamp.toIso8601String(),
+            },
+          )),
+        );
+        } else {
       // ✅ الانتقال إلى صفحة التأكيد
       Navigator.pushReplacement(
         context,
@@ -74,6 +137,7 @@ class ConfirmationPage extends StatelessWidget {
           ),
         ),
       );
+    }
     } catch (e) {
       print("❌ Error booking appointment: $e");
     }

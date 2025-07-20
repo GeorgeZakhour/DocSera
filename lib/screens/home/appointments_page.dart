@@ -318,6 +318,8 @@ import 'package:docsera/gen_l10n/app_localizations.dart';
 
     /// 🔹 **Appointment Card**
     Widget _buildAppointmentCard(Map<String, dynamic> appointment) {
+      final bool needsConfirmation = appointment['is_confirmed'] == false && appointment['booked'] == true;
+
       // ✅ Ensure `timestamp` is a `DateTime` object
       DateTime? appointmentDate;
       if (appointment['timestamp'] is String) {
@@ -337,6 +339,8 @@ import 'package:docsera/gen_l10n/app_localizations.dart';
       } else if (appointment['booking_timestamp'] is DateTime) {
         bookingDate = appointment['booking_timestamp'];
       }
+
+
 
       String locale = Localizations.localeOf(context).languageCode; // ✅ Get the current locale
 
@@ -384,7 +388,7 @@ import 'package:docsera/gen_l10n/app_localizations.dart';
             // 🔹 **Date and Time Bar**
             Container(
               decoration: BoxDecoration(
-                color: AppColors.mainDark, // ✅ Dark background
+                color: needsConfirmation ? AppColors.grayMain : AppColors.mainDark,
                 borderRadius:  BorderRadius.only(
                   topLeft: Radius.circular(8.r),
                   topRight: Radius.circular(8.r),
@@ -415,6 +419,10 @@ import 'package:docsera/gen_l10n/app_localizations.dart';
               onTap: () {
                 bool isUpcoming = _selectedTab == 0;
 
+                needsConfirmation
+                ?
+                null
+                :
                 Navigator.push(
                   context,
                   fadePageRoute(AppointmentDetailsPage(
@@ -426,7 +434,7 @@ import 'package:docsera/gen_l10n/app_localizations.dart';
               child: Column(
                 children: [
                   Padding(
-                    padding: EdgeInsets.symmetric(horizontal: 18.w, vertical: 12.h),
+                    padding: EdgeInsets.symmetric(horizontal: 18.w, vertical: needsConfirmation? 8.h : 12.h),
                     child: Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
@@ -434,7 +442,7 @@ import 'package:docsera/gen_l10n/app_localizations.dart';
                           children: [
                             // ✅ Doctor Avatar
                             CircleAvatar(
-                              radius: 20.r,
+                              radius: needsConfirmation ? 16.r : 20.r,
                               backgroundColor: AppColors.mainDark.withOpacity(0.3),
                               backgroundImage: AssetImage(avatarPath),
                             ),
@@ -456,7 +464,13 @@ import 'package:docsera/gen_l10n/app_localizations.dart';
                             ),
                           ],
                         ),
-                        Icon(Icons.arrow_forward_ios, color: Colors.grey, size: 16.sp),
+                        needsConfirmation
+                            ?
+                        SizedBox()
+                        :
+                        Icon(Icons.arrow_forward_ios, color: Colors.grey, size: 16.sp)
+
+
                       ],
                     ),
                   ),
@@ -465,7 +479,9 @@ import 'package:docsera/gen_l10n/app_localizations.dart';
                 padding: EdgeInsets.only(left: 12.w,right: 12.w, bottom: 8.h),
                 child: Row(
                   children: [
-                    Icon(Icons.local_hospital_outlined, color: AppColors.main.withOpacity(0.7), size: 16.sp),
+                    Icon(Icons.local_hospital_outlined,
+                        color: needsConfirmation ? AppColors.grayMain : AppColors.main.withOpacity(0.7),
+                        size: needsConfirmation ? 12.sp :16.sp),
                     SizedBox(width: 5.w),
                     Text(
                       appointment["reason"] ?? "No reason given",
@@ -483,7 +499,8 @@ import 'package:docsera/gen_l10n/app_localizations.dart';
 
             // 🔹 **Patient Name & Book Again Button**
             Padding(
-              padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 10.h),
+              padding: needsConfirmation ? EdgeInsets.symmetric(horizontal: 16.w, vertical: 5.h)
+                  :EdgeInsets.symmetric(horizontal: 16.w, vertical: 10.h),
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 crossAxisAlignment: CrossAxisAlignment.center,
@@ -501,8 +518,9 @@ import 'package:docsera/gen_l10n/app_localizations.dart';
                           ),
                         ],
                       ),
-                      SizedBox(height: 3.h),
 
+                     if (!needsConfirmation) ...[
+                      SizedBox(height: 3.h),
                       // ✅ Show Booking Date
                       Row(
                         children: [
@@ -514,8 +532,23 @@ import 'package:docsera/gen_l10n/app_localizations.dart';
                           ),
                         ],
                       ),
+                     ],
                     ],
                   ),
+                  needsConfirmation
+                      ? Container(
+                    padding: EdgeInsets.symmetric(horizontal: 10.w, vertical: 5.h),
+                    decoration: BoxDecoration(
+                      borderRadius: BorderRadius.circular(20.r),
+                      border: Border.all(color: Colors.grey),
+                      color: Colors.transparent,
+                    ),
+                    child: Text(
+                      AppLocalizations.of(context)!.waitingConfirmation,
+                      style: AppTextStyles.getText3(context).copyWith(color: Colors.grey[700], fontWeight: FontWeight.w500),
+                    ),
+                  )
+                      :
                   InkWell(
                     onTap: () {
                       // ✅ Navigate to SelectPatientPage to start a new booking for the same doctor

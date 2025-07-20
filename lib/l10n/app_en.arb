@@ -75,6 +75,7 @@
   "appointmentReason": "Reason: {reason}",
   "patientName": "Patient: {name}",
   "bookAgain": "Book again",
+  "waitingConfirmation": "Waiting for confirmation",
   "loadMoreAppointments": "Load more..",
   "unknownDate": "Unknown Date",
   "unknownTime": "Unknown Time",
@@ -408,7 +409,9 @@
   "appointmentAddedToCalendar": "📅 Appointment added to your calendar!",
   "appointmentFailedToAdd": "⚠️ Failed to add appointment to the calendar.",
   "errorLoadingAppointments": "An error occurred while loading appointments.",
-
+  "awaitingDoctorConfirmation": "Awaiting Doctor Confirmation",
+  "waitingForDoctorToApprove": "Your request has been sent successfully. The doctor will review and approve the appointment shortly.",
+  "backToHome": "Back to Home",
 
   "@AppointmentDetails================================": {
     "description": "👨‍⚕️ معلومات الحجز"

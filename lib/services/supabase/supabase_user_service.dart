@@ -462,12 +462,15 @@ extension SupabaseUserServiceAppointments on SupabaseUserService {
         .from('appointments')
         .stream(primaryKey: ['id'])
         .eq('user_id', userId)
-        .order('timestamp')
+        .order('timestamp', ascending: true)
         .map((event) {
       final now = DateTime.now().toLocal();
       List<Map<String, dynamic>> all = [];
 
       for (final appt in event) {
+        // ✅ تصفية الحجوزات المؤكدة فقط
+        if (appt['booked'] != true) continue;
+
         final timestamp = DateTime.tryParse(appt['timestamp'] ?? '') ?? now;
 
         appt['timestamp'] = timestamp.toIso8601String();
@@ -489,6 +492,7 @@ extension SupabaseUserServiceAppointments on SupabaseUserService {
 
     return stream;
   }
+
 
 
   /// ✅ تفعيل الاستماع للمواعيد

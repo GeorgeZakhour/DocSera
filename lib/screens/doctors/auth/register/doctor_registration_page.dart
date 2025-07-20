@@ -1,8 +1,10 @@
 import 'package:docsera/screens/doctors/auth/register/doctor_create_password.dart';
+import 'package:docsera/screens/doctors/doctor_panel/doctor_dashboard.dart';
 import 'package:docsera/utils/page_transitions.dart';
 import 'package:docsera/widgets/base_scaffold.dart';
 import 'package:flutter/material.dart';
 import 'package:docsera/app/const.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:uuid/uuid.dart';
 
@@ -28,6 +30,7 @@ class _DoctorRegistrationPageState extends State<DoctorRegistrationPage> {
   final TextEditingController _addressDetailsController = TextEditingController();
   final TextEditingController _profileDescriptionController = TextEditingController();
   final TextEditingController _otherLanguageController = TextEditingController();
+  final TextEditingController _passwordController = TextEditingController();
 
 
 
@@ -144,9 +147,16 @@ class _DoctorRegistrationPageState extends State<DoctorRegistrationPage> {
   Future<void> _registerDoctor() async {
     if (_formKey.currentState!.validate()) {
       try {
-        // ✅ Create a document reference with an auto-generated ID
-        final doctorId = const Uuid().v4(); // أو أي توليد ID
+        // ✅ إنشاء حساب باستخدام Supabase Auth
+        final authResponse = await Supabase.instance.client.auth.signUp(
+          email: _emailController.text.trim(),
+          password: _passwordController.text.trim(),
+        );
 
+        final doctorId = authResponse.user?.id;
+        if (doctorId == null) throw Exception("Signup failed");
+
+        // ✅ حفظ البيانات الإضافية في جدول doctors
         await Supabase.instance.client.from('doctors').insert({
           "id": doctorId,
           "title": _selectedTitle,
@@ -173,17 +183,19 @@ class _DoctorRegistrationPageState extends State<DoctorRegistrationPage> {
           "created_at": DateTime.now().toIso8601String(),
           "last_updated": DateTime.now().toIso8601String(),
         });
-        // ✅ Show success message
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text("Doctor Registered Successfully!")),
-        );
 
-        // ✅ Navigate to password creation page
-        Navigator.push(
+        // ✅ حفظ بيانات الدخول
+        final prefs = await SharedPreferences.getInstance();
+        await prefs.setBool('isDoctorLoggedIn', true);
+        await prefs.setString('doctorId', doctorId);
+        await prefs.setString('doctorEmail', _emailController.text.trim());
+
+        // ✅ التنقل إلى لوحة التحكم
+        Navigator.pushAndRemoveUntil(
           context,
-            fadePageRoute(DoctorCreatePasswordPage(doctorId: doctorId, email: _emailController.text.trim()))
+          fadePageRoute(DoctorDashboard()),
+              (route) => false,
         );
-
       } catch (e) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text("Error: $e")),
@@ -265,6 +277,14 @@ class _DoctorRegistrationPageState extends State<DoctorRegistrationPage> {
                 // Phone Number
                 TextField(controller: _phoneController, decoration: _inputDecoration("Phone Number"), keyboardType: TextInputType.number),
                 const SizedBox(height: 16),
+
+                TextField(
+                  controller: _passwordController,
+                  obscureText: true,
+                  decoration: _inputDecoration("Password"),
+                ),
+                const SizedBox(height: 16),
+
 
                 // Specialty Selection
                 DropdownButtonFormField<String>(

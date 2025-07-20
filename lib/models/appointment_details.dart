@@ -5,6 +5,8 @@ class AppointmentDetails {
   final String doctorTitle;
   final String specialty;
   final String image;
+  final String patientId;
+  final bool isRelative;
   final String patientName;
   final String patientGender;
   final int patientAge;
@@ -20,6 +22,8 @@ class AppointmentDetails {
     required this.doctorTitle,
     required this.specialty,
     required this.image,
+    required this.patientId,
+    required this.isRelative,
     required this.patientName,
     required this.patientGender,
     required this.patientAge,
@@ -37,6 +41,8 @@ class AppointmentDetails {
     String? doctorTitle,
     String? specialty,
     String? image,
+    String? patientId,
+    bool? isRelative,
     String? patientName,
     String? patientGender,
     int? patientAge,
@@ -53,6 +59,8 @@ class AppointmentDetails {
       doctorTitle: doctorTitle ?? this.doctorTitle,
       specialty: specialty ?? this.specialty,
       image: image ?? this.image,
+      patientId: patientId ?? this.patientId,
+      isRelative: isRelative ?? this.isRelative,
       patientName: patientName ?? this.patientName,
       patientGender: patientGender ?? this.patientGender,
       patientAge: patientAge ?? this.patientAge,
