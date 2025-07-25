@@ -3,6 +3,7 @@ import 'package:docsera/app/text_styles.dart';
 import 'package:docsera/models/conversation.dart';
 import 'package:docsera/screens/doctors/doctor_panel/doctor_drawer.dart';
 import 'package:docsera/screens/doctors/doctor_panel/doctor_conversation_page.dart';
+import 'package:docsera/utils/doctor_image_utils.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
@@ -19,14 +20,12 @@ class DoctorMessagesPage extends StatelessWidget {
 
   String _getDoctorAvatar(Map<String, dynamic>? doctor) {
     if (doctor == null) return 'assets/images/male-doc.png';
-    if (doctor['profileImage'] != null && doctor['profileImage'].toString().isNotEmpty) {
-      return doctor['profileImage'];
-    }
-    String gender = doctor['gender']?.toLowerCase() ?? 'male';
-    String title = doctor['title']?.toLowerCase() ?? '';
-    return (title == "dr.")
-        ? (gender == "female" ? 'assets/images/female-doc.png' : 'assets/images/male-doc.png')
-        : (gender == "female" ? 'assets/images/female-phys.png' : 'assets/images/male-phys.png');
+
+    return getDoctorImage(
+      imageUrl: doctor['profileImage'],
+      gender: doctor['gender'],
+      title: doctor['title'],
+    );
   }
 
   @override

@@ -2,6 +2,7 @@
   import 'dart:async';
   import 'dart:convert';
   import 'package:docsera/screens/doctors/appointment/select_patient_page.dart';
+import 'package:docsera/utils/doctor_image_utils.dart';
   import 'package:flutter/material.dart';
   import 'package:docsera/app/const.dart';
   import 'package:flutter_screenutil/flutter_screenutil.dart';
@@ -1162,16 +1163,13 @@
 
 
       // ✅ Determine avatar based on gender & title
-      String avatarPath;
-      if (title == "dr.") {
-        avatarPath = gender == "female"
-            ? 'assets/images/female-doc.png'
-            : 'assets/images/male-doc.png';
-      } else {
-        avatarPath = gender == "female"
-            ? 'assets/images/female-phys.png'
-            : 'assets/images/male-phys.png';
-      }
+      String? imageUrl = doctor['profile_image'];
+      String avatarPath = getDoctorImage(
+        imageUrl: imageUrl,
+        gender: gender,
+        title: title,
+      );
+
       final String? profileDescription = doctor['profile_description'];
       final List<String>? specialties = (doctor['specialties'] as List<dynamic>?)?.cast<String>();
       final String? website = doctor['website'];

@@ -4,6 +4,7 @@
   import 'package:docsera/Business_Logic/Appointments_page/appointments_state.dart';
 import 'package:docsera/screens/home/shimmer/shimmer_widgets.dart';
 import 'package:docsera/services/supabase/supabase_user_service.dart';
+import 'package:docsera/utils/doctor_image_utils.dart';
   import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:docsera/gen_l10n/app_localizations.dart';
   import 'package:docsera/screens/doctors/appointment/select_patient_page.dart';
@@ -362,18 +363,12 @@ import 'package:docsera/gen_l10n/app_localizations.dart';
       String patientName = appointment["patient_name"] ?? "Unknown";
 
       // ✅ Determine doctor's avatar based on gender & title
-      String gender = (appointment['doctor_gender'] ?? '').toLowerCase();
-      String title = (appointment['doctor_title'] ?? '').toLowerCase();
-      String? doctorImage = appointment['doctor_image'];
+      String avatarPath = getDoctorImage(
+        imageUrl: appointment['doctor_image'],
+        gender: appointment['doctor_gender'],
+        title: appointment['doctor_title'],
+      );
 
-      String avatarPath;
-      if (doctorImage != null && doctorImage.trim().isNotEmpty) {
-        avatarPath = doctorImage; // إذا كانت الصورة موجودة (مسار Asset حقيقي)
-      } else {
-        avatarPath = (title == "dr.")
-            ? (gender == "female" ? 'assets/images/female-doc.png' : 'assets/images/male-doc.png')
-            : (gender == "male" ? 'assets/images/male-phys.png' : 'assets/images/female-phys.png');
-      }
 
       return Card(
         elevation: 0,

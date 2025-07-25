@@ -187,6 +187,9 @@ class AppLocalizationsAr extends AppLocalizations {
   String get bookAgain => 'احجز مرة أخرى';
 
   @override
+  String get waitingConfirmation => 'بانتظار تأكيد الموعد';
+
+  @override
   String get loadMoreAppointments => 'تحميل المزيد..';
 
   @override
@@ -1057,6 +1060,16 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get errorLoadingAppointments => 'حدث خطأ أثناء تحميل المواعيد.';
+
+  @override
+  String get awaitingDoctorConfirmation => 'بانتظار تأكيد الطبيب';
+
+  @override
+  String get waitingForDoctorToApprove =>
+      'تم إرسال طلبك بنجاح، وسيقوم الطبيب بمراجعة الموعد والموافقة عليه.';
+
+  @override
+  String get backToHome => 'العودة إلى الرئيسية';
 
   @override
   String get appointmentDetails => 'تفاصيل الموعد';

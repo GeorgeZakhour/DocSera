@@ -2,6 +2,7 @@ import 'package:docsera/app/const.dart';
 import 'package:docsera/app/text_styles.dart';
 import 'package:docsera/models/appointment_details.dart';
 import 'package:docsera/screens/doctors/appointment/confirmation_page.dart';
+import 'package:docsera/utils/doctor_image_utils.dart';
 import 'package:docsera/utils/page_transitions.dart';
 import 'package:docsera/widgets/base_scaffold.dart';
 import 'package:docsera/widgets/custom_bottom_navigation_bar.dart';
@@ -117,11 +118,11 @@ class RescheduleConfirmationPage extends StatelessWidget {
     String gender = appointment.doctorGender.toLowerCase();
     String title = appointment.doctorTitle.toLowerCase();
 
-    String avatarPath = (appointment.image.isNotEmpty)
-        ? appointment.image
-        : (title == "dr.")
-        ? (gender == "female" ? 'assets/images/female-doc.png' : 'assets/images/male-doc.png')
-        : (gender == "male" ? 'assets/images/male-phys.png' : 'assets/images/female-phys.png');
+    String avatarPath = getDoctorImage(
+      imageUrl: appointment.image,
+      gender: gender,
+      title: title,
+    );
 
 
     return Container(
@@ -140,8 +141,9 @@ class RescheduleConfirmationPage extends StatelessWidget {
               CircleAvatar(
                 backgroundColor: old? AppColors.yellow.withOpacity(0.2) : AppColors.main.withOpacity(0.2),
                 radius: 25.r,
-                backgroundImage: AssetImage(avatarPath),
-              ),
+                backgroundImage: avatarPath.startsWith("http")
+                    ? NetworkImage(avatarPath)
+                    : AssetImage(avatarPath) as ImageProvider,              ),
               SizedBox(width: 12.w),
               Column(
                 crossAxisAlignment: CrossAxisAlignment.start,

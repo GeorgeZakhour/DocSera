@@ -1,5 +1,6 @@
 import 'package:docsera/app/text_styles.dart';
 import 'package:docsera/screens/doctors/appointment/select_patient_page.dart';
+import 'package:docsera/utils/doctor_image_utils.dart';
 import 'package:docsera/widgets/custom_bottom_navigation_bar.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
@@ -22,15 +23,15 @@ class AppointmentCancelledPage extends StatelessWidget {
     String formattedDate = DateFormat("EEEE, d MMMM yyyy", locale).format(appointmentDate);
     String formattedTime = DateFormat("HH:mm", locale).format(appointmentDate);
 
-    final imagePath = (appointment['doctor_image'] != null && appointment['doctor_image'].toString().isNotEmpty)
-        ? appointment['doctor_image']
-        : (appointment['doctor_title'].toString().toLowerCase() == "dr."
-        ? (appointment['doctor_gender'].toString().toLowerCase() == "female"
-        ? 'assets/images/female-doc.png'
-        : 'assets/images/male-doc.png')
-        : (appointment['doctor_gender'].toString().toLowerCase() == "male"
-        ? 'assets/images/male-phys.png'
-        : 'assets/images/female-phys.png'));
+    String gender = (appointment['doctor_gender'] ?? '').toString().toLowerCase();
+    String title = (appointment['doctor_title'] ?? '').toString().toLowerCase();
+    String? doctorImage = appointment['doctor_image'];
+
+    final imagePath = getDoctorImage(
+      imageUrl: doctorImage,
+      gender: gender,
+      title: title,
+    );
 
     return WillPopScope(
       onWillPop: () async {

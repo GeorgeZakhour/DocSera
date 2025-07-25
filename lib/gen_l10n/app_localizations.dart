@@ -428,6 +428,12 @@ abstract class AppLocalizations {
   /// **'Book Again'**
   String get bookAgain;
 
+  /// No description provided for @waitingConfirmation.
+  ///
+  /// In en, this message translates to:
+  /// **'Waiting for confirmation'**
+  String get waitingConfirmation;
+
   /// No description provided for @loadMoreAppointments.
   ///
   /// In en, this message translates to:
@@ -2065,6 +2071,24 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'An error occurred while loading appointments.'**
   String get errorLoadingAppointments;
+
+  /// No description provided for @awaitingDoctorConfirmation.
+  ///
+  /// In en, this message translates to:
+  /// **'Awaiting Doctor Confirmation'**
+  String get awaitingDoctorConfirmation;
+
+  /// No description provided for @waitingForDoctorToApprove.
+  ///
+  /// In en, this message translates to:
+  /// **'Your request has been sent successfully. The doctor will review and approve the appointment shortly.'**
+  String get waitingForDoctorToApprove;
+
+  /// No description provided for @backToHome.
+  ///
+  /// In en, this message translates to:
+  /// **'Back to Home'**
+  String get backToHome;
 
   /// No description provided for @appointmentDetails.
   ///

@@ -8,6 +8,7 @@ import 'package:docsera/app/text_styles.dart';
 import 'package:docsera/screens/home/shimmer/shimmer_widgets.dart';
 import 'package:docsera/services/supabase/supabase_user_service.dart';
 import 'package:docsera/utils/custom_clippers.dart';
+import 'package:docsera/utils/doctor_image_utils.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:docsera/gen_l10n/app_localizations.dart';
@@ -171,24 +172,23 @@ class _MainScreenState extends State<MainScreen> with AutomaticKeepAliveClientMi
 
   /// **🔹 Doctor Card Widget**
   Widget _buildDoctorCard(Map<String, dynamic> doctor) {
-    String gender = (doctor['gender'] ?? 'male').toLowerCase();
+    String gender = (doctor['gender'] ?? '').toLowerCase();
     String title = (doctor['title'] ?? '').toLowerCase();
     String? imageUrl = doctor['profile_image'];
 
-    ImageProvider profileImageProvider;
+    final String avatarPath = getDoctorImage(
+      imageUrl: imageUrl,
+      gender: gender,
+      title: title,
+    );
 
-    if (imageUrl != null && imageUrl.startsWith('http')) {
-      profileImageProvider = NetworkImage(imageUrl);
+    ImageProvider profileImageProvider;
+    if (avatarPath.startsWith('http')) {
+      profileImageProvider = NetworkImage(avatarPath);
     } else {
-      String avatarPath = (title == 'dr.')
-          ? (gender == 'female'
-          ? 'assets/images/female-doc.png'
-          : 'assets/images/male-doc.png')
-          : (gender == 'female'
-          ? 'assets/images/female-phys.png'
-          : 'assets/images/male-phys.png');
       profileImageProvider = AssetImage(avatarPath);
     }
+
 
 
     return GestureDetector(
@@ -242,9 +242,16 @@ class _MainScreenState extends State<MainScreen> with AutomaticKeepAliveClientMi
               ListTile(
                 leading: CircleAvatar(
                   backgroundColor: AppColors.main.withOpacity(0.1),
-                  backgroundImage: (doctor['profileImage'] != null && doctor['profileImage'].toString().startsWith("http"))
-                      ? NetworkImage(doctor['profileImage'])
-                      : AssetImage(doctor['profileImage']) as ImageProvider,
+                  backgroundImage: (() {
+                    final String avatarPath = getDoctorImage(
+                      imageUrl: doctor['profileImage'],
+                      gender: doctor['gender'],
+                      title: doctor['title'],
+                    );
+                    return avatarPath.startsWith("http")
+                        ? NetworkImage(avatarPath)
+                        : AssetImage(avatarPath) as ImageProvider;
+                  })(),
                 ),
                 title: Text(
                   "${doctor['title']} ${doctor['first_name']} ${doctor['last_name']}".trim(),
@@ -624,15 +631,15 @@ class _MainScreenState extends State<MainScreen> with AutomaticKeepAliveClientMi
               showSecondShape: true,
             ),
 
-            ElevatedButton(
-              onPressed: () async {
-                final prefs = await SharedPreferences.getInstance();
-                await prefs.clear();
-                Supabase.instance.client.auth.signOut(); // ⛔ اختياري فقط
-                // أعد تشغيل التطبيق أو انتقل لشاشة البداية
-              },
-              child: Text('🧹 Reset Session'),
-            ),
+            // ElevatedButton(
+            //   onPressed: () async {
+            //     final prefs = await SharedPreferences.getInstance();
+            //     await prefs.clear();
+            //     Supabase.instance.client.auth.signOut(); // ⛔ اختياري فقط
+            //     // أعد تشغيل التطبيق أو انتقل لشاشة البداية
+            //   },
+            //   child: Text('🧹 Reset Session'),
+            // ),
 
 
 

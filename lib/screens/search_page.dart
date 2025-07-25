@@ -1,5 +1,6 @@
 import 'package:docsera/models/document.dart';
 import 'package:docsera/screens/doctors/doctor_profile_page.dart';
+import 'package:docsera/utils/doctor_image_utils.dart';
 import 'package:docsera/utils/page_transitions.dart';
 import 'package:docsera/widgets/base_scaffold.dart';
 import 'package:docsera/gen_l10n/app_localizations.dart';
@@ -279,9 +280,11 @@ class _SearchPageState extends State<SearchPage> {
     String gender = doctor['gender']?.toLowerCase() ?? 'male';
     String title = doctor['title']?.toLowerCase() ?? '';
 
-    String avatarPath = (title == "dr.")
-        ? (gender == "female" ? 'assets/images/female-doc.png' : 'assets/images/male-doc.png')
-        : (gender == "female" ? 'assets/images/female-phys.png' : 'assets/images/male-phys.png');
+    String avatarPath = getDoctorImage(
+      imageUrl: doctor['image'],
+      gender: doctor['gender'],
+      title: doctor['title'],
+    );
 
 
     return ListTile(

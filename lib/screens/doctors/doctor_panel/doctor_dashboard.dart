@@ -1,4 +1,5 @@
 import 'package:docsera/screens/doctors/doctor_panel/doctor_drawer.dart';
+import 'package:docsera/utils/doctor_image_utils.dart';
 import 'package:flutter/material.dart';
 import 'package:docsera/app/const.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -261,10 +262,10 @@ class _DoctorDashboardState extends State<DoctorDashboard> {
 
   /// **🔹 Helper: Get Doctor Avatar**
   String _getDoctorAvatar(Map<String, dynamic> doctor) {
-    String gender = doctor['gender']?.toLowerCase() ?? 'male';
-    String title = doctor['title']?.toLowerCase() ?? '';
-    return (title == "dr.")
-        ? (gender == "female" ? 'assets/images/female-doc.png' : 'assets/images/male-doc.png')
-        : (gender == "female" ? 'assets/images/female-phys.png' : 'assets/images/male-phys.png');
+    return getDoctorImage(
+      imageUrl: doctor['profileImage'],
+      gender: doctor['gender'],
+      title: doctor['title'],
+    );
   }
 }

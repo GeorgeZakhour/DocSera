@@ -105,27 +105,27 @@ class _LogInPageState extends State<LogInPage> {
       final input = _inputController.text.trim();
       final password = _passwordController.text;
 
-      // ✅ التحقق إذا كان إدخال المستخدم رقم هاتف
       final isPhone = RegExp(r'^0\d{9}$').hasMatch(input) || RegExp(r'^00963\d{9}$').hasMatch(input);
       final formattedPhone = isPhone ? getFormattedPhoneNumber(input) : null;
 
-      print("📥 المستخدم أدخل: $input");
+      print("📥 [INPUT] المستخدم أدخل: $input");
       if (isPhone) {
-        print("📞 تم التعرف عليه كرقم هاتف وتم تنسيقه إلى: $formattedPhone");
+        print("📞 [FORMAT] تم التعرف عليه كرقم هاتف وتم تنسيقه إلى: $formattedPhone");
       } else {
-        print("📧 تم التعرف عليه كإيميل: $input");
+        print("📧 [FORMAT] تم التعرف عليه كإيميل: $input");
       }
 
-      // ✅ جلب بيانات المستخدم من Firestore
+      // ✅ جلب بيانات المستخدم من Supabase
       final userDoc = await _supabaseUserService.getUserByEmailOrPhone(isPhone ? formattedPhone! : input);
+      print("🧾 [USER DATA] البيانات المسترجعة من Supabase: $userDoc");
+
       final userData = userDoc;
       if (userData == null) throw Exception("❌ لم يتم العثور على بيانات المستخدم");
 
-      // ✅ استخراج الإيميل  لتسجيل الدخول
-      final email = userData['email'];
+      final email = userData['email']?.toString();
       if (email == null || email.isEmpty) throw Exception("❌ الإيميل غير متوفر");
 
-      print("📨 الإيميل  الذي سيتم استخدامه لتسجيل الدخول: $email");
+      print("📨 [AUTH EMAIL] الإيميل الذي سيتم استخدامه لتسجيل الدخول: $email");
 
       // ✅ تسجيل الدخول في Supabase Auth
       final response = await Supabase.instance.client.auth.signInWithPassword(
@@ -134,32 +134,48 @@ class _LogInPageState extends State<LogInPage> {
       );
 
       final supabaseUser = response.user;
-      if (supabaseUser == null) throw Exception("❌ فشل تسجيل الدخول");
+      if (supabaseUser == null) throw Exception("❌ فشل تسجيل الدخول في Supabase");
 
       final userId = supabaseUser.id;
+      print("✅ [LOGIN SUCCESS] User ID: $userId");
+
+      // ✅ تحضير البيانات
+      final firstName = userData['firstName']?.toString() ?? '';
+      final lastName = userData['lastName']?.toString() ?? '';
+      final fullName = '$firstName $lastName'.trim();
+      final userPhone = userData['phone_number']?.toString() ?? '';
+      final userEmail = userData['email']?.toString() ?? '';
 
       // ✅ تخزين البيانات في SharedPreferences
-      SharedPreferences prefs = await SharedPreferences.getInstance();
+      final prefs = await SharedPreferences.getInstance();
       await prefs.setBool('isLoggedIn', true);
       await prefs.setString('userId', userId);
-      await prefs.setString('userName', '${userData['firstName']} ${userData['lastName']}');
-      await prefs.setString('userEmail', userData['email'] ?? '');
-      await prefs.setString('userPhone', userData['phone_number'] ?? '');
+      await prefs.setString('userName', fullName);
+      await prefs.setString('userEmail', userEmail);
+      await prefs.setString('userPhone', userPhone);
       await prefs.setString('userPassword', password); // للبصمة
 
-      // ✅ تحديث الـ Cubit
-      context.read<UserCubit>().loadUserData(context);
+      print("💾 [SHARED PREFS] تم حفظ بيانات المستخدم");
 
-      // ✅ الانتقال للواجهة الرئيسية
+      // ✅ تحديث Cubit
+      context.read<UserCubit>().loadUserData(context);
+      print("🔁 [CUBIT] تم استدعاء loadUserData");
+
+      // ✅ التحقق من الأجهزة الموثوقة والتحقق بخطوتين
       if (context.mounted) {
         final deviceId = await getDeviceId();
+        print("📱 [DEVICE ID] $deviceId");
+
         final trustedDevices = (userData['trustedDevices'] as List?) ?? [];
         final is2FAEnabled = userData['twoFactorAuthEnabled'] == true;
 
+        print("🛡️ [2FA] مفعل؟ $is2FAEnabled");
+        print("🧩 [DEVICE TRUSTED?] ${trustedDevices.contains(deviceId)}");
+
         if (is2FAEnabled && !trustedDevices.contains(deviceId)) {
-          // 👇 إرسال رمز OTP والتنقل إلى صفحة تحقق OTP المخصصة لتسجيل الدخول
           final phone = userData['phone_number'];
 
+          print("🚨 [2FA] الانتقال إلى صفحة OTP للتحقق");
           Navigator.pushAndRemoveUntil(
             context,
             MaterialPageRoute(
@@ -171,7 +187,7 @@ class _LogInPageState extends State<LogInPage> {
                 (route) => false,
           );
         } else {
-          // 👇 المستخدم موثق مسبقًا أو تحقق بخطوتين غير مفعل
+          print("✅ [NAVIGATION] الانتقال إلى الصفحة الرئيسية");
           Navigator.pushAndRemoveUntil(
             context,
             fadePageRoute(CustomBottomNavigationBar()),

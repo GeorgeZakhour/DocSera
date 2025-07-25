@@ -3,6 +3,7 @@
   import 'package:docsera/screens/home/messages/conversation_page.dart';
   import 'package:docsera/screens/home/shimmer/shimmer_widgets.dart';
   import 'package:docsera/screens/search_page.dart';
+import 'package:docsera/utils/doctor_image_utils.dart';
   import 'package:flutter/material.dart';
   import 'package:flutter_bloc/flutter_bloc.dart';
   import 'package:docsera/gen_l10n/app_localizations.dart';

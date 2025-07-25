@@ -11,6 +11,7 @@ import 'package:docsera/screens/doctors/appointment/select_patient_page.dart';
 import 'package:docsera/screens/home/appointment/reschedule_confirmation_page.dart';
 import 'package:docsera/screens/home/appointment/send_document.dart';
 import 'package:docsera/screens/home/shimmer/shimmer_widgets.dart';
+import 'package:docsera/utils/doctor_image_utils.dart';
 import 'package:docsera/utils/text_direction_utils.dart';
 import 'package:docsera/widgets/base_scaffold.dart';
 import 'package:file_picker/file_picker.dart';
@@ -1256,14 +1257,11 @@ Shared from DocSera App
     String title = (widget.appointment['doctor_title'] ?? '').toLowerCase();
     String? doctorImage = widget.appointment['doctor_image'];
 
-    String avatarPath;
-    if (doctorImage != null && doctorImage.trim().isNotEmpty) {
-      avatarPath = doctorImage; // إذا كانت الصورة موجودة (مسار Asset حقيقي)
-    } else {
-      avatarPath = (title == "dr.")
-          ? (gender == "female" ? 'assets/images/female-doc.png' : 'assets/images/male-doc.png')
-          : (gender == "male" ? 'assets/images/male-phys.png' : 'assets/images/female-phys.png');
-    }
+    String avatarPath = getDoctorImage(
+      imageUrl: doctorImage,
+      gender: gender,
+      title: title,
+    );
 
 
     return BaseScaffold(
@@ -1326,8 +1324,9 @@ Shared from DocSera App
                                   CircleAvatar(
                                     backgroundColor: AppColors.main.withOpacity(0.3),
                                     radius: 20.sp,
-                                    backgroundImage: AssetImage(avatarPath),
-                                  ),
+                                    backgroundImage: avatarPath.startsWith("http")
+                                        ? NetworkImage(avatarPath)
+                                        : AssetImage(avatarPath) as ImageProvider,                                  ),
                                   SizedBox(width: 20.w),
                                   Column(
                                     crossAxisAlignment: CrossAxisAlignment.start,

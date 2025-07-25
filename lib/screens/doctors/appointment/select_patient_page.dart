@@ -3,6 +3,7 @@ import 'package:docsera/models/appointment_details.dart';
 import 'package:docsera/models/patient_profile.dart';
 import 'package:docsera/screens/doctors/appointment/visited_doctor_page.dart';
 import 'package:docsera/screens/home/account/add_relative.dart';
+import 'package:docsera/utils/doctor_image_utils.dart';
 import 'package:docsera/utils/page_transitions.dart';
 import 'package:docsera/widgets/base_scaffold.dart';
 import 'package:flutter/material.dart';
@@ -190,15 +191,11 @@ class _SelectPatientPageState extends State<SelectPatientPage> {
 
   @override
   Widget build(BuildContext context) {
-    final imagePath = (widget.image.isNotEmpty)
-        ? widget.image
-        : (widget.doctorTitle.toLowerCase() == "dr."
-        ? (widget.doctorGender.toLowerCase() == "female"
-        ? 'assets/images/female-doc.png'
-        : 'assets/images/male-doc.png')
-        : (widget.doctorGender.toLowerCase() == "male"
-        ? 'assets/images/male-phys.png'
-        : 'assets/images/female-phys.png'));
+    final imagePath = getDoctorImage(
+      imageUrl: widget.image,
+      gender: widget.doctorGender,
+      title: widget.doctorTitle,
+    );
 
 
     return BaseScaffold(

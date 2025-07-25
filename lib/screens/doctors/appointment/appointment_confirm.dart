@@ -3,6 +3,7 @@ import 'package:docsera/app/text_styles.dart';
 import 'package:docsera/models/appointment_details.dart';
 import 'package:docsera/screens/doctors/appointment/confirmation_page.dart';
 import 'package:docsera/screens/doctors/appointment/waiting_for_confirmation_page.dart';
+import 'package:docsera/utils/doctor_image_utils.dart';
 import 'package:docsera/utils/page_transitions.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
@@ -295,15 +296,11 @@ class ConfirmationPage extends StatelessWidget {
         ? "${appointmentDetails.doctorTitle} ${appointmentDetails.doctorName}"
         : appointmentDetails.doctorName;
 
-    final imagePath = (appointmentDetails.image.isNotEmpty)
-        ? appointmentDetails.image
-        : (appointmentDetails.doctorTitle.toLowerCase() == "dr."
-        ? (appointmentDetails.doctorGender.toLowerCase() == "female"
-        ? 'assets/images/female-doc.png'
-        : 'assets/images/male-doc.png')
-        : (appointmentDetails.doctorGender.toLowerCase() == "male"
-        ? 'assets/images/male-phys.png'
-        : 'assets/images/female-phys.png'));
+    final imagePath = getDoctorImage(
+      imageUrl: appointmentDetails.image,
+      gender: appointmentDetails.doctorGender,
+      title: appointmentDetails.doctorTitle,
+    );
 
     return Row(
       children: [

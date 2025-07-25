@@ -81,25 +81,33 @@ class UserCubit extends Cubit<UserState> {
   }
 
   Future<void> _emitUserStateFromMap(Map<String, dynamic> userData, String userId) async {
-    final firstName = userData['first_name'] ?? '';
-    final lastName = userData['last_name'] ?? '';
+    final firstName = userData['first_name']?.toString() ?? '';
+    final lastName = userData['last_name']?.toString() ?? '';
     final userName = "$firstName $lastName".trim();
-    final userEmail = userData['email'];
-    final userPhone = userData['phone_number'] ?? '';
-    final isPhoneVerified = userData['phone_verified'] ?? false;
-    final isEmailVerified = userData['email_verified'] ?? false;
-    final is2FAEnabled = userData['two_factor_auth_enabled'] ?? false;
+
+    final userEmail = (userData['email']?.toString() ?? '').trim();
+    final userPhone = (userData['phone_number']?.toString() ?? '').trim();
+    final isPhoneVerified = userData['phone_verified'] == true;
+    final isEmailVerified = userData['email_verified'] == true;
+    final is2FAEnabled = userData['two_factor_auth_enabled'] == true;
+
 
     await _prefs.setString('userName', userName);
-    if (userEmail != null) {
-      await _prefs.setString('userEmail', userEmail);
-    } else {
-      await _prefs.remove('userEmail');
-    }
+    await _prefs.setString('userEmail', userEmail);
     await _prefs.setString('userPhone', userPhone);
     await _prefs.setBool('phoneVerified', isPhoneVerified);
     await _prefs.setBool('isEmailVerified', isEmailVerified);
 
+    print("📤 [UserCubit] Preparing to emit UserLoaded with:");
+    print("🆔 userId: $userId");
+    print("👤 userName: $userName");
+    print("📧 userEmail: $userEmail (${userEmail.runtimeType})");
+    print("📞 userPhone: $userPhone (${userPhone.runtimeType})");
+    print("📱 phoneVerified: $isPhoneVerified (${isPhoneVerified.runtimeType})");
+    print("📨 emailVerified: $isEmailVerified (${isEmailVerified.runtimeType})");
+    print("🛡️ 2FA Enabled: $is2FAEnabled (${is2FAEnabled.runtimeType})");
+
+    assert(userId != null && userEmail != null && userPhone != null);
     emit(UserLoaded(
       userId: userId,
       userName: userName,

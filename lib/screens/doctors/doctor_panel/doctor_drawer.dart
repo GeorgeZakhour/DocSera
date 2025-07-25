@@ -1,3 +1,4 @@
+import 'package:docsera/utils/doctor_image_utils.dart';
 import 'package:docsera/widgets/custom_bottom_navigation_bar.dart';
 import 'package:flutter/material.dart';
 import 'package:docsera/app/const.dart';
@@ -79,21 +80,11 @@ class DoctorDrawer extends StatelessWidget {
       specialty = doctorData['specialty'] ?? "Specialty";
 
       // ✅ Check if Profile Image Exists
-      if (doctorData['profileImage'] != null &&
-          doctorData['profileImage'].isNotEmpty) {
-        avatarImage = doctorData['profileImage']; // ✅ Use Firestore Image
-      } else {
-        // ✅ Use Default Avatar Based on Gender & Title
-        String gender = doctorData['gender']?.toLowerCase() ?? 'male';
-        String title = doctorData['title']?.toLowerCase() ?? '';
-        avatarImage = (title == "dr.")
-            ? (gender == "female"
-            ? 'assets/images/female-doc.png'
-            : 'assets/images/male-doc.png')
-            : (gender == "female"
-            ? 'assets/images/female-phys.png'
-            : 'assets/images/male-phys.png');
-      }
+      avatarImage = getDoctorImage(
+        imageUrl: doctorData['profileImage'],
+        gender: doctorData['gender'],
+        title: doctorData['title'],
+      );
     }
 
     print("📸 Selected Avatar: $avatarImage");

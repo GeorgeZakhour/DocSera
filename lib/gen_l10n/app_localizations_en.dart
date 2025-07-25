@@ -188,6 +188,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get bookAgain => 'Book Again';
 
   @override
+  String get waitingConfirmation => 'Waiting for confirmation';
+
+  @override
   String get loadMoreAppointments => 'Load more..';
 
   @override
@@ -1070,6 +1073,16 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get errorLoadingAppointments =>
       'An error occurred while loading appointments.';
+
+  @override
+  String get awaitingDoctorConfirmation => 'Awaiting Doctor Confirmation';
+
+  @override
+  String get waitingForDoctorToApprove =>
+      'Your request has been sent successfully. The doctor will review and approve the appointment shortly.';
+
+  @override
+  String get backToHome => 'Back to Home';
 
   @override
   String get appointmentDetails => 'Appointment Details';

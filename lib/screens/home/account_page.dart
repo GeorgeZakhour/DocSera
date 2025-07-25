@@ -21,6 +21,7 @@ import 'package:docsera/screens/home/account/my_relatives.dart';
 import 'package:docsera/utils/page_transitions.dart';
 import 'package:flutter/material.dart';
 import 'package:docsera/app/const.dart';
+import 'package:flutter_svg/svg.dart';
 import 'package:local_auth/local_auth.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:docsera/utils/input_decoration.dart';
@@ -2009,12 +2010,13 @@ class _AccountScreenState extends State<AccountScreen> {
 
   /// **🔹 Builds benefits list**
   Widget _buildBenefitsList() {
-    return Expanded( // 🔸 Replace `Flexible` with `Expanded`
-        child: SingleChildScrollView( // 🔸 Ensure it scrolls when needed
+    return Expanded(
+      child: Center(
+        child: SingleChildScrollView(
           child: Padding(
             padding: EdgeInsets.symmetric(horizontal: 60.w),
             child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
+              mainAxisAlignment: MainAxisAlignment.center, // يضمن التمركز العمودي داخل الـScroll
               crossAxisAlignment: CrossAxisAlignment.center,
               children: [
                 _buildBenefitItem(Icons.event_available, AppLocalizations.of(context)!.benefit_appointments),
@@ -2025,8 +2027,10 @@ class _AccountScreenState extends State<AccountScreen> {
             ),
           ),
         ),
-      );
+      ),
+    );
   }
+
 
   /// **🔵 عنصر عنوان لقسم معين**
   Widget _buildSectionTitle(String title) {
@@ -2089,7 +2093,14 @@ class _AccountScreenState extends State<AccountScreen> {
           children: [
             Transform.translate(
               offset: Offset(0, -10.h),
-              child: (field == 'faceId') ? Icon(icon, color: AppColors.main, size: 20.sp) : Icon(icon, color: AppColors.main, size: 16.sp),
+              child: (field == 'faceId')
+                  ? SvgPicture.asset(
+                'assets/icons/face-id.svg',
+                width: 20.w,
+                height: 20.w,
+                color: AppColors.main,
+              )
+                  : Icon(icon, color: AppColors.main, size: 16.sp),
             ),
             SizedBox(width: 12.w),
             Expanded(

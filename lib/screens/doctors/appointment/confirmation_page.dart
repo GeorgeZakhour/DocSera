@@ -3,6 +3,7 @@ import 'package:docsera/app/text_styles.dart';
 import 'package:docsera/screens/doctors/appointment/select_patient_page.dart';
 import 'package:docsera/screens/home/appointment/appointment_details_page.dart';
 import 'package:docsera/screens/home/appointment/send_document.dart';
+import 'package:docsera/utils/doctor_image_utils.dart';
 import 'package:docsera/widgets/custom_bottom_navigation_bar.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
@@ -54,15 +55,11 @@ class AppointmentConfirmedPage extends StatelessWidget {
     String formattedDate = DateFormat("EEEE, d MMMM yyyy", locale).format(appointmentDate);
     String formattedTime = DateFormat("HH:mm", locale).format(appointmentDate);
 
-    final imagePath = (appointment['doctor_image'] != null && appointment['doctor_image'].toString().isNotEmpty)
-        ? appointment['doctor_image']
-        : (appointment['doctorTitle'].toString().toLowerCase() == "dr."
-        ? (appointment['doctorGender'].toString().toLowerCase() == "female"
-        ? 'assets/images/female-doc.png'
-        : 'assets/images/male-doc.png')
-        : (appointment['doctorGender'].toString().toLowerCase() == "male"
-        ? 'assets/images/male-phys.png'
-        : 'assets/images/female-phys.png'));
+    final imagePath = getDoctorImage(
+      imageUrl: appointment['doctor_image'],
+      gender: appointment['doctorGender'],
+      title: appointment['doctorTitle'],
+    );
 
     return WillPopScope(
       onWillPop: () async {
