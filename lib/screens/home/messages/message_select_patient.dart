@@ -5,6 +5,7 @@ import 'package:docsera/models/patient_profile.dart';
 import 'package:docsera/screens/home/account/add_relative.dart';
 import 'package:docsera/screens/home/messages/conversation_page.dart';
 import 'package:docsera/screens/home/messages/message_select_reason_page.dart';
+import 'package:docsera/utils/doctor_image_utils.dart';
 import 'package:docsera/utils/page_transitions.dart';
 import 'package:docsera/widgets/base_scaffold.dart';
 import 'package:flutter/material.dart';
@@ -20,7 +21,8 @@ class SelectPatientForMessagePage extends StatefulWidget {
   final String doctorGender;
   final String doctorTitle;
   final String specialty;
-  final String image;
+  final ImageProvider doctorImage;
+  final String doctorImageUrl;
   final UserDocument? attachedDocument;
 
   const SelectPatientForMessagePage({
@@ -30,7 +32,8 @@ class SelectPatientForMessagePage extends StatefulWidget {
     required this.doctorGender,
     required this.doctorTitle,
     required this.specialty,
-    required this.image,
+    required this.doctorImage,
+    required this.doctorImageUrl,
     this.attachedDocument,
   }) : super(key: key);
 
@@ -41,7 +44,7 @@ class SelectPatientForMessagePage extends StatefulWidget {
 class _SelectPatientForMessagePageState extends State<SelectPatientForMessagePage> {
   String? userId;
   String userName = "Loading...";
-  String userGender = "Male";
+  String userGender = "ذكر";
   int userAge = 0;
   String? selectedPatientId;
 
@@ -77,7 +80,7 @@ class _SelectPatientForMessagePageState extends State<SelectPatientForMessagePag
     if (userData != null) {
       String firstName = userData['first_name'] ?? "";
       String lastName = userData['last_name'] ?? "";
-      String gender = userData['gender'] ?? "Unknown";
+      String gender = userData['gender'] ?? "";
       String? dobString = userData['date_of_birth'];
 
       int age = _calculateAge(dobString);
@@ -293,7 +296,12 @@ class _SelectPatientForMessagePageState extends State<SelectPatientForMessagePag
             radius: 18.r,
             child: ClipRRect(
               borderRadius: BorderRadius.circular(50),
-              child: Image.asset(widget.image, width: 40.w, height: 40.h, fit: BoxFit.cover),
+              child: Image(
+                image: widget.doctorImage,
+                width: 40.w,
+                height: 40.h,
+                fit: BoxFit.cover,
+              ),
             ),
           ),
           SizedBox(width: 15.w),
@@ -353,7 +361,7 @@ class _SelectPatientForMessagePageState extends State<SelectPatientForMessagePag
                         conversationId: conversationId,
                         doctorName: widget.doctorName,
                         doctorSpecialty: widget.specialty,
-                        doctorImage: widget.image,
+                        doctorImage: widget.doctorImage,
                         isClosed: docData['is_closed'] ?? false,
                         patientName: docData['patient_name'] ?? selectedPatientName,
                         accountHolderName: userName,
@@ -381,7 +389,8 @@ class _SelectPatientForMessagePageState extends State<SelectPatientForMessagePag
                     fadePageRoute(
                       SelectMessageReasonPage(
                         doctorName: widget.doctorName,
-                        doctorImage: widget.image,
+                        doctorImage: widget.doctorImage,
+                        doctorImageUrl: widget.doctorImageUrl,
                         doctorSpecialty: widget.specialty,
                         patientProfile: patientProfile,
                         attachedDocument: widget.attachedDocument,

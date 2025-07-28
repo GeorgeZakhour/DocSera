@@ -55,11 +55,17 @@ class AppointmentConfirmedPage extends StatelessWidget {
     String formattedDate = DateFormat("EEEE, d MMMM yyyy", locale).format(appointmentDate);
     String formattedTime = DateFormat("HH:mm", locale).format(appointmentDate);
 
-    final imagePath = getDoctorImage(
-      imageUrl: appointment['doctor_image'],
-      gender: appointment['doctorGender'],
-      title: appointment['doctorTitle'],
+    final imageResult = resolveDoctorImagePathAndWidget(
+      doctor: {
+        "doctor_image": appointment['doctor_image'],
+        "gender": appointment['doctorGender'],
+        "title": appointment['doctorTitle'],
+      },
+      width: 44, // بحجم مناسب للصورة في البطاقة
+      height: 44,
     );
+    final imageProvider = imageResult.imageProvider;
+
 
     return WillPopScope(
       onWillPop: () async {
@@ -174,7 +180,7 @@ class AppointmentConfirmedPage extends StatelessWidget {
                             CircleAvatar(
                               radius: 22.r,
                               backgroundColor: AppColors.main.withOpacity(0.3),
-                              backgroundImage: AssetImage(imagePath),
+                              backgroundImage: imageProvider,
                             ),
                           SizedBox(width: 12.w),
                             Column(
@@ -221,12 +227,12 @@ class AppointmentConfirmedPage extends StatelessWidget {
                           fadePageRoute(
                             SelectPatientPage(
                               doctorId: appointment["doctorId"] ?? "",
-                              doctorName: appointment["doctorName"] ?? "Unknown",
+                              doctorName: appointment["doctorName"] ?? "",
                               doctorTitle: appointment["doctorTitle"] ?? "",
                               doctorGender: appointment["doctorGender"] ?? "",
-                              specialty: appointment["specialty"] ?? "General Practice",
-                              image: appointment["doctor_image"] ?? "assets/images/female-doc.png",
-                              clinicName: appointment['clinicName'] ?? "Unknown Clinic",
+                              specialty: appointment["specialty"] ?? "",
+                              image: appointment["doctor_image"] ?? "",
+                              clinicName: appointment['clinicName'] ?? "",
                               clinicAddress: appointment['clinicAddress'] ?? {},
                             ),
                           ),

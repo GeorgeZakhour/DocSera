@@ -105,7 +105,7 @@ class _DoctorDashboardState extends State<DoctorDashboard> {
                         ),
                         const SizedBox(width: 10),
                         Text(
-                          appointment['time'] ?? "Unknown Time",
+                          appointment['time'] ?? "",
                           style: const TextStyle(fontSize: 14, fontWeight: FontWeight.bold),
                         ),
                       ],
@@ -183,7 +183,7 @@ class _DoctorDashboardState extends State<DoctorDashboard> {
       child: Row(
         children: [
           Text("$label: ", style: const TextStyle(fontWeight: FontWeight.bold)),
-          Expanded(child: Text(value ?? "Unknown", overflow: TextOverflow.ellipsis, maxLines: 2)),
+          Expanded(child: Text(value ?? "", overflow: TextOverflow.ellipsis, maxLines: 2)),
         ],
       ),
     );
@@ -231,12 +231,27 @@ class _DoctorDashboardState extends State<DoctorDashboard> {
                   child: ClipRRect(
                     borderRadius: BorderRadius.circular(60),
                     child: doctorData != null
-                        ? Image.asset(
-                      _getDoctorAvatar(doctorData!),
-                      width: 110,
-                      height: 110,
-                      fit: BoxFit.cover,
+                        ? Builder(
+                      builder: (_) {
+                        final imageResult = resolveDoctorImagePathAndWidget(
+                          doctor: {
+                            'doctor_image': doctorData!['doctor_image'],
+                            'gender': doctorData!['gender'],
+                            'title': doctorData!['title'],
+                          },
+                          width: 110,
+                          height: 110,
+                        );
+                        final imageProvider = imageResult.imageProvider;
+                        return Image(
+                          image: imageProvider,
+                          width: 110,
+                          height: 110,
+                          fit: BoxFit.cover,
+                        );
+                      },
                     )
+
                         : const CircularProgressIndicator(),
                   ),
                 ),
@@ -257,15 +272,6 @@ class _DoctorDashboardState extends State<DoctorDashboard> {
           ],
         ),
       ),
-    );
-  }
-
-  /// **🔹 Helper: Get Doctor Avatar**
-  String _getDoctorAvatar(Map<String, dynamic> doctor) {
-    return getDoctorImage(
-      imageUrl: doctor['profileImage'],
-      gender: doctor['gender'],
-      title: doctor['title'],
     );
   }
 }

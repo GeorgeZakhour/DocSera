@@ -277,24 +277,17 @@ class _SearchPageState extends State<SearchPage> {
 
   /// **Doctor Search Result Tile**
   Widget _buildDoctorTile(Map<String, dynamic> doctor) {
-    String gender = doctor['gender']?.toLowerCase() ?? 'male';
-    String title = doctor['title']?.toLowerCase() ?? '';
-
-    String avatarPath = getDoctorImage(
-      imageUrl: doctor['image'],
-      gender: doctor['gender'],
-      title: doctor['title'],
-    );
+    final imageResult = resolveDoctorImagePathAndWidget(doctor: doctor);
+    final avatarPath = imageResult.avatarPath;
+    final imageProvider = imageResult.imageProvider;
 
 
     return ListTile(
       leading: CircleAvatar(
         backgroundColor: AppColors.mainDark.withOpacity(0.2),
         radius: 22.sp,
-        child: ClipRRect(
-          borderRadius: BorderRadius.circular(50.r),
-          child: Image.asset(avatarPath, width: 100.w, height: 100.h, fit: BoxFit.cover),
-        ),
+        backgroundImage: imageProvider,
+
       ),
 
       title: Column(
@@ -338,7 +331,7 @@ class _SearchPageState extends State<SearchPage> {
               Icon(Icons.location_on, size: 12.sp, color: Colors.grey),
               SizedBox(width: 4.w),
               Text(
-                doctor['address']['city'] ?? "Unknown Location",
+                doctor['address']['city'] ?? "",
                 style: AppTextStyles.getText3(context).copyWith(color: Colors.grey),
               ),
             ],
@@ -357,7 +350,8 @@ class _SearchPageState extends State<SearchPage> {
               doctorGender: doctor['gender'],
               doctorTitle: doctor['title'],
               specialty: doctor['specialty'],
-              image: avatarPath,
+              doctorImage: imageProvider,
+              doctorImageUrl: avatarPath, // ✅ أضف هذا السطر هنا
               attachedDocument: widget.attachedDocument,
             ),
           ));

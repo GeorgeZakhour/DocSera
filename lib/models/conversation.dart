@@ -10,6 +10,8 @@ class Conversation {
   final String? doctorName;
   final String? doctorSpecialty;
   final String? doctorImage;
+  final String? doctorGender; // ✅ جديد
+  final String? doctorTitle;  // ✅ جديد
   final bool isClosed;
 
   final String? patientName;
@@ -18,10 +20,8 @@ class Conversation {
 
   final List<Map<String, dynamic>> messages;
 
-  // ✅ الحقل الجديد
   final int? unreadCountForUser;
   final int? unreadCountForDoctor;
-
 
   Conversation({
     required this.id,
@@ -34,6 +34,8 @@ class Conversation {
     this.doctorName,
     this.doctorSpecialty,
     this.doctorImage,
+    this.doctorGender,
+    this.doctorTitle,
     this.isClosed = false,
     this.patientName,
     this.accountHolderName,
@@ -55,6 +57,8 @@ class Conversation {
       doctorName: data['doctor_name'],
       doctorSpecialty: data['doctor_specialty'],
       doctorImage: data['doctor_image'],
+      doctorGender: data['doctor_gender'], // ✅ جديد
+      doctorTitle: data['doctor_title'],   // ✅ جديد
       isClosed: data['is_closed'] ?? false,
       patientName: data['patient_name'],
       accountHolderName: data['account_holder_name'],
@@ -76,6 +80,8 @@ class Conversation {
       'doctor_name': doctorName,
       'doctor_specialty': doctorSpecialty,
       'doctor_image': doctorImage,
+      'doctor_gender': doctorGender, // ✅ جديد
+      'doctor_title': doctorTitle,   // ✅ جديد
       'is_closed': isClosed,
       'patient_name': patientName,
       'account_holder_name': accountHolderName,
@@ -96,6 +102,8 @@ class Conversation {
     String? doctorName,
     String? doctorSpecialty,
     String? doctorImage,
+    String? doctorGender, // ✅ جديد
+    String? doctorTitle,  // ✅ جديد
     bool? isClosed,
     String? patientName,
     String? accountHolderName,
@@ -115,6 +123,8 @@ class Conversation {
       doctorName: doctorName ?? this.doctorName,
       doctorSpecialty: doctorSpecialty ?? this.doctorSpecialty,
       doctorImage: doctorImage ?? this.doctorImage,
+      doctorGender: doctorGender ?? this.doctorGender, // ✅ جديد
+      doctorTitle: doctorTitle ?? this.doctorTitle,   // ✅ جديد
       isClosed: isClosed ?? this.isClosed,
       patientName: patientName ?? this.patientName,
       accountHolderName: accountHolderName ?? this.accountHolderName,

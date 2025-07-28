@@ -43,7 +43,7 @@ class ConversationPage extends StatefulWidget {
   final String conversationId;
   final String doctorName;
   final String doctorSpecialty;
-  final String doctorImage;
+  final ImageProvider doctorImage;
   final bool isClosed;
   final String patientName;
   final String accountHolderName;
@@ -418,6 +418,7 @@ class _ConversationPageState extends State<ConversationPage> with AutomaticKeepA
     final decoded = utf8.decode(bytes, allowMalformed: true);
     return decoded.replaceAll(RegExp(r'[\u0300-\u036f]'), '');
   }
+
   void _sendMessage() async {
     final text = _controller.text.trim();
     if (text.isEmpty && _selectedImageFiles.isEmpty && widget.attachedDocument == null) return;
@@ -1520,7 +1521,7 @@ class _ConversationPageState extends State<ConversationPage> with AutomaticKeepA
               CircleAvatar(
                 radius: 18.r,
                 backgroundColor: AppColors.whiteText.withOpacity(0.35),
-                backgroundImage: AssetImage(widget.doctorImage),
+                backgroundImage: widget.doctorImage,
               ),
               SizedBox(width: 10.w),
               Column(
@@ -1781,7 +1782,7 @@ class _ConversationPageState extends State<ConversationPage> with AutomaticKeepA
                                   : CircleAvatar(
                                 radius: 12.r,
                                 backgroundColor: AppColors.main.withOpacity(0.55),
-                                backgroundImage: AssetImage(widget.doctorImage),
+                                backgroundImage: widget.doctorImage,
                               );
       
                               final avatar2 = isUser
@@ -1811,7 +1812,7 @@ class _ConversationPageState extends State<ConversationPage> with AutomaticKeepA
                                   : CircleAvatar(
                                 radius: 12.r,
                                 backgroundColor: AppColors.main.withOpacity(0.55),
-                                backgroundImage: AssetImage(widget.doctorImage),
+                                backgroundImage: widget.doctorImage,
                               );
       
                               final showReason = isUser && !firstUserMessageFound;
@@ -1883,7 +1884,7 @@ class _ConversationPageState extends State<ConversationPage> with AutomaticKeepA
                                                       children: [
                                                         CircleAvatar(
                                                           radius: 7.r,
-                                                          backgroundImage: AssetImage(widget.doctorImage),
+                                                          backgroundImage: widget.doctorImage,
                                                           backgroundColor: AppColors.main.withOpacity(0.5),
                                                         ),
                                                         SizedBox(width: 4.w),

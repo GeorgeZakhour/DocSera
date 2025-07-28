@@ -79,10 +79,10 @@ class _DoctorAppointmentsState extends State<DoctorAppointments> {
         if (date.isEmpty) continue;
 
         bool isBooked = appointment['booked'] ?? false;
-        String time = appointment['appointment_time'] ?? "Unknown Time";
-        String accountName = appointment['account_name'] ?? "Unknown Holder";
-        String patientName = appointment['patient_name'] ?? "Unknown Patient";
-        String reason = appointment['reason'] ?? "No Reason Provided";
+        String time = appointment['appointment_time'] ?? "";
+        String accountName = appointment['account_name'] ?? "";
+        String patientName = appointment['patient_name'] ?? "";
+        String reason = appointment['reason'] ?? "";
         String userAge = appointment['user_age']?.toString() ?? "-";
         String userGender = appointment['user_gender'] ?? "-";
         String bookingTimestamp = appointment['booking_timestamp'] != null
@@ -344,7 +344,6 @@ class _DoctorAppointmentsState extends State<DoctorAppointments> {
             'doctor_name': doctorName,
             'doctor_title': doctorTitle,
             'doctor_gender': doctorGender,
-            'doctor_image': doctorImage,
             'doctor_specialty': doctorSpecialty,
             'clinic': clinicName,
             'clinic_address': clinicAddress,
@@ -735,7 +734,7 @@ class _DoctorAppointmentsState extends State<DoctorAppointments> {
                                   isBooked ? Icon(Icons.access_time, color: AppColors.main, size: 22) : SizedBox(height: 0),
                                   const SizedBox(height: 5),
                                   Text(
-                                    appointment['appointment_time'] ?? "Unknown Time",
+                                    appointment['appointment_time'] ?? "",
                                     style: TextStyle(
                                       fontSize: 12,
                                       fontWeight: FontWeight.bold,
@@ -817,13 +816,13 @@ class _DoctorAppointmentsState extends State<DoctorAppointments> {
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
-                              _infoRow("Account Holder", appointment['accountName'] ?? "Unknown"),
+                              _infoRow("Account Holder", appointment['accountName'] ?? ""),
                               _infoRow("New Patient", (appointment['newPatient'] ?? false) ? "Yes" : "No"),
-                              _infoRow("Patient Name", appointment['patientName'] ?? "Unknown"),
-                              _infoRow("Date", appointment['appointment_date'] ?? "Unknown"),
-                              _infoRow("Time", appointment['appointment_time'] ?? "Unknown"),
-                              _infoRow("Reason", appointment['reason'] ?? "Unknown"),
-                              _infoRow("Booking Time", appointment['bookingTimestamp'] ?? "Unknown"),
+                              _infoRow("Patient Name", appointment['patientName'] ?? ""),
+                              _infoRow("Date", appointment['appointment_date'] ?? ""),
+                              _infoRow("Time", appointment['appointment_time'] ?? ""),
+                              _infoRow("Reason", appointment['reason'] ?? ""),
+                              _infoRow("Booking Time", appointment['bookingTimestamp'] ?? ""),
                             ],
                           ),
                         ),

@@ -17,6 +17,7 @@ class AppColors {
   static const Color red = Color(0xFFD32F2F); // Matching red tone
   static const Color background = Color(0xFFF7FBFB); // Lighter green background
   static const Color background3 = Color(0xFFF7FDFC); // Softer light green background
+  static const Color background4 = Color(0xFFEAF7F5); // أخضر باهت متوازن، أخف من E0F2EF لكن يظهر بوضوح عن الأبيض
   static const Color background2 = Colors.white; // White background for containers
   static const Color whiteText = Colors.white; // White text for buttons
   static const Color grayMain = Color(0xFF74A0A2);  // Black text for buttons

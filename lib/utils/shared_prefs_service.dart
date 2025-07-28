@@ -147,9 +147,9 @@ class SharedPrefsService {
               ? (gender == "female" ? "assets/images/female-doc.png" : "assets/images/male-doc.png")
               : (gender == "female" ? "assets/images/female-phys.png" : "assets/images/male-phys.png");
 
-          // ✅ التأكد من أن `profileImage` ليس فارغًا
-          String profileImage = doctorData['profileImage'] != null && doctorData['profileImage'].isNotEmpty
-              ? doctorData['profileImage']
+          // ✅ التأكد من أن `doctorImage` ليس فارغًا
+          String doctorImage = doctorData['doctor_image'] != null && doctorData['doctor_image'].isNotEmpty
+              ? doctorData['doctor_image']
               : defaultImage;
 
           // ✅ التأكد من أن `lastUpdated` هو رقم `int`
@@ -160,10 +160,10 @@ class SharedPrefsService {
           doctors.add({
             'id': doctorId,
             'title': doctorData['title'] ?? "",
-            'first_name': doctorData['firstName'] ?? "Unknown",
-            'last_name': doctorData['lastName'] ?? "Doctor",
-            'specialty': doctorData['specialty'] ?? "Unknown Specialty",
-            'profile_image': profileImage,
+            'first_name': doctorData['firstName'] ?? "",
+            'last_name': doctorData['lastName'] ?? "",
+            'specialty': doctorData['specialty'] ?? "",
+            'doctor_image': doctorImage,
             'gender': gender,
             'clinic': doctorData['clinic'] ?? "",
             'phone_number': doctorData['phone_number'] ?? "",

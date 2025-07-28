@@ -49,7 +49,7 @@ class PatientProfilePage extends StatelessWidget {
                             Icon(Icons.account_circle_rounded, color: AppColors.mainDark),
                             const SizedBox(width: 10),
                             Text(
-                              data['patientName'] ?? "Unknown",
+                              data['patientName'] ?? "",
                               style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: AppColors.mainDark),
                             ),
                           ],
@@ -57,11 +57,11 @@ class PatientProfilePage extends StatelessWidget {
                         const SizedBox(height: 10),
 
                         /// **Patient Info List**
-                        _infoRow("Gender", data['userGender'] ?? "Unknown"),
-                        _infoRow("Age", data['userAge']?.toString() ?? "Unknown"),
-                        _infoRow("Date of Birth", data['dateOfBirth'] ?? "Unknown"),
-                        _infoRow("Phone Number", data['phone_number'] ?? "Unknown"),
-                        _infoRow("Email", data['email'] ?? "Unknown"),
+                        _infoRow("Gender", data['userGender'] ?? ""),
+                        _infoRow("Age", data['userAge']?.toString() ?? ""),
+                        _infoRow("Date of Birth", data['dateOfBirth'] ?? ""),
+                        _infoRow("Phone Number", data['phone_number'] ?? ""),
+                        _infoRow("Email", data['email'] ?? ""),
                         _infoRow("Number of Visits", visits.length.toString()),
                       ],
                     ),
@@ -141,7 +141,7 @@ class PatientProfilePage extends StatelessWidget {
             ListTile(
               contentPadding: EdgeInsets.zero,
               title: Text(
-                "Visit on ${visit['date'] ?? 'Unknown'}",
+                "Visit on ${visit['date'] ?? ''}",
                 style: const TextStyle(fontWeight: FontWeight.bold,fontSize: 14),
               ),
               subtitle: Text(visit['reason'] ?? "No reason provided"),
@@ -165,9 +165,9 @@ class PatientProfilePage extends StatelessWidget {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    _infoRow("Date of Visit", visit['date'] ?? "Unknown"),
-                    _infoRow("Reason", visit['reason'] ?? "Unknown"),
-                    _infoRow("Notes", visit['notes'] ?? "No notes added"),
+                    _infoRow("Date of Visit", visit['date'] ?? ""),
+                    _infoRow("Reason", visit['reason'] ?? ""),
+                    _infoRow("Notes", visit['notes'] ?? ""),
                   ],
                 ),
               ),

@@ -31,7 +31,7 @@ class ConfirmationPage extends StatelessWidget {
   Future<void> _confirmBooking(BuildContext context) async {
     SharedPreferences prefs = await SharedPreferences.getInstance();
     final userId = prefs.getString('userId');
-    final userName = prefs.getString('userName') ?? "Unknown";
+    final userName = prefs.getString('userName') ?? "";
 
     if (userId == null) {
       print("❌ Error: User not logged in!");
@@ -64,8 +64,11 @@ class ConfirmationPage extends StatelessWidget {
         'is_docsera_user': true,
         'booked_via': 'DocSera',
         'attachments': null,
+        'doctor_image': appointmentDetails.image,
         'is_confirmed': !requiresConfirmation, // ✅ حسب الإعداد
       }).eq('id', appointmentId);
+
+      print("📸 doctor_image used during booking = ${appointmentDetails.image}");
 
       // ✅ أضف الطبيب إلى قائمة visited doctors عند الحجز
       final targetTable = appointmentDetails.isRelative ? 'relatives' : 'users';
@@ -153,15 +156,16 @@ class ConfirmationPage extends StatelessWidget {
     String formattedDateTime = DateFormat('EEEE, d MMMM • HH:mm', Localizations.localeOf(context).toString())
         .format(appointmentTimestamp);
 
-    final imagePath = (appointmentDetails.image.isNotEmpty)
-        ? appointmentDetails.image
-        : (appointmentDetails.doctorTitle.toLowerCase() == "dr."
-        ? (appointmentDetails.doctorGender.toLowerCase() == "female"
-        ? 'assets/images/female-doc.png'
-        : 'assets/images/male-doc.png')
-        : (appointmentDetails.doctorGender.toLowerCase() == "male"
-        ? 'assets/images/male-phys.png'
-        : 'assets/images/female-phys.png'));
+    final imageResult = resolveDoctorImagePathAndWidget(
+      doctor: {
+        "doctor_image": appointmentDetails.image,
+        "gender": appointmentDetails.doctorGender,
+        "title": appointmentDetails.doctorTitle,
+      },
+      width: 40,
+      height: 40,
+    );
+    final imageProvider = imageResult.imageProvider;
 
 
     return BaseScaffold(
@@ -176,15 +180,7 @@ class ConfirmationPage extends StatelessWidget {
               CircleAvatar(
                 backgroundColor: AppColors.background2.withOpacity(0.3),
                 radius: 18.r,
-                child: ClipRRect(
-                  borderRadius: BorderRadius.circular(50),
-                  child: Image.asset(
-                    imagePath,
-                    width: 40.w,
-                    height: 40.h,
-                    fit: BoxFit.cover,
-                  ),
-                ),
+                backgroundImage: imageProvider,
               ),
               Positioned(
                 bottom: 0,
@@ -296,18 +292,24 @@ class ConfirmationPage extends StatelessWidget {
         ? "${appointmentDetails.doctorTitle} ${appointmentDetails.doctorName}"
         : appointmentDetails.doctorName;
 
-    final imagePath = getDoctorImage(
-      imageUrl: appointmentDetails.image,
-      gender: appointmentDetails.doctorGender,
-      title: appointmentDetails.doctorTitle,
+    final imageResult = resolveDoctorImagePathAndWidget(
+      doctor: {
+        "doctor_image": appointmentDetails.image,
+        "gender": appointmentDetails.doctorGender,
+        "title": appointmentDetails.doctorTitle,
+      },
+      width: 50,
+      height: 50,
     );
+    final imageProvider = imageResult.imageProvider;
+
 
     return Row(
       children: [
         CircleAvatar(
           backgroundColor: AppColors.orange.withOpacity(0.3),
           radius: 25.r,
-          backgroundImage: AssetImage(imagePath),
+          backgroundImage: imageProvider,
         ),
         SizedBox(width: 12.w),
         Column(

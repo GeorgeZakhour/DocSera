@@ -897,6 +897,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get noResultsSubtitle => 'Try a different search term.';
 
   @override
+  String get gallery => 'Gallery';
+
+  @override
   String get location => 'Location';
 
   @override
@@ -940,6 +943,12 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get clinicNotAvailable => 'Clinic not available';
+
+  @override
+  String get faq => 'Frequently Asked Questions';
+
+  @override
+  String get offeredServices => 'Offered Services';
 
   @override
   String get makeAppointment => 'Make an Appointment';

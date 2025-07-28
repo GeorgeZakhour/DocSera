@@ -346,6 +346,7 @@
     "description": "👨‍⚕️ Doctor Profile Page"
   },
 
+  "gallery": "Gallery",
   "location": "Location",
   "openInMaps": "Open in Maps",
   "additionalInformation": "Additional Information",
@@ -361,8 +362,12 @@
   "today": "Today",
   "closed": "Closed",
   "clinicNotAvailable": "Clinic not available",
+  "faq": "Frequently Asked Questions",
+  "offeredServices": "Offered Services",
 
-"@bookAppointment================================": {
+
+
+  "@bookAppointment================================": {
 "description": "👨‍⚕️ صفحات الحجز"
 },
 
@@ -400,6 +405,7 @@
   "unknown": "Unknown",
   "addToCalendar": "Add to my calendar",
   "bookAgain": "Book Again",
+  "waitingConfirmation": "Waiting Confirmation",
   "sendDocuments": "Send Documents",
   "sendDocumentsSubtitle": "Send documents to your practitioner before your consultation",
   "viewMoreDetails": "View More Details",

@@ -18,15 +18,6 @@ class DoctorMessagesPage extends StatelessWidget {
 
   const DoctorMessagesPage({Key? key, this.doctorData}) : super(key: key);
 
-  String _getDoctorAvatar(Map<String, dynamic>? doctor) {
-    if (doctor == null) return 'assets/images/male-doc.png';
-
-    return getDoctorImage(
-      imageUrl: doctor['profileImage'],
-      gender: doctor['gender'],
-      title: doctor['title'],
-    );
-  }
 
   @override
   Widget build(BuildContext context) {
@@ -135,7 +126,16 @@ class DoctorMessagesPage extends StatelessWidget {
     }
 
     final fullName = '${doctorData?['title'] ?? ''} ${doctorData?['first_name'] ?? ''} ${doctorData?['last_name'] ?? ''}'.trim();
-    final imageUrl = _getDoctorAvatar(doctorData);
+    final imageResult = resolveDoctorImagePathAndWidget(
+      doctor: {
+        'doctor_image': doctorData?['doctor_image'],
+        'gender': doctorData?['gender'],
+        'title': doctorData?['title'],
+      },
+      width: 40,
+      height: 40,
+    );
+    final imageUrl = imageResult.avatarPath;
 
     return Column(
       children: [

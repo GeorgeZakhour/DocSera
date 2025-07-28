@@ -11,7 +11,8 @@ import 'package:docsera/gen_l10n/app_localizations.dart';
 
 class SelectMessageReasonPage extends StatelessWidget {
   final String doctorName;
-  final String doctorImage;
+  final ImageProvider doctorImage;
+  final String doctorImageUrl;
   final String doctorSpecialty;
   final PatientProfile patientProfile;
   final UserDocument? attachedDocument;
@@ -20,6 +21,7 @@ class SelectMessageReasonPage extends StatelessWidget {
     Key? key,
     required this.doctorName,
     required this.doctorImage,
+    required this.doctorImageUrl,
     required this.doctorSpecialty,
     required this.patientProfile,
     this.attachedDocument,
@@ -47,8 +49,8 @@ class SelectMessageReasonPage extends StatelessWidget {
             radius: 18.r,
             child: ClipRRect(
               borderRadius: BorderRadius.circular(50),
-              child: Image.asset(
-                doctorImage,
+              child: Image(
+                image: doctorImage,
                 width: 40.w,
                 height: 40.h,
                 fit: BoxFit.cover,
@@ -123,6 +125,7 @@ class SelectMessageReasonPage extends StatelessWidget {
             WriteMessagePage(
               doctorName: doctorName,
               doctorImage: doctorImage,
+              doctorImageUrl: doctorImageUrl,
               doctorSpecialty: doctorSpecialty,
               selectedReason: reason,
               patientProfile: patientProfile.copyWith(reason: reason),

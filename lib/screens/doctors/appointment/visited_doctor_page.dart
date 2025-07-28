@@ -28,11 +28,17 @@ class _VisitedDoctorPageState extends State<VisitedDoctorPage> {
 
   @override
   Widget build(BuildContext context) {
-    final imagePath = getDoctorImage(
-      imageUrl: widget.appointmentDetails.image,
-      gender: widget.appointmentDetails.doctorGender,
-      title: widget.appointmentDetails.doctorTitle,
+    final imageResult = resolveDoctorImagePathAndWidget(
+      doctor: {
+        "doctor_image": widget.appointmentDetails.image,
+        "gender": widget.appointmentDetails.doctorGender,
+        "title": widget.appointmentDetails.doctorTitle,
+      },
+      width: 40,
+      height: 40,
     );
+    final imageProvider = imageResult.imageProvider;
+
 
 
     return BaseScaffold(
@@ -45,15 +51,7 @@ class _VisitedDoctorPageState extends State<VisitedDoctorPage> {
           CircleAvatar(
             backgroundColor: AppColors.background2.withOpacity(0.3),
             radius: 18.r,
-            child: ClipRRect(
-              borderRadius: BorderRadius.circular(50),
-              child: Image.asset(
-                imagePath,
-                width: 40.w,
-                height: 40.h,
-                fit: BoxFit.cover,
-              ),
-            ),
+            backgroundImage: imageProvider,
           ),
           SizedBox(width: 15.w),
           Column(

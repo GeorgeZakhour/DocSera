@@ -6,6 +6,7 @@ import 'package:docsera/app/const.dart';
 import 'package:docsera/app/text_styles.dart';
 import 'package:docsera/models/document.dart';
 import 'package:docsera/models/patient_profile.dart';
+import 'package:docsera/utils/doctor_image_utils.dart';
 import 'package:docsera/widgets/base_scaffold.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
@@ -20,7 +21,8 @@ import 'conversation_page.dart';
 
 class WriteMessagePage extends StatefulWidget {
   final String doctorName;
-  final String doctorImage;
+  final ImageProvider doctorImage;
+  final String doctorImageUrl;
   final String doctorSpecialty;
   final String selectedReason;
   final PatientProfile patientProfile;
@@ -30,6 +32,7 @@ class WriteMessagePage extends StatefulWidget {
     Key? key,
     required this.doctorName,
     required this.doctorImage,
+    required this.doctorImageUrl,
     required this.doctorSpecialty,
     required this.selectedReason,
     required this.patientProfile,
@@ -432,7 +435,7 @@ class _WriteMessagePageState extends State<WriteMessagePage> {
             radius: 18.r,
             child: ClipRRect(
               borderRadius: BorderRadius.circular(50),
-              child: Image.asset(widget.doctorImage, width: 40.w, height: 40.h, fit: BoxFit.cover),
+              child: Image(image: widget.doctorImage, width: 40.w, height: 40.h, fit: BoxFit.cover),
             ),
           ),
           SizedBox(width: 15.w),
@@ -591,13 +594,15 @@ class _WriteMessagePageState extends State<WriteMessagePage> {
                             }
                           }
 
+                          print("📸 doctorImageUrl before startConversation = ${widget.doctorImageUrl}");
+
                           final conversationId = await context.read<MessagesCubit>().startConversation(
                             patientId: patientId,
                             doctorId: doctorId,
                             message: messageText,
                             doctorName: widget.doctorName,
                             doctorSpecialty: widget.doctorSpecialty,
-                            doctorImage: widget.doctorImage,
+                            doctorImage: widget.doctorImageUrl,
                             patientName: widget.patientProfile.patientName,
                             accountHolderName: accountHolderName,
                             selectedReason: widget.selectedReason,

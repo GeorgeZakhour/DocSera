@@ -27,11 +27,17 @@ class AppointmentCancelledPage extends StatelessWidget {
     String title = (appointment['doctor_title'] ?? '').toString().toLowerCase();
     String? doctorImage = appointment['doctor_image'];
 
-    final imagePath = getDoctorImage(
-      imageUrl: doctorImage,
-      gender: gender,
-      title: title,
+    final imageResult = resolveDoctorImagePathAndWidget(
+      doctor: {
+        'doctor_image': doctorImage,
+        'gender': gender,
+        'title': title,
+      },
+      width: 44,
+      height: 44,
     );
+    final imageProvider = imageResult.imageProvider;
+
 
     return WillPopScope(
       onWillPop: () async {
@@ -130,9 +136,7 @@ class AppointmentCancelledPage extends StatelessWidget {
                             CircleAvatar(
                               radius: 22.r,
                               backgroundColor: AppColors.main.withOpacity(0.2),
-                              backgroundImage: imagePath.toString().startsWith("http")
-                                  ? NetworkImage(imagePath) as ImageProvider
-                                  : AssetImage(imagePath),
+                              backgroundImage: imageProvider,
                             ),
 
                             SizedBox(width: 12.w),

@@ -35,7 +35,7 @@ class SelectPatientPage extends StatefulWidget {
 
 class _SelectPatientPageState extends State<SelectPatientPage> {
   String userName = "Loading...";
-  String userGender = "Male"; // Default, will be fetched
+  String userGender = "ذكر"; // Default, will be fetched
   int userAge = 0; // Default, will be fetched
   bool isSelected = true; // Default selection for main user
   String patientDOB = ""; // ✅ Store Date of Birth
@@ -49,6 +49,7 @@ class _SelectPatientPageState extends State<SelectPatientPage> {
   String selectedPatientName = "";
   String selectedPatientGender = "";
   int selectedPatientAge = 0;
+  String? latestDoctorImage;
 
 
 
@@ -56,6 +57,7 @@ class _SelectPatientPageState extends State<SelectPatientPage> {
   void initState() {
     super.initState();
     _loadUserInfo();
+    _fetchLatestDoctorImage();
   }
 
   Future<void> _loadUserInfo() async {
@@ -77,10 +79,10 @@ class _SelectPatientPageState extends State<SelectPatientPage> {
       if (response != null) {
         final firstName = response['first_name'] ?? "";
         final lastName = response['last_name'] ?? "";
-        final gender = response['gender'] ?? "Unknown";
+        final gender = response['gender'] ?? "";
         final dobString = response['date_of_birth'];
-        final phoneNumber = response['phone_number'] ?? "Not provided";
-        final email = response['email'] ?? "Not provided";
+        final phoneNumber = response['phone_number'] ?? "";
+        final email = response['email'] ?? "";
 
         final age = _calculateAge(dobString);
 
@@ -137,9 +139,9 @@ class _SelectPatientPageState extends State<SelectPatientPage> {
         relatives = response.map<Map<String, dynamic>>((data) {
           return {
             "id": data["id"] ?? "",
-            "first_name": data["first_name"] ?? "Unknown",
+            "first_name": data["first_name"] ?? "",
             "last_name": data["last_name"] ?? "",
-            "gender": data["gender"] ?? "Unknown",
+            "gender": data["gender"] ?? "",
             "age": _calculateAge(data["date_of_birth"]) ?? 0,
           };
         }).toList();
@@ -185,17 +187,43 @@ class _SelectPatientPageState extends State<SelectPatientPage> {
   }
 
 
+  Future<void> _fetchLatestDoctorImage() async {
+    try {
+      final response = await Supabase.instance.client
+          .from('doctors')
+          .select('doctor_image')
+          .eq('id', widget.doctorId)
+          .maybeSingle();
+
+      if (response != null && response['doctor_image'] != null) {
+        setState(() {
+          latestDoctorImage = response['doctor_image'];
+        });
+        print("📸 Latest doctor image from Supabase: $latestDoctorImage");
+      } else {
+        print("⚠️ No doctor image found in Supabase.");
+      }
+    } catch (e) {
+      print("❌ Error fetching doctor image: $e");
+    }
+  }
 
 
 
 
   @override
   Widget build(BuildContext context) {
-    final imagePath = getDoctorImage(
-      imageUrl: widget.image,
-      gender: widget.doctorGender,
-      title: widget.doctorTitle,
+    final imageResult = resolveDoctorImagePathAndWidget(
+      doctor: {
+        "doctor_image": latestDoctorImage ?? widget.image,
+        "gender": widget.doctorGender,
+        "title": widget.doctorTitle,
+      },
+      width: 40,
+      height: 40,
     );
+    final imageProvider = imageResult.imageProvider;
+
 
 
     return BaseScaffold(
@@ -208,15 +236,8 @@ class _SelectPatientPageState extends State<SelectPatientPage> {
             CircleAvatar(
               backgroundColor: AppColors.background2.withOpacity(0.3),
               radius: 18.r,
-              child: ClipRRect(
-                borderRadius: BorderRadius.circular(50),
-                child: Image.asset(
-                  imagePath,
-                  width: 40.w,
-                  height: 40.h,
-                  fit: BoxFit.cover,
-                ),
-              ),
+              backgroundImage: imageProvider,
+
             ),
             SizedBox(width: 15.w),
             Column(
@@ -289,7 +310,7 @@ class _SelectPatientPageState extends State<SelectPatientPage> {
                         doctorGender: widget.doctorGender,
                         doctorTitle: widget.doctorTitle,
                         specialty: widget.specialty,
-                        image: widget.image,
+                        image: latestDoctorImage ?? widget.image, // ✅ صورة محدثة
                         patientId: selectedPatientId!,
                         isRelative: selectedPatientId != userId,
                         patientName: selectedPatientName,

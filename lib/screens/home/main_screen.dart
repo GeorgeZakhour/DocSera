@@ -172,23 +172,11 @@ class _MainScreenState extends State<MainScreen> with AutomaticKeepAliveClientMi
 
   /// **🔹 Doctor Card Widget**
   Widget _buildDoctorCard(Map<String, dynamic> doctor) {
-    String gender = (doctor['gender'] ?? '').toLowerCase();
-    String title = (doctor['title'] ?? '').toLowerCase();
-    String? imageUrl = doctor['profile_image'];
 
-    final String avatarPath = getDoctorImage(
-      imageUrl: imageUrl,
-      gender: gender,
-      title: title,
-    );
 
-    ImageProvider profileImageProvider;
-    if (avatarPath.startsWith('http')) {
-      profileImageProvider = NetworkImage(avatarPath);
-    } else {
-      profileImageProvider = AssetImage(avatarPath);
-    }
-
+    final imageResult = resolveDoctorImagePathAndWidget(doctor: doctor);
+    final avatarPath = imageResult.avatarPath;
+    final doctorImageProvider = imageResult.imageProvider;
 
 
     return GestureDetector(
@@ -203,7 +191,7 @@ class _MainScreenState extends State<MainScreen> with AutomaticKeepAliveClientMi
             CircleAvatar(
               radius: 30,
               backgroundColor: AppColors.main.withOpacity(0.2),
-              backgroundImage: profileImageProvider,
+              backgroundImage: doctorImageProvider,
             ),
             SizedBox(height: 6.h),
             Text(
@@ -227,6 +215,9 @@ class _MainScreenState extends State<MainScreen> with AutomaticKeepAliveClientMi
   }
 
   void _showDoctorOptions(Map<String, dynamic> doctor) {
+    final imageResult = resolveDoctorImagePathAndWidget(doctor: doctor);
+    final imageProvider = imageResult.imageProvider;
+
     showModalBottomSheet(
       context: context,
       backgroundColor: AppColors.background2,
@@ -242,29 +233,21 @@ class _MainScreenState extends State<MainScreen> with AutomaticKeepAliveClientMi
               ListTile(
                 leading: CircleAvatar(
                   backgroundColor: AppColors.main.withOpacity(0.1),
-                  backgroundImage: (() {
-                    final String avatarPath = getDoctorImage(
-                      imageUrl: doctor['profileImage'],
-                      gender: doctor['gender'],
-                      title: doctor['title'],
-                    );
-                    return avatarPath.startsWith("http")
-                        ? NetworkImage(avatarPath)
-                        : AssetImage(avatarPath) as ImageProvider;
-                  })(),
+                  backgroundImage: imageProvider,
                 ),
+
                 title: Text(
                   "${doctor['title']} ${doctor['first_name']} ${doctor['last_name']}".trim(),
                   style: AppTextStyles.getText2(context).copyWith(fontWeight: FontWeight.bold),
                 ),
-                subtitle: Text(doctor['specialty'] ?? "Unknown Specialty", style: AppTextStyles.getText2(context) ,),
+                subtitle: Text(doctor['specialty'] ?? "", style: AppTextStyles.getText2(context) ,),
               ),
               const Divider(),
               ListTile(
                 dense: true,
-                contentPadding: EdgeInsets.symmetric(vertical: 2.h, horizontal: 16.w), // ✅ تقليل التباعد العلوي والسفلي
+                contentPadding: EdgeInsets.symmetric( horizontal: 16.w), // ✅ تقليل التباعد العلوي والسفلي
                 leading: Icon(Icons.calendar_today, color: AppColors.main, size: 20.sp),
-                title: Text(AppLocalizations.of(context)!.bookAppointment, style: AppTextStyles.getText2(context).copyWith(fontWeight: FontWeight.bold)),
+                title: Text(AppLocalizations.of(context)!.bookAppointment, style: AppTextStyles.getText2(context).copyWith(fontWeight: FontWeight.w500)),
                 onTap: () {
                   Navigator.pop(context); // إغلاق الـ Bottom Sheet
                   Navigator.push(
@@ -276,7 +259,7 @@ class _MainScreenState extends State<MainScreen> with AutomaticKeepAliveClientMi
                         doctorGender: doctor['gender'],
                         doctorTitle: doctor['title'],
                         specialty: doctor['specialty'],
-                        image: doctor['profileImage'] ?? 'assets/images/worker.png',
+                        image: imageResult.avatarPath,
                         clinicName: doctor['clinic'],
                         clinicAddress: doctor['address'],
                       ),
@@ -287,9 +270,9 @@ class _MainScreenState extends State<MainScreen> with AutomaticKeepAliveClientMi
               Divider(color: Colors.grey[100], height: 1.h, thickness: 1.h),
               ListTile(
                 dense: true,
-                contentPadding: EdgeInsets.symmetric(vertical: 1.h, horizontal: 16.w), // ✅ تقليل التباعد العلوي والسفلي
+                contentPadding: EdgeInsets.symmetric(horizontal: 16.w), // ✅ تقليل التباعد العلوي والسفلي
                 leading:  Icon(Icons.person, color: AppColors.main, size: 20.sp),
-                  title: Text( AppLocalizations.of(context)!.viewProfile, style: AppTextStyles.getText2(context).copyWith(fontWeight: FontWeight.bold)),
+                  title: Text( AppLocalizations.of(context)!.viewProfile, style: AppTextStyles.getText2(context).copyWith(fontWeight: FontWeight.w500)),
                   onTap: () {
                   Navigator.pop(context); // Close the bottom sheet
                   Navigator.push(
@@ -297,16 +280,18 @@ class _MainScreenState extends State<MainScreen> with AutomaticKeepAliveClientMi
                     fadePageRoute(DoctorProfilePage(doctor: {
                       "id": doctor["id"] ?? "",
                       "title": doctor["title"] ?? "",
-                      "first_name": doctor["firstName"] ?? "Unknown",
+                      "first_name": doctor["firstName"] ?? "",
                       "last_name": doctor["last_name"] ?? "",
-                      "specialty": doctor["specialty"] ?? "General Practice",
-                      "profile_description": doctor["profile_description"] ?? "No Description",
-                      "clinic": doctor["clinic"] ?? "Unknown Clinic",
-                      "address": doctor["address"] ?? "No Address",
-                      "phone_number": doctor["phoneNumber"] ?? "Not Provided",
+                      "specialty": doctor["specialty"] ?? "",
+                      "profile_description": doctor["profile_description"] ?? "",
+                      "clinic": doctor["clinic"] ?? "",
+                      "address": doctor["address"] ?? "",
+                      "phone_number": doctor["phoneNumber"] ?? "",
                       "languages": doctor["languages"] ?? [],
-                      "email": doctor["email"] ?? "Not Provided",
-                      "doctor_image": doctor["profileImage"] ?? "assets/images/male-doc.png",
+                      "email": doctor["email"] ?? "",
+                      "doctor_image": (doctor["doctor_image"] != null && doctor["doctor_image"] != "null")
+                          ? doctor["doctor_image"]
+                          : "assets/images/male-doc.png",
                     }, doctorId: doctor["id"],)),
                   );
 
@@ -315,11 +300,11 @@ class _MainScreenState extends State<MainScreen> with AutomaticKeepAliveClientMi
                Divider(color: Colors.grey[100], height: 1.h, thickness: 1.h),
               ListTile(
                 dense: true,
-                contentPadding: EdgeInsets.symmetric(vertical: 2.h, horizontal: 16.w), // ✅ تقليل التباعد العلوي والسفلي
+                contentPadding: EdgeInsets.symmetric( horizontal: 16.w), // ✅ تقليل التباعد العلوي والسفلي
                 leading:  Icon(Icons.remove_circle, color: AppColors.red, size: 20.sp),
                 title: Text(
                   AppLocalizations.of(context)!.removeFromFavorites,
-                  style: AppTextStyles.getText2(context).copyWith(fontWeight: FontWeight.bold, color: AppColors.red)
+                  style: AppTextStyles.getText2(context).copyWith(fontWeight: FontWeight.w500, color: AppColors.red)
                 ),
                 onTap: () async {
                   await _removeFromFavorites(doctor['id']);
@@ -631,15 +616,15 @@ class _MainScreenState extends State<MainScreen> with AutomaticKeepAliveClientMi
               showSecondShape: true,
             ),
 
-            // ElevatedButton(
-            //   onPressed: () async {
-            //     final prefs = await SharedPreferences.getInstance();
-            //     await prefs.clear();
-            //     Supabase.instance.client.auth.signOut(); // ⛔ اختياري فقط
-            //     // أعد تشغيل التطبيق أو انتقل لشاشة البداية
-            //   },
-            //   child: Text('🧹 Reset Session'),
-            // ),
+            ElevatedButton(
+              onPressed: () async {
+                final prefs = await SharedPreferences.getInstance();
+                await prefs.clear();
+                Supabase.instance.client.auth.signOut(); // ⛔ اختياري فقط
+                // أعد تشغيل التطبيق أو انتقل لشاشة البداية
+              },
+              child: Text('🧹 Reset Session'),
+            ),
 
 
 

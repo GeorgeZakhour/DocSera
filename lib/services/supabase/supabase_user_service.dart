@@ -229,10 +229,10 @@ extension SupabaseUserServiceFavorites on SupabaseUserService {
   Map<String, dynamic> _buildDoctorInfo(Map<String, dynamic> doctor, String doctorId) {
     final gender = (doctor['gender'] ?? "male").toLowerCase();
     final title = (doctor['title'] ?? "").toLowerCase();
-    String profileImage = doctor['doctor_image'] ?? "";
+    String doctorImage = doctor['doctor_image'] ?? "";
 
-    if (profileImage.isEmpty || !profileImage.startsWith("http")) {
-      profileImage = (title == "dr.")
+    if (doctorImage.isEmpty || !doctorImage.startsWith("http")) {
+      doctorImage = (title == "dr.")
           ? (gender == "female"
           ? 'assets/images/female-doc.png'
           : 'assets/images/male-doc.png')
@@ -244,10 +244,10 @@ extension SupabaseUserServiceFavorites on SupabaseUserService {
     return {
       'id': doctorId,
       'title': doctor['title'] ?? "",
-      'first_name': doctor['first_name'] ?? "Unknown",
-      'last_name': doctor['last_name'] ?? "Doctor",
-      'specialty': doctor['specialty'] ?? "Unknown",
-      'profileImage': profileImage,
+      'first_name': doctor['first_name'] ?? "",
+      'last_name': doctor['last_name'] ?? "",
+      'specialty': doctor['specialty'] ?? "",
+      'doctor_image': doctorImage,
       'gender': gender,
       'clinic': doctor['clinic'] ?? "",
       'phone_number': doctor['phone_number'] ?? "",
@@ -331,25 +331,16 @@ extension SupabaseUserServiceFavorites on SupabaseUserService {
         if (doctor != null) {
           String gender = (doctor['gender'] ?? "male").toLowerCase();
           String title = (doctor['title'] ?? "").toLowerCase();
-          String profileImage = doctor['doctor_image'] ?? "";
+          String doctorImage = doctor['doctor_image'] ?? "";
 
-          if (profileImage.isEmpty || !profileImage.startsWith("http")) {
-            profileImage = (title == "dr.")
-                ? (gender == "female"
-                ? 'assets/images/female-doc.png'
-                : 'assets/images/male-doc.png')
-                : (gender == "female"
-                ? 'assets/images/female-phys.png'
-                : 'assets/images/male-phys.png');
-          }
 
           doctors.add({
             'id': doctorId,
             'title': doctor['title'] ?? "",
-            'first_name': doctor['first_name'] ?? "Unknown",
-            'last_name': doctor['last_name'] ?? "Doctor",
-            'specialty': doctor['specialty'] ?? "Unknown",
-            'profileImage': profileImage,
+            'first_name': doctor['first_name'] ?? "",
+            'last_name': doctor['last_name'] ?? "",
+            'specialty': doctor['specialty'] ?? "",
+            'doctor_image': doctorImage,
             'gender': gender,
             'clinic': doctor['clinic'] ?? "",
             'phone_number': doctor['phone_number'] ?? "",

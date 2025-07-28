@@ -360,14 +360,20 @@ import 'package:docsera/gen_l10n/app_localizations.dart';
           : AppLocalizations.of(context)!.unknown;
 
       // ✅ Ensure Patient Name is Retrieved
-      String patientName = appointment["patient_name"] ?? "Unknown";
+      String patientName = appointment["patient_name"] ?? "";
 
       // ✅ Determine doctor's avatar based on gender & title
-      String avatarPath = getDoctorImage(
-        imageUrl: appointment['doctor_image'],
-        gender: appointment['doctor_gender'],
-        title: appointment['doctor_title'],
+      DoctorImageResult imageResult = resolveDoctorImagePathAndWidget(
+        doctor: {
+          "doctor_image": appointment['doctor_image'],
+          "gender": appointment['doctor_gender'],
+          "title": appointment['doctor_title'],
+        },
+        width: needsConfirmation ? 32 : 40,
+        height: needsConfirmation ? 32 : 40,
       );
+      final imageProvider = imageResult.imageProvider;
+
 
 
       return Card(
@@ -439,7 +445,7 @@ import 'package:docsera/gen_l10n/app_localizations.dart';
                             CircleAvatar(
                               radius: needsConfirmation ? 16.r : 20.r,
                               backgroundColor: AppColors.mainDark.withOpacity(0.3),
-                              backgroundImage: AssetImage(avatarPath),
+                              backgroundImage: imageProvider,
                             ),
                             SizedBox(width: 20.w),
 
@@ -552,12 +558,12 @@ import 'package:docsera/gen_l10n/app_localizations.dart';
                         fadePageRoute(
                           SelectPatientPage(
                             doctorId: appointment["doctor_id"] ?? "",
-                            doctorName: appointment["doctor_name"] ?? "Unknown",
+                            doctorName: appointment["doctor_name"] ?? "",
                             doctorTitle: appointment["doctor_title"] ?? "",
                             doctorGender: appointment["doctor_gender"] ?? "",
-                            specialty: appointment["doctor_specialty"] ?? "General Practice",
-                            image: appointment["doctor_image"] ?? "assets/images/male-doc.png",
-                            clinicName: appointment['clinicName'] ?? "Unknown Clinic",
+                            specialty: appointment["doctor_specialty"] ?? "",
+                            image: appointment["doctor_image"] ?? "",
+                            clinicName: appointment['clinicName'] ?? "",
                             clinicAddress: appointment['clinic_address'] ?? {}, // ✅ Pass empty map if null
                           ),
                         ),

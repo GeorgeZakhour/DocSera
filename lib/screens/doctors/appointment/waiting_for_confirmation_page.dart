@@ -22,11 +22,17 @@ class WaitingForConfirmationPage extends StatelessWidget {
     String formattedDate = DateFormat("EEEE, d MMMM yyyy", locale).format(appointmentDate);
     String formattedTime = DateFormat("HH:mm", locale).format(appointmentDate);
 
-    final imagePath = getDoctorImage(
-      imageUrl: appointment['doctor_image'],
-      gender: appointment['doctorGender'],
-      title: appointment['doctorTitle'],
+    final imageResult = resolveDoctorImagePathAndWidget(
+      doctor: {
+        'doctor_image': appointment['doctor_image'],
+        'gender': appointment['doctorGender'],
+        'title': appointment['doctorTitle'],
+      },
+      width: 44,
+      height: 44,
     );
+    final imageProvider = imageResult.imageProvider;
+
 
     return WillPopScope(
       onWillPop: () async {
@@ -95,7 +101,7 @@ class WaitingForConfirmationPage extends StatelessWidget {
                           CircleAvatar(
                             radius: 22.r,
                             backgroundColor: AppColors.main.withOpacity(0.3),
-                            backgroundImage: AssetImage(imagePath),
+                            backgroundImage: imageProvider,
                           ),
                           SizedBox(width: 12.w),
                           Column(

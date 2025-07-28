@@ -889,6 +889,9 @@ class AppLocalizationsAr extends AppLocalizations {
   String get noResultsSubtitle => 'حاول استخدام مصطلح بحث مختلف.';
 
   @override
+  String get gallery => 'صور العيادة والطبيب';
+
+  @override
   String get location => 'الموقع';
 
   @override
@@ -932,6 +935,12 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get clinicNotAvailable => 'العيادة غير متوفرة';
+
+  @override
+  String get faq => 'الأسئلة الشائعة';
+
+  @override
+  String get offeredServices => 'الخدمات المقدمة';
 
   @override
   String get makeAppointment => 'حجز موعد';

@@ -1257,11 +1257,17 @@ Shared from DocSera App
     String title = (widget.appointment['doctor_title'] ?? '').toLowerCase();
     String? doctorImage = widget.appointment['doctor_image'];
 
-    String avatarPath = getDoctorImage(
-      imageUrl: doctorImage,
-      gender: gender,
-      title: title,
+    final imageResult = resolveDoctorImagePathAndWidget(
+      doctor: {
+        'doctor_image': doctorImage,
+        'gender': gender,
+        'title': title,
+      },
+      width: 40,
+      height: 40,
     );
+    final imageProvider = imageResult.imageProvider;
+
 
 
     return BaseScaffold(
@@ -1324,9 +1330,8 @@ Shared from DocSera App
                                   CircleAvatar(
                                     backgroundColor: AppColors.main.withOpacity(0.3),
                                     radius: 20.sp,
-                                    backgroundImage: avatarPath.startsWith("http")
-                                        ? NetworkImage(avatarPath)
-                                        : AssetImage(avatarPath) as ImageProvider,                                  ),
+                                    backgroundImage: imageProvider,
+                                ),
                                   SizedBox(width: 20.w),
                                   Column(
                                     crossAxisAlignment: CrossAxisAlignment.start,
@@ -1491,12 +1496,12 @@ Shared from DocSera App
                                   fadePageRoute(
                                     SelectPatientPage(
                                       doctorId: widget.appointment["doctor_id"] ?? "",
-                                      doctorName: widget.appointment["doctor_name"] ?? "Unknown",
+                                      doctorName: widget.appointment["doctor_name"] ?? "",
                                       doctorTitle: widget.appointment["doctor_title"] ?? "",
                                       doctorGender: widget.appointment["doctor_gender"] ?? "",
-                                      specialty: widget.appointment["doctor_specialty"] ?? "General Practice",
-                                      image: widget.appointment["doctor_image"] ?? "assets/images/female-doc.png",
-                                      clinicName: widget.appointment['clinic'] ?? "Unknown Clinic",
+                                      specialty: widget.appointment["doctor_specialty"] ?? "",
+                                      image: widget.appointment["doctor_image"] ?? "",
+                                      clinicName: widget.appointment['clinic'] ?? "",
                                       clinicAddress: widget.appointment['clinic_address'] ?? {},
                                     ),
                                   ),
@@ -1549,7 +1554,7 @@ Shared from DocSera App
                                       Icon(Icons.person, color: AppColors.main, size: 18.sp),
                                       SizedBox(width: 12.w),
                                       Text(
-                                        (widget.appointment['patient_name'] ?? "Unknown").toUpperCase(), // ✅ Convert to uppercase
+                                        (widget.appointment['patient_name'] ?? "").toUpperCase(), // ✅ Convert to uppercase
                                           style: AppTextStyles.getText2(context).copyWith(fontSize: 12.sp, fontWeight: FontWeight.w500),
                                       ),
                                     ],

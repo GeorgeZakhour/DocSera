@@ -71,20 +71,26 @@ class DoctorDrawer extends StatelessWidget {
 
     String doctorName = "Doctor";
     String specialty = "Specialty";
-    String avatarImage = "assets/images/male-doc.png"; // Default image
+    ImageProvider<Object> avatarImage = const AssetImage("assets/images/male-doc.png");
 
     if (doctorData != null) {
       // ✅ Get Name & Specialty Safely
       doctorName =
-          "${doctorData['title'] ?? ''} ${doctorData['firstName'] ?? 'Doctor'} ${doctorData['lastName'] ?? ''}".trim();
+          "${doctorData['title'] ?? ''} ${doctorData['first_name'] ?? 'Doctor'} ${doctorData['last_name'] ?? ''}".trim();
       specialty = doctorData['specialty'] ?? "Specialty";
 
-      // ✅ Check if Profile Image Exists
-      avatarImage = getDoctorImage(
-        imageUrl: doctorData['profileImage'],
-        gender: doctorData['gender'],
-        title: doctorData['title'],
+      final imageResult = resolveDoctorImagePathAndWidget(
+        doctor: {
+          'doctor_image': doctorData['doctor_image'],
+          'gender': doctorData['gender'],
+          'title': doctorData['title'],
+        },
+        width: 60,
+        height: 60,
       );
+
+      avatarImage = imageResult.imageProvider;
+
     }
 
     print("📸 Selected Avatar: $avatarImage");
@@ -97,9 +103,8 @@ class DoctorDrawer extends StatelessWidget {
           CircleAvatar(
             backgroundColor: AppColors.background2.withOpacity(0.5),
             radius: 30,
-            backgroundImage: avatarImage.startsWith("http") // Check if it's a URL
-                ? NetworkImage(avatarImage) as ImageProvider
-                : AssetImage(avatarImage),
+            backgroundImage: avatarImage,
+
           ),
           const SizedBox(height: 10),
           Text(

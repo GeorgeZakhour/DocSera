@@ -118,11 +118,17 @@ class RescheduleConfirmationPage extends StatelessWidget {
     String gender = appointment.doctorGender.toLowerCase();
     String title = appointment.doctorTitle.toLowerCase();
 
-    String avatarPath = getDoctorImage(
-      imageUrl: appointment.image,
-      gender: gender,
-      title: title,
+    final imageResult = resolveDoctorImagePathAndWidget(
+      doctor: {
+        'doctor_image': appointment.image,
+        'gender': gender,
+        'title': title,
+      },
+      width: 50,
+      height: 50,
     );
+    final imageProvider = imageResult.imageProvider;
+
 
 
     return Container(
@@ -141,9 +147,8 @@ class RescheduleConfirmationPage extends StatelessWidget {
               CircleAvatar(
                 backgroundColor: old? AppColors.yellow.withOpacity(0.2) : AppColors.main.withOpacity(0.2),
                 radius: 25.r,
-                backgroundImage: avatarPath.startsWith("http")
-                    ? NetworkImage(avatarPath)
-                    : AssetImage(avatarPath) as ImageProvider,              ),
+                backgroundImage: imageProvider,
+           ),
               SizedBox(width: 12.w),
               Column(
                 crossAxisAlignment: CrossAxisAlignment.start,

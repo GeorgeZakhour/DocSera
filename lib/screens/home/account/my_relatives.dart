@@ -170,7 +170,7 @@ class _MyRelativesPageState extends State<MyRelativesPage> {
 
     bool isArabicLocale = Localizations.localeOf(context).languageCode == 'ar';
 
-    int age = _calculateAge(relative['date_of_birth'] ?? "Unknown");
+    int age = _calculateAge(relative['date_of_birth'] ?? "");
     String formattedDate = formatLocalizedDate(relative['date_of_birth'] ?? "", context);
     String formattedAge = AppLocalizations.of(context)!.yearsCount(
         isArabicLocale ? convertToArabicNumbers(age.toString()) : age.toString()

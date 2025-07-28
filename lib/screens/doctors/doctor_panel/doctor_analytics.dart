@@ -74,7 +74,7 @@ class _DoctorAnalyticsPageState extends State<DoctorAnalyticsPage> {
         appointmentTypes[type] = (appointmentTypes[type] ?? 0) + 1;
 
         // ✅ توزيع الجنس
-        String gender = data['userGender'] ?? 'Unknown';
+        String gender = data['userGender'] ?? '';
         genderDistribution[gender] = (genderDistribution[gender] ?? 0) + 1;
 
         // ✅ توزيع العمر

@@ -1736,6 +1736,8 @@ abstract class AppLocalizations {
   /// **'Try a different search term.'**
   String get noResultsSubtitle;
 
+  String get gallery;
+
   /// No description provided for @location.
   ///
   /// In en, this message translates to:
@@ -1825,6 +1827,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Clinic not available'**
   String get clinicNotAvailable;
+
+
+  String get faq;
+
+
+  String get offeredServices;
 
   /// No description provided for @makeAppointment.
   ///

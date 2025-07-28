@@ -257,6 +257,16 @@ import 'package:docsera/utils/doctor_image_utils.dart';
       final doctor = convos.first;
       final totalUnread = convos.fold<int>(0, (sum, c) => sum + (c.unreadCountForUser ?? 0));
 
+      final imageResult = resolveDoctorImagePathAndWidget(
+        doctor: {
+          'doctor_image': doctor.doctorImage,
+          'gender': doctor.doctorGender,
+          'title': doctor.doctorTitle,
+        },
+        width: 44,
+        height: 44,
+      );
+
       return StatefulBuilder(
         builder: (context, setState) {
           final isRTL = Directionality.of(context).toString().contains('rtl');
@@ -279,7 +289,8 @@ import 'package:docsera/utils/doctor_image_utils.dart';
                                 CircleAvatar(
                                   radius: 22.r,
                                   backgroundColor: AppColors.main.withOpacity(0.1),
-                                  backgroundImage: AssetImage(doctor.doctorImage ?? 'assets/images/male-doc.png'),
+                                  backgroundImage: imageResult.imageProvider,
+
                                 ),
                                 Positioned(
                                   right: 0,
@@ -446,12 +457,34 @@ import 'package:docsera/utils/doctor_image_utils.dart';
           trailingText = DateFormat('dd/MM/yyyy').format(lastMessageTime);
         }
       }
+      print('TITLE: ${convo.doctorTitle} - GENDER: ${convo.doctorGender}');
 
 
       final unreadCount = convo.unreadCountForUser ?? 0;
 
+      final imageResult = resolveDoctorImagePathAndWidget(
+        doctor: {
+          'doctor_image': convo.doctorImage,
+          'gender': convo.doctorGender,
+          'title': convo.doctorTitle,
+        },
+        width: 44,
+        height: 44,
+      );
+
+
       return InkWell(
         onTap: () async {
+          final imageResult = resolveDoctorImagePathAndWidget(
+            doctor: {
+              'doctor_image': convo.doctorImage,
+              'gender': convo.doctorGender,
+              'title': convo.doctorTitle,
+            },
+            width: 44,
+            height: 44,
+          );
+
           await Navigator.push(
             context,
             MaterialPageRoute(
@@ -459,7 +492,7 @@ import 'package:docsera/utils/doctor_image_utils.dart';
                 conversationId: convo.id,
                 doctorName: convo.doctorName ?? '',
                 doctorSpecialty: convo.doctorSpecialty ?? '',
-                doctorImage: convo.doctorImage ?? 'assets/images/male-doc.png',
+                doctorImage: imageResult.imageProvider,
                 isClosed: convo.isClosed,
                 patientName: convo.patientName ?? '',
                 accountHolderName: convo.accountHolderName ?? '',
@@ -488,7 +521,8 @@ import 'package:docsera/utils/doctor_image_utils.dart';
                     CircleAvatar(
                           radius: 22.r,
                           backgroundColor: AppColors.main.withOpacity(0.1),
-                          backgroundImage: AssetImage(convo.doctorImage ?? 'assets/images/male-doc.png'),
+                          backgroundImage: imageResult.imageProvider,
+
                   ),
 
                     SizedBox(width: 12.w),

@@ -24,6 +24,9 @@ class MessagesCubit extends Cubit<MessagesState> {
     }
 
     final userId = authState.user.id;
+
+    print("👤 MessagesCubit - Current userId: $userId");
+
     _fetchConversations(userId);
     _startRealtimeListener(userId);
   }
@@ -79,6 +82,14 @@ class MessagesCubit extends Cubit<MessagesState> {
         final authState = Supabase.instance.client.auth.currentUser;
         final userId = authState?.id ?? patientId;
 
+        final doctor = await _supabase
+            .from('doctors')
+            .select('title, gender')
+            .eq('id', doctorId)
+            .single();
+
+        final genderArabic = doctor['gender'] == 'Male' ? 'ذكر' : 'أنثى';
+
         final convoInsert = await _supabase.from('conversations').insert({
           'doctor_id': doctorId,
           'patient_id': patientId,
@@ -89,12 +100,15 @@ class MessagesCubit extends Cubit<MessagesState> {
           'doctor_name': doctorName,
           'doctor_specialty': doctorSpecialty,
           'doctor_image': doctorImage,
+          'doctor_title': doctor['title'],         // ✅ جديد
+          'doctor_gender': genderArabic,           // ✅ جديد
           'is_closed': false,
           'patient_name': patientName,
           'account_holder_name': accountHolderName,
           'selected_reason': selectedReason,
           'unread_count_for_doctor': 1,
         }).select('id').single();
+
 
         final convoId = convoInsert['id'] as String;
 
@@ -120,62 +134,66 @@ class MessagesCubit extends Cubit<MessagesState> {
     emit(MessagesLoading());
 
     try {
-      final response = await _supabase
+      // ✅ تحديد إذا المستخدم دكتور أو لا
+      final isDoctor = await _supabase
+          .from('doctors')
+          .select('id')
+          .eq('id', userId)
+          .maybeSingle() != null;
+
+      final query = isDoctor
+          ? _supabase
           .from('conversations')
           .select('*, messages!messages_conversation_id_fkey(*)')
-          .contains('participants', [userId])
-          .order('updated_at', ascending: false);
+          .eq('doctor_id', userId)
+          : _supabase
+          .from('conversations')
+          .select('*, messages!messages_conversation_id_fkey(*)')
+          .contains('participants', [userId]);
+
+      final response = await query.order('updated_at', ascending: false);
 
       final List<Conversation> conversations = [];
 
       for (final convo in response) {
-          final base = Conversation.fromMap(convo['id'], convo);
-          final unread = convo['unread_count_for_user'] ?? 0;
+        final base = Conversation.fromMap(convo['id'], convo);
+        final unread = convo['unread_count_for_user'] ?? 0;
 
-          final List messagesList = (convo['messages'] ?? [])..sort(
-                (a, b) => DateTime.parse(b['timestamp']).compareTo(DateTime.parse(a['timestamp'])),
-          );
+        final List messagesList = (convo['messages'] ?? [])..sort(
+              (a, b) => DateTime.parse(b['timestamp']).compareTo(DateTime.parse(a['timestamp'])),
+        );
 
-          // print("📬 الرسائل بعد الترتيب:");
-          // for (var msg in messagesList) {
-          //   print("↪️ ${msg['text']} @ ${msg['timestamp']}");
-          // }
+        final messages = <Map<String, dynamic>>[];
 
-          final messages = <Map<String, dynamic>>[];
+        if (messagesList.isNotEmpty) {
+          final latest = messagesList.first;
 
-          if (messagesList.isNotEmpty) {
-            final latest = messagesList.first;
-            // print("↪️ $latest");
+          messages.insert(0, {
+            'id': latest['id'],
+            'text': latest['text'] ?? (latest['file_url'] != null ? '📎 ملف مرفق' : ''),
+            'timestamp': DateTime.tryParse(latest['timestamp'] ?? ''),
+            'senderId': latest['sender_id'],
+            'readByUser': latest['read_by_user'] ?? false,
+            'isUser': latest['is_user'] ?? false,
+          });
+        }
 
-            messages.insert(0, {
-              'id': latest['id'], // ✅ أضف هذا السطر
-              'text': latest['text'] ?? (latest['file_url'] != null ? '📎 ملف مرفق' : ''),
-              'timestamp': DateTime.tryParse(latest['timestamp'] ?? ''),
-              'senderId': latest['sender_id'],
-              'readByUser': latest['read_by_user'] ?? false,
-              'isUser': latest['is_user'] ?? false,
-            });
-
-          }
-
-          conversations.add(base.copyWith(
-            unreadCountForUser: unread,
-            messages: messages,
-            lastMessage: messages.isNotEmpty
-                ? (messages.first['text'].toString().isNotEmpty
-                ? messages.first['text']
-                : '📎 ملف مرفق')
-                : (base.lastMessage ?? ''),
-          ));
+        conversations.add(base.copyWith(
+          unreadCountForUser: unread,
+          messages: messages,
+          lastMessage: messages.isNotEmpty
+              ? (messages.first['text'].toString().isNotEmpty
+              ? messages.first['text']
+              : '📎 ملف مرفق')
+              : (base.lastMessage ?? ''),
+        ));
       }
-
 
       emit(MessagesLoaded(conversations));
     } catch (e) {
       emit(MessagesError("فشل تحميل الرسائل: $e"));
     }
   }
-
   /// ✅ الاستماع إلى جميع المحادثات الخاصة بالمستخدم الحالي
   void _startRealtimeListener(String userId) {
     _realtimeChannel?.unsubscribe();

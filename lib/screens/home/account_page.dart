@@ -2094,12 +2094,9 @@ class _AccountScreenState extends State<AccountScreen> {
             Transform.translate(
               offset: Offset(0, -10.h),
               child: (field == 'faceId')
-                  ? SvgPicture.asset(
-                'assets/icons/face-id.svg',
-                width: 20.w,
-                height: 20.w,
-                color: AppColors.main,
-              )
+                  ? (biometricIcon == Icons.face
+                  ? SvgPicture.asset('assets/icons/face-id.svg', width: 20.w, height: 20.w, color: AppColors.main)
+                  : Icon(biometricIcon, size: 20.w, color: AppColors.main))
                   : Icon(icon, color: AppColors.main, size: 16.sp),
             ),
             SizedBox(width: 12.w),
