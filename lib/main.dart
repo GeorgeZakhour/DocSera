@@ -123,106 +123,112 @@ class _MyAppState extends State<MyApp> {
       builder: (context, child) {
         return Directionality(
           textDirection: _locale.languageCode == 'ar' ? TextDirection.rtl : TextDirection.ltr,
-          child: MaterialApp(
-            debugShowCheckedModeBanner: false,
-            theme: ThemeData(
-              primarySwatch: Colors.teal,
+          child: GestureDetector(
+            behavior: HitTestBehavior.translucent,
+            onTap: () {
+              FocusManager.instance.primaryFocus?.unfocus();
+            },
+            child: MaterialApp(
+              debugShowCheckedModeBanner: false,
+              theme: ThemeData(
+                primarySwatch: Colors.teal,
 
-              // ✅ تأثير الضغط المطول لكل الأزرار
-              textButtonTheme: TextButtonThemeData(
-                style: ButtonStyle(
-                  overlayColor: MaterialStateProperty.all(AppColors.main.withOpacity(0.08)),
+                // ✅ تأثير الضغط المطول لكل الأزرار
+                textButtonTheme: TextButtonThemeData(
+                  style: ButtonStyle(
+                    overlayColor: MaterialStateProperty.all(AppColors.main.withOpacity(0.08)),
+                  ),
+                ),
+                outlinedButtonTheme: OutlinedButtonThemeData(
+                  style: ButtonStyle(
+                    overlayColor: MaterialStateProperty.all(AppColors.main.withOpacity(0.08)),
+                  ),
+                ),
+                elevatedButtonTheme: ElevatedButtonThemeData(
+                  style: ButtonStyle(
+                    backgroundColor: MaterialStateProperty.all(AppColors.main),
+                    foregroundColor: MaterialStateProperty.all(Colors.white),
+                    overlayColor: MaterialStateProperty.all(AppColors.main.withOpacity(0.08)),
+                  ),
+                ),
+
+                splashColor: AppColors.main.withOpacity(0.1),
+                highlightColor: AppColors.main.withOpacity(0.05),
+                splashFactory: InkRipple.splashFactory,
+
+                /// ✅ Use responsive font family based on the selected language
+                fontFamily: _locale.languageCode == 'ar' ? 'Cairo' : 'Montserrat',
+
+                popupMenuTheme: PopupMenuThemeData(
+                  color: Colors.white.withOpacity(0.95),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12.r),
+                  ),
+                  textStyle: TextStyle(
+                    fontSize: 12.sp,
+                    fontFamily: _locale.languageCode == 'ar' ? 'Cairo' : 'Montserrat',
+                    color: Colors.black87,
+                  ),
+                  elevation: 4,
+                ),
+                /// ✅ Global Input Field Theme
+                inputDecorationTheme: InputDecorationTheme(
+                  labelStyle: TextStyle(color: Colors.grey, fontSize: 12.sp), // ✅ لون اللابل دائمًا رمادي
+                  floatingLabelStyle: TextStyle(color: AppColors.main),
+                  hintStyle: TextStyle(color: Colors.grey),
+                  focusedBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(25.r),
+                    borderSide: BorderSide(color: AppColors.main, width: 2),
+                  ),
+                  enabledBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(25.r),
+                    borderSide: BorderSide(color: Colors.grey),
+                  ),
+                  contentPadding: EdgeInsets.symmetric(vertical: 10.h, horizontal: 12.w),
+                ),
+
+                /// ✅ Set Cursor and Selection Color
+                textSelectionTheme: TextSelectionThemeData(
+                  cursorColor: AppColors.main,
+                  selectionColor: AppColors.main.withOpacity(0.3),
+                  selectionHandleColor: AppColors.main,
                 ),
               ),
-              outlinedButtonTheme: OutlinedButtonThemeData(
-                style: ButtonStyle(
-                  overlayColor: MaterialStateProperty.all(AppColors.main.withOpacity(0.08)),
-                ),
-              ),
-              elevatedButtonTheme: ElevatedButtonThemeData(
-                style: ButtonStyle(
-                  backgroundColor: MaterialStateProperty.all(AppColors.main),
-                  foregroundColor: MaterialStateProperty.all(Colors.white),
-                  overlayColor: MaterialStateProperty.all(AppColors.main.withOpacity(0.08)),
-                ),
-              ),
 
-              splashColor: AppColors.main.withOpacity(0.1),
-              highlightColor: AppColors.main.withOpacity(0.05),
-              splashFactory: InkRipple.splashFactory,
-
-              /// ✅ Use responsive font family based on the selected language
-              fontFamily: _locale.languageCode == 'ar' ? 'Cairo' : 'Montserrat',
-
-              popupMenuTheme: PopupMenuThemeData(
-                color: Colors.white.withOpacity(0.95),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(12.r),
-                ),
-                textStyle: TextStyle(
-                  fontSize: 12.sp,
-                  fontFamily: _locale.languageCode == 'ar' ? 'Cairo' : 'Montserrat',
-                  color: Colors.black87,
-                ),
-                elevation: 4,
-              ),
-              /// ✅ Global Input Field Theme
-              inputDecorationTheme: InputDecorationTheme(
-                labelStyle: TextStyle(color: Colors.grey, fontSize: 12.sp), // ✅ لون اللابل دائمًا رمادي
-                floatingLabelStyle: TextStyle(color: AppColors.main),
-                hintStyle: TextStyle(color: Colors.grey),
-                focusedBorder: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(25.r),
-                  borderSide: BorderSide(color: AppColors.main, width: 2),
-                ),
-                enabledBorder: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(25.r),
-                  borderSide: BorderSide(color: Colors.grey),
-                ),
-                contentPadding: EdgeInsets.symmetric(vertical: 10.h, horizontal: 12.w),
-              ),
-
-              /// ✅ Set Cursor and Selection Color
-              textSelectionTheme: TextSelectionThemeData(
-                cursorColor: AppColors.main,
-                selectionColor: AppColors.main.withOpacity(0.3),
-                selectionHandleColor: AppColors.main,
-              ),
-            ),
-
-            // ✅ Localization setup
-            locale: _locale,
-            supportedLocales: const [Locale('en'), Locale('ar')],
-            // localizationsDelegates: AppLocalizations.localizationsDelegates,
-            localizationsDelegates: const [
-              AppLocalizations.delegate,
-              GlobalMaterialLocalizations.delegate,
-              GlobalWidgetsLocalizations.delegate,
-              GlobalCupertinoLocalizations.delegate,
-              quill.FlutterQuillLocalizations.delegate, // لازم تعمل import لـ flutter_quill
-            ],
+              // ✅ Localization setup
+              locale: _locale,
+              supportedLocales: const [Locale('en'), Locale('ar')],
+              // localizationsDelegates: AppLocalizations.localizationsDelegates,
+              localizationsDelegates: const [
+                AppLocalizations.delegate,
+                GlobalMaterialLocalizations.delegate,
+                GlobalWidgetsLocalizations.delegate,
+                GlobalCupertinoLocalizations.delegate,
+                quill.FlutterQuillLocalizations.delegate, // لازم تعمل import لـ flutter_quill
+              ],
 
 
-            // ✅ Fallback for unsupported locales
-            localeResolutionCallback: (locale, supportedLocales) {
-              if (locale == null) return const Locale('en');
-              for (var supportedLocale in supportedLocales) {
-                if (supportedLocale.languageCode == locale.languageCode) {
-                  return supportedLocale;
+              // ✅ Fallback for unsupported locales
+              localeResolutionCallback: (locale, supportedLocales) {
+                if (locale == null) return const Locale('en');
+                for (var supportedLocale in supportedLocales) {
+                  if (supportedLocale.languageCode == locale.languageCode) {
+                    return supportedLocale;
+                  }
                 }
-              }
-              return const Locale('en'); // ✅ Default to English
-            },
+                return const Locale('en'); // ✅ Default to English
+              },
 
-            // ✅ Make the app title support localization
-            onGenerateTitle: (context) => AppLocalizations.of(context)!.appName,
+              // ✅ Make the app title support localization
+              onGenerateTitle: (context) => AppLocalizations.of(context)!.appName,
 
-            home: SplashScreen(),
+              home: SplashScreen(),
 
-            routes: {
-              "/login": (context) => const LogInPage(),
-              "/identification": (context) => const IdentificationPage(),
-            },
+              routes: {
+                "/login": (context) => const LogInPage(),
+                "/identification": (context) => const IdentificationPage(),
+              },
+            ),
           ),
         );
       },

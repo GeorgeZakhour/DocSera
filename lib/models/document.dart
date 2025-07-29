@@ -1,5 +1,6 @@
 class UserDocument {
-  final String? id; // صار nullable لأنو ما رح تنشأه قبل الإدراج
+  final String? id;
+  final String userId;
   final String name;
   final String type;
   final String fileType;
@@ -13,8 +14,9 @@ class UserDocument {
 
   UserDocument({
     this.id,
+    required this.userId,
     required this.name,
-    required this.type,
+    required this.type, 
     required this.fileType,
     required this.patientId,
     required this.previewUrl,
@@ -28,6 +30,7 @@ class UserDocument {
   factory UserDocument.fromMap(Map<String, dynamic> data) {
     return UserDocument(
       id: data['id']?.toString(),
+      userId: data['user_id'] ?? '',
       name: data['name'] ?? '',
       type: data['type'] ?? '',
       fileType: data['file_type'] ?? '',
@@ -43,6 +46,7 @@ class UserDocument {
 
   Map<String, dynamic> toMap() {
     return {
+      'user_id': userId,
       'name': name,
       'type': type,
       'file_type': fileType,
@@ -67,6 +71,7 @@ class UserDocument {
   }) {
     return UserDocument(
       id: id,
+      userId: userId ?? this.userId,
       name: name ?? this.name,
       type: type ?? this.type,
       fileType: fileType,

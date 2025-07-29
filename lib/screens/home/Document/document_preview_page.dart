@@ -279,43 +279,41 @@ class _DocumentPreviewPageState extends State<DocumentPreviewPage> {
   }
 
   Widget _buildImageViewer() {
-    return ScrollbarTheme(
-      data: ScrollbarThemeData(
-        thumbColor: MaterialStateProperty.all(Colors.black.withOpacity(0.08)),
-        thickness: MaterialStateProperty.all(3),
-        radius: Radius.circular(5),
-      ),
-      child: Scrollbar(
-        controller: _scrollController,
-        interactive: true,
-        thumbVisibility: false,
-        scrollbarOrientation: ScrollbarOrientation.right,
-        child: GestureDetector(
-          onDoubleTapDown: (details) => _doubleTapDetails = details,
-          onDoubleTap: _handleDoubleTap,
-          child: InteractiveViewer(
-            transformationController: _transformationController,
-            panEnabled: true,
-            scaleEnabled: true,
-            minScale: 1.0,
-            maxScale: 4.0,
-            child: SingleChildScrollView(
-              controller: _scrollController,
-              padding: EdgeInsets.zero,
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: _imageBytes.map((bytes) {
-                  return Padding(
-                    padding: EdgeInsets.symmetric(horizontal: 4.w, vertical: 4.h),
-                    child: ClipRRect(
-                      borderRadius: BorderRadius.circular(12.r),
-                      child: bytes.isNotEmpty
-                          ? Image.memory(bytes, fit: BoxFit.contain, width: double.infinity)
-                          : Icon(Icons.broken_image, size: 80, color: Colors.grey),
+    return GestureDetector(
+      onDoubleTapDown: (details) => _doubleTapDetails = details,
+      onDoubleTap: _handleDoubleTap,
+      child: InteractiveViewer(
+        transformationController: _transformationController,
+        panEnabled: true,
+        scaleEnabled: true,
+        minScale: 1.0,
+        maxScale: 4.0,
+        child: SingleChildScrollView(
+          controller: _scrollController,
+          child: ConstrainedBox(
+            constraints: BoxConstraints(
+              minHeight: MediaQuery.of(context).size.height, // ✅ لضمان الطول الأدنى
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: _imageBytes.map((bytes) {
+                return Padding(
+                  padding: EdgeInsets.symmetric(horizontal: 8.w, vertical: 8.h),
+                  child: ClipRRect(
+                    borderRadius: BorderRadius.circular(12.r),
+                    child: bytes.isNotEmpty
+                        ? Image.memory(
+                      bytes,
+                      fit: BoxFit.contain,
+                    )
+                        : Container(
+                      height: 200.h,
+                      color: Colors.grey[200],
+                      child: Icon(Icons.broken_image, size: 80, color: Colors.grey),
                     ),
-                  );
-                }).toList(),
-              ),
+                  ),
+                );
+              }).toList(),
             ),
           ),
         ),

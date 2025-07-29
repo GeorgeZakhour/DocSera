@@ -1074,12 +1074,6 @@ class _DocumentsPageState extends State<DocumentsPage> with AutomaticKeepAliveCl
     );
   }
 
-
-  Widget _buildBannerListItem() => Padding(
-    padding: EdgeInsets.fromLTRB(16.w, 8.h, 16.w, 12.h),
-    child: _buildDocumentsBannerCard(),
-  );
-
   Map<int, List<Map<String, dynamic>>> _groupDocumentsByYear(List<Map<String, dynamic>> docs) {
     final Map<int, List<Map<String, dynamic>>> grouped = {};
 
@@ -1098,38 +1092,6 @@ class _DocumentsPageState extends State<DocumentsPage> with AutomaticKeepAliveCl
       ..sort((a, b) => b.key.compareTo(a.key)));
 
     return sorted;
-  }
-
-  Widget _buildDocumentListTile(Map<String, dynamic> doc) {
-    return Card(
-      margin: EdgeInsets.only(bottom: 12.h),
-      child: ListTile(
-        contentPadding: EdgeInsets.symmetric(horizontal: 12.w, vertical: 6.h),
-        leading: doc['type'] == 'pdf'
-            ? SvgPicture.asset(
-          'assets/icons/pdf-file.svg',
-          width: 32.sp,
-          height: 32.sp,
-          color: AppColors.mainDark,
-        )
-            : Icon(
-          Icons.image,
-          color: AppColors.mainDark,
-          size: 32.sp,
-        ),
-
-        title: Text(
-          doc['name'],
-          overflow: TextOverflow.ellipsis,
-          style: AppTextStyles.getText2(context),
-        ),
-        trailing: IconButton(
-          icon: Icon(Icons.more_vert),
-          onPressed: () => _showEditOptions(doc),
-        ),
-        onTap: () => _openDocument(doc),
-      ),
-    );
   }
 
   Widget _buildDocumentCard(Map<String, dynamic> doc) {
@@ -1211,7 +1173,6 @@ class _DocumentsPageState extends State<DocumentsPage> with AutomaticKeepAliveCl
       ),
     );
   }
-
 
   void _showEditOptions(Map<String, dynamic> doc) {
     final UserDocument userDoc = doc['doc'];
@@ -1342,8 +1303,6 @@ class _DocumentsPageState extends State<DocumentsPage> with AutomaticKeepAliveCl
     );
   }
 
-
-
   Widget _buildNotesListView(List<Note> notes) {
     return CustomScrollView(
       physics: BouncingScrollPhysics(),
@@ -1375,8 +1334,6 @@ class _DocumentsPageState extends State<DocumentsPage> with AutomaticKeepAliveCl
       ],
     );
   }
-
-
 
   Widget _buildNoteListTile(Note note) {
     final isArabic = Directionality.of(context) == TextDirection.RTL;
@@ -1451,7 +1408,6 @@ class _DocumentsPageState extends State<DocumentsPage> with AutomaticKeepAliveCl
       ),
     );
   }
-
 
   Widget _buildNoteCard(Note note) {
     final isArabic = Directionality.of(context) == TextDirection.RTL;

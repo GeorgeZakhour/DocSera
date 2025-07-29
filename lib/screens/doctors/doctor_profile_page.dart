@@ -48,18 +48,29 @@ class _DoctorProfilePageState extends State<DoctorProfilePage> {
   Offset _doubleTapPosition = Offset.zero;
   Map<String, ImageProvider> _imageCache = {};
   double _buttonTopOffset = 0.0;
+  bool _isOpeningImageOverlay = false;
 
 
   void _showImageOverlayWithIndex(List<String> urls, int index) {
+    if (_isOpeningImageOverlay) return;
+    _isOpeningImageOverlay = true;
+
     setState(() {
       _expandedImageUrls = urls;
       _initialImageIndex = index;
       _expandedImageOverlay = true;
-      for (final url in urls) {
-        _preloadImage(url);
-      }
+    });
+
+    for (final url in urls) {
+      _preloadImage(url);
+    }
+
+    // إعادة التمكين بعد فريم واحد لضمان منع الضغط السريع
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _isOpeningImageOverlay = false;
     });
   }
+
 
   void _hideImageOverlay() {
     setState(() {
@@ -415,7 +426,8 @@ class _DoctorProfilePageState extends State<DoctorProfilePage> {
                           ),
                         ),
                       ),
-                      Text(
+                      if (_expandedImageUrls.length > 1)
+                        Text(
                         '${_initialImageIndex + 1} ${AppLocalizations.of(context)!.ofText} ${_expandedImageUrls.length}',
                         style: AppTextStyles.getText1(context)
                             .copyWith(color: Colors.white),
@@ -1795,13 +1807,21 @@ class _DoctorProfilePageState extends State<DoctorProfilePage> {
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
                           SizedBox(height: 70.h),
-                          CircleAvatar(
-                            backgroundColor: AppColors.background2.withOpacity(0.2),
-                            radius: 40.r,
-                            child: ClipRRect(
-                              borderRadius: BorderRadius.circular(50),
-                              child: doctorAvatarWidget,
+                          GestureDetector(
+                            onTap: () {
+                              if (avatarPath != null && avatarPath.startsWith('http')) {
+                                _showImageOverlayWithIndex([avatarPath], 0);
+                              }
+                            },
 
+                            child: CircleAvatar(
+                              backgroundColor: AppColors.background2.withOpacity(0.2),
+                              radius: 40.r,
+                              child: ClipRRect(
+                                borderRadius: BorderRadius.circular(50),
+                                child: doctorAvatarWidget,
+
+                              ),
                             ),
                           ),
                           SizedBox(height: 10.h),

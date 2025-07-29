@@ -210,14 +210,15 @@ class _NoteEditorPageState extends State<NoteEditorPage> {
           final noChange = isSameTitle && isSameContent;
 
           if ((isNew && isTitleEmpty && isContentEmpty) || (!isNew && noChange)) {
-            Navigator.pop(context);
+            Future.microtask(() => Navigator.of(context).maybePop());
           } else {
-            Future.delayed(Duration.zero, () => _showExitPopup());
+            Future.microtask(() => _showExitPopup());
           }
         }
 
         return true;
       },
+
       child: SafeArea(
         child: Material(
           color: Colors.transparent,
@@ -301,11 +302,11 @@ class _NoteEditorPageState extends State<NoteEditorPage> {
                                           showFontSize: _toolbarExpanded,
                                           showColorButton: _toolbarExpanded,
                                           showBackgroundColorButton: false,
-                                          showCodeBlock: _toolbarExpanded,
+                                          showCodeBlock: false,
                                           showDirection: false,
                                           showListCheck: false,
                                           showSearchButton: _toolbarExpanded,
-                                          showClearFormat: _toolbarExpanded,
+                                          showClearFormat: false,
                                           showDividers: false,
                                           showUndo: true,
                                           showRedo: true,
@@ -318,11 +319,11 @@ class _NoteEditorPageState extends State<NoteEditorPage> {
                                           showListBullets: _toolbarExpanded,
                                           showListNumbers: _toolbarExpanded,
                                           showIndent: false,
-                                          showLink: _toolbarExpanded,
+                                          showLink: false,
                                           showAlignmentButtons: false,
                                           showHeaderStyle: false,
-                                          showSubscript: _toolbarExpanded,
-                                          showSuperscript: _toolbarExpanded,
+                                          showSubscript: false,
+                                          showSuperscript: false,
                                           toolbarSize: 20.h,
                                           buttonOptions: QuillSimpleToolbarButtonOptions(
                                             base: QuillToolbarBaseButtonOptions(

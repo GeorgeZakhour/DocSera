@@ -502,7 +502,8 @@ class _DocumentInfoScreenState extends State<DocumentInfoScreen> {
       }
 
       final userDocument = UserDocument(
-        id: '', // Supabase رح يولد ID تلقائيًا
+        id: '',
+        userId: userId,
         name: name,
         type: docType,
         fileType: fileType,

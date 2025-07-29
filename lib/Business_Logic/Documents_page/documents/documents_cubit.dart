@@ -42,7 +42,7 @@ class DocumentsCubit extends Cubit<DocumentsState> {
       table: 'documents',
       filter: PostgresChangeFilter(
         type: PostgresChangeFilterType.eq,
-        column: 'patient_id',
+        column: 'user_id',
         value: userId,
       ),
       callback: (payload) {
@@ -55,7 +55,7 @@ class DocumentsCubit extends Cubit<DocumentsState> {
       table: 'documents',
       filter: PostgresChangeFilter(
         type: PostgresChangeFilterType.eq,
-        column: 'patient_id',
+        column: 'user_id',
         value: userId,
       ),
       callback: (payload) {
@@ -68,7 +68,7 @@ class DocumentsCubit extends Cubit<DocumentsState> {
       table: 'documents',
       filter: PostgresChangeFilter(
         type: PostgresChangeFilterType.eq,
-        column: 'patient_id',
+        column: 'user_id',
         value: userId,
       ),
       callback: (payload) {
@@ -87,7 +87,7 @@ class DocumentsCubit extends Cubit<DocumentsState> {
       final response = await Supabase.instance.client
           .from('documents')
           .select()
-          .eq('patient_id', userId)
+          .eq('user_id', userId)
           .order('uploaded_at', ascending: false);
 
       final docs = response.map((e) => UserDocument.fromMap(e)).toList();
@@ -98,7 +98,7 @@ class DocumentsCubit extends Cubit<DocumentsState> {
   }
 
   /// ✅ Upload document (PDF or multiple images)
-  Future<void> uploadDocument() async {
+  Future<void> uploadDocument({required String patientId}) async {
     try {
       final currentUser = Supabase.instance.client.auth.currentUser;
       if (currentUser == null) {
@@ -106,7 +106,7 @@ class DocumentsCubit extends Cubit<DocumentsState> {
         return;
       }
 
-      final userId = currentUser.id;
+      final userId = currentUser.id; // المستخدم الأساسي
       final picked = await FilePicker.platform.pickFiles(
         allowMultiple: true,
         type: FileType.custom,
@@ -117,7 +117,6 @@ class DocumentsCubit extends Cubit<DocumentsState> {
 
       final firstPath = picked.files.first.path ?? '';
       final isPdf = firstPath.toLowerCase().endsWith('.pdf');
-
 
       final uploadedAt = DateTime.now().toUtc();
       final prefs = await SharedPreferences.getInstance();
@@ -130,8 +129,7 @@ class DocumentsCubit extends Cubit<DocumentsState> {
           ? autoName
           : picked.files.first.name;
 
-      final docId = const Uuid().v4(); // ✅ يولّد UUID جديد
-
+      final docId = const Uuid().v4();
 
       if (isPdf) {
         final file = File(picked.files.first.path!);
@@ -139,18 +137,18 @@ class DocumentsCubit extends Cubit<DocumentsState> {
         final path = 'documents/$userId/${DateTime.now().millisecondsSinceEpoch}-$fileName';
 
         final storage = Supabase.instance.client.storage;
-
-        final res = await storage.from('documents').upload(path, file);
+        await storage.from('documents').upload(path, file);
         final url = storage.from('documents').getPublicUrl(path);
 
         final previewUrl = await generatePdfThumbnail(file.path, path, userId);
 
         final docData = {
           'id': docId,
+          'user_id': userId, // ✅ المالك الأساسي
+          'patient_id': patientId, // ✅ المريض المقصود
           'name': docName,
           'type': 'pdf',
           'file_type': 'pdf',
-          'patient_id': userId,
           'preview_url': previewUrl ?? url,
           'pages': [url],
           'uploaded_at': uploadedAt.toIso8601String(),
@@ -161,8 +159,7 @@ class DocumentsCubit extends Cubit<DocumentsState> {
         return;
       }
 
-
-      // Multiple images
+      // الصور
       final uploadedUrls = <String>[];
       for (int i = 0; i < picked.files.length; i++) {
         final file = File(picked.files[i].path!);
@@ -170,17 +167,17 @@ class DocumentsCubit extends Cubit<DocumentsState> {
         final path = 'documents/$userId/${DateTime.now().millisecondsSinceEpoch}-$fileName';
 
         final storage = Supabase.instance.client.storage;
-
         await storage.from('documents').upload(path, file);
         final url = storage.from('documents').getPublicUrl(path);
         uploadedUrls.add(url);
       }
 
       final docData = {
+        'user_id': userId,
+        'patient_id': patientId,
         'name': docName,
         'type': 'image',
         'file_type': 'image',
-        'patient_id': userId,
         'preview_url': uploadedUrls.first,
         'pages': uploadedUrls,
         'uploaded_at': uploadedAt.toIso8601String(),
@@ -300,7 +297,7 @@ class DocumentsCubit extends Cubit<DocumentsState> {
           .from('documents')
           .delete()
           .eq('id', document.id!)
-          .eq('patient_id', userId);
+          .eq('user_id', userId);
 
       // حذف من التخزين
       for (final url in document.pages) {

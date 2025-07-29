@@ -697,7 +697,7 @@ class _ConversationPageState extends State<ConversationPage> with AutomaticKeepA
               iconPath,
               width: 24.sp,
               height: 24.sp,
-              color: onTap == null ? Colors.grey : AppColors.main,
+              color: onTap == null ? Colors.grey : null,
             ),
           ),
           SizedBox(height: 6.h),
@@ -1131,6 +1131,7 @@ class _ConversationPageState extends State<ConversationPage> with AutomaticKeepA
         .where((url) => url != null && url is String && url.trim().isNotEmpty)
         .cast<String>()
         .toList();
+    final currentUserId = Supabase.instance.client.auth.currentUser?.id ?? '';
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -1173,6 +1174,7 @@ class _ConversationPageState extends State<ConversationPage> with AutomaticKeepA
                         final pdf = pdfs.first;
                         final userDoc = UserDocument(
                           id: '',
+                          userId: currentUserId,
                           name: pdf['file_name'] ?? pdf['fileName'] ?? 'PDF File',
                           type: '',
                           fileType: 'pdf',

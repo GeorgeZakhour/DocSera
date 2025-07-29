@@ -2014,7 +2014,9 @@ class _AccountScreenState extends State<AccountScreen> {
       child: Center(
         child: SingleChildScrollView(
           child: Padding(
-            padding: EdgeInsets.symmetric(horizontal: 60.w),
+            padding: EdgeInsets.symmetric(
+              horizontal: Localizations.localeOf(context).languageCode == 'ar' ? 100.w : 80.w,
+            ),
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center, // يضمن التمركز العمودي داخل الـScroll
               crossAxisAlignment: CrossAxisAlignment.center,
