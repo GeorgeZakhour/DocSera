@@ -188,7 +188,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get bookAgain => 'Book Again';
 
   @override
-  String get waitingConfirmation => 'Waiting for confirmation';
+  String get waitingConfirmation => 'Waiting Confirmation';
 
   @override
   String get loadMoreAppointments => 'Load more..';

@@ -431,7 +431,7 @@ abstract class AppLocalizations {
   /// No description provided for @waitingConfirmation.
   ///
   /// In en, this message translates to:
-  /// **'Waiting for confirmation'**
+  /// **'Waiting Confirmation'**
   String get waitingConfirmation;
 
   /// No description provided for @loadMoreAppointments.
@@ -1736,6 +1736,10 @@ abstract class AppLocalizations {
   /// **'Try a different search term.'**
   String get noResultsSubtitle;
 
+  /// No description provided for @gallery.
+  ///
+  /// In en, this message translates to:
+  /// **'Gallery'**
   String get gallery;
 
   /// No description provided for @location.
@@ -1828,10 +1832,16 @@ abstract class AppLocalizations {
   /// **'Clinic not available'**
   String get clinicNotAvailable;
 
-
+  /// No description provided for @faq.
+  ///
+  /// In en, this message translates to:
+  /// **'Frequently Asked Questions'**
   String get faq;
 
-
+  /// No description provided for @offeredServices.
+  ///
+  /// In en, this message translates to:
+  /// **'Offered Services'**
   String get offeredServices;
 
   /// No description provided for @makeAppointment.

@@ -173,14 +173,22 @@ class _LogInPageState extends State<LogInPage> {
         print("🧩 [DEVICE TRUSTED?] ${trustedDevices.contains(deviceId)}");
 
         if (is2FAEnabled && !trustedDevices.contains(deviceId)) {
-          final phone = userData['phone_number'];
+          final phone = userData['phone_number']?.toString();
+          print("📞 [2FA PHONE] قيمة phone_number = $phone");
+
+          if (phone == null || phone.isEmpty) {
+            print("🚨 [ERROR] لا يمكن إرسال المستخدم إلى صفحة OTP لأن رقم الهاتف غير موجود");
+            throw Exception("رقم الهاتف غير متوفر");
+          }
 
           print("🚨 [2FA] الانتقال إلى صفحة OTP للتحقق");
+          print("📞 [TYPE CHECK] phone.runtimeType = ${phone.runtimeType}");
+
           Navigator.pushAndRemoveUntil(
             context,
             MaterialPageRoute(
               builder: (_) => LoginOTPPage(
-                phoneNumber: phone,
+                phoneNumber: phone.toString(),
                 userId: userId,
               ),
             ),

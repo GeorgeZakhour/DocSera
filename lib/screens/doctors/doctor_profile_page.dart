@@ -296,9 +296,9 @@ class _DoctorProfilePageState extends State<DoctorProfilePage> {
   }
 
   double _calculateButtonOffset() {
-    double expandedHeight = MediaQuery.of(context).size.height * 0.34;
+    double expandedHeight = MediaQuery.of(context).size.height * 0.30 + 24.h;
     double scroll = _scrollController.hasClients ? _scrollController.offset : 0.0;
-    return expandedHeight - scroll - 24.h;
+    return expandedHeight - scroll;
   }
 
 

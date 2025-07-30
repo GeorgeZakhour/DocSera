@@ -57,11 +57,12 @@ class _AccountScreenState extends State<AccountScreen> {
   @override
   void initState() {
     super.initState();
+
     PackageInfo.fromPlatform().then((info) {
+      print("📦 FULL PackageInfo: ${info.toString()}");
       setState(() {
         appVersion = 'v${info.version}';
       });
-      print("✅ App Version Loaded: v${info.version}"); // ✅ DEBUG
     });
 
     _loadFaceIdPreference();
@@ -73,6 +74,7 @@ class _AccountScreenState extends State<AccountScreen> {
       userCubit.startRealtimeUserListener(prefs.getString('userId') ?? '');
     });
   }
+
 
 
   @override
@@ -1882,6 +1884,8 @@ class _AccountScreenState extends State<AccountScreen> {
                       ),
                     ),
                   ),
+
+
               ],
             ),
           ),
