@@ -62,8 +62,7 @@ import 'app_localizations_en.dart';
 /// be consistent with the languages listed in the AppLocalizations.supportedLocales
 /// property.
 abstract class AppLocalizations {
-  AppLocalizations(String locale)
-      : localeName = intl.Intl.canonicalizedLocale(locale.toString());
+  AppLocalizations(String locale) : localeName = intl.Intl.canonicalizedLocale(locale.toString());
 
   final String localeName;
 
@@ -71,8 +70,7 @@ abstract class AppLocalizations {
     return Localizations.of<AppLocalizations>(context, AppLocalizations);
   }
 
-  static const LocalizationsDelegate<AppLocalizations> delegate =
-      _AppLocalizationsDelegate();
+  static const LocalizationsDelegate<AppLocalizations> delegate = _AppLocalizationsDelegate();
 
   /// A list of this localizations delegate along with the default localizations
   /// delegates.
@@ -84,8 +82,7 @@ abstract class AppLocalizations {
   /// Additional delegates can be added by appending to this list in
   /// MaterialApp. This list does not have to be used at all if a custom list
   /// of delegates is preferred or required.
-  static const List<LocalizationsDelegate<dynamic>> localizationsDelegates =
-      <LocalizationsDelegate<dynamic>>[
+  static const List<LocalizationsDelegate<dynamic>> localizationsDelegates = <LocalizationsDelegate<dynamic>>[
     delegate,
     GlobalMaterialLocalizations.delegate,
     GlobalCupertinoLocalizations.delegate,
@@ -107,7 +104,7 @@ abstract class AppLocalizations {
   /// No description provided for @logIn.
   ///
   /// In en, this message translates to:
-  /// **'Log In'**
+  /// **'Log in'**
   String get logIn;
 
   /// No description provided for @logInAppbar.
@@ -179,7 +176,7 @@ abstract class AppLocalizations {
   /// No description provided for @cancel.
   ///
   /// In en, this message translates to:
-  /// **'CANCEL'**
+  /// **'Cancel'**
   String get cancel;
 
   /// No description provided for @appName.
@@ -425,13 +422,13 @@ abstract class AppLocalizations {
   /// No description provided for @bookAgain.
   ///
   /// In en, this message translates to:
-  /// **'Book Again'**
+  /// **'Book again'**
   String get bookAgain;
 
   /// No description provided for @waitingConfirmation.
   ///
   /// In en, this message translates to:
-  /// **'Waiting Confirmation'**
+  /// **'Waiting for confirmation'**
   String get waitingConfirmation;
 
   /// No description provided for @loadMoreAppointments.
@@ -451,6 +448,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Unknown Time'**
   String get unknownTime;
+
+  /// No description provided for @unknown.
+  ///
+  /// In en, this message translates to:
+  /// **'Unknown'**
+  String get unknown;
 
   /// No description provided for @somethingWentWrong.
   ///
@@ -593,7 +596,7 @@ abstract class AppLocalizations {
   /// No description provided for @addDocument.
   ///
   /// In en, this message translates to:
-  /// **'Add a document'**
+  /// **'Add Document'**
   String get addDocument;
 
   /// No description provided for @uploadingDocument.
@@ -809,19 +812,19 @@ abstract class AppLocalizations {
   /// No description provided for @firstName.
   ///
   /// In en, this message translates to:
-  /// **'First Name'**
+  /// **'First name'**
   String get firstName;
 
   /// No description provided for @lastName.
   ///
   /// In en, this message translates to:
-  /// **'Last Name'**
+  /// **'Last name'**
   String get lastName;
 
   /// No description provided for @dateOfBirth.
   ///
   /// In en, this message translates to:
-  /// **'Date of Birth'**
+  /// **'Date of birth'**
   String get dateOfBirth;
 
   /// No description provided for @dateFormatHint.
@@ -991,6 +994,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Damascus'**
   String get damascus;
+
+  /// No description provided for @reefDamascus.
+  ///
+  /// In en, this message translates to:
+  /// **'Rif Dimashq'**
+  String get reefDamascus;
 
   /// No description provided for @aleppo.
   ///
@@ -1262,18 +1271,6 @@ abstract class AppLocalizations {
   /// **'Login'**
   String get loginSection;
 
-  /// No description provided for @phone.
-  ///
-  /// In en, this message translates to:
-  /// **'Phone'**
-  String get phone;
-
-  /// No description provided for @email.
-  ///
-  /// In en, this message translates to:
-  /// **'Email'**
-  String get email;
-
   /// No description provided for @password.
   ///
   /// In en, this message translates to:
@@ -1538,30 +1535,6 @@ abstract class AppLocalizations {
   /// **'Incorrect current password'**
   String get incorrectCurrentPassword;
 
-  /// No description provided for @weakPassword.
-  ///
-  /// In en, this message translates to:
-  /// **'Password strength: Weak'**
-  String get weakPassword;
-
-  /// No description provided for @fairPassword.
-  ///
-  /// In en, this message translates to:
-  /// **'Password strength: Fair'**
-  String get fairPassword;
-
-  /// No description provided for @goodPassword.
-  ///
-  /// In en, this message translates to:
-  /// **'Password strength: Good'**
-  String get goodPassword;
-
-  /// No description provided for @strongPassword.
-  ///
-  /// In en, this message translates to:
-  /// **'Password strength: Strong'**
-  String get strongPassword;
-
   /// No description provided for @passwordMatchError.
   ///
   /// In en, this message translates to:
@@ -1733,8 +1706,152 @@ abstract class AppLocalizations {
   /// No description provided for @noResultsSubtitle.
   ///
   /// In en, this message translates to:
-  /// **'Try a different search term.'**
+  /// **'Try using another keyword or check your spelling.'**
   String get noResultsSubtitle;
+
+  /// No description provided for @searchBySpecialty.
+  ///
+  /// In en, this message translates to:
+  /// **'Search by specialty'**
+  String get searchBySpecialty;
+
+  /// No description provided for @nearbyMe.
+  ///
+  /// In en, this message translates to:
+  /// **'Nearby me'**
+  String get nearbyMe;
+
+  /// No description provided for @cities.
+  ///
+  /// In en, this message translates to:
+  /// **'Cities'**
+  String get cities;
+
+  /// No description provided for @selectCityPlaceholder.
+  ///
+  /// In en, this message translates to:
+  /// **'Select a city'**
+  String get selectCityPlaceholder;
+
+  /// No description provided for @locationPermissionDenied.
+  ///
+  /// In en, this message translates to:
+  /// **'Location permission is denied. Please enable it in settings.'**
+  String get locationPermissionDenied;
+
+  /// No description provided for @locationError.
+  ///
+  /// In en, this message translates to:
+  /// **'Unable to access your location. Please enable location services.'**
+  String get locationError;
+
+  /// No description provided for @showResults.
+  ///
+  /// In en, this message translates to:
+  /// **'Show results'**
+  String get showResults;
+
+  /// No description provided for @specialtyGynecology.
+  ///
+  /// In en, this message translates to:
+  /// **'Gynecology'**
+  String get specialtyGynecology;
+
+  /// No description provided for @specialtyPediatrics.
+  ///
+  /// In en, this message translates to:
+  /// **'Pediatrics'**
+  String get specialtyPediatrics;
+
+  /// No description provided for @specialtyDentistry.
+  ///
+  /// In en, this message translates to:
+  /// **'Dentistry'**
+  String get specialtyDentistry;
+
+  /// No description provided for @specialtyCardiology.
+  ///
+  /// In en, this message translates to:
+  /// **'Cardiology'**
+  String get specialtyCardiology;
+
+  /// No description provided for @specialtyOphthalmology.
+  ///
+  /// In en, this message translates to:
+  /// **'Ophthalmology'**
+  String get specialtyOphthalmology;
+
+  /// No description provided for @specialtyUrology.
+  ///
+  /// In en, this message translates to:
+  /// **'Urology'**
+  String get specialtyUrology;
+
+  /// No description provided for @specialtyDermatology.
+  ///
+  /// In en, this message translates to:
+  /// **'Dermatology'**
+  String get specialtyDermatology;
+
+  /// No description provided for @specialtyPsychology.
+  ///
+  /// In en, this message translates to:
+  /// **'Psychology'**
+  String get specialtyPsychology;
+
+  /// No description provided for @specialtyNutrition.
+  ///
+  /// In en, this message translates to:
+  /// **'Nutrition'**
+  String get specialtyNutrition;
+
+  /// No description provided for @specialtyNeurology.
+  ///
+  /// In en, this message translates to:
+  /// **'Neurology'**
+  String get specialtyNeurology;
+
+  /// No description provided for @specialtyOrthopedics.
+  ///
+  /// In en, this message translates to:
+  /// **'Orthopedics'**
+  String get specialtyOrthopedics;
+
+  /// No description provided for @specialtyOncology.
+  ///
+  /// In en, this message translates to:
+  /// **'Oncology'**
+  String get specialtyOncology;
+
+  /// No description provided for @specialtyENT.
+  ///
+  /// In en, this message translates to:
+  /// **'ENT'**
+  String get specialtyENT;
+
+  /// No description provided for @specialtyGeneralSurgery.
+  ///
+  /// In en, this message translates to:
+  /// **'General Surgery'**
+  String get specialtyGeneralSurgery;
+
+  /// No description provided for @showOnMap.
+  ///
+  /// In en, this message translates to:
+  /// **'Show on map'**
+  String get showOnMap;
+
+  /// No description provided for @searchHere.
+  ///
+  /// In en, this message translates to:
+  /// **'Search here'**
+  String get searchHere;
+
+  /// No description provided for @bookingNotAvailable.
+  ///
+  /// In en, this message translates to:
+  /// **'Booking not available'**
+  String get bookingNotAvailable;
 
   /// No description provided for @gallery.
   ///
@@ -1967,8 +2084,8 @@ abstract class AppLocalizations {
   /// No description provided for @appointmentTime.
   ///
   /// In en, this message translates to:
-  /// **'Time: {time}'**
-  String appointmentTime(Object time);
+  /// **'Appointment Time'**
+  String get appointmentTime;
 
   /// No description provided for @confirm.
   ///
@@ -2024,12 +2141,6 @@ abstract class AppLocalizations {
   /// **'A confirmation has been sent to your email'**
   String get appointmentConfirmedMessage;
 
-  /// No description provided for @unknown.
-  ///
-  /// In en, this message translates to:
-  /// **'Unknown'**
-  String get unknown;
-
   /// No description provided for @addToCalendar.
   ///
   /// In en, this message translates to:
@@ -2039,7 +2150,7 @@ abstract class AppLocalizations {
   /// No description provided for @sendDocuments.
   ///
   /// In en, this message translates to:
-  /// **'Send documents'**
+  /// **'Send Documents'**
   String get sendDocuments;
 
   /// No description provided for @sendDocumentsSubtitle.
@@ -2156,6 +2267,18 @@ abstract class AppLocalizations {
   /// **'Back to {doctorName}\'s profile'**
   String backToDoctorProfile(Object doctorName);
 
+  /// No description provided for @appointmentWithLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Appointment with {doctorName}'**
+  String appointmentWithLabel(Object doctorName);
+
+  /// No description provided for @appointmentReason2.
+  ///
+  /// In en, this message translates to:
+  /// **'Reason: {reason}'**
+  String appointmentReason2(Object reason);
+
   /// No description provided for @appointmentLocation.
   ///
   /// In en, this message translates to:
@@ -2167,6 +2290,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Date: {date}'**
   String appointmentDate(Object date);
+
+  /// No description provided for @appointmentTime2.
+  ///
+  /// In en, this message translates to:
+  /// **'Time: {time}'**
+  String appointmentTime2(Object time);
 
   /// No description provided for @sharedFromApp.
   ///
@@ -2459,13 +2588,13 @@ abstract class AppLocalizations {
   /// No description provided for @errorCheckingEmail.
   ///
   /// In en, this message translates to:
-  /// **'An error occurred while verifying the email.'**
+  /// **'An error occurred while checking the email. Please try again.'**
   String get errorCheckingEmail;
 
   /// No description provided for @emailAlreadyRegistered.
   ///
   /// In en, this message translates to:
-  /// **'This email is already registered!'**
+  /// **'ُEmail already registered'**
   String get emailAlreadyRegistered;
 
   /// No description provided for @emailAlreadyRegisteredContent.
@@ -2477,7 +2606,7 @@ abstract class AppLocalizations {
   /// No description provided for @phoneAlreadyRegistered.
   ///
   /// In en, this message translates to:
-  /// **'This phone number is already registered!'**
+  /// **'Phone number already registered'**
   String get phoneAlreadyRegistered;
 
   /// No description provided for @phoneAlreadyRegisteredContent.
@@ -2545,6 +2674,30 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Create a Password'**
   String get createPassword;
+
+  /// No description provided for @weakPassword.
+  ///
+  /// In en, this message translates to:
+  /// **'Password strength: Weak'**
+  String get weakPassword;
+
+  /// No description provided for @fairPassword.
+  ///
+  /// In en, this message translates to:
+  /// **'Password strength: Fair'**
+  String get fairPassword;
+
+  /// No description provided for @goodPassword.
+  ///
+  /// In en, this message translates to:
+  /// **'Password strength: Good'**
+  String get goodPassword;
+
+  /// No description provided for @strongPassword.
+  ///
+  /// In en, this message translates to:
+  /// **'Password strength: Strong'**
+  String get strongPassword;
 
   /// No description provided for @useEightCharacters.
   ///
@@ -2696,6 +2849,12 @@ abstract class AppLocalizations {
   /// **'You must be at least 16 years old'**
   String get mustBeOver16;
 
+  /// No description provided for @email.
+  ///
+  /// In en, this message translates to:
+  /// **'Email'**
+  String get email;
+
   /// No description provided for @emailVerified.
   ///
   /// In en, this message translates to:
@@ -2707,6 +2866,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Add email later'**
   String get skipEmail;
+
+  /// No description provided for @phone.
+  ///
+  /// In en, this message translates to:
+  /// **'Phone'**
+  String get phone;
 
   /// No description provided for @phoneVerified.
   ///
@@ -2749,6 +2914,18 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Failed to log in automatically.'**
   String get autoLoginFailed;
+
+  /// No description provided for @emailAlreadyRegisteredAlt.
+  ///
+  /// In en, this message translates to:
+  /// **'ُEmail already registered'**
+  String get emailAlreadyRegisteredAlt;
+
+  /// No description provided for @phoneAlreadyRegisteredAlt.
+  ///
+  /// In en, this message translates to:
+  /// **'Phone number already registered'**
+  String get phoneAlreadyRegisteredAlt;
 
   /// No description provided for @welcomeToDocsera.
   ///
@@ -2885,7 +3062,7 @@ abstract class AppLocalizations {
   /// No description provided for @results.
   ///
   /// In en, this message translates to:
-  /// **'Results'**
+  /// **'Results Count'**
   String get results;
 
   /// No description provided for @medicalImaging.
@@ -2957,7 +3134,7 @@ abstract class AppLocalizations {
   /// No description provided for @delete.
   ///
   /// In en, this message translates to:
-  /// **'DELETE'**
+  /// **'Delete'**
   String get delete;
 
   /// No description provided for @createdByYou.
@@ -3011,13 +3188,13 @@ abstract class AppLocalizations {
   /// No description provided for @takePhoto.
   ///
   /// In en, this message translates to:
-  /// **'Take a photo'**
+  /// **'Take a Photo'**
   String get takePhoto;
 
   /// No description provided for @chooseFromLibrary.
   ///
   /// In en, this message translates to:
-  /// **'Choose photo'**
+  /// **'Choose from Library'**
   String get chooseFromLibrary;
 
   /// No description provided for @chooseFile.
@@ -3161,7 +3338,7 @@ abstract class AppLocalizations {
   /// No description provided for @messagingDisabled.
   ///
   /// In en, this message translates to:
-  /// **'Messaging is deactivated'**
+  /// **'Messaging unavailable'**
   String get messagingDisabled;
 
   /// No description provided for @selectMessagePatient.
@@ -3525,8 +3702,7 @@ abstract class AppLocalizations {
   String get errorOccurred;
 }
 
-class _AppLocalizationsDelegate
-    extends LocalizationsDelegate<AppLocalizations> {
+class _AppLocalizationsDelegate extends LocalizationsDelegate<AppLocalizations> {
   const _AppLocalizationsDelegate();
 
   @override
@@ -3535,25 +3711,25 @@ class _AppLocalizationsDelegate
   }
 
   @override
-  bool isSupported(Locale locale) =>
-      <String>['ar', 'en'].contains(locale.languageCode);
+  bool isSupported(Locale locale) => <String>['ar', 'en'].contains(locale.languageCode);
 
   @override
   bool shouldReload(_AppLocalizationsDelegate old) => false;
 }
 
 AppLocalizations lookupAppLocalizations(Locale locale) {
+
+
   // Lookup logic when only language code is specified.
   switch (locale.languageCode) {
-    case 'ar':
-      return AppLocalizationsAr();
-    case 'en':
-      return AppLocalizationsEn();
+    case 'ar': return AppLocalizationsAr();
+    case 'en': return AppLocalizationsEn();
   }
 
   throw FlutterError(
-      'AppLocalizations.delegate failed to load unsupported locale "$locale". This is likely '
-      'an issue with the localizations generation tool. Please file an issue '
-      'on GitHub with a reproducible sample app and the gen-l10n configuration '
-      'that was used.');
+    'AppLocalizations.delegate failed to load unsupported locale "$locale". This is likely '
+    'an issue with the localizations generation tool. Please file an issue '
+    'on GitHub with a reproducible sample app and the gen-l10n configuration '
+    'that was used.'
+  );
 }

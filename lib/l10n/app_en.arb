@@ -1,7 +1,5 @@
 {
-  "@navigationBar================================": {
-    "description": "Navigation Bar"
-  },
+  "@navigationBar================================": "Navigation Bar",
 
   "chooseLanguage": "Choose App Language",
   "logIn": "Log in",
@@ -13,15 +11,12 @@
   "account": "Account",
   "languageEnglish": "English",
   "languageArabic": "العربية",
-
   "exitAppTitle": "Exit Application",
   "areYouSureToExit": "Are you sure you want to exit the app?",
   "exit": "Exit",
   "cancel": "Cancel",
 
-  "@mainScreen================================": {
-    "description": "🏠 Main Screen"
-  },
+  "@mainScreen================================": "🏠 Main Screen",
 
   "appName": "DocSera",
   "myPractitioners": "My Practitioners",
@@ -33,7 +28,7 @@
   "bannerText1": "Recurring, cramp-like abdominal pain? Here's what could be behind it.",
   "bannerText2": "Discover the benefits of preventive healthcare.",
   "bannerText3": "Get a doctor’s consultation from your home!",
-  "sponsored" : "Sponsored",
+  "sponsored": "Sponsored",
   "weAreHiring": "We Are Hiring!",
   "workWithUs": "Work with us to grow together",
   "learnMore": "LEARN MORE",
@@ -44,9 +39,7 @@
   "viewProfile": "View profile",
   "removeFromFavorites": "Remove from my favorite practitioners",
 
-  "@mainScreenWidgets================================": {
-    "description": "🏠 Main Screen widgets"
-  },
+  "@mainScreenWidgets================================": "🏠 Main Screen widgets",
 
   "yourDoctor": "Seamless Healthcare",
   "anytime": "Anytime.",
@@ -58,10 +51,7 @@
   "manageHealth": "Manage your health",
   "manageHealthDescription": "Easily keep in one place all your health information and that of those who are important to you.",
 
-
-  "@appointmentsPage================================": {
-    "description": "📅 Appointments Page"
-  },
+  "@appointmentsPage================================": "📅 Appointments Page",
 
   "planAppointments": "Plan your appointments",
   "planAppointmentsDescription": "Find a healthcare professional and book an appointment online at any time.",
@@ -79,6 +69,7 @@
   "loadMoreAppointments": "Load more..",
   "unknownDate": "Unknown Date",
   "unknownTime": "Unknown Time",
+  "unknown": "Unknown",
   "somethingWentWrong": "Something went wrong. Please try again.",
   "cancelReasonQuestion": "Why do you want to cancel this appointment?",
   "typeReasonHere": "Type your reason here...",
@@ -98,11 +89,7 @@
   "currentAppointment": "Current Appointment",
   "newAppointment": "New Appointment",
 
-
-
-  "@documentsPage================================": {
-    "description": "📂 Documents Page"
-  },
+  "@documentsPage================================": "📂 Documents Page",
 
   "manageDocuments": "Manage your documents",
   "manageDocumentsDescription": "Easily access your documents and share them with your practitioners at any time.",
@@ -116,10 +103,7 @@
   "chooseAddDocumentMethod": "Choose a method",
   "createNote": "Create Note",
 
-
-  "@messagesPage================================": {
-    "description": "📩 Messages Page"
-  },
+  "@messagesPage================================": "📩 Messages Page",
 
   "sendRequests": "Send requests",
   "sendRequestsDescription": "You can send specific requests to your practitioners to ask about prescriptions, test results, referral letters, and more.",
@@ -129,9 +113,7 @@
   "fileTooLarge": "The total size of images is too large (max 4MB). Please reduce the number or size of images.",
   "chooseAttachmentType": "Send attachment",
 
-  "@accountPage================================": {
-    "description": "👤 Account Page"
-  },
+  "@accountPage================================": "👤 Account Page",
 
   "welcomeDocsera": "Welcome to DocSera!",
   "welcome_subtitle": "Manage your appointments and stay connected.",
@@ -142,18 +124,15 @@
   "benefit_history": "Track your appointment history",
   "benefit_chat": "Communicate directly with doctors",
   "logOut": "Log out",
-
-
   "noName": "No name provided",
   "birthDateNotProvided": "Birth date not provided",
   "addressNotProvided": "Address not provided",
   "didYouKnow": "Did you know that?",
   "didYouKnowDesc": "You can also book appointments for your relatives by creating dedicated profiles for them.",
   "manageMyRelatives": "Manage my relatives",
-
   "relativeAddedSuccess": "Relative added successfully!",
   "relativeAddFailed": "Failed to add relative: {error}",
-"arabicOnlyError": "Please enter the text in Arabic only",
+  "arabicOnlyError": "Please enter the text in Arabic only",
   "numbersOnlyError": "Please enter numbers only",
   "max3DigitsError": "Number must not exceed 3 digits",
   "editMyProfile": "Edit my profile",
@@ -181,7 +160,7 @@
   "infoText": "Changes made to your profile will be shared with your practitioners.",
   "requiredField": "This field is required",
   "minTwoLettersError": "Please enter at least two letters",
-  "fillFullAddress" : "Please fill Street, City, and Country before adding a Building Number.",
+  "fillFullAddress": "Please fill Street, City, and Country before adding a Building Number.",
   "enterPhoneOptional": "Enter phone number (optional)",
   "enterEmailOptional": "Enter email (optional)",
   "enterStreet": "Enter street",
@@ -190,6 +169,7 @@
   "add": "Add",
   "syria": "Syria",
   "damascus": "Damascus",
+  "reefDamascus": "Rif Dimashq",
   "aleppo": "Aleppo",
   "homs": "Homs",
   "hama": "Hama",
@@ -202,20 +182,17 @@
   "alHasakah": "Al-Hasakah",
   "qamishli": "Qamishli",
   "suwayda": "Suwayda",
-
   "personalInformation": "Personal Information",
   "myProfile": "My Profile",
   "myRelatives": "My relatives",
   "myRelativesDescription": "Add or manage relatives",
   "editRelative": "Edit Relative",
-
   "noRelativesTitle": "Look after your relatives on DocSera",
   "noRelativesDesc": "Add your relatives to your account to manage their appointments and their health documents with ease.",
   "bornOn": "Born on {date}",
   "bornOnLabel": "Born on",
   "yearsCount": "{count} years",
   "manageAccessRights": "Manage access rights",
-
   "accessRightsFor": "Access rights for {name}",
   "thisPersonCan": "This person can:",
   "bookRescheduleCancel": "Book, reschedule and cancel",
@@ -228,27 +205,18 @@
   "removeRelativeTitle": "Remove {name}?",
   "removeRelativeDesc": "By removing this relative from your account, you will no longer have access to their documents or appointment history.",
   "remove": "Remove",
-  "cancel": "Cancel",
   "relativeRemoved": "{name} has been removed as relative.",
   "relativeRemoveFailed": "Failed to remove {name}: {error}",
   "you": "you",
   "accountHolder": "Account Holder",
-
   "invalidPhoneNumber": "Invalid phone number.\nIt must either start with 9 and be 9 digits, or start with 09 and be 10 digits.",
-
   "addEmailTitle": "Add Email",
-
   "samePhone": "This phone number is already in use.",
   "sameEmail": "This email is already in use.",
-
   "invalidEmail": "Invalid email address",
-
   "loginSection": "Login",
-  "phone": "Phone",
-  "email": "Email",
   "password": "Password",
   "passwordHidden": "••••••••••••••••",
-
   "settings": "Settings",
   "language": "Language",
   "languageDescription": "Account language settings",
@@ -265,19 +233,15 @@
   "faceIdFailed": "Face ID authentication failed",
   "fingerprintFailed": "Fingerprint authentication failed",
   "biometricTitle": "Biometric Authentication",
-
   "confidentiality": "Confidentiality",
   "myPreferences": "My preferences",
   "legalInformation": "Legal information",
   "deleteMyAccount": "Delete my account",
-
-
   "editPhoneNumber": "Edit Phone Number",
   "editEmail": "Edit Email",
   "newPhoneNumber": "New phone number",
   "newEmailAddress": "New email address",
   "verify": "Verify",
-  "save": "SAVE",
   "pleaseConfirm": "Please confirm your {fieldType}",
   "sixDigitCode": "6-digit verification code",
   "sentVerificationMessage": "We have sent you an {destination} to {messageType}.",
@@ -291,15 +255,10 @@
   "verifyLater": "Verify later",
   "alreadyExistsPhone": "A DocSera account already exists with this phone number",
   "alreadyExistsEmail": "A DocSera account already exists with this email",
-
   "changePassword": "Change Password",
   "currentPassword": "Current password",
   "newPassword": "New password",
   "incorrectCurrentPassword": "Incorrect current password",
-  "weakPassword": "Weak: Use at least 8 characters",
-  "fairPassword": "Fair: Add uppercase, number & symbol",
-  "goodPassword": "Good: Strong but can be improved",
-  "strongPassword": "Strong: Good to go!",
   "passwordMatchError": "New password cannot be the same as current password",
   "passwordUpdatedSuccess": "Password updated successfully!",
   "passwordUpdatedFailed": "Failed to update password: {error}",
@@ -308,43 +267,56 @@
   "verified": "Verified",
   "notVerified": "Not Verified",
   "addressNotEntered": "Address not entered",
-
-  "myPreferences": "My preferences",
   "personalizedServices": "Personalized services",
   "serviceImprovements": "Service improvements",
   "map": "Map",
   "notifications": "Notifications",
   "cookieManagement": "Cookie Management",
-
   "termsAndConditionsOfUse": "Terms and conditions of use",
   "termsOfUseAgreement": "Terms of use agreement",
   "personalDataProtectionPolicy": "Personal data protection policy",
   "cookiePolicy": "Cookie policy",
   "legalNotice": "Legal notice",
   "reportIllicitContent": "Report illicit content",
-
   "deleteAccountWarningText": "You can delete your DocSera account and associated data at any time. This will not automatically delete your personal data from the databases of the healthcare professionals with whom you have booked appointments. Healthcare professionals may have a legitimate interest in keeping your personal data. You are free to exercise your rights of access, rectification or deletion and contact them directly.",
   "confirmDeleteMyAccount": "DELETE MY ACCOUNT",
   "goodbyeMessage": "We're sad to see you go 😔",
   "goodbyeSubtext": "Your account has been successfully deleted. We hope to see you again someday.",
 
-
-
-  "@searchPage================================": {
-"description": "👤search Page"
-},
+  "@searchPage================================": "👤search Page",
 
   "searchTitle": "Search",
   "searchHint": "Name, specialty, clinic",
   "favoritesTitle": "Favorites",
   "noFavorites": "No Favorite Doctors",
   "noResultsTitle": "No Results Found",
-  "noResultsSubtitle": "Try a different search term.",
+  "noResultsSubtitle": "Try using another keyword or check your spelling.",
+  "searchBySpecialty": "Search by specialty",
+  "nearbyMe": "Nearby me",
+  "cities": "Cities",
+  "selectCityPlaceholder": "Select a city",
+  "locationPermissionDenied": "Location permission is denied. Please enable it in settings.",
+  "locationError": "Unable to access your location. Please enable location services.",
+  "showResults": "Show results",
+  "specialtyGynecology": "Gynecology",
+  "specialtyPediatrics": "Pediatrics",
+  "specialtyDentistry": "Dentistry",
+  "specialtyCardiology": "Cardiology",
+  "specialtyOphthalmology": "Ophthalmology",
+  "specialtyUrology": "Urology",
+  "specialtyDermatology": "Dermatology",
+  "specialtyPsychology": "Psychology",
+  "specialtyNutrition": "Nutrition",
+  "specialtyNeurology": "Neurology",
+  "specialtyOrthopedics": "Orthopedics",
+  "specialtyOncology": "Oncology",
+  "specialtyENT": "ENT",
+  "specialtyGeneralSurgery": "General Surgery",
+  "showOnMap": "Show on map",
+  "searchHere": "Search here",
+  "bookingNotAvailable": "Booking not available",
 
-
-  "@doctorProfile================================": {
-    "description": "👨‍⚕️ Doctor Profile Page"
-  },
+  "@doctorProfile================================": "👨‍⚕️ Doctor Profile Page",
 
   "gallery": "Gallery",
   "location": "Location",
@@ -365,17 +337,13 @@
   "faq": "Frequently Asked Questions",
   "offeredServices": "Offered Services",
 
-
-
-  "@bookAppointment================================": {
-"description": "👨‍⚕️ صفحات الحجز"
-},
+  "@bookAppointment================================": "👨‍⚕️ Booking Pages",
 
   "makeAppointment": "Make an Appointment",
   "whoIsThisFor": "Who is this appointment for?",
   "addRelative": "Add a relative",
-  "me" : "(Me)",
-  "yearsOld" : " years old",
+  "me": "(Me)",
+  "yearsOld": " years old",
   "haveYouVisitedBefore": "Have you visited this practitioner in the past?",
   "yes": "Yes",
   "no": "No",
@@ -398,18 +366,14 @@
   "agreeToHonor": "you agree to honor it.",
   "for2": "For",
   "date": "Date",
-  "location": "Location",
   "reason": "Reason",
   "appointmentConfirmed": "Appointment Confirmed",
   "appointmentConfirmedMessage": "A confirmation has been sent to your email",
-  "unknown": "Unknown",
   "addToCalendar": "Add to my calendar",
-  "bookAgain": "Book Again",
-  "waitingConfirmation": "Waiting Confirmation",
   "sendDocuments": "Send Documents",
   "sendDocumentsSubtitle": "Send documents to your practitioner before your consultation",
   "viewMoreDetails": "View More Details",
-  "appointmentWith": "Appointment with",
+  "appointmentWith": "Appointment with {doctorName}",
   "reasonForAppointment": "Reason for appointment",
   "notSpecified": "Not specified",
   "appointmentAddedToCalendar": "📅 Appointment added to your calendar!",
@@ -419,9 +383,7 @@
   "waitingForDoctorToApprove": "Your request has been sent successfully. The doctor will review and approve the appointment shortly.",
   "backToHome": "Back to Home",
 
-  "@AppointmentDetails================================": {
-    "description": "👨‍⚕️ معلومات الحجز"
-  },
+  "@AppointmentDetails================================": "👨‍⚕️ Appointment Details",
 
   "appointmentDetails": "Appointment Details",
   "reschedule": "Reschedule",
@@ -431,11 +393,11 @@
   "clinicDetails": "Details of the healthcare facility",
   "openMap": "Open map",
   "backToDoctorProfile": "Back to {doctorName}'s profile",
-  "appointmentWith": "Appointment with {doctorName}",
-  "appointmentReason": "Reason: {reason}",
+  "appointmentWithLabel": "Appointment with {doctorName}",
+  "appointmentReason2": "Reason: {reason}",
   "appointmentLocation": "Location: {clinicName}",
   "appointmentDate": "Date: {date}",
-  "appointmentTime": "Time: {time}",
+  "appointmentTime2": "Time: {time}",
   "sharedFromApp": "Shared from DocSera App",
   "youAreAboutToReschedule": "You're about to move your appointment at the last minute",
   "youAreAboutToCancel": "You're about to cancel your appointment at the last minute",
@@ -454,21 +416,16 @@
   "appointmentShortNoticeWarning": "This appointment is in less than 48 hours. It is unlikely to be booked by another patient.",
   "rescheduleRespectNotice": "Out of respect to your practitioner, you should only move if absolutely necessary",
   "cancelRespectNotice": "Out of respect to your practitioner, you should only cancel if absolutely necessary",
-
-  "sendDocuments": "Send documents",
   "sendDocument": "Send document",
   "sendDocumentsLater": "Sending documents will be enabled later once the doctor app is ready",
   "sendDocumentsTo": "Send documents to",
   "beforeConsultation": "before consultation",
   "exampleDocuments": "For example, referral, test results, prescriptions",
-  "addDocument": "Add a document",
   "sizeLimit": "Size",
   "acceptedFormat": "Accepted formats",
 
+  "@IdentificationPage================================": "Identification Page",
 
-  "@IdentificationPage================================": {
-    "description": "Identification Page"
-  },
   "identificationTitle": "Identification",
   "registerOrLogin": "Register or Log in",
   "newToApp": "New to DocSera?",
@@ -476,18 +433,13 @@
   "alreadyHaveAccount": "I already have an account",
   "login": "Log In",
 
+  "@LoginPage================================": "👤Login Page",
 
-  "@LoginPage================================": {
-    "description": "👤Login Page"
-  },
-
-  "logIn": "Log In",
   "emailOrPhone": "Email or Phone Number",
-  "password": "Password",
   "incorrectPassword": "Incorrect email/phone or password",
   "userNotFound": "User not found",
   "loginError": "Error: {error}",
-    "faceIdNoCredentials": "No saved credentials found for Face ID login.",
+  "faceIdNoCredentials": "No saved credentials found for Face ID login.",
   "logInWithFaceId": "Log in with Face ID",
   "logInWithFingerprint": "Log in with Fingerprint",
   "enterManually": "Enter manually",
@@ -499,14 +451,11 @@
   "createAnAccount": "Create an account",
   "continueAsGuest": "Continue as guest",
 
-  "@SignUpPage================================": {
-    "description": "👤Sign Up Page"
-  },
-  "signUp": "Sign Up",
+  "@SignUpPage================================": "👤Sign Up Page",
+
   "enterPhone": "Please enter your phone number",
   "enterEmail": "Please enter your email",
   "errorCheckingEmail": "An error occurred while checking the email. Please try again.",
-  "emailOrPhone": "Email or Phone Number",
   "emailAlreadyRegistered": "ُEmail already registered",
   "emailAlreadyRegisteredContent": "Email you entered is already registered in DocSera",
   "phoneAlreadyRegistered": "Phone number already registered",
@@ -516,16 +465,11 @@
   "edit": "Edit",
   "enterPersonalInfo": "Enter your personal information",
   "identity": "Identinty",
-  "selectGender": "Select Gender",
   "male": "Male",
   "female": "Female",
-  "firstName": "First Name",
-  "lastName": "Last Name",
-  "dateOfBirth": "Date of Birth",
   "enterDateOfBirth": "Enter your date of birth",
   "dobHint": "DD.MM.YYYY",
   "createPassword": "Create a Password",
-  "password": "Password",
   "weakPassword": "Password strength: Weak",
   "fairPassword": "Password strength: Fair",
   "goodPassword": "Password strength: Good",
@@ -533,19 +477,16 @@
   "useEightCharacters": "Use 8 characters or more for your password.",
   "passwordTooSimple": "Your password is too simple. Try adding special characters, numbers, and capital letters.",
   "passwordRepeatedCharacters": "Avoid repeated characters like 'aaa' or '111'.",
-
   "termsOfUseTitle": "Terms of Use and Privacy Policy",
   "termsOfUseDescription": "To create a DocSera account, please accept the terms of use.",
   "acceptTerms": "I have read and accepted the Terms of Use",
   "dataProcessingInfo": "You can find more information on data processing in our ",
   "dataProtectionNotice": "data protection notices.",
-
   "marketingPreferencesTitle": "Stay connected with our latest updates",
   "marketingPreferencesSubtitle": "Get personalized emails and push notifications about health tips and our services.",
   "marketingCheckboxText": "Helpful tips to manage my health and marketing information about our services",
   "privacyPolicyInfo": "You can change your choice anytime in your settings. To learn more, ",
   "privacyPolicyLink": "see the privacy policy.",
-
   "enterSmsCode": "Enter the code sent to you by SMS",
   "enterEmailCode": "Enter the code sent to you by Email",
   "otpLabel": "6-digit verification code",
@@ -555,16 +496,12 @@
   "otpSendFailed": "Failed to send OTP. Please try again.",
   "tryAgain": "Try again",
   "seconds": "seconds",
-
   "reviewDetails": "Please review your details:",
   "name": "Name",
-  "gender": "Gender",
-  "dateOfBirth": "Date of Birth",
   "mustBeOver16": "You must be at least 16 years old",
   "email": "Email",
   "emailVerified": "Email Verified",
   "skipEmail": "Add email later",
-  "errorCheckingEmail": "An error occurred while verifying the email.",
   "phone": "Phone",
   "phoneVerified": "Phone Verified",
   "termsAccepted": "Terms Accepted",
@@ -573,22 +510,16 @@
   "registrationSuccess": "Account created successfully!",
   "registrationFailed": "Failed to register user",
   "autoLoginFailed": "Failed to log in automatically.",
-  "emailAlreadyRegistered": "This email is already registered!",
-  "phoneAlreadyRegistered": "This phone number is already registered!",
-
+  "emailAlreadyRegisteredAlt": "ُEmail already registered",
+  "phoneAlreadyRegisteredAlt": "Phone number already registered",
   "welcomeToDocsera": "Welcome to DocSera,",
   "welcomeMessageInfo": "Easily book your appointments, manage your medical files, and stay connected with doctors — all in one secure and fast place.",
   "goToHomepage": "Go to Homepage",
-
   "serverConnectionError": "Cannot connect to the server. Please check your internet connection and try again.",
   "verificationError": "An error occurred while verifying the number: {errorMessage}",
   "unexpectedError": "An unexpected error occurred. Please try again later.",
 
-
-
-  "@DocumentsPage================================": {
-    "description": "👤Documents Page"
-  },
+  "@DocumentsPage================================": "👤Documents Page",
 
   "documentAddedSuccessfully": "Document added successfully!",
   "documentAddFailed": "Failed to add document.",
@@ -606,8 +537,7 @@
   "patientConcerned": "Patient concerned",
   "selectRelevantPatient": "Select the relevant patient",
   "documentWillBeEncrypted": "This document will be encrypted",
-
-  "results": "Results",
+  "results": "Results Count",
   "medicalImaging": "Medical imaging",
   "report": "Report",
   "referralLetter": "Referral letter",
@@ -624,60 +554,40 @@
   "pagesCount": "{count} Page(s)",
   "pageSingular": "Page",
   "pagePlural": "Pages",
-
   "deleteTheDocument": "Delete the document",
   "areYouSureToDelete": "Are you sure you want to delete the document \"{name}\"?\nIf you shared it with a doctor, they will keep their copy.",
-  "delete": "DELETE",
-  "cancel": "CANCEL",
-
   "documentUploadedSuccessfully": "Document uploaded successfully",
   "fileLoadFailed": "❌ Failed to load the file",
-
   "takePhoto": "Take a Photo",
   "chooseFromLibrary": "Choose from Library",
   "chooseFile": "Choose File",
-
   "deleteDocument": "Delete Document",
   "confirmDeleteDocument": "Are you sure you want to delete this document?",
-
   "downloadSuccess": "The file has been downloaded successfully",
   "permissionDenied": "Storage permission was denied",
   "uploadFailed": "Failed to upload document. Please try again.",
-
-
   "documentDetails": "Document details",
   "createdAt": "Created at",
   "createdBy": "Created by",
   "encryptedDocument": "Encrypted document",
-
   "changeTheNameOfTheDocument": "Change the name of the document",
-
   "fillRequiredFields": "Please fill in all required fields",
   "editNote": "Edit Note",
   "noteTitle": "Note Title",
-
   "deleteTheNote": "Delete the note",
-
-
   "addNote": "Add Note",
   "discard": "Discard",
   "unsavedNoteTitle": "Unsaved Changes",
   "unsavedNoteMessage": "Do you want to save this note before exiting?",
-
   "noteContent": "Write your note here...",
   "show": "Show",
 
-  "@MessagesPage================================": {
-    "description": "👤Messages Page"
-  },
+  "@MessagesPage================================": "👤Messages Page",
 
   "lastUpdated": "Last updated at {time}",
   "sendMessageTitle": "Send a message",
-  "messagingDisabled": "Messaging is deactivated",
+  "messagingDisabled": "Messaging unavailable",
   "selectMessagePatient": "Who is this message request for?",
-
-
-  "sendMessage": "Send a message",
   "selectMessageReason": "What is the reason for this message?",
   "noEmergencySupport": "Your practitioner cannot address medical emergencies by message. In case of a medical emergency, call 112.",
   "reasonTestResults": "Request sending of test results",
@@ -687,44 +597,31 @@
   "reasonOpeningHours": "Opening hours and days",
   "reasonContract": "Treatment contract",
   "reasonOther": "Other",
-
-  "sendMessage": "Send a message",
   "whatDoYouNeed": "What do you need?",
   "help": "Help",
   "attachDocuments": "Attach documents",
   "sendMyMessage": "SEND MY MESSAGE",
   "messageHint": "Explain the reason for your message. Provide any relevant information to your practitioner.",
-
-  "help": "Help",
   "helpTitle": "What should I add in my request?",
   "helpMessage1": "Include essential, relevant, and necessary information for the physician to process your request.",
   "helpMessage2": "If necessary (e.g., for a certificate of illness), the doctor may require you to make an appointment for an examination. In the event of an emergency, contact 112.",
-
   "yesterday": "Yesterday",
   "conversationClosed": "Conversation Closed",
   "forPatient": "For patient",
-
-
   "messageForPatient": "Message request for:",
   "onBehalfOfPatient": "On behalf of {patientName}",
   "onBehalfOf": "On behalf of",
   "conversationClosedByDoctor": "This conversation has been closed by {doctorName}. You can no longer respond.",
   "sendNewRequest": "Send a new request",
-
   "writeYourMessage": "Write your message...",
   "waitingDoctorReply": "Please wait for the doctor to reply to your request.",
-
   "read": "Read",
-
-  "takePhoto": "Take a photo",
-  "chooseFromLibrary": "Choose photo",
   "chooseFromLibrary2": "Choose photo",
   "uploadPdf": "Upload PDF file",
   "attachedImage": "Attached image",
   "attachedImages": "Attached images",
   "maxImagesReached": "Maximum 8 images.",
   "remaining": "remaining",
-
   "addToDocuments": "Add to Documents",
   "downloadAll": "Download All",
   "downloadCompleted": "Image downloaded successfully",
@@ -732,31 +629,22 @@
   "downloadFailed": "Failed to download image",
   "imagesDownloadFailed": "Failed to download images",
   "ofText": "of",
-
   "importedFromConversationWith": "Imported from the conversation with {name} on {date}",
-
   "documentAccessInfo": "Only you can access and manage documents stored here.",
   "notesAccessInfo": "Only you can access and manage your notes securely.",
   "messageAccessInfo": "You can message your doctor directly here. All your conversations are securely stored and easily accessible.",
   "accountPrivacyInfoLine1": "Your personal data stays personal.",
   "accountPrivacyInfoLine2": "We protect your information with industry-leading security.",
-
   "forgotPasswordButton": "Forget your password?",
   "resetPassword": "Reset Password",
   "confirmPassword": "Confirm Password",
-
   "activated": "Activated",
   "notActivated": "Not activated",
-
   "encryptedDocumentsFullDescription": "Your medical documents are securely stored with advanced encryption, ensuring that only you can access and manage them safely.",
-
   "twoFactorAuthHeadline": "Extra security beyond your password",
   "twoFactorAuthFullDescription": "For extra protection, a verification code is sent to you by email or SMS when you log in from a new device.",
-
   "activate2FA": "Activate Two-Factor Authentication",
   "deactivate2FA": "Deactivate Two-Factor Authentication",
-
   "twoFactorDeactivateWarning": "Disabling 2FA will make your account less secure. Are you sure you want to proceed?",
-
   "errorOccurred": "An error occurred. Please try again"
 }

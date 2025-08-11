@@ -72,8 +72,7 @@ class AppLocalizationsAr extends AppLocalizations {
   String get bannerTitle3 => 'تنبيه صحي هام';
 
   @override
-  String get bannerText1 =>
-      'ألم بطني متكرر يشبه التقلصات؟ إليك ما قد يكون السبب وراءه.';
+  String get bannerText1 => 'ألم بطني متكرر يشبه التقلصات؟ إليك ما قد يكون السبب وراءه.';
 
   @override
   String get bannerText2 => 'اكتشف فوائد الرعاية الصحية الوقائية.';
@@ -97,8 +96,7 @@ class AppLocalizationsAr extends AppLocalizations {
   String get areYouAHealthProfessional => 'هل أنت طبيب؟';
 
   @override
-  String get improveDailyLife =>
-      'حسن حياتك اليومية مع حلولنا للمحترفين الصحيين.';
+  String get improveDailyLife => 'حسن حياتك اليومية مع حلولنا للمحترفين الصحيين.';
 
   @override
   String get registerAsDoctor => 'سجل كطبيب';
@@ -125,29 +123,25 @@ class AppLocalizationsAr extends AppLocalizations {
   String get fasterAccess => 'وصول أسرع وأسهل إلى الرعاية';
 
   @override
-  String get fasterAccessDescription =>
-      'احجز مواعيد للزيارات الشخصية واحصل على تذكيرات حتى لا تفوت أي موعد.';
+  String get fasterAccessDescription => 'احجز مواعيد للزيارات الشخصية واحصل على تذكيرات حتى لا تفوت أي موعد.';
 
   @override
   String get receiveCare => 'احصل على الرعاية بشروطك';
 
   @override
-  String get receiveCareDescription =>
-      'تواصل مع الأطباء، واحصل على نصائح وقائية ورعاية عند الحاجة.';
+  String get receiveCareDescription => 'تواصل مع الأطباء، واحصل على نصائح وقائية ورعاية عند الحاجة.';
 
   @override
   String get manageHealth => 'إدارة صحتك';
 
   @override
-  String get manageHealthDescription =>
-      'احتفظ بسهولة بجميع معلوماتك الصحية ومعلومات من يهمك أمرهم في مكان واحد.';
+  String get manageHealthDescription => 'احتفظ بسهولة بجميع معلوماتك الصحية ومعلومات من يهمك أمرهم في مكان واحد.';
 
   @override
   String get planAppointments => 'خطط لمواعيدك';
 
   @override
-  String get planAppointmentsDescription =>
-      'ابحث عن محترف صحي واحجز موعدك عبر الإنترنت في أي وقت.';
+  String get planAppointmentsDescription => 'ابحث عن محترف صحي واحجز موعدك عبر الإنترنت في أي وقت.';
 
   @override
   String get logInCapital => 'تسجيل الدخول';
@@ -165,8 +159,7 @@ class AppLocalizationsAr extends AppLocalizations {
   String get noPastAppointments => 'لا توجد مواعيد سابقة';
 
   @override
-  String get noAppointmentsDescription =>
-      'تحكم في صحتك. احجز موعدك القادم بسهولة.';
+  String get noAppointmentsDescription => 'تحكم في صحتك. احجز موعدك القادم بسهولة.';
 
   @override
   String bookedOn(Object date) {
@@ -199,6 +192,9 @@ class AppLocalizationsAr extends AppLocalizations {
   String get unknownTime => 'الوقت غير معروف';
 
   @override
+  String get unknown => 'غير معروف';
+
+  @override
   String get somethingWentWrong => 'حدث خطأ ما. يرجى المحاولة مرة أخرى.';
 
   @override
@@ -217,12 +213,10 @@ class AppLocalizationsAr extends AppLocalizations {
   String get notAllowed => 'غير مسموح';
 
   @override
-  String get cancelTimeLimitNote =>
-      'احتراماً لوقت الطبيب والمرضى الآخرين، يجب إلغاء الموعد قبل ٢٤ ساعة على الأقل من الوقت المحدد. لا يُسمح بالإلغاء المتأخر.';
+  String get cancelTimeLimitNote => 'احتراماً لوقت الطبيب والمرضى الآخرين، يجب إلغاء الموعد قبل ٢٤ ساعة على الأقل من الوقت المحدد. لا يُسمح بالإلغاء المتأخر.';
 
   @override
-  String get appointmentCancelledMessage =>
-      'تم إلغاء الموعد بنجاح. يمكنك حجز موعد جديد في أي وقت.';
+  String get appointmentCancelledMessage => 'تم إلغاء الموعد بنجاح. يمكنك حجز موعد جديد في أي وقت.';
 
   @override
   String get toAppointmentPage => 'العودة إلى صفحة المواعيد';
@@ -231,20 +225,16 @@ class AppLocalizationsAr extends AppLocalizations {
   String get tooLateToReschedule => 'تجاوزت المهلة لإعادة جدولة هذا الموعد.';
 
   @override
-  String get rescheduleTimeLimitNote =>
-      'احتراماً لوقت الطبيب والمرضى الآخرين، يجب إعادة جدولة الموعد قبل ٢٤ ساعة على الأقل من الوقت المحدد. لا يُسمح بإعادة الجدولة المتأخرة.';
+  String get rescheduleTimeLimitNote => 'احتراماً لوقت الطبيب والمرضى الآخرين، يجب إعادة جدولة الموعد قبل ٢٤ ساعة على الأقل من الوقت المحدد. لا يُسمح بإعادة الجدولة المتأخرة.';
 
   @override
-  String get appointmentRescheduleNoWarning =>
-      'يمكنك الآن متابعة إعادة الجدولة.';
+  String get appointmentRescheduleNoWarning => 'يمكنك الآن متابعة إعادة الجدولة.';
 
   @override
-  String get noAvailableAppointmentsRes =>
-      'لا توجد مواعيد أخرى متاحة لإعادة الجدولة.';
+  String get noAvailableAppointmentsRes => 'لا توجد مواعيد أخرى متاحة لإعادة الجدولة.';
 
   @override
-  String get cancelInsteadNote =>
-      'يمكنك إلغاء هذا الموعد بدلاً من ذلك إذا لزم الأمر.';
+  String get cancelInsteadNote => 'يمكنك إلغاء هذا الموعد بدلاً من ذلك إذا لزم الأمر.';
 
   @override
   String get rescheduleReasonQuestion => 'لماذا تريد إعادة جدولة هذا الموعد؟';
@@ -262,8 +252,7 @@ class AppLocalizationsAr extends AppLocalizations {
   String get manageDocuments => 'إدارة مستنداتك';
 
   @override
-  String get manageDocumentsDescription =>
-      'يمكنك الوصول إلى مستنداتك بسهولة ومشاركتها مع الأطباء في أي وقت.';
+  String get manageDocumentsDescription => 'يمكنك الوصول إلى مستنداتك بسهولة ومشاركتها مع الأطباء في أي وقت.';
 
   @override
   String get notes => 'الملاحظات';
@@ -272,8 +261,7 @@ class AppLocalizationsAr extends AppLocalizations {
   String get takeNotesTitle => 'دوِّن ملاحظات\n مهمة حول صحتك';
 
   @override
-  String get takeNotesDescription =>
-      'مثلاً، تتبع الأعراض، سجل ملاحظات حول صحتك النفسية، وحضر أسئلة لمناقشتها مع طبيبك.';
+  String get takeNotesDescription => 'مثلاً، تتبع الأعراض، سجل ملاحظات حول صحتك النفسية، وحضر أسئلة لمناقشتها مع طبيبك.';
 
   @override
   String get addDocument => 'إضافة مستند';
@@ -282,8 +270,7 @@ class AppLocalizationsAr extends AppLocalizations {
   String get uploadingDocument => 'جاري رفع المستند...';
 
   @override
-  String get documentTooLarge =>
-      'الملف بعد الضغط أكبر من 2 ميغابايت، الرجاء تقليل عدد الصور أو استخدام صور أصغر.';
+  String get documentTooLarge => 'الملف بعد الضغط أكبر من 2 ميغابايت، الرجاء تقليل عدد الصور أو استخدام صور أصغر.';
 
   @override
   String get pdfTooLarge => 'ملف PDF كبير جداً، الرجاء استخدام ملف أصغر من 2MB';
@@ -298,8 +285,7 @@ class AppLocalizationsAr extends AppLocalizations {
   String get sendRequests => 'إرسال الطلبات';
 
   @override
-  String get sendRequestsDescription =>
-      'يمكنك إرسال طلبات محددة إلى الأطباء للاستفسار عن الوصفات الطبية، نتائج الفحوصات، خطابات الإحالة، والمزيد.';
+  String get sendRequestsDescription => 'يمكنك إرسال طلبات محددة إلى الأطباء للاستفسار عن الوصفات الطبية، نتائج الفحوصات، خطابات الإحالة، والمزيد.';
 
   @override
   String get sendMessage => 'إرسال رسالة';
@@ -308,12 +294,10 @@ class AppLocalizationsAr extends AppLocalizations {
   String get easilySendMessages => 'أرسل الرسائل بسهولة إلى الأطباء';
 
   @override
-  String get sendMessagesDescription =>
-      'ابدأ محادثة مع طبيبك. استفسر عن نتائج الفحوصات، اطلب خطابات الإحالة، والمزيد.';
+  String get sendMessagesDescription => 'ابدأ محادثة مع طبيبك. استفسر عن نتائج الفحوصات، اطلب خطابات الإحالة، والمزيد.';
 
   @override
-  String get fileTooLarge =>
-      'إجمالي حجم الصور كبير جداً (الحد الأقصى 4 ميغابايت). يرجى تقليل عدد الصور أو تصغير حجمها.';
+  String get fileTooLarge => 'إجمالي حجم الصور كبير جداً (الحد الأقصى 4 ميغابايت). يرجى تقليل عدد الصور أو تصغير حجمها.';
 
   @override
   String get chooseAttachmentType => 'إرسال مرفق';
@@ -358,8 +342,7 @@ class AppLocalizationsAr extends AppLocalizations {
   String get didYouKnow => 'هل كنت تعلم؟';
 
   @override
-  String get didYouKnowDesc =>
-      'يمكنك أيضًا حجز المواعيد لأقربائك من خلال إنشاء ملفات شخصية مخصصة لهم.';
+  String get didYouKnowDesc => 'يمكنك أيضًا حجز المواعيد لأقربائك من خلال إنشاء ملفات شخصية مخصصة لهم.';
 
   @override
   String get manageMyRelatives => 'إدارة الأقارب';
@@ -439,8 +422,7 @@ class AppLocalizationsAr extends AppLocalizations {
   String get dobRequired => 'تاريخ الميلاد مطلوب';
 
   @override
-  String get buildingNrError =>
-      'يرجى ملء الشارع والمدينة والدولة قبل إدخال رقم البناء.';
+  String get buildingNrError => 'يرجى ملء الشارع والمدينة والدولة قبل إدخال رقم البناء.';
 
   @override
   String get updateSuccess => 'تم تحديث الملف الشخصي بنجاح!';
@@ -460,8 +442,7 @@ class AppLocalizationsAr extends AppLocalizations {
   String get minTwoLettersError => 'الرجاء إدخال حرفين على الأقل';
 
   @override
-  String get fillFullAddress =>
-      'برجاء ملء الشارع، المدينة، والدولة قبل إضافة رقم المبنى.';
+  String get fillFullAddress => 'برجاء ملء الشارع، المدينة، والدولة قبل إضافة رقم المبنى.';
 
   @override
   String get enterPhoneOptional => 'أدخل رقم الهاتف (اختياري)';
@@ -476,8 +457,7 @@ class AppLocalizationsAr extends AppLocalizations {
   String get enterBuildingOptional => 'أدخل رقم البناء (اختياري)';
 
   @override
-  String get authorizationStatement =>
-      'أُقر بأنني الممثل القانوني لقريبي، أو أنني مخوّل باستخدام خدمات Docsera لإدارة بياناته الطبية نيابة عنه.';
+  String get authorizationStatement => 'أُقر بأنني الممثل القانوني لقريبي، أو أنني مخوّل باستخدام خدمات Docsera لإدارة بياناته الطبية نيابة عنه.';
 
   @override
   String get add => 'إضافة';
@@ -487,6 +467,9 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get damascus => 'دمشق';
+
+  @override
+  String get reefDamascus => 'ريف دمشق';
 
   @override
   String get aleppo => 'حلب';
@@ -543,8 +526,7 @@ class AppLocalizationsAr extends AppLocalizations {
   String get noRelativesTitle => 'اهتم بأقاربك على دوكسيرا';
 
   @override
-  String get noRelativesDesc =>
-      'أضف أقاربك إلى حسابك لإدارة مواعيدهم ووثائقهم الصحية بكل سهولة.';
+  String get noRelativesDesc => 'أضف أقاربك إلى حسابك لإدارة مواعيدهم ووثائقهم الصحية بكل سهولة.';
 
   @override
   String bornOn(Object date) {
@@ -597,8 +579,7 @@ class AppLocalizationsAr extends AppLocalizations {
   }
 
   @override
-  String get removeRelativeDesc =>
-      'عند إزالة هذا القريب من حسابك، لن تتمكن من الوصول إلى مستنداته أو سجل مواعيده بعد الآن.';
+  String get removeRelativeDesc => 'عند إزالة هذا القريب من حسابك، لن تتمكن من الوصول إلى مستنداته أو سجل مواعيده بعد الآن.';
 
   @override
   String get remove => 'إزالة';
@@ -620,8 +601,7 @@ class AppLocalizationsAr extends AppLocalizations {
   String get accountHolder => 'صاحب الحساب';
 
   @override
-  String get invalidPhoneNumber =>
-      'رقم الهاتف غير صحيح.\nيجب إما أن يبدأ بـ 9 ويتكوّن من 9 أرقام، أو يبدأ بـ 09 ويتكوّن من 10 أرقام.';
+  String get invalidPhoneNumber => 'رقم الهاتف غير صحيح.\nيجب إما أن يبدأ بـ 9 ويتكوّن من 9 أرقام، أو يبدأ بـ 09 ويتكوّن من 10 أرقام.';
 
   @override
   String get addEmailTitle => 'إضافة بريد إلكتروني';
@@ -637,12 +617,6 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get loginSection => 'تسجيل الدخول';
-
-  @override
-  String get phone => 'رقم الهاتف';
-
-  @override
-  String get email => 'البريد الإلكتروني';
 
   @override
   String get password => 'كلمة المرور';
@@ -681,8 +655,7 @@ class AppLocalizationsAr extends AppLocalizations {
   String get fingerprintTitle => 'افتح باستخدام البصمة';
 
   @override
-  String get fingerprintDescription =>
-      'استخدم بصمتك لتسجيل الدخول بسرعة وأمان.';
+  String get fingerprintDescription => 'استخدم بصمتك لتسجيل الدخول بسرعة وأمان.';
 
   @override
   String get faceIdPrompt => 'المصادقة باستخدام Face ID';
@@ -769,8 +742,7 @@ class AppLocalizationsAr extends AppLocalizations {
   String get alreadyExistsPhone => 'يوجد حساب دوكسيرا مسجل بهذا الرقم بالفعل';
 
   @override
-  String get alreadyExistsEmail =>
-      'يوجد حساب دوكسيرا مسجل بهذا البريد الإلكتروني بالفعل';
+  String get alreadyExistsEmail => 'يوجد حساب دوكسيرا مسجل بهذا البريد الإلكتروني بالفعل';
 
   @override
   String get changePassword => 'تغيير كلمة المرور';
@@ -785,20 +757,7 @@ class AppLocalizationsAr extends AppLocalizations {
   String get incorrectCurrentPassword => 'كلمة المرور الحالية غير صحيحة';
 
   @override
-  String get weakPassword => 'قوة كلمة المرور: ضعيفة';
-
-  @override
-  String get fairPassword => 'قوة كلمة المرور: متوسطة';
-
-  @override
-  String get goodPassword => 'قوة كلمة المرور: جيدة';
-
-  @override
-  String get strongPassword => 'قوة كلمة المرور: قوية';
-
-  @override
-  String get passwordMatchError =>
-      'لا يمكن أن تكون كلمة المرور الجديدة مطابقة للحالية';
+  String get passwordMatchError => 'لا يمكن أن تكون كلمة المرور الجديدة مطابقة للحالية';
 
   @override
   String get passwordUpdatedSuccess => 'تم تحديث كلمة المرور بنجاح!';
@@ -857,8 +816,7 @@ class AppLocalizationsAr extends AppLocalizations {
   String get reportIllicitContent => 'الإبلاغ عن محتوى غير قانوني';
 
   @override
-  String get deleteAccountWarningText =>
-      'يمكنك حذف حسابك وبياناتك المرتبطة في أي وقت. لن يؤدي ذلك إلى حذف بياناتك تلقائيًا من قواعد بيانات الأطباء الذين حجزت معهم مواعيد. قد يكون لدى الأطباء مصلحة مشروعة في الاحتفاظ ببياناتك الشخصية. يمكنك ممارسة حقوقك في الوصول أو التصحيح أو الحذف من خلال التواصل معهم مباشرة.';
+  String get deleteAccountWarningText => 'يمكنك حذف حسابك وبياناتك المرتبطة في أي وقت. لن يؤدي ذلك إلى حذف بياناتك تلقائيًا من قواعد بيانات الأطباء الذين حجزت معهم مواعيد. قد يكون لدى الأطباء مصلحة مشروعة في الاحتفاظ ببياناتك الشخصية. يمكنك ممارسة حقوقك في الوصول أو التصحيح أو الحذف من خلال التواصل معهم مباشرة.';
 
   @override
   String get confirmDeleteMyAccount => 'حذف حسابي';
@@ -867,8 +825,7 @@ class AppLocalizationsAr extends AppLocalizations {
   String get goodbyeMessage => 'نأسف لرؤيتك ترحل 😔';
 
   @override
-  String get goodbyeSubtext =>
-      'تم حذف حسابك بنجاح. نأمل أن نراك مجددًا في المستقبل.';
+  String get goodbyeSubtext => 'تم حذف حسابك بنجاح. نأمل أن نراك مجددًا في المستقبل.';
 
   @override
   String get searchTitle => 'بحث';
@@ -887,6 +844,78 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get noResultsSubtitle => 'حاول استخدام مصطلح بحث مختلف.';
+
+  @override
+  String get searchBySpecialty => 'البحث حسب التخصص';
+
+  @override
+  String get nearbyMe => 'بالقرب مني';
+
+  @override
+  String get cities => 'المدن';
+
+  @override
+  String get selectCityPlaceholder => 'اختر مدينة';
+
+  @override
+  String get locationPermissionDenied => 'تم رفض إذن الوصول إلى الموقع. يرجى تفعيله من الإعدادات.';
+
+  @override
+  String get locationError => 'تعذر الوصول إلى موقعك. يرجى تفعيل خدمات الموقع.';
+
+  @override
+  String get showResults => 'عرض النتائج';
+
+  @override
+  String get specialtyGynecology => 'نسائية';
+
+  @override
+  String get specialtyPediatrics => 'أطفال';
+
+  @override
+  String get specialtyDentistry => 'أسنان';
+
+  @override
+  String get specialtyCardiology => 'قلبية';
+
+  @override
+  String get specialtyOphthalmology => 'عيون';
+
+  @override
+  String get specialtyUrology => 'بولية';
+
+  @override
+  String get specialtyDermatology => 'جلدية';
+
+  @override
+  String get specialtyPsychology => 'نفسية';
+
+  @override
+  String get specialtyNutrition => 'تغذية';
+
+  @override
+  String get specialtyNeurology => 'أعصاب';
+
+  @override
+  String get specialtyOrthopedics => 'عظمية';
+
+  @override
+  String get specialtyOncology => 'أورام';
+
+  @override
+  String get specialtyENT => 'أنف أذن حنجرة';
+
+  @override
+  String get specialtyGeneralSurgery => 'جراحة عامة';
+
+  @override
+  String get showOnMap => 'عرض على الخريطة';
+
+  @override
+  String get searchHere => 'ابحث هنا';
+
+  @override
+  String get bookingNotAvailable => 'الحجز غير متاح';
 
   @override
   String get gallery => 'صور العيادة والطبيب';
@@ -1003,9 +1032,7 @@ class AppLocalizationsAr extends AppLocalizations {
   String get patientInfo => 'معلومات المريض';
 
   @override
-  String appointmentTime(Object time) {
-    return 'الوقت: $time';
-  }
+  String get appointmentTime => 'وقت الموعد';
 
   @override
   String get confirm => 'تأكيد';
@@ -1032,17 +1059,13 @@ class AppLocalizationsAr extends AppLocalizations {
   String get appointmentConfirmed => 'تم تأكيد الموعد';
 
   @override
-  String get appointmentConfirmedMessage =>
-      'تم إرسال تأكيد الحجز إلى بريدك الإلكتروني';
-
-  @override
-  String get unknown => 'غير معروف';
+  String get appointmentConfirmedMessage => 'تم إرسال تأكيد الحجز إلى بريدك الإلكتروني';
 
   @override
   String get addToCalendar => 'إضافة إلى التقويم';
 
   @override
-  String get sendDocuments => 'إرسال مستندات';
+  String get sendDocuments => 'إرسال المستندات';
 
   @override
   String get sendDocumentsSubtitle => 'إرسل المستندات إلى طبيبك قبل الموعد';
@@ -1052,7 +1075,7 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String appointmentWith(Object doctorName) {
-    return 'موعد مع $doctorName';
+    return 'موعد مع';
   }
 
   @override
@@ -1074,8 +1097,7 @@ class AppLocalizationsAr extends AppLocalizations {
   String get awaitingDoctorConfirmation => 'بانتظار تأكيد الطبيب';
 
   @override
-  String get waitingForDoctorToApprove =>
-      'تم إرسال طلبك بنجاح، وسيقوم الطبيب بمراجعة الموعد والموافقة عليه.';
+  String get waitingForDoctorToApprove => 'تم إرسال طلبك بنجاح، وسيقوم الطبيب بمراجعة الموعد والموافقة عليه.';
 
   @override
   String get backToHome => 'العودة إلى الرئيسية';
@@ -1107,6 +1129,16 @@ class AppLocalizationsAr extends AppLocalizations {
   }
 
   @override
+  String appointmentWithLabel(Object doctorName) {
+    return 'موعد مع $doctorName';
+  }
+
+  @override
+  String appointmentReason2(Object reason) {
+    return 'السبب: $reason';
+  }
+
+  @override
   String appointmentLocation(Object clinicName) {
     return 'الموقع: $clinicName';
   }
@@ -1117,26 +1149,27 @@ class AppLocalizationsAr extends AppLocalizations {
   }
 
   @override
+  String appointmentTime2(Object time) {
+    return 'الوقت: $time';
+  }
+
+  @override
   String get sharedFromApp => 'تمت المشاركة من تطبيق DocSera';
 
   @override
-  String get youAreAboutToReschedule =>
-      'أنت على وشك إعادة جدولة موعدك في اللحظة الأخيرة';
+  String get youAreAboutToReschedule => 'أنت على وشك إعادة جدولة موعدك في اللحظة الأخيرة';
 
   @override
   String get youAreAboutToCancel => 'أنت على وشك إلغاء موعدك في اللحظة الأخيرة';
 
   @override
-  String get lastMinuteWarning =>
-      'هذا الموعد خلال أقل من 48 ساعة. من غير المحتمل أن يتم حجزه من قبل مريض آخر.';
+  String get lastMinuteWarning => 'هذا الموعد خلال أقل من 48 ساعة. من غير المحتمل أن يتم حجزه من قبل مريض آخر.';
 
   @override
-  String get respectPractitionerReschedule =>
-      'احترامًا لطبيبك، يجب عليك إعادة الجدولة فقط إذا كان ذلك ضروريًا للغاية.';
+  String get respectPractitionerReschedule => 'احترامًا لطبيبك، يجب عليك إعادة الجدولة فقط إذا كان ذلك ضروريًا للغاية.';
 
   @override
-  String get respectPractitionerCancel =>
-      'احترامًا لطبيبك، يجب عليك الإلغاء فقط إذا كان ذلك ضروريًا للغاية.';
+  String get respectPractitionerCancel => 'احترامًا لطبيبك، يجب عليك الإلغاء فقط إذا كان ذلك ضروريًا للغاية.';
 
   @override
   String get continuing => 'المتابعة';
@@ -1157,34 +1190,28 @@ class AppLocalizationsAr extends AppLocalizations {
   String get appointmentCancelNoWarning => 'تم إلغاء الموعد دون تحذير';
 
   @override
-  String get doctorIdMissingError =>
-      'رقم تعريف الطبيب غير موجود. لا يمكن فتح الملف الشخصي.';
+  String get doctorIdMissingError => 'رقم تعريف الطبيب غير موجود. لا يمكن فتح الملف الشخصي.';
 
   @override
-  String get rescheduleWarningTitle =>
-      'أنت على وشك تأجيل موعدك في اللحظة الأخيرة';
+  String get rescheduleWarningTitle => 'أنت على وشك تأجيل موعدك في اللحظة الأخيرة';
 
   @override
   String get cancelWarningTitle => 'أنت على وشك إلغاء موعدك في اللحظة الأخيرة';
 
   @override
-  String get appointmentShortNoticeWarning =>
-      'هذا الموعد بعد أقل من 48 ساعة. من غير المحتمل أن يتم حجزه من قبل مريض آخر.';
+  String get appointmentShortNoticeWarning => 'هذا الموعد بعد أقل من 48 ساعة. من غير المحتمل أن يتم حجزه من قبل مريض آخر.';
 
   @override
-  String get rescheduleRespectNotice =>
-      'من باب الاحترام لمقدم الرعاية الصحية الخاص بك، يجب تأجيل الموعد فقط عند الضرورة القصوى';
+  String get rescheduleRespectNotice => 'من باب الاحترام لمقدم الرعاية الصحية الخاص بك، يجب تأجيل الموعد فقط عند الضرورة القصوى';
 
   @override
-  String get cancelRespectNotice =>
-      'من باب الاحترام لمقدم الرعاية الصحية الخاص بك، يجب إلغاء الموعد فقط عند الضرورة القصوى';
+  String get cancelRespectNotice => 'من باب الاحترام لمقدم الرعاية الصحية الخاص بك، يجب إلغاء الموعد فقط عند الضرورة القصوى';
 
   @override
   String get sendDocument => 'إرسال المستند';
 
   @override
-  String get sendDocumentsLater =>
-      'سيتم تفعيل ميزة إرسال المستندات لاحقًا عند الانتهاء من تطوير تطبيق الأطباء';
+  String get sendDocumentsLater => 'سيتم تفعيل ميزة إرسال المستندات لاحقًا عند الانتهاء من تطوير تطبيق الأطباء';
 
   @override
   String get sendDocumentsTo => 'أرسل المستندات إلى';
@@ -1223,8 +1250,7 @@ class AppLocalizationsAr extends AppLocalizations {
   String get emailOrPhone => 'البريد الإلكتروني أو رقم الهاتف';
 
   @override
-  String get incorrectPassword =>
-      'البريد الإلكتروني/الهاتف أو كلمة المرور غير صحيحة';
+  String get incorrectPassword => 'البريد الإلكتروني/الهاتف أو كلمة المرور غير صحيحة';
 
   @override
   String get userNotFound => 'المستخدم غير موجود';
@@ -1235,8 +1261,7 @@ class AppLocalizationsAr extends AppLocalizations {
   }
 
   @override
-  String get faceIdNoCredentials =>
-      'لم يتم العثور على بيانات محفوظة لتسجيل الدخول باستخدام Face ID.';
+  String get faceIdNoCredentials => 'لم يتم العثور على بيانات محفوظة لتسجيل الدخول باستخدام Face ID.';
 
   @override
   String get logInWithFaceId => 'تسجيل الدخول باستخدام Face ID';
@@ -1275,21 +1300,19 @@ class AppLocalizationsAr extends AppLocalizations {
   String get enterEmail => 'الرجاء إدخال بريدك الإلكتروني';
 
   @override
-  String get errorCheckingEmail => 'حدث خطأ أثناء التحقق من البريد الإلكتروني.';
+  String get errorCheckingEmail => 'حدث خطأ أثناء التحقق من البريد الإلكتروني. يرجى المحاولة مرة أخرى.';
 
   @override
-  String get emailAlreadyRegistered => 'هذا البريد الإلكتروني مسجل بالفعل!';
+  String get emailAlreadyRegistered => 'البريد الإلكتروني مسجل';
 
   @override
-  String get emailAlreadyRegisteredContent =>
-      'البريد الإلكتروني الذي أدخلته مسجل مسبقاً في دوكسيرا.';
+  String get emailAlreadyRegisteredContent => 'البريد الإلكتروني الذي أدخلته مسجل مسبقاً في دوكسيرا.';
 
   @override
-  String get phoneAlreadyRegistered => 'رقم الهاتف هذا مسجل بالفعل!';
+  String get phoneAlreadyRegistered => 'رقم الهاتف مسجل';
 
   @override
-  String get phoneAlreadyRegisteredContent =>
-      'رقم الهاتف الذي أدخلته مسجل مسبقاً في دوكسيرا.';
+  String get phoneAlreadyRegisteredContent => 'رقم الهاتف الذي أدخلته مسجل مسبقاً في دوكسيرا.';
 
   @override
   String get loginWithEmail => 'تسجيل الدخول بالبريد الإلكتروني';
@@ -1322,29 +1345,37 @@ class AppLocalizationsAr extends AppLocalizations {
   String get createPassword => 'إنشاء كلمة المرور';
 
   @override
+  String get weakPassword => 'قوة كلمة المرور: ضعيفة';
+
+  @override
+  String get fairPassword => 'قوة كلمة المرور: متوسطة';
+
+  @override
+  String get goodPassword => 'قوة كلمة المرور: جيدة';
+
+  @override
+  String get strongPassword => 'قوة كلمة المرور: قوية';
+
+  @override
   String get useEightCharacters => 'استخدم 8 أحرف أو أكثر لكلمة المرور.';
 
   @override
-  String get passwordTooSimple =>
-      'كلمة المرور سهلة جدًا. حاول إضافة رموز خاصة، أرقام، وأحرف كبيرة.';
+  String get passwordTooSimple => 'كلمة المرور سهلة جدًا. حاول إضافة رموز خاصة، أرقام، وأحرف كبيرة.';
 
   @override
-  String get passwordRepeatedCharacters =>
-      'تجنب الأحرف المتكررة مثل \'aaa\' أو \'111\'.';
+  String get passwordRepeatedCharacters => 'تجنب الأحرف المتكررة مثل \'aaa\' أو \'111\'.';
 
   @override
   String get termsOfUseTitle => 'شروط الاستخدام وسياسة الخصوصية';
 
   @override
-  String get termsOfUseDescription =>
-      'لإنشاء حساب في دوكسيرا، يرجى قبول شروط الاستخدام.';
+  String get termsOfUseDescription => 'لإنشاء حساب في دوكسيرا، يرجى قبول شروط الاستخدام.';
 
   @override
   String get acceptTerms => 'لقد قرأت ووافقت على شروط الاستخدام';
 
   @override
-  String get dataProcessingInfo =>
-      'يمكنك العثور على مزيد من المعلومات حول معالجة البيانات في ';
+  String get dataProcessingInfo => 'يمكنك العثور على مزيد من المعلومات حول معالجة البيانات في ';
 
   @override
   String get dataProtectionNotice => 'إشعارات حماية البيانات.';
@@ -1353,27 +1384,22 @@ class AppLocalizationsAr extends AppLocalizations {
   String get marketingPreferencesTitle => 'ابقَ على اطلاع بآخر التحديثات';
 
   @override
-  String get marketingPreferencesSubtitle =>
-      'احصل على رسائل بريد إلكتروني وإشعارات مخصصة حول النصائح الصحية وخدماتنا.';
+  String get marketingPreferencesSubtitle => 'احصل على رسائل بريد إلكتروني وإشعارات مخصصة حول النصائح الصحية وخدماتنا.';
 
   @override
-  String get marketingCheckboxText =>
-      'نصائح مفيدة لإدارة صحتي ومعلومات تسويقية حول خدماتنا';
+  String get marketingCheckboxText => 'نصائح مفيدة لإدارة صحتي ومعلومات تسويقية حول خدماتنا';
 
   @override
-  String get privacyPolicyInfo =>
-      'يمكنك تغيير اختيارك في أي وقت من خلال الإعدادات. لمعرفة المزيد،';
+  String get privacyPolicyInfo => 'يمكنك تغيير اختيارك في أي وقت من خلال الإعدادات. لمعرفة المزيد،';
 
   @override
   String get privacyPolicyLink => 'راجع سياسة الخصوصية.';
 
   @override
-  String get enterSmsCode =>
-      'أدخل الرمز الذي تم إرساله إليك عبر الرسائل القصيرة';
+  String get enterSmsCode => 'أدخل الرمز الذي تم إرساله إليك عبر الرسائل القصيرة';
 
   @override
-  String get enterEmailCode =>
-      'أدخل الرمز الذي تم إرساله إليك عبر البريد الإلكتروني';
+  String get enterEmailCode => 'أدخل الرمز الذي تم إرساله إليك عبر البريد الإلكتروني';
 
   @override
   String get otpLabel => 'رمز التحقق المكون من 6 أرقام';
@@ -1388,8 +1414,7 @@ class AppLocalizationsAr extends AppLocalizations {
   String get invalidCode => 'رمز غير صحيح. يرجى المحاولة مرة أخرى.';
 
   @override
-  String get otpSendFailed =>
-      'فشل في إرسال رمز التحقق. يرجى المحاولة مرة أخرى.';
+  String get otpSendFailed => 'فشل في إرسال رمز التحقق. يرجى المحاولة مرة أخرى.';
 
   @override
   String get tryAgain => 'أعد المحاولة';
@@ -1407,10 +1432,16 @@ class AppLocalizationsAr extends AppLocalizations {
   String get mustBeOver16 => 'يجب أن يكون عمرك 16 سنة على الأقل';
 
   @override
+  String get email => 'البريد الإلكتروني';
+
+  @override
   String get emailVerified => 'تم التحقق من البريد الإلكتروني';
 
   @override
   String get skipEmail => 'إضافة البريد الإلكتروني لاحقًا';
+
+  @override
+  String get phone => 'رقم الهاتف';
 
   @override
   String get phoneVerified => 'تم التحقق من الهاتف';
@@ -1434,18 +1465,22 @@ class AppLocalizationsAr extends AppLocalizations {
   String get autoLoginFailed => 'فشل تسجيل الدخول التلقائي.';
 
   @override
+  String get emailAlreadyRegisteredAlt => 'هذا البريد الإلكتروني مسجل بالفعل!';
+
+  @override
+  String get phoneAlreadyRegisteredAlt => 'رقم الهاتف هذا مسجل بالفعل!';
+
+  @override
   String get welcomeToDocsera => 'مرحباً بك في دوكسيرا،';
 
   @override
-  String get welcomeMessageInfo =>
-      'احجز مواعيدك بسهولة، تابع ملفاتك الطبية، وتواصل مع الأطباء من مكان واحد وبكل أمان وسرعة.';
+  String get welcomeMessageInfo => 'احجز مواعيدك بسهولة، تابع ملفاتك الطبية، وتواصل مع الأطباء من مكان واحد وبكل أمان وسرعة.';
 
   @override
   String get goToHomepage => 'الانتقال إلى الصفحة الرئيسية';
 
   @override
-  String get serverConnectionError =>
-      'لا يمكن الاتصال بالخادم. تحقق من اتصال الإنترنت وحاول مجددًا.';
+  String get serverConnectionError => 'لا يمكن الاتصال بالخادم. تحقق من اتصال الإنترنت وحاول مجددًا.';
 
   @override
   String verificationError(Object errorMessage) {
@@ -1453,8 +1488,7 @@ class AppLocalizationsAr extends AppLocalizations {
   }
 
   @override
-  String get unexpectedError =>
-      'حدث خطأ غير متوقع. يرجى المحاولة مرة أخرى لاحقًا.';
+  String get unexpectedError => 'حدث خطأ غير متوقع. يرجى المحاولة مرة أخرى لاحقًا.';
 
   @override
   String get documentAddedSuccessfully => 'تمت إضافة المستند بنجاح!';
@@ -1505,7 +1539,7 @@ class AppLocalizationsAr extends AppLocalizations {
   String get documentWillBeEncrypted => 'سيتم تشفير هذا المستند';
 
   @override
-  String get results => 'نتائج';
+  String get results => 'عدد النتائج';
 
   @override
   String get medicalImaging => 'تصوير شعاعي';
@@ -1574,10 +1608,10 @@ class AppLocalizationsAr extends AppLocalizations {
   String get fileLoadFailed => '❌ فشل تحميل الملف';
 
   @override
-  String get takePhoto => 'التقاط صورة';
+  String get takePhoto => 'التقط صورة';
 
   @override
-  String get chooseFromLibrary => 'اختيار صورة';
+  String get chooseFromLibrary => 'اختر من المعرض';
 
   @override
   String get chooseFile => 'اختيار ملف';
@@ -1651,7 +1685,7 @@ class AppLocalizationsAr extends AppLocalizations {
   String get sendMessageTitle => 'مراسلة طبيب';
 
   @override
-  String get messagingDisabled => 'تم إيقاف الرسائل';
+  String get messagingDisabled => 'المراسلة غير متاحة';
 
   @override
   String get selectMessagePatient => 'لمن هذه الرسالة؟';
@@ -1660,8 +1694,7 @@ class AppLocalizationsAr extends AppLocalizations {
   String get selectMessageReason => 'ما سبب هذه الرسالة؟';
 
   @override
-  String get noEmergencySupport =>
-      'لا يمكن للطبيب معالجة الحالات الطارئة عبر الرسائل. في حال وجود حالة طبية طارئة، اتصل بالرقم 112.';
+  String get noEmergencySupport => 'لا يمكن للطبيب معالجة الحالات الطارئة عبر الرسائل. في حال وجود حالة طبية طارئة، اتصل بالرقم 112.';
 
   @override
   String get reasonTestResults => 'طلب إرسال نتائج الفحوصات';
@@ -1700,15 +1733,13 @@ class AppLocalizationsAr extends AppLocalizations {
   String get messageHint => 'اشرح سبب رسالتك. قدم أي معلومات ذات صلة للممارس.';
 
   @override
-  String get helpTitle => 'ماذا يجب أن أكتب في طلبي؟';
+  String get helpTitle => 'ماذا يجب أن أضيف في طلبي؟';
 
   @override
-  String get helpMessage1 =>
-      'يرجى تضمين معلومات ضرورية ومهمة تساعد الطبيب على معالجة طلبك.';
+  String get helpMessage1 => 'أدرج المعلومات الأساسية والمرتبطة والضرورية ليتمكن الطبيب من معالجة طلبك.';
 
   @override
-  String get helpMessage2 =>
-      'إذا لزم الأمر (مثل شهادة مرضية)، قد يطلب الطبيب حجز موعد للفحص. في حالة الطوارئ، اتصل بالرقم 112.';
+  String get helpMessage2 => 'عند الحاجة (مثلًا لشهادة مرض)، قد يطلب منك الطبيب حجز موعد للفحص. وفي حال الطوارئ، اتصل برقم 112.';
 
   @override
   String get yesterday => 'أمس';
@@ -1792,16 +1823,13 @@ class AppLocalizationsAr extends AppLocalizations {
   }
 
   @override
-  String get documentAccessInfo =>
-      'فقط أنت تملك صلاحية الوصول إلى هذه المستندات وإدارتها.';
+  String get documentAccessInfo => 'فقط أنت تملك صلاحية الوصول إلى هذه المستندات وإدارتها.';
 
   @override
-  String get notesAccessInfo =>
-      'يمكنك أنت فقط الوصول إلى ملاحظاتك وإدارتها بأمان.';
+  String get notesAccessInfo => 'يمكنك أنت فقط الوصول إلى ملاحظاتك وإدارتها بأمان.';
 
   @override
-  String get messageAccessInfo =>
-      'يمكنك مراسلة طبيبك مباشرة من هنا. يتم حفظ جميع محادثاتك بأمان ويمكنك الوصول إليها بسهولة.';
+  String get messageAccessInfo => 'يمكنك مراسلة طبيبك مباشرة من هنا. يتم حفظ جميع محادثاتك بأمان ويمكنك الوصول إليها بسهولة.';
 
   @override
   String get accountPrivacyInfoLine1 => 'بياناتك الشخصية تبقى خاصة.';
@@ -1825,15 +1853,13 @@ class AppLocalizationsAr extends AppLocalizations {
   String get notActivated => 'غير مفعّل';
 
   @override
-  String get encryptedDocumentsFullDescription =>
-      'يتم تخزين مستنداتك الطبية بأمان باستخدام تشفير متقدم، مما يضمن أن تكون وحدك من يمكنه الوصول إليها وإدارتها.';
+  String get encryptedDocumentsFullDescription => 'يتم تخزين مستنداتك الطبية بأمان باستخدام تشفير متقدم، مما يضمن أن تكون وحدك من يمكنه الوصول إليها وإدارتها.';
 
   @override
   String get twoFactorAuthHeadline => 'أمان إضافي يتجاوز كلمة المرور';
 
   @override
-  String get twoFactorAuthFullDescription =>
-      'لحماية إضافية، سيتم إرسال رمز تحقق إلى بريدك الإلكتروني أو عبر رسالة نصية عند تسجيل الدخول من جهاز جديد.';
+  String get twoFactorAuthFullDescription => 'لحماية إضافية، سيتم إرسال رمز تحقق إلى بريدك الإلكتروني أو عبر رسالة نصية عند تسجيل الدخول من جهاز جديد.';
 
   @override
   String get activate2FA => 'تفعيل التحقق بخطوتين';
@@ -1842,8 +1868,7 @@ class AppLocalizationsAr extends AppLocalizations {
   String get deactivate2FA => 'إلغاء تفعيل التحقق بخطوتين';
 
   @override
-  String get twoFactorDeactivateWarning =>
-      'سيؤدي إلغاء التحقق بخطوتين إلى تقليل أمان حسابك. هل أنت متأكد أنك تريد المتابعة؟';
+  String get twoFactorDeactivateWarning => 'سيؤدي إلغاء التحقق بخطوتين إلى تقليل أمان حسابك. هل أنت متأكد أنك تريد المتابعة؟';
 
   @override
   String get errorOccurred => 'حدث خطأ، يرجى المحاولة مرة أخرى';

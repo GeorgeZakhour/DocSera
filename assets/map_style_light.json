@@ -1,0 +1,13 @@
+[
+  { "featureType": "poi", "stylers": [ { "visibility": "off" } ] },
+
+  { "featureType": "poi.park", "stylers": [ { "visibility": "on" } ] },
+  { "featureType": "poi.park", "elementType": "geometry",
+    "stylers": [ { "color": "#d8f5d0" } ] },
+  { "featureType": "poi.park", "elementType": "labels.text.fill",
+    "stylers": [ { "color": "#4e7d4e" } ] },
+
+  { "featureType": "transit", "stylers": [ { "visibility": "off" } ] },
+  { "featureType": "road", "elementType": "geometry",
+    "stylers": [ { "lightness": 20 } ] }
+]

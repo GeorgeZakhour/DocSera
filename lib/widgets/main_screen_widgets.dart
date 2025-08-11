@@ -1,6 +1,7 @@
 import 'dart:math';
 import 'package:docsera/gen_l10n/app_localizations.dart';
 import 'package:docsera/app/text_styles.dart';
+import 'package:docsera/screens/search_advanced_page.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:docsera/screens/search_page.dart';
 import 'package:docsera/utils/page_transitions.dart';
@@ -154,7 +155,9 @@ class SearchBarSection extends StatelessWidget {
       onTap: () {
         Navigator.push(
           context,
-          fadePageRoute(const SearchPage(mode: "search",)), // ✅ Smooth transition to SearchPage
+          fadePageRoute(
+            const SearchAdvancedPage(mode: "search"),
+          ),
         );
       },
       child: Container(

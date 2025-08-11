@@ -203,7 +203,7 @@ class _SplashScreenState extends State<SplashScreen> with TickerProviderStateMix
                         Transform.rotate(
                           angle: _rotationAnimation.value,
                           child: SvgPicture.asset(
-                            "assets/images/DocSera-shape.svg",
+                            "assets/images/DocSera-shape-white.svg",
                             width: _sizeAnimation.value,
                           ),
                         ),
