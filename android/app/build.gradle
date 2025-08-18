@@ -15,6 +15,7 @@ android {
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_1_8
         targetCompatibility = JavaVersion.VERSION_1_8
+        coreLibraryDesugaringEnabled true
     }
 
     kotlinOptions {
@@ -22,10 +23,7 @@ android {
     }
 
     defaultConfig {
-        // TODO: Specify your own unique Application ID (https://developer.android.com/studio/build/application-id.html).
         applicationId = "com.techspearz.docsera"
-        // You can update the following values to match your application needs.
-        // For more information, see: https://flutter.dev/to/review-gradle-config.
         minSdkVersion 23
         targetSdkVersion 35
         versionCode = flutter.versionCode
@@ -52,9 +50,11 @@ dependencies {
     // Add Firebase Analytics (you can replace this with any Firebase service you need)
     implementation "com.google.firebase:firebase-analytics"
 
-    // Add any other Firebase dependencies you plan to use, e.g., Firebase Auth or Firestore
     // For Firebase Authentication:
     implementation "com.google.firebase:firebase-auth"
     // For Firestore:
     implementation "com.google.firebase:firebase-firestore"
+
+    // ⬅️ حدّثنا النسخة هنا (كانت 2.0.4)
+    coreLibraryDesugaring "com.android.tools:desugar_jdk_libs:2.1.4"
 }
