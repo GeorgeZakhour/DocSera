@@ -298,6 +298,7 @@
   "locationPermissionDenied": "Location permission is denied. Please enable it in settings.",
   "locationError": "Unable to access your location. Please enable location services.",
   "showResults": "Show results",
+
   "specialtyGeneral": "General Medicine",
   "specialtyInternal": "Internal Medicine",
   "specialtyPediatrics": "Pediatrics",
@@ -319,6 +320,7 @@
   "specialtyCancer": "Oncology",
   "specialtyEmergency": "Emergency Medicine",
   "specialtyPhysio": "Physiotherapy",
+
   "showOnMap": "Show on map",
   "searchHere": "Search here",
   "bookingNotAvailable": "Booking not available",

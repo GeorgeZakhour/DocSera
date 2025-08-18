@@ -507,6 +507,7 @@ class _BottomCardsPager extends StatelessWidget {
   final void Function(Map<String, dynamic>) onOpenMaps;
 
   const _BottomCardsPager({
+    super.key,
     required this.height,
     required this.controller,
     required this.doctors,
@@ -527,8 +528,7 @@ class _BottomCardsPager extends StatelessWidget {
             controller: controller,
             itemCount: doctors.length,
             onPageChanged: onPageChanged,
-            // لا نظهر طرف البطاقة التالية — كل بطاقة وسط الشاشة وبالعرض الكامل
-            padEnds: true,
+            padEnds: true, // كل بطاقة بوسط الشاشة
             itemBuilder: (context, index) {
               final doc = doctors[index];
               return Padding(
@@ -551,7 +551,7 @@ class _BottomCardsPager extends StatelessWidget {
   }
 }
 
-// ======= بطاقة الطبيب (مركزية + عنوان + تفاصيل + زر الخرائط على نفس السطر) =======
+/// ======= بطاقة الطبيب (صديقة للمساحات الصغيرة، بدون RenderFlex) =======
 class _DoctorCard extends StatelessWidget {
   final Map<String, dynamic> doctor;
   final VoidCallback onOpenMaps;
@@ -593,13 +593,13 @@ class _DoctorCard extends StatelessWidget {
     final imageProvider = imageResult.imageProvider;
 
     final name =
-    "${doctor['title'] ?? ''} ${doctor['first_name'] ?? ''} ${doctor['last_name'] ?? ''}".trim();
+    "${doctor['title'] ?? ''} ${doctor['first_name'] ?? ''} ${doctor['last_name'] ?? ''}"
+        .trim();
     final specialty = (doctor['specialty'] ?? '').toString();
     final address = _address(doctor);
     final details = _addressDetails(doctor);
 
     return Container(
-      margin: EdgeInsets.zero,
       padding: EdgeInsets.all(12.w),
       decoration: BoxDecoration(
         color: Colors.white,
@@ -608,114 +608,145 @@ class _DoctorCard extends StatelessWidget {
           BoxShadow(color: Colors.black12, blurRadius: 10, offset: Offset(0, -4)),
         ],
       ),
-      child: Column(
-        mainAxisSize: MainAxisSize.max,
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          // الهيدر: الصورة + الاسم + التخصص
-          Row(
-            children: [
-              CircleAvatar(
-                backgroundColor: AppColors.mainDark.withOpacity(0.2),
-                radius: 28.sp,
-                backgroundImage: imageProvider,
-              ),
-              SizedBox(width: 12.w),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      name,
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                      style: AppTextStyles.getText2(context).copyWith(
-                        fontWeight: FontWeight.w700,
-                        color: AppColors.mainDark,
+      // السماح للبطاقة أن تتمدّد عموديًا قليلًا إذا احتاج النص
+      child: IntrinsicHeight(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            /// الهيدر: الصورة + الاسم + التخصص
+            Row(
+              crossAxisAlignment: CrossAxisAlignment.center,
+              children: [
+                CircleAvatar(
+                  backgroundColor: AppColors.mainDark.withOpacity(0.2),
+                  radius: 28.sp,
+                  backgroundImage: imageProvider,
+                ),
+                SizedBox(width: 12.w),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      // الاسم
+                      Text(
+                        name,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: AppTextStyles.getText2(context).copyWith(
+                          fontWeight: FontWeight.w700,
+                          color: AppColors.mainDark,
+                        ),
                       ),
-                    ),
-                    SizedBox(height: 2.h),
-                    Text(
-                      specialty,
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                      style: AppTextStyles.getText3(context).copyWith(color: Colors.grey),
-                    ),
-                  ],
-                ),
-              ),
-            ],
-          ),
-
-          SizedBox(height: 10.h),
-
-          // العنوان (السطر الأول) + زر "افتح في تطبيق الخرائط" على نفس السطر
-          Row(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Icon(Icons.place, size: 16.sp, color: Colors.grey[700]),
-              SizedBox(width: 6.w),
-              Expanded(
-                child: Text(
-                  address.isEmpty ? '-' : address,
-                  maxLines: 2,
-                  overflow: TextOverflow.ellipsis,
-                  style: AppTextStyles.getText3(context).copyWith(color: Colors.grey[800]),
-                ),
-              ),
-              SizedBox(width: 8.w),
-              TextButton(
-                onPressed: onOpenMaps,
-                style: TextButton.styleFrom(
-                  foregroundColor: AppColors.main,
-                  padding: EdgeInsets.symmetric(horizontal: 8.w, vertical: 4.h),
-                  minimumSize: const Size(0, 0),
-                ),
-                child: Text(
-                  t.openInMapsApp,
-                  style: AppTextStyles.getText3(context).copyWith(
-                    color: AppColors.main,
-                    fontWeight: FontWeight.w700,
+                      SizedBox(height: 2.h),
+                      // التخصص
+                      Text(
+                        specialty,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: AppTextStyles.getText3(context).copyWith(color: Colors.grey),
+                      ),
+                    ],
                   ),
                 ),
-              ),
-            ],
-          ),
+              ],
+            ),
 
-          // سطر إضافي لتفاصيل العنوان إن وُجدت
-          if (details.isNotEmpty) ...[
-            SizedBox(height: 6.h),
+            SizedBox(height: 10.h),
+
+            /// العنوان + زر الخرائط — بدون RenderFlex:
+            /// - دمج تفاصيل العنوان مع السطر الأساسي ليكونوا "أقرب"
+            /// - استخدام Expanded للنص وقيود عرض للزر
+            Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Icon(Icons.place, size: 16.sp, color: Colors.grey[700]),
+                SizedBox(width: 6.w),
+
+                /// النص قابل للالتفاف حتى 3 أسطر مع دمج التفاصيل
+                Expanded(
+                  child: Text.rich(
+                    TextSpan(
+                      children: [
+                        TextSpan(
+                          text: (address.isEmpty ? '-' : address),
+                          style: AppTextStyles.getText3(context)
+                              .copyWith(color: Colors.grey[800]),
+                        ),
+                        if (details.isNotEmpty) ...[
+                          TextSpan(
+                            text: " — ",
+                            style: AppTextStyles.getText3(context)
+                                .copyWith(color: Colors.grey[700]),
+                          ),
+                          TextSpan(
+                            text: details,
+                            style: AppTextStyles.getText3(context)
+                                .copyWith(color: Colors.grey[700]),
+                          ),
+                        ],
+                      ],
+                    ),
+                    maxLines: 3,
+                    softWrap: true,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                ),
+
+                SizedBox(width: 8.w),
+
+                /// الزر بقيود عرض + FittedBox لتفادي الفيضان
+                ConstrainedBox(
+                  constraints: BoxConstraints(
+                    maxWidth: 140.w, // يتقلّص قبل ما يسبب Overflow
+                  ),
+                  child: FittedBox(
+                    fit: BoxFit.scaleDown,
+                    alignment: Alignment.centerRight,
+                    child: TextButton(
+                      onPressed: onOpenMaps,
+                      style: TextButton.styleFrom(
+                        foregroundColor: AppColors.main,
+                        padding: EdgeInsets.symmetric(horizontal: 8.w, vertical: 4.h),
+                        minimumSize: const Size(0, 0),
+                        tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                        visualDensity: VisualDensity.compact,
+                      ),
+                      child: Text(
+                        t.openInMapsApp,
+                        style: AppTextStyles.getText3(context).copyWith(
+                          color: AppColors.main,
+                          fontWeight: FontWeight.w700,
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+
+            /// فاصل
             Padding(
-              padding: EdgeInsetsDirectional.only(start: 24.w), // لمحاذاة مع النص بعد الأيقونة
-              child: Text(
-                details,
-                maxLines: 2,
-                overflow: TextOverflow.ellipsis,
-                style: AppTextStyles.getText3(context).copyWith(color: Colors.black87),
-              ),
+              padding: EdgeInsets.symmetric(vertical: 10.h),
+              child: Divider(height: 1, color: Colors.grey.shade300),
+            ),
+
+            /// صف حالة الحجز (كما السابق)
+            Row(
+              children: [
+                Icon(Icons.event_busy, size: 18, color: Colors.grey.shade600),
+                SizedBox(width: 6.w),
+                Expanded(
+                  child: Text(
+                    t.bookingNotAvailable,
+                    style: AppTextStyles.getText3(context)
+                        .copyWith(color: Colors.grey.shade700),
+                  ),
+                ),
+              ],
             ),
           ],
-
-          // فاصل
-          Padding(
-            padding: EdgeInsets.symmetric(vertical: 10.h),
-            child: Divider(height: 1, color: Colors.grey.shade300),
-          ),
-
-          // صف حالة الحجز (كما القديم)
-          Row(
-            children: [
-              Icon(Icons.event_busy, size: 18, color: Colors.grey.shade600),
-              SizedBox(width: 6.w),
-              Expanded(
-                child: Text(
-                  t.bookingNotAvailable,
-                  style: AppTextStyles.getText3(context).copyWith(color: Colors.grey.shade700),
-                ),
-              ),
-            ],
-          ),
-        ],
+        ),
       ),
     );
   }
