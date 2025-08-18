@@ -526,112 +526,131 @@ class _MainScreenState extends State<MainScreen> with AutomaticKeepAliveClientMi
       },
     ];
 
-    return  SingleChildScrollView(
-      controller: scrollController,
-      child: Container(
-        color: AppColors.background2,
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.center,
-          children: [
-            const TopSection(), // ✅ Contains only the header & background
-
-            // ✅ Pass the banners list to `BannersSection`
-            // ✅ Use optimized BannersSection
-            // ✅ Pass banners and ensure instant display
-            Transform.translate(
-              offset: Offset(0, -screenHeight * 0.055),
-              child: AnimatedOpacity(
-                opacity: _bannerColorsReady ? 1.0 : 0.0,
-                duration: const Duration(milliseconds: 300),
-                child: BannersSection(
-                  banners: bannerData,
-                  onColorsLoaded: () {
-                    print("🎉 onColorsLoaded called from BannersSection");
-                    if (!_bannerColorsReady && mounted) {
-                      setState(() {
-                        print("✅ Setting _bannerColorsReady = true");
-                        _bannerColorsReady = true;
-                        _bannersLoadedOnce = true; // ✅ حفظ دائم بعد أول تحميل
-                      });
-                    }
-                  },
-                ),
+    return  Stack(
+      children: [
+        Positioned.fill(
+          child: Column(
+            children: [
+              Expanded(
+                flex: 1,
+                child: Container(color: AppColors.main),
               ),
-            ),
-
-
-
-
-            // ✅ **"My Practitioners" يظهر فقط إذا كان المستخدم مسجّل الدخول**
-            isLoggedIn && favoriteDoctors.isNotEmpty ? _buildMyPractitionersSection(isLoggedIn, favoriteDoctors) : SizedBox(),
-            isLoggedIn && favoriteDoctors.isNotEmpty ? SizedBox(height: 20.h) : SizedBox(),
-            _buildScrollButton(scrollController), // ✅ Button now properly below banners
-            SizedBox(height: 40.h),
-            const FeaturesSection(),
-            SizedBox(height: 30.h),
-
-
-            DecorativeImageCard(
-              title:  AppLocalizations.of(context)!.weAreHiring,
-              description:  AppLocalizations.of(context)!.workWithUs,
-              buttonText:  AppLocalizations.of(context)!.learnMore,
-              onButtonPressed: () {
-                Navigator.push(
-                  context,
-                  fadePageRoute(WelcomePage(
-                    signUpInfo: SignUpInfo(firstName: "User"), // أو أي اسم تجريبي
-                  )),
-                );
-              },
-
-              backgroundColor: Colors.grey.shade400,
-              buttonColor: Colors.grey.withOpacity(0.9),
-              shapeNumber: 10,
-              imageShapeNumber: 4,
-              secondShapeNumber: 9,
-              shapeColor: Colors.yellow.withOpacity(0.3),
-              imagePath: 'assets/images/worker.png',
-              showSecondShape: true,
-            ),
-
-            // ✅ Decorative Cards Section
-            DecorativeImageCard(
-              title: AppLocalizations.of(context)!.areYouAHealthProfessional,
-              description: AppLocalizations.of(context)!.improveDailyLife,
-              buttonText:  AppLocalizations.of(context)!.registerAsDoctor,
-              onButtonPressed: () {
-                Navigator.push(
-                  context,
-                  fadePageRoute(const DoctorIdentificationPage()),
-                );
-              },
-              backgroundColor: AppColors.main,
-              buttonColor: Colors.white.withOpacity(0.4),
-              shapeNumber: 1,
-              imageShapeNumber: 2,
-              secondShapeNumber: 5, // ✅ استخدم الشكل 7 كشكل إضافي
-              shapeColor: Colors.white.withOpacity(0.3),
-              secondShapeColor: AppColors.mainDark.withOpacity(0.8),
-              imagePath: 'assets/images/professional.jpg',
-              showSecondShape: true,
-            ),
-
-            ElevatedButton(
-              onPressed: () async {
-                final prefs = await SharedPreferences.getInstance();
-                await prefs.clear();
-                Supabase.instance.client.auth.signOut(); // ⛔ اختياري فقط
-                // أعد تشغيل التطبيق أو انتقل لشاشة البداية
-              },
-              child: Text('🧹 Reset Session'),
-            ),
-
-
-
-          ],
+              Expanded(
+                flex: 1,
+                child: Container(color: AppColors.background2),
+              ),
+            ],
+          ),
         ),
-      ),
 
+        SingleChildScrollView(
+          controller: scrollController,
+          child: Container(
+            color: AppColors.background2,
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.center,
+              children: [
+                const TopSection(), // ✅ Contains only the header & background
+
+                // ✅ Pass the banners list to `BannersSection`
+                // ✅ Use optimized BannersSection
+                // ✅ Pass banners and ensure instant display
+                Transform.translate(
+                  offset: Offset(0, -screenHeight * 0.055),
+                  child: AnimatedOpacity(
+                    opacity: _bannerColorsReady ? 1.0 : 0.0,
+                    duration: const Duration(milliseconds: 300),
+                    child: BannersSection(
+                      banners: bannerData,
+                      onColorsLoaded: () {
+                        print("🎉 onColorsLoaded called from BannersSection");
+                        if (!_bannerColorsReady && mounted) {
+                          setState(() {
+                            print("✅ Setting _bannerColorsReady = true");
+                            _bannerColorsReady = true;
+                            _bannersLoadedOnce = true; // ✅ حفظ دائم بعد أول تحميل
+                          });
+                        }
+                      },
+                    ),
+                  ),
+                ),
+
+
+
+
+                // ✅ **"My Practitioners" يظهر فقط إذا كان المستخدم مسجّل الدخول**
+                isLoggedIn && favoriteDoctors.isNotEmpty ? _buildMyPractitionersSection(isLoggedIn, favoriteDoctors) : SizedBox(),
+                isLoggedIn && favoriteDoctors.isNotEmpty ? SizedBox(height: 20.h) : SizedBox(),
+                _buildScrollButton(scrollController), // ✅ Button now properly below banners
+                SizedBox(height: 40.h),
+                const FeaturesSection(),
+                SizedBox(height: 30.h),
+
+
+                DecorativeImageCard(
+                  title:  AppLocalizations.of(context)!.weAreHiring,
+                  description:  AppLocalizations.of(context)!.workWithUs,
+                  buttonText:  AppLocalizations.of(context)!.learnMore,
+                  onButtonPressed: () {
+                    Navigator.push(
+                      context,
+                      fadePageRoute(WelcomePage(
+                        signUpInfo: SignUpInfo(firstName: "User"), // أو أي اسم تجريبي
+                      )),
+                    );
+                  },
+
+                  backgroundColor: Colors.grey.shade400,
+                  buttonColor: Colors.grey.withOpacity(0.9),
+                  shapeNumber: 10,
+                  imageShapeNumber: 4,
+                  secondShapeNumber: 9,
+                  shapeColor: Colors.yellow.withOpacity(0.3),
+                  imagePath: 'assets/images/worker.png',
+                  showSecondShape: true,
+                ),
+
+                // ✅ Decorative Cards Section
+                DecorativeImageCard(
+                  title: AppLocalizations.of(context)!.areYouAHealthProfessional,
+                  description: AppLocalizations.of(context)!.improveDailyLife,
+                  buttonText:  AppLocalizations.of(context)!.registerAsDoctor,
+                  onButtonPressed: () {
+                    Navigator.push(
+                      context,
+                      fadePageRoute(const DoctorIdentificationPage()),
+                    );
+                  },
+                  backgroundColor: AppColors.main,
+                  buttonColor: Colors.white.withOpacity(0.4),
+                  shapeNumber: 1,
+                  imageShapeNumber: 2,
+                  secondShapeNumber: 5, // ✅ استخدم الشكل 7 كشكل إضافي
+                  shapeColor: Colors.white.withOpacity(0.3),
+                  secondShapeColor: AppColors.mainDark.withOpacity(0.8),
+                  imagePath: 'assets/images/professional.jpg',
+                  showSecondShape: true,
+                ),
+
+                ElevatedButton(
+                  onPressed: () async {
+                    final prefs = await SharedPreferences.getInstance();
+                    await prefs.clear();
+                    Supabase.instance.client.auth.signOut(); // ⛔ اختياري فقط
+                    // أعد تشغيل التطبيق أو انتقل لشاشة البداية
+                  },
+                  child: Text('🧹 Reset Session'),
+                ),
+
+
+
+              ],
+            ),
+          ),
+
+        ),
+      ],
     );
   }
 

@@ -306,23 +306,43 @@
   "locationPermissionDenied": "تم رفض إذن الوصول إلى الموقع. يرجى تفعيله من الإعدادات.",
   "locationError": "تعذر الوصول إلى موقعك. يرجى تفعيل خدمات الموقع.",
   "showResults": "عرض النتائج",
+
+  "specialtyGeneral": "طب عام",
+  "specialtyInternal": "طب باطني",
+  "specialtyPediatrics": "طب أطفال",
   "specialtyGynecology": "نسائية",
-  "specialtyPediatrics": "أطفال",
-  "specialtyDentistry": "أسنان",
+  "specialtyDentistry": "طب أسنان",
   "specialtyCardiology": "قلبية",
-  "specialtyOphthalmology": "عيون",
-  "specialtyUrology": "بولية",
-  "specialtyDermatology": "جلدية",
-  "specialtyPsychology": "نفسية",
-  "specialtyNutrition": "تغذية",
-  "specialtyNeurology": "أعصاب",
+  "specialtyENT": "أنف وأذن وحنجرة",
+  "specialtyOphthalmology": "طب عيون",
   "specialtyOrthopedics": "عظمية",
-  "specialtyOncology": "أورام",
-  "specialtyENT": "أنف أذن حنجرة",
+  "specialtyDermatology": "جلدية",
+  "specialtyPsychology": "طب نفسي",
+  "specialtyNeurology": "عصبية",
+  "specialtyNutrition": "تغذية",
+  "specialtyEndocrinology": "غدد وسكري",
+  "specialtyUrology": "بولية",
   "specialtyGeneralSurgery": "جراحة عامة",
+  "specialtyGastro": "هضمية",
+  "specialtyPlastic": "تجميل",
+  "specialtyCancer": "أورام",
+  "specialtyEmergency": "طوارئ",
+  "specialtyPhysio": "علاج فيزيائي",
+
   "showOnMap": "عرض على الخريطة",
   "searchHere": "ابحث هنا",
   "bookingNotAvailable": "الحجز غير متاح",
+  "bothGenders": "كلا الجنسين",
+  "noFilters": "لا توجد فلاتر مفعّلة",
+  "filters": "الفلاتر",
+  "done": "تم",
+  "moreFiltersSoon": "المزيد من الفلاتر قريباً",
+  "maxDistance": "أقصى مسافة",
+  "specialty": "التخصص",
+  "reset": "إعادة تعيين",
+  "more": "أُخرى",
+"openInMapsApp": "افتح في تطبيق الخرائط",
+
 
   "@doctorProfile================================": {
     "description": "👨‍⚕️ صفحة الملف الشخصي للطبيب"

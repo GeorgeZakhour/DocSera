@@ -41,20 +41,37 @@ class _SplashScreenState extends State<SplashScreen> with TickerProviderStateMix
   double screenHeight = 0;
   double screenWidth = 0;
 
+  // الهدف النهائي: StatusBar/Notch + AppBar + TopSection(30%)
+  double _topTargetHeight = 0.0;
+
   String appVersion = '';
 
   @override
-  void didChangeDependencies() {
-    super.didChangeDependencies();
-    screenHeight = MediaQuery.of(context).size.height;
-    screenWidth = MediaQuery.of(context).size.width;
+  void initState() {
+    super.initState();
+    _loadVersionSafely();
+  }
 
-    PackageInfo.fromPlatform().then((info) {
-      setState(() {
-        appVersion = 'v${info.version}';
-      });
-    });
+  Future<void> _loadVersionSafely() async {
+    try {
+      final info = await PackageInfo.fromPlatform();
+      final ver = info.version.trim();
+      if (mounted) setState(() => appVersion = ver.isNotEmpty ? 'v$ver' : '');
+    } catch (_) {
+      if (mounted) setState(() => appVersion = '');
+    }
+  }
 
+  // نفس ما يظهر في Main: AppBar + TopSection(0.30 من ارتفاع الشاشة)
+  double _computeTopTargetHeight(BuildContext context) {
+    final h = MediaQuery.of(context).size.height;
+    final padTop = MediaQuery.of(context).padding.top; // للنوتش/الستاتس بار
+    const topSectionFactor = 0.30; // مطابق لـ TopSection
+    const appBarHeight = kToolbarHeight; // ارتفاع الـAppBar القياسي
+    return padTop + appBarHeight + h * topSectionFactor;
+  }
+
+  void _initAnimations() {
     _fadeInController = AnimationController(duration: const Duration(milliseconds: 800), vsync: this);
     _fadeInAnimation = Tween<double>(begin: 0, end: 1).animate(CurvedAnimation(parent: _fadeInController, curve: Curves.easeIn));
 
@@ -62,7 +79,7 @@ class _SplashScreenState extends State<SplashScreen> with TickerProviderStateMix
     _rotationAnimation = Tween<double>(begin: 0, end: 2 * pi * 2).animate(CurvedAnimation(parent: _rotationController, curve: Curves.easeOut));
 
     _sizeController = AnimationController(duration: const Duration(milliseconds: 2000), vsync: this);
-    _sizeAnimation = Tween<double>(begin: 160, end: 50).animate(CurvedAnimation(parent: _sizeController, curve: Curves.easeOut));
+    _sizeAnimation = Tween<double>(begin: 160, end: 30).animate(CurvedAnimation(parent: _sizeController, curve: Curves.easeOut));
 
     _shiftController = AnimationController(duration: const Duration(milliseconds: 800), vsync: this);
     _shiftAnimation = Tween<double>(begin: 0, end: -screenWidth * 0.25).animate(CurvedAnimation(parent: _shiftController, curve: Curves.easeInOut));
@@ -73,15 +90,28 @@ class _SplashScreenState extends State<SplashScreen> with TickerProviderStateMix
     _fadeOutController = AnimationController(duration: const Duration(milliseconds: 600), vsync: this);
     _fadeOutAnimation = Tween<double>(begin: 1, end: 0).animate(CurvedAnimation(parent: _fadeOutController, curve: Curves.easeIn));
 
-    _backgroundShiftController = AnimationController(duration: const Duration(milliseconds: 800), vsync: this);
-    _backgroundHeightAnimation = Tween<double>(
-      begin: screenHeight * 0.95,
-      end: screenHeight * 0.411,
-    ).animate(CurvedAnimation(parent: _backgroundShiftController, curve: Curves.easeInOut));
-
     _bottomTextFadeController = AnimationController(duration: const Duration(milliseconds: 600), vsync: this);
     _bottomTextFadeAnimation = Tween<double>(begin: 1, end: 0).animate(CurvedAnimation(parent: _bottomTextFadeController, curve: Curves.easeIn));
 
+    _backgroundShiftController = AnimationController(duration: const Duration(milliseconds: 800), vsync: this);
+
+    // النهاية = الهدف المحسوب (AppBar + TopSection)
+    _backgroundHeightAnimation = Tween<double>(
+      begin: screenHeight * 0.95,
+      end: _topTargetHeight,
+    ).animate(CurvedAnimation(parent: _backgroundShiftController, curve: Curves.easeInOut));
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    screenHeight = MediaQuery.of(context).size.height;
+    screenWidth = MediaQuery.of(context).size.width;
+
+    // احسب الهدف قبل تهيئة الأنيميشن
+    _topTargetHeight = _computeTopTargetHeight(context);
+
+    _initAnimations();
     _startAnimations();
   }
 
@@ -108,6 +138,7 @@ class _SplashScreenState extends State<SplashScreen> with TickerProviderStateMix
     if (state is AuthAuthenticated && !biometricRequired) {
       _navigateToHomeScreen();
     } else {
+      if (!mounted) return;
       Navigator.of(context).pushReplacement(
         MaterialPageRoute(
           builder: (_) => LoginPage(
@@ -131,18 +162,17 @@ class _SplashScreenState extends State<SplashScreen> with TickerProviderStateMix
     );
   }
 
-
   Future<void> _waitForAuthReady() async {
     final authCubit = context.read<AuthCubit>();
     AppAuthState state = authCubit.state;
     if (state is AuthInitial || state is AuthLoading) {
-      await authCubit.stream.firstWhere((newState) =>
-      newState is AuthAuthenticated || newState is AuthUnauthenticated);
+      await authCubit.stream.firstWhere(
+            (newState) => newState is AuthAuthenticated || newState is AuthUnauthenticated,
+      );
     }
   }
 
   Future<bool> _isBiometricRequired() async {
-    // بدل هذا بقراءة من SharedPreferences أو SecureStorage أو AuthCubit
     return false;
   }
 
@@ -161,6 +191,16 @@ class _SplashScreenState extends State<SplashScreen> with TickerProviderStateMix
 
   @override
   Widget build(BuildContext context) {
+    // إذا تغيّر الـpadding.top أو الاتجاه (iOS notch) نحدّث الهدف أثناء العرض
+    final newTarget = _computeTopTargetHeight(context);
+    if ((newTarget - _topTargetHeight).abs() > 0.5) {
+      _topTargetHeight = newTarget;
+      _backgroundHeightAnimation = Tween<double>(
+        begin: _backgroundHeightAnimation.value,
+        end: _topTargetHeight,
+      ).animate(CurvedAnimation(parent: _backgroundShiftController, curve: Curves.easeInOut));
+    }
+
     return Scaffold(
       backgroundColor: Colors.white,
       body: Stack(
@@ -223,24 +263,25 @@ class _SplashScreenState extends State<SplashScreen> with TickerProviderStateMix
               },
             ),
           ),
-          Positioned(
-            bottom: 35,
-            left: 0,
-            right: 0,
-            child: AnimatedOpacity(
-              opacity: _bottomTextFadeAnimation.value,
-              duration: const Duration(milliseconds: 600),
-              child: Text(
-                appVersion.isEmpty ? '' : appVersion,
-                textAlign: TextAlign.center,
-                style: AppTextStyles.getText4(context).copyWith(
-                  color: AppColors.grayMain,
-                  fontWeight: FontWeight.w300,
-                  fontSize: 10,
+          if (appVersion.isNotEmpty)
+            Positioned(
+              bottom: 35,
+              left: 0,
+              right: 0,
+              child: AnimatedOpacity(
+                opacity: _bottomTextFadeAnimation.value,
+                duration: const Duration(milliseconds: 600),
+                child: Text(
+                  appVersion,
+                  textAlign: TextAlign.center,
+                  style: AppTextStyles.getText4(context).copyWith(
+                    color: AppColors.grayMain,
+                    fontWeight: FontWeight.w300,
+                    fontSize: 10,
+                  ),
                 ),
               ),
             ),
-          ),
           Positioned(
             bottom: 25,
             left: 0,

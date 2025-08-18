@@ -62,7 +62,8 @@ import 'app_localizations_en.dart';
 /// be consistent with the languages listed in the AppLocalizations.supportedLocales
 /// property.
 abstract class AppLocalizations {
-  AppLocalizations(String locale) : localeName = intl.Intl.canonicalizedLocale(locale.toString());
+  AppLocalizations(String locale)
+      : localeName = intl.Intl.canonicalizedLocale(locale.toString());
 
   final String localeName;
 
@@ -70,7 +71,8 @@ abstract class AppLocalizations {
     return Localizations.of<AppLocalizations>(context, AppLocalizations);
   }
 
-  static const LocalizationsDelegate<AppLocalizations> delegate = _AppLocalizationsDelegate();
+  static const LocalizationsDelegate<AppLocalizations> delegate =
+      _AppLocalizationsDelegate();
 
   /// A list of this localizations delegate along with the default localizations
   /// delegates.
@@ -82,7 +84,8 @@ abstract class AppLocalizations {
   /// Additional delegates can be added by appending to this list in
   /// MaterialApp. This list does not have to be used at all if a custom list
   /// of delegates is preferred or required.
-  static const List<LocalizationsDelegate<dynamic>> localizationsDelegates = <LocalizationsDelegate<dynamic>>[
+  static const List<LocalizationsDelegate<dynamic>> localizationsDelegates =
+      <LocalizationsDelegate<dynamic>>[
     delegate,
     GlobalMaterialLocalizations.delegate,
     GlobalCupertinoLocalizations.delegate,
@@ -1751,17 +1754,29 @@ abstract class AppLocalizations {
   /// **'Show results'**
   String get showResults;
 
-  /// No description provided for @specialtyGynecology.
+  /// No description provided for @specialtyGeneral.
   ///
   /// In en, this message translates to:
-  /// **'Gynecology'**
-  String get specialtyGynecology;
+  /// **'General Medicine'**
+  String get specialtyGeneral;
+
+  /// No description provided for @specialtyInternal.
+  ///
+  /// In en, this message translates to:
+  /// **'Internal Medicine'**
+  String get specialtyInternal;
 
   /// No description provided for @specialtyPediatrics.
   ///
   /// In en, this message translates to:
   /// **'Pediatrics'**
   String get specialtyPediatrics;
+
+  /// No description provided for @specialtyGynecology.
+  ///
+  /// In en, this message translates to:
+  /// **'Gynecology & Obstetrics'**
+  String get specialtyGynecology;
 
   /// No description provided for @specialtyDentistry.
   ///
@@ -1772,8 +1787,14 @@ abstract class AppLocalizations {
   /// No description provided for @specialtyCardiology.
   ///
   /// In en, this message translates to:
-  /// **'Cardiology'**
+  /// **'Cardiology & Vascular'**
   String get specialtyCardiology;
+
+  /// No description provided for @specialtyENT.
+  ///
+  /// In en, this message translates to:
+  /// **'Ear, Nose & Throat'**
+  String get specialtyENT;
 
   /// No description provided for @specialtyOphthalmology.
   ///
@@ -1781,11 +1802,11 @@ abstract class AppLocalizations {
   /// **'Ophthalmology'**
   String get specialtyOphthalmology;
 
-  /// No description provided for @specialtyUrology.
+  /// No description provided for @specialtyOrthopedics.
   ///
   /// In en, this message translates to:
-  /// **'Urology'**
-  String get specialtyUrology;
+  /// **'Orthopedics'**
+  String get specialtyOrthopedics;
 
   /// No description provided for @specialtyDermatology.
   ///
@@ -1796,14 +1817,8 @@ abstract class AppLocalizations {
   /// No description provided for @specialtyPsychology.
   ///
   /// In en, this message translates to:
-  /// **'Psychology'**
+  /// **'Psychiatry'**
   String get specialtyPsychology;
-
-  /// No description provided for @specialtyNutrition.
-  ///
-  /// In en, this message translates to:
-  /// **'Nutrition'**
-  String get specialtyNutrition;
 
   /// No description provided for @specialtyNeurology.
   ///
@@ -1811,29 +1826,59 @@ abstract class AppLocalizations {
   /// **'Neurology'**
   String get specialtyNeurology;
 
-  /// No description provided for @specialtyOrthopedics.
+  /// No description provided for @specialtyNutrition.
   ///
   /// In en, this message translates to:
-  /// **'Orthopedics'**
-  String get specialtyOrthopedics;
+  /// **'Nutrition'**
+  String get specialtyNutrition;
 
-  /// No description provided for @specialtyOncology.
+  /// No description provided for @specialtyEndocrinology.
   ///
   /// In en, this message translates to:
-  /// **'Oncology'**
-  String get specialtyOncology;
+  /// **'Endocrinology & Diabetes'**
+  String get specialtyEndocrinology;
 
-  /// No description provided for @specialtyENT.
+  /// No description provided for @specialtyUrology.
   ///
   /// In en, this message translates to:
-  /// **'ENT'**
-  String get specialtyENT;
+  /// **'Urology'**
+  String get specialtyUrology;
 
   /// No description provided for @specialtyGeneralSurgery.
   ///
   /// In en, this message translates to:
   /// **'General Surgery'**
   String get specialtyGeneralSurgery;
+
+  /// No description provided for @specialtyGastro.
+  ///
+  /// In en, this message translates to:
+  /// **'Gastroenterology'**
+  String get specialtyGastro;
+
+  /// No description provided for @specialtyPlastic.
+  ///
+  /// In en, this message translates to:
+  /// **'Plastic Surgery'**
+  String get specialtyPlastic;
+
+  /// No description provided for @specialtyCancer.
+  ///
+  /// In en, this message translates to:
+  /// **'Oncology'**
+  String get specialtyCancer;
+
+  /// No description provided for @specialtyEmergency.
+  ///
+  /// In en, this message translates to:
+  /// **'Emergency Medicine'**
+  String get specialtyEmergency;
+
+  /// No description provided for @specialtyPhysio.
+  ///
+  /// In en, this message translates to:
+  /// **'Physiotherapy'**
+  String get specialtyPhysio;
 
   /// No description provided for @showOnMap.
   ///
@@ -1852,6 +1897,66 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Booking not available'**
   String get bookingNotAvailable;
+
+  /// No description provided for @bothGenders.
+  ///
+  /// In en, this message translates to:
+  /// **'Both genders'**
+  String get bothGenders;
+
+  /// No description provided for @noFilters.
+  ///
+  /// In en, this message translates to:
+  /// **'No filters applied'**
+  String get noFilters;
+
+  /// No description provided for @filters.
+  ///
+  /// In en, this message translates to:
+  /// **'Filters'**
+  String get filters;
+
+  /// No description provided for @done.
+  ///
+  /// In en, this message translates to:
+  /// **'Done'**
+  String get done;
+
+  /// No description provided for @moreFiltersSoon.
+  ///
+  /// In en, this message translates to:
+  /// **'More filters coming soon'**
+  String get moreFiltersSoon;
+
+  /// No description provided for @maxDistance.
+  ///
+  /// In en, this message translates to:
+  /// **'Max distance'**
+  String get maxDistance;
+
+  /// No description provided for @specialty.
+  ///
+  /// In en, this message translates to:
+  /// **'Specialty'**
+  String get specialty;
+
+  /// No description provided for @reset.
+  ///
+  /// In en, this message translates to:
+  /// **'Reset'**
+  String get reset;
+
+  /// No description provided for @more.
+  ///
+  /// In en, this message translates to:
+  /// **'more'**
+  String get more;
+
+  /// No description provided for @openInMapsApp.
+  ///
+  /// In en, this message translates to:
+  /// **'Open in Maps App'**
+  String get openInMapsApp;
 
   /// No description provided for @gallery.
   ///
@@ -3702,7 +3807,8 @@ abstract class AppLocalizations {
   String get errorOccurred;
 }
 
-class _AppLocalizationsDelegate extends LocalizationsDelegate<AppLocalizations> {
+class _AppLocalizationsDelegate
+    extends LocalizationsDelegate<AppLocalizations> {
   const _AppLocalizationsDelegate();
 
   @override
@@ -3711,25 +3817,25 @@ class _AppLocalizationsDelegate extends LocalizationsDelegate<AppLocalizations> 
   }
 
   @override
-  bool isSupported(Locale locale) => <String>['ar', 'en'].contains(locale.languageCode);
+  bool isSupported(Locale locale) =>
+      <String>['ar', 'en'].contains(locale.languageCode);
 
   @override
   bool shouldReload(_AppLocalizationsDelegate old) => false;
 }
 
 AppLocalizations lookupAppLocalizations(Locale locale) {
-
-
   // Lookup logic when only language code is specified.
   switch (locale.languageCode) {
-    case 'ar': return AppLocalizationsAr();
-    case 'en': return AppLocalizationsEn();
+    case 'ar':
+      return AppLocalizationsAr();
+    case 'en':
+      return AppLocalizationsEn();
   }
 
   throw FlutterError(
-    'AppLocalizations.delegate failed to load unsupported locale "$locale". This is likely '
-    'an issue with the localizations generation tool. Please file an issue '
-    'on GitHub with a reproducible sample app and the gen-l10n configuration '
-    'that was used.'
-  );
+      'AppLocalizations.delegate failed to load unsupported locale "$locale". This is likely '
+      'an issue with the localizations generation tool. Please file an issue '
+      'on GitHub with a reproducible sample app and the gen-l10n configuration '
+      'that was used.');
 }
