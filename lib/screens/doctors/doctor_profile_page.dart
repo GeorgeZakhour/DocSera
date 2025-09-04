@@ -291,6 +291,15 @@ class _DoctorProfilePageState extends State<DoctorProfilePage> {
     }
   }
 
+  void _sendEmail(String email) async {
+    final Uri emailLaunchUri = Uri(
+      scheme: 'mailto',
+      path: email,
+    );
+    await launchUrl(emailLaunchUri);
+  }
+
+
   void _showGalleryBottomSheet(List<dynamic> galleryUrls, String doctorId) {
     final cleanedGalleryUrls = galleryUrls.map((e) => e.toString().split('/').last).toList();
 
@@ -1187,11 +1196,33 @@ class _DoctorProfilePageState extends State<DoctorProfilePage> {
     );
   }
 
-  /// **🔹 Combined Card for Contact Info, Opening Hours & Languages**
+  /// تحويل رقم الهاتف إلى صيغة 09XXXXXXXX
+  String _displayPhone(String raw) {
+    if (raw.startsWith('00963')) {
+      final rest = raw.substring(5);
+      return '0$rest';
+    }
+    if (raw.startsWith('+963')) {
+      final rest = raw.substring(4);
+      return '0$rest';
+    }
+    return raw;
+  }
+
+  /// 🔹 Card for Contact Info + Opening Hours + Languages
   Widget _buildInfoSection(
-      String? phoneNumber, Map<String, dynamic> openingHours, List<dynamic> languages) {
+      String? phoneNumber,
+      Map<String, dynamic> openingHours,
+      List<dynamic> languages,
+      {String? email}
+      ) {
     final l = AppLocalizations.of(context)!;
-    final List<String> languageLabels = languages.map((code) => languageLabelFromCode(l, code.toString())).toList();
+    final List<String> languageLabels =
+    languages.map((code) => languageLabelFromCode(l, code.toString())).toList();
+
+    final String formattedPhone = phoneNumber != null ? _displayPhone(phoneNumber) : '';
+    final String displayedPhone = formattedPhone.isNotEmpty ? formattedPhone : l.notProvided;
+    final String displayedEmail = (email ?? '').isNotEmpty ? email! : l.notProvided;
 
     return Card(
       color: AppColors.background2,
@@ -1205,7 +1236,7 @@ class _DoctorProfilePageState extends State<DoctorProfilePage> {
         children: [
           /// 🔹 Contact Information
           GestureDetector(
-            onTap: () => _showContactDetails(phoneNumber),
+            onTap: () => _showContactDetails(phoneNumber, email: email),
             behavior: HitTestBehavior.opaque,
             child: Padding(
               padding: EdgeInsets.fromLTRB(12.w, 12.w, 12.w, 0),
@@ -1217,7 +1248,7 @@ class _DoctorProfilePageState extends State<DoctorProfilePage> {
                       Icon(Icons.phone, color: AppColors.mainDark, size: 16.sp),
                       SizedBox(width: 5.w),
                       Text(
-                        AppLocalizations.of(context)!.contactInformation,
+                        l.contactInformation,
                         style: AppTextStyles.getTitle1(context).copyWith(fontSize: 11.sp),
                       ),
                     ],
@@ -1225,9 +1256,11 @@ class _DoctorProfilePageState extends State<DoctorProfilePage> {
                   Row(
                     children: [
                       Text(
-                        AppLocalizations.of(context)!.viewMore,
-                        style: AppTextStyles.getText3(context)
-                            .copyWith(color: AppColors.main, fontWeight: FontWeight.bold),
+                        l.viewMore,
+                        style: AppTextStyles.getText3(context).copyWith(
+                          color: AppColors.main,
+                          fontWeight: FontWeight.bold,
+                        ),
                       ),
                       Icon(
                         Localizations.localeOf(context).languageCode == 'ar'
@@ -1262,7 +1295,7 @@ class _DoctorProfilePageState extends State<DoctorProfilePage> {
                       Icon(Icons.access_time, color: AppColors.mainDark, size: 16.sp),
                       SizedBox(width: 5.w),
                       Text(
-                        AppLocalizations.of(context)!.openingHours,
+                        l.openingHours,
                         style: AppTextStyles.getTitle1(context).copyWith(fontSize: 11.sp),
                       ),
                     ],
@@ -1270,7 +1303,7 @@ class _DoctorProfilePageState extends State<DoctorProfilePage> {
                   Row(
                     children: [
                       Text(
-                        AppLocalizations.of(context)!.viewMore,
+                        l.viewMore,
                         style: AppTextStyles.getText3(context)
                             .copyWith(color: AppColors.main, fontWeight: FontWeight.bold),
                       ),
@@ -1307,7 +1340,7 @@ class _DoctorProfilePageState extends State<DoctorProfilePage> {
                       Icon(Icons.language, color: AppColors.mainDark, size: 16.sp),
                       SizedBox(width: 5.w),
                       Text(
-                        AppLocalizations.of(context)!.languagesSpoken,
+                        l.languagesSpoken,
                         style: AppTextStyles.getTitle1(context).copyWith(fontSize: 11.sp),
                       ),
                     ],
@@ -1315,7 +1348,7 @@ class _DoctorProfilePageState extends State<DoctorProfilePage> {
                   Row(
                     children: [
                       Text(
-                        AppLocalizations.of(context)!.viewMore,
+                        l.viewMore,
                         style: AppTextStyles.getText3(context)
                             .copyWith(color: AppColors.main, fontWeight: FontWeight.bold),
                       ),
@@ -1332,15 +1365,24 @@ class _DoctorProfilePageState extends State<DoctorProfilePage> {
               ),
             ),
           ),
-
-
-
         ],
       ),
     );
   }
 
-  void _showContactDetails(String? phoneNumber) {
+
+  void _showContactDetails(String? phoneNumber, {String? email}) {
+    final l = AppLocalizations.of(context)!;
+
+    String _formatPhone(String raw) {
+      if (raw.startsWith('00963')) return '0${raw.substring(5)}';
+      if (raw.startsWith('+963')) return '0${raw.substring(4)}';
+      return raw;
+    }
+
+    final formattedPhone = phoneNumber != null ? _formatPhone(phoneNumber) : null;
+    final formattedEmail = (email ?? '').trim();
+
     showModalBottomSheet(
       context: context,
       backgroundColor: AppColors.background2,
@@ -1354,25 +1396,45 @@ class _DoctorProfilePageState extends State<DoctorProfilePage> {
             children: [
               Center(
                 child: Text(
-                  AppLocalizations.of(context)!.contactInformation,
+                  l.contactInformation,
                   style: AppTextStyles.getTitle1(context).copyWith(fontSize: 12.sp),
                 ),
               ),
               SizedBox(height: 25.h),
-              if (phoneNumber != null)
+
+              if (formattedPhone != null && formattedPhone.isNotEmpty)
                 GestureDetector(
-                  onTap: () => _makePhoneCall(phoneNumber),
+                  onTap: () => _makePhoneCall(formattedPhone),
                   child: Row(
                     children: [
                       Icon(Icons.call, color: AppColors.main, size: 16.sp),
                       SizedBox(width: 10.w),
                       Text(
-                        phoneNumber,
+                        formattedPhone,
                         style: AppTextStyles.getTitle1(context).copyWith(color: AppColors.main),
                       ),
                     ],
                   ),
                 ),
+
+              if (formattedPhone != null && formattedPhone.isNotEmpty)
+                SizedBox(height: 16.h),
+
+              if (formattedEmail.isNotEmpty)
+                GestureDetector(
+                  onTap: () => _sendEmail(formattedEmail),
+                  child: Row(
+                    children: [
+                      Icon(Icons.email_outlined, color: AppColors.main, size: 16.sp),
+                      SizedBox(width: 10.w),
+                      Text(
+                        formattedEmail,
+                        style: AppTextStyles.getTitle1(context).copyWith(color: AppColors.main),
+                      ),
+                    ],
+                  ),
+                ),
+
               SizedBox(height: 25.h),
             ],
           ),
@@ -1965,6 +2027,7 @@ class _DoctorProfilePageState extends State<DoctorProfilePage> {
                             _doctorData?['phone_number']?.toString(),
                             _doctorData?['opening_hours'] ?? {},
                             _doctorData?['languages'] ?? [],
+                            email: _doctorData?['email']?.toString(),
                           ),
                         if (_doctorData?['faqs'] != null) SizedBox(height: 10.h),
                         if (_doctorData?['faqs'] != null && _doctorData!['faqs'] is Map<String, dynamic>)
