@@ -143,18 +143,6 @@ abstract class AppLocalizations {
   /// **'Account'**
   String get account;
 
-  /// No description provided for @languageEnglish.
-  ///
-  /// In en, this message translates to:
-  /// **'English'**
-  String get languageEnglish;
-
-  /// No description provided for @languageArabic.
-  ///
-  /// In en, this message translates to:
-  /// **'العربية'**
-  String get languageArabic;
-
   /// No description provided for @exitAppTitle.
   ///
   /// In en, this message translates to:
@@ -2062,6 +2050,54 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Offered Services'**
   String get offeredServices;
+
+  /// No description provided for @languageArabic.
+  ///
+  /// In en, this message translates to:
+  /// **'Arabic'**
+  String get languageArabic;
+
+  /// No description provided for @languageEnglish.
+  ///
+  /// In en, this message translates to:
+  /// **'English'**
+  String get languageEnglish;
+
+  /// No description provided for @languageFrench.
+  ///
+  /// In en, this message translates to:
+  /// **'French'**
+  String get languageFrench;
+
+  /// No description provided for @languageGerman.
+  ///
+  /// In en, this message translates to:
+  /// **'German'**
+  String get languageGerman;
+
+  /// No description provided for @languageSpanish.
+  ///
+  /// In en, this message translates to:
+  /// **'Spanish'**
+  String get languageSpanish;
+
+  /// No description provided for @languageTurkish.
+  ///
+  /// In en, this message translates to:
+  /// **'Turkish'**
+  String get languageTurkish;
+
+  /// No description provided for @languageRussian.
+  ///
+  /// In en, this message translates to:
+  /// **'Russian'**
+  String get languageRussian;
+
+  /// No description provided for @languageKurdish.
+  ///
+  /// In en, this message translates to:
+  /// **'Kurdish'**
+  String get languageKurdish;
 
   /// No description provided for @makeAppointment.
   ///

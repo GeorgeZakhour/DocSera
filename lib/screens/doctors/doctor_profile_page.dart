@@ -6,6 +6,7 @@ import 'package:docsera/screens/doctors/appointment/select_patient_page.dart';
 import 'package:docsera/utils/doctor_image_utils.dart';
 import 'package:flutter/material.dart';
 import 'package:docsera/app/const.dart';
+import 'package:flutter_quill/flutter_quill.dart' as quill;
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:share_plus/share_plus.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -254,6 +255,21 @@ class _DoctorProfilePageState extends State<DoctorProfilePage> {
     double scroll = _scrollController.hasClients ? _scrollController.offset : 0.0;
     return expandedHeight - scroll;
   }
+
+  String languageLabelFromCode(AppLocalizations l, String code) {
+    switch (code) {
+      case 'ar': return l.languageArabic;
+      case 'en': return l.languageEnglish;
+      case 'fr': return l.languageFrench;
+      case 'de': return l.languageGerman;
+      case 'es': return l.languageSpanish;
+      case 'tr': return l.languageTurkish;
+      case 'ru': return l.languageRussian;
+      case 'ku': return l.languageKurdish;
+      default:   return code;
+    }
+  }
+
 
   /// 🔹 Open Google Maps with the given address (يُستخدم فقط عند الحاجة)
   void _openMaps(String address) async {
@@ -635,43 +651,31 @@ class _DoctorProfilePageState extends State<DoctorProfilePage> {
                       if (profileDescription != null && profileDescription.isNotEmpty)
                         Padding(
                           padding: EdgeInsets.symmetric(horizontal: 4.w),
-                          child: Text(
-                            profileDescription,
-                            style: AppTextStyles.getText1(context),
+                          child: Builder(
+                            builder: (context) {
+                              try {
+                                final doc = quill.Document.fromJson(jsonDecode(profileDescription));
+                                final controller = quill.QuillController(
+                                  document: doc,
+                                  selection: const TextSelection.collapsed(offset: 0),
+                                  readOnly: true,
+                                );
+
+                                return quill.QuillEditor.basic(
+                                  controller: controller,
+                                  focusNode: FocusNode(skipTraversal: true, canRequestFocus: false), // ✅ يمنع المؤشر
+                                );
+                              } catch (e) {
+                                return Text(
+                                  AppLocalizations.of(context)!.notProvided,
+                                  style: AppTextStyles.getText3(context),
+                                );
+                              }
+                            },
                           ),
                         ),
                       SizedBox(height: 16.h),
-                      if (specialties != null && specialties.isNotEmpty)
-                        Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              AppLocalizations.of(context)!.specialtiesProcedures,
-                              style: AppTextStyles.getText2(context).copyWith(
-                                  fontWeight: FontWeight.bold, color: AppColors.mainDark),
-                            ),
-                            SizedBox(height: 15.h),
-                            Wrap(
-                              spacing: 8,
-                              runSpacing: 6,
-                              children: specialties.map((specialty) {
-                                return Container(
-                                  decoration: BoxDecoration(
-                                    color: AppColors.main.withOpacity(0.2),
-                                    borderRadius: BorderRadius.circular(20.r),
-                                  ),
-                                  padding: EdgeInsets.symmetric(horizontal: 12.w, vertical: 6.h),
-                                  child: Text(
-                                    specialty,
-                                    style: AppTextStyles.getText2(context)
-                                        .copyWith(color: AppColors.mainDark, fontWeight: FontWeight.w500),
-                                  ),
-                                );
-                              }).toList(),
-                            ),
-                          ],
-                        ),
-                      SizedBox(height: 16.h),
+
                       if (website != null && website.isNotEmpty)
                         Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
@@ -810,7 +814,6 @@ class _DoctorProfilePageState extends State<DoctorProfilePage> {
     );
   }
 
-  // ✅ تبويب العنوان بعد التعديل: خريطة ثابتة + زر يفتح صفحة الخرائط لعنصر واحد
   Widget _buildLocationSection(
       String? street,
       String? buildingNr,
@@ -853,8 +856,10 @@ class _DoctorProfilePageState extends State<DoctorProfilePage> {
                       children: [
                         Text(
                           AppLocalizations.of(context)!.viewMore,
-                          style: AppTextStyles.getText3(context)
-                              .copyWith(color: AppColors.main, fontWeight: FontWeight.bold),
+                          style: AppTextStyles.getText3(context).copyWith(
+                            color: AppColors.main,
+                            fontWeight: FontWeight.bold,
+                          ),
                         ),
                         Icon(
                           Localizations.localeOf(context).languageCode == 'ar'
@@ -874,6 +879,8 @@ class _DoctorProfilePageState extends State<DoctorProfilePage> {
                   padding: EdgeInsets.only(bottom: 2.h, right: 4.w, left: 4.w),
                   child: Text(
                     clinic,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
                     style: AppTextStyles.getText2(context).copyWith(fontWeight: FontWeight.bold),
                   ),
                 ),
@@ -882,6 +889,8 @@ class _DoctorProfilePageState extends State<DoctorProfilePage> {
                   padding: EdgeInsets.only(top: 2.h, right: 8.w, left: 8.w),
                   child: Text(
                     buildingNr != null ? "$street, $buildingNr" : street,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
                     style: AppTextStyles.getText2(context).copyWith(color: Colors.black87),
                   ),
                 ),
@@ -890,13 +899,15 @@ class _DoctorProfilePageState extends State<DoctorProfilePage> {
                   padding: EdgeInsets.only(top: 2.h, right: 8.w, left: 8.w),
                   child: Text(
                     "$city, $country",
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
                     style: AppTextStyles.getText2(context).copyWith(color: Colors.black87),
                   ),
                 ),
 
               SizedBox(height: 12.h),
 
-              // ✅ بلاطة الخريطة: نفس صورة البحث المتقدّم + إطار Main + زر "افتح في الخرائط" بنفس التصميم
+              // صورة الخريطة + زر "افتح في الخرائط"
               Container(
                 height: 140,
                 decoration: BoxDecoration(
@@ -929,6 +940,8 @@ class _DoctorProfilePageState extends State<DoctorProfilePage> {
     );
   }
 
+
+
   Widget _buildProfileSection(String? profileDescription, List<String>? specialties, String? website) {
     List<String> visibleSpecialties = [];
     String moreSpecialties = '';
@@ -944,103 +957,88 @@ class _DoctorProfilePageState extends State<DoctorProfilePage> {
 
     return GestureDetector(
       onTap: () => _showProfileDetails(profileDescription, specialties, website),
-      child: Card(
-        color: AppColors.background2,
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(12.r),
-          side: BorderSide(color: Colors.grey.shade200, width: 0.8),
-        ),
-        elevation: 0,
-        child: Padding(
-          padding: EdgeInsets.all(12.r),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              // العنوان
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      behavior: HitTestBehavior.opaque,
+      child: Stack(
+        children: [
+          Card(
+            color: AppColors.background2,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(12.r),
+              side: BorderSide(color: Colors.grey.shade200, width: 0.8),
+            ),
+            elevation: 0,
+            child: Padding(
+              padding: EdgeInsets.all(12.r),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
+                  // العنوان + "عرض المزيد"
                   Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      Icon(Icons.person_outline, color: AppColors.mainDark, size: 16.sp),
-                      SizedBox(width: 5.w),
-                      Text(
-                        AppLocalizations.of(context)!.profile,
-                        style: AppTextStyles.getTitle1(context).copyWith(fontSize: 11.sp),
+                      Row(
+                        children: [
+                          Icon(Icons.person_outline, color: AppColors.mainDark, size: 16.sp),
+                          SizedBox(width: 5.w),
+                          Text(
+                            AppLocalizations.of(context)!.profile,
+                            style: AppTextStyles.getTitle1(context).copyWith(fontSize: 11.sp),
+                          ),
+                        ],
                       ),
+                      if (profileDescription != null && profileDescription.isNotEmpty)
+                        Row(
+                          children: [
+                            Text(
+                              AppLocalizations.of(context)!.viewMore,
+                              style: AppTextStyles.getText3(context).copyWith(
+                                color: AppColors.main,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                            Icon(
+                              Localizations.localeOf(context).languageCode == 'ar'
+                                  ? Icons.keyboard_arrow_left
+                                  : Icons.keyboard_arrow_right,
+                              color: AppColors.main,
+                              size: 18.sp,
+                            ),
+                          ],
+                        ),
                     ],
                   ),
+                  SizedBox(height: 8.h),
+
                   if (profileDescription != null && profileDescription.isNotEmpty)
-                    Row(
-                      children: [
-                        Text(
-                          AppLocalizations.of(context)!.viewMore,
-                          style: AppTextStyles.getText3(context)
-                              .copyWith(color: AppColors.main, fontWeight: FontWeight.bold),
-                        ),
-                        Icon(
-                          Localizations.localeOf(context).languageCode == 'ar'
-                              ? Icons.keyboard_arrow_left
-                              : Icons.keyboard_arrow_right,
-                          color: AppColors.main,
-                          size: 18.sp,
-                        ),
-                      ],
+                    Padding(
+                      padding: EdgeInsets.only(top: 4.h, right: 12.w, left: 12.w, bottom: 8.h),
+                      child: Builder(
+                        builder: (context) {
+                          try {
+                            final doc = quill.Document.fromJson(jsonDecode(profileDescription));
+                            final plainText = doc.toPlainText().trim();
+
+                            return Text(
+                              plainText,
+                              style: AppTextStyles.getText3(context),
+                              maxLines: 5, // تقريبًا 5 أسطر
+                              overflow: TextOverflow.ellipsis, // ✅ لإظهار ...
+                            );
+                          } catch (e) {
+                            return Text(
+                              AppLocalizations.of(context)!.notProvided,
+                              style: AppTextStyles.getText3(context),
+                            );
+                          }
+                        },
+                      ),
                     ),
                 ],
               ),
-              SizedBox(height: 8.h),
-
-              if (profileDescription != null && profileDescription.isNotEmpty)
-                Padding(
-                  padding: EdgeInsets.only(top: 4.h, right: 4.w, left: 4.w),
-                  child: Text(
-                    profileDescription.length > 100
-                        ? "${profileDescription.substring(0, 100)}..."
-                        : profileDescription,
-                    style: AppTextStyles.getText3(context).copyWith(color: Colors.black87),
-                  ),
-                ),
-
-              SizedBox(height: 8.h),
-
-              if (specialties != null && specialties.isNotEmpty)
-                Wrap(
-                  spacing: 8,
-                  runSpacing: 6,
-                  children: [
-                    ...visibleSpecialties.map((specialty) {
-                      return Container(
-                        decoration: BoxDecoration(
-                          color: AppColors.main.withOpacity(0.2),
-                          borderRadius: BorderRadius.circular(20.r),
-                        ),
-                        padding: EdgeInsets.symmetric(horizontal: 12.w, vertical: 6.h),
-                        child: Text(
-                          specialty,
-                          style: AppTextStyles.getText3(context)
-                              .copyWith(color: AppColors.mainDark, fontWeight: FontWeight.w500),
-                        ),
-                      );
-                    }),
-                    if (moreSpecialties.isNotEmpty)
-                      Container(
-                        decoration: BoxDecoration(
-                          color: AppColors.main.withOpacity(0.2),
-                          borderRadius: BorderRadius.circular(20.r),
-                        ),
-                        padding: EdgeInsets.symmetric(horizontal: 12.w, vertical: 6.h),
-                        child: Text(
-                          moreSpecialties,
-                          style: AppTextStyles.getText3(context)
-                              .copyWith(color: AppColors.mainDark, fontWeight: FontWeight.w500),
-                        ),
-                      ),
-                  ],
-                ),
-            ],
+            ),
           ),
-        ),
+
+        ],
       ),
     );
   }
@@ -1192,6 +1190,9 @@ class _DoctorProfilePageState extends State<DoctorProfilePage> {
   /// **🔹 Combined Card for Contact Info, Opening Hours & Languages**
   Widget _buildInfoSection(
       String? phoneNumber, Map<String, dynamic> openingHours, List<dynamic> languages) {
+    final l = AppLocalizations.of(context)!;
+    final List<String> languageLabels = languages.map((code) => languageLabelFromCode(l, code.toString())).toList();
+
     return Card(
       color: AppColors.background2,
       shape: RoundedRectangleBorder(
@@ -1331,6 +1332,9 @@ class _DoctorProfilePageState extends State<DoctorProfilePage> {
               ),
             ),
           ),
+
+
+
         ],
       ),
     );
@@ -1377,124 +1381,187 @@ class _DoctorProfilePageState extends State<DoctorProfilePage> {
     );
   }
 
-  void _showOpeningHoursDetails(Map<String, dynamic> openingHours) {
-    bool isArabic = Localizations.localeOf(context).languageCode == 'ar';
+  // void _showOpeningHoursDetails(Map<String, dynamic> openingHours) { bool isArabic = Localizations.localeOf(context).languageCode == 'ar'; Map<String, String> daysMap = { "mon": isArabic ? "الإثنين" : "Monday", "tue": isArabic ? "الثلاثاء" : "Tuesday", "wed": isArabic ? "الأربعاء" : "Wednesday", "thu": isArabic ? "الخميس" : "Thursday", "fri": isArabic ? "الجمعة" : "Friday", "sat": isArabic ? "السبت" : "Saturday", "sun": isArabic ? "الأحد" : "Sunday", }; List<String> days = daysMap.keys.toList(); String currentDay = days[DateTime.now().weekday - 1]; showModalBottomSheet( context: context, backgroundColor: AppColors.background2, shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)), builder: (context) { return Padding( padding: EdgeInsets.all(16.w), child: Column( mainAxisSize: MainAxisSize.min, crossAxisAlignment: CrossAxisAlignment.start, children: [ Center( child: Text( AppLocalizations.of(context)!.openingHours, style: AppTextStyles.getTitle1(context).copyWith(fontSize: 12.sp), ), ), SizedBox(height: 25.h), Column( children: days.map((day) { List<dynamic>? slots = openingHours[day] as List<dynamic>?; String formattedHours = (slots != null && slots.isNotEmpty) ? _formatOpeningHours(slots) : AppLocalizations.of(context)!.closed; bool isToday = (day == currentDay); return Padding( padding: const EdgeInsets.symmetric(vertical: 4, horizontal: 8), child: Row( mainAxisAlignment: MainAxisAlignment.spaceBetween, children: [ Text( daysMap[day] ?? day, style: TextStyle( fontSize: 14.sp, fontWeight: isToday ? FontWeight.bold : FontWeight.normal, color: isToday ? AppColors.main : Colors.black87, ), ), Text( formattedHours, style: TextStyle( fontSize: 12.sp, fontWeight: FontWeight.bold, color: isToday ? AppColors.main : Colors.black87, ), textAlign: TextAlign.right, ), ], ), ); }).toList(), ), SizedBox(height: 25.h), ], ), ); }, ); }
 
-    Map<String, String> daysMap = {
-      "Monday": isArabic ? "الإثنين" : "Monday",
-      "Tuesday": isArabic ? "الثلاثاء" : "Tuesday",
-      "Wednesday": isArabic ? "الأربعاء" : "Wednesday",
-      "Thursday": isArabic ? "الخميس" : "Thursday",
-      "Friday": isArabic ? "الجمعة" : "Friday",
-      "Saturday": isArabic ? "السبت" : "Saturday",
-      "Sunday": isArabic ? "الأحد" : "Sunday",
+  void _showOpeningHoursDetails(Map<String, dynamic> openingHours) {
+    final isArabic = Localizations.localeOf(context).languageCode == 'ar';
+    final l = AppLocalizations.of(context)!;
+
+    final daysMap = {
+      "mon": isArabic ? "الإثنين" : "Monday",
+      "tue": isArabic ? "الثلاثاء" : "Tuesday",
+      "wed": isArabic ? "الأربعاء" : "Wednesday",
+      "thu": isArabic ? "الخميس" : "Thursday",
+      "fri": isArabic ? "الجمعة" : "Friday",
+      "sat": isArabic ? "السبت" : "Saturday",
+      "sun": isArabic ? "الأحد" : "Sunday",
     };
 
-    List<String> days = daysMap.keys.toList();
-    String currentDay = days[DateTime.now().weekday - 1];
+    final days = daysMap.keys.toList();
+    final currentDay = days[DateTime.now().weekday - 1];
 
     showModalBottomSheet(
       context: context,
       backgroundColor: AppColors.background2,
+      isScrollControlled: true,
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
       builder: (context) {
-        return Padding(
-          padding: EdgeInsets.all(16.w),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Center(
-                child: Text(
-                  AppLocalizations.of(context)!.openingHours,
-                  style: AppTextStyles.getTitle1(context).copyWith(fontSize: 12.sp),
-                ),
-              ),
-              SizedBox(height: 25.h),
-              Column(
-                children: days.map((day) {
-                  List<dynamic>? slots = openingHours[day] as List<dynamic>?;
-                  String formattedHours = (slots != null && slots.isNotEmpty)
-                      ? _formatOpeningHours(slots)
-                      : AppLocalizations.of(context)!.closed;
-
-                  bool isToday = (day == currentDay);
-
-                  return Padding(
-                    padding: const EdgeInsets.symmetric(vertical: 4, horizontal: 8),
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        Text(
-                          daysMap[day] ?? day,
-                          style: TextStyle(
-                            fontSize: 14.sp,
-                            fontWeight: isToday ? FontWeight.bold : FontWeight.normal,
-                            color: isToday ? AppColors.main : Colors.black87,
-                          ),
-                        ),
-                        Text(
-                          formattedHours,
-                          style: TextStyle(
-                            fontSize: 12.sp,
-                            fontWeight: FontWeight.bold,
-                            color: isToday ? AppColors.main : Colors.black87,
-                          ),
-                          textAlign: TextAlign.right,
-                        ),
-                      ],
+        return DraggableScrollableSheet(
+          expand: false,
+          initialChildSize: 0.4,
+          minChildSize: 0.3,
+          maxChildSize: 0.6,
+          builder: (context, scrollController) {
+            return SingleChildScrollView(
+              controller: scrollController,
+              padding: EdgeInsets.all(16.w),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Center(
+                    child: Text(
+                      l.openingHours,
+                      style: AppTextStyles.getTitle1(context).copyWith(fontSize: 12.sp),
                     ),
-                  );
-                }).toList(),
+                  ),
+                  SizedBox(height: 20.h),
+                  Column(
+                    children: List.generate(days.length, (index) {
+                      final day = days[index];
+                      final slots = openingHours[day] as List<dynamic>?;
+                      final isToday = (day == currentDay);
+                      final color = isToday ? AppColors.main : Colors.black87;
+
+                      return Column(
+                        children: [
+                          Padding(
+                            padding: const EdgeInsets.symmetric(vertical: 2),
+                            child: Row(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  daysMap[day] ?? day,
+                                  style: TextStyle(
+                                    fontSize: 13.sp,
+                                    fontWeight: isToday ? FontWeight.bold : FontWeight.normal,
+                                    color: color,
+                                  ),
+                                ),
+                                const Spacer(),
+                                (slots != null && slots.isNotEmpty)
+                                    ? Column(
+                                  crossAxisAlignment: CrossAxisAlignment.end,
+                                  children: slots.map((slot) {
+                                    final slotMap = slot as Map<String, dynamic>;
+                                    final from = _pretty12(context, slotMap["from"] ?? '');
+                                    final to   = _pretty12(context, slotMap["to"] ?? '');
+                                    return Padding(
+                                      padding: const EdgeInsets.symmetric(vertical: 1.5),
+                                      child: Text(
+                                        "$from - $to",
+                                        textAlign: isArabic ? TextAlign.right : TextAlign.left,
+                                        style: TextStyle(
+                                          fontSize: 11.sp,
+                                          fontWeight: FontWeight.bold,
+                                          color: color,
+                                        ),
+                                      ),
+                                    );
+                                  }).toList(),
+                                )
+                                    : Text(
+                                  l.closed,
+                                  style: TextStyle(
+                                    fontSize: 11.sp,
+                                    fontWeight: FontWeight.w500,
+                                    color: Colors.grey,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                          if (index < days.length - 1)
+                            Divider(
+                              thickness: 0.3,
+                              height: 6,
+                              color: Colors.grey[400],
+                            ),
+                        ],
+                      );
+                    }),
+                  ),
+                  SizedBox(height: 20.h),
+                ],
               ),
-              SizedBox(height: 25.h),
-            ],
-          ),
+            );
+          },
         );
       },
     );
+
+
+  }
+
+  String _pretty12(BuildContext ctx, String hhmm) {
+    try {
+      // أزل أي إضافات مثل "ص" أو "م" لو كانت موجودة
+      hhmm = hhmm.trim().split(' ').first;
+
+      final parts = hhmm.split(':');
+      if (parts.length != 2) return hhmm;
+
+      final h = int.parse(parts[0]);
+      final m = int.parse(parts[1]);
+
+      final tod = TimeOfDay(hour: h, minute: m);
+      return MaterialLocalizations.of(ctx).formatTimeOfDay(
+        tod,
+        alwaysUse24HourFormat: false,
+      );
+    } catch (_) {
+      return hhmm;
+    }
   }
 
   String _formatOpeningHours(List<dynamic> slots) {
     if (slots.isEmpty) return "Closed";
 
-    List<String> sortedSlots = slots.map((slot) {
-      Map<String, dynamic> slotMap = slot as Map<String, dynamic>;
-      String fromTime = _convertTo24Hour(slotMap["from"]!);
-      String toTime = _convertTo24Hour(slotMap["to"]!);
-      return "$fromTime - $toTime";
+    List<Map<String, dynamic>> formatted = slots.map((slot) {
+      final slotMap = slot as Map<String, dynamic>;
+      final fromRaw = slotMap["from"] ?? '';
+      final toRaw   = slotMap["to"] ?? '';
+
+      return {
+        "from": fromRaw,
+        "to": toRaw,
+        "label": "${_pretty12(context, fromRaw)} - ${_pretty12(context, toRaw)}"
+      };
     }).toList();
 
-    sortedSlots.sort((a, b) {
-      int fromA = int.parse(a.split(" - ")[0].replaceAll(":", ""));
-      int fromB = int.parse(b.split(" - ")[0].replaceAll(":", ""));
-      return fromA.compareTo(fromB);
+    // ترتيب حسب وقت البدء الحقيقي (وليس النص)
+    formatted.sort((a, b) {
+      final fromA = TimeOfDay(
+        hour: int.parse(a["from"]!.split(":")[0]),
+        minute: int.parse(a["from"]!.split(":")[1]),
+      );
+      final fromB = TimeOfDay(
+        hour: int.parse(b["from"]!.split(":")[0]),
+        minute: int.parse(b["from"]!.split(":")[1]),
+      );
+      return fromA.hour.compareTo(fromB.hour) != 0
+          ? fromA.hour.compareTo(fromB.hour)
+          : fromA.minute.compareTo(fromB.minute);
     });
 
-    return sortedSlots.join(", ");
-  }
-
-  String _convertTo24Hour(String time) {
-    try {
-      List<String> parts = time.split(" ");
-      List<String> timeParts = parts[0].split(":");
-      int hour = int.parse(timeParts[0]);
-      String minutes = timeParts[1];
-
-      if (parts[1] == "PM" && hour != 12) {
-        hour += 12;
-      } else if (parts[1] == "AM" && hour == 12) {
-        hour = 0;
-      }
-
-      return "${hour.toString().padLeft(2, '0')}:$minutes";
-    } catch (e) {
-      print("Error converting time: $e");
-      return time;
-    }
+    return formatted.map((e) => e["label"]).join(", ");
   }
 
   void _showLanguagesDetails(List<dynamic> languages) {
+    final l = AppLocalizations.of(context)!;
+
+    // تحويل أكواد اللغات إلى نصوص محلية من ARB
+    final translatedLanguages = languages.map((code) => languageLabelFromCode(l, code.toString())).toList();
+
     showModalBottomSheet(
       context: context,
       backgroundColor: AppColors.background2,
@@ -1518,7 +1585,7 @@ class _DoctorProfilePageState extends State<DoctorProfilePage> {
               Wrap(
                 spacing: 8,
                 runSpacing: 6,
-                children: languages.map((language) {
+                children: translatedLanguages.map((language) {
                   return Container(
                     decoration: BoxDecoration(
                       color: AppColors.main.withOpacity(0.2),
@@ -1717,6 +1784,21 @@ class _DoctorProfilePageState extends State<DoctorProfilePage> {
     double fadeStart = 100;
     double fadeEnd = MediaQuery.of(context).size.height * 0.15;
     double opacity = 1.0;
+    int visibleSections = 0;
+
+    if (_doctorData?['gallery'] != null && (_doctorData!['gallery'] as List).isNotEmpty)
+      visibleSections++;
+    if (profileDescription != null || (specialties != null && specialties.isNotEmpty))
+      visibleSections++;
+    if (_doctorData?['offered_services'] != null && _doctorData!['offered_services'] is Map<String, dynamic> && (_doctorData!['offered_services'] as Map).isNotEmpty)
+      visibleSections++;
+    if (street != null || city != null || country != null)
+      visibleSections++;
+    if (_doctorData?['opening_hours'] != null || _doctorData?['languages'] != null || _doctorData?['phone_number'] != null)
+      visibleSections++;
+    if (_doctorData?['faqs'] != null && _doctorData!['faqs'] is Map<String, dynamic>)
+      visibleSections++;
+
 
     if (offset <= fadeStart) {
       opacity = 1.0;
@@ -1750,18 +1832,27 @@ class _DoctorProfilePageState extends State<DoctorProfilePage> {
                   onPressed: () => Navigator.of(context).pop(),
                 ),
                 actions: [
-                  IconButton(
-                    icon: Icon(
-                      _isFavorite ? Icons.star : Icons.star_border,
-                      color: AppColors.whiteText,
-                    ),
-                    onPressed: _toggleFavoriteStatus,
+                  FutureBuilder<String?>(
+                    future: _getCurrentUserId(),
+                    builder: (context, snapshot) {
+                      final userId = snapshot.data;
+                      if (userId == null || userId.isEmpty) return SizedBox.shrink(); // 🔥 Hide icon if not logged in
+
+                      return IconButton(
+                        icon: Icon(
+                          _isFavorite ? Icons.star : Icons.star_border,
+                          color: AppColors.whiteText,
+                        ),
+                        onPressed: _toggleFavoriteStatus,
+                      );
+                    },
                   ),
                   IconButton(
                     icon: Icon(Icons.share, color: AppColors.whiteText, size: 18.sp),
                     onPressed: _shareDoctorProfile,
                   ),
                 ],
+
                 flexibleSpace: FlexibleSpaceBar(
                   title: Opacity(
                     opacity: _showAppBar ? 1.0 : 0.0,
@@ -1824,7 +1915,8 @@ class _DoctorProfilePageState extends State<DoctorProfilePage> {
                     padding: EdgeInsets.all(16.w),
                     child: Column(
                       children: [
-                        SizedBox(height: 5.h),
+
+                        SizedBox(height: 25.h),
                         if (_doctorData?['gallery'] != null &&
                             (_doctorData!['gallery'] as List).isNotEmpty)
                           SizedBox(height: 10.h),
@@ -1838,8 +1930,18 @@ class _DoctorProfilePageState extends State<DoctorProfilePage> {
                             (specialties != null && specialties.isNotEmpty))
                           _buildProfileSection(profileDescription, specialties, website),
                         if (_doctorData?['offered_services'] != null) SizedBox(height: 10.h),
-                        if (_doctorData?['offered_services'] != null)
-                          _buildServicesSection(_doctorData!['offered_services']),
+                        if (_doctorData?['offered_services'] != null &&
+                            _doctorData!['offered_services'] is Map<String, dynamic> &&
+                            (_doctorData!['offered_services'] as Map).isNotEmpty)
+                          _buildServicesSection(
+                            (_doctorData!['offered_services'] as Map<String, dynamic>)
+                                .entries
+                                .map((entry) => {
+                              'title': entry.key,
+                              'description': entry.value?.toString() ?? '',
+                            })
+                                .toList(),
+                          ),
                         if (street != null || city != null || country != null)
                           SizedBox(height: 10.h),
                         if (street != null || city != null || country != null)
@@ -1865,8 +1967,19 @@ class _DoctorProfilePageState extends State<DoctorProfilePage> {
                             _doctorData?['languages'] ?? [],
                           ),
                         if (_doctorData?['faqs'] != null) SizedBox(height: 10.h),
-                        if (_doctorData?['faqs'] != null)
-                          _buildFAQsSection(_doctorData!['faqs']),
+                        if (_doctorData?['faqs'] != null && _doctorData!['faqs'] is Map<String, dynamic>)
+                          _buildFAQsSection(
+                            (_doctorData!['faqs'] as Map<String, dynamic>)
+                                .entries
+                                .map((entry) => {
+                              'question': entry.key,
+                              'answer': entry.value?.toString() ?? '',
+                            })
+                                .toList(),
+                          ),
+
+                        if (visibleSections < 4) SizedBox(height: 250.h),
+
                         SizedBox(height: 60.h),
                       ],
                     ),

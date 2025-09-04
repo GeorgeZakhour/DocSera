@@ -33,12 +33,6 @@ class AppLocalizationsAr extends AppLocalizations {
   String get account => 'الحساب';
 
   @override
-  String get languageEnglish => 'English';
-
-  @override
-  String get languageArabic => 'العربية';
-
-  @override
   String get exitAppTitle => 'الخروج من التطبيق';
 
   @override
@@ -1021,6 +1015,30 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get offeredServices => 'الخدمات المقدمة';
+
+  @override
+  String get languageArabic => 'العربية';
+
+  @override
+  String get languageEnglish => 'الإنجليزية';
+
+  @override
+  String get languageFrench => 'الفرنسية';
+
+  @override
+  String get languageGerman => 'الألمانية';
+
+  @override
+  String get languageSpanish => 'الإسبانية';
+
+  @override
+  String get languageTurkish => 'التركية';
+
+  @override
+  String get languageRussian => 'الروسية';
+
+  @override
+  String get languageKurdish => 'الكردية';
 
   @override
   String get makeAppointment => 'حجز موعد';

@@ -9,8 +9,6 @@
   "documents": "Documents",
   "messages": "Messages",
   "account": "Account",
-  "languageEnglish": "English",
-  "languageArabic": "العربية",
   "exitAppTitle": "Exit Application",
   "areYouSureToExit": "Are you sure you want to exit the app?",
   "exit": "Exit",
@@ -356,6 +354,14 @@
   "clinicNotAvailable": "Clinic not available",
   "faq": "Frequently Asked Questions",
   "offeredServices": "Offered Services",
+  "languageArabic": "Arabic",
+  "languageEnglish": "English",
+  "languageFrench": "French",
+  "languageGerman": "German",
+  "languageSpanish": "Spanish",
+  "languageTurkish": "Turkish",
+  "languageRussian": "Russian",
+  "languageKurdish": "Kurdish",
 
   "@bookAppointment================================": "👨‍⚕️ Booking Pages",
 

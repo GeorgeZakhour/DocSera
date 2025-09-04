@@ -10,8 +10,6 @@
   "documents": "المستندات",
   "messages": "الرسائل",
   "account": "الحساب",
-  "languageEnglish": "English",
-  "languageArabic": "العربية",
   "exitAppTitle": "الخروج من التطبيق",
   "areYouSureToExit": "هل أنت متأكد أنك تريد الخروج من التطبيق؟",
   "exit": "خروج",
@@ -365,6 +363,14 @@
   "clinicNotAvailable": "العيادة غير متوفرة",
   "faq": "الأسئلة الشائعة",
   "offeredServices": "الخدمات المقدمة",
+  "languageArabic": "العربية",
+  "languageEnglish": "الإنجليزية",
+  "languageFrench": "الفرنسية",
+  "languageGerman": "الألمانية",
+  "languageSpanish": "الإسبانية",
+  "languageTurkish": "التركية",
+  "languageRussian": "الروسية",
+  "languageKurdish": "الكردية",
 
   "@bookAppointment================================": {
     "description": "👨‍⚕️ صفحات الحجز"
@@ -454,6 +460,7 @@
   "exampleDocuments": "مثل الإحالة، نتائج التحاليل، الوصفات الطبية",
   "sizeLimit": "الحجم",
   "acceptedFormat": "الصيغ المقبولة",
+
 
   "@IdentificationPage================================": {
     "description": "Identification Page"
