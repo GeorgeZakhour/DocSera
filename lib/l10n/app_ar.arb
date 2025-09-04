@@ -371,6 +371,9 @@
   "languageTurkish": "التركية",
   "languageRussian": "الروسية",
   "languageKurdish": "الكردية",
+  "pleaseLoginToContinue": "يرجى تسجيل الدخول لإتمام الحجز",
+  "noAccountQuestion": "ليس لديك حساب؟",
+
 
   "@bookAppointment================================": {
     "description": "👨‍⚕️ صفحات الحجز"

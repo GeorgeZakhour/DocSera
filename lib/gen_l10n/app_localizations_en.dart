@@ -1041,6 +1041,12 @@ class AppLocalizationsEn extends AppLocalizations {
   String get languageKurdish => 'Kurdish';
 
   @override
+  String get pleaseLoginToContinue => 'Please log in to complete the booking';
+
+  @override
+  String get noAccountQuestion => 'Don\'t have an account?';
+
+  @override
   String get makeAppointment => 'Make an Appointment';
 
   @override

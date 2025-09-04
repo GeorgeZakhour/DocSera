@@ -362,6 +362,9 @@
   "languageTurkish": "Turkish",
   "languageRussian": "Russian",
   "languageKurdish": "Kurdish",
+  "pleaseLoginToContinue": "Please log in to complete the booking",
+  "noAccountQuestion": "Don't have an account?",
+
 
   "@bookAppointment================================": "👨‍⚕️ Booking Pages",
 

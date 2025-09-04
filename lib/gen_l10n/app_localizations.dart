@@ -2099,6 +2099,18 @@ abstract class AppLocalizations {
   /// **'Kurdish'**
   String get languageKurdish;
 
+  /// No description provided for @pleaseLoginToContinue.
+  ///
+  /// In en, this message translates to:
+  /// **'Please log in to complete the booking'**
+  String get pleaseLoginToContinue;
+
+  /// No description provided for @noAccountQuestion.
+  ///
+  /// In en, this message translates to:
+  /// **'Don\'t have an account?'**
+  String get noAccountQuestion;
+
   /// No description provided for @makeAppointment.
   ///
   /// In en, this message translates to:

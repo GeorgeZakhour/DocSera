@@ -2,6 +2,9 @@ import 'dart:async';
 import 'dart:convert';
 import 'dart:ui';
 import 'package:cached_network_image/cached_network_image.dart';
+import 'package:docsera/models/sign_up_info.dart';
+import 'package:docsera/screens/auth/login/login_page.dart';
+import 'package:docsera/screens/auth/sign_up/sign_up_phone.dart';
 import 'package:docsera/screens/doctors/appointment/select_patient_page.dart';
 import 'package:docsera/utils/doctor_image_utils.dart';
 import 'package:flutter/material.dart';
@@ -17,6 +20,9 @@ import 'package:docsera/app/text_styles.dart';
 
 // ✅ استيراد صفحة نتائج الخرائط
 import 'package:docsera/screens/map_results_page.dart';
+
+import 'auth/login/doctor_login_page.dart';
+import 'auth/register/doctor_registration_page.dart';
 
 class DoctorProfilePage extends StatefulWidget {
   final String doctorId; // ✅ Make non-nullable
@@ -1801,6 +1807,112 @@ class _DoctorProfilePageState extends State<DoctorProfilePage> {
     }
   }
 
+  void _showLoginPromptDialog() {
+    final l = AppLocalizations.of(context)!;
+
+    showDialog(
+      context: context,
+      barrierDismissible: true,
+      builder: (context) {
+        return Dialog(
+          backgroundColor: AppColors.background2,
+          insetPadding: EdgeInsets.symmetric(horizontal: 24.w, vertical: 24.h),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(20.r),
+          ),
+          child: Stack(
+            children: [
+              Padding(
+                padding: EdgeInsets.all(20.w),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    SizedBox(height: 10.h),
+                    Icon(Icons.login, color: AppColors.main, size: 32.sp),
+                    SizedBox(height: 10.h),
+
+                    // العنوان
+                    Text(
+                      l.pleaseLoginToContinue,
+                      style: AppTextStyles.getTitle1(context).copyWith(fontSize: 13.sp),
+                      textAlign: TextAlign.center,
+                    ),
+                    SizedBox(height: 20.h),
+
+                    // زر تسجيل الدخول
+                    ElevatedButton(
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: AppColors.main,
+                        minimumSize: Size(double.infinity, 48.h),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(30.r),
+                        ),
+                      ),
+                      onPressed: () {
+                        Navigator.pop(context);
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(builder: (_) => const LogInPage()),
+                        );
+                      },
+                      child: Text(
+                        l.login,
+                        style: TextStyle(fontSize: 12.sp, color: Colors.white),
+                      ),
+                    ),
+
+                    SizedBox(height: 10.h),
+
+                    // النص + الزر في نفس السطر
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Text(
+                          l.noAccountQuestion, // "ليس لديك حساب؟"
+                          style: TextStyle(
+                            fontSize: 11.sp,
+                            color: Colors.grey[600],
+                            fontWeight: FontWeight.w500,
+                          ),
+                        ),
+                        TextButton(
+                          onPressed: () {
+                            Navigator.pop(context);
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (_) => SignUpFirstPage(signUpInfo: SignUpInfo()),
+                              ),
+                            );
+                          },
+                          child: Text(
+                            l.signUp, // "أنشئ حساباً الآن"
+                            style: TextStyle(fontSize: 11.sp, color: AppColors.main),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
+              ),
+
+              // زر الإغلاق (أقرب للزاوية)
+              Positioned(
+                top: 8,
+                right: 8,
+                child: IconButton(
+                  icon: Icon(Icons.close, size: 20.sp, color: Colors.grey[600]),
+                  onPressed: () => Navigator.pop(context),
+                ),
+              ),
+            ],
+          ),
+        );
+      },
+    );
+  }
+
+
   @override
   Widget build(BuildContext context) {
     final doctor = _doctorData ?? {};
@@ -2077,23 +2189,31 @@ class _DoctorProfilePageState extends State<DoctorProfilePage> {
                   ],
                 ),
                 child: ElevatedButton.icon(
-                  onPressed: () {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (context) => SelectPatientPage(
-                          doctorId: doctorId,
-                          doctorName: "$doctorFirstName $doctorLastName",
-                          doctorGender: doctorGender,
-                          doctorTitle: doctorTitle,
-                          specialty: doctorSpecialty,
-                          image: avatarPath,
-                          clinicName: clinicName,
-                          clinicAddress: clinicAddress,
+                  onPressed: () async {
+                    final prefs = await SharedPreferences.getInstance();
+                    final userId = prefs.getString('userId');
+
+                    if (userId == null || userId.isEmpty) {
+                      _showLoginPromptDialog(); // 🔻 تابع أدناه
+                    } else {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => SelectPatientPage(
+                            doctorId: doctorId,
+                            doctorName: "$doctorFirstName $doctorLastName",
+                            doctorGender: doctorGender,
+                            doctorTitle: doctorTitle,
+                            specialty: doctorSpecialty,
+                            image: avatarPath,
+                            clinicName: clinicName,
+                            clinicAddress: clinicAddress,
+                          ),
                         ),
-                      ),
-                    );
+                      );
+                    }
                   },
+
                   icon: Icon(Icons.calendar_today, color: AppColors.mainDark, size: 18.sp),
                   label: Text(
                     AppLocalizations.of(context)!.bookAppointment,
@@ -2120,23 +2240,31 @@ class _DoctorProfilePageState extends State<DoctorProfilePage> {
             child: Opacity(
               opacity: bottomButtonOpacity.clamp(0.0, 1.0),
               child: ElevatedButton.icon(
-                onPressed: () {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (context) => SelectPatientPage(
-                        doctorId: doctorId,
-                        doctorName: "$doctorFirstName $doctorLastName",
-                        doctorGender: doctorGender,
-                        doctorTitle: doctorTitle,
-                        specialty: doctorSpecialty,
-                        image: avatarPath,
-                        clinicName: clinicName,
-                        clinicAddress: clinicAddress,
+                onPressed: () async {
+                  final prefs = await SharedPreferences.getInstance();
+                  final userId = prefs.getString('userId');
+
+                  if (userId == null || userId.isEmpty) {
+                    _showLoginPromptDialog(); // 🔻 تابع أدناه
+                  } else {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => SelectPatientPage(
+                          doctorId: doctorId,
+                          doctorName: "$doctorFirstName $doctorLastName",
+                          doctorGender: doctorGender,
+                          doctorTitle: doctorTitle,
+                          specialty: doctorSpecialty,
+                          image: avatarPath,
+                          clinicName: clinicName,
+                          clinicAddress: clinicAddress,
+                        ),
                       ),
-                    ),
-                  );
+                    );
+                  }
                 },
+
                 icon: Icon(Icons.calendar_today, color: Colors.white, size: 18.sp),
                 label: Text(
                   AppLocalizations.of(context)!.bookAppointment,

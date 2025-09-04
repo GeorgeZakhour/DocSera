@@ -1041,6 +1041,12 @@ class AppLocalizationsAr extends AppLocalizations {
   String get languageKurdish => 'الكردية';
 
   @override
+  String get pleaseLoginToContinue => 'يرجى تسجيل الدخول لإتمام الحجز';
+
+  @override
+  String get noAccountQuestion => 'ليس لديك حساب؟';
+
+  @override
   String get makeAppointment => 'حجز موعد';
 
   @override
