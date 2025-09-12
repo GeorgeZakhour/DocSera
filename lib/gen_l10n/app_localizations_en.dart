@@ -1077,6 +1077,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get selectReason => 'Select the reason for this visit';
 
   @override
+  String get noReasonsFound => 'No appointment reasons found yet';
+
+  @override
   String get initialExamination => 'Initial examination for new patient';
 
   @override
@@ -1157,7 +1160,19 @@ class AppLocalizationsEn extends AppLocalizations {
   String get reasonForAppointment => 'Reason for appointment';
 
   @override
+  String get retry => 'Retry';
+
+  @override
   String get notSpecified => 'Not specified';
+
+  @override
+  String get loginFirst => 'Please log in first.';
+
+  @override
+  String get slotAlreadyBooked => 'Sorry, this time slot has just been booked. Please choose another time.';
+
+  @override
+  String get errorBookingAppointment => 'Error booking appointment';
 
   @override
   String get appointmentAddedToCalendar => '📅 Appointment added to your calendar!';

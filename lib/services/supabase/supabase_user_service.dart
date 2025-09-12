@@ -256,6 +256,7 @@ extension SupabaseUserServiceFavorites on SupabaseUserService {
       'specialties': doctor['specialties'] ?? [],
       'website': doctor['website'] ?? "",
       'address': doctor['address'] ?? {},
+      'location': doctor['location'] ?? {},
       'opening_hours': doctor['opening_hours'] ?? {},
       'languages': doctor['languages'] ?? [],
       'last_updated': doctor['last_updated'] != null
@@ -349,6 +350,7 @@ extension SupabaseUserServiceFavorites on SupabaseUserService {
             'specialties': doctor['specialties'] ?? [],
             'website': doctor['website'] ?? "",
             'address': doctor['address'] ?? {},
+            'location': doctor['location'] ?? {},
             'opening_hours': doctor['opening_hours'] ?? {},
             'languages': doctor['languages'] ?? [],
             'last_updated': doctor['last_updated'] != null

@@ -250,6 +250,9 @@ class _MainScreenState extends State<MainScreen> with AutomaticKeepAliveClientMi
                 title: Text(AppLocalizations.of(context)!.bookAppointment, style: AppTextStyles.getText2(context).copyWith(fontWeight: FontWeight.w500)),
                 onTap: () {
                   Navigator.pop(context); // إغلاق الـ Bottom Sheet
+                  print("🧭 [MainScreen] doctor map = $doctor");
+                  print("🧭 [MainScreen] location candidate = ${doctor['location'] ?? doctor['clinicLocation'] ?? doctor['address']?['location']}");
+
                   Navigator.push(
                     context,
                     MaterialPageRoute(
@@ -262,6 +265,7 @@ class _MainScreenState extends State<MainScreen> with AutomaticKeepAliveClientMi
                         image: imageResult.avatarPath,
                         clinicName: doctor['clinic'],
                         clinicAddress: doctor['address'],
+                        clinicLocation: doctor['location'] ?? {},
                       ),
                     ),
                   );

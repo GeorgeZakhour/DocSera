@@ -13,6 +13,7 @@ import 'package:docsera/screens/home/appointment/send_document.dart';
 import 'package:docsera/screens/home/shimmer/shimmer_widgets.dart';
 import 'package:docsera/utils/doctor_image_utils.dart';
 import 'package:docsera/utils/text_direction_utils.dart';
+import 'package:docsera/utils/time_utils.dart';
 import 'package:docsera/widgets/base_scaffold.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
@@ -60,99 +61,285 @@ class _AppointmentDetailsPageState extends State<AppointmentDetailsPage> {
   // bool _shouldAutoScroll = true;
   // bool _isSending = false;
 
+  Future<void> _openMaps(BuildContext context, Map<String, dynamic> appt) async {
+    try {
+      debugPrint("🌍 [OpenMaps] Full appointment object: $appt");
 
-  /// 🔹 Open Google Maps with the given address
-  void _openMaps(String address) async {
-    String encodedAddress = Uri.encodeComponent(address);
-    Uri googleMapsUrl = Uri.parse("https://www.google.com/maps/search/?api=1&query=$encodedAddress");
+      // جرّب قراءة location (ممكن تكون String أو Map)
+      dynamic rawLoc = appt['location'] ?? appt['clinicLocation'];
+      debugPrint("🌍 [OpenMaps] rawLoc = $rawLoc (${rawLoc?.runtimeType})");
 
-    if (await canLaunchUrl(googleMapsUrl)) {
-      await launchUrl(googleMapsUrl, mode: LaunchMode.externalApplication);
-    } else {
-      throw 'Could not launch $googleMapsUrl';
+      Map<String, dynamic>? loc;
+      if (rawLoc is String) {
+        try {
+          loc = Map<String, dynamic>.from(jsonDecode(rawLoc));
+          debugPrint("✅ [OpenMaps] Decoded location from String → $loc");
+        } catch (e) {
+          debugPrint("❌ [OpenMaps] Failed to decode location JSON: $e");
+        }
+      } else if (rawLoc is Map) {
+        loc = Map<String, dynamic>.from(rawLoc);
+        debugPrint("✅ [OpenMaps] Location is already a Map → $loc");
+      }
+
+      // إذا عندنا lat/lng → افتح مباشرة
+      if (loc != null && loc['lat'] != null && loc['lng'] != null) {
+        final lat = loc['lat'];
+        final lng = loc['lng'];
+        debugPrint("📍 [OpenMaps] Using coordinates → lat=$lat, lng=$lng");
+
+        final uri = Uri.parse("https://www.google.com/maps/search/?api=1&query=$lat,$lng");
+        debugPrint("🌐 [OpenMaps] Launching URI = $uri");
+
+        final ok = await launchUrl(uri, mode: LaunchMode.externalApplication);
+        if (!ok && context.mounted) {
+          debugPrint("❌ [OpenMaps] Could not open Google Maps with coords");
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text("تعذر فتح الخرائط")),
+          );
+        }
+      } else {
+        debugPrint("⚠️ [OpenMaps] No valid coordinates found, fallback to address");
+
+        // fallback على العنوان النصي إذا ما في إحداثيات
+        final addr = (appt['clinic_address'] ?? appt['clinicAddress'] ?? '').toString();
+        debugPrint("🏠 [OpenMaps] Raw address = $addr");
+
+        if (addr.trim().isEmpty) {
+          debugPrint("❌ [OpenMaps] No address available to open");
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text("لا يوجد عنوان متاح")),
+          );
+          return;
+        }
+
+        final uri = Uri.parse(
+          'https://www.google.com/maps/search/?api=1&query=${Uri.encodeComponent(addr)}',
+        );
+        debugPrint("🌐 [OpenMaps] Launching fallback URI = $uri");
+
+        final ok = await launchUrl(uri, mode: LaunchMode.externalApplication);
+        if (!ok && context.mounted) {
+          debugPrint("❌ [OpenMaps] Could not open Google Maps with address");
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text("تعذر فتح الخرائط: $addr")),
+          );
+        }
+      }
+    } catch (e, st) {
+      debugPrint("❌ [OpenMaps] Exception: $e\n$st");
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text("خطأ أثناء فتح الخرائط")),
+        );
+      }
     }
   }
 
-  void _addToCalendar(BuildContext context) {
-    DateTime startTime = DateTime.parse(widget.appointment['timestamp']);
-    DateTime endTime = startTime.add(Duration(minutes: 30)); // Assuming a 30 min appointment
 
-    final Event event = Event(
-      title: 'Appointment with ${widget.appointment['doctor_title'] ?? ''}${widget.appointment['doctor_name'] ?? 'Doctor'}',
-      description: 'Reason: ${widget.appointment['reason'] ?? 'No reason provided'}',
-      location: "${widget.appointment['clinic_address']['street'] ?? ''}, ${widget.appointment['clinic_address']['city'] ?? ''}",
-      startDate: startTime,
-      endDate: endTime,
+  void _addToCalendar(BuildContext context, {int clinicOffsetMinutes = 180}) {
+    final appt = widget.appointment;
+
+    // 1) نقرأ الـ timestamp كـ UTC
+    final tsUtc = DateTime.parse(appt['timestamp'].toString()).toUtc();
+
+    // 2) نحسب "الوقت الجداري" للعيادة (UTC + offset)، ثم نبني DateTime محلي (بدون تحويل منطقة الجهاز)
+    final clinicWall = tsUtc.add(Duration(minutes: clinicOffsetMinutes));
+    final startLocal = DateTime(
+      clinicWall.year,
+      clinicWall.month,
+      clinicWall.day,
+      clinicWall.hour,
+      clinicWall.minute,
+    );
+
+    // 3) مدة الجلسة (افتراضي 30 دقيقة)
+    final duration = (appt['durationMinutes'] is int)
+        ? appt['durationMinutes'] as int
+        : 30;
+    final endLocal = startLocal.add(Duration(minutes: duration));
+
+    // 4) العنوان (يدعم clinicAddress و clinic_address)
+    final addr = (appt['clinicAddress'] ?? appt['clinic_address'] ?? const {}) as Map<String, dynamic>;
+    final location = [
+      addr['street']?.toString(),
+      addr['buildingNr']?.toString(),
+      addr['city']?.toString(),
+      addr['country']?.toString(),
+    ].where((s) => (s ?? '').toString().trim().isNotEmpty).join(', ');
+
+    // 5) اسم الطبيب (camel/snake)
+    final doctorName = [
+      (appt['doctorTitle'] ?? appt['doctor_title'] ?? '').toString().trim(),
+      (appt['doctorName']  ?? appt['doctor_name']  ?? '').toString().trim(),
+    ].where((s) => s.isNotEmpty).join(' ');
+
+    // 6) نصوص إضافية
+    final clinicName = ((appt['clinicName'] ?? appt['clinic']) ?? '').toString().trim();
+    final reasonText = (appt['reason'] ?? AppLocalizations.of(context)!.notSpecified).toString();
+
+    // 7) بناء الحدث (عنوان بالعربية عبر appointmentWithLabel)
+    final event = Event(
+      title: AppLocalizations.of(context)!.appointmentWithLabel(doctorName).trim(),
+      description:
+      "${AppLocalizations.of(context)!.clinicDetails}: "
+          "${clinicName.isNotEmpty ? clinicName : AppLocalizations.of(context)!.clinicNotAvailable}\n"
+          "${AppLocalizations.of(context)!.reasonForAppointment}: $reasonText",
+      location: location,
+      startDate: startLocal, // وقت العيادة ثابت (لا toLocal/‏toUtc)
+      endDate: endLocal,
       allDay: false,
     );
 
-    // 🔍 Debug prints for terminal
-    print("🔗 Adding Event to Calendar:");
-    print("📅 Title: ${event.title}");
-    print("📄 Description: ${event.description}");
-    print("📍 Location: ${event.location}");
-    print("🕑 Start Time: ${event.startDate}");
-    print("🕑 End Time: ${event.endDate}");
-    print("📅 All Day Event: ${event.allDay}");
-
-
+    // 8) الإضافة + إشعار
     Add2Calendar.addEvent2Cal(event).then((success) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text(success ? '📅 Appointment added to your calendar!' : '⚠️ Failed to add appointment.'),
+          content: Text(
+            success
+                ? AppLocalizations.of(context)!.appointmentAddedToCalendar
+                : AppLocalizations.of(context)!.appointmentFailedToAdd,
+          ),
         ),
       );
     });
   }
 
   void _shareAppointmentDetails() {
-    DateTime appointmentDate = DateTime.parse(widget.appointment['timestamp']);
-    String formattedDate = DateFormat("EEEE, d MMMM yyyy").format(appointmentDate);
-    String formattedTime = DateFormat("HH:mm").format(appointmentDate);
+    final appt = widget.appointment;
+    final locale = Localizations.localeOf(context).toString();
 
-    String doctorName = "${widget.appointment['doctor_title'] ?? ''} ${widget.appointment['doctor_name'] ?? 'Doctor'}".trim();
-    Map<String, dynamic> clinicAddress = widget.appointment['clinicAddress'] ?? {};
+    // Show time/date in clinic TZ (UTC+3), not device local
+    final tsClinic = DateTime.parse(appt['timestamp'].toString()).toUtc().add(const Duration(hours: 3));
+    final formattedDate = DateFormat('EEEE, d MMMM yyyy', locale).format(tsClinic);
+    final formattedTime = MaterialLocalizations.of(context)
+        .formatTimeOfDay(TimeOfDay(hour: tsClinic.hour, minute: tsClinic.minute), alwaysUse24HourFormat: false);
 
-    String formattedAddress = "${clinicAddress['street'] ?? ''} ${clinicAddress['buildingNr'] ?? ''}, "
-        "${clinicAddress['city'] ?? ''}, ${clinicAddress['country'] ?? ''}";
+    final doctorName = [
+      (appt['doctorTitle'] ?? appt['doctor_title'] ?? '').toString().trim(),
+      (appt['doctorName']  ?? appt['doctor_name']  ?? '').toString().trim(),
+    ].where((s) => s.isNotEmpty).join(' ');
 
-    String shareText = """
-📅 **Appointment Details**:
+    final addr = (appt['clinicAddress'] ?? appt['clinic_address'] ?? const {}) as Map<String, dynamic>;
+    final formattedAddress = [
+      addr['street']?.toString(),
+      addr['buildingNr']?.toString(),
+      addr['city']?.toString(),
+      addr['country']?.toString(),
+    ].where((s) => (s ?? '').toString().trim().isNotEmpty).join(', ');
 
-👨‍⚕️ Doctor: $doctorName
-📍 Location: ${widget.appointment['clinic'] ?? 'Clinic not specified'}
-🏡 Address: $formattedAddress
-📅 Date: $formattedDate
-🕑 Time: $formattedTime
-📝 Reason: ${widget.appointment['reason'] ?? 'No reason provided'}
+    final clinicName = ((appt['clinicName'] ?? appt['clinic']) ?? '').toString().trim();
+    final reasonText = (appt['reason'] ?? AppLocalizations.of(context)!.notSpecified).toString();
 
-Shared from DocSera App
+    final shareText = """
+📅 ${AppLocalizations.of(context)!.appointmentDetails}:
+
+👨‍⚕️ ${AppLocalizations.of(context)!.appointmentWithLabel(doctorName)} 
+📍 ${AppLocalizations.of(context)!.clinicDetails}: ${clinicName.isNotEmpty ? clinicName : AppLocalizations.of(context)!.clinicNotAvailable}
+🏡 ${AppLocalizations.of(context)!.address}: ${formattedAddress.isNotEmpty ? formattedAddress : AppLocalizations.of(context)!.addressNotEntered}
+📅 ${AppLocalizations.of(context)!.date}: $formattedDate
+🕑 ${AppLocalizations.of(context)!.appointmentTime}: $formattedTime
+📝 ${AppLocalizations.of(context)!.reasonForAppointment}: $reasonText
+
+— DocSera
 """;
 
-    Share.share(shareText, subject: "Appointment with $doctorName");
+    Share.share(shareText, subject: "${AppLocalizations.of(context)!.appointmentWithLabel(doctorName)} ");
   }
 
+  Map<String, dynamic> get _appt => widget.appointment;
+
+  String _doctorId() =>
+      (_appt['doctorId'] ?? _appt['doctor_id'] ?? '').toString();
+
+  String _appointmentId() =>
+      (_appt['id'] ?? _appt['appointmentId'] ?? _appt['appointment_id'] ?? '')
+          .toString();
+
+
+  DateTime _tsUtc() =>
+      DateTime.parse(_appt['timestamp'].toString()).toUtc();
+
+  Future<int> _fetchCancellationDeadlineHours(String doctorId) async {
+    final row = await Supabase.instance.client
+        .from('doctors')
+        .select('cancellation_deadline_hours')
+        .eq('id', doctorId)
+        .maybeSingle();
+    return (row?['cancellation_deadline_hours'] as int?) ?? 24;
+  }
+
+  Future<(bool tooLate, bool shortNotice)> _computeRescheduleWindow() async {
+    final tsUtc = DateTime.parse(widget.appointment['timestamp'].toString()).toUtc();
+    final nowUtc = DateTime.now().toUtc();
+    final hours = await _fetchCancellationDeadlineHours(widget.appointment['doctor_id']);
+    final tooLate = nowUtc.isAfter(tsUtc.subtract(Duration(hours: hours)));
+    // تعبير “إشعار قصير” اختياري (ضعف المهلة كمثال)
+    final shortNotice = !tooLate && nowUtc.isAfter(tsUtc.subtract(Duration(hours: hours * 2)));
+    return (tooLate, shortNotice);
+  }
+
+
+
+  bool _isTooLateToCancel({
+    required DateTime tsUtc,
+    required int deadlineHours,
+  }) {
+    final nowUtc = DateTime.now().toUtc();
+    final lastAllowed = tsUtc.subtract(Duration(hours: deadlineHours));
+    return nowUtc.isAfter(lastAllowed);
+  }
+
+// (اختياري) تنبيه "إشعار قصير"؛ هنا عرّفناه بأنه داخل ضعفي المهلة
+  bool _isShortNotice({
+    required DateTime tsUtc,
+    required int deadlineHours,
+  }) {
+    final nowUtc = DateTime.now().toUtc();
+    final borderline = tsUtc.subtract(Duration(hours: deadlineHours * 2));
+    return nowUtc.isAfter(borderline) && !_isTooLateToCancel(tsUtc: tsUtc, deadlineHours: deadlineHours);
+  }
+
+
   void _showRescheduleAppointmentSheet(BuildContext context) async {
-    DateTime appointmentDate = DateTime.parse(widget.appointment['timestamp']);
-    DateTime now = DateTime.now();
-    Duration difference = appointmentDate.difference(now);
+    // --------- Helpers ---------
+    Future<int> _fetchCancellationDeadlineHours(String doctorId) async {
+      final row = await Supabase.instance.client
+          .from('doctors')
+          .select('cancellation_deadline_hours')
+          .eq('id', doctorId)
+          .maybeSingle();
+      return (row?['cancellation_deadline_hours'] as int?) ?? 24;
+    }
 
-    final bool isTooLate = difference < const Duration(hours: 24);
-    final bool isShortNotice = difference >= const Duration(hours: 24) && difference <= const Duration(hours: 48);
+    (bool, bool) _computeFlags({
+      required DateTime apptUtc,
+      required int deadlineHours,
+    }) {
+      final nowUtc = DateTime.now().toUtc();
+      final tooLate = nowUtc.isAfter(apptUtc.subtract(Duration(hours: deadlineHours)));
+      final shortNotice = !tooLate &&
+          nowUtc.isAfter(apptUtc.subtract(Duration(hours: deadlineHours * 2)));
+      return (tooLate, shortNotice);
+    }
 
-    // 🔍 تحقق من وجود مواعيد متاحة
-    final availableSlots = await Supabase.instance.client
-        .from('appointments')
-        .select()
-        .eq('doctor_id', widget.appointment['doctor_id'])
-        .eq('booked', false)
-        .gt('timestamp', DateTime.now());
+    // --------- بيانات ---------
+    final appt = widget.appointment;
+    final doctorId = (appt['doctor_id'] ?? appt['doctorId'] ?? '').toString().trim();
+    if (doctorId.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(AppLocalizations.of(context)!.doctorIdMissingError)),
+      );
+      return;
+    }
 
-    final hasAvailable = availableSlots.isNotEmpty;
+    final tsUtc = DateTime.parse(appt['timestamp'].toString()).toUtc();
+    final deadlineHours = await _fetchCancellationDeadlineHours(doctorId);
+    final (isTooLate, isShortNotice) =
+    _computeFlags(apptUtc: tsUtc, deadlineHours: deadlineHours);
 
-
+    // --------- Too late ---------
     if (isTooLate) {
-      // ⛔️ أقل من 24 ساعة – ممنوع إعادة الجدولة
       showModalBottomSheet(
         context: context,
         backgroundColor: Colors.white,
@@ -207,7 +394,10 @@ Shared from DocSera App
                   ),
                   child: Text(
                     AppLocalizations.of(context)!.tooLateToReschedule,
-                    style: TextStyle(color: AppColors.orangeText, fontWeight: FontWeight.bold, fontSize: 12.sp),
+                    style: TextStyle(
+                        color: AppColors.orangeText,
+                        fontWeight: FontWeight.bold,
+                        fontSize: 12.sp),
                   ),
                 ),
                 SizedBox(height: 10.h),
@@ -225,98 +415,9 @@ Shared from DocSera App
       return;
     }
 
-    if (!hasAvailable) {
-      // ⛔️ لا يوجد مواعيد متاحة
-      showModalBottomSheet(
-        context: context,
-        backgroundColor: Colors.white,
-        shape: const RoundedRectangleBorder(
-          borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
-        ),
-        builder: (_) {
-          return Padding(
-            padding: EdgeInsets.symmetric(horizontal: 20.w, vertical: 24.h),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Stack(
-                  alignment: Alignment.center,
-                  children: [
-                    Center(
-                      child: Text(
-                        AppLocalizations.of(context)!.reschedule,
-                        style: AppTextStyles.getTitle1(context).copyWith(
-                          fontWeight: FontWeight.bold,
-                          color: AppColors.blackText,
-                        ),
-                      ),
-                    ),
-                    Positioned(
-                      right: 0,
-                      child: IconButton(
-                        icon: const Icon(Icons.close),
-                        onPressed: () => Navigator.pop(context),
-                      ),
-                    ),
-                  ],
-                ),
-                SizedBox(height: 25.h),
-                Stack(
-                  clipBehavior: Clip.none,
-                  children: [
-                    Image.asset('assets/images/empty_calendar.png', height: 70, width: 70),
-                    Positioned(
-                      bottom: -10,
-                      right: -10,
-                      child: Icon(Icons.info_outline, color: AppColors.red.withOpacity(0.8), size: 35),
-                    ),
-                  ],
-                ),
-                SizedBox(height: 35.h),
-                Container(
-                  padding: EdgeInsets.symmetric(horizontal: 14.w, vertical: 6.h),
-                  decoration: BoxDecoration(
-                    color: const Color(0xFFFFE7E7),
-                    borderRadius: BorderRadius.circular(30.r),
-                  ),
-                  child: Text(
-                    AppLocalizations.of(context)!.noAvailableAppointments,
-                    style: TextStyle(color: AppColors.red, fontWeight: FontWeight.bold, fontSize: 12.sp),
-                  ),
-                ),
-                SizedBox(height: 10.h),
-                Text(
-                  AppLocalizations.of(context)!.cancelInsteadNote,
-                  textAlign: TextAlign.center,
-                  style: AppTextStyles.getText3(context).copyWith(fontSize: 11.sp),
-                ),
-                SizedBox(height: 25.h),
-                ElevatedButton(
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: AppColors.red,
-                    minimumSize: const Size(double.infinity, 40),
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10.r)),
-                  ),
-                  onPressed: () {
-                    Navigator.pop(context);
-                    _showCancelAppointmentSheet(context);
-                  },
-                  child: Text(
-                    AppLocalizations.of(context)!.cancelAppointmentAction.toUpperCase(),
-                    style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 12.sp),
-                  ),
-                ),
-              ],
-            ),
-          );
-        },
-      );
-      return;
-    }
-
-    // ✅ الحالة الأخيرة: في وقت كافي ومواعيد متاحة => أطلب السبب وأكّد العملية
+    // --------- سبب إعادة الجدولة ---------
     bool isInvalid = false;
-    TextEditingController reasonController = TextEditingController();
+    final reasonController = TextEditingController();
 
     showModalBottomSheet(
       context: context,
@@ -325,19 +426,19 @@ Shared from DocSera App
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(20.r)),
       ),
-      builder: (context) {
+      builder: (ctx) {
         return StatefulBuilder(
-          builder: (context, setState) {
+          builder: (ctx, setBSState) {
             return Padding(
               padding: EdgeInsets.only(
-                bottom: MediaQuery.of(context).viewInsets.bottom,
+                bottom: MediaQuery.of(ctx).viewInsets.bottom,
                 top: 16.h,
               ),
               child: SingleChildScrollView(
                 padding: EdgeInsets.symmetric(horizontal: 16.w),
                 child: ConstrainedBox(
                   constraints: BoxConstraints(
-                    minHeight: MediaQuery.of(context).size.height * 0.9,
+                    minHeight: MediaQuery.of(ctx).size.height * 0.9,
                   ),
                   child: IntrinsicHeight(
                     child: Column(
@@ -348,9 +449,9 @@ Shared from DocSera App
                           children: [
                             Center(
                               child: Text(
-                                AppLocalizations.of(context)!.reschedule,
+                                AppLocalizations.of(ctx)!.reschedule,
                                 textAlign: TextAlign.center,
-                                style: AppTextStyles.getTitle1(context).copyWith(
+                                style: AppTextStyles.getTitle1(ctx).copyWith(
                                   fontWeight: FontWeight.bold,
                                   color: AppColors.blackText,
                                 ),
@@ -360,156 +461,168 @@ Shared from DocSera App
                               right: 0,
                               child: IconButton(
                                 icon: const Icon(Icons.close),
-                                onPressed: () => Navigator.pop(context),
+                                onPressed: () => Navigator.pop(ctx),
                               ),
                             ),
                           ],
                         ),
                         SizedBox(height: 35.h),
 
-
-                          Column(
-                            children: [
-                              if (isShortNotice)
-                                Column(
-                                children: [
-                                  Stack(
-                                    clipBehavior: Clip.none,
-                                    children: [
-                                      Image.asset('assets/images/empty_calendar.png', height: 70, width: 70),
-                                      Positioned(
-                                        bottom: -10,
-                                        right: -10,
-                                        child: Icon(Icons.warning_rounded, color: AppColors.yellow.withOpacity(0.8), size: 35),
-                                      ),
-                                    ],
+                        // تحذير عند shortNotice
+                        Column(
+                          children: [
+                            Stack(
+                              clipBehavior: Clip.none,
+                              children: [
+                                Image.asset('assets/images/empty_calendar.png',
+                                    height: 70, width: 70),
+                                Positioned(
+                                  bottom: -10,
+                                  right: -10,
+                                  child: Icon(
+                                    isShortNotice
+                                        ? Icons.warning_rounded
+                                        : Icons.access_time,
+                                    color: isShortNotice
+                                        ? AppColors.yellow.withOpacity(0.8)
+                                        : AppColors.orangeText.withOpacity(0.8),
+                                    size: 35,
                                   ),
-                                  SizedBox(height: 25.h),
-                                ],
+                                ),
+                              ],
+                            ),
+                            SizedBox(height: 25.h),
+                            if (isShortNotice) ...[
+                              Text(
+                                AppLocalizations.of(ctx)!.rescheduleWarningTitle,
+                                textAlign: TextAlign.center,
+                                style: TextStyle(
+                                    fontSize: 13.sp, fontWeight: FontWeight.bold),
                               ),
-
-                              if (!isShortNotice)
-                                Column(
-                                children: [
-                                  Stack(
-                                    clipBehavior: Clip.none,
-                                    children: [
-                                      Image.asset('assets/images/empty_calendar.png', height: 70, width: 70),
-                                      Positioned(
-                                        bottom: -10,
-                                        right: -10,
-                                        child: Icon(Icons.access_time, color: AppColors.orangeText.withOpacity(0.8), size: 35),
-                                      ),
-                                    ],
-                                  ),
-                                  SizedBox(height: 25.h),
-                                ],
-                              ),
-
-                              if (isShortNotice)
-                                Column(
+                              SizedBox(height: 25.h),
+                              Container(
+                                padding: EdgeInsets.all(16.w),
+                                decoration: BoxDecoration(
+                                  color: AppColors.yellow.withOpacity(0.2),
+                                  borderRadius: BorderRadius.circular(8.r),
+                                  border: Border.all(
+                                      color: AppColors.yellow.withOpacity(0.8)),
+                                ),
+                                child: Row(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
                                   children: [
-                                    Text(
-                                      AppLocalizations.of(context)!.rescheduleWarningTitle,
-                                      textAlign: TextAlign.center,
-                                      style: TextStyle(fontSize: 13.sp, fontWeight: FontWeight.bold),
-                                    ),
-                                    SizedBox(height: 25.h),
-                                    Container(
-                                      padding: EdgeInsets.all(16.w),
-                                      decoration: BoxDecoration(
-                                        color: AppColors.yellow.withOpacity(0.2),
-                                        borderRadius: BorderRadius.circular(8.r),
-                                        border: Border.all(color: AppColors.yellow.withOpacity(0.8)),
-                                      ),
-                                      child: Row(
-                                        crossAxisAlignment: CrossAxisAlignment.start,
+                                    Icon(Icons.warning,
+                                        color: Colors.brown, size: 16.sp),
+                                    SizedBox(width: 8.w),
+                                    Expanded(
+                                      child: Column(
+                                        crossAxisAlignment:
+                                        CrossAxisAlignment.start,
                                         children: [
-                                          Icon(Icons.warning, color: Colors.brown, size: 16.sp),
-                                          SizedBox(width: 8.w),
-                                          Expanded(
-                                            child: Column(
-                                              crossAxisAlignment: CrossAxisAlignment.start,
-                                              children: [
-                                                Text(
-                                                  AppLocalizations.of(context)!.appointmentShortNoticeWarning,
-                                                  style: TextStyle(color: Colors.brown, fontSize: 12.sp, fontWeight: FontWeight.bold),
-                                                ),
-                                                SizedBox(height: 4.h),
-                                                Text(
-                                                  AppLocalizations.of(context)!.rescheduleRespectNotice,
-                                                  style: TextStyle(color: Colors.brown, fontSize: 11.sp, fontWeight: FontWeight.w500),
-                                                ),
-                                              ],
-                                            ),
+                                          Text(
+                                            AppLocalizations.of(ctx)!
+                                                .appointmentShortNoticeWarning,
+                                            style: TextStyle(
+                                                color: Colors.brown,
+                                                fontSize: 12.sp,
+                                                fontWeight: FontWeight.bold),
+                                          ),
+                                          SizedBox(height: 4.h),
+                                          Text(
+                                            AppLocalizations.of(ctx)!
+                                                .rescheduleRespectNotice,
+                                            style: TextStyle(
+                                                color: Colors.brown,
+                                                fontSize: 11.sp,
+                                                fontWeight: FontWeight.w500),
                                           ),
                                         ],
                                       ),
                                     ),
-                                    SizedBox(height: 25.h),
                                   ],
                                 ),
+                              ),
+                              SizedBox(height: 25.h),
                             ],
-                          ),
-
+                          ],
+                        ),
 
                         Align(
                           alignment: Alignment.center,
                           child: Text(
-                            AppLocalizations.of(context)!.rescheduleReasonQuestion,
-                            style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13.sp),
+                            AppLocalizations.of(ctx)!.rescheduleReasonQuestion,
+                            style: TextStyle(
+                                fontWeight: FontWeight.bold, fontSize: 13.sp),
                           ),
                         ),
                         SizedBox(height: 10.h),
+
                         TextField(
                           controller: reasonController,
                           maxLines: 3,
-                          textDirection: detectTextDirection(reasonController.text),
-                          textAlign: getTextAlign(context),
-                          style: AppTextStyles.getText2(context),
+                          textDirection:
+                          detectTextDirection(reasonController.text),
+                          textAlign: getTextAlign(ctx),
+                          style: AppTextStyles.getText2(ctx),
                           decoration: InputDecoration(
-                            hintText: AppLocalizations.of(context)!.typeReasonHere,
-                            hintStyle: AppTextStyles.getText3(context).copyWith(fontSize: 11.sp, color: Colors.grey),
-                            contentPadding: EdgeInsets.symmetric(vertical: 12.h, horizontal: 14.w),
+                            hintText:
+                            AppLocalizations.of(ctx)!.typeReasonHere,
+                            hintStyle: AppTextStyles.getText3(ctx).copyWith(
+                                fontSize: 11.sp, color: Colors.grey),
+                            contentPadding: EdgeInsets.symmetric(
+                                vertical: 12.h, horizontal: 14.w),
                             filled: true,
                             fillColor: Colors.white,
-                            errorText: isInvalid ? AppLocalizations.of(context)!.reasonRequired : null,
+                            errorText: isInvalid
+                                ? AppLocalizations.of(ctx)!.reasonRequired
+                                : null,
                             border: OutlineInputBorder(
                               borderRadius: BorderRadius.circular(25.r),
                               borderSide: const BorderSide(color: Colors.grey),
                             ),
                             focusedBorder: OutlineInputBorder(
                               borderRadius: BorderRadius.circular(25.r),
-                              borderSide: BorderSide(color: AppColors.main, width: 2),
+                              borderSide:
+                              BorderSide(color: AppColors.main, width: 2),
                             ),
                           ),
-                          onChanged: (_) => setState(() => isInvalid = false),
+                          onChanged: (_) => setBSState(() => isInvalid = false),
                         ),
+
                         const Spacer(),
+
                         ElevatedButton(
                           style: ElevatedButton.styleFrom(
                             backgroundColor: AppColors.main,
                             minimumSize: const Size(double.infinity, 40),
-                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10.r)),
+                            shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(10.r)),
                           ),
                           onPressed: () async {
                             if (reasonController.text.trim().isEmpty) {
-                              setState(() => isInvalid = true);
+                              setBSState(() => isInvalid = true);
                               return;
                             }
-                            // أغلق الشيت الحالي
-                            Navigator.pop(context);
-                            final screenHeight = MediaQuery.of(context).size.height;
 
-                            final doctorScheduleCubit = context.read<DoctorScheduleCubit>()
-                              ..fetchDoctorAppointments(widget.appointment['doctor_id'] ?? '', context);
-// افتح الشيت يلي يعرض المواعيد المتاحة
+                            Navigator.pop(ctx);
+
+                            final screenHeight =
+                                MediaQuery.of(context).size.height;
+                            final doctorScheduleCubit =
+                            context.read<DoctorScheduleCubit>()
+                              ..fetchDoctorAppointments(
+                                doctorId,
+                                context,
+                                reasonId: appt['reason_id'] ?? appt['reasonId'], // ✅ تمرير السبب
+                              );
+
                             showModalBottomSheet(
                               context: context,
                               isScrollControlled: true,
                               backgroundColor: AppColors.background2,
                               shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.vertical(top: Radius.circular(20.r)),
+                                borderRadius: BorderRadius.vertical(
+                                    top: Radius.circular(20.r)),
                               ),
                               builder: (_) {
                                 return SizedBox(
@@ -518,56 +631,60 @@ Shared from DocSera App
                                     value: doctorScheduleCubit,
                                     child: DoctorAppointmentsBottomSheet(
                                       patientProfile: PatientProfile(
-                                        patientId: widget.appointment['user_id'] ?? '',
-                                        doctorId: widget.appointment['doctor_id'] ?? '',
-                                        patientName: widget.appointment['patient_name'] ?? '',
-                                        patientGender: widget.appointment['user_gender'] ?? '',
-                                        patientAge: widget.appointment['user_age'] ?? 0,
-                                        patientDOB: '',
-                                        patientPhoneNumber: '',
-                                        patientEmail: '',
-                                        reason: widget.appointment['reason'] ?? '',
+                                        patientId: appt['user_id'] ?? appt['userId'] ?? '',
+                                        doctorId: doctorId,
+                                        patientName: appt['patient_name'] ?? appt['patientName'] ?? AppLocalizations.of(context)!.unknown,
+                                        patientGender: appt['user_gender'] ?? appt['userGender'] ?? '',
+                                        patientAge: appt['user_age'] ?? appt['userAge'] ?? 0,
+                                        patientDOB: appt['patient_dob'] ?? appt['patientDOB'] ?? '',
+                                        patientPhoneNumber: appt['patient_phone'] ?? appt['patientPhoneNumber'] ?? '',
+                                        patientEmail: appt['patient_email'] ?? appt['patientEmail'] ?? '',
+                                        reason: appt['reason'] ?? appt['reason_text'] ?? AppLocalizations.of(context)!.notSpecified,
                                       ),
                                       appointmentDetails: AppointmentDetails(
-                                        doctorId: widget.appointment['doctor_id'] ?? '',
-                                        doctorName: widget.appointment['doctor_name'] ?? '',
-                                        doctorGender: widget.appointment['doctor_gender'] ?? '',
-                                        doctorTitle: widget.appointment['doctor_title'] ?? '',
-                                        specialty: widget.appointment['doctor_specialty'] ?? '',
-                                        image: widget.appointment['doctor_image'] ?? '',
-                                        patientId: widget.appointment['relative_id'] ?? widget.appointment['user_id'] ?? '',
-                                        isRelative: widget.appointment['relative_id'] != null,
-                                        patientName: widget.appointment['patient_name'] ?? '',
-                                        patientGender: widget.appointment['user_gender'] ?? '',
-                                        patientAge: widget.appointment['user_age'] ?? 0,
-                                        newPatient: widget.appointment['new_patient'] ?? false,
-                                        reason: widget.appointment['reason'] ?? '',
-                                        clinicName: widget.appointment['clinic'] ?? '',
-                                        clinicAddress: widget.appointment['clinic_address'] ?? {},
+                                        doctorId: doctorId,
+                                        doctorName: appt['doctor_name'] ?? appt['doctorName'] ?? '',
+                                        doctorGender: appt['doctor_gender'] ?? appt['doctorGender'] ?? '',
+                                        doctorTitle: appt['doctor_title'] ?? appt['doctorTitle'] ?? '',
+                                        specialty: appt['doctor_specialty'] ?? appt['specialty'] ?? '',
+                                        image: appt['doctor_image'] ?? appt['doctorImage'] ?? '',
+                                        patientId: appt['relative_id'] ?? appt['relativeId'] ?? appt['user_id'] ?? appt['userId'] ?? '',
+                                        isRelative: (appt['relative_id'] ?? appt['relativeId']) != null,
+                                        patientName: appt['patient_name'] ?? appt['patientName'] ?? AppLocalizations.of(context)!.unknown,
+                                        patientGender: appt['user_gender'] ?? appt['userGender'] ?? '',
+                                        patientAge: appt['user_age'] ?? appt['userAge'] ?? 0,
+                                        newPatient: appt['new_patient'] ?? appt['newPatient'] ?? false,
+                                        reason: appt['reason'] ?? appt['reason_text'] ?? AppLocalizations.of(context)!.notSpecified,
+                                        reasonId: appt['reason_id'] ?? appt['reasonId'], // ✅ تمرير الـ id
+                                        clinicName: appt['clinic'] ?? appt['clinicName'] ?? '',
+                                        clinicAddress: appt['clinic_address'] ?? appt['clinicAddress'] ?? const {},
+                                        location: appt['location'] ?? appt['clinicLocation'],
                                       ),
-                                      oldAppointmentId: widget.appointment['id'] ?? '',
-                                      oldTimestamp: DateTime.parse(widget.appointment['timestamp']),
+                                      oldAppointmentId: _appointmentId(),
+                                      oldTimestamp: DateTime.tryParse(appt['timestamp']?.toString() ?? '') ?? DateTime.now(),
                                     ),
-
                                   ),
                                 );
                               },
                             );
-
-
-
-                            // Navigator.push(context, fadePageRoute(ReschedulePage(...)));
                           },
                           child: Text(
-                            AppLocalizations.of(context)!.continuing.toUpperCase(),
-                            style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 12.sp),
+                            AppLocalizations.of(ctx)!.continuing.toUpperCase(),
+                            style: TextStyle(
+                                color: Colors.white,
+                                fontWeight: FontWeight.bold,
+                                fontSize: 12.sp),
                           ),
                         ),
+
                         TextButton(
-                          onPressed: () => Navigator.pop(context),
+                          onPressed: () => Navigator.pop(ctx),
                           child: Text(
-                            AppLocalizations.of(context)!.keepAppointment,
-                            style: TextStyle(color: Colors.black54, fontWeight: FontWeight.bold, fontSize: 12.sp),
+                            AppLocalizations.of(ctx)!.keepAppointment,
+                            style: TextStyle(
+                                color: Colors.black54,
+                                fontWeight: FontWeight.bold,
+                                fontSize: 12.sp),
                           ),
                         ),
                         SizedBox(height: 10.h),
@@ -583,16 +700,28 @@ Shared from DocSera App
     );
   }
 
-  void _showCancelAppointmentSheet(BuildContext context) {
-    DateTime appointmentDate = DateTime.parse(widget.appointment['timestamp']);
-    DateTime now = DateTime.now();
-    Duration difference = appointmentDate.difference(now);
+  void _showCancelAppointmentSheet(BuildContext context) async {
+    final doctorId = _doctorId();
+    final apptId = _appointmentId();
+    print("🧨 [Cancel] apptId=$_appointmentId  raw(id)=${_appt['id']}  raw(appointmentId)=${_appt['appointmentId']}");
 
-    final bool isTooLate = difference < const Duration(hours: 24);
-    final bool isShortNotice = difference >= const Duration(hours: 24) && difference <= const Duration(hours: 48);
+    if (doctorId.isEmpty || apptId.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(AppLocalizations.of(context)!.somethingWentWrong)),
+      );
+      return;
+    }
 
-    if (isTooLate) {
-      // ⛔️ أقل من 24 ساعة – ممنوع الإلغاء
+    // 1) اجلب مهلة الإلغاء من جدول الأطباء
+    final deadlineHours = await _fetchCancellationDeadlineHours(doctorId);
+
+    // 2) احسب على UTC
+    final tsUtc = _tsUtc();
+    final tooLate = _isTooLateToCancel(tsUtc: tsUtc, deadlineHours: deadlineHours);
+    final shortNotice = _isShortNotice(tsUtc: tsUtc, deadlineHours: deadlineHours);
+
+    if (tooLate) {
+      // ⛔️ تجاوز مهلة الإلغاء
       showModalBottomSheet(
         context: context,
         backgroundColor: Colors.white,
@@ -647,12 +776,17 @@ Shared from DocSera App
                     borderRadius: BorderRadius.circular(30.r),
                   ),
                   child: Text(
+                    // يمكنك تخصيص نص الترجمة لإظهار الساعات (deadlineHours)
+                    // أو اكتب نصًا مباشرًا:
+                    // "انتهت مهلة الإلغاء (${deadlineHours} ساعة قبل الموعد)."
                     AppLocalizations.of(context)!.tooLateToCancel,
                     style: TextStyle(color: AppColors.red, fontWeight: FontWeight.bold, fontSize: 12.sp),
                   ),
                 ),
                 SizedBox(height: 10.h),
                 Text(
+                  // مثال نص إيضاحي:
+                  // "يمكن الإلغاء حتى ${deadlineHours} ساعة قبل موعدك."
                   AppLocalizations.of(context)!.cancelTimeLimitNote,
                   textAlign: TextAlign.center,
                   style: AppTextStyles.getText3(context).copyWith(fontSize: 11.sp),
@@ -666,8 +800,9 @@ Shared from DocSera App
       return;
     }
 
+    // 💬 تجميع السبب ثم الحذف
     bool isInvalid = false;
-    TextEditingController reasonController = TextEditingController();
+    final reasonController = TextEditingController();
 
     showModalBottomSheet(
       context: context,
@@ -717,84 +852,50 @@ Shared from DocSera App
                           ],
                         ),
                         SizedBox(height: 35.h),
-                          Column(
+
+                        // تحذير إشعار قصير اختياري
+                        if (shortNotice) ...[
+                          Stack(
+                            clipBehavior: Clip.none,
                             children: [
-                              if (!isShortNotice)
-                                Stack(
-                                  clipBehavior: Clip.none,
-                                  children: [
-                                    Image.asset('assets/images/empty_calendar.png', height: 70, width: 70),
-                                    Positioned(
-                                      bottom: -10,
-                                      right: -10,
-                                      child: Icon(Icons.cancel, color: AppColors.red.withOpacity(0.8), size: 35),
-                                    ),
-                                  ],
-                                ),
-                              if (isShortNotice)
-                                Stack(
-                                  clipBehavior: Clip.none,
-                                  children: [
-                                    Image.asset('assets/images/empty_calendar.png', height: 70, width: 70),
-                                    Positioned(
-                                      bottom: -10,
-                                      right: -10,
-                                      child: Icon(Icons.warning_rounded, color: AppColors.yellow.withOpacity(0.8), size: 35),
-                                    ),
-                                  ],
-                                ),
-
-
-                                SizedBox(height: 25.h),
-
-                              if (isShortNotice)
-                                Text(
-                                  AppLocalizations.of(context)!.cancelWarningTitle,
-                                  textAlign: TextAlign.center,
-                                  style: TextStyle(fontSize: 13.sp, fontWeight: FontWeight.bold),
-                                ),
-                              if (isShortNotice)
-                                SizedBox(height: 25.h),
-                              if (isShortNotice)
-                                Container(
-                                  padding: EdgeInsets.all(16.w),
-                                  decoration: BoxDecoration(
-                                    color: AppColors.yellow.withOpacity(0.2),
-                                    borderRadius: BorderRadius.circular(8.r),
-                                    border: Border.all(color: AppColors.yellow.withOpacity(0.8)),
-                                  ),
-                                  child: Row(
-                                    crossAxisAlignment: CrossAxisAlignment.start,
-                                    children: [
-                                      Icon(Icons.warning, color: Colors.brown, size: 16.sp),
-                                      SizedBox(width: 8.w),
-                                      Expanded(
-                                        child: Column(
-                                          crossAxisAlignment: CrossAxisAlignment.start,
-                                          children: [
-                                            Text(
-                                              AppLocalizations.of(context)!.appointmentShortNoticeWarning,
-                                              style: TextStyle(color: Colors.brown, fontSize: 12.sp, fontWeight: FontWeight.bold),
-                                            ),
-                                            SizedBox(height: 4.h),
-                                            Text(
-                                              AppLocalizations.of(context)!.cancelRespectNotice,
-                                              style: TextStyle(color: Colors.brown, fontSize: 11.sp, fontWeight: FontWeight.w500),
-                                            ),
-                                          ],
-                                        ),
-                                      ),
-                                    ],
-                                  ),
-                                ),
-                              SizedBox(height: 25.h),
+                              Image.asset('assets/images/empty_calendar.png', height: 70, width: 70),
+                              Positioned(
+                                bottom: -10,
+                                right: -10,
+                                child: Icon(Icons.warning_rounded, color: AppColors.yellow.withOpacity(0.8), size: 35),
+                              ),
                             ],
                           ),
+                          SizedBox(height: 25.h),
+                          Container(
+                            padding: EdgeInsets.all(16.w),
+                            decoration: BoxDecoration(
+                              color: AppColors.yellow.withOpacity(0.2),
+                              borderRadius: BorderRadius.circular(8.r),
+                              border: Border.all(color: AppColors.yellow.withOpacity(0.8)),
+                            ),
+                            child: Row(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Icon(Icons.warning, color: Colors.brown, size: 16.sp),
+                                SizedBox(width: 8.w),
+                                Expanded(
+                                  child: Text(
+                                    AppLocalizations.of(context)!.cancelRespectNotice,
+                                    style: TextStyle(color: Colors.brown, fontSize: 11.sp, fontWeight: FontWeight.w500),
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                          SizedBox(height: 25.h),
+                        ],
+
                         Align(
                           alignment: Alignment.center,
                           child: Text(
                             AppLocalizations.of(context)!.cancelReasonQuestion,
-                            style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13.sp),
+                            style: const TextStyle(fontWeight: FontWeight.bold),
                           ),
                         ),
                         SizedBox(height: 10.h),
@@ -835,25 +936,23 @@ Shared from DocSera App
                               return;
                             }
 
-                            // احفظ نسخة من السياق الحالي
                             final currentContext = context;
-
                             try {
                               await _cancelAppointment(
-                                context,
-                                userId: widget.appointment['user_id'],
-                                appointmentId: widget.appointment['id'],
-                                doctorId: widget.appointment['doctor_id'],
+                                currentContext,
+                                appointmentId: apptId,
+                                doctorId: doctorId,
+                                // يمكنك إرسال السبب إلى لوج/جدول منفصل إن رغبت
+                                // cancelReason: reasonController.text.trim(),
                               );
                               Navigator.pop(currentContext);
 
-                              // ✅ التنقل لصفحة التأكيد بعد الإلغاء
+                              // ✅ الذهاب لصفحة تأكيد الإلغاء
                               Navigator.pushReplacement(
                                 currentContext,
-                                fadePageRoute(AppointmentCancelledPage(appointment: widget.appointment)),
+                                fadePageRoute(AppointmentCancelledPage(appointment: _appt)),
                               );
                             } catch (e) {
-                              // ✅ عرض رسالة الخطأ بسياق صالح
                               ScaffoldMessenger.of(currentContext).showSnackBar(
                                 SnackBar(
                                   content: Text(AppLocalizations.of(currentContext)!.somethingWentWrong),
@@ -862,17 +961,16 @@ Shared from DocSera App
                               );
                             }
                           },
-
                           child: Text(
                             AppLocalizations.of(context)!.cancelAppointmentAction.toUpperCase(),
-                            style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 12.sp),
+                            style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
                           ),
                         ),
                         TextButton(
                           onPressed: () => Navigator.pop(context),
                           child: Text(
                             AppLocalizations.of(context)!.keepAppointment,
-                            style: TextStyle(color: Colors.black54, fontWeight: FontWeight.bold, fontSize: 12.sp),
+                            style: const TextStyle(color: Colors.black54, fontWeight: FontWeight.bold),
                           ),
                         ),
                         SizedBox(height: 10.h),
@@ -890,385 +988,124 @@ Shared from DocSera App
 
   Future<void> _cancelAppointment(
       BuildContext context, {
-        required String userId,
         required String appointmentId,
         required String doctorId,
+        // String? cancelReason, // إن أردت تسجيل السبب في جدول آخر
       }) async {
+    if (appointmentId.trim().isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Missing appointment id')),
+      );
+      return;
+    }
+
     try {
-      // تحديث الموعد عند الطبيب ليصير غير محجوز
+      // نحذف الصف من جدول المواعيد
       await Supabase.instance.client
           .from('appointments')
-          .update({
-        'booked': false,
-        'account_name': null,
-        'patient_name': null,
-        'user_gender': null,
-        'user_age': null,
-        'new_patient': null,
-        'reason': null,
-        'user_id': null,
-        'booking_timestamp': null,
-      })
+          .delete()
           .eq('id', appointmentId);
 
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-        content: Text(AppLocalizations.of(context)!.appointmentCancelled),
-        backgroundColor: AppColors.red.withOpacity(0.8),
-      ));
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(AppLocalizations.of(context)!.appointmentCancelled),
+            backgroundColor: AppColors.red.withOpacity(0.8),
+          ),
+        );
+      }
+
+      // ملاحظة:
+      // - إن أردت حفظ log للإلغاء (userId, doctorId, reason, timestamp...)،
+      //   أنشئ جدولًا مثل appointment_cancellations وأضف له صفًا هنا.
     } catch (e) {
-      print("❌ Error cancelling appointment: $e");
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-        content: Text(AppLocalizations.of(context)!.somethingWentWrong),
-        backgroundColor: Colors.red,
-      ));
+      debugPrint("❌ Error cancelling appointment: $e");
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(AppLocalizations.of(context)!.somethingWentWrong),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
     }
   }
 
-  // void _showAttachmentOptions() {
-  //   final local = AppLocalizations.of(context)!;
-  //   final imagesCount = _selectedImageFiles .length;
-  //   final isImageMode = _pendingFileType == 'image';
-  //
-  //   final isPdfOptionDisabled = isImageMode && imagesCount > 0;
-  //   final isCameraDisabled = isImageMode && imagesCount >= 8;
-  //   final isGalleryDisabled = isImageMode && imagesCount >= 8;
-  //
-  //   showModalBottomSheet(
-  //     context: context,
-  //     backgroundColor: Colors.white,
-  //     shape: RoundedRectangleBorder(
-  //       borderRadius: BorderRadius.vertical(top: Radius.circular(16.r)),
-  //     ),
-  //     builder: (_) {
-  //       return Padding(
-  //         padding: EdgeInsets.symmetric(horizontal: 24.w, vertical: 24.h),
-  //         child: Column(
-  //           mainAxisSize: MainAxisSize.min,
-  //           children: [
-  //             Text(
-  //               local.chooseAttachmentType,
-  //               style: AppTextStyles.getTitle1(context).copyWith(fontSize: 12.sp, color: AppColors.grayMain),
-  //             ),
-  //             SizedBox(height: 10.h),
-  //             Divider(height: 1.h, color: Colors.grey[200]),
-  //             SizedBox(height: 20.h),
-  //             Row(
-  //               mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-  //               children: [
-  //                 _buildIconAction(
-  //                   iconPath: 'assets/icons/camera.svg',
-  //                   label: local.takePhoto,
-  //                   onTap: isCameraDisabled
-  //                       ? null
-  //                       : () async {
-  //                     Navigator.pop(context);
-  //                     final picked = await ImagePicker().pickImage(source: ImageSource.camera);
-  //                     if (picked != null) {
-  //                       setState(() {
-  //                         _selectedImageFiles.add(File(picked.path));
-  //                         _pendingFileType = 'image';
-  //                         _attachedDocument = null;
-  //                       });
-  //                     }
-  //                   },
-  //                 ),
-  //                 _buildIconAction(
-  //                   iconPath: 'assets/icons/gallery.svg',
-  //                   label: local.chooseFromLibrary2,
-  //                   onTap: isGalleryDisabled
-  //                       ? null
-  //                       : () async {
-  //                     Navigator.pop(context);
-  //                     final result = await FilePicker.platform.pickFiles(
-  //                       type: FileType.image,
-  //                       allowMultiple: true,
-  //                     );
-  //                     if (result != null && result.files.isNotEmpty) {
-  //                       final pickedFiles = result.files
-  //                           .where((file) => file.path != null)
-  //                           .map((file) => File(file.path!))
-  //                           .toList();
-  //
-  //                       final totalFiles = _selectedImageFiles.length + pickedFiles.length;
-  //                       final available = 8 - _selectedImageFiles.length;
-  //                       final filesToAdd = pickedFiles.take(available).toList();
-  //
-  //                       setState(() {
-  //                         _selectedImageFiles.addAll(filesToAdd);
-  //                         _pendingFileType = 'image';
-  //                         _attachedDocument = null;
-  //                       });
-  //                     }
-  //                   },
-  //                 ),
-  //                 _buildIconAction(
-  //                   iconPath: 'assets/icons/file.svg',
-  //                   label: local.chooseFile,
-  //                   onTap: isPdfOptionDisabled
-  //                       ? null
-  //                       : () async {
-  //                     Navigator.pop(context);
-  //                     final result = await FilePicker.platform.pickFiles(
-  //                       type: FileType.custom,
-  //                       allowedExtensions: ['pdf'],
-  //                     );
-  //                     if (result != null && result.files.isNotEmpty) {
-  //                       final pickedFile = File(result.files.first.path!);
-  //                       setState(() {
-  //                         _selectedImageFiles = [pickedFile];
-  //                         _pendingFileType = 'pdf';
-  //                         _attachedDocument = null;
-  //                       });
-  //                     }
-  //                   },
-  //                 ),
-  //               ],
-  //             ),
-  //             SizedBox(height: 12.h),
-  //           ],
-  //         ),
-  //       );
-  //     },
-  //   );
-  // }
-  //
-  // Widget _buildIconAction({
-  //   required String iconPath,
-  //   required String label,
-  //   required VoidCallback? onTap,
-  // }) {
-  //   return GestureDetector(
-  //     onTap: onTap,
-  //     child: Column(
-  //       children: [
-  //         Container(
-  //           padding: EdgeInsets.all(12.r),
-  //           decoration: BoxDecoration(
-  //             color: onTap == null ? Colors.grey.shade200 : AppColors.main.withOpacity(0.1),
-  //             shape: BoxShape.circle,
-  //           ),
-  //           child: SvgPicture.asset(
-  //             iconPath,
-  //             width: 24.sp,
-  //             height: 24.sp,
-  //             color: onTap == null ? Colors.grey : AppColors.main,
-  //           ),
-  //         ),
-  //         SizedBox(height: 6.h),
-  //         Text(
-  //           label,
-  //           style: AppTextStyles.getText3(context).copyWith(
-  //             fontSize: 10.sp,
-  //             color: onTap == null ? Colors.grey : Colors.black,
-  //           ),
-  //           textAlign: TextAlign.center,
-  //         ),
-  //       ],
-  //     ),
-  //   );
-  // }
-  //
-  // Widget _buildPreviewAttachment() {
-  //   final local = AppLocalizations.of(context)!;
-  //
-  //   if (_selectedImageFiles.isEmpty) return const SizedBox();
-  //   final isPdf = _pendingFileType == 'pdf';
-  //
-  //   Widget buildBlurredContainer(Widget child) {
-  //     return ClipRRect(
-  //       borderRadius: BorderRadius.circular(12.r),
-  //       child: BackdropFilter(
-  //         filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
-  //         child: Container(
-  //           width: double.infinity,
-  //           padding: EdgeInsets.symmetric(horizontal: 12.w, vertical: 10.h),
-  //           decoration: BoxDecoration(
-  //             color: Colors.white.withOpacity(0.3),
-  //             border: Border.all(color: AppColors.main.withOpacity(0.4)),
-  //             borderRadius: BorderRadius.circular(12.r),
-  //           ),
-  //           child: child,
-  //         ),
-  //       ),
-  //     );
-  //   }
-  //
-  //   if (isPdf) {
-  //     final fileName = _selectedImageFiles.first.path.split('/').last;
-  //     final shortName = fileName.length > 30 ? fileName.substring(0, 27) + '...' : fileName;
-  //
-  //     return Padding(
-  //       padding: EdgeInsets.symmetric(horizontal: 0, vertical: 6.h),
-  //       child: buildBlurredContainer(
-  //         Row(
-  //           children: [
-  //             SvgPicture.asset('assets/icons/pdf-file.svg', width: 24.sp, height: 24.sp),
-  //             SizedBox(width: 10.w),
-  //             Expanded(
-  //               child: Text(
-  //                 shortName,
-  //                 style: AppTextStyles.getText2(context).copyWith(fontSize: 12.sp, color: Colors.black87),
-  //                 overflow: TextOverflow.ellipsis,
-  //               ),
-  //             ),
-  //             IconButton(
-  //               icon: Icon(Icons.close, size: 18.sp, color: AppColors.main),
-  //               onPressed: () {
-  //                 setState(() {
-  //                   _selectedImageFiles.clear();
-  //                   _pendingFileType = null;
-  //                 });
-  //               },
-  //             ),
-  //           ],
-  //         ),
-  //       ),
-  //     );
-  //   }
-  //
-  //   final count = _selectedImageFiles.length;
-  //   final imageSize = 36.w;
-  //   final spacing = 6.w;
-  //   final label = count == 1 ? local.attachedImage : '$count ${local.attachedImages}';
-  //
-  //   return Padding(
-  //     padding: EdgeInsets.symmetric(horizontal: 0, vertical: 6.h),
-  //     child: buildBlurredContainer(
-  //       Row(
-  //         crossAxisAlignment: CrossAxisAlignment.center,
-  //         children: [
-  //           Wrap(
-  //             spacing: spacing,
-  //             children: List.generate(
-  //               count > 3 ? 4 : count,
-  //                   (i) {
-  //                 if (i == 3 && count > 4) {
-  //                   return Container(
-  //                     width: imageSize,
-  //                     height: imageSize,
-  //                     decoration: BoxDecoration(
-  //                       border: Border.all(color: Colors.grey.shade300, width: 0.5),
-  //                       borderRadius: BorderRadius.circular(6.r),
-  //                       color: AppColors.main.withOpacity(0.15),
-  //                     ),
-  //                     alignment: Alignment.center,
-  //                     child: Text(
-  //                       '+${count - 3}',
-  //                       style: AppTextStyles.getText2(context).copyWith(
-  //                         fontSize: 11.sp,
-  //                         color: AppColors.main,
-  //                       ),
-  //                     ),
-  //                   );
-  //                 } else {
-  //                   return Container(
-  //                     width: imageSize,
-  //                     height: imageSize,
-  //                     decoration: BoxDecoration(
-  //                       border: Border.all(color: Colors.grey.shade300, width: 0.5),
-  //                       borderRadius: BorderRadius.circular(6.r),
-  //                     ),
-  //                     child: ClipRRect(
-  //                       borderRadius: BorderRadius.circular(6.r),
-  //                       child: GestureDetector(
-  //                         onTap: () {
-  //                           print('tapped');
-  //                           final filePaths = _selectedImageFiles.map((f) => f.path).toList();
-  //                           _showLocalImageOverlayWithIndex(filePaths, i);
-  //                         },
-  //                         child: Image.file(
-  //                           _selectedImageFiles[i],
-  //                           fit: BoxFit.cover,
-  //                         ),
-  //                       ),
-  //
-  //                     ),
-  //                   );
-  //                 }
-  //               },
-  //             ),
-  //           ),
-  //           const Spacer(),
-  //           Row(
-  //             children: [
-  //               Text(
-  //                 label,
-  //                 style: AppTextStyles.getText2(context).copyWith(fontSize: 10.sp, color: Colors.black87),
-  //               ),
-  //               SizedBox(width: 4.w),
-  //               IconButton(
-  //                 icon: Icon(Icons.close, size: 18.sp, color: AppColors.main),
-  //                 onPressed: () {
-  //                   setState(() {
-  //                     _selectedImageFiles.clear();
-  //                     _pendingFileType = null;
-  //                   });
-  //                 },
-  //               ),
-  //             ],
-  //           ),
-  //         ],
-  //       ),
-  //     ),
-  //   );
-  // }
-  //
-  // void _showLocalImageOverlayWithIndex(List<String> paths, int index) {
-  //   setState(() {
-  //     _expandedImageUrls = paths;
-  //     _initialImageIndex = index;
-  //     _expandedImageOverlay = true;
-  //   });
-  // }
-  //
-  //
-  // void _hideImageOverlay() {
-  //   setState(() {
-  //     _expandedImageOverlay = false;
-  //   });
-  // }
 
 
   @override
   Widget build(BuildContext context) {
-    DateTime appointmentDate = DateTime.parse(widget.appointment['timestamp']);
-    String locale = Localizations.localeOf(context).languageCode; // ✅ Get the current locale
+    // Short alias
+    final appt = widget.appointment;
 
-// ✅ Format date normally
-    String formattedDate = DateFormat("EEEE, d MMMM yyyy", locale).format(appointmentDate);
+    debugPrint(
+        'clinicName=${appt['clinicName']} (${appt['clinicName']?.runtimeType}) | '
+            'clinic=${appt['clinic']} (${appt['clinic']?.runtimeType}) | '
+            'clinic_name=${appt['clinic_name']} (${appt['clinic_name']?.runtimeType})'
+    );
 
-// ✅ Ensure 12-hour format with AM/PM
-    String formattedTime = DateFormat("h:mm a", locale).format(appointmentDate);
+    // --- Locale ---
+    final String locale = Localizations.localeOf(context).toString();
+
+    // --- Timestamp UTC → Syria time ---
+    final DateTime tsUtc = DateTime.parse(appt['timestamp'].toString()).toUtc();
+    final DateTime tsClinic = tsUtc.add(const Duration(hours: 3)); // Syria TZ
+
+    // --- Date & Time ---
+    final String formattedDate = DateFormat('EEEE, d MMMM yyyy', locale).format(tsClinic);
+// ✅ دايماً استعملها
+    final String formattedTime = format12hLocalized(context, tsUtc);
 
 
-    final Map<String, dynamic> clinicAddress = widget.appointment['clinic_address'] ?? {};
 
+    // --- Clinic name ---
+    final String clinicName =
+    (appt['clinicName'] ?? appt['clinic'] ?? appt['clinic_name'] ?? '').toString().trim();
 
-    String formattedAddress = "${clinicAddress['street'] ?? ''} ${clinicAddress['buildingNr'] ?? ''}\n"
-        "${clinicAddress['city'] ?? ''}\n"
-        "${clinicAddress['country'] ?? ''}\n"
-        "${clinicAddress['details'] ?? ''}";
+    // --- Clinic address: handle Map or JSON string ---
+    dynamic rawAddress = appt['clinic_address'] ?? appt['clinicAddress'] ?? {};
+    Map<String, dynamic> clinicAddress;
+    if (rawAddress is String) {
+      try {
+        clinicAddress = Map<String, dynamic>.from(jsonDecode(rawAddress));
+      } catch (_) {
+        clinicAddress = {};
+      }
+    } else {
+      clinicAddress = Map<String, dynamic>.from(rawAddress);
+    }
 
-    // Create the doctorName variable (handles empty title)
-    String doctorName = "${widget.appointment['doctor_title'] ?? ''} ${widget.appointment['doctor_name'] ?? ''}".trim();
-    print("🚀🚀🚀🚀🚀🚀🚀 TEST TEST TEST: '${widget.appointment}'");
+    String _joinNonEmpty(List<String?> parts, {String sep = ' '}) =>
+        parts.where((s) => (s ?? '').trim().isNotEmpty).map((s) => s!.trim()).join(sep);
 
-    String gender = (widget.appointment['doctor_gender'] ?? '').toLowerCase();
-    String title = (widget.appointment['doctor_title'] ?? '').toLowerCase();
-    String? doctorImage = widget.appointment['doctor_image'];
+    final String line1 = _joinNonEmpty([clinicAddress['street']?.toString(), clinicAddress['buildingNr']?.toString()]);
+    final String line2 = _joinNonEmpty([clinicAddress['city']?.toString()]);
+    final String line3 = _joinNonEmpty([clinicAddress['country']?.toString()]);
+    final String line4 = _joinNonEmpty([clinicAddress['details']?.toString()]);
+    final String formattedAddress = _joinNonEmpty([line1, line2, line3, line4], sep: '\n');
+
+    // --- Doctor info ---
+    final String doctorName = _joinNonEmpty([
+      (appt['doctorTitle'] ?? appt['doctor_title'])?.toString(),
+      (appt['doctorName'] ?? appt['doctor_name'])?.toString(),
+    ]);
+    final specialty = (appt['specialty'] ?? appt['doctor_specialty'] ?? AppLocalizations.of(context)!.unknownSpecialty).toString();
+    final patientName = (appt['patientName'] ?? appt['patient_name'] ?? AppLocalizations.of(context)!.unknown).toString();
+
+    final String gender = (appt['doctor_gender'] ?? appt['doctorGender'] ?? '').toString().toLowerCase();
+    final String titleForImage = (appt['doctor_title'] ?? appt['doctorTitle'] ?? '').toString().toLowerCase();
+    final String? doctorImage = (appt['doctor_image'] ?? appt['doctorImage']) as String?;
 
     final imageResult = resolveDoctorImagePathAndWidget(
       doctor: {
         'doctor_image': doctorImage,
-        'gender': gender,
-        'title': title,
+        'doctorGender': gender,
+        'doctorTitle': titleForImage,
       },
       width: 40,
       height: 40,
     );
     final imageProvider = imageResult.imageProvider;
-
-
 
     return BaseScaffold(
       title: Text(
@@ -1306,10 +1143,10 @@ Shared from DocSera App
                             child: GestureDetector(
                               behavior: HitTestBehavior.opaque, // ✅ Makes blank space clickable
                               onTap: () {
-                                final doctorId = widget.appointment['doctor_id']?.toString() ?? '';
+                                final doctorId = (appt['doctorId'] ?? appt['doctor_id'] ?? '').toString();
 
                                 print("🚀 Navigating to DoctorProfilePage with doctorId: '$doctorId'");
-                                print("💡 Full appointment object: ${widget.appointment}");
+                                print("💡 Full appointment object: $appt");
 
                                 if (doctorId.isEmpty) {
                                   print("❌ ERROR: doctorId is missing or empty.");
@@ -1319,12 +1156,11 @@ Shared from DocSera App
                                 } else {
                                   Navigator.push(
                                     context,
-                                    fadePageRoute(
-                                      DoctorProfilePage(doctorId: doctorId),
-                                    ),
+                                    fadePageRoute(DoctorProfilePage(doctorId: doctorId)),
                                   );
                                 }
                               },
+
                               child: Row(
                                 children: [
                                   CircleAvatar(
@@ -1342,9 +1178,10 @@ Shared from DocSera App
                                       ),
 
                                       Text(
-                                        widget.appointment['doctor_specialty'] ?? AppLocalizations.of(context)!.unknownSpecialty,
-                                          style: AppTextStyles.getText2(context).copyWith( color: Colors.black54),
+                                        specialty,
+                                        style: AppTextStyles.getText2(context).copyWith(color: Colors.black54),
                                       ),
+
                                     ],
                                   ),
                                   const Spacer(),
@@ -1495,15 +1332,17 @@ Shared from DocSera App
                                   context,
                                   fadePageRoute(
                                     SelectPatientPage(
-                                      doctorId: widget.appointment["doctor_id"] ?? "",
-                                      doctorName: widget.appointment["doctor_name"] ?? "",
-                                      doctorTitle: widget.appointment["doctor_title"] ?? "",
-                                      doctorGender: widget.appointment["doctor_gender"] ?? "",
-                                      specialty: widget.appointment["doctor_specialty"] ?? "",
-                                      image: widget.appointment["doctor_image"] ?? "",
-                                      clinicName: widget.appointment['clinic'] ?? "",
-                                      clinicAddress: widget.appointment['clinic_address'] ?? {},
+                                      doctorId: widget.appointment["doctorId"] ?? widget.appointment["doctor_id"] ?? "",
+                                      doctorName: widget.appointment["doctorName"] ?? widget.appointment["doctor_name"] ?? "",
+                                      doctorTitle: widget.appointment["doctorTitle"] ?? widget.appointment["doctor_title"] ?? "",
+                                      doctorGender: widget.appointment["doctorGender"] ?? widget.appointment["doctor_gender"] ?? "",
+                                      specialty: widget.appointment["specialty"] ?? widget.appointment["doctor_specialty"] ?? "",
+                                      image: widget.appointment["doctorImage"] ?? widget.appointment["doctor_image"] ?? "",
+                                      clinicName: widget.appointment['clinicName'] ?? widget.appointment['clinic'] ?? "",
+                                      clinicAddress: widget.appointment['clinicAddress'] ?? widget.appointment['clinic_address'] ?? {},
+                                      clinicLocation: widget.appointment['clinicLocation'] ?? widget.appointment['location'] ?? {},
                                     ),
+
                                   ),
                                 );                              },
                               borderRadius: BorderRadius.circular(12.r),
@@ -1554,8 +1393,8 @@ Shared from DocSera App
                                       Icon(Icons.person, color: AppColors.main, size: 18.sp),
                                       SizedBox(width: 12.w),
                                       Text(
-                                        (widget.appointment['patient_name'] ?? "").toUpperCase(), // ✅ Convert to uppercase
-                                          style: AppTextStyles.getText2(context).copyWith(fontSize: 12.sp, fontWeight: FontWeight.w500),
+                                        patientName.toUpperCase(),
+                                        style: AppTextStyles.getText2(context).copyWith(fontSize: 12.sp, fontWeight: FontWeight.w500),
                                       ),
                                     ],
                                   ),
@@ -1626,9 +1465,13 @@ Shared from DocSera App
                                           crossAxisAlignment: CrossAxisAlignment.start,
                                           children: [
                                             Text(
-                                              widget.appointment['clinic'] ?? AppLocalizations.of(context)!.clinicNotAvailable,
-                                              style: AppTextStyles.getText2(context).copyWith(color: AppColors.blackText, fontWeight: FontWeight.bold),
+                                              clinicName.isNotEmpty
+                                                  ? clinicName
+                                                  : AppLocalizations.of(context)!.clinicNotAvailable,
+                                              style: AppTextStyles.getText2(context)
+                                                  .copyWith(color: AppColors.blackText, fontWeight: FontWeight.bold),
                                             ),
+
                                             SizedBox(height: 4.h),
                                             Text(
                                               formattedAddress.isNotEmpty ? formattedAddress : AppLocalizations.of(context)!.addressNotEntered,
@@ -1644,7 +1487,7 @@ Shared from DocSera App
 
                                 // 🔹 Open Map Button
                                 InkWell(
-                                  onTap: () => _openMaps("${clinicAddress['street'] ?? ''}, ${clinicAddress['buildingNr'] ?? ''}, ${clinicAddress['city'] ?? ''}, ${clinicAddress['country'] ?? ''}"),
+                                  onTap: () => _openMaps(context, widget.appointment),
                                   borderRadius: BorderRadius.only(
                                     bottomLeft: Radius.circular(12.r),
                                     bottomRight: Radius.circular(12.r),
@@ -1704,9 +1547,10 @@ Shared from DocSera App
                                 InkWell(
                                   // In AppointmentDetailsPage (onTap for navigation)
                                   onTap: () {
-                                    final doctorId = widget.appointment['doctor_id']?.toString() ?? '';
+                                    final doctorId = (appt['doctorId'] ?? appt['doctor_id'] ?? '').toString();
 
                                     print("🚀 Navigating to DoctorProfilePage with doctorId: '$doctorId'");
+                                    print("💡 Full appointment object: $appt");
 
                                     if (doctorId.isEmpty) {
                                       print("❌ ERROR: doctorId is missing or empty.");
@@ -1716,12 +1560,11 @@ Shared from DocSera App
                                     } else {
                                       Navigator.push(
                                         context,
-                                        fadePageRoute(
-                                          DoctorProfilePage(doctorId: doctorId),
-                                        ),
+                                        fadePageRoute(DoctorProfilePage(doctorId: doctorId)),
                                       );
                                     }
                                   },
+
 
                                   borderRadius: BorderRadius.circular(12),
                                   child: Padding(
@@ -1801,7 +1644,6 @@ class DoctorAppointmentsBottomSheet extends StatelessWidget {
     required this.oldTimestamp,
   }) : super(key: key);
 
-
   @override
   Widget build(BuildContext context) {
     return Padding(
@@ -1810,14 +1652,17 @@ class DoctorAppointmentsBottomSheet extends StatelessWidget {
         builder: (context, state) {
           if (state is DoctorScheduleLoading) {
             return Column(
-              children: List.generate(7, (index) => Padding(
-                padding: EdgeInsets.symmetric(vertical: 8.h),
-                child: ShimmerWidget(
-                  width: double.infinity,
-                  height: 40.h,
-                  radius: 12.r,
+              children: List.generate(
+                7,
+                    (index) => Padding(
+                  padding: EdgeInsets.symmetric(vertical: 8.h),
+                  child: ShimmerWidget(
+                    width: double.infinity,
+                    height: 40.h,
+                    radius: 12.r,
+                  ),
                 ),
-              )),
+              ),
             );
           } else if (state is DoctorScheduleLoaded) {
             final appointments = state.appointments.entries.toList();
@@ -1843,26 +1688,40 @@ class DoctorAppointmentsBottomSheet extends StatelessWidget {
                         children: [
                           SizedBox(height: 12.h),
                           Container(
-                            padding: EdgeInsets.symmetric(vertical: 12.h, horizontal: 16.w),
+                            padding: EdgeInsets.symmetric(
+                                vertical: 12.h, horizontal: 16.w),
                             decoration: BoxDecoration(
                               color: Colors.white,
                               borderRadius: BorderRadius.circular(12.r),
                               boxShadow: [
-                                BoxShadow(color: AppColors.main.withOpacity(0.1), blurRadius: 5, spreadRadius: 2),
+                                BoxShadow(
+                                  color: AppColors.main.withOpacity(0.1),
+                                  blurRadius: 5,
+                                  spreadRadius: 2,
+                                ),
                               ],
                             ),
                             child: Column(
                               children: [
                                 GestureDetector(
                                   onTap: () {
-                                    context.read<DoctorScheduleCubit>().toggleExpand(date);
+                                    context
+                                        .read<DoctorScheduleCubit>()
+                                        .toggleExpand(date);
                                   },
                                   child: Row(
-                                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                    mainAxisAlignment:
+                                    MainAxisAlignment.spaceBetween,
                                     children: [
-                                      Text(date, style: AppTextStyles.getTitle1(context).copyWith(fontSize: 12.sp)),
+                                      Text(
+                                        date,
+                                        style: AppTextStyles.getTitle1(context)
+                                            .copyWith(fontSize: 12.sp),
+                                      ),
                                       Icon(
-                                        isExpanded ? Icons.keyboard_arrow_up : Icons.keyboard_arrow_down,
+                                        isExpanded
+                                            ? Icons.keyboard_arrow_up
+                                            : Icons.keyboard_arrow_down,
                                         color: AppColors.main,
                                         size: 20.sp,
                                       ),
@@ -1874,50 +1733,92 @@ class DoctorAppointmentsBottomSheet extends StatelessWidget {
                                   Wrap(
                                     spacing: 10.w,
                                     runSpacing: 10.h,
-                                    children: times.map((slot) {
+                                    children: times.map<Widget>((slot) {
+                                      // ✅ نستخدم time_utils لتنسيق الوقت
+                                      final tsUtc = DateTime.parse(
+                                          slot['timestamp'].toString())
+                                          .toUtc();
+                                      final formattedTime =
+                                      format12hLocalized(context, tsUtc);
+
                                       return GestureDetector(
-                                          onTap: () {
-                                            print("📦 clinicAddress = ${appointmentDetails.clinicAddress} (type: ${appointmentDetails.clinicAddress.runtimeType})");
+                                        onTap: () {
+                                          print(
+                                              "📦 clinicAddress = ${appointmentDetails.clinicAddress} (type: ${appointmentDetails.clinicAddress.runtimeType})");
 
-                                            Navigator.push(
-                                              context,
-                                              fadePageRoute(RescheduleConfirmationPage(
-                                                oldAppointment: appointmentDetails,
-                                                newAppointment: AppointmentDetails(
-                                                  doctorId: appointmentDetails.doctorId,
-                                                  doctorName: appointmentDetails.doctorName,
-                                                  doctorGender: appointmentDetails.doctorGender,
-                                                  doctorTitle: appointmentDetails.doctorTitle,
-                                                  specialty: appointmentDetails.specialty,
-                                                  image: appointmentDetails.image,
-                                                  patientId: appointmentDetails.patientId,
-                                                  isRelative: appointmentDetails.isRelative,
-                                                  patientName: appointmentDetails.patientName,
-                                                  patientGender: appointmentDetails.patientGender,
-                                                  patientAge: appointmentDetails.patientAge,
-                                                  newPatient: appointmentDetails.newPatient,
-                                                  reason: appointmentDetails.reason,
-                                                  clinicName: appointmentDetails.clinicName,
-                                                  clinicAddress: appointmentDetails.clinicAddress,
+                                          Navigator.push(
+                                            context,
+                                            fadePageRoute(
+                                              RescheduleConfirmationPage(
+                                                oldAppointment:
+                                                appointmentDetails,
+                                                newAppointment:
+                                                appointmentDetails.copyWith(
+                                                  doctorId: appointmentDetails
+                                                      .doctorId,
+                                                  doctorName: appointmentDetails
+                                                      .doctorName,
+                                                  doctorGender:
+                                                  appointmentDetails
+                                                      .doctorGender,
+                                                  doctorTitle: appointmentDetails
+                                                      .doctorTitle,
+                                                  specialty: appointmentDetails
+                                                      .specialty,
+                                                  image:
+                                                  appointmentDetails.image,
+                                                  patientId:
+                                                  appointmentDetails
+                                                      .patientId,
+                                                  isRelative:
+                                                  appointmentDetails
+                                                      .isRelative,
+                                                  patientName:
+                                                  appointmentDetails
+                                                      .patientName,
+                                                  patientGender:
+                                                  appointmentDetails
+                                                      .patientGender,
+                                                  patientAge: appointmentDetails
+                                                      .patientAge,
+                                                  newPatient: appointmentDetails
+                                                      .newPatient,
+                                                  reason: appointmentDetails
+                                                      .reason,
+                                                  clinicName:
+                                                  appointmentDetails
+                                                      .clinicName,
+                                                  clinicAddress:
+                                                  appointmentDetails
+                                                      .clinicAddress,
                                                 ),
-                                                oldAppointmentId: oldAppointmentId,
+                                                oldAppointmentId:
+                                                oldAppointmentId,
                                                 oldTimestamp: oldTimestamp,
-                                                newAppointmentId: slot['id'],
-                                                newTimestamp: slot['timestamp'],
-                                              )),
-                                            );
-                                          },
-
-
+                                                newAppointmentId:
+                                                slot['id'].toString(),
+                                                newTimestamp: DateTime.parse(
+                                                    slot['timestamp']
+                                                        .toString()),
+                                              ),
+                                            ),
+                                          );
+                                        },
                                         child: Container(
-                                          padding: EdgeInsets.symmetric(vertical: 10.h, horizontal: 16.w),
+                                          padding: EdgeInsets.symmetric(
+                                              vertical: 10.h,
+                                              horizontal: 16.w),
                                           decoration: BoxDecoration(
-                                            color: AppColors.main.withOpacity(0.1),
-                                            borderRadius: BorderRadius.circular(8.r),
+                                            color:
+                                            AppColors.main.withOpacity(0.1),
+                                            borderRadius:
+                                            BorderRadius.circular(8.r),
                                           ),
                                           child: Text(
-                                            slot['time'],
-                                            style: AppTextStyles.getText2(context).copyWith(
+                                            formattedTime,
+                                            style: AppTextStyles.getText2(
+                                                context)
+                                                .copyWith(
                                               color: AppColors.main,
                                               fontWeight: FontWeight.w500,
                                             ),
@@ -1948,7 +1849,8 @@ class DoctorAppointmentsBottomSheet extends StatelessWidget {
             return Center(
               child: Text(
                 AppLocalizations.of(context)!.errorLoadingAppointments,
-                style: AppTextStyles.getText2(context).copyWith(color: Colors.red),
+                style: AppTextStyles.getText2(context)
+                    .copyWith(color: Colors.red),
               ),
             );
           }

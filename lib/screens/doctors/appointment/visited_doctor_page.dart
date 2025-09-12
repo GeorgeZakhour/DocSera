@@ -25,7 +25,6 @@ class VisitedDoctorPage extends StatefulWidget {
 }
 
 class _VisitedDoctorPageState extends State<VisitedDoctorPage> {
-
   @override
   Widget build(BuildContext context) {
     final imageResult = resolveDoctorImagePathAndWidget(
@@ -38,8 +37,6 @@ class _VisitedDoctorPageState extends State<VisitedDoctorPage> {
       height: 40,
     );
     final imageProvider = imageResult.imageProvider;
-
-
 
     return BaseScaffold(
       titleAlignment: 2,
@@ -59,12 +56,18 @@ class _VisitedDoctorPageState extends State<VisitedDoctorPage> {
             children: [
               Text(
                 AppLocalizations.of(context)!.makeAppointment,
-                  style: AppTextStyles.getText2(context).copyWith(fontSize: 12.sp,fontWeight: FontWeight.w300,color: AppColors.whiteText)
+                style: AppTextStyles.getText2(context).copyOf(
+                  fontSize: 12.sp,
+                  fontWeight: FontWeight.w300,
+                  color: AppColors.whiteText,
+                ),
               ),
               Text(
                 widget.appointmentDetails.doctorName,
-                style: AppTextStyles.getTitle2(context).copyWith(fontSize: 14.sp,color: AppColors.whiteText
-              ),
+                style: AppTextStyles.getTitle2(context).copyOf(
+                  fontSize: 14.sp,
+                  color: AppColors.whiteText,
+                ),
               ),
             ],
           ),
@@ -75,26 +78,36 @@ class _VisitedDoctorPageState extends State<VisitedDoctorPage> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // 🔹 السؤال الرئيسي
+            // السؤال الرئيسي
             Text(
               AppLocalizations.of(context)!.haveYouVisitedBefore,
-              style: AppTextStyles.getTitle1(context).copyWith(fontSize: 12.sp),
+              style: AppTextStyles.getTitle1(context).copyOf(fontSize: 12.sp),
             ),
             SizedBox(height: 15.h),
 
-            // 🔹 خيارات نعم / لا داخل نفس الكارد
+            // خيارات نعم / لا داخل نفس الكارد
             Card(
               color: Colors.white,
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(12.r),
-                side: BorderSide(color: Colors.grey.shade200, width: 0.8), // ✅ حد خفيف
+                side: BorderSide(color: Colors.grey.shade200, width: 0.8),
               ),
               elevation: 0,
               child: Column(
                 children: [
-                  _buildOptionButton(context, AppLocalizations.of(context)!.yes, false, true),
+                  _buildOptionButton(
+                    context,
+                    AppLocalizations.of(context)!.yes,
+                    false, // زار الطبيب سابقًا => ليس مريضًا جديدًا
+                    true,
+                  ),
                   Divider(color: Colors.grey.shade200, thickness: 1, height: 1),
-                  _buildOptionButton(context, AppLocalizations.of(context)!.no, true, false),
+                  _buildOptionButton(
+                    context,
+                    AppLocalizations.of(context)!.no,
+                    true, // لم يزره من قبل => مريض جديد
+                    false,
+                  ),
                 ],
               ),
             ),
@@ -104,7 +117,7 @@ class _VisitedDoctorPageState extends State<VisitedDoctorPage> {
     );
   }
 
-  // 🔹 زر الاختيار (نعم / لا) مع توجيه المستخدم إلى صفحة السبب
+  // زر الاختيار (نعم / لا) ➜ إلى صفحة السبب
   Widget _buildOptionButton(BuildContext context, String text, bool isNewPatient, bool isFirst) {
     return InkWell(
       onTap: () {
@@ -130,10 +143,29 @@ class _VisitedDoctorPageState extends State<VisitedDoctorPage> {
         ),
         child: Text(
           text,
-          style: AppTextStyles.getTitle1(context).copyWith(fontSize: 12.sp, fontWeight: FontWeight.w500, color: AppColors.blackText),
-          textAlign: TextAlign.start, // ✅ يتبع اتجاه النص تلقائياً
+          style: AppTextStyles.getTitle1(context).copyOf(
+            fontSize: 12.sp,
+            fontWeight: FontWeight.w500,
+            color: AppColors.blackText,
+          ),
+          textAlign: TextAlign.start,
         ),
       ),
+    );
+  }
+}
+
+// امتداد صغير لعدم تكرار copyWith للـTextStyle
+extension _TextStyleCopy on TextStyle {
+  TextStyle copyOf({
+    double? fontSize,
+    FontWeight? fontWeight,
+    Color? color,
+  }) {
+    return copyWith(
+      fontSize: fontSize,
+      fontWeight: fontWeight,
+      color: color,
     );
   }
 }

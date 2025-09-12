@@ -8,25 +8,67 @@ import 'package:docsera/widgets/base_scaffold.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:docsera/gen_l10n/app_localizations.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 
 class SelectReasonPage extends StatefulWidget {
   final PatientProfile patientProfile;
   final AppointmentDetails appointmentDetails;
 
-  const SelectReasonPage({Key? key, required this.patientProfile, required this.appointmentDetails}) : super(key: key);
+  const SelectReasonPage({
+    Key? key,
+    required this.patientProfile,
+    required this.appointmentDetails,
+  }) : super(key: key);
 
   @override
   _SelectReasonPageState createState() => _SelectReasonPageState();
 }
 
 class _SelectReasonPageState extends State<SelectReasonPage> {
+  List<Map<String, dynamic>> reasons = [];
+  bool isLoading = true;
+  String? _error;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadReasons();
+  }
+
+  Future<void> _loadReasons() async {
+    setState(() {
+      isLoading = true;
+      _error = null;
+    });
+
+    try {
+      final res = await Supabase.instance.client
+          .from('appointment_reasons')
+          .select('id,label,created_at')
+          .eq('doctor_id', widget.appointmentDetails.doctorId)
+          .order('created_at', ascending: true);
+
+      reasons = List<Map<String, dynamic>>.from(res);
+    } catch (e) {
+      _error = 'load_failed';
+    } finally {
+      if (mounted) {
+        setState(() {
+          isLoading = false;
+        });
+      }
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
+    final l = AppLocalizations.of(context)!;
+
     return BaseScaffold(
       titleAlignment: 2,
       height: 75.h,
       title: Text(
-        AppLocalizations.of(context)!.selectReasonTitle, // ✅ نص ديناميكي متعدد اللغات
+        l.selectReasonTitle,
         style: AppTextStyles.getTitle1(context).copyWith(color: AppColors.whiteText),
       ),
       child: Padding(
@@ -34,47 +76,67 @@ class _SelectReasonPageState extends State<SelectReasonPage> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // 🔹 عنوان "اختر سبب الزيارة"
             Text(
-              AppLocalizations.of(context)!.selectReason,
+              l.selectReason,
               style: AppTextStyles.getTitle1(context).copyWith(fontSize: 12.sp),
             ),
             SizedBox(height: 15.h),
 
-            // 🔹 خيارات الأسباب (بطاقة تحتوي على 3 خيارات مع فواصل)
-            Card(
-              color: Colors.white,
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(12.r),
-                side: BorderSide(color: Colors.grey.shade200, width: 0.8),
-              ),
-              elevation: 0,
-              child: Column(
-                children: [
-                  _buildOptionButton(context, AppLocalizations.of(context)!.initialExamination),
-                  Divider(color: Colors.grey.shade300, thickness: 1, height: 1), // ✅ تقليل المسافة الفاصلة
-                  _buildOptionButton(context, AppLocalizations.of(context)!.checkupFollowup),
-                  Divider(color: Colors.grey.shade300, thickness: 1, height: 1), // ✅ تقليل المسافة الفاصلة
-                  _buildOptionButton(context, AppLocalizations.of(context)!.acuteSymptoms),
-                ],
-              ),
-            ),
+            if (isLoading)
+              Center(child: CircularProgressIndicator(color: AppColors.main))
+            else if (_error != null)
+              Text(l.somethingWentWrong, style: AppTextStyles.getText2(context))
+            else if (reasons.isEmpty)
+                Text(l.noReasonsFound, style: AppTextStyles.getText2(context))
+              else
+                Card(
+                  color: Colors.white,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12.r),
+                    side: BorderSide(color: Colors.grey.shade200, width: 0.8),
+                  ),
+                  elevation: 0,
+                  child: Column(
+                    children: List.generate(reasons.length, (index) {
+                      final reason = reasons[index];
+                      final isLast = index == reasons.length - 1;
+
+                      return Column(
+                        children: [
+                          _buildReasonRow(
+                            context: context,
+                            reasonId: (reason['id'] ?? '') as String,
+                            label: (reason['label'] ?? '').toString(),
+                          ),
+                          if (!isLast)
+                            Divider(color: Colors.grey.shade300, thickness: 1, height: 1),
+                        ],
+                      );
+                    }),
+                  ),
+                ),
           ],
         ),
       ),
     );
   }
 
-  // 🔹 زر لكل خيار مع حركة انتقال سلسة
-  Widget _buildOptionButton(BuildContext context, String reason) {
+  Widget _buildReasonRow({
+    required BuildContext context,
+    required String reasonId,
+    required String label,
+  }) {
     return InkWell(
       onTap: () {
         Navigator.push(
           context,
           fadePageRoute(
             DoctorAppointmentsPage(
-              patientProfile: widget.patientProfile.copyWith(reason: reason),
-              appointmentDetails: widget.appointmentDetails.copyWith(reason: reason),
+              patientProfile: widget.patientProfile.copyWith(reason: label),
+              appointmentDetails: widget.appointmentDetails.copyWith(
+                reason: label,
+                reasonId: reasonId,
+              ),
             ),
           ),
         );
@@ -83,13 +145,13 @@ class _SelectReasonPageState extends State<SelectReasonPage> {
         padding: EdgeInsets.symmetric(vertical: 15.h, horizontal: 20.w),
         width: double.infinity,
         child: Text(
-          reason,
+          label,
           style: AppTextStyles.getText2(context).copyWith(
             fontSize: 12.sp,
             fontWeight: FontWeight.w500,
             color: AppColors.blackText,
           ),
-          textAlign: TextAlign.start, // ✅ يجعل النص يبدأ حسب اتجاه اللغة
+          textAlign: TextAlign.start,
         ),
       ),
     );

@@ -11,9 +11,12 @@ class AppointmentDetails {
   final String patientGender;
   final int patientAge;
   final bool newPatient;
-  final String reason;
-  final String clinicName; // ✅ إضافة اسم العيادة
-  final Map<String, dynamic> clinicAddress;// ✅ إضافة عنوان العيادة
+  final String reason;              // النص
+  final String? reasonId;           // 🆕 المعرّف (UUID أو string)
+  final String clinicName;
+  final Map<String, dynamic> clinicAddress;
+
+  final Map<String, dynamic>? location; // 🆕 lat/lng كـ jsonb
 
   AppointmentDetails({
     required this.doctorId,
@@ -29,11 +32,13 @@ class AppointmentDetails {
     required this.patientAge,
     required this.newPatient,
     required this.reason,
-    required this.clinicName, // ✅ استلام اسم العيادة
-    required this.clinicAddress, // ✅ استلام عنوان العيادة
+    this.reasonId,                       // 🆕 optional
+    required this.clinicName,
+    required this.clinicAddress,
+    this.location,                       // 🆕 optional
   });
 
-  // ✅ `copyWith` لتعديل أي بيانات عند الحاجة
+  /// ✅ copyWith لتحديث أي قيمة بسهولة
   AppointmentDetails copyWith({
     String? doctorId,
     String? doctorName,
@@ -48,9 +53,10 @@ class AppointmentDetails {
     int? patientAge,
     bool? newPatient,
     String? reason,
+    String? reasonId,
     String? clinicName,
-    Map<String, dynamic>? clinicAddress
-
+    Map<String, dynamic>? clinicAddress,
+    Map<String, dynamic>? location,
   }) {
     return AppointmentDetails(
       doctorId: doctorId ?? this.doctorId,
@@ -66,8 +72,10 @@ class AppointmentDetails {
       patientAge: patientAge ?? this.patientAge,
       newPatient: newPatient ?? this.newPatient,
       reason: reason ?? this.reason,
-      clinicName: clinicName ?? this.clinicName, // ✅ إضافة العيادة
-      clinicAddress: clinicAddress ?? this.clinicAddress, // ✅ إضافة العنوان
+      reasonId: reasonId ?? this.reasonId,
+      clinicName: clinicName ?? this.clinicName,
+      clinicAddress: clinicAddress ?? this.clinicAddress,
+      location: location ?? this.location,
     );
   }
 }

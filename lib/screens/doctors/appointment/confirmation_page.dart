@@ -4,6 +4,7 @@ import 'package:docsera/screens/doctors/appointment/select_patient_page.dart';
 import 'package:docsera/screens/home/appointment/appointment_details_page.dart';
 import 'package:docsera/screens/home/appointment/send_document.dart';
 import 'package:docsera/utils/doctor_image_utils.dart';
+import 'package:docsera/utils/time_utils.dart';
 import 'package:docsera/widgets/custom_bottom_navigation_bar.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
@@ -20,40 +21,84 @@ class AppointmentConfirmedPage extends StatelessWidget {
   const AppointmentConfirmedPage({Key? key, required this.appointment})
       : super(key: key);
 
-  void _addToCalendar(BuildContext context) {
-    DateTime startTime = DateTime.parse(appointment['timestamp']);
-    DateTime endTime = startTime.add(const Duration(minutes: 30));
+  /// إضافة إلى التقويم: نستخدم اللحظة المطلقة من timestamp (محلي الجهاز) ومدة قابلة للتخصيص
+  void _addToCalendar(BuildContext context, {int clinicOffsetMinutes = 180}) {
+    final appt = appointment;
 
-    final Event event = Event(
-      title: "${AppLocalizations.of(context)!.appointmentWith} ${appointment['doctorTitle'] ?? ''} ${appointment['doctorName'] ?? ''}",
-      description: "${AppLocalizations.of(context)!.reasonForAppointment}: ${appointment['reason'] ?? AppLocalizations.of(context)!.notSpecified}",
-      location: "${appointment['clinicAddress']['street'] ?? ''}, ${appointment['clinicAddress']['city'] ?? ''}",
-      startDate: startTime,
-      endDate: endTime,
+    // 1) نقرأ الـ timestamp كـ UTC
+    final tsUtc = DateTime.parse(appt['timestamp'].toString()).toUtc();
+
+    // 2) وقت العيادة (UTC +3)
+    final clinicWall = tsUtc.add(Duration(minutes: clinicOffsetMinutes));
+    final startLocal = DateTime(
+      clinicWall.year,
+      clinicWall.month,
+      clinicWall.day,
+      clinicWall.hour,
+      clinicWall.minute,
+    );
+
+    // 3) المدة
+    final duration = (appt['durationMinutes'] is int)
+        ? appt['durationMinutes'] as int
+        : 30;
+    final endLocal = startLocal.add(Duration(minutes: duration));
+
+    // 4) العنوان
+    final addr = (appt['clinicAddress'] ?? appt['clinic_address'] ?? const {}) as Map<String, dynamic>;
+    final location = [
+      addr['street']?.toString(),
+      addr['buildingNr']?.toString(),
+      addr['city']?.toString(),
+      addr['country']?.toString(),
+    ].where((s) => (s ?? '').toString().trim().isNotEmpty).join(', ');
+
+    // 5) اسم الطبيب
+    final doctorName = [
+      (appt['doctorTitle'] ?? appt['doctor_title'] ?? '').toString().trim(),
+      (appt['doctorName']  ?? appt['doctor_name']  ?? '').toString().trim(),
+    ].where((s) => s.isNotEmpty).join(' ');
+
+    // 6) نصوص إضافية
+    final clinicName = ((appt['clinicName'] ?? appt['clinic']) ?? '').toString().trim();
+    final reasonText = (appt['reason'] ?? AppLocalizations.of(context)!.notSpecified).toString();
+
+    // 7) بناء الحدث
+    final event = Event(
+      title: AppLocalizations.of(context)!.appointmentWithLabel(doctorName).trim(),
+      description:
+      "${AppLocalizations.of(context)!.clinicDetails}: "
+          "${clinicName.isNotEmpty ? clinicName : AppLocalizations.of(context)!.clinicNotAvailable}\n"
+          "${AppLocalizations.of(context)!.reasonForAppointment}: $reasonText",
+      location: location,
+      startDate: startLocal,
+      endDate: endLocal,
       allDay: false,
     );
 
+    // 8) إضافة للتقويم
     Add2Calendar.addEvent2Cal(event).then((success) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text(success
-              ? AppLocalizations.of(context)!.appointmentAddedToCalendar
-              : AppLocalizations.of(context)!.appointmentFailedToAdd),
+          content: Text(
+            success
+                ? AppLocalizations.of(context)!.appointmentAddedToCalendar
+                : AppLocalizations.of(context)!.appointmentFailedToAdd,
+          ),
         ),
       );
     });
   }
 
-
   @override
   Widget build(BuildContext context) {
-    DateTime appointmentDate = DateTime.parse(appointment['timestamp']);
-    // ✅ تحديد لغة التنسيق تلقائيًا
-    String locale = Localizations.localeOf(context).languageCode;
+    final formattedDate = formatBusinessDate(context, appointment);
+    final tsUtc = DateTime.parse(appointment['timestamp'].toString()).toUtc();
+    final formattedTime = format12hLocalized(context, tsUtc);
 
-// ✅ تنسيق التاريخ والوقت بناءً على اللغة
-    String formattedDate = DateFormat("EEEE, d MMMM yyyy", locale).format(appointmentDate);
-    String formattedTime = DateFormat("HH:mm", locale).format(appointmentDate);
+    // مدة الموعد (اختياري لعرضها بجانب الوقت)
+    final int? durationMinutes =
+    appointment['durationMinutes'] is int ? appointment['durationMinutes'] as int : null;
 
     final imageResult = resolveDoctorImagePathAndWidget(
       doctor: {
@@ -61,11 +106,10 @@ class AppointmentConfirmedPage extends StatelessWidget {
         "gender": appointment['doctorGender'],
         "title": appointment['doctorTitle'],
       },
-      width: 44, // بحجم مناسب للصورة في البطاقة
+      width: 44,
       height: 44,
     );
     final imageProvider = imageResult.imageProvider;
-
 
     return WillPopScope(
       onWillPop: () async {
@@ -74,7 +118,7 @@ class AppointmentConfirmedPage extends StatelessWidget {
           fadePageRoute(const CustomBottomNavigationBar()),
               (route) => false,
         );
-        return false; // يمنع الرجوع العادي
+        return false; // منع الرجوع
       },
       child: Scaffold(
         backgroundColor: AppColors.background3,
@@ -93,7 +137,7 @@ class AppointmentConfirmedPage extends StatelessWidget {
             onPressed: () {
               Navigator.pushAndRemoveUntil(
                 context,
-                fadePageRoute(CustomBottomNavigationBar()),
+                fadePageRoute(const CustomBottomNavigationBar()),
                     (route) => false,
               );
             },
@@ -104,7 +148,7 @@ class AppointmentConfirmedPage extends StatelessWidget {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.center,
             children: [
-              // ✅ Confirmation Message
+              // رسالة التأكيد
               Icon(Icons.check_circle, color: AppColors.main, size: 26.sp),
               SizedBox(height: 8.h),
               Text(AppLocalizations.of(context)!.appointmentConfirmed,
@@ -112,11 +156,14 @@ class AppointmentConfirmedPage extends StatelessWidget {
               Text(
                 AppLocalizations.of(context)!.appointmentConfirmedMessage,
                 style: AppTextStyles.getText2(context).copyWith(
-                    fontSize: 12.sp, color: Colors.black87),
+                  fontSize: 12.sp,
+                  color: Colors.black87,
+                ),
+                textAlign: TextAlign.center,
               ),
               SizedBox(height: 20.h),
 
-              // ✅ Appointment Details Card
+              // بطاقة تفاصيل الموعد
               Card(
                 elevation: 0,
                 shape: RoundedRectangleBorder(
@@ -126,45 +173,49 @@ class AppointmentConfirmedPage extends StatelessWidget {
                 color: AppColors.background2,
                 child: Column(
                   children: [
-                    // 🔹 Date & Time Bar
+                    // شريط التاريخ والوقت
                     Container(
-                      padding: EdgeInsets.symmetric(
-                          vertical: 10.h, horizontal: 16.w),
+                      padding: EdgeInsets.symmetric(vertical: 10.h, horizontal: 16.w),
                       decoration: BoxDecoration(
                         color: AppColors.mainDark,
-                        borderRadius: BorderRadius.vertical(
-                            top: Radius.circular(12.r)),
+                        borderRadius: BorderRadius.vertical(top: Radius.circular(12.r)),
                       ),
                       child: Row(
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
                           Row(
                             children: [
-                              Icon(Icons.calendar_today, color: Colors.white,
-                                  size: 14.sp),
+                              Icon(Icons.calendar_today, color: Colors.white, size: 14.sp),
                               SizedBox(width: 6.w),
-                              Text(formattedDate,
-                                  style: AppTextStyles.getText3(context).copyWith(
-                                      color: Colors.white,
-                                      fontWeight: FontWeight.w600)),
+                              Text(
+                                formattedDate,
+                                style: AppTextStyles.getText3(context).copyWith(
+                                  color: Colors.white,
+                                  fontWeight: FontWeight.w600,
+                                ),
+                              ),
                             ],
                           ),
                           Row(
                             children: [
-                              Icon(Icons.access_time, color: Colors.white,
-                                  size: 14.sp),
+                              Icon(Icons.access_time, color: Colors.white, size: 14.sp),
                               SizedBox(width: 6.w),
-                              Text(formattedTime,
-                                  style: AppTextStyles.getText3(context).copyWith(
-                                      color: Colors.white,
-                                      fontWeight: FontWeight.w600)),
+                              Text(
+                                durationMinutes == null
+                                    ? formattedTime
+                                    : '$formattedTime • ${durationMinutes}m',
+                                style: AppTextStyles.getText3(context).copyWith(
+                                  color: Colors.white,
+                                  fontWeight: FontWeight.w600,
+                                ),
+                              ),
                             ],
                           ),
                         ],
                       ),
                     ),
 
-                    // 🔹 Doctor Information
+                    // معلومات الطبيب
                     Padding(
                       padding: EdgeInsets.all(12.w),
                       child: GestureDetector(
@@ -172,7 +223,8 @@ class AppointmentConfirmedPage extends StatelessWidget {
                           Navigator.push(
                             context,
                             fadePageRoute(DoctorProfilePage(
-                                doctorId: appointment['doctorId'])),
+                              doctorId: appointment['doctorId'],
+                            )),
                           );
                         },
                         child: Row(
@@ -182,41 +234,45 @@ class AppointmentConfirmedPage extends StatelessWidget {
                               backgroundColor: AppColors.main.withOpacity(0.3),
                               backgroundImage: imageProvider,
                             ),
-                          SizedBox(width: 12.w),
+                            SizedBox(width: 12.w),
                             Column(
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
                                 Text(
-                                  "${appointment['doctorTitle'] ??
-                                      ''} ${appointment['doctorName'] ?? ''}"
-                                      .trim(),
-                                  style: AppTextStyles.getTitle1(context)
-                                      .copyWith(fontSize: 13.sp),
+                                  "${appointment['doctorTitle'] ?? ''} ${appointment['doctorName'] ?? ''}".trim(),
+                                  style: AppTextStyles.getTitle1(context).copyWith(fontSize: 13.sp),
                                 ),
                                 Text(
                                   appointment['specialty'] ?? "التخصص غير محدد",
-                                  style: AppTextStyles.getText2(context).copyWith(
-                                      color: Colors.black54),
+                                  style: AppTextStyles.getText2(context).copyWith(color: Colors.black54),
                                 ),
                               ],
                             ),
                             const Spacer(),
-                            Icon(Icons.arrow_forward_ios, color: Colors.grey,
-                                size: 12.sp),
+                            Icon(Icons.arrow_forward_ios, color: Colors.grey, size: 12.sp),
                           ],
                         ),
                       ),
                     ),
-                    Divider(color: Colors.grey[200], height: 1.h,),
+                    Divider(color: Colors.grey[200], height: 1.h),
 
-                    // 🔹 Patient Name + Options
-                    _buildCardOption(context, Icons.person,
-                        appointment['patientName'] ?? AppLocalizations.of(context)!.unknown),
-                    Divider(color: Colors.grey[200], height: 1.h,),
-                    _buildCardOption(context, Icons.calendar_today,
-                        AppLocalizations.of(context)!.addToCalendar,
-                        onTap: () => _addToCalendar(context), isBold: true),
-                    Divider(color: Colors.grey[200], height: 1.h,),
+                    // اسم المريض + الخيارات
+                    _buildCardOption(
+                      context,
+                      Icons.person,
+                      appointment['patientName'] ?? AppLocalizations.of(context)!.unknown,
+                    ),
+                    Divider(color: Colors.grey[200], height: 1.h),
+
+                    _buildCardOption(
+                      context,
+                      Icons.calendar_today,
+                      AppLocalizations.of(context)!.addToCalendar,
+                      onTap: () => _addToCalendar(context),
+                      isBold: true,
+                    ),
+                    Divider(color: Colors.grey[200], height: 1.h),
+
                     _buildCardOption(
                       context,
                       Icons.refresh,
@@ -226,41 +282,42 @@ class AppointmentConfirmedPage extends StatelessWidget {
                           context,
                           fadePageRoute(
                             SelectPatientPage(
-                              doctorId: appointment["doctorId"] ?? "",
-                              doctorName: appointment["doctorName"] ?? "",
-                              doctorTitle: appointment["doctorTitle"] ?? "",
-                              doctorGender: appointment["doctorGender"] ?? "",
-                              specialty: appointment["specialty"] ?? "",
-                              image: appointment["doctor_image"] ?? "",
-                              clinicName: appointment['clinicName'] ?? "",
-                              clinicAddress: appointment['clinicAddress'] ?? {},
+                              doctorId: appointment["doctorId"] ?? appointment["doctor_id"] ?? "",
+                              doctorName: appointment["doctorName"] ?? appointment["doctor_name"] ?? "",
+                              doctorTitle: appointment["doctorTitle"] ?? appointment["doctor_title"] ?? "",
+                              doctorGender: appointment["doctorGender"] ?? appointment["doctor_gender"] ?? "",
+                              specialty: appointment["specialty"] ?? appointment["doctor_specialty"] ?? AppLocalizations.of(context)!.unknownSpecialty,
+                              image: appointment["doctor_image"] ?? appointment["doctorImage"] ?? "assets/images/male-doc.png",
+                              clinicName: appointment['clinic'] ?? appointment['clinicName'] ?? AppLocalizations.of(context)!.clinicNotAvailable,
+                              clinicAddress: appointment['clinicAddress'] ?? appointment['clinic_address'] ?? const {},
+                              clinicLocation: appointment['clinicLocation'] ?? appointment['location'] ?? const {},
                             ),
+
                           ),
                         );
                       },
                       isBold: true,
                       hasArrow: true,
                     ),
-
-
                   ],
                 ),
               ),
 
               SizedBox(height: 5.h),
 
-              // ✅ "إرسال المستندات" مع أيقونة الملف
+              // إرسال المستندات
               _buildInfoCard(
                 context,
                 AppLocalizations.of(context)!.sendDocuments,
                 subtitle: AppLocalizations.of(context)!.sendDocumentsSubtitle,
-                icon: Icons.file_open_outlined, // ✅ تمت إضافة الأيقونة هنا
+                icon: Icons.file_open_outlined,
                 onTap: () {
                   Navigator.push(
                     context,
                     fadePageRoute(
                       SendDocumentToDoctorPage(
-                        doctorName: "${appointment['doctorTitle'] ?? ''} ${appointment['doctorName'] ?? ''}".trim(),
+                        doctorName:
+                        "${appointment['doctorTitle'] ?? ''} ${appointment['doctorName'] ?? ''}".trim(),
                       ),
                     ),
                   );
@@ -268,20 +325,25 @@ class AppointmentConfirmedPage extends StatelessWidget {
               ),
               SizedBox(height: 5.h),
 
-      // ✅ "عرض تفاصيل الموعد" بدون أيقونة، محاذاة مركزية، وارتفاع أقل
+              // عرض تفاصيل الموعد
               _buildInfoCard(
                 context,
                 AppLocalizations.of(context)!.viewMoreDetails.toUpperCase(),
                 onTap: () {
                   Navigator.push(
                     context,
-                    fadePageRoute(AppointmentDetailsPage(appointment: appointment, isUpcoming: true)),
+                    fadePageRoute(
+                      AppointmentDetailsPage(
+                        appointment: appointment,
+                        isUpcoming: true,
+                      ),
+                    ),
                   );
+                  print("🧭 [AppointmentConfirmedPage] Navigating to AppointmentDetailsPage");
+                  print("   appointmentId = ${appointment['appointmentId'] ?? appointment['id']}");
                 },
-                isCentered: true, // 🔹 يجعل النص في المنتصف وارتفاع العنصر أقل
+                isCentered: true,
               ),
-
-
             ],
           ),
         ),
@@ -289,9 +351,16 @@ class AppointmentConfirmedPage extends StatelessWidget {
     );
   }
 
-  /// 🔹 Card Row with Icon
-  Widget _buildCardOption(BuildContext context, IconData icon, String text,
-      {VoidCallback? onTap, bool isBold = false, bool hasArrow = false}) {
+  // ================= UI bits =================
+
+  Widget _buildCardOption(
+      BuildContext context,
+      IconData icon,
+      String text, {
+        VoidCallback? onTap,
+        bool isBold = false,
+        bool hasArrow = false,
+      }) {
     return InkWell(
       onTap: onTap,
       child: Padding(
@@ -305,28 +374,32 @@ class AppointmentConfirmedPage extends StatelessWidget {
               style: AppTextStyles.getText2(context).copyWith(
                 fontWeight: isBold ? FontWeight.bold : FontWeight.w500,
                 color: isBold ? AppColors.main : AppColors.blackText,
-                fontSize: isBold ? 11.sp : 12.sp
+                fontSize: isBold ? 11.sp : 12.sp,
               ),
             ),
-            if (hasArrow) Spacer(),
-            if (hasArrow) Icon(
-                Icons.arrow_forward_ios, color: Colors.grey, size: 12.sp),
+            if (hasArrow) const Spacer(),
+            if (hasArrow) Icon(Icons.arrow_forward_ios, color: Colors.grey, size: 12.sp),
           ],
         ),
       ),
     );
   }
 
-  /// 🔹 Creates a full-width card for additional options
-  Widget _buildInfoCard(BuildContext context, String title,
-      {String? subtitle, VoidCallback? onTap, bool isCentered = false, IconData? icon}) {
+  Widget _buildInfoCard(
+      BuildContext context,
+      String title, {
+        String? subtitle,
+        VoidCallback? onTap,
+        bool isCentered = false,
+        IconData? icon,
+      }) {
     return SizedBox(
-      width: double.infinity, // ✅ يجعل العرض كاملًا
+      width: double.infinity,
       child: Card(
         elevation: 0,
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(8.r),
-          side: BorderSide(color: Colors.grey.shade200, width: 0.4), // ✅ تحسين سمك الإطار
+          side: BorderSide(color: Colors.grey.shade200, width: 0.4),
         ),
         color: AppColors.background2,
         child: InkWell(
@@ -334,12 +407,14 @@ class AppointmentConfirmedPage extends StatelessWidget {
           borderRadius: BorderRadius.circular(8.r),
           child: Padding(
             padding: EdgeInsets.symmetric(
-                vertical: isCentered ? 8.h : 14.h, horizontal: 16.w), // ✅ تقليل الارتفاع للبطاقة الوسطى
+              vertical: isCentered ? 8.h : 14.h,
+              horizontal: 16.w,
+            ),
             child: Row(
               mainAxisAlignment: isCentered ? MainAxisAlignment.center : MainAxisAlignment.start,
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                if (icon != null) ...[ // ✅ إضافة الأيقونة إذا كانت موجودة
+                if (icon != null) ...[
                   Icon(icon, color: AppColors.main, size: 16.sp),
                   SizedBox(width: 10.w),
                 ],
@@ -375,4 +450,3 @@ class AppointmentConfirmedPage extends StatelessWidget {
     );
   }
 }
-

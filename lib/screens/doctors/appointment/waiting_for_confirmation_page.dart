@@ -1,6 +1,7 @@
 import 'package:docsera/app/const.dart';
 import 'package:docsera/app/text_styles.dart';
 import 'package:docsera/utils/doctor_image_utils.dart';
+import 'package:docsera/utils/time_utils.dart';
 import 'package:docsera/widgets/custom_bottom_navigation_bar.dart';
 import 'package:flutter/material.dart';
 import 'package:docsera/gen_l10n/app_localizations.dart';
@@ -15,12 +16,17 @@ class WaitingForConfirmationPage extends StatelessWidget {
   const WaitingForConfirmationPage({Key? key, required this.appointment})
       : super(key: key);
 
+
   @override
   Widget build(BuildContext context) {
-    DateTime appointmentDate = DateTime.parse(appointment['timestamp']);
-    String locale = Localizations.localeOf(context).languageCode;
-    String formattedDate = DateFormat("EEEE, d MMMM yyyy", locale).format(appointmentDate);
-    String formattedTime = DateFormat("HH:mm", locale).format(appointmentDate);
+    final formattedDate = formatBusinessDate(context, appointment);
+    final tsUtc = DateTime.parse(appointment['timestamp'].toString()).toUtc();
+    final formattedTime = format12hLocalized(context, tsUtc);
+
+    // مدة الموعد (اختيارية): مرّرها في الـ navPayload باسم durationMinutes
+    final int? durationMinutes = appointment['durationMinutes'] is int
+        ? appointment['durationMinutes'] as int
+        : null;
 
     final imageResult = resolveDoctorImagePathAndWidget(
       doctor: {
@@ -32,7 +38,6 @@ class WaitingForConfirmationPage extends StatelessWidget {
       height: 44,
     );
     final imageProvider = imageResult.imageProvider;
-
 
     return WillPopScope(
       onWillPop: () async {
@@ -78,12 +83,14 @@ class WaitingForConfirmationPage extends StatelessWidget {
               Text(
                 AppLocalizations.of(context)!.waitingForDoctorToApprove,
                 style: AppTextStyles.getText2(context).copyWith(
-                    fontSize: 12.sp, color: Colors.black87),
+                  fontSize: 12.sp,
+                  color: Colors.black87,
+                ),
                 textAlign: TextAlign.center,
               ),
               SizedBox(height: 20.h),
 
-              // ✅ Appointment Details
+              // ✅ تفاصيل الموعد
               Card(
                 elevation: 0,
                 shape: RoundedRectangleBorder(
@@ -96,6 +103,7 @@ class WaitingForConfirmationPage extends StatelessWidget {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
+                      // الطبيب
                       Row(
                         children: [
                           CircleAvatar(
@@ -119,7 +127,10 @@ class WaitingForConfirmationPage extends StatelessWidget {
                           ),
                         ],
                       ),
+
                       SizedBox(height: 12.h),
+
+                      // التاريخ والوقت (من appointmentDate/Time أو fallback)
                       Row(
                         children: [
                           Icon(Icons.calendar_today, color: AppColors.main, size: 16.sp),
@@ -129,15 +140,25 @@ class WaitingForConfirmationPage extends StatelessWidget {
                           Icon(Icons.access_time, color: AppColors.main, size: 16.sp),
                           SizedBox(width: 8.w),
                           Text(formattedTime, style: AppTextStyles.getText2(context)),
+                          if (durationMinutes != null) ...[
+                            SizedBox(width: 8.w),
+                            Text('• ${durationMinutes}m',
+                                style: AppTextStyles.getText2(context).copyWith(color: Colors.black54)),
+                          ],
                         ],
                       ),
+
                       SizedBox(height: 10.h),
+
+                      // المريض
                       Row(
                         children: [
                           Icon(Icons.person, color: AppColors.main, size: 16.sp),
                           SizedBox(width: 8.w),
-                          Text(appointment['patientName'] ?? AppLocalizations.of(context)!.unknown,
-                              style: AppTextStyles.getText2(context)),
+                          Text(
+                            appointment['patientName'] ?? AppLocalizations.of(context)!.unknown,
+                            style: AppTextStyles.getText2(context),
+                          ),
                         ],
                       ),
                     ],
@@ -147,7 +168,7 @@ class WaitingForConfirmationPage extends StatelessWidget {
 
               SizedBox(height: 30.h),
 
-              // ✅ Back to home button
+              // زر الرجوع للرئيسية
               SizedBox(
                 width: double.infinity,
                 child: ElevatedButton(
@@ -160,12 +181,16 @@ class WaitingForConfirmationPage extends StatelessWidget {
                   },
                   style: ElevatedButton.styleFrom(
                     backgroundColor: AppColors.mainDark,
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10.r)),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(10.r),
+                    ),
                     padding: EdgeInsets.symmetric(vertical: 12.h),
                   ),
                   child: Text(
                     AppLocalizations.of(context)!.backToHome,
-                    style: AppTextStyles.getTitle1(context).copyWith(color: Colors.white, fontSize: 12.sp),
+                    style: AppTextStyles
+                        .getTitle1(context)
+                        .copyWith(color: Colors.white, fontSize: 12.sp),
                   ),
                 ),
               ),

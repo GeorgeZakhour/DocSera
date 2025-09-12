@@ -5,6 +5,7 @@
 import 'package:docsera/screens/home/shimmer/shimmer_widgets.dart';
 import 'package:docsera/services/supabase/supabase_user_service.dart';
 import 'package:docsera/utils/doctor_image_utils.dart';
+import 'package:docsera/utils/time_utils.dart';
   import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:docsera/gen_l10n/app_localizations.dart';
   import 'package:docsera/screens/doctors/appointment/select_patient_page.dart';
@@ -318,193 +319,155 @@ import 'package:docsera/gen_l10n/app_localizations.dart';
     }
 
     /// 🔹 **Appointment Card**
-    Widget _buildAppointmentCard(Map<String, dynamic> appointment) {
-      final bool needsConfirmation = appointment['is_confirmed'] == false && appointment['booked'] == true;
+    Widget _buildAppointmentCard(Map<String, dynamic> appt) {
+      final bool needsConfirmation = appt['is_confirmed'] == false && appt['booked'] == true;
 
-      // ✅ Ensure `timestamp` is a `DateTime` object
-      DateTime? appointmentDate;
-      if (appointment['timestamp'] is String) {
-        appointmentDate = DateTime.tryParse(appointment['timestamp']);
-      } else if (appointment['timestamp'] is String) {
-        appointmentDate = DateTime.tryParse(appointment['timestamp']);
-      } else if (appointment['timestamp'] is DateTime) {
-        appointmentDate = appointment['timestamp'];
-      }
+      // ✅ Parse timestamps
+      final tsUtc = DateTime.parse(appt['timestamp'].toString()).toUtc();
+      final bookingTs = appt['booking_timestamp'] != null
+          ? DateTime.tryParse(appt['booking_timestamp'].toString())?.toUtc()
+          : null;
 
-      // ✅ Ensure `bookingTimestamp` is a `DateTime` object
-      DateTime? bookingDate;
-      if (appointment['booking_timestamp'] is String) {
-        bookingDate = DateTime.tryParse(appointment['booking_timestamp']);
-      } else if (appointment['booking_timestamp'] is String) {
-        bookingDate = DateTime.tryParse(appointment['booking_timestamp']);
-      } else if (appointment['booking_timestamp'] is DateTime) {
-        bookingDate = appointment['booking_timestamp'];
-      }
+      // ✅ Format date & time using utils (always Syria time)
+      final formattedDate = formatBusinessDate(context, appt);
+      final formattedTime = format12hLocalized(context, tsUtc);
 
-
-
-      String locale = Localizations.localeOf(context).languageCode; // ✅ Get the current locale
-
-// ✅ Format appointment date & time based on the selected language
-      String formattedDate = appointmentDate != null
-          ? DateFormat("EEEE, d MMMM yyyy", locale).format(appointmentDate)
-          : AppLocalizations.of(context)!.unknownDate;
-
-      String formattedTime = appointmentDate != null
-          ? DateFormat("h:mm a", locale).format(appointmentDate)
-          : AppLocalizations.of(context)!.unknownTime;
-
-// ✅ Format booking date
-      String formattedBookingDate = bookingDate != null
-          ? DateFormat("yyyy-MM-dd  ~  HH:mm", locale).format(bookingDate)
+      // ✅ Booking date
+      final locale = Localizations.localeOf(context).toString();
+      final formattedBookingDate = bookingTs != null
+          ? DateFormat("yyyy-MM-dd  ~  HH:mm", locale).format(bookingTs.add(const Duration(hours: 3)))
           : AppLocalizations.of(context)!.unknown;
 
-      // ✅ Ensure Patient Name is Retrieved
-      String patientName = appointment["patient_name"] ?? "";
+      // ✅ Patient name (camel + snake)
+      final patientName = (appt["patientName"] ?? appt["patient_name"] ?? "").toString();
 
-      // ✅ Determine doctor's avatar based on gender & title
+      // ✅ Doctor info
+      final doctorName = "${(appt["doctor_title"] ?? appt["doctorTitle"] ?? "")} ${(appt["doctor_name"] ?? appt["doctorName"] ?? "Doctor")}".trim();
+      final specialty = (appt["specialty"] ?? appt["doctor_specialty"] ?? AppLocalizations.of(context)!.unknownSpecialty).toString();
+
       DoctorImageResult imageResult = resolveDoctorImagePathAndWidget(
         doctor: {
-          "doctor_image": appointment['doctor_image'],
-          "gender": appointment['doctor_gender'],
-          "title": appointment['doctor_title'],
+          "doctor_image": appt['doctor_image'] ?? appt['doctorImage'],
+          "gender": appt['doctor_gender'] ?? appt['doctorGender'],
+          "title": appt['doctor_title'] ?? appt['doctorTitle'],
         },
         width: needsConfirmation ? 32 : 40,
         height: needsConfirmation ? 32 : 40,
       );
+
+      print("🖼️ AppointmentCard RAW doctor_image = ${appt['doctor_image'] ?? appt['doctorImage']}");
+      print("🖼️ Resolved avatarPath = ${imageResult.avatarPath}");
+
+
       final imageProvider = imageResult.imageProvider;
-
-
 
       return Card(
         elevation: 0,
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(8.r),
-          side: BorderSide(color: Colors.grey.shade200, width: 0.8), // ✅ Very thin border
+          side: BorderSide(color: Colors.grey.shade200, width: 0.8),
         ),
         color: AppColors.background2,
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // 🔹 **Date and Time Bar**
+            // 🔹 Date and Time Bar
             Container(
               decoration: BoxDecoration(
                 color: needsConfirmation ? AppColors.grayMain : AppColors.mainDark,
-                borderRadius:  BorderRadius.only(
+                borderRadius: BorderRadius.only(
                   topLeft: Radius.circular(8.r),
                   topRight: Radius.circular(8.r),
                 ),
               ),
-              padding:  EdgeInsets.symmetric(vertical: 8.h, horizontal: 12.w),
+              padding: EdgeInsets.symmetric(vertical: 8.h, horizontal: 12.w),
               child: Row(
                 children: [
                   Icon(Icons.calendar_today, size: 12.sp, color: Colors.white),
                   SizedBox(width: 6.w),
-                  Text(
-                    formattedDate, // ✅ Safe date display
-                    style: AppTextStyles.getText3(context).copyWith(fontWeight: FontWeight.bold, color: Colors.white),
-                  ),
+                  Text(formattedDate,
+                      style: AppTextStyles.getText3(context).copyWith(
+                          fontWeight: FontWeight.bold, color: Colors.white)),
                   const Spacer(),
                   Icon(Icons.access_time, size: 12.sp, color: Colors.white),
                   SizedBox(width: 6.w),
-                  Text(
-                    formattedTime, // ✅ Extracted from timestamp
-                    style: AppTextStyles.getText3(context).copyWith(fontWeight: FontWeight.bold, color: Colors.white),
-                  ),
+                  Text(formattedTime,
+                      style: AppTextStyles.getText3(context).copyWith(
+                          fontWeight: FontWeight.bold, color: Colors.white)),
                 ],
               ),
             ),
 
             GestureDetector(
-              behavior: HitTestBehavior.opaque, // ✅ Makes blank space clickable
+              behavior: HitTestBehavior.opaque,
               onTap: () {
-                bool isUpcoming = _selectedTab == 0;
-
-                needsConfirmation
-                ?
-                null
-                :
-                Navigator.push(
-                  context,
-                  fadePageRoute(AppointmentDetailsPage(
-                    appointment: appointment, // ✅ تمرير كامل البيانات كما هي
-                    isUpcoming: isUpcoming,
-                  )),
-                );
+                if (!needsConfirmation) {
+                  Navigator.push(
+                    context,
+                    fadePageRoute(AppointmentDetailsPage(
+                      appointment: appt,
+                      isUpcoming: _selectedTab == 0,
+                    )),
+                  );
+                  print("🧭 [AppointmentsPage] Navigating to AppointmentDetailsPage");
+                  print("   appointmentId = ${appt['id']}");
+                }
               },
               child: Column(
                 children: [
                   Padding(
-                    padding: EdgeInsets.symmetric(horizontal: 18.w, vertical: needsConfirmation? 8.h : 12.h),
+                    padding: EdgeInsets.symmetric(horizontal: 18.w, vertical: needsConfirmation ? 8.h : 12.h),
                     child: Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
                         Row(
                           children: [
-                            // ✅ Doctor Avatar
                             CircleAvatar(
                               radius: needsConfirmation ? 16.r : 20.r,
                               backgroundColor: AppColors.mainDark.withOpacity(0.3),
                               backgroundImage: imageProvider,
                             ),
                             SizedBox(width: 20.w),
-
-                            // ✅ Doctor Name and Specialty
                             Column(
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
-                                Text(
-                                  "${appointment["doctor_title"] ?? ""} ${appointment["doctor_name"] ?? "Doctor Unavailable"}".trim(),
-                                  style: AppTextStyles.getText2(context).copyWith(fontWeight: FontWeight.bold),
-                                ),
-                                Text(
-                                  appointment["doctor_specialty"] ?? "General Practice",
-                                  style: AppTextStyles.getText3(context).copyWith(color: AppColors.textSubColor),
-                                ),
+                                Text(doctorName,
+                                    style: AppTextStyles.getText2(context).copyWith(fontWeight: FontWeight.bold)),
+                                Text(specialty,
+                                    style: AppTextStyles.getText3(context).copyWith(color: AppColors.textSubColor)),
                               ],
                             ),
                           ],
                         ),
-                        needsConfirmation
-                            ?
-                        SizedBox()
-                        :
-                        Icon(Icons.arrow_forward_ios, color: Colors.grey, size: 16.sp)
-
-
+                        if (!needsConfirmation)
+                          Icon(Icons.arrow_forward_ios, color: Colors.grey, size: 16.sp),
                       ],
                     ),
                   ),
-
-              Padding(
-                padding: EdgeInsets.only(left: 12.w,right: 12.w, bottom: 8.h),
-                child: Row(
-                  children: [
-                    Icon(Icons.local_hospital_outlined,
-                        color: needsConfirmation ? AppColors.grayMain : AppColors.main.withOpacity(0.7),
-                        size: needsConfirmation ? 12.sp :16.sp),
-                    SizedBox(width: 5.w),
-                    Text(
-                      appointment["reason"] ?? "No reason given",
-                      style: AppTextStyles.getText3(context).copyWith(color: AppColors.textSubColor),
+                  Padding(
+                    padding: EdgeInsets.only(left: 12.w, right: 12.w, bottom: 8.h),
+                    child: Row(
+                      children: [
+                        Icon(Icons.local_hospital_outlined,
+                            color: needsConfirmation ? AppColors.grayMain : AppColors.main.withOpacity(0.7),
+                            size: needsConfirmation ? 12.sp : 16.sp),
+                        SizedBox(width: 5.w),
+                        Text(appt["reason"]?.toString() ?? AppLocalizations.of(context)!.notSpecified,
+                            style: AppTextStyles.getText3(context).copyWith(color: AppColors.textSubColor)),
+                      ],
                     ),
-                  ],
-                ),
-              ),
+                  ),
                 ],
               ),
             ),
 
-            /// **🔹 Full-Width Light Gray Divider**
             Divider(color: Colors.grey[200], height: 1.h),
 
-            // 🔹 **Patient Name & Book Again Button**
+            // 🔹 Patient name + booking date
             Padding(
-              padding: needsConfirmation ? EdgeInsets.symmetric(horizontal: 16.w, vertical: 5.h)
-                  :EdgeInsets.symmetric(horizontal: 16.w, vertical: 10.h),
+              padding: needsConfirmation ? EdgeInsets.symmetric(horizontal: 16.w, vertical: 5.h) : EdgeInsets.symmetric(horizontal: 16.w, vertical: 10.h),
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                crossAxisAlignment: CrossAxisAlignment.center,
                 children: [
                   Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
@@ -513,74 +476,61 @@ import 'package:docsera/gen_l10n/app_localizations.dart';
                         children: [
                           Icon(Icons.person, size: 12.sp, color: AppColors.mainDark),
                           SizedBox(width: 6.w),
-                          Text(
-                            patientName, // ✅ Show correct patient name
-                            style: AppTextStyles.getText3(context).copyWith(color: AppColors.blackText),
-                          ),
+                          Text(patientName,
+                              style: AppTextStyles.getText3(context).copyWith(color: AppColors.blackText)),
                         ],
                       ),
-
-                     if (!needsConfirmation) ...[
-                      SizedBox(height: 3.h),
-                      // ✅ Show Booking Date
-                      Row(
-                        children: [
-                          Icon(Icons.history, size: 10.sp, color: AppColors.grayMain),
-                          SizedBox(width: 6.w),
-                          Text(
-                            AppLocalizations.of(context)!.bookedOn(formattedBookingDate),
-                            style: AppTextStyles.getText3(context).copyWith(color: AppColors.grayMain, fontSize: 8 ),
-                          ),
-                        ],
-                      ),
-                     ],
-                    ],
-                  ),
-                  needsConfirmation
-                      ? Container(
-                    padding: EdgeInsets.symmetric(horizontal: 10.w, vertical: 5.h),
-                    decoration: BoxDecoration(
-                      borderRadius: BorderRadius.circular(20.r),
-                      border: Border.all(color: Colors.grey),
-                      color: Colors.transparent,
-                    ),
-                    child: Text(
-                      AppLocalizations.of(context)!.waitingConfirmation,
-                      style: AppTextStyles.getText3(context).copyWith(color: Colors.grey[700], fontWeight: FontWeight.w500),
-                    ),
-                  )
-                      :
-                  InkWell(
-                    onTap: () {
-                      // ✅ Navigate to SelectPatientPage to start a new booking for the same doctor
-                      Navigator.push(
-                        context,
-                        fadePageRoute(
-                          SelectPatientPage(
-                            doctorId: appointment["doctor_id"] ?? "",
-                            doctorName: appointment["doctor_name"] ?? "",
-                            doctorTitle: appointment["doctor_title"] ?? "",
-                            doctorGender: appointment["doctor_gender"] ?? "",
-                            specialty: appointment["doctor_specialty"] ?? "",
-                            image: appointment["doctor_image"] ?? "",
-                            clinicName: appointment['clinicName'] ?? "",
-                            clinicAddress: appointment['clinic_address'] ?? {}, // ✅ Pass empty map if null
-                          ),
-                        ),
-                      );
-                    },
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.start,
-                      children: [
-                        Icon(Icons.refresh, color: AppColors.main, size: 14.sp),
-                        const SizedBox(width: 4),
-                        Text(
-                          AppLocalizations.of(context)!.bookAgain,
-                          style: AppTextStyles.getText3(context).copyWith(color: AppColors.main,fontWeight: FontWeight.bold),
+                      if (!needsConfirmation && bookingTs != null) ...[
+                        SizedBox(height: 3.h),
+                        Row(
+                          children: [
+                            Icon(Icons.history, size: 10.sp, color: AppColors.grayMain),
+                            SizedBox(width: 6.w),
+                            Text(AppLocalizations.of(context)!.bookedOn(formattedBookingDate),
+                                style: AppTextStyles.getText3(context).copyWith(color: AppColors.grayMain, fontSize: 8)),
+                          ],
                         ),
                       ],
-                    ),
+                    ],
                   ),
+                  if (needsConfirmation)
+                    Container(
+                      padding: EdgeInsets.symmetric(horizontal: 10.w, vertical: 5.h),
+                      decoration: BoxDecoration(
+                        borderRadius: BorderRadius.circular(20.r),
+                        border: Border.all(color: Colors.grey),
+                        color: Colors.transparent,
+                      ),
+                      child: Text(AppLocalizations.of(context)!.waitingConfirmation,
+                          style: AppTextStyles.getText3(context).copyWith(color: Colors.grey[700], fontWeight: FontWeight.w500)),
+                    )
+                  else
+                    InkWell(
+                      onTap: () {
+                        Navigator.push(
+                          context,
+                          fadePageRoute(SelectPatientPage(
+                            doctorId: appt["doctor_id"] ?? appt["doctorId"] ?? "",
+                            doctorName: appt["doctor_name"] ?? appt["doctorName"] ?? "",
+                            doctorTitle: appt["doctor_title"] ?? appt["doctorTitle"] ?? "",
+                            doctorGender: appt["doctor_gender"] ?? appt["doctorGender"] ?? "",
+                            specialty: appt["doctor_specialty"] ?? appt["specialty"] ?? "",
+                            image: appt["doctor_image"] ?? appt["doctorImage"] ?? "",
+                            clinicName: appt['clinic'] ?? appt['clinicName'] ?? "",
+                            clinicAddress: appt['clinic_address'] ?? appt['clinicAddress'] ?? {},
+                            clinicLocation: appt['location'] ?? {},
+                          )),
+                        );
+                      },
+                      child: Row(
+                        children: [
+                          Icon(Icons.refresh, color: AppColors.main, size: 14.sp),
+                          const SizedBox(width: 4),
+                          Text(AppLocalizations.of(context)!.bookAgain,
+                              style: AppTextStyles.getText3(context).copyWith(color: AppColors.main, fontWeight: FontWeight.bold)),
+                        ],
+                      ),
+                    ),
                 ],
               ),
             ),

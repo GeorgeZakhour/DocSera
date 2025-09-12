@@ -1077,6 +1077,9 @@ class AppLocalizationsAr extends AppLocalizations {
   String get selectReason => 'اختر سبب الزيارة';
 
   @override
+  String get noReasonsFound => 'لم يتم العثور على أسباب حجز بعد';
+
+  @override
   String get initialExamination => 'فحص أولي للمريض الجديد';
 
   @override
@@ -1157,7 +1160,19 @@ class AppLocalizationsAr extends AppLocalizations {
   String get reasonForAppointment => 'سبب الموعد';
 
   @override
+  String get retry => 'إعادة المحاولة';
+
+  @override
   String get notSpecified => 'غير محدد';
+
+  @override
+  String get loginFirst => 'يرجى تسجيل الدخول أولًا.';
+
+  @override
+  String get slotAlreadyBooked => 'عذرًا، تم حجز هذا الموعد للتو. يرجى اختيار وقت آخر.';
+
+  @override
+  String get errorBookingAppointment => 'حدث خطأ أثناء حجز الموعد';
 
   @override
   String get appointmentAddedToCalendar => '📅 تم إضافة الموعد إلى التقويم!';

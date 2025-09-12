@@ -1925,6 +1925,10 @@ class _DoctorProfilePageState extends State<DoctorProfilePage> {
     String? country = address?['country'];
     String? addressDetails = address?['details'];
     String? clinic = doctor['clinic'];
+    final String? Reason;
+    final String? ReasonId;
+    final Map<String, dynamic>? location;
+
 
     String? imagePath = doctor['doctor_image'];
     print('📷 RAW doctor_image = "$imagePath"');
@@ -1952,7 +1956,66 @@ class _DoctorProfilePageState extends State<DoctorProfilePage> {
     final doctorTitle = _doctorData?['title'] ?? '';
     final doctorSpecialty = _doctorData?['specialty'] ?? '';
     final clinicName = _doctorData?['clinic'] ?? '';
-    final clinicAddress = _doctorData?['address'] ?? {};
+    // final clinicAddress = _doctorData?['address'] ?? {};
+
+
+// --- Address (could be a JSON string or a Map) ---
+    final Map<String, dynamic> clinicAddress = (() {
+      final raw = _doctorData?['address'];
+      if (raw is String) {
+        try {
+          return Map<String, dynamic>.from(jsonDecode(raw));
+        } catch (_) {
+          return <String, dynamic>{};
+        }
+      } else if (raw is Map) {
+        return Map<String, dynamic>.from(raw);
+      } else {
+        return <String, dynamic>{};
+      }
+    })();
+
+// --- Location (lat/lng) (could be a JSON string or a Map) ---
+// --- Location (lat/lng) (could be a JSON string or a Map) ---
+    final Map<String, dynamic> clinicLocation = (() {
+      final raw = _doctorData?['location'];
+      Map<String, dynamic> out;
+      if (raw is String) {
+        try {
+          out = Map<String, dynamic>.from(jsonDecode(raw));
+          print("🌍 [DoctorProfilePage] Location raw (String) decoded = $out");
+        } catch (_) {
+          print("❌ [DoctorProfilePage] Failed to decode location JSON: $raw");
+          out = <String, dynamic>{};
+        }
+      } else if (raw is Map) {
+        out = Map<String, dynamic>.from(raw);
+        print("🌍 [DoctorProfilePage] Location raw (Map) = $out");
+      } else {
+        print("⚠️ [DoctorProfilePage] No location data found (raw=$raw)");
+        out = <String, dynamic>{};
+      }
+
+      // Normalize types to double if present
+      double? lat;
+      double? lng;
+      final rawLat = out['lat'];
+      final rawLng = out['lng'];
+      if (rawLat is num) lat = rawLat.toDouble();
+      if (rawLng is num) lng = rawLng.toDouble();
+      lat ??= double.tryParse(rawLat?.toString() ?? '');
+      lng ??= double.tryParse(rawLng?.toString() ?? '');
+
+      final normalized = {
+        if (lat != null) 'lat': lat,
+        if (lng != null) 'lng': lng,
+      };
+
+      print("✅ [DoctorProfilePage] Normalized clinicLocation = $normalized");
+      return normalized;
+    })();
+
+
 
     double offset = _scrollController.hasClients ? _scrollController.offset : 0;
     double fadeStart = 100;
@@ -2189,30 +2252,34 @@ class _DoctorProfilePageState extends State<DoctorProfilePage> {
                   ],
                 ),
                 child: ElevatedButton.icon(
-                  onPressed: () async {
-                    final prefs = await SharedPreferences.getInstance();
-                    final userId = prefs.getString('userId');
-
-                    if (userId == null || userId.isEmpty) {
-                      _showLoginPromptDialog(); // 🔻 تابع أدناه
-                    } else {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (context) => SelectPatientPage(
-                            doctorId: doctorId,
-                            doctorName: "$doctorFirstName $doctorLastName",
-                            doctorGender: doctorGender,
-                            doctorTitle: doctorTitle,
-                            specialty: doctorSpecialty,
-                            image: avatarPath,
-                            clinicName: clinicName,
-                            clinicAddress: clinicAddress,
-                          ),
-                        ),
-                      );
+                  onPressed: () {
+                    final user = Supabase.instance.client.auth.currentUser;
+                    if (user == null) {
+                      _showLoginPromptDialog();
+                      return;
                     }
+                    print("➡️ [DoctorProfilePage] Navigating to SelectPatientPage with:");
+                    print("- doctorId: $doctorId");
+                    print("- clinicLocation: $clinicLocation");
+
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (_) => SelectPatientPage(
+                          doctorId: doctorId,
+                          doctorName: "$doctorFirstName $doctorLastName",
+                          doctorGender: doctorGender,
+                          doctorTitle: doctorTitle,
+                          specialty: doctorSpecialty,
+                          image: avatarPath,
+                          clinicName: clinicName,
+                          clinicAddress: clinicAddress,
+                          clinicLocation: clinicLocation,
+                        ),
+                      ),
+                    );
                   },
+
 
                   icon: Icon(Icons.calendar_today, color: AppColors.mainDark, size: 18.sp),
                   label: Text(
@@ -2247,6 +2314,10 @@ class _DoctorProfilePageState extends State<DoctorProfilePage> {
                   if (userId == null || userId.isEmpty) {
                     _showLoginPromptDialog(); // 🔻 تابع أدناه
                   } else {
+                    print("➡️ [DoctorProfilePage] Navigating to SelectPatientPage with:");
+                    print("- doctorId: $doctorId");
+                    print("- clinicLocation: $clinicLocation");
+
                     Navigator.push(
                       context,
                       MaterialPageRoute(
@@ -2259,6 +2330,7 @@ class _DoctorProfilePageState extends State<DoctorProfilePage> {
                           image: avatarPath,
                           clinicName: clinicName,
                           clinicAddress: clinicAddress,
+                          clinicLocation: clinicLocation,
                         ),
                       ),
                     );

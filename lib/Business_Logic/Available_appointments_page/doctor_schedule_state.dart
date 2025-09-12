@@ -7,20 +7,9 @@ class DoctorScheduleLoading extends DoctorScheduleState {}
 class DoctorScheduleLoaded extends DoctorScheduleState {
   final Map<String, List<Map<String, dynamic>>> appointments;
   final Set<String> expandedDates;
-  final int maxDisplayedDates; // ✅ أضف المتغير الثالث
+  final int maxDisplayedDates;
 
   DoctorScheduleLoaded(this.appointments, this.expandedDates, this.maxDisplayedDates);
-}
-
-
-
-class DoctorScheduleExpanded extends DoctorScheduleState {
-  final Set<String> expandedDates;
-  DoctorScheduleExpanded(this.expandedDates);
-}
-class DoctorScheduleMoreDatesLoaded extends DoctorScheduleState {
-  final int maxDisplayedDates;
-  DoctorScheduleMoreDatesLoaded(this.maxDisplayedDates);
 }
 
 class DoctorScheduleEmpty extends DoctorScheduleState {}

@@ -8,26 +8,34 @@ import 'package:docsera/utils/page_transitions.dart';
 import 'package:docsera/widgets/base_scaffold.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/svg.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 import 'package:docsera/app/text_styles.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:docsera/gen_l10n/app_localizations.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
-
 class SelectPatientPage extends StatefulWidget {
   final String doctorId;
-  final String doctorName; // ✅ Receive doctor name
-  final String doctorGender; // ✅ Receive doctor name
+  final String doctorName;
+  final String doctorGender;
   final String doctorTitle;
   final String specialty;
   final String image;
-  final String clinicName; // ✅ استلام العيادة
-  final Map<String, dynamic> clinicAddress;// ✅ استلام العنوان
+  final String clinicName;
+  final Map<String, dynamic> clinicAddress;
+  final Map<String, dynamic> clinicLocation;
 
-
-
-  const SelectPatientPage({Key? key, required this.doctorId, required this.doctorName,required this.doctorGender,required this.doctorTitle,required this.specialty, required this.image, required this.clinicName,required this.clinicAddress}) : super(key: key);
+  const SelectPatientPage({
+    Key? key,
+    required this.doctorId,
+    required this.doctorName,
+    required this.doctorGender,
+    required this.doctorTitle,
+    required this.specialty,
+    required this.image,
+    required this.clinicName,
+    required this.clinicAddress,
+    required this.clinicLocation,
+  }) : super(key: key);
 
   @override
   _SelectPatientPageState createState() => _SelectPatientPageState();
@@ -35,15 +43,14 @@ class SelectPatientPage extends StatefulWidget {
 
 class _SelectPatientPageState extends State<SelectPatientPage> {
   String userName = "Loading...";
-  String userGender = "ذكر"; // Default, will be fetched
-  int userAge = 0; // Default, will be fetched
-  bool isSelected = true; // Default selection for main user
-  String patientDOB = ""; // ✅ Store Date of Birth
-  String patientPhoneNumber = ""; // ✅ Store Phone Number
-  String patientEmail = ""; // ✅ Store Email
+  String userGender = "ذكر";
+  int userAge = 0;
+  String patientDOB = "";
+  String patientPhoneNumber = "";
+  String patientEmail = "";
 
-  String? userId; // ✅ Declare userId at class level
-  List<Map<String, dynamic>> relatives = []; // ✅ Declare relatives list
+  String? userId;
+  List<Map<String, dynamic>> relatives = [];
   String? selectedPatientId;
 
   String selectedPatientName = "";
@@ -51,11 +58,11 @@ class _SelectPatientPageState extends State<SelectPatientPage> {
   int selectedPatientAge = 0;
   String? latestDoctorImage;
 
-
-
   @override
   void initState() {
     super.initState();
+    print("📍 [SelectPatientPage] Received clinicLocation = ${widget.clinicLocation}");
+
     _loadUserInfo();
     _fetchLatestDoctorImage();
   }
@@ -63,11 +70,11 @@ class _SelectPatientPageState extends State<SelectPatientPage> {
   Future<void> _loadUserInfo() async {
     final currentUser = Supabase.instance.client.auth.currentUser;
     if (currentUser == null) {
-      print("❌ Supabase user is not logged in.");
+      debugPrint("❌ Supabase user is not logged in.");
       return;
     }
 
-    userId = currentUser.id; // 🔄 نحفظه مباشرة في المتغير المستخدم لاحقًا
+    userId = currentUser.id;
 
     try {
       final response = await Supabase.instance.client
@@ -93,38 +100,38 @@ class _SelectPatientPageState extends State<SelectPatientPage> {
           patientDOB = dobString ?? "";
           patientPhoneNumber = phoneNumber;
           patientEmail = email;
+
+          // ✅ اختيار افتراضي للمستخدم الأساسي
+          selectedPatientId = userId;
+          selectedPatientName = userName.trim();
+          selectedPatientGender = userGender;
+          selectedPatientAge = userAge;
         });
 
         await _loadRelatives();
       } else {
-        print("❌ No user found with this ID.");
-        return;
+        debugPrint("❌ No user found with this ID.");
       }
     } catch (e) {
-      print("❌ Error loading user info from Supabase: $e");
+      debugPrint("❌ Error loading user info from Supabase: $e");
     }
   }
-
 
   int _calculateAge(String? dobString) {
     if (dobString == null || dobString.isEmpty) return 0;
-
     try {
-      DateTime dob = DateTime.parse(dobString); // ✅ يقبل "2020-04-15"
-      DateTime today = DateTime.now();
-      int age = today.year - dob.year;
-
+      final dob = DateTime.parse(dobString);
+      final today = DateTime.now();
+      var age = today.year - dob.year;
       if (today.month < dob.month || (today.month == dob.month && today.day < dob.day)) {
         age--;
       }
-
       return age;
     } catch (e) {
-      print("❌ Error parsing dateOfBirth: $e");
+      debugPrint("❌ Error parsing dateOfBirth: $e");
       return 0;
     }
   }
-
 
   Future<void> _loadRelatives() async {
     if (userId == null) return;
@@ -142,12 +149,12 @@ class _SelectPatientPageState extends State<SelectPatientPage> {
             "first_name": data["first_name"] ?? "",
             "last_name": data["last_name"] ?? "",
             "gender": data["gender"] ?? "",
-            "age": _calculateAge(data["date_of_birth"]) ?? 0,
+            "age": _calculateAge(data["date_of_birth"]),
           };
         }).toList();
       });
     } catch (e) {
-      print("❌ Error loading relatives from Supabase: $e");
+      debugPrint("❌ Error loading relatives from Supabase: $e");
     }
   }
 
@@ -166,26 +173,18 @@ class _SelectPatientPageState extends State<SelectPatientPage> {
             color: Colors.white,
             borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
           ),
-          child: ClipRRect(
-            borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
-            child: SingleChildScrollView(
-              child: ConstrainedBox(
-                constraints: BoxConstraints(
-                  maxHeight: MediaQuery.of(context).size.height * 0.9,
-                ),
-                child: const AddRelativePage(),
-              ),
-            ),
+          child: const ClipRRect(
+            borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+            child: AddRelativePage(),
           ),
         );
       },
     );
 
     if (mounted) {
-      _loadRelatives(); // ✅ يتم تحميل البيانات فقط عند عودة المستخدم للصفحة
+      _loadRelatives();
     }
   }
-
 
   Future<void> _fetchLatestDoctorImage() async {
     try {
@@ -199,17 +198,14 @@ class _SelectPatientPageState extends State<SelectPatientPage> {
         setState(() {
           latestDoctorImage = response['doctor_image'];
         });
-        print("📸 Latest doctor image from Supabase: $latestDoctorImage");
+        debugPrint("📸 Latest doctor image from Supabase: $latestDoctorImage");
       } else {
-        print("⚠️ No doctor image found in Supabase.");
+        debugPrint("⚠️ No doctor image found in Supabase.");
       }
     } catch (e) {
-      print("❌ Error fetching doctor image: $e");
+      debugPrint("❌ Error fetching doctor image: $e");
     }
   }
-
-
-
 
   @override
   Widget build(BuildContext context) {
@@ -224,77 +220,87 @@ class _SelectPatientPageState extends State<SelectPatientPage> {
     );
     final imageProvider = imageResult.imageProvider;
 
-
-
     return BaseScaffold(
       titleAlignment: 2,
-        height: 75.h,
-        title:  Row(
-          mainAxisAlignment: MainAxisAlignment.start,
-          crossAxisAlignment: CrossAxisAlignment.center,
-          children: [
-            CircleAvatar(
-              backgroundColor: AppColors.background2.withOpacity(0.3),
-              radius: 18.r,
-              backgroundImage: imageProvider,
-
-            ),
-            SizedBox(width: 15.w),
-            Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(AppLocalizations.of(context)!.makeAppointment,
-                style: AppTextStyles.getText2(context).copyWith(fontSize: 12.sp,fontWeight: FontWeight.w300,color: AppColors.whiteText),),
-                Text(widget.doctorName,style: AppTextStyles.getTitle2(context).copyWith(fontSize: 14.sp,color: AppColors.whiteText)),
-              ],
-            ),
-          ],
-        ),
+      height: 75.h,
+      title: Row(
+        mainAxisAlignment: MainAxisAlignment.start,
+        crossAxisAlignment: CrossAxisAlignment.center,
+        children: [
+          CircleAvatar(
+            backgroundColor: AppColors.background2.withOpacity(0.3),
+            radius: 18.r,
+            backgroundImage: imageProvider,
+          ),
+          SizedBox(width: 15.w),
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                AppLocalizations.of(context)!.makeAppointment,
+                style: AppTextStyles.getText2(context).copyWith(
+                  fontSize: 12.sp,
+                  fontWeight: FontWeight.w300,
+                  color: AppColors.whiteText,
+                ),
+              ),
+              Text(
+                widget.doctorName,
+                style: AppTextStyles.getTitle2(context).copyWith(
+                  fontSize: 14.sp,
+                  color: AppColors.whiteText,
+                ),
+              ),
+            ],
+          ),
+        ],
+      ),
       child: Padding(
         padding: EdgeInsets.all(16.w),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // 🔹 "Who is this appointment for?"
             Text(
               AppLocalizations.of(context)!.whoIsThisFor,
               style: AppTextStyles.getTitle1(context).copyWith(fontSize: 12.sp),
             ),
             SizedBox(height: 15.h),
 
-            _buildPatientList(), // ✅ Display patient selection card with dividers
+            _buildPatientList(),
 
             SizedBox(height: 20.h),
 
-            // 🔹 Add a relative (Dummy Button for Now)
             GestureDetector(
               onTap: _showAddRelativeSheet,
               child: Row(
-                children:  [
+                children: [
                   SvgPicture.asset(
-                    "assets/icons/add-user.svg", // ✅ استخدام أيقونة SVG
-                    height: 14.sp, // ✅ تعيين الحجم بحيث يتناسب مع التصميم
-                    colorFilter: ColorFilter.mode(AppColors.main, BlendMode.srcIn), // ✅ جعل اللون متناسقًا مع الثيم
+                    "assets/icons/add-user.svg",
+                    height: 14.sp,
+                    colorFilter: const ColorFilter.mode(AppColors.main, BlendMode.srcIn),
                   ),
                   SizedBox(width: 6.w),
-                  Text(AppLocalizations.of(context)!.addRelative, style: AppTextStyles.getText2(context).copyWith(color: AppColors.main)),
+                  Text(
+                    AppLocalizations.of(context)!.addRelative,
+                    style: AppTextStyles.getText2(context).copyWith(color: AppColors.main),
+                  ),
                 ],
               ),
             ),
             SizedBox(height: 30.h),
 
-            // 🔹 Continue Button
             GestureDetector(
               onTap: selectedPatientId != null
                   ? () {
-                print("Selected Patient: $selectedPatientName, Gender: $selectedPatientGender, Age: $selectedPatientAge");
+                debugPrint(
+                    "Selected Patient: $selectedPatientName, Gender: $selectedPatientGender, Age: $selectedPatientAge");
 
                 Navigator.push(
                   context,
                   fadePageRoute(
                     VisitedDoctorPage(
                       patientProfile: PatientProfile(
-                        patientId: selectedPatientId!, // ✅ مضاف
+                        patientId: selectedPatientId!,
                         doctorId: widget.doctorId,
                         patientName: selectedPatientName,
                         patientGender: selectedPatientGender,
@@ -310,7 +316,7 @@ class _SelectPatientPageState extends State<SelectPatientPage> {
                         doctorGender: widget.doctorGender,
                         doctorTitle: widget.doctorTitle,
                         specialty: widget.specialty,
-                        image: latestDoctorImage ?? widget.image, // ✅ صورة محدثة
+                        image: latestDoctorImage ?? widget.image,
                         patientId: selectedPatientId!,
                         isRelative: selectedPatientId != userId,
                         patientName: selectedPatientName,
@@ -320,6 +326,7 @@ class _SelectPatientPageState extends State<SelectPatientPage> {
                         reason: "",
                         clinicName: widget.clinicName,
                         clinicAddress: widget.clinicAddress,
+                        location: widget.clinicLocation,
                       ),
                     ),
                   ),
@@ -337,12 +344,11 @@ class _SelectPatientPageState extends State<SelectPatientPage> {
                 child: Text(
                   AppLocalizations.of(context)!.continueButton,
                   style: AppTextStyles.getText2(context).copyWith(
-                    color: Colors.white ,
+                    color: Colors.white,
                   ),
                 ),
               ),
             ),
-
           ],
         ),
       ),
@@ -350,23 +356,30 @@ class _SelectPatientPageState extends State<SelectPatientPage> {
   }
 
   Widget _buildPatientList() {
-    List<Widget> patientTiles = [];
+    final tiles = <Widget>[];
 
-    // إضافة المستخدم الرئيسي
     if (userId != null) {
       final nameParts = userName.split(" ");
-      final firstName = nameParts.isNotEmpty ? nameParts[0] : "";
+      final firstName = nameParts.isNotEmpty ? nameParts.first : "";
       final lastName = nameParts.length > 1 ? nameParts[1] : "";
 
-      patientTiles.add(_buildPatientTile(userId!, firstName, lastName, userGender, userAge, true, true, relatives.isEmpty));
+      tiles.add(_buildPatientTile(
+        userId!,
+        firstName,
+        lastName,
+        userGender,
+        userAge,
+        true,
+        true,
+        relatives.isEmpty,
+      ));
     }
 
-    // إضافة الأقارب مع ضبط الأول والأخير
     for (int i = 0; i < relatives.length; i++) {
-      bool isFirst = userId == null && i == 0; // أول عنصر فقط إن لم يكن هناك مستخدم رئيسي
-      bool isLast = i == relatives.length - 1; // آخر عنصر
+      final isFirst = userId == null && i == 0;
+      final isLast = i == relatives.length - 1;
 
-      patientTiles.add(
+      tiles.add(
         _buildPatientTile(
           relatives[i]["id"],
           relatives[i]["first_name"],
@@ -392,41 +405,44 @@ class _SelectPatientPageState extends State<SelectPatientPage> {
           ),
         ],
       ),
-      child: Column(
-        children: patientTiles,
-      ),
+      child: Column(children: tiles),
     );
   }
 
-  void _updateSelectedPatient(String id, String firstName, String lastName, String gender, int age) {
-    setState(() {
-      selectedPatientId = id;
-      selectedPatientName = "$firstName $lastName";
-      selectedPatientGender = gender;
-      selectedPatientAge = age;
-    });
+  void _updateSelectedPatient(
+      String id, String firstName, String lastName, String gender, int age) {
+    selectedPatientId = id;
+    selectedPatientName = "$firstName $lastName".trim();
+    selectedPatientGender = gender;
+    selectedPatientAge = age;
   }
 
   String normalizeArabicInitial(String input) {
     if (input.isEmpty) return "";
-    String firstChar = input[0];
+    final firstChar = input[0];
     return firstChar == 'ه' ? 'هـ' : firstChar;
   }
 
-
-  Widget _buildPatientTile(String id, String firstName, String lastName, String gender, int age, bool isMainUser, bool isFirst, bool isLast) {
-    bool isArabic = RegExp(r'[\u0600-\u06FF]').hasMatch(firstName);
-    String avatarText = isArabic
+  Widget _buildPatientTile(
+      String id,
+      String firstName,
+      String lastName,
+      String gender,
+      int age,
+      bool isMainUser,
+      bool isFirst,
+      bool isLast,
+      ) {
+    final isArabic = RegExp(r'[\u0600-\u06FF]').hasMatch(firstName);
+    final avatarText = isArabic
         ? normalizeArabicInitial(firstName).toUpperCase()
         : "${firstName.isNotEmpty ? firstName[0].toUpperCase() : ''}${lastName.isNotEmpty ? lastName[0].toUpperCase() : ''}";
-
 
     return Column(
       children: [
         GestureDetector(
           onTap: () {
             setState(() {
-              selectedPatientId = id;
               _updateSelectedPatient(id, firstName, lastName, gender, age);
             });
           },
@@ -488,7 +504,7 @@ class _SelectPatientPageState extends State<SelectPatientPage> {
                     ),
                   ],
                 ),
-                Spacer(),
+                const Spacer(),
                 Icon(
                   selectedPatientId == id ? Icons.radio_button_checked : Icons.radio_button_off,
                   color: selectedPatientId == id ? AppColors.main : Colors.grey,
@@ -497,10 +513,8 @@ class _SelectPatientPageState extends State<SelectPatientPage> {
             ),
           ),
         ),
-        if (!isLast) Divider(color: Colors.grey.shade300, thickness: 1, height: 1), // ✅ إزالة الفراغ بين العنصر والتظليل
+        if (!isLast) Divider(color: Colors.grey.shade300, thickness: 1, height: 1),
       ],
     );
   }
-
 }
-

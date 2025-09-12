@@ -314,6 +314,7 @@ class _DoctorAppointmentsState extends State<DoctorAppointments> {
     final doctorSpecialty = doctorResponse['specialty'] ?? "";
     final clinicName = doctorResponse['clinic'] ?? "";
     final clinicAddress = doctorResponse['address'] ?? {};
+    final clinicLocation = doctorResponse['location'] ?? {};
 
 
     print("👨‍⚕️ Doctor Data:");
@@ -347,11 +348,15 @@ class _DoctorAppointmentsState extends State<DoctorAppointments> {
             'doctor_specialty': doctorSpecialty,
             'clinic': clinicName,
             'clinic_address': clinicAddress,
+            'location': clinicLocation,
             'timestamp': combinedTimestamp.toIso8601String(),
             'appointment_date': formattedDate,
             'appointment_time': formattedTime,
             'booked': false,
           });
+
+          print("✅ Added slot: $formattedDate at $formattedTime "
+              "with location=${doctorResponse['location']}");
 
           print("✅ Added slot: $formattedDate at $formattedTime");
         } catch (e) {

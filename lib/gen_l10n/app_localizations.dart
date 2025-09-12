@@ -2171,6 +2171,12 @@ abstract class AppLocalizations {
   /// **'Select the reason for this visit'**
   String get selectReason;
 
+  /// No description provided for @noReasonsFound.
+  ///
+  /// In en, this message translates to:
+  /// **'No appointment reasons found yet'**
+  String get noReasonsFound;
+
   /// No description provided for @initialExamination.
   ///
   /// In en, this message translates to:
@@ -2327,11 +2333,35 @@ abstract class AppLocalizations {
   /// **'Reason for appointment'**
   String get reasonForAppointment;
 
+  /// No description provided for @retry.
+  ///
+  /// In en, this message translates to:
+  /// **'Retry'**
+  String get retry;
+
   /// No description provided for @notSpecified.
   ///
   /// In en, this message translates to:
   /// **'Not specified'**
   String get notSpecified;
+
+  /// No description provided for @loginFirst.
+  ///
+  /// In en, this message translates to:
+  /// **'Please log in first.'**
+  String get loginFirst;
+
+  /// No description provided for @slotAlreadyBooked.
+  ///
+  /// In en, this message translates to:
+  /// **'Sorry, this time slot has just been booked. Please choose another time.'**
+  String get slotAlreadyBooked;
+
+  /// No description provided for @errorBookingAppointment.
+  ///
+  /// In en, this message translates to:
+  /// **'Error booking appointment'**
+  String get errorBookingAppointment;
 
   /// No description provided for @appointmentAddedToCalendar.
   ///
