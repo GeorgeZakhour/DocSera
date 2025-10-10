@@ -4,6 +4,7 @@ import 'dart:ui' as ui;
 import 'package:docsera/app/const.dart';
 import 'package:docsera/app/text_styles.dart';
 import 'package:docsera/utils/doctor_image_utils.dart';
+import 'package:docsera/utils/page_transitions.dart' show fadePageRoute;
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
@@ -12,11 +13,17 @@ import 'package:docsera/gen_l10n/app_localizations.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:geolocator/geolocator.dart';
 
+import 'doctors/doctor_profile_page.dart';
+
 class FullMapResultsPage extends StatefulWidget {
   final List<Map<String, dynamic>> results; // عناصر فيها lat/lng + بيانات الطبيب الأساسية
+  final bool fromDoctorProfile;
 
-  const FullMapResultsPage({super.key, required this.results});
-
+  const FullMapResultsPage({
+    super.key,
+    required this.results,
+    this.fromDoctorProfile = false, // default: false
+  });
   @override
   State<FullMapResultsPage> createState() => _FullMapResultsPageState();
 }
@@ -395,7 +402,10 @@ class _FullMapResultsPageState extends State<FullMapResultsPage> with SingleTick
         children: [
           // ===== Google Map =====
           GoogleMap(
-            initialCameraPosition: CameraPosition(target: initialCenter, zoom: 12),
+            initialCameraPosition: CameraPosition(
+              target: initialCenter,
+              zoom: widget.fromDoctorProfile ? 16 : 12, // 👈 farther when from profile
+            ),
             onMapCreated: (c) async {
               _gController = c;
               await _applyMapStyle();
@@ -418,7 +428,11 @@ class _FullMapResultsPageState extends State<FullMapResultsPage> with SingleTick
           // زر "موقعي"
           Positioned(
             right: 16,
-            bottom: hasCards ? (_bottomCardHeight + 40) : 24,
+            bottom: hasCards
+                ? (widget.fromDoctorProfile
+                ? (_bottomCardHeight * 0.72) + 15 // smaller card -> lower offset
+                : _bottomCardHeight + 15) // full card -> higher offset
+                : 24,
             child: SafeArea(
               top: false,
               child: FloatingActionButton(
@@ -454,23 +468,23 @@ class _FullMapResultsPageState extends State<FullMapResultsPage> with SingleTick
           ),
 
           // Search here (placeholder)
-          Positioned(
-            top: 60.h,
-            right: 16.w,
-            child: Material(
-              color: Colors.white,
-              elevation: 2,
-              shape: const StadiumBorder(),
-              child: InkWell(
-                borderRadius: BorderRadius.circular(24),
-                onTap: () {},
-                child: Padding(
-                  padding: EdgeInsets.symmetric(horizontal: 14.w, vertical: 8.h),
-                  child: Text(t.searchHere, style: AppTextStyles.getText2(context)),
-                ),
-              ),
-            ),
-          ),
+          // Positioned(
+          //   top: 60.h,
+          //   right: 16.w,
+          //   child: Material(
+          //     color: Colors.white,
+          //     elevation: 2,
+          //     shape: const StadiumBorder(),
+          //     child: InkWell(
+          //       borderRadius: BorderRadius.circular(24),
+          //       onTap: () {},
+          //       child: Padding(
+          //         padding: EdgeInsets.symmetric(horizontal: 14.w, vertical: 8.h),
+          //         child: Text(t.searchHere, style: AppTextStyles.getText2(context)),
+          //       ),
+          //     ),
+          //   ),
+          // ),
 
           // ===== Bottom swipeable doctor cards =====
           if (hasCards)
@@ -484,6 +498,7 @@ class _FullMapResultsPageState extends State<FullMapResultsPage> with SingleTick
                 await _animateToDoctor(i);
               },
               onOpenMaps: (doc) => _openInMapsPreferred(doc),
+              fromDoctorProfile: widget.fromDoctorProfile,
             ),
         ],
       ),
@@ -505,6 +520,7 @@ class _BottomCardsPager extends StatelessWidget {
   final int selectedIndex;
   final ValueChanged<int> onPageChanged;
   final void Function(Map<String, dynamic>) onOpenMaps;
+  final bool fromDoctorProfile; // ✅
 
   const _BottomCardsPager({
     super.key,
@@ -514,6 +530,8 @@ class _BottomCardsPager extends StatelessWidget {
     required this.selectedIndex,
     required this.onPageChanged,
     required this.onOpenMaps,
+    this.fromDoctorProfile = false,
+
   });
 
   @override
@@ -523,7 +541,9 @@ class _BottomCardsPager extends StatelessWidget {
       child: SafeArea(
         top: false,
         child: SizedBox(
-          height: height,
+          height: fromDoctorProfile
+              ? height * 0.72 // ~28% shorter, tweak if needed
+              : height,
           child: PageView.builder(
             controller: controller,
             itemCount: doctors.length,
@@ -541,6 +561,7 @@ class _BottomCardsPager extends StatelessWidget {
                 child: _DoctorCard(
                   doctor: doc,
                   onOpenMaps: () => onOpenMaps(doc),
+                  fromDoctorProfile: fromDoctorProfile,
                 ),
               );
             },
@@ -555,17 +576,18 @@ class _BottomCardsPager extends StatelessWidget {
 class _DoctorCard extends StatelessWidget {
   final Map<String, dynamic> doctor;
   final VoidCallback onOpenMaps;
+  final bool fromDoctorProfile;
 
   const _DoctorCard({
     required this.doctor,
     required this.onOpenMaps,
+    this.fromDoctorProfile = false,
   });
 
   String _address(Map<String, dynamic> doctor) {
     final addr = doctor['address'] as Map<String, dynamic>?;
     if (addr == null) return '';
     final parts = <String>[];
-
     void add(dynamic v) {
       final s = (v ?? '').toString().trim();
       if (s.isNotEmpty) parts.add(s);
@@ -575,26 +597,22 @@ class _DoctorCard extends StatelessWidget {
     add(addr['building']);
     add(addr['floor']);
     add(addr['city']);
-
     return parts.join(' • ');
   }
 
   String _addressDetails(Map<String, dynamic> doctor) {
     final addr = doctor['address'] as Map<String, dynamic>?;
-    final det = (addr?['details'] ?? '').toString().trim();
-    return det;
+    return (addr?['details'] ?? '').toString().trim();
   }
 
   @override
   Widget build(BuildContext context) {
     final t = AppLocalizations.of(context)!;
-
     final imageResult = resolveDoctorImagePathAndWidget(doctor: doctor);
     final imageProvider = imageResult.imageProvider;
 
     final name =
-    "${doctor['title'] ?? ''} ${doctor['first_name'] ?? ''} ${doctor['last_name'] ?? ''}"
-        .trim();
+    "${doctor['title'] ?? ''} ${doctor['first_name'] ?? ''} ${doctor['last_name'] ?? ''}".trim();
     final specialty = (doctor['specialty'] ?? '').toString();
     final address = _address(doctor);
     final details = _addressDetails(doctor);
@@ -608,145 +626,150 @@ class _DoctorCard extends StatelessWidget {
           BoxShadow(color: Colors.black12, blurRadius: 10, offset: Offset(0, -4)),
         ],
       ),
-      // السماح للبطاقة أن تتمدّد عموديًا قليلًا إذا احتاج النص
-      child: IntrinsicHeight(
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            /// الهيدر: الصورة + الاسم + التخصص
-            Row(
-              crossAxisAlignment: CrossAxisAlignment.center,
-              children: [
-                CircleAvatar(
-                  backgroundColor: AppColors.mainDark.withOpacity(0.2),
-                  radius: 28.sp,
-                  backgroundImage: imageProvider,
+      child: Column(
+        mainAxisSize: MainAxisSize.min, // ✅ allows auto collapse
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          /// Header: image + name + specialty
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.center,
+            children: [
+              CircleAvatar(
+                backgroundColor: AppColors.mainDark.withOpacity(0.2),
+                radius: 26.sp,
+                backgroundImage: imageProvider,
+              ),
+              SizedBox(width: 10.w),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      name,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: AppTextStyles.getText2(context).copyWith(
+                        fontWeight: FontWeight.w700,
+                        color: AppColors.mainDark,
+                      ),
+                    ),
+                    SizedBox(height: 2.h),
+                    Text(
+                      specialty,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: AppTextStyles.getText3(context).copyWith(color: Colors.grey),
+                    ),
+                  ],
                 ),
-                SizedBox(width: 12.w),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
+              ),
+            ],
+          ),
+
+          SizedBox(height: 8.h),
+
+          /// Address + "Open in Maps"
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Icon(Icons.place, size: 15.sp, color: Colors.grey[700]),
+              SizedBox(width: 4.w),
+              Expanded(
+                child: Text.rich(
+                  TextSpan(
                     children: [
-                      // الاسم
-                      Text(
-                        name,
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                        style: AppTextStyles.getText2(context).copyWith(
-                          fontWeight: FontWeight.w700,
-                          color: AppColors.mainDark,
+                      TextSpan(
+                        text: (address.isEmpty ? '-' : address),
+                        style: AppTextStyles.getText3(context)
+                            .copyWith(color: Colors.grey[800]),
+                      ),
+                      if (details.isNotEmpty) ...[
+                        TextSpan(
+                          text: " — ",
+                          style: AppTextStyles.getText3(context)
+                              .copyWith(color: Colors.grey[700]),
                         ),
-                      ),
-                      SizedBox(height: 2.h),
-                      // التخصص
-                      Text(
-                        specialty,
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                        style: AppTextStyles.getText3(context).copyWith(color: Colors.grey),
-                      ),
+                        TextSpan(
+                          text: details,
+                          style: AppTextStyles.getText3(context)
+                              .copyWith(color: Colors.grey[700]),
+                        ),
+                      ],
                     ],
                   ),
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
                 ),
-              ],
-            ),
-
-            SizedBox(height: 10.h),
-
-            /// العنوان + زر الخرائط — بدون RenderFlex:
-            /// - دمج تفاصيل العنوان مع السطر الأساسي ليكونوا "أقرب"
-            /// - استخدام Expanded للنص وقيود عرض للزر
-            Row(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Icon(Icons.place, size: 16.sp, color: Colors.grey[700]),
-                SizedBox(width: 6.w),
-
-                /// النص قابل للالتفاف حتى 3 أسطر مع دمج التفاصيل
-                Expanded(
-                  child: Text.rich(
-                    TextSpan(
-                      children: [
-                        TextSpan(
-                          text: (address.isEmpty ? '-' : address),
-                          style: AppTextStyles.getText3(context)
-                              .copyWith(color: Colors.grey[800]),
-                        ),
-                        if (details.isNotEmpty) ...[
-                          TextSpan(
-                            text: " — ",
-                            style: AppTextStyles.getText3(context)
-                                .copyWith(color: Colors.grey[700]),
-                          ),
-                          TextSpan(
-                            text: details,
-                            style: AppTextStyles.getText3(context)
-                                .copyWith(color: Colors.grey[700]),
-                          ),
-                        ],
-                      ],
+              ),
+              SizedBox(width: 6.w),
+              ConstrainedBox(
+                constraints: BoxConstraints(maxWidth: 110.w),
+                child: FittedBox(
+                  fit: BoxFit.scaleDown,
+                  child: TextButton(
+                    onPressed: onOpenMaps,
+                    style: TextButton.styleFrom(
+                      padding: EdgeInsets.symmetric(horizontal: 8.w, vertical: 4.h),
+                      minimumSize: Size.zero,
+                      tapTargetSize: MaterialTapTargetSize.shrinkWrap,
                     ),
-                    maxLines: 3,
-                    softWrap: true,
-                    overflow: TextOverflow.ellipsis,
+                    child: Text(
+                      t.openInMapsApp,
+                      style: AppTextStyles.getText3(context).copyWith(
+                        color: AppColors.main,
+                        fontWeight: FontWeight.w700,
+                      ),
+                    ),
                   ),
                 ),
+              ),
+            ],
+          ),
 
-                SizedBox(width: 8.w),
-
-                /// الزر بقيود عرض + FittedBox لتفادي الفيضان
-                ConstrainedBox(
-                  constraints: BoxConstraints(
-                    maxWidth: 140.w, // يتقلّص قبل ما يسبب Overflow
+          /// ✅ Divider & button appear only if not from doctor profile
+          if (!fromDoctorProfile) ...[
+            Padding(
+              padding: EdgeInsets.symmetric(vertical: 8.h),
+              child: Divider(height: 1, color: Colors.grey.shade300),
+            ),
+            Align(
+              alignment: Alignment.center,
+              child: SizedBox(
+                width: double.infinity,
+                child: OutlinedButton(
+                  onPressed: () {
+                    Navigator.push(
+                      context,
+                      fadePageRoute(
+                        DoctorProfilePage(
+                          doctor: doctor,
+                          doctorId: doctor['id'],
+                        ),
+                      ),
+                    );
+                  },
+                  style: OutlinedButton.styleFrom(
+                    side: BorderSide(color: AppColors.main, width: 1),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(8.r),
+                    ),
+                    padding: EdgeInsets.symmetric(vertical: 8.h),
                   ),
                   child: FittedBox(
                     fit: BoxFit.scaleDown,
-                    alignment: Alignment.centerRight,
-                    child: TextButton(
-                      onPressed: onOpenMaps,
-                      style: TextButton.styleFrom(
-                        foregroundColor: AppColors.main,
-                        padding: EdgeInsets.symmetric(horizontal: 8.w, vertical: 4.h),
-                        minimumSize: const Size(0, 0),
-                        tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                        visualDensity: VisualDensity.compact,
-                      ),
-                      child: Text(
-                        t.openInMapsApp,
-                        style: AppTextStyles.getText3(context).copyWith(
-                          color: AppColors.main,
-                          fontWeight: FontWeight.w700,
-                        ),
+                    child: Text(
+                      t.viewProfile,
+                      style: AppTextStyles.getText3(context).copyWith(
+                        color: AppColors.main,
+                        fontWeight: FontWeight.bold,
                       ),
                     ),
                   ),
                 ),
-              ],
-            ),
-
-            /// فاصل
-            Padding(
-              padding: EdgeInsets.symmetric(vertical: 10.h),
-              child: Divider(height: 1, color: Colors.grey.shade300),
-            ),
-
-            /// صف حالة الحجز (كما السابق)
-            Row(
-              children: [
-                Icon(Icons.event_busy, size: 18, color: Colors.grey.shade600),
-                SizedBox(width: 6.w),
-                Expanded(
-                  child: Text(
-                    t.bookingNotAvailable,
-                    style: AppTextStyles.getText3(context)
-                        .copyWith(color: Colors.grey.shade700),
-                  ),
-                ),
-              ],
+              ),
             ),
           ],
-        ),
+        ],
       ),
     );
   }

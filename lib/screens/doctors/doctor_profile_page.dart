@@ -510,7 +510,7 @@ class _DoctorProfilePageState extends State<DoctorProfilePage> {
     }
     Navigator.push(
       context,
-      MaterialPageRoute(builder: (_) => FullMapResultsPage(results: [item])),
+      MaterialPageRoute(builder: (_) => FullMapResultsPage(results: [item], fromDoctorProfile: true)),
     );
   }
 
