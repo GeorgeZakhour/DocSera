@@ -1,3 +1,5 @@
+import 'dart:io';
+
 import 'package:docsera/app/text_styles.dart';
 import 'package:docsera/screens/auth/login/login_otp.dart';
 import 'package:docsera/services/supabase/supabase_user_service.dart';
@@ -80,11 +82,28 @@ class _LogInPageState extends State<LogInPage> {
     return sha256.convert(utf8.encode(password)).toString();
   }
 
-  Future<String> getDeviceId() async {
+/// ✅ الحصول على معرف الجهاز بطريقة آمنة تعمل على Android و iOS
+Future<String> getDeviceId() async {
+  try {
     final info = DeviceInfoPlugin();
-    final androidInfo = await info.androidInfo;
-    return androidInfo.id ?? androidInfo.serialNumber ?? androidInfo.device ?? '';
+
+    if (Platform.isIOS) {
+      // 🟢 iOS
+      final iosInfo = await info.iosInfo;
+      return iosInfo.identifierForVendor ?? 'ios-unknown';
+    } else if (Platform.isAndroid) {
+      // 🤖 Android
+      final androidInfo = await info.androidInfo;
+      return androidInfo.id ?? androidInfo.device ?? 'android-unknown';
+    } else {
+      return 'unknown-platform';
+    }
+  } catch (e) {
+    print('⚠️ [DEBUG] Failed to get deviceId: $e');
+    return 'unknown-device';
   }
+}
+
 
 
 
@@ -102,8 +121,13 @@ class _LogInPageState extends State<LogInPage> {
     setState(() => isLoading = true);
 
     try {
-      final input = _inputController.text.trim();
-      final password = _passwordController.text;
+      var input = _inputController.text.trim();
+      final password = _passwordController.text.trim();
+
+      // 🟢 تأكد أن الإيميل دائمًا بحروف صغيرة (lowercase)
+      if (input.contains('@')) {
+        input = input.toLowerCase();
+      }
 
       final isPhone = RegExp(r'^0\d{9}$').hasMatch(input) || RegExp(r'^00963\d{9}$').hasMatch(input);
       final formattedPhone = isPhone ? getFormattedPhoneNumber(input) : null;
@@ -203,15 +227,32 @@ class _LogInPageState extends State<LogInPage> {
           );
         }
       }
-    } catch (e) {
-      print("❌ خطأ أثناء تسجيل الدخول: $e");
-      setState(() {
-        errorMessage = AppLocalizations.of(context)!.loginError(e.toString());
-      });
-    } finally {
-      setState(() => isLoading = false);
-    }
-  }
+      } catch (e) {
+        print("❌ خطأ أثناء تسجيل الدخول: $e");
+        String message;
+
+        // 🔍 تحليل نوع الخطأ وإظهار النص المناسب
+        final errorStr = e.toString().toLowerCase();
+
+        if (errorStr.contains('invalid login credentials') ||
+            errorStr.contains('invalid email or password') ||
+            errorStr.contains('wrong password')) {
+          message = AppLocalizations.of(context)!.errorWrongPassword;
+        } else if (errorStr.contains('user not found') ||
+                  errorStr.contains('no user') ||
+                  errorStr.contains('not found')) {
+          message = AppLocalizations.of(context)!.errorUserNotFound;
+        } else {
+          message = AppLocalizations.of(context)!.errorGenericLogin;
+        }
+
+        setState(() {
+          errorMessage = message;
+        });
+      } finally {
+            setState(() => isLoading = false);
+          }
+        }
 
 
 

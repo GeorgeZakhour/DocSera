@@ -64,19 +64,47 @@ class SupabaseUserService {
     return exists;
   }
 
-  /// ✅ إضافة مستخدم جديد إلى جدول Supabase
-  Future<void> addUser(String userId, Map<String, dynamic> userData) async {
-    try {
-      userData['created_at'] = DateTime.now().toUtc().toIso8601String();
-      userData['updated_at'] = DateTime.now().toUtc().toIso8601String();
-      userData['id'] = userId;
+/// ✅ إضافة مستخدم جديد إلى جدول Supabase (آمن ضد null)
+Future<void> addUser(String userId, Map<String, dynamic> userData) async {
+  try {
+    // 🕐 إضافة حقول الوقت
+    userData['created_at'] = DateTime.now().toUtc().toIso8601String();
+    userData['updated_at'] = DateTime.now().toUtc().toIso8601String();
+    userData['id'] = userId;
 
-      await _supabase.from('users').insert(userData);
+    // 🧹 تنظيف البيانات من أي null
+    final safeData = <String, dynamic>{};
+    userData.forEach((key, value) {
+      if (value == null) { 
+        // 🔄 استبدال null حسب نوع الحقل المتوقع
+        safeData[key] = (key.contains('verified') ||
+                key.contains('accepted') ||
+                key.contains('checked') ||
+                key.contains('enabled'))
+            ? false
+            : "";
+      } else {
+        safeData[key] = value;
+      }
+    });
 
-    } catch (e) {
-      throw Exception('Failed to add user: ${e.toString()}');
-    }
+    // 🧠 طباعة القيم قبل الإدخال لمعرفة النوع والقيم
+    print("📤 [DEBUG] Inserting userData into Supabase:");
+    safeData.forEach((key, value) {
+      print("   ➡️ $key (${value.runtimeType}): $value");
+    });
+
+    // ✅ تنفيذ الإدخال
+    final response = await _supabase.from('users').insert(safeData).select();
+
+    print("✅ [DEBUG] User inserted successfully: $response");
+  } catch (e, s) {
+    print("❌ [DEBUG] addUser() failed with error: $e");
+    print(s);
+    throw Exception('Failed to add user: ${e.toString()}');
   }
+}
+
 
 
   /// ✅ جلب بيانات مستخدم حسب ID

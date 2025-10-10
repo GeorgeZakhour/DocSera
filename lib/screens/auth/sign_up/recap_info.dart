@@ -1,3 +1,5 @@
+import 'dart:io';
+
 import 'package:docsera/app/const.dart';
 import 'package:docsera/screens/auth/sign_up/WelcomePage.dart';
 import 'package:docsera/services/supabase/supabase_user_service.dart';
@@ -18,12 +20,30 @@ class RecapPage extends StatelessWidget {
 
   RecapPage({Key? key, required this.signUpInfo}) : super(key: key);
 
-  /// ✅ الحصول على معرف الجهاز
-  Future<String> getDeviceId() async {
+
+/// ✅ الحصول على معرف الجهاز بطريقة آمنة تدعم Android و iOS
+Future<String> getDeviceId() async {
+  try {
     final info = DeviceInfoPlugin();
-    final androidInfo = await info.androidInfo;
-    return androidInfo.id ?? androidInfo.device ?? '';
+
+    if (Platform.isIOS) {
+      // 🟢 لنظام iOS
+      final iosInfo = await info.iosInfo;
+      return iosInfo.identifierForVendor ?? 'ios-unknown';
+    } else if (Platform.isAndroid) {
+      // 🤖 لنظام Android
+      final androidInfo = await info.androidInfo;
+      return androidInfo.id ?? androidInfo.device ?? 'android-unknown';
+    } else {
+      return 'unknown-platform';
+    }
+  } catch (e) {
+    print('⚠️ [DEBUG] Failed to get deviceId: $e');
+    return 'unknown-device';
   }
+}
+
+
 
   /// ✅ تسجيل الدخول التلقائي بعد التسجيل (اختياري)
   Future<void> _autoLogin(BuildContext context) async {
@@ -49,96 +69,113 @@ class RecapPage extends StatelessWidget {
   }
 
   /// ✅ تسجيل المستخدم في Supabase (مع إصلاح خاص بـ iOS)
-  Future<void> _registerUserWithSupabase(BuildContext context) async {
-    try {
-      // تحقق من وجود الإيميل مسبقًا
-      final existingEmail = await Supabase.instance.client
-          .from('users')
-          .select('email')
-          .eq('email', signUpInfo.email!)
-          .maybeSingle();
+Future<void> _registerUserWithSupabase(BuildContext context) async {
+  try {
+    // ✅ تحقق أولاً من أن الإيميل موجود فعلاً
+    if (signUpInfo.email == null || signUpInfo.password == null) {
+      throw Exception("Missing email or password");
+    }
 
-      if (existingEmail != null) {
-        throw Exception(AppLocalizations.of(context)!.emailAlreadyRegistered);
-      }
+    // ✅ تحقق من وجود الإيميل مسبقًا
+    final existingEmail = await Supabase.instance.client
+        .from('users')
+        .select('email')
+        .eq('email', signUpInfo.email!)
+        .maybeSingle();
 
-      // إنشاء المستخدم في Supabase Auth
-      final response = await Supabase.instance.client.auth.signUp(
-        email: signUpInfo.email!,
-        password: signUpInfo.password!,
+    if (existingEmail != null) {
+      throw Exception(AppLocalizations.of(context)!.emailAlreadyRegistered);
+    }
+
+    // ✅ تسجيل المستخدم في Supabase Auth
+    final response = await Supabase.instance.client.auth.signUp(
+      email: signUpInfo.email!,
+      password: signUpInfo.password!,
+    );
+
+    // ✅ إصلاح iOS: الحصول على المستخدم الحالي إن لم يتم إرجاعه مباشرة
+    final user = response.user ?? Supabase.instance.client.auth.currentUser;
+    if (user == null || user.id.isEmpty) {
+      throw Exception("User creation failed — no user ID returned");
+    }
+
+    final userId = user.id;
+
+    // ✅ إعداد بيانات المستخدم بطريقة آمنة (لا يوجد null في أي حقل)
+    final userData = {
+      'id': userId,
+      'first_name': signUpInfo.firstName ?? "",
+      'last_name': signUpInfo.lastName ?? "",
+      'email': signUpInfo.email ?? "",
+      'phone_number': signUpInfo.phoneNumber ?? "",
+      'email_verified': signUpInfo.emailVerified,
+      'phone_verified': signUpInfo.phoneVerified,
+      'gender': signUpInfo.gender ?? "",
+      'date_of_birth': signUpInfo.dateOfBirth ?? "",
+      'terms_accepted': signUpInfo.termsAccepted,
+      'marketing_checked': signUpInfo.marketingChecked,
+      'two_factor_auth_enabled': false,
+      'trusted_devices': [],
+    };
+
+    // ✅ حفظ المستخدم في جدول users
+    await _supabaseUserService.addUser(userId, userData);
+
+    // ✅ إضافة معرف الجهاز
+    final deviceId = await getDeviceId();
+    await Supabase.instance.client
+        .from('users')
+        .update({'trusted_devices': [deviceId]})
+        .eq('id', userId);
+
+    // ✅ تخزين الحالة محليًا بطريقة آمنة (تعمل 100% على iOS)
+      final prefs = await SharedPreferences.getInstance();
+
+      final safeUserId = (userId ?? '').toString();
+      final safeUserName =
+          '${(signUpInfo.firstName ?? '').toString()} ${(signUpInfo.lastName ?? '').toString()}'.trim();
+      final safeUserEmail = (signUpInfo.email ?? 'Not provided').toString();
+      final safeUserPhone = (signUpInfo.phoneNumber ?? 'Not provided').toString();
+
+      await prefs.setBool('isLoggedIn', true);
+      await prefs.setString('userId', safeUserId);
+      await prefs.setString('userName', safeUserName);
+      await prefs.setString('userEmail', safeUserEmail);
+      await prefs.setString('userPhone', safeUserPhone);
+
+
+    // ✅ الانتقال إلى صفحة الترحيب
+    if (context.mounted) {
+      Navigator.pushAndRemoveUntil(
+        context,
+        fadePageRoute(WelcomePage(signUpInfo: signUpInfo)),
+        (Route<dynamic> route) => false,
       );
 
-      // ✅ إصلاح مشكلة iOS: الحصول على المستخدم الحالي إذا لم يتم إرجاعه مباشرة
-      final user = response.user ?? Supabase.instance.client.auth.currentUser;
-      if (user == null) {
-        throw Exception(AppLocalizations.of(context)!.registrationFailed);
-      }
-
-      final userId = user.id;
-
-      // بيانات المستخدم لحفظها في قاعدة البيانات
-      final userData = {
-        'id': userId,
-        'first_name': signUpInfo.firstName,
-        'last_name': signUpInfo.lastName,
-        'email': signUpInfo.email,
-        'phone_number': signUpInfo.phoneNumber,
-        'email_verified': signUpInfo.emailVerified,
-        'phone_verified': signUpInfo.phoneVerified,
-        'gender': signUpInfo.gender,
-        'date_of_birth': signUpInfo.dateOfBirth,
-        'terms_accepted': signUpInfo.termsAccepted,
-        'marketing_checked': signUpInfo.marketingChecked,
-        'two_factor_auth_enabled': false,
-        'trusted_devices': [],
-      };
-
-      // حفظ المستخدم في Supabase (جدول users)
-      await _supabaseUserService.addUser(userId, userData);
-
-      // إضافة معرف الجهاز إلى trusted_devices
-      final deviceId = await getDeviceId();
-      await Supabase.instance.client
-          .from('users')
-          .update({'trusted_devices': [deviceId]})
-          .eq('id', userId);
-
-      // حفظ الحالة في SharedPreferences
-      final prefs = await SharedPreferences.getInstance();
-      await prefs.setBool('isLoggedIn', true);
-      await prefs.setString('userId', userId);
-      await prefs.setString(
-          'userName', '${signUpInfo.firstName} ${signUpInfo.lastName}');
-      await prefs.setString('userEmail', signUpInfo.email ?? "Not provided");
-      await prefs.setString('userPhone', signUpInfo.phoneNumber ?? "Not provided");
-
-      // الانتقال إلى صفحة الترحيب
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(AppLocalizations.of(context)!.registrationSuccess),
+          backgroundColor: AppColors.main.withOpacity(0.9),
+        ),
+      );
+    }
+    } catch (e, s) {
       if (context.mounted) {
-        Navigator.pushAndRemoveUntil(
-          context,
-          fadePageRoute(WelcomePage(signUpInfo: signUpInfo)),
-              (Route<dynamic> route) => false,
-        );
-
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(AppLocalizations.of(context)!.registrationSuccess),
-            backgroundColor: AppColors.main.withOpacity(0.9),
-          ),
-        );
-      }
-    } catch (e) {
-      if (context.mounted) {
+        final errorText = (e?.toString() ?? 'Unknown error');
+        print('❌ Registration failed: $errorText');
+        print(s);
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text(
-              '${AppLocalizations.of(context)!.registrationFailed}: $e',
+              '${AppLocalizations.of(context)!.registrationFailed}: $errorText',
             ),
           ),
         );
       }
     }
-  }
+
+}
+
 
   /// ✅ تنسيق عرض الجنس حسب اللغة
   String _getLocalizedGender(BuildContext context) {

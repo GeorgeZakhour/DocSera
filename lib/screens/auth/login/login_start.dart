@@ -198,64 +198,93 @@ class _LoginPageState extends State<LoginPage> {
 
 
 
-  Future<void> _loginWithCredentials() async {
+Future<void> _loginWithCredentials() async {
     FocusScope.of(context).unfocus();
-    final input = _inputController.text.trim();
+    var input = _inputController.text.trim();
     final password = _passwordController.text.trim();
 
-    setState(() {
-      _inputEmpty = input.isEmpty;
-      _passwordEmpty = password.isEmpty;
-      _authFailed = false;
-    });
+    // 🟢 تأكد أن الإيميل دائمًا بحروف صغيرة (lowercase)
+    if (input.contains('@')) {
+      input = input.toLowerCase();
+}
 
-    if (_inputEmpty || _passwordEmpty) return;
+  setState(() {
+    _inputEmpty = input.isEmpty;
+    _passwordEmpty = password.isEmpty;
+    _authFailed = false;
+  });
 
-    setState(() => _isLoading = true);
+  if (_inputEmpty || _passwordEmpty) return;
 
-    try {
-      final isPhone = RegExp(r'^0\d{9}$').hasMatch(input) || input.startsWith('00963');
-      final formattedPhone = isPhone ? _formatPhone(input) : input;
+  setState(() => _isLoading = true);
 
-      final userDoc = await _supabaseUserService.getUserByEmailOrPhone(formattedPhone);
-      final userData = userDoc;
-      if (userData == null) throw Exception("User not found");
+  try {
+    final isPhone = RegExp(r'^0\d{9}$').hasMatch(input) || input.startsWith('00963');
+    final formattedPhone = isPhone ? _formatPhone(input) : input;
 
-      final email = userData['email'];
-      if (email == null) throw Exception("email not found");
+    final userDoc = await _supabaseUserService.getUserByEmailOrPhone(formattedPhone);
+    final userData = userDoc;
+    if (userData == null) throw Exception("user not found");
 
-      // ✅ تسجيل الدخول في Supabase Auth
-      final response = await Supabase.instance.client.auth.signInWithPassword(
-        email: email,
-        password: password,
+    final email = userData['email'];
+    if (email == null) throw Exception("email not found");
+
+    final response = await Supabase.instance.client.auth.signInWithPassword(
+      email: email,
+      password: password,
+    );
+
+    final supabaseUser = response.user;
+    if (supabaseUser == null) throw Exception("wrong password");
+
+    final userId = supabaseUser.id;
+    if (userId == null) throw Exception("invalid user");
+
+    await _saveUserDataToPrefs({...userData, 'uid': userId}, password);
+
+    context.read<UserCubit>().loadUserData(context);
+
+    if (mounted) {
+      Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(builder: (_) => CustomBottomNavigationBar()),
       );
-
-      final supabaseUser = response.user;
-      if (supabaseUser == null) throw Exception("❌ فشل تسجيل الدخول");
-
-      final userId = supabaseUser.id;
-
-      if (userId == null) throw Exception("Invalid user");
-
-      await _saveUserDataToPrefs({...userData, 'uid': userId}, password);
-
-
-
-      context.read<UserCubit>().loadUserData(context);
-
-      if (mounted) {
-        Navigator.pushReplacement(
-          context,
-          MaterialPageRoute(builder: (_) => CustomBottomNavigationBar()),
-        );
-      }
-    } catch (e) {
-      print("❌ Login failed: $e");
-      setState(() => _authFailed = true);
-    } finally {
-      setState(() => _isLoading = false);
     }
+  } catch (e) {
+    print("❌ Login failed: $e");
+    String message;
+    final errorStr = e.toString().toLowerCase();
+
+    if (errorStr.contains('invalid login credentials') ||
+        errorStr.contains('wrong password') ||
+        errorStr.contains('invalid email or password')) {
+      message = AppLocalizations.of(context)!.errorWrongPassword;
+    } else if (errorStr.contains('user not found') ||
+               errorStr.contains('no user') ||
+               errorStr.contains('not found')) {
+      message = AppLocalizations.of(context)!.errorUserNotFound;
+    } else {
+      message = AppLocalizations.of(context)!.errorGenericLogin;
+    }
+
+    setState(() => _authFailed = true);
+
+    if (context.mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(message, textAlign: TextAlign.center),
+          backgroundColor: Colors.redAccent,
+          behavior: SnackBarBehavior.floating,
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+          duration: const Duration(seconds: 3),
+        ),
+      );
+    }
+  } finally {
+    setState(() => _isLoading = false);
   }
+}
+
 
   String _formatPhone(String phone) {
     phone = phone.trim();
