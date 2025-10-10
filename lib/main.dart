@@ -9,6 +9,7 @@ import 'package:docsera/Business_Logic/Documents_page/notes/notes_cubit.dart';
 import 'package:docsera/Business_Logic/Main_page/main_screen_cubit.dart';
 import 'package:docsera/Business_Logic/Messages_page/messages_cubit.dart';
 import 'package:docsera/splash_screen.dart';
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -145,6 +146,11 @@ class _MyAppState extends State<MyApp> {
             child: MaterialApp(
               debugShowCheckedModeBanner: false,
               theme: ThemeData(
+
+                cupertinoOverrideTheme: const NoDefaultCupertinoThemeData(
+                  primaryColor: AppColors.main,
+                ),
+
                 primarySwatch: Colors.teal,
 
                 // ✅ تأثير الضغط المطول لكل الأزرار
@@ -203,9 +209,9 @@ class _MyAppState extends State<MyApp> {
 
                 /// ✅ Set Cursor and Selection Color
                 textSelectionTheme: TextSelectionThemeData(
-                  cursorColor: AppColors.main,
-                  selectionColor: AppColors.main.withOpacity(0.3),
-                  selectionHandleColor: AppColors.main,
+                  cursorColor: AppColors.main, // 🔹 لون المؤشر
+                  selectionColor: AppColors.main.withOpacity(0.25), // 🔹 لون خلفية التحديد (بدل البنفسجي)
+                  selectionHandleColor: AppColors.main, // 🔹 لون المقابض الصغيرة عند تحديد النص
                 ),
               ),
 

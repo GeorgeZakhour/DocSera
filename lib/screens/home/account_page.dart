@@ -12,6 +12,7 @@ import 'package:docsera/services/supabase/supabase_otp_service.dart';
 import 'package:docsera/services/supabase/supabase_user_service.dart';
 import 'package:docsera/utils/custom_clippers.dart';
 import 'package:docsera/utils/text_direction_utils.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:docsera/gen_l10n/app_localizations.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
@@ -361,6 +362,9 @@ class _AccountScreenState extends State<AccountScreen> {
                           ],
                         ),
                       ),
+                      inputFormatters: [
+                        FilteringTextInputFormatter.deny(RegExp(r'[\u0600-\u06FF]')), // منع كل الحروف العربية
+                      ],
                       onChanged: (_) {
                         setState(() => errorMessage = null);
                       },
@@ -786,6 +790,9 @@ class _AccountScreenState extends State<AccountScreen> {
                       textDirection: detectTextDirection(currentPasswordController.text),
                       textAlign: getTextAlign(context),
                       obscureText: !isCurrentPasswordVisible,
+                      inputFormatters: [
+                        FilteringTextInputFormatter.deny(RegExp(r'[\u0600-\u06FF]')), // يمنع الأحرف العربية
+                      ],
                       decoration: getInputDecoration(hintText: AppLocalizations.of(context)!.currentPassword).copyWith(
                         contentPadding: EdgeInsets.symmetric(vertical: 10.h, horizontal: 12.w),
                         errorText: isCurrentPasswordValid ? null : AppLocalizations.of(context)!.incorrectCurrentPassword,
@@ -808,6 +815,9 @@ class _AccountScreenState extends State<AccountScreen> {
                       textDirection: detectTextDirection(newPasswordController.text),
                       textAlign: getTextAlign(context),
                       obscureText: !isNewPasswordVisible,
+                      inputFormatters: [
+                        FilteringTextInputFormatter.deny(RegExp(r'[\u0600-\u06FF]')), // يمنع الأحرف العربية
+                      ],
                       style: AppTextStyles.getText2(context).copyWith(fontSize: 12.sp),
                       onChanged: (value) {
                         _validateNewPassword(value, setState);
