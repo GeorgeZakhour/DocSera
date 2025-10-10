@@ -1,3 +1,5 @@
+import 'dart:io';
+
 import 'package:docsera/Business_Logic/Account_page/user_cubit.dart';
 import 'package:docsera/Business_Logic/Appointments_page/appointments_cubit.dart';
 import 'package:docsera/Business_Logic/Authentication/auth_state.dart' as custom_auth;
@@ -22,6 +24,7 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 import 'Business_Logic/Authentication/auth_cubit.dart';
 import 'app/const.dart';
 import 'services/supabase/supabase_user_service.dart';
+import 'dart:developer';
 
 
 void main() async {
@@ -48,6 +51,17 @@ void main() async {
       systemNavigationBarIconBrightness: Brightness.light,
     ),
   );
+
+  // ✅ يحفّز ظهور نافذة Local Network على iOS
+await Socket.connect('192.168.1.1', 80, timeout: Duration(seconds: 1))
+    .then((socket) {
+  log('Connected to local network');
+  socket.destroy();
+}).catchError((e) {
+  log('Failed to connect — still triggers prompt');
+});
+
+
 
   runApp(
     MultiBlocProvider(
