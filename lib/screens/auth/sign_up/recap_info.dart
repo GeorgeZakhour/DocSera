@@ -12,22 +12,20 @@ import '../../../app/text_styles.dart';
 import 'package:docsera/gen_l10n/app_localizations.dart';
 import 'package:device_info_plus/device_info_plus.dart';
 
-
 class RecapPage extends StatelessWidget {
   final SignUpInfo signUpInfo;
   final SupabaseUserService _supabaseUserService = SupabaseUserService();
 
   RecapPage({Key? key, required this.signUpInfo}) : super(key: key);
 
-
+  /// ✅ الحصول على معرف الجهاز
   Future<String> getDeviceId() async {
     final info = DeviceInfoPlugin();
     final androidInfo = await info.androidInfo;
     return androidInfo.id ?? androidInfo.device ?? '';
   }
 
-
-  /// **Auto Login after successful registration**
+  /// ✅ تسجيل الدخول التلقائي بعد التسجيل (اختياري)
   Future<void> _autoLogin(BuildContext context) async {
     try {
       await Supabase.instance.client.auth.signInWithPassword(
@@ -35,30 +33,25 @@ class RecapPage extends StatelessWidget {
         password: signUpInfo.password!,
       );
 
-
-      // ✅ Save login state
       SharedPreferences prefs = await SharedPreferences.getInstance();
       await prefs.setBool('isLoggedIn', true);
 
       Navigator.pushAndRemoveUntil(
         context,
-        fadePageRoute(WelcomePage(signUpInfo: signUpInfo)), // ✅ Navigate to Welcome Page
+        fadePageRoute(WelcomePage(signUpInfo: signUpInfo)),
             (Route<dynamic> route) => false,
       );
-
-    } catch (e) {
+    } catch (_) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text(AppLocalizations.of(context)!.autoLoginFailed)),
       );
     }
   }
 
-  /// **Register user in Firebase and store data in Firestore**
+  /// ✅ تسجيل المستخدم في Supabase (مع إصلاح خاص بـ iOS)
   Future<void> _registerUserWithSupabase(BuildContext context) async {
     try {
-
-
-// ✅ تحقق من الإيميل الحقيقي فقط إذا تم إدخاله
+      // تحقق من وجود الإيميل مسبقًا
       final existingEmail = await Supabase.instance.client
           .from('users')
           .select('email')
@@ -69,32 +62,30 @@ class RecapPage extends StatelessWidget {
         throw Exception(AppLocalizations.of(context)!.emailAlreadyRegistered);
       }
 
-
-
-
-
-      // ✅ Register user in Supabase Auth
+      // إنشاء المستخدم في Supabase Auth
       final response = await Supabase.instance.client.auth.signUp(
         email: signUpInfo.email!,
         password: signUpInfo.password!,
       );
 
-      final user = response.user;
+      // ✅ إصلاح مشكلة iOS: الحصول على المستخدم الحالي إذا لم يتم إرجاعه مباشرة
+      final user = response.user ?? Supabase.instance.client.auth.currentUser;
       if (user == null) {
         throw Exception(AppLocalizations.of(context)!.registrationFailed);
       }
 
-      final userId = user?.id;
+      final userId = user.id;
 
+      // بيانات المستخدم لحفظها في قاعدة البيانات
       final userData = {
-        'id': userId, // ✅ أضف هذا السطر
+        'id': userId,
         'first_name': signUpInfo.firstName,
         'last_name': signUpInfo.lastName,
         'email': signUpInfo.email,
         'phone_number': signUpInfo.phoneNumber,
         'email_verified': signUpInfo.emailVerified,
         'phone_verified': signUpInfo.phoneVerified,
-        'gender': signUpInfo.gender == "ذكر" ? "ذكر" : "أنثى",
+        'gender': signUpInfo.gender,
         'date_of_birth': signUpInfo.dateOfBirth,
         'terms_accepted': signUpInfo.termsAccepted,
         'marketing_checked': signUpInfo.marketingChecked,
@@ -102,37 +93,33 @@ class RecapPage extends StatelessWidget {
         'trusted_devices': [],
       };
 
-      // ✅ Save user data in Firestore
-      if (userId == null) throw Exception('User ID is null');
+      // حفظ المستخدم في Supabase (جدول users)
       await _supabaseUserService.addUser(userId, userData);
 
+      // إضافة معرف الجهاز إلى trusted_devices
       final deviceId = await getDeviceId();
       await Supabase.instance.client
           .from('users')
           .update({'trusted_devices': [deviceId]})
           .eq('id', userId);
 
-
-
-      // ✅ Store user info in SharedPreferences
-      SharedPreferences prefs = await SharedPreferences.getInstance();
+      // حفظ الحالة في SharedPreferences
+      final prefs = await SharedPreferences.getInstance();
       await prefs.setBool('isLoggedIn', true);
       await prefs.setString('userId', userId);
-      await prefs.setString('userName', '${signUpInfo.firstName} ${signUpInfo.lastName}');
+      await prefs.setString(
+          'userName', '${signUpInfo.firstName} ${signUpInfo.lastName}');
       await prefs.setString('userEmail', signUpInfo.email ?? "Not provided");
       await prefs.setString('userPhone', signUpInfo.phoneNumber ?? "Not provided");
 
-
+      // الانتقال إلى صفحة الترحيب
       if (context.mounted) {
-        // ✅ Navigate to Home
         Navigator.pushAndRemoveUntil(
           context,
-          fadePageRoute(WelcomePage(signUpInfo: signUpInfo)), // ✅ Navigate to Welcome Page
+          fadePageRoute(WelcomePage(signUpInfo: signUpInfo)),
               (Route<dynamic> route) => false,
         );
 
-
-        // ✅ Show confirmation message
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text(AppLocalizations.of(context)!.registrationSuccess),
@@ -143,35 +130,70 @@ class RecapPage extends StatelessWidget {
     } catch (e) {
       if (context.mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('${AppLocalizations.of(context)!.registrationFailed}: $e')),
+          SnackBar(
+            content: Text(
+              '${AppLocalizations.of(context)!.registrationFailed}: $e',
+            ),
+          ),
         );
       }
     }
   }
 
+  /// ✅ تنسيق عرض الجنس حسب اللغة
+  String _getLocalizedGender(BuildContext context) {
+    final gender = signUpInfo.gender?.trim() ?? "";
+    final isArabic = Localizations.localeOf(context).languageCode == 'ar';
+
+    if (gender.isEmpty) return "—";
+
+    if (gender == "Male" || gender == "ذكر") {
+      return isArabic ? "ذكر" : AppLocalizations.of(context)!.male;
+    } else if (gender == "Female" || gender == "أنثى") {
+      return isArabic ? "أنثى" : AppLocalizations.of(context)!.female;
+    }
+
+    return gender;
+  }
+
   @override
   Widget build(BuildContext context) {
     final List<Map<String, String>> recapData = [
-      {AppLocalizations.of(context)!.name: "${signUpInfo.firstName ?? "—"} ${signUpInfo.lastName ?? "—"}"},
       {
-        AppLocalizations.of(context)!.gender:
-        Localizations.localeOf(context).languageCode == 'ar'
-            ? (signUpInfo.gender == "Male" ? "ذكر" : "أنثى")
-            : (signUpInfo.gender ?? "—"),
+        AppLocalizations.of(context)!.name:
+        "${signUpInfo.firstName ?? "—"} ${signUpInfo.lastName ?? "—"}"
       },
-      {AppLocalizations.of(context)!.dateOfBirth: signUpInfo.dateOfBirth ?? "—"},
+      {AppLocalizations.of(context)!.gender: _getLocalizedGender(context)},
+      {
+        AppLocalizations.of(context)!.dateOfBirth:
+        signUpInfo.dateOfBirth ?? "—"
+      },
       {AppLocalizations.of(context)!.email: signUpInfo.email ?? "—"},
-      {AppLocalizations.of(context)!.emailVerified: signUpInfo.emailVerified ? "✔" : "✖"},
-      {AppLocalizations.of(context)!.phone: signUpInfo.phoneNumber?.replaceFirst("00963", "0") ?? "—"},
-      {AppLocalizations.of(context)!.phoneVerified: signUpInfo.phoneVerified ? "✔" : "✖"},
-      {AppLocalizations.of(context)!.termsAccepted: signUpInfo.termsAccepted ? "✔" : "✖"},
-      if (signUpInfo.marketingChecked) {AppLocalizations.of(context)!.marketingPreferences: "✔"},
+      {
+        AppLocalizations.of(context)!.emailVerified:
+        signUpInfo.emailVerified ? "✔" : "✖"
+      },
+      {
+        AppLocalizations.of(context)!.phone:
+        signUpInfo.phoneNumber?.replaceFirst("00963", "0") ?? "—"
+      },
+      {
+        AppLocalizations.of(context)!.phoneVerified:
+        signUpInfo.phoneVerified ? "✔" : "✖"
+      },
+      {
+        AppLocalizations.of(context)!.termsAccepted:
+        signUpInfo.termsAccepted ? "✔" : "✖"
+      },
+      if (signUpInfo.marketingChecked)
+        {AppLocalizations.of(context)!.marketingPreferences: "✔"},
     ];
 
     return BaseScaffold(
       title: Text(
         AppLocalizations.of(context)!.signUp,
-        style: AppTextStyles.getTitle1(context).copyWith(color: AppColors.whiteText),
+        style: AppTextStyles.getTitle1(context)
+            .copyWith(color: AppColors.whiteText),
       ),
       child: Padding(
         padding: EdgeInsets.all(16.w),
@@ -184,13 +206,12 @@ class RecapPage extends StatelessWidget {
             ),
             SizedBox(height: 10.h),
 
-            // **White Container with Rounded Borders**
+            // ✅ بيانات المراجعة
             Container(
-              // padding: EdgeInsets.all(16.w),
               decoration: BoxDecoration(
                 color: Colors.white,
                 borderRadius: BorderRadius.circular(12.r),
-                border: Border.all(color: Colors.grey[300]!), // Thin grey border
+                border: Border.all(color: Colors.grey[300]!),
               ),
               child: Column(
                 children: recapData.map((entry) {
@@ -200,11 +221,14 @@ class RecapPage extends StatelessWidget {
                   return Column(
                     children: [
                       Padding(
-                        padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 12.h),
+                        padding:
+                        EdgeInsets.symmetric(horizontal: 16.w, vertical: 12.h),
                         child: Row(
                           mainAxisAlignment: MainAxisAlignment.spaceBetween,
                           children: [
-                            Text(title, style: AppTextStyles.getText2(context).copyWith(fontWeight: FontWeight.bold)),
+                            Text(title,
+                                style: AppTextStyles.getText2(context)
+                                    .copyWith(fontWeight: FontWeight.bold)),
                             Text(value, style: AppTextStyles.getText2(context)),
                           ],
                         ),
@@ -216,23 +240,25 @@ class RecapPage extends StatelessWidget {
                 }).toList(),
               ),
             ),
-
             SizedBox(height: 20.h),
 
-            // **Register Button**
+            // ✅ زر التسجيل
             ElevatedButton(
               onPressed: () => _registerUserWithSupabase(context),
               style: ElevatedButton.styleFrom(
                 backgroundColor: AppColors.main,
                 padding: EdgeInsets.symmetric(vertical: 12.h),
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8.0)),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(8.0),
+                ),
               ),
               child: SizedBox(
                 width: double.infinity,
                 child: Center(
                   child: Text(
                     AppLocalizations.of(context)!.register,
-                    style: AppTextStyles.getText2(context).copyWith(color: Colors.white, fontWeight: FontWeight.bold),
+                    style: AppTextStyles.getText2(context).copyWith(
+                        color: Colors.white, fontWeight: FontWeight.bold),
                   ),
                 ),
               ),

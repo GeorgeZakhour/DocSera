@@ -521,6 +521,7 @@
   "marketingCheckboxText": "Helpful tips to manage my health and marketing information about our services",
   "privacyPolicyInfo": "You can change your choice anytime in your settings. To learn more, ",
   "privacyPolicyLink": "see the privacy policy.",
+  "pleaseAcceptTerms": "Please accept the terms to continue",
   "enterSmsCode": "Enter the code sent to you by SMS",
   "enterEmailCode": "Enter the code sent to you by Email",
   "otpLabel": "6-digit verification code",
