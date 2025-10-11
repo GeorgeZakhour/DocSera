@@ -152,9 +152,15 @@ class _SplashScreenState extends State<SplashScreen> with TickerProviderStateMix
   void _navigateToHomeScreen() {
     Navigator.of(context).pushReplacement(
       PageRouteBuilder(
+        transitionDuration: const Duration(milliseconds: 1400), // 🟢 اجعلها أطول قليلاً
         pageBuilder: (context, animation, secondaryAnimation) {
+          final curvedAnimation = CurvedAnimation(
+            parent: animation,
+            curve: Curves.easeInOut, // ✅ يجعل الـ fade سلس جداً
+          );
+
           return FadeTransition(
-            opacity: animation,
+            opacity: curvedAnimation,
             child: CustomBottomNavigationBar(),
           );
         },

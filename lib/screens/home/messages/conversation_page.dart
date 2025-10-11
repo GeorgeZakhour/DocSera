@@ -426,7 +426,7 @@ class _ConversationPageState extends State<ConversationPage> with AutomaticKeepA
 
     final supabase = Supabase.instance.client;
     final conversationId = widget.conversationId;
-    final now = DateTime.now().toLocal(); // ✅ نفس التوقيت لكل شي
+    final now = DateTime.now().toUtc(); // ✅ UTC ثابت
 
 
     // ✅ ضغط الصور إذا موجودة
@@ -1365,7 +1365,7 @@ class _ConversationPageState extends State<ConversationPage> with AutomaticKeepA
                       child: Align(
                         alignment: Alignment.bottomRight,
                         child: Text(
-                          time != null ? intl.DateFormat('HH:mm').format(time) : '',
+                          time != null ? intl.DateFormat('HH:mm').format(time.toLocal()) : '',
                           style: AppTextStyles.getText3(context).copyWith(
                             fontSize: 10.sp,
                             color: Colors.black54,
@@ -1435,7 +1435,7 @@ class _ConversationPageState extends State<ConversationPage> with AutomaticKeepA
                     Align(
                     alignment: Alignment.bottomRight,
                     child: Text(
-                      time != null ? intl.DateFormat('HH:mm').format(time) : '',
+                      time != null ? intl.DateFormat('HH:mm').format(time.toLocal()) : '',
                       style: AppTextStyles.getText3(context).copyWith(
                         fontSize: 10.sp,
                         color: isUser ? Colors.white70 : Colors.black54,

@@ -278,7 +278,7 @@ class AppointmentConfirmedPage extends StatelessWidget {
                       Icons.refresh,
                       AppLocalizations.of(context)!.bookAgain,
                       onTap: () {
-                        Navigator.pushReplacement(
+                          Navigator.push(
                           context,
                           fadePageRoute(
                             SelectPatientPage(

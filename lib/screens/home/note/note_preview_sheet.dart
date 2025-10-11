@@ -47,11 +47,11 @@ class NotePreviewSheet extends StatelessWidget {
                       context: context,
                       isScrollControlled: true,
                       isDismissible: false,
-                      enableDrag: true,
+                      enableDrag: false,
                       backgroundColor: Colors.transparent,
                       builder: (context) => DraggableScrollableSheet(
                         initialChildSize: 0.9,
-                        minChildSize: 0.75,
+                        minChildSize: 0.9,
                         maxChildSize: 0.9,
                         expand: false,
                         builder: (context, scrollController) => NoteEditorPage(

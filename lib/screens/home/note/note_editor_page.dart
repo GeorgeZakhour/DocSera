@@ -29,21 +29,22 @@ class _NoteEditorPageState extends State<NoteEditorPage> {
   bool _toolbarExpanded = false;
   late FocusNode _contentFocusNode;
 
+  bool _titleError = false;
+  bool _contentError = false;
 
   @override
   void initState() {
     super.initState();
-    _titleController = TextEditingController(text: widget.existingNote?.title ?? '');
+    _titleController =
+        TextEditingController(text: widget.existingNote?.title ?? '');
     _contentFocusNode = FocusNode();
-    _contentFocusNode.addListener(() {
-      setState(() {});
-    });
+    _contentFocusNode.addListener(() => setState(() {}));
 
     _contentController = widget.existingNote != null
         ? QuillController(
-      document: Document.fromJson(widget.existingNote!.content),
-      selection: const TextSelection.collapsed(offset: 0),
-    )
+            document: Document.fromJson(widget.existingNote!.content),
+            selection: const TextSelection.collapsed(offset: 0),
+          )
         : QuillController.basic();
   }
 
@@ -56,15 +57,20 @@ class _NoteEditorPageState extends State<NoteEditorPage> {
   }
 
   void _saveNote() {
+    final locale = AppLocalizations.of(context)!;
     final title = _titleController.text.trim();
-    final content = _contentController.document.toDelta().toJson();
+    final isContentEmpty =
+        _contentController.document.toPlainText().trim().isEmpty;
 
-    if (title.isEmpty || _contentController.document.isEmpty()) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(AppLocalizations.of(context)!.fillRequiredFields)),
-      );
-      return;
-    }
+    setState(() {
+      _titleError = title.isEmpty;
+      _contentError = isContentEmpty;
+    });
+
+    // ✅ إذا واحد من الاثنين ناقص → لا يتم الحفظ
+    if (_titleError || _contentError) return;
+
+    final content = _contentController.document.toDelta().toJson();
 
     if (widget.existingNote == null) {
       context.read<NotesCubit>().addNote(title, content);
@@ -79,7 +85,8 @@ class _NoteEditorPageState extends State<NoteEditorPage> {
 
   void _maybeExitEditor() {
     final titleEmpty = _titleController.text.trim().isEmpty;
-    final contentEmpty = _contentController.document.toPlainText().trim().isEmpty;
+    final contentEmpty =
+        _contentController.document.toPlainText().trim().isEmpty;
 
     if (titleEmpty && contentEmpty) {
       Navigator.pop(context);
@@ -88,7 +95,6 @@ class _NoteEditorPageState extends State<NoteEditorPage> {
     }
   }
 
-
   void _showExitPopup() {
     final locale = AppLocalizations.of(context)!;
 
@@ -96,8 +102,10 @@ class _NoteEditorPageState extends State<NoteEditorPage> {
       context: context,
       builder: (context) {
         return AlertDialog(
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16.r)),
-          contentPadding: EdgeInsets.symmetric(horizontal: 24.w, vertical: 20.h),
+          shape:
+              RoundedRectangleBorder(borderRadius: BorderRadius.circular(16.r)),
+          contentPadding:
+              EdgeInsets.symmetric(horizontal: 24.w, vertical: 20.h),
           content: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
@@ -112,15 +120,15 @@ class _NoteEditorPageState extends State<NoteEditorPage> {
                 style: AppTextStyles.getText2(context),
                 textAlign: TextAlign.center,
               ),
-              SizedBox(height: 15.h),
-
-              // Save Button
+              SizedBox(height: 20.h),
               ElevatedButton(
                 style: ElevatedButton.styleFrom(
                   backgroundColor: AppColors.main,
                   elevation: 0,
-                  padding: EdgeInsets.symmetric(horizontal: 24.w, vertical: 12.h),
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10.r)),
+                  padding:
+                      EdgeInsets.symmetric(horizontal: 24.w, vertical: 12.h),
+                  shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(10.r)),
                 ),
                 onPressed: () {
                   Navigator.of(context).pop();
@@ -129,19 +137,19 @@ class _NoteEditorPageState extends State<NoteEditorPage> {
                 child: Center(
                   child: Text(
                     locale.save,
-                    style: AppTextStyles.getText2(context).copyWith(color: Colors.white),
+                    style: AppTextStyles.getText2(context)
+                        .copyWith(color: Colors.white),
                   ),
                 ),
               ),
-
-              // SizedBox(height: 10.h),
-
-              // Cancel Button (outlined style)
+              SizedBox(height: 12.h),
               OutlinedButton(
                 style: OutlinedButton.styleFrom(
-                  padding: EdgeInsets.symmetric(horizontal: 24.w, vertical: 12.h),
+                  padding:
+                      EdgeInsets.symmetric(horizontal: 24.w, vertical: 12.h),
                   side: BorderSide(color: AppColors.main),
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10.r)),
+                  shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(10.r)),
                 ),
                 onPressed: () => Navigator.of(context).pop(),
                 child: Center(
@@ -154,14 +162,11 @@ class _NoteEditorPageState extends State<NoteEditorPage> {
                   ),
                 ),
               ),
-
-              // SizedBox(height: 10.h),
-
-              // Discard Button
+              SizedBox(height: 8.h),
               TextButton(
                 onPressed: () {
-                  Navigator.of(context).pop(); // close dialog
-                  Navigator.of(context).pop(); // close modal sheet
+                  Navigator.of(context, rootNavigator: false).pop();
+                  Navigator.of(context, rootNavigator: false).pop();
                 },
                 child: Text(
                   locale.discard,
@@ -181,7 +186,6 @@ class _NoteEditorPageState extends State<NoteEditorPage> {
   @override
   Widget build(BuildContext context) {
     final locale = AppLocalizations.of(context)!;
-
     final isArabic = Localizations.localeOf(context).languageCode == 'ar';
 
     final TextStyle currentStyle = TextStyle(
@@ -190,36 +194,10 @@ class _NoteEditorPageState extends State<NoteEditorPage> {
       fontFamily: isArabic ? 'Cairo' : 'Montserrat',
     );
 
-
-
-
     return NotificationListener<DraggableScrollableNotification>(
-      onNotification: (notification) {
-        if (notification.extent < 0.76 && mounted) {
-          final title = _titleController.text.trim();
-          final contentText = _contentController.document.toPlainText().trim();
-          final contentDelta = _contentController.document.toDelta().toJson();
-
-          final isNew = widget.existingNote == null;
-          final isTitleEmpty = title.isEmpty;
-          final isContentEmpty = contentText.isEmpty;
-
-          final isSameTitle = widget.existingNote?.title == title;
-          final isSameContent = widget.existingNote?.content.toString() == contentDelta.toString();
-
-          final noChange = isSameTitle && isSameContent;
-
-          if ((isNew && isTitleEmpty && isContentEmpty) || (!isNew && noChange)) {
-            Future.microtask(() => Navigator.of(context).maybePop());
-          } else {
-            Future.microtask(() => _showExitPopup());
-          }
-        }
-
-        return true;
-      },
-
+      onNotification: (_) => true,
       child: SafeArea(
+        bottom: false,
         child: Material(
           color: Colors.transparent,
           child: Container(
@@ -231,7 +209,6 @@ class _NoteEditorPageState extends State<NoteEditorPage> {
               builder: (context, constraints) {
                 return Column(
                   children: [
-                    // Scrollable content
                     Expanded(
                       child: SingleChildScrollView(
                         controller: widget.scrollController,
@@ -239,7 +216,8 @@ class _NoteEditorPageState extends State<NoteEditorPage> {
                           left: 16.w,
                           right: 16.w,
                           top: 10.h,
-                          bottom: MediaQuery.of(context).viewInsets.bottom + 100.h, // ✅ يتفاعل مع الكيبورد
+                          bottom:
+                              MediaQuery.of(context).viewInsets.bottom + 100.h,
                         ),
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -264,19 +242,74 @@ class _NoteEditorPageState extends State<NoteEditorPage> {
                                       onPressed: _maybeExitEditor,
                                     ),
                                   ),
+                                  Positioned(
+                                    right: 0,
+                                    child: TextButton(
+                                      onPressed: _saveNote,
+                                      child: Text(
+                                        locale.save,
+                                        style: AppTextStyles.getText2(context)
+                                            .copyWith(
+                                          color: AppColors.main,
+                                          fontWeight: FontWeight.bold,
+                                        ),
+                                      ),
+                                    ),
+                                  ),
                                 ],
                               ),
                             ),
                             SizedBox(height: 18.h),
-                            TextField(
-                              controller: _titleController,
-                              style: AppTextStyles.getText2(context),
-                              decoration: InputDecoration(
-                                hintText: locale.noteTitle,
-                                border: InputBorder.none,
-                              ),
+                            // ===== Title Field =====
+                            Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                TextField(
+                                  controller: _titleController,
+                                  style: AppTextStyles.getText2(context),
+                                  decoration: InputDecoration(
+                                    hintText: locale.noteTitle,
+                                    border: OutlineInputBorder(
+                                      borderRadius:
+                                          BorderRadius.circular(8.r),
+                                      borderSide: BorderSide(
+                                        color: _titleError
+                                            ? Colors.red
+                                            : Colors.grey.shade300,
+                                        width: 1.5,
+                                      ),
+                                    ),
+                                    focusedBorder: OutlineInputBorder(
+                                      borderRadius:
+                                          BorderRadius.circular(8.r),
+                                      borderSide: BorderSide(
+                                        color: _titleError
+                                            ? Colors.red
+                                            : AppColors.main,
+                                        width: 1.5,
+                                      ),
+                                    ),
+                                    filled: true,
+                                    fillColor: Colors.white,
+                                  ),
+                                ),
+                                if (_titleError)
+                                  Padding(
+                                    padding: EdgeInsets.only(top: 4.h, left: 4.w),
+                                    child: Text(
+                                      locale.fillRequiredFields,
+                                      style: TextStyle(
+                                        color: Colors.red,
+                                        fontSize: 11.sp,
+                                      ),
+                                    ),
+                                  ),
+                              ],
                             ),
-                            Divider(height: 20.h, color: AppColors.grayMain.withOpacity(0.5)),
+                            Divider(
+                                height: 20.h,
+                                color: AppColors.grayMain.withOpacity(0.5)),
+                            // ===== Toolbar =====
                             Row(
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
@@ -284,21 +317,27 @@ class _NoteEditorPageState extends State<NoteEditorPage> {
                                   child: Container(
                                     width: double.infinity,
                                     decoration: BoxDecoration(
-                                      color: AppColors.main.withOpacity(0.1),
-                                      borderRadius: BorderRadius.circular(25.r),
+                                      color:
+                                          AppColors.main.withOpacity(0.1),
+                                      borderRadius:
+                                          BorderRadius.circular(25.r),
                                     ),
                                     child: Theme(
                                       data: Theme.of(context).copyWith(
-                                        canvasColor: Colors.white.withOpacity(0.95), // أهم شيء هنا
-                                        cardColor: Colors.white.withOpacity(0.95),
-                                        dialogBackgroundColor: Colors.white.withOpacity(0.95),
+                                        canvasColor:
+                                            Colors.white.withOpacity(0.95),
+                                        cardColor:
+                                            Colors.white.withOpacity(0.95),
+                                        dialogBackgroundColor:
+                                            Colors.white.withOpacity(0.95),
                                       ),
                                       child: QuillSimpleToolbar(
                                         controller: _contentController,
                                         config: QuillSimpleToolbarConfig(
                                           multiRowsDisplay: true,
-                                          showFontFamily: false, // not supported via dropdown
-                                          showCenterAlignment: _toolbarExpanded,
+                                          showFontFamily: false,
+                                          showCenterAlignment:
+                                              _toolbarExpanded,
                                           showFontSize: _toolbarExpanded,
                                           showColorButton: _toolbarExpanded,
                                           showBackgroundColorButton: false,
@@ -325,34 +364,6 @@ class _NoteEditorPageState extends State<NoteEditorPage> {
                                           showSubscript: false,
                                           showSuperscript: false,
                                           toolbarSize: 20.h,
-                                          buttonOptions: QuillSimpleToolbarButtonOptions(
-                                            base: QuillToolbarBaseButtonOptions(
-                                              iconSize: 11.sp,
-                                              iconTheme: QuillIconTheme(
-                                                iconButtonUnselectedData: IconButtonData(
-                                                  iconSize: 10.sp,
-                                                  padding: EdgeInsets.all(2.r),
-                                                  constraints: BoxConstraints(
-                                                    minWidth: 10.w,
-                                                    minHeight: 15.h,
-                                                  ),
-                                                ),
-                                                iconButtonSelectedData: IconButtonData(
-                                                  iconSize: 10.sp,
-                                                  padding: EdgeInsets.all(2.r),
-                                                  constraints: BoxConstraints(
-                                                    minWidth: 10.w,
-                                                    minHeight: 15.h,
-                                                  ),
-                                                  style: ButtonStyle(
-                                                    backgroundColor: MaterialStateProperty.all(
-                                                      AppColors.main.withOpacity(0.5),
-                                                    ),
-                                                  ),
-                                                ),
-                                              ),
-                                            ),
-                                          ),
                                         ),
                                       ),
                                     ),
@@ -362,12 +373,18 @@ class _NoteEditorPageState extends State<NoteEditorPage> {
                                   children: [
                                     IconButton(
                                       icon: Icon(
-                                        _toolbarExpanded ? Icons.arrow_drop_up_sharp : Icons.arrow_drop_down_sharp,
+                                        _toolbarExpanded
+                                            ? Icons.arrow_drop_up_sharp
+                                            : Icons.arrow_drop_down_sharp,
                                         size: 25.sp,
-                                        color: _toolbarExpanded ? AppColors.grayMain : AppColors.main,
+                                        color: _toolbarExpanded
+                                            ? AppColors.grayMain
+                                            : AppColors.main,
                                       ),
                                       onPressed: () {
-                                        setState(() => _toolbarExpanded = !_toolbarExpanded);
+                                        setState(() =>
+                                            _toolbarExpanded =
+                                                !_toolbarExpanded);
                                       },
                                     ),
                                   ],
@@ -375,70 +392,78 @@ class _NoteEditorPageState extends State<NoteEditorPage> {
                               ],
                             ),
                             SizedBox(height: 20.h),
-                            Container(
-                              constraints: BoxConstraints(
-                                minHeight: 0.3.sh,
-                                maxHeight: 0.45.sh,
-                              ),
-                              decoration: BoxDecoration(
-                                borderRadius: BorderRadius.circular(8.r),
-                                color: Colors.white,
-                                border: Border.all(
-                                  color: _contentFocusNode.hasFocus ? AppColors.main : Colors.grey.shade300,
-                                ),
-                              ),
-                              child: Padding(
-                                padding: EdgeInsets.symmetric(horizontal: 12.w, vertical: 10.h),
-                                child: QuillEditor.basic(
-                                  controller: _contentController,
-                                  focusNode: _contentFocusNode,
-                                  config: QuillEditorConfig(
-                                    placeholder: AppLocalizations.of(context)!.noteContent,
-                                    customStyles: DefaultStyles(
-                                      paragraph: DefaultTextBlockStyle(
-                                        currentStyle,
-                                        const HorizontalSpacing(12, 12),
-                                        const VerticalSpacing(6, 6),
-                                        const VerticalSpacing(4, 4),
-                                        null,
-                                      ),
-                                      placeHolder: DefaultTextBlockStyle(
-                                        TextStyle(
-                                          fontSize: 12.sp,
-                                          fontFamily: isArabic ? 'Cairo' : 'Montserrat',
-                                          color: Colors.grey[400],
+                            // ===== Content Field =====
+                            Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Container(
+                                  constraints: BoxConstraints(
+                                    minHeight: 0.3.sh,
+                                    maxHeight: 0.45.sh,
+                                  ),
+                                  decoration: BoxDecoration(
+                                    borderRadius:
+                                        BorderRadius.circular(8.r),
+                                    color: Colors.white,
+                                    border: Border.all(
+                                      color: _contentError
+                                          ? Colors.red
+                                          : _contentFocusNode.hasFocus
+                                              ? AppColors.main
+                                              : Colors.grey.shade300,
+                                      width: 1.5,
+                                    ),
+                                  ),
+                                  child: Padding(
+                                    padding: EdgeInsets.symmetric(
+                                        horizontal: 12.w, vertical: 10.h),
+                                    child: QuillEditor.basic(
+                                      controller: _contentController,
+                                      focusNode: _contentFocusNode,
+                                      config: QuillEditorConfig(
+                                        placeholder:
+                                            AppLocalizations.of(context)!
+                                                .noteContent,
+                                        customStyles: DefaultStyles(
+                                          paragraph: DefaultTextBlockStyle(
+                                            currentStyle,
+                                            const HorizontalSpacing(12, 12),
+                                            const VerticalSpacing(6, 6),
+                                            const VerticalSpacing(4, 4),
+                                            null,
+                                          ),
+                                          placeHolder: DefaultTextBlockStyle(
+                                            TextStyle(
+                                              fontSize: 12.sp,
+                                              fontFamily: isArabic
+                                                  ? 'Cairo'
+                                                  : 'Montserrat',
+                                              color: Colors.grey[400],
+                                            ),
+                                            const HorizontalSpacing(12, 12),
+                                            const VerticalSpacing(6, 6),
+                                            const VerticalSpacing(4, 4),
+                                            null,
+                                          ),
                                         ),
-                                        const HorizontalSpacing(12, 12),
-                                        const VerticalSpacing(6, 6),
-                                        const VerticalSpacing(4, 4),
-                                        null,
                                       ),
                                     ),
                                   ),
                                 ),
-
-                              ),
+                                if (_contentError)
+                                  Padding(
+                                    padding: EdgeInsets.only(top: 4.h, left: 4.w),
+                                    child: Text(
+                                      locale.fillRequiredFields,
+                                      style: TextStyle(
+                                        color: Colors.red,
+                                        fontSize: 11.sp,
+                                      ),
+                                    ),
+                                  ),
+                              ],
                             ),
                           ],
-                        ),
-                      ),
-                    ),
-
-                    // Button fixed at bottom
-                    Padding(
-                      padding: EdgeInsets.fromLTRB(16.w, 0, 16.w, 20.h),
-                      child: SizedBox(
-                        width: double.infinity,
-                        child: ElevatedButton(
-                          onPressed: _saveNote,
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: AppColors.main,
-                            padding: EdgeInsets.symmetric(vertical: 12.h),
-                          ),
-                          child: Text(
-                            widget.existingNote == null ? locale.addNote : locale.save,
-                            style: AppTextStyles.getTitle1(context).copyWith(color: Colors.white),
-                          ),
                         ),
                       ),
                     ),
@@ -451,5 +476,4 @@ class _NoteEditorPageState extends State<NoteEditorPage> {
       ),
     );
   }
-
 }

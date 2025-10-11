@@ -564,7 +564,7 @@ class _SearchAdvancedPageState extends State<SearchAdvancedPage> {
         SizedBox(height: 5.h),
         ListView.builder(
           shrinkWrap: true,
-          physics: const NeverScrollableScrollPhysics(),
+          physics: ClampingScrollPhysics(),
           itemCount: _favoriteDoctors.length,
           itemBuilder: (_, i) => _doctorTile(_favoriteDoctors[i]),
         ),
@@ -1486,11 +1486,10 @@ class _ResultsSheet extends StatelessWidget {
     final t = AppLocalizations.of(context)!;
 
     return DraggableScrollableSheet(
-      controller: controller,
       initialChildSize: 0.7,
-      minChildSize: 0.7,
-      maxChildSize: maxChildSize,
-      snap: false,
+      minChildSize: 0.7,  // 👈 لازم فرق واضح ليتشجع ينزل
+      maxChildSize: 0.88,
+      controller: controller,
       builder: (context, controller) {
         return Material(
           color: Colors.transparent,
