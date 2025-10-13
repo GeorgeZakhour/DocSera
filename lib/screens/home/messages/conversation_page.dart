@@ -1122,274 +1122,290 @@ class _ConversationPageState extends State<ConversationPage> with AutomaticKeepA
     );
   }
 
-  Widget _buildAttachmentBubble(List<Map<String, dynamic>> attachments, bool isUser, Widget avatar, DateTime? time,  {required bool showSenderName}) {
-    final images = attachments.where((a) => a['type'] == 'image').toList();
-    final pdfs = attachments.where((a) => a['type'] == 'pdf').toList();
-    final lang = Localizations.localeOf(context).languageCode;
-    final validImages = images
-        .map((e) => e['file_url'] ?? e['fileUrl'])
-        .where((url) => url != null && url is String && url.trim().isNotEmpty)
-        .cast<String>()
-        .toList();
-    final currentUserId = Supabase.instance.client.auth.currentUser?.id ?? '';
+  Widget _buildAttachmentBubble(
+  List<Map<String, dynamic>> attachments,
+  bool isUser,
+  Widget avatar,
+  DateTime? time, {
+  required bool showSenderName,
+}) {
+  final images = attachments.where((a) => a['type'] == 'image').toList();
+  final pdfs = attachments.where((a) => a['type'] == 'pdf').toList();
+  final lang = Localizations.localeOf(context).languageCode;
+  final validImages = images
+      .map((e) => e['file_url'] ?? e['fileUrl'])
+      .where((url) => url != null && url is String && url.trim().isNotEmpty)
+      .cast<String>()
+      .toList();
+  final currentUserId = Supabase.instance.client.auth.currentUser?.id ?? '';
 
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        if (images.isEmpty && pdfs.isNotEmpty)
-          Stack(
-            clipBehavior: Clip.none,
+  return Column(
+    crossAxisAlignment:
+        isUser ? CrossAxisAlignment.end : CrossAxisAlignment.start,
+    children: [
+      // === PDF ATTACHMENT ===
+      if (images.isEmpty && pdfs.isNotEmpty)
+        Align(
+          alignment: isUser ? Alignment.centerLeft : Alignment.centerRight,
+          child: Column(
+            crossAxisAlignment:
+                isUser ? CrossAxisAlignment.start : CrossAxisAlignment.end,
             children: [
-              Align(
-                alignment: isUser ? Alignment.centerRight : Alignment.centerLeft,
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    if (showSenderName)
-                      Padding(
-                        padding: EdgeInsets.only(
-                          bottom: 4.h,
-                          right: isUser ? 14.w : 0,
-                          left: isUser ? 0 : 14.w,
-                        ),
-                        child: Row(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            avatar,
-                            SizedBox(width: 6.w),
-                            Text(
-                              isUser ? widget.accountHolderName : widget.doctorName,
-                              style: AppTextStyles.getText2(context).copyWith(
-                                fontWeight: FontWeight.bold,
-                                color: Colors.black87,
-                                fontSize: 12.sp,
-                              ),
-                            ),
-                          ],
+              if (showSenderName)
+                Padding(
+                  padding: EdgeInsets.only(
+                    bottom: 4.h,
+                    right: isUser ? 14.w : 0,
+                    left: isUser ? 0 : 14.w,
+                  ),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      avatar,
+                      SizedBox(width: 6.w),
+                      Text(
+                        isUser
+                            ? widget.accountHolderName
+                            : widget.doctorName,
+                        style: AppTextStyles.getText2(context).copyWith(
+                          fontWeight: FontWeight.bold,
+                          color: Colors.black87,
+                          fontSize: 12.sp,
                         ),
                       ),
+                    ],
+                  ),
+                ),
+              GestureDetector(
+                onTap: () {
+                  final pdf = pdfs.first;
+                  final userDoc = UserDocument(
+                    id: '',
+                    userId: currentUserId,
+                    name: pdf['file_name'] ??
+                        pdf['fileName'] ??
+                        'PDF File',
+                    type: '',
+                    fileType: 'pdf',
+                    patientId: widget.patientName,
+                    previewUrl:
+                        pdf['file_url'] ?? pdf['fileUrl'] ?? '',
+                    pages: [pdf['file_url'] ?? pdf['fileUrl'] ?? ''],
+                    uploadedAt: DateTime.now(),
+                    uploadedById: '',
+                    cameFromConversation: true,
+                    conversationDoctorName: widget.doctorName,
+                  );
 
-                    GestureDetector(
-                      onTap: () {
-                        final pdf = pdfs.first;
-                        final userDoc = UserDocument(
-                          id: '',
-                          userId: currentUserId,
-                          name: pdf['file_name'] ?? pdf['fileName'] ?? 'PDF File',
-                          type: '',
-                          fileType: 'pdf',
-                          patientId: widget.patientName,
-                          previewUrl: pdf['file_url'] ?? pdf['fileUrl'] ?? '',
-                          pages: [pdf['file_url'] ?? pdf['fileUrl'] ?? ''],
-                          uploadedAt: DateTime.now(),
-                          uploadedById: '',
-                          cameFromConversation: true,
-                          conversationDoctorName: widget.doctorName,
-                        );
-
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                            builder: (_) => DocumentPreviewPage(document: userDoc, cameFromConversation: true, doctorName: widget.doctorName),
-                          ),
-                        );
-                      },
-                      child: Container(
-                        constraints: BoxConstraints(minWidth: 0.3.sw, maxWidth: 0.6.sw),
-                        padding: EdgeInsets.symmetric(horizontal: 12.w, vertical: 20.h),
-                        decoration: BoxDecoration(
-                          color: Colors.white,
-                          borderRadius: BorderRadius.circular(8.r),
-                          border: Border.all(color: AppColors.main.withOpacity(0.4)),
-                        ),
-                        child: Row(
-                          children: [
-                            SvgPicture.asset('assets/icons/pdf-file.svg', width: 20.w, height: 20.w),
-                            SizedBox(width: 8.w),
-                            Expanded(
-                              child: Text(
-                                pdfs.first['file_name'] ?? pdfs.first['fileName'] ?? 'PDF File',
-                                style: AppTextStyles.getText2(context),
-                                overflow: TextOverflow.ellipsis,
-                              ),
-                            ),
-                          ],
-                        ),
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (_) => DocumentPreviewPage(
+                        document: userDoc,
+                        cameFromConversation: true,
+                        doctorName: widget.doctorName,
                       ),
                     ),
-                    SizedBox(height: 4.h),
-                    Padding(
-                      padding: EdgeInsets.only(right: isUser ? 14.w : 0, left: isUser ? 0 : 14.w),
-                      child: Align(
-                        alignment: Alignment.bottomRight,
+                  );
+                },
+                child: Container(
+                  constraints:
+                      BoxConstraints(minWidth: 0.3.sw, maxWidth: 0.6.sw),
+                  padding: EdgeInsets.symmetric(
+                      horizontal: 12.w, vertical: 20.h),
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.circular(8.r),
+                    border: Border.all(
+                        color: AppColors.main.withOpacity(0.4)),
+                  ),
+                  child: Row(
+                    children: [
+                      SvgPicture.asset(
+                        'assets/icons/pdf-file.svg',
+                        width: 20.w,
+                        height: 20.w,
+                      ),
+                      SizedBox(width: 8.w),
+                      Expanded(
                         child: Text(
-                          time != null ? intl.DateFormat('HH:mm').format(time!) : '',
-                          style: AppTextStyles.getText3(context).copyWith(
-                            fontSize: 10.sp,
-                            color: Colors.black54,
-                          ),
+                          pdfs.first['file_name'] ??
+                              pdfs.first['fileName'] ??
+                              'PDF File',
+                          style: AppTextStyles.getText2(context),
+                          overflow: TextOverflow.ellipsis,
                         ),
                       ),
-                    ),
-                  ],
+                    ],
+                  ),
                 ),
               ),
-
-              if (!showSenderName)
-                Positioned(
-                  top: 4.h,
-                  left: isUser ? null : -16.w,
-                  right: isUser ? -16.w : null,
-                  child: avatar,
+              Padding(
+                padding: EdgeInsets.only(top: 2.h), // تقليل المسافة بين الصورة والوقت
+                child: Align(
+                  alignment: isUser ? Alignment.bottomRight : Alignment.bottomLeft,
+                  child: Padding(
+                    padding: EdgeInsets.only(top: 1.h), // زيادة دقة التحكم بالمسافة
+                    child: Text(
+                      time != null
+                          ? intl.DateFormat('HH:mm').format(time.toLocal())
+                          : '',
+                      style: AppTextStyles.getText3(context).copyWith(
+                        fontSize: 10.sp,
+                        color: Colors.black54,
+                        height: 1.0, // يمنع أي مساحة عمودية إضافية من الـ Text نفسه
+                      ),
+                    ),
+                  ),
                 ),
-
-
+              ),
             ],
           ),
+        ),
 
-        if (images.isNotEmpty)
-          Stack(
-            clipBehavior: Clip.none,
+      // === IMAGE ATTACHMENT ===
+      if (images.isNotEmpty)
+        Align(
+          alignment: isUser ? Alignment.centerLeft : Alignment.centerRight,
+          child: Column(
+            crossAxisAlignment:
+                isUser ? CrossAxisAlignment.start : CrossAxisAlignment.end,
             children: [
-              Align(
-                alignment: isUser ? Alignment.centerRight : Alignment.centerLeft,
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    if (showSenderName)
-                      Padding(
-                        padding: EdgeInsets.only(
-                          bottom: 4.h,
-                          right: isUser ? 10.w : 0,
-                          left: isUser ? 0 : 10.w,
-                        ),
-                        child: Row(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            avatar,
-                            SizedBox(width: 6.w),
-                            Text(
-                              isUser ? widget.accountHolderName : widget.doctorName,
-                              style: AppTextStyles.getText2(context).copyWith(
-                                fontWeight: FontWeight.bold,
-                                color: Colors.black87,
-                                fontSize: 12.sp,
-                              ),
-                            ),
-                          ],
+              if (showSenderName)
+                Padding(
+                  padding: EdgeInsets.only(
+                    bottom: 4.h,
+                    right: isUser ? 10.w : 0,
+                    left: isUser ? 0 : 10.w,
+                  ),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      avatar,
+                      SizedBox(width: 6.w),
+                      Text(
+                        isUser
+                            ? widget.accountHolderName
+                            : widget.doctorName,
+                        style: AppTextStyles.getText2(context).copyWith(
+                          fontWeight: FontWeight.bold,
+                          color: Colors.black87,
+                          fontSize: 12.sp,
                         ),
                       ),
-                    ClipRRect(
+                    ],
+                  ),
+                ),
+              ClipRRect(
+                borderRadius: BorderRadius.circular(12.r),
+                child: GestureDetector(
+                  onTap: () => _showImageOverlay(validImages),
+                  child: Container(
+                    constraints: BoxConstraints(maxWidth: 0.5.sw),
+                    padding: EdgeInsets.only(bottom: 0.h), // 👈 أضف هذا السطر لتقليل الفراغ السفلي
+                    decoration: BoxDecoration(
                       borderRadius: BorderRadius.circular(12.r),
-                      child: GestureDetector(
-                        onTap: () => _showImageOverlay(validImages),
-                        child: Container(
-                          constraints: BoxConstraints(maxWidth: 0.5.sw),
-                          decoration: BoxDecoration(
-                            color: Colors.transparent,
-                            borderRadius: BorderRadius.circular(12.r),
-                          ),
-                          child: GridView.count(
-                            crossAxisCount: images.length == 1 ? 1 : 2,
-                            childAspectRatio: 1,
-                            shrinkWrap: true,
-                            crossAxisSpacing: 6.w,
-                            mainAxisSpacing: 6.h,
-                            physics: const NeverScrollableScrollPhysics(),
-                              children: List.generate(min(4, images.length), (i) {
-                                final imageUrl = validImages[i];
-
-                                if (i == 3 && validImages.length > 4) {
-                                  return GestureDetector(
-                                    onTap: () {
-                                      setState(() {
-                                        _expandedImageUrls = validImages;
-                                        _expandedImageOverlay = true;
-                                        _showAsGrid = true; // ✅ لعرض الصور كشبكة
-                                      });
-                                    },
-                                    child: Container(
-                                      decoration: BoxDecoration(
-                                        color: AppColors.main.withOpacity(0.1),
-                                        borderRadius: BorderRadius.circular(8.r),
-                                      ),
-                                      child: Center(
-                                        child: CircleAvatar(
-                                          radius: 16.r,
-                                          backgroundColor: Colors.white.withOpacity(0.85),
-                                          child: Text(
-                                              '+${validImages.length - 3}',
-                                              style: AppTextStyles.getText3(context).copyWith(
-                                              fontSize: 10.sp,
-                                              color: AppColors.main,
-                                            ),
-                                          ),
+                    ),
+                    child: LayoutBuilder(
+                      builder: (context, constraints) {
+                        return GridView.count(
+                          padding: EdgeInsets.zero, // 🔥 يزيل أي padding داخلي
+                          crossAxisCount: images.length == 1 ? 1 : 2,
+                          shrinkWrap: true,
+                          crossAxisSpacing: 6.w,
+                          mainAxisSpacing: 6.h,
+                          physics: const ClampingScrollPhysics(), // 🔥 أفضل من NeverScrollable لتقليل overscroll space
+                          clipBehavior: Clip.none,
+                          children: List.generate(min(4, images.length), (i) {
+                            final imageUrl = validImages[i];
+                            if (i == 3 && validImages.length > 4) {
+                              return GestureDetector(
+                                onTap: () {
+                                  setState(() {
+                                    _expandedImageUrls = validImages;
+                                    _expandedImageOverlay = true;
+                                    _showAsGrid = true;
+                                  });
+                                },
+                                child: Container(
+                                  decoration: BoxDecoration(
+                                    color: AppColors.main.withOpacity(0.1),
+                                    borderRadius: BorderRadius.circular(8.r),
+                                  ),
+                                  child: Center(
+                                    child: CircleAvatar(
+                                      radius: 16.r,
+                                      backgroundColor: Colors.white.withOpacity(0.85),
+                                      child: Text(
+                                        '+${validImages.length - 3}',
+                                        style: AppTextStyles.getText3(context).copyWith(
+                                          fontSize: 10.sp,
+                                          color: AppColors.main,
                                         ),
                                       ),
                                     ),
-                                  );
-                                } else {
-                                  // ✅ فتح صورة واحدة في صفحة المعاينة المخصصة
-                                  return GestureDetector(
-                                    onTap: () {
-                                      _showAsGrid = false;
-                                      _showImageOverlayWithIndex(
-                                        validImages,
-                                        i,
-                                      );
-                                    },
-                                    child: ClipRRect(
-                                      borderRadius: BorderRadius.circular(8.r),
-                                      child: _imageCache.containsKey(imageUrl)
-                                          ? Image(image: _imageCache[imageUrl]!, fit: BoxFit.cover)
-                                          : FadeInImage(
-                                        placeholder: MemoryImage(kTransparentImage),
-                                        image: CachedNetworkImageProvider(imageUrl),
-                                        fadeInDuration: const Duration(milliseconds: 100),
-                                        fit: BoxFit.cover,
-                                        placeholderFit: BoxFit.cover,
-                                        imageErrorBuilder: (_, __, ___) => const Icon(Icons.error),
-                                      ),
-                                    ),
+                                  ),
+                                ),
+                              );
+                            } else {
+                              return GestureDetector(
+                                onTap: () {
+                                  _showAsGrid = false;
+                                  _showImageOverlayWithIndex(validImages, i);
+                                },
+                                child: ClipRRect(
+                                  borderRadius: BorderRadius.circular(8.r),
+                                  child: _imageCache.containsKey(imageUrl)
+                                      ? Image(
+                                          image: _imageCache[imageUrl]!,
+                                          fit: BoxFit.cover,
+                                        )
+                                      : FadeInImage(
+                                          placeholder: MemoryImage(kTransparentImage),
+                                          image: CachedNetworkImageProvider(imageUrl),
+                                          fadeInDuration: const Duration(milliseconds: 100),
+                                          fit: BoxFit.cover,
+                                          placeholderFit: BoxFit.cover,
+                                          imageErrorBuilder: (_, __, ___) =>
+                                              const Icon(Icons.error),
+                                        ),
+                                ),
+                              );
+                            }
+                          }),
+                        );
+                      },
+                    ),
 
-                                  );
-                                }
-                              }),
-                          ),
-                        ),
-                      ),
-                    ),
-                    SizedBox(height: 4.h),
-                    Padding(
-                      padding: EdgeInsets.only(right: isUser ? 14.w : 0, left: isUser ? 0 : 14.w),
-                      child: Align(
-                        alignment: Alignment.bottomRight,
-                        child: Text(
-                          time != null ? intl.DateFormat('HH:mm').format(time.toLocal()) : '',
-                          style: AppTextStyles.getText3(context).copyWith(
-                            fontSize: 10.sp,
-                            color: Colors.black54,
-                          ),
-                        ),
-                      ),
-                    ),
-                  ],
+                  ),
                 ),
               ),
-              if (!showSenderName)
-                Positioned(
-                  top: 4.h,
-                  left: isUser ? null : -16.w,
-                  right: isUser ? -16.w : null,
-                  child: avatar,
+              Padding(
+                padding: EdgeInsets.only(top: 2.h), // تقليل المسافة بين الصورة والوقت
+                child: Align(
+                  alignment: isUser ? Alignment.bottomRight : Alignment.bottomLeft,
+                  child: Padding(
+                    padding: EdgeInsets.only(top: 1.h), // زيادة دقة التحكم بالمسافة
+                    child: Text(
+                      time != null
+                          ? intl.DateFormat('HH:mm').format(time.toLocal())
+                          : '',
+                      style: AppTextStyles.getText3(context).copyWith(
+                        fontSize: 10.sp,
+                        color: Colors.black54,
+                        height: 1.0, // يمنع أي مساحة عمودية إضافية من الـ Text نفسه
+                      ),
+                    ),
+                  ),
                 ),
+              ),
 
             ],
           ),
-
-      ],
-    );
-  }
+        ),
+    ],
+  );
+}
 
   Widget _buildTextBubble(String content, List<Map<String, dynamic>> attachments, bool isUser, Widget avatar, bool showReason, DateTime? time, bool isArabic,  {required bool showSenderName}) {
     return ClipRect(
