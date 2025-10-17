@@ -332,6 +332,9 @@
   "reset": "Reset",
   "more": "more",
   "openInMapsApp": "Open in Maps App",
+  "messagesDisabled": "Not receiving messages",
+  "patientsOnlyMessaging": "Messages only from patients",
+
 
 
   "@doctorProfile================================": "👨‍⚕️ Doctor Profile Page",
@@ -373,6 +376,9 @@
   "addRelative": "Add a relative",
   "me": "(Me)",
   "yearsOld": " years old",
+  "cannotSendMessageTitle": "Message not allowed",
+  "thisPatientCannotMessageDoctor": "Sorry, this patient cannot send a message to doctor",
+  "ok": "OK",
   "haveYouVisitedBefore": "Have you visited this practitioner in the past?",
   "yes": "Yes",
   "no": "No",
@@ -627,6 +633,8 @@
   "messagingDisabled": "Messaging unavailable",
   "selectMessagePatient": "Who is this message request for?",
   "selectMessageReason": "What is the reason for this message?",
+  "failedToLoadReasons": "Failed to load message reasons. Please try again later.",
+  "noReasonsAddedByDoctor": "This doctor has not added any message reasons yet.",
   "noEmergencySupport": "Your practitioner cannot address medical emergencies by message. In case of a medical emergency, call 112.",
   "reasonTestResults": "Request sending of test results",
   "reasonBill": "A bill or fees note",

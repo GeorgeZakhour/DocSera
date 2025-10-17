@@ -32,7 +32,7 @@ class MessagesCubit extends Cubit<MessagesState> {
   }
 
   Future<String?> startConversation({
-    required String patientId,
+    required String patientId, // ممكن يكون ID المستخدم أو ID القريب
     required String doctorId,
     required String message,
     required String doctorName,
@@ -43,14 +43,53 @@ class MessagesCubit extends Cubit<MessagesState> {
     required String selectedReason,
   }) async {
     try {
-      final existing = await _supabase
+      final now = DateTime.now().toUtc();
+
+      // ✅ الحصول على userId (صاحب الحساب الأساسي)
+      final accountHolderId = _supabase.auth.currentUser?.id;
+      if (accountHolderId == null) {
+        throw Exception("❌ لا يوجد مستخدم مسجل حالياً.");
+      }
+
+// ✅ تحديد ما إذا كان هذا المريض الرئيسي أم أحد أقاربه
+      final bool isRelative = accountHolderId != patientId;
+
+// ✅ relativeId هو ID القريب الحقيقي إن وجد
+      final String? relativeId = isRelative ? patientId : null;
+
+// ✅ نتحقق إن كان هناك محادثة مفتوحة لنفس الطبيب ولنفس الحساب ولنفس القريب (أو null)
+      final query = _supabase
           .from('conversations')
           .select()
-          .eq('patient_id', patientId)
           .eq('doctor_id', doctorId)
-          .maybeSingle();
+          .eq('patient_id', accountHolderId)
+          .eq('is_closed', false);
 
-      final now = DateTime.now().toUtc();
+      if (relativeId != null) {
+        query.eq('relative_id', relativeId);
+      } else {
+        query.filter('relative_id', 'is', null);
+      }
+
+      final List existingList = await query.limit(1);
+
+      Map<String, dynamic>? existing;
+
+      if (existingList.isNotEmpty) {
+        final item = existingList.first;
+        final existingRel = item['relative_id'];
+        // ⚡ تحقق يدوي: لو الـ relative_id لا يطابق الحالة الحالية، اعتبرها محادثة جديدة
+        if ((relativeId == null && existingRel != null) ||
+            (relativeId != null && existingRel != relativeId)) {
+          existing = null;
+        } else {
+          existing = item;
+        }
+      } else {
+        existing = null;
+      }
+
+
 
       if (existing != null) {
         final convoId = existing['id'] as String;
@@ -65,7 +104,7 @@ class MessagesCubit extends Cubit<MessagesState> {
 
         await _supabase.from('conversations').update({
           'last_message': message,
-          'last_sender_id': patientId,
+          'last_sender_id': accountHolderId,
           'updated_at': now.toIso8601String(),
           'doctor_name': doctorName,
           'doctor_specialty': doctorSpecialty,
@@ -77,57 +116,68 @@ class MessagesCubit extends Cubit<MessagesState> {
           'unread_count_for_doctor': (existing['unread_count_for_doctor'] ?? 0) + 1,
         }).eq('id', convoId);
 
-        return convoId; // ✅ رجّع الـ id الموجود
-      } else {
-        final authState = Supabase.instance.client.auth.currentUser;
-        final userId = authState?.id ?? patientId;
-
-        final doctor = await _supabase
-            .from('doctors')
-            .select('title, gender')
-            .eq('id', doctorId)
-            .single();
-
-        final genderArabic = doctor['gender'] == 'Male' ? 'ذكر' : 'أنثى';
-
-        final convoInsert = await _supabase.from('conversations').insert({
-          'doctor_id': doctorId,
-          'patient_id': patientId,
-          'participants': [patientId, doctorId, userId],
-          'last_message': message,
-          'last_sender_id': patientId,
-          'updated_at': now.toIso8601String(),
-          'doctor_name': doctorName,
-          'doctor_specialty': doctorSpecialty,
-          'doctor_image': doctorImage,
-          'doctor_title': doctor['title'],         // ✅ جديد
-          'doctor_gender': genderArabic,           // ✅ جديد
-          'is_closed': false,
-          'patient_name': patientName,
-          'account_holder_name': accountHolderName,
-          'selected_reason': selectedReason,
-          'unread_count_for_doctor': 1,
-        }).select('id').single();
-
-
-        final convoId = convoInsert['id'] as String;
-
-        await _supabase.from('messages').insert({
-          'conversation_id': convoId,
-          'sender_name': patientName,
-          'text': message,
-          'is_user': true,
-          'timestamp': now.toIso8601String(),
-        });
-
-        return convoId; // ✅ رجّع الـ id الجديد
+        return convoId;
       }
+
+      // ✅ جلب بيانات الطبيب
+      final doctor = await _supabase
+          .from('doctors')
+          .select('title, gender')
+          .eq('id', doctorId)
+          .maybeSingle();
+
+      final doctorTitle = doctor?['title'] ?? '';
+      final doctorGender = (doctor?['gender'] == 'Male') ? 'ذكر' : 'أنثى';
+
+      // ✅ إنشاء محادثة جديدة
+      final newConversation = {
+        'doctor_id': doctorId,
+        'patient_id': accountHolderId, // صاحب الحساب الأساسي دائمًا
+        'relative_id': relativeId,            // ✅ فقط لو القريب موجود
+        'participants': relativeId != null
+            ? [accountHolderId, relativeId, doctorId]
+            : [accountHolderId, doctorId],
+        'last_message': message,
+        'last_sender_id': accountHolderId,
+        'updated_at': now.toIso8601String(),
+        'doctor_name': doctorName,
+        'doctor_specialty': doctorSpecialty,
+        'doctor_image': doctorImage,
+        'doctor_title': doctorTitle,
+        'doctor_gender': doctorGender,
+        'is_closed': false,
+        'patient_name': patientName,
+        'account_holder_name': accountHolderName,
+        'selected_reason': selectedReason,
+        'unread_count_for_doctor': 1,
+        'source': isRelative ? 'relative' : 'user',
+      };
+
+      final convoInsert = await _supabase
+          .from('conversations')
+          .insert(newConversation)
+          .select('id')
+          .single();
+
+      final convoId = convoInsert['id'] as String;
+
+      // ✅ أول رسالة
+      await _supabase.from('messages').insert({
+        'conversation_id': convoId,
+        'sender_name': patientName,
+        'text': message,
+        'is_user': true,
+        'timestamp': now.toIso8601String(),
+      });
+
+      return convoId;
     } catch (e) {
       print("❌ Failed to start conversation: $e");
       emit(MessagesError("حدث خطأ أثناء إرسال الرسالة"));
-      return null; // لو صار خطأ
+      return null;
     }
   }
+
 
 
   void _fetchConversations(String userId) async {

@@ -339,7 +339,9 @@
   "specialty": "التخصص",
   "reset": "إعادة تعيين",
   "more": "أُخرى",
-"openInMapsApp": "افتح في تطبيق الخرائط",
+  "openInMapsApp": "افتح في تطبيق الخرائط",
+  "messagesDisabled": "غير متاح للرسائل",
+  "patientsOnlyMessaging": "متاح فقط لمرضاه الحاليين",
 
 
   "@doctorProfile================================": {
@@ -383,6 +385,9 @@
   "addRelative": "إضافة قريب",
   "me": "(أنا)",
   "yearsOld": " عام",
+  "cannotSendMessageTitle": "لا يمكن إرسال رسالة",
+  "thisPatientCannotMessageDoctor": "عذرًا، هذا المريض لا يمكنه إرسال رسالة إلى الطبيب",
+  "ok": "حسنًا",
   "haveYouVisitedBefore": "هل زرت هذا الطبيب من قبل؟",
   "yes": "نعم",
   "no": "لا",
@@ -644,6 +649,8 @@
   "messagingDisabled": "المراسلة غير متاحة",
   "selectMessagePatient": "لمن هذه الرسالة؟",
   "selectMessageReason": "ما سبب هذه الرسالة؟",
+  "failedToLoadReasons": "فشل تحميل أسباب المراسلة، يُرجى المحاولة لاحقًا.",
+  "noReasonsAddedByDoctor": "هذا الطبيب لم يضف أي أسباب للمراسلة بعد.",
   "noEmergencySupport": "لا يمكن للطبيب معالجة الحالات الطارئة عبر الرسائل. في حال وجود حالة طبية طارئة، اتصل بالرقم 112.",
   "reasonTestResults": "طلب إرسال نتائج الفحوصات",
   "reasonBill": "فاتورة أو ملاحظة رسوم",

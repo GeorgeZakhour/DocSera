@@ -274,95 +274,137 @@ class _SearchPageState extends State<SearchPage> {
     );
   }
 
+  Future<bool> _isUserPatientOfDoctor(String doctorId) async {
+    if (_userId == null) return false;
+
+    final result = await Supabase.instance.client
+        .from('appointments')
+        .select('id')
+        .eq('doctor_id', doctorId)
+        .eq('user_id', _userId!)
+        .limit(1);
+
+    return (result is List && result.isNotEmpty);
+  }
+
 
   /// **Doctor Search Result Tile**
   Widget _buildDoctorTile(Map<String, dynamic> doctor) {
     final imageResult = resolveDoctorImagePathAndWidget(doctor: doctor);
     final avatarPath = imageResult.avatarPath;
     final imageProvider = imageResult.imageProvider;
+    final local = AppLocalizations.of(context)!;
 
+    final bool messagesEnabled = doctor['messages_enabled'] == true;
+    final String access = doctor['messages_access'] ?? 'public';
 
-    return ListTile(
-      leading: CircleAvatar(
-        backgroundColor: AppColors.mainDark.withOpacity(0.2),
-        radius: 22.sp,
-        backgroundImage: imageProvider,
+    return FutureBuilder<bool>(
+      future: _isUserPatientOfDoctor(doctor['id']),
+      builder: (context, snapshot) {
+        final bool isPatient = snapshot.data ?? false;
 
-      ),
+        // 🧩 تحقق من التوفر
+        bool isUnavailable = false;
+        String unavailableReason = '';
 
-      title: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            "${doctor['title']} ${doctor['first_name']} ${doctor['last_name']}".trim(),
-            style: AppTextStyles.getText2(context).copyWith(
-              fontWeight: FontWeight.bold,
-              color: AppColors.mainDark,
-            ),
-          ),
-          if (doctor['messagingEnabled'] == false)
-            Padding(
-              padding: EdgeInsets.only(top: 4.h),
-              child: Container(
-                padding: EdgeInsets.symmetric(horizontal: 8.w, vertical: 4.h),
-                decoration: BoxDecoration(
-                  color: Colors.grey.shade200,
-                  borderRadius: BorderRadius.circular(8.r),
-                ),
-                child: Text(
-                  AppLocalizations.of(context)!.messagingDisabled,
-                  style: AppTextStyles.getText3(context).copyWith(color: Colors.red),
-                ),
-              ),
-            ),
-        ],
-      ),
-
-      subtitle: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            "${doctor['specialty']} • ${doctor['clinic']}",
-            style: AppTextStyles.getText3(context).copyWith(color: Colors.grey),
-          ),
-          SizedBox(height: 4.h),
-          Row(
-            children: [
-              Icon(Icons.location_on, size: 12.sp, color: Colors.grey),
-              SizedBox(width: 4.w),
-              Text(
-                doctor['address']['city'] ?? "",
-                style: AppTextStyles.getText3(context).copyWith(color: Colors.grey),
-              ),
-            ],
-          ),
-        ],
-      ),
-
-      trailing: Icon(Icons.arrow_forward_ios, size: 12.sp, color: Colors.grey),
-
-      onTap: () {
-        if (widget.mode == "message") {
-          Navigator.push(context, fadePageRoute(
-            SelectPatientForMessagePage(
-              doctorId: doctor['id'],
-              doctorName: "${doctor['title']} ${doctor['first_name']} ${doctor['last_name']}",
-              doctorGender: doctor['gender'],
-              doctorTitle: doctor['title'],
-              specialty: doctor['specialty'],
-              doctorImage: imageProvider,
-              doctorImageUrl: avatarPath, // ✅ أضف هذا السطر هنا
-              attachedDocument: widget.attachedDocument,
-            ),
-          ));
-        }else {
-          Navigator.push(context, fadePageRoute(
-            DoctorProfilePage(doctor: doctor, doctorId: doctor['id']),
-          ));
+        if (!messagesEnabled) {
+          isUnavailable = true;
+          unavailableReason = local.messagesDisabled; // 🔹 “غير متاح للرسائل”
+        } else if (access == 'patients' && !isPatient) {
+          isUnavailable = true;
+          unavailableReason = local.patientsOnlyMessaging; // 🔹 “متاح فقط لمرضاه”
         }
+
+        final tileOpacity = isUnavailable ? 0.6 : 1.0;
+
+        return Opacity(
+          opacity: tileOpacity,
+          child: AbsorbPointer( // يمنع الضغط لما يكون غير متاح
+            absorbing: isUnavailable,
+            child: ListTile(
+              contentPadding: const EdgeInsets.symmetric(vertical: 6, horizontal: 8),
+              leading: CircleAvatar(
+                backgroundColor: AppColors.mainDark.withOpacity(0.15),
+                radius: 22,
+                backgroundImage: imageProvider,
+              ),
+              title: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    "${doctor['title']} ${doctor['first_name']} ${doctor['last_name']}".trim(),
+                    style: AppTextStyles.getText2(context).copyWith(
+                      fontWeight: FontWeight.bold,
+                      color: AppColors.mainDark,
+                    ),
+                  ),
+                  if (isUnavailable)
+                    Padding(
+                      padding: const EdgeInsets.only(top: 4),
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                        decoration: BoxDecoration(
+                          color: Colors.grey.shade200,
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                        child: Text(
+                          unavailableReason,
+                          style: AppTextStyles.getText3(context).copyWith(
+                            color: AppColors.mainDark,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                      ),
+                    ),
+                ],
+              ),
+              subtitle: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    "${doctor['specialty']} • ${doctor['clinic'] ?? ''}",
+                    style: AppTextStyles.getText3(context).copyWith(color: Colors.grey.shade700),
+                  ),
+                  const SizedBox(height: 3),
+                  Row(
+                    children: [
+                      const Icon(Icons.location_on, size: 12, color: Colors.grey),
+                      const SizedBox(width: 4),
+                      Text(
+                        doctor['address']?['city'] ?? '',
+                        style: AppTextStyles.getText3(context).copyWith(color: Colors.grey.shade700),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+              trailing: Icon(Icons.arrow_forward_ios, size: 12, color: Colors.grey),
+              onTap: () {
+                if (widget.mode == "message") {
+                  Navigator.push(context, fadePageRoute(
+                    SelectPatientForMessagePage(
+                      doctorId: doctor['id'],
+                      doctorName:
+                      "${doctor['title']} ${doctor['first_name']} ${doctor['last_name']}",
+                      doctorGender: doctor['gender'],
+                      doctorTitle: doctor['title'],
+                      specialty: doctor['specialty'],
+                      doctorImage: imageProvider,
+                      doctorImageUrl: avatarPath,
+                      attachedDocument: widget.attachedDocument,
+                    ),
+                  ));
+                } else {
+                  Navigator.push(context, fadePageRoute(
+                    DoctorProfilePage(doctor: doctor, doctorId: doctor['id']),
+                  ));
+                }
+              },
+            ),
+          ),
+        );
       },
     );
-
   }
 
 }

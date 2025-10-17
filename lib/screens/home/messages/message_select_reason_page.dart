@@ -8,8 +8,10 @@ import 'package:docsera/widgets/base_scaffold.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:docsera/gen_l10n/app_localizations.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 
-class SelectMessageReasonPage extends StatelessWidget {
+class SelectMessageReasonPage extends StatefulWidget {
+  final String doctorId; // ✅ نضيف doctorId لنعمل query
   final String doctorName;
   final ImageProvider doctorImage;
   final String doctorImageUrl;
@@ -19,6 +21,7 @@ class SelectMessageReasonPage extends StatelessWidget {
 
   const SelectMessageReasonPage({
     Key? key,
+    required this.doctorId,
     required this.doctorName,
     required this.doctorImage,
     required this.doctorImageUrl,
@@ -28,16 +31,44 @@ class SelectMessageReasonPage extends StatelessWidget {
   }) : super(key: key);
 
   @override
+  State<SelectMessageReasonPage> createState() => _SelectMessageReasonPageState();
+}
+
+class _SelectMessageReasonPageState extends State<SelectMessageReasonPage> {
+  List<Map<String, dynamic>> _reasons = [];
+  bool _isLoading = true;
+  bool _hasError = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _fetchDoctorReasons();
+  }
+
+  Future<void> _fetchDoctorReasons() async {
+    try {
+      final response = await Supabase.instance.client
+          .from('message_reasons')
+          .select('id, label')
+          .eq('doctor_id', widget.doctorId)
+          .order('order_index', ascending: true);
+
+      setState(() {
+        _reasons = List<Map<String, dynamic>>.from(response);
+        _isLoading = false;
+      });
+    } catch (e) {
+      print("❌ Failed to fetch reasons: $e");
+      setState(() {
+        _hasError = true;
+        _isLoading = false;
+      });
+    }
+  }
+
+  @override
   Widget build(BuildContext context) {
-    final reasons = [
-      AppLocalizations.of(context)!.reasonTestResults,
-      AppLocalizations.of(context)!.reasonBill,
-      AppLocalizations.of(context)!.reasonAppointment,
-      AppLocalizations.of(context)!.reasonTreatmentUpdate,
-      AppLocalizations.of(context)!.reasonOpeningHours,
-      AppLocalizations.of(context)!.reasonContract,
-      AppLocalizations.of(context)!.reasonOther,
-    ];
+    final local = AppLocalizations.of(context)!;
 
     return BaseScaffold(
       titleAlignment: 2,
@@ -50,7 +81,7 @@ class SelectMessageReasonPage extends StatelessWidget {
             child: ClipRRect(
               borderRadius: BorderRadius.circular(50),
               child: Image(
-                image: doctorImage,
+                image: widget.doctorImage,
                 width: 40.w,
                 height: 40.h,
                 fit: BoxFit.cover,
@@ -62,12 +93,14 @@ class SelectMessageReasonPage extends StatelessWidget {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text(
-                AppLocalizations.of(context)!.sendMessage,
-                style: AppTextStyles.getText2(context).copyWith(fontSize: 12.sp, color: AppColors.whiteText),
+                local.sendMessage,
+                style: AppTextStyles.getText2(context)
+                    .copyWith(fontSize: 12.sp, color: AppColors.whiteText),
               ),
               Text(
-                doctorName,
-                style: AppTextStyles.getTitle2(context).copyWith(fontSize: 14.sp, color: AppColors.whiteText),
+                widget.doctorName,
+                style: AppTextStyles.getTitle2(context)
+                    .copyWith(fontSize: 14.sp, color: AppColors.whiteText),
               ),
             ],
           ),
@@ -80,35 +113,27 @@ class SelectMessageReasonPage extends StatelessWidget {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text(
-                AppLocalizations.of(context)!.selectMessageReason,
+                local.selectMessageReason,
                 style: AppTextStyles.getTitle1(context).copyWith(fontSize: 12.sp),
               ),
               SizedBox(height: 10.h),
               Text(
-                AppLocalizations.of(context)!.noEmergencySupport,
+                local.noEmergencySupport,
                 style: AppTextStyles.getText2(context).copyWith(fontSize: 10.sp),
               ),
               SizedBox(height: 20.h),
-              Card(
-                color: Colors.white,
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(12.r),
-                  side: BorderSide(color: Colors.grey.shade200),
+              _isLoading
+                  ? Center(
+                child: Padding(
+                  padding: EdgeInsets.only(top: 40.h),
+                  child: const CircularProgressIndicator(color: AppColors.main),
                 ),
-                elevation: 0,
-                child: Column(
-                  children: List.generate(reasons.length, (index) {
-                    final reason = reasons[index];
-                    return Column(
-                      children: [
-                        if (index > 0)
-                          Divider(color: Colors.grey.shade300, thickness: 1, height: 1),
-                        _buildReasonTile(context, reason),
-                      ],
-                    );
-                  }),
-                ),
-              ),
+              )
+                  : _hasError
+                  ? _buildErrorWidget(local)
+                  : _reasons.isEmpty
+                  ? _buildEmptyWidget(local)
+                  : _buildReasonsList(context, local),
             ],
           ),
         ),
@@ -116,34 +141,93 @@ class SelectMessageReasonPage extends StatelessWidget {
     );
   }
 
-  Widget _buildReasonTile(BuildContext context, String reason) {
+  Widget _buildErrorWidget(AppLocalizations local) {
+    return Container(
+      padding: EdgeInsets.all(20.w),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(12.r),
+        border: Border.all(color: Colors.grey.shade200),
+      ),
+      child: Center(
+        child: Text(
+          local.failedToLoadReasons,
+          style: AppTextStyles.getText2(context).copyWith(color: Colors.redAccent),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildEmptyWidget(AppLocalizations local) {
+    return Container(
+      padding: EdgeInsets.all(20.w),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(12.r),
+        border: Border.all(color: Colors.grey.shade200),
+      ),
+      child: Center(
+        child: Text(
+          local.noReasonsAddedByDoctor,
+          style: AppTextStyles.getText2(context).copyWith(color: Colors.grey),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildReasonsList(BuildContext context, AppLocalizations local) {
+    return Card(
+      color: Colors.white,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(12.r),
+        side: BorderSide(color: Colors.grey.shade200),
+      ),
+      elevation: 0,
+      child: Column(
+        children: List.generate(_reasons.length, (index) {
+          final reason = _reasons[index];
+          final label = reason['label'] ?? '';
+          final reasonId = reason['id'] ?? '';
+
+          return Column(
+            children: [
+              if (index > 0)
+                Divider(color: Colors.grey.shade300, thickness: 1, height: 1),
+              _buildReasonTile(context, label, reasonId),
+            ],
+          );
+        }),
+      ),
+    );
+  }
+
+  Widget _buildReasonTile(BuildContext context, String label, String reasonId) {
     return InkWell(
       onTap: () {
         Navigator.push(
           context,
           fadePageRoute(
             WriteMessagePage(
-              doctorName: doctorName,
-              doctorImage: doctorImage,
-              doctorImageUrl: doctorImageUrl,
-              doctorSpecialty: doctorSpecialty,
-              selectedReason: reason,
-              patientProfile: patientProfile.copyWith(reason: reason),
-              attachedDocument: attachedDocument,
+              doctorName: widget.doctorName,
+              doctorImage: widget.doctorImage,
+              doctorImageUrl: widget.doctorImageUrl,
+              doctorSpecialty: widget.doctorSpecialty,
+              selectedReason: label,
+              patientProfile: widget.patientProfile.copyWith(reason: label),
+              attachedDocument: widget.attachedDocument,
             ),
           ),
         );
-        print("Selected reason: $reason");
+        print("✅ Selected reason: $label (ID: $reasonId)");
       },
       child: Container(
         padding: EdgeInsets.symmetric(vertical: 15.h, horizontal: 20.w),
         width: double.infinity,
         child: Text(
-          reason,
+          label,
           style: AppTextStyles.getText2(context).copyWith(fontWeight: FontWeight.w500),
         ),
       ),
     );
   }
-
 }

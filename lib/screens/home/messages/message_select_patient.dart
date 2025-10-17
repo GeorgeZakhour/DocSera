@@ -1,3 +1,5 @@
+import 'dart:ui';
+
 import 'package:docsera/app/const.dart';
 import 'package:docsera/app/text_styles.dart';
 import 'package:docsera/models/document.dart';
@@ -341,6 +343,119 @@ class _SelectPatientForMessagePageState extends State<SelectPatientForMessagePag
             GestureDetector(
               onTap: selectedPatientId != null
                   ? () async {
+
+                // ✅ أولاً: نتحقق هل المريض أو القريب محظور من الطبيب
+                final blockCheck = await Supabase.instance.client
+                    .from('doctor_patient_blocks')
+                    .select('id')
+                    .eq('doctor_id', widget.doctorId)
+                    .eq('patient_id', userId!)
+                    .or('relative_id.eq.$selectedPatientId,patient_id.eq.$selectedPatientId')
+                    .limit(1)
+                    .maybeSingle();
+
+                if (blockCheck != null) {
+                  // ❌ المريض محظور
+                  showDialog(
+                    context: context,
+                    barrierColor: Colors.black.withOpacity(0.3),
+                    builder: (_) {
+                      final isArabic = Localizations.localeOf(context).languageCode == 'ar';
+                      return Center(
+                        child: ClipRRect(
+                          borderRadius: BorderRadius.circular(20),
+                          child: BackdropFilter(
+                            filter: ImageFilter.blur(sigmaX: 25, sigmaY: 25),
+                            child: Container(
+                              width: 320.w,
+                              padding: EdgeInsets.all(22.w),
+                              decoration: BoxDecoration(
+                                borderRadius: BorderRadius.circular(20),
+                                border: Border.all(
+                                  color: Colors.white.withOpacity(0.15),
+                                ),
+                                color: Colors.white.withOpacity(0.85),
+                                boxShadow: [
+                                  BoxShadow(
+                                    color: Colors.black.withOpacity(0.1),
+                                    blurRadius: 15,
+                                    offset: const Offset(0, 8),
+                                  ),
+                                ],
+                              ),
+                              child: Column(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  // 🔹 أيقونة القفل
+                                  Container(
+                                    padding: const EdgeInsets.all(14),
+                                    decoration: BoxDecoration(
+                                      color: AppColors.main.withOpacity(0.15),
+                                      shape: BoxShape.circle,
+                                    ),
+                                    child: const Icon(Icons.lock_rounded,
+                                        color: AppColors.main, size: 34),
+                                  ),
+                                  SizedBox(height: 14.h),
+
+                                  // 🔹 العنوان
+                                  Text(
+                                    AppLocalizations.of(context)!.cannotSendMessageTitle,
+                                    textAlign: TextAlign.center,
+                                    style: AppTextStyles.getTitle1(context).copyWith(
+                                      fontSize: 15.sp,
+                                      fontWeight: FontWeight.bold,
+                                      color: AppColors.blackText,
+                                      decoration: TextDecoration.none, // ✅ يزيل أي خط سفلي افتراضي
+                                    ),
+                                  ),
+                                  SizedBox(height: 10.h),
+
+                                  // 🔹 المحتوى
+                                  Text(
+                                    "${AppLocalizations.of(context)!.thisPatientCannotMessageDoctor} ${widget.doctorName}",
+                                    textAlign: TextAlign.center,
+                                    style: AppTextStyles.getText2(context).copyWith(
+                                      fontSize: 13.sp,
+                                      color: Colors.black87,
+                                      height: 1.4,
+                                      decoration: TextDecoration.none, // ✅ يزيل أي خط سفلي افتراضي
+                                    ),
+                                  ),
+                                  SizedBox(height: 22.h),
+
+                                  // 🔹 زر الإغلاق
+                                  SizedBox(
+                                    width: double.infinity,
+                                    child: ElevatedButton(
+                                      onPressed: () => Navigator.pop(context),
+                                      style: ElevatedButton.styleFrom(
+                                        backgroundColor: AppColors.main,
+                                        shape: RoundedRectangleBorder(
+                                          borderRadius: BorderRadius.circular(14),
+                                        ),
+                                        padding: EdgeInsets.symmetric(vertical: 12.h),
+                                        elevation: 0,
+                                      ),
+                                      child: Text(
+                                        AppLocalizations.of(context)!.ok,
+                                        style: AppTextStyles.getTitle2(context)
+                                            .copyWith(color: Colors.white, fontSize: 13.sp),
+                                      ),
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ),
+                        ),
+                      );
+                    },
+                  );
+                  return; // 🚫 لا نكمل
+                }
+
+                // ✅ غير محظور → نتابع كالمعتاد
                 final response = await Supabase.instance.client
                     .from('conversations')
                     .select()
@@ -370,8 +485,7 @@ class _SelectPatientForMessagePageState extends State<SelectPatientForMessagePag
                       ),
                     ),
                   );
-                }
-                else {
+                } else {
                   final patientProfile = PatientProfile(
                     patientId: selectedPatientId!,
                     doctorId: widget.doctorId,
@@ -388,6 +502,7 @@ class _SelectPatientForMessagePageState extends State<SelectPatientForMessagePag
                     context,
                     fadePageRoute(
                       SelectMessageReasonPage(
+                        doctorId: widget.doctorId,
                         doctorName: widget.doctorName,
                         doctorImage: widget.doctorImage,
                         doctorImageUrl: widget.doctorImageUrl,
@@ -400,6 +515,7 @@ class _SelectPatientForMessagePageState extends State<SelectPatientForMessagePag
                 }
               }
                   : null,
+
 
               child: Container(
                 width: double.infinity,
