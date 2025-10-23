@@ -1,5 +1,6 @@
   import 'dart:async';
   import 'dart:convert';
+import 'dart:ui';
   import 'package:docsera/Business_Logic/Appointments_page/appointments_cubit.dart';
   import 'package:docsera/Business_Logic/Appointments_page/appointments_state.dart';
 import 'package:docsera/screens/home/shimmer/shimmer_widgets.dart';
@@ -321,22 +322,23 @@ import 'package:docsera/gen_l10n/app_localizations.dart';
     /// 🔹 **Appointment Card**
     Widget _buildAppointmentCard(Map<String, dynamic> appt) {
       final bool needsConfirmation = appt['is_confirmed'] == false && appt['booked'] == true;
+      final bool isRejected = (appt['is_confirmed'] == true && appt['booked'] == false && appt['status']?.toString() == 'rejected');
 
-      // ✅ Parse timestamps
       final tsUtc = DateTime.parse(appt['timestamp'].toString()).toUtc();
       final bookingTs = appt['booking_timestamp'] != null
           ? DateTime.tryParse(appt['booking_timestamp'].toString())?.toUtc()
           : null;
 
-      // ✅ Format date & time using utils (always Syria time)
-      final formattedDate = formatBusinessDate(context, appt);
-      final formattedTime = format12hLocalized(context, tsUtc);
+// ✅ التاريخ والوقت في توقيت دمشق
+      final formattedDate = TimezoneUtils.formatBusinessDate(context, appt);
+      final formattedTime = TimezoneUtils.format12hLocalized(context, tsUtc);
 
-      // ✅ Booking date
       final locale = Localizations.localeOf(context).toString();
       final formattedBookingDate = bookingTs != null
-          ? DateFormat("yyyy-MM-dd  ~  HH:mm", locale).format(bookingTs.add(const Duration(hours: 3)))
+          ? DateFormat("yyyy-MM-dd  ~  HH:mm", locale)
+          .format(TimezoneUtils.toDamascus(bookingTs))
           : AppLocalizations.of(context)!.unknown;
+
 
       // ✅ Patient name (camel + snake)
       final patientName = (appt["patientName"] ?? appt["patient_name"] ?? "").toString();
@@ -351,8 +353,8 @@ import 'package:docsera/gen_l10n/app_localizations.dart';
           "gender": appt['doctor_gender'] ?? appt['doctorGender'],
           "title": appt['doctor_title'] ?? appt['doctorTitle'],
         },
-        width: needsConfirmation ? 32 : 40,
-        height: needsConfirmation ? 32 : 40,
+        width: needsConfirmation || isRejected ? 32 : 40,
+        height: needsConfirmation || isRejected ? 32 : 40,
       );
 
       print("🖼️ AppointmentCard RAW doctor_image = ${appt['doctor_image'] ?? appt['doctorImage']}");
@@ -361,180 +363,290 @@ import 'package:docsera/gen_l10n/app_localizations.dart';
 
       final imageProvider = imageResult.imageProvider;
 
-      return Card(
-        elevation: 0,
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(8.r),
-          side: BorderSide(color: Colors.grey.shade200, width: 0.8),
-        ),
-        color: AppColors.background2,
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            // 🔹 Date and Time Bar
-            Container(
-              decoration: BoxDecoration(
-                color: needsConfirmation ? AppColors.grayMain : AppColors.mainDark,
-                borderRadius: BorderRadius.only(
-                  topLeft: Radius.circular(8.r),
-                  topRight: Radius.circular(8.r),
-                ),
-              ),
-              padding: EdgeInsets.symmetric(vertical: 8.h, horizontal: 12.w),
-              child: Row(
-                children: [
-                  Icon(Icons.calendar_today, size: 12.sp, color: Colors.white),
-                  SizedBox(width: 6.w),
-                  Text(formattedDate,
-                      style: AppTextStyles.getText3(context).copyWith(
-                          fontWeight: FontWeight.bold, color: Colors.white)),
-                  const Spacer(),
-                  Icon(Icons.access_time, size: 12.sp, color: Colors.white),
-                  SizedBox(width: 6.w),
-                  Text(formattedTime,
-                      style: AppTextStyles.getText3(context).copyWith(
-                          fontWeight: FontWeight.bold, color: Colors.white)),
-                ],
-              ),
-            ),
-
-            GestureDetector(
-              behavior: HitTestBehavior.opaque,
-              onTap: () {
-                if (!needsConfirmation) {
-                  Navigator.push(
-                    context,
-                    fadePageRoute(AppointmentDetailsPage(
-                      appointment: appt,
-                      isUpcoming: _selectedTab == 0,
-                    )),
-                  );
-                  print("🧭 [AppointmentsPage] Navigating to AppointmentDetailsPage");
-                  print("   appointmentId = ${appt['id']}");
-                }
-              },
-              child: Column(
-                children: [
-                  Padding(
-                    padding: EdgeInsets.symmetric(horizontal: 18.w, vertical: needsConfirmation ? 8.h : 12.h),
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        Row(
-                          children: [
-                            CircleAvatar(
-                              radius: needsConfirmation ? 16.r : 20.r,
-                              backgroundColor: AppColors.mainDark.withOpacity(0.3),
-                              backgroundImage: imageProvider,
-                            ),
-                            SizedBox(width: 20.w),
-                            Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Text(doctorName,
-                                    style: AppTextStyles.getText2(context).copyWith(fontWeight: FontWeight.bold)),
-                                Text(specialty,
-                                    style: AppTextStyles.getText3(context).copyWith(color: AppColors.textSubColor)),
-                              ],
-                            ),
-                          ],
-                        ),
-                        if (!needsConfirmation)
-                          Icon(Icons.arrow_forward_ios, color: Colors.grey, size: 16.sp),
-                      ],
-                    ),
-                  ),
-                  Padding(
-                    padding: EdgeInsets.only(left: 12.w, right: 12.w, bottom: 8.h),
-                    child: Row(
-                      children: [
-                        Icon(Icons.local_hospital_outlined,
-                            color: needsConfirmation ? AppColors.grayMain : AppColors.main.withOpacity(0.7),
-                            size: needsConfirmation ? 12.sp : 16.sp),
-                        SizedBox(width: 5.w),
-                        Text(appt["reason"]?.toString() ?? AppLocalizations.of(context)!.notSpecified,
-                            style: AppTextStyles.getText3(context).copyWith(color: AppColors.textSubColor)),
-                      ],
-                    ),
-                  ),
-                ],
-              ),
-            ),
-
-            Divider(color: Colors.grey[200], height: 1.h),
-
-            // 🔹 Patient name + booking date
-            Padding(
-              padding: needsConfirmation ? EdgeInsets.symmetric(horizontal: 16.w, vertical: 5.h) : EdgeInsets.symmetric(horizontal: 16.w, vertical: 10.h),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Row(
-                        children: [
-                          Icon(Icons.person, size: 12.sp, color: AppColors.mainDark),
-                          SizedBox(width: 6.w),
-                          Text(patientName,
-                              style: AppTextStyles.getText3(context).copyWith(color: AppColors.blackText)),
-                        ],
-                      ),
-                      if (!needsConfirmation && bookingTs != null) ...[
-                        SizedBox(height: 3.h),
-                        Row(
-                          children: [
-                            Icon(Icons.history, size: 10.sp, color: AppColors.grayMain),
-                            SizedBox(width: 6.w),
-                            Text(AppLocalizations.of(context)!.bookedOn(formattedBookingDate),
-                                style: AppTextStyles.getText3(context).copyWith(color: AppColors.grayMain, fontSize: 8)),
-                          ],
-                        ),
-                      ],
-                    ],
-                  ),
-                  if (needsConfirmation)
-                    Container(
-                      padding: EdgeInsets.symmetric(horizontal: 10.w, vertical: 5.h),
-                      decoration: BoxDecoration(
-                        borderRadius: BorderRadius.circular(20.r),
-                        border: Border.all(color: Colors.grey),
-                        color: Colors.transparent,
-                      ),
-                      child: Text(AppLocalizations.of(context)!.waitingConfirmation,
-                          style: AppTextStyles.getText3(context).copyWith(color: Colors.grey[700], fontWeight: FontWeight.w500)),
-                    )
-                  else
-                    InkWell(
-                      onTap: () {
-                        Navigator.push(
-                          context,
-                          fadePageRoute(SelectPatientPage(
-                            doctorId: appt["doctor_id"] ?? appt["doctorId"] ?? "",
-                            doctorName: appt["doctor_name"] ?? appt["doctorName"] ?? "",
-                            doctorTitle: appt["doctor_title"] ?? appt["doctorTitle"] ?? "",
-                            doctorGender: appt["doctor_gender"] ?? appt["doctorGender"] ?? "",
-                            specialty: appt["doctor_specialty"] ?? appt["specialty"] ?? "",
-                            image: appt["doctor_image"] ?? appt["doctorImage"] ?? "",
-                            clinicName: appt['clinic'] ?? appt['clinicName'] ?? "",
-                            clinicAddress: appt['clinic_address'] ?? appt['clinicAddress'] ?? {},
-                            clinicLocation: appt['location'] ?? {},
-                          )),
-                        );
-                      },
-                      child: Row(
-                        children: [
-                          Icon(Icons.refresh, color: AppColors.main, size: 14.sp),
-                          const SizedBox(width: 4),
-                          Text(AppLocalizations.of(context)!.bookAgain,
-                              style: AppTextStyles.getText3(context).copyWith(color: AppColors.main, fontWeight: FontWeight.bold)),
-                        ],
-                      ),
-                    ),
-                ],
-              ),
+      return Container(
+        margin: EdgeInsets.only(bottom: 14.h),
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(25.r),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.grey.withOpacity(0.08),
+              blurRadius: 18,
+              offset: const Offset(0, 6),
             ),
           ],
+        ),
+        child: ClipRRect(
+          borderRadius: BorderRadius.circular(25.r),
+          child: Stack(
+            children: [
+              // ✨ 1️⃣ tinted background layer (below glass)
+              Positioned.fill(
+                child: Container(
+                  decoration: BoxDecoration(
+                    color: isRejected
+                        ? AppColors.red.withOpacity(0.09)
+                        : (needsConfirmation
+                        ? AppColors.grayMain.withOpacity(0.12)
+                        : AppColors.main.withOpacity(0.12)),
+                  ),
+                ),
+              ),
+
+              // 🧊 2️⃣ frosted glass layer
+              BackdropFilter(
+                filter: ImageFilter.blur(sigmaX: 20, sigmaY: 20),
+                child: Container(
+                  decoration: BoxDecoration(
+                    color: Colors.white.withOpacity(0.45), // frosted white blend
+                    borderRadius: BorderRadius.circular(25.r),
+                    border: Border.all(
+                      color: isRejected
+                          ? AppColors.red.withOpacity(0.4)
+                          : (needsConfirmation
+                          ? AppColors.grayMain.withOpacity(0.4)
+                          : AppColors.main.withOpacity(0.45)),
+                      width: 1.3,
+                    ),
+                  ),
+                  padding: EdgeInsets.symmetric(
+                    horizontal: 18.w,
+                    vertical: (needsConfirmation || isRejected) ? 10.h : 16.h,
+                  ),
+
+                  // 🩺 Card content
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      // 🕓 Date & Time Row
+                      Row(
+                        children: [
+                          Icon(
+                            Icons.calendar_today_rounded,
+                            size: 13.sp,
+                            color: isRejected
+                                ? AppColors.red
+                                : (needsConfirmation
+                                ? AppColors.grayMain
+                                : AppColors.mainDark),
+                          ),
+                          SizedBox(width: 5.w),
+                          Text(
+                            formattedDate,
+                            style: AppTextStyles.getText3(context).copyWith(
+                              fontWeight: FontWeight.w600,
+                              color: isRejected
+                                  ? AppColors.red
+                                  : (needsConfirmation
+                                  ? AppColors.grayMain
+                                  : AppColors.mainDark),
+                            ),
+                          ),
+                          const Spacer(),
+                          Icon(
+                            Icons.access_time_rounded,
+                            size: 13.sp,
+                            color: isRejected
+                                ? AppColors.red
+                                : (needsConfirmation
+                                ? AppColors.grayMain
+                                : AppColors.mainDark),
+                          ),
+                          SizedBox(width: 5.w),
+                          Text(
+                            formattedTime,
+                            style: AppTextStyles.getText3(context).copyWith(
+                              fontWeight: FontWeight.w600,
+                              color: isRejected
+                                  ? AppColors.red
+                                  : (needsConfirmation
+                                  ? AppColors.grayMain
+                                  : AppColors.mainDark),
+                            ),
+                          ),
+                        ],
+                      ),
+
+                      SizedBox(height: (needsConfirmation || isRejected) ? 8.h : 14.h),
+
+                      // 👨‍⚕️ Doctor Info
+                      GestureDetector(
+                        behavior: HitTestBehavior.opaque,
+                        onTap: () {
+                          if (!needsConfirmation && !isRejected) {
+                            Navigator.push(
+                              context,
+                              fadePageRoute(AppointmentDetailsPage(
+                                appointment: appt,
+                                isUpcoming: _selectedTab == 0,
+                              )),
+                            );
+                          }
+                        },
+                        child: Row(
+                          crossAxisAlignment: CrossAxisAlignment.center,
+                          children: [
+                            CircleAvatar(
+                              radius: (needsConfirmation || isRejected) ? 18.r : 22.r,
+                              backgroundColor: Colors.white.withOpacity(0.6),
+                              backgroundImage: imageProvider,
+                            ),
+                            SizedBox(width: 14.w),
+                            Expanded(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(
+                                    doctorName,
+                                    style: AppTextStyles.getText2(context).copyWith(
+                                      fontWeight: FontWeight.bold,
+                                      color: isRejected
+                                          ? Colors.grey.shade700
+                                          : AppColors.mainDark,
+                                    ),
+                                  ),
+                                  Text(
+                                    specialty,
+                                    style: AppTextStyles.getText3(context).copyWith(
+                                      color: AppColors.textSubColor,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                            if (!needsConfirmation && !isRejected)
+                              Icon(Icons.arrow_forward_ios_rounded,
+                                  color: Colors.grey.shade400, size: 15.sp),
+                          ],
+                        ),
+                      ),
+
+                      SizedBox(height: (needsConfirmation || isRejected) ? 6.h : 12.h),
+
+                      // 🏥 Reason
+                      Row(
+                        children: [
+                          Icon(
+                            Icons.local_hospital_outlined,
+                            color: isRejected
+                                ? AppColors.red
+                                : (needsConfirmation
+                                ? AppColors.grayMain
+                                : AppColors.main.withOpacity(0.8)),
+                            size: (needsConfirmation || isRejected) ? 13.sp : 15.sp,
+                          ),
+                          SizedBox(width: 5.w),
+                          Flexible(
+                            child: Text(
+                              appt["reason"]?.toString() ??
+                                  AppLocalizations.of(context)!.notSpecified,
+                              style: AppTextStyles.getText3(context)
+                                  .copyWith(color: AppColors.textSubColor),
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                          ),
+                        ],
+                      ),
+
+                      Divider(
+                        color: Colors.grey.withOpacity(0.22),
+                        height: (needsConfirmation || isRejected) ? 14.h : 20.h,
+                      ),
+
+                      // 👤 Patient + Status
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          // Patient info
+                          Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Row(
+                                children: [
+                                  Icon(Icons.person,
+                                      size: 12.sp, color: AppColors.mainDark),
+                                  SizedBox(width: 6.w),
+                                  Text(
+                                    patientName,
+                                    style: AppTextStyles.getText3(context).copyWith(
+                                      color: isRejected
+                                          ? Colors.grey.shade700
+                                          : AppColors.mainDark,
+                                      fontWeight: FontWeight.w500,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                              if (!needsConfirmation && !isRejected)
+                                Padding(
+                                  padding: EdgeInsets.only(top: 3.h),
+                                  child: Row(
+                                    children: [
+                                      Icon(Icons.history,
+                                          size: 10.sp, color: AppColors.grayMain),
+                                      SizedBox(width: 5.w),
+                                      Text(
+                                        AppLocalizations.of(context)!
+                                            .bookedOn(formattedBookingDate),
+                                        style: AppTextStyles.getText3(context)
+                                            .copyWith(
+                                            color: AppColors.grayMain,
+                                            fontSize: 8),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                            ],
+                          ),
+
+                          // 🏷️ Status Badge
+                          Container(
+                            padding: EdgeInsets.symmetric(
+                              horizontal: 10.w,
+                              vertical:
+                              (needsConfirmation || isRejected) ? 4.h : 6.h,
+                            ),
+                            decoration: BoxDecoration(
+                              borderRadius: BorderRadius.circular(20.r),
+                              border: Border.all(
+                                color: isRejected
+                                    ? AppColors.red.withOpacity(0.7)
+                                    : (needsConfirmation
+                                    ? AppColors.grayMain.withOpacity(0.7)
+                                    : AppColors.main.withOpacity(0.7)),
+                                width: 1,
+                              ),
+                              color: isRejected
+                                  ? AppColors.red.withOpacity(0.06)
+                                  : (needsConfirmation
+                                  ? AppColors.grayMain.withOpacity(0.06)
+                                  : AppColors.main.withOpacity(0.08)),
+                            ),
+                            child: Text(
+                              isRejected
+                                  ? AppLocalizations.of(context)!.statusRejected
+                                  : (needsConfirmation
+                                  ? AppLocalizations.of(context)!
+                                  .waitingConfirmation
+                                  : AppLocalizations.of(context)!
+                                  .appointmentConfirmed),
+                              style: AppTextStyles.getText3(context).copyWith(
+                                color: isRejected
+                                    ? AppColors.red
+                                    : (needsConfirmation
+                                    ? AppColors.grayMain
+                                    : AppColors.mainDark),
+                                fontWeight: FontWeight.w600,
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ],
+          ),
         ),
       );
     }

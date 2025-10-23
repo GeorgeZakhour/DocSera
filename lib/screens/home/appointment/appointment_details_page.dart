@@ -145,13 +145,8 @@ class _AppointmentDetailsPageState extends State<AppointmentDetailsPage> {
 
     // 2) نحسب "الوقت الجداري" للعيادة (UTC + offset)، ثم نبني DateTime محلي (بدون تحويل منطقة الجهاز)
     final clinicWall = tsUtc.add(Duration(minutes: clinicOffsetMinutes));
-    final startLocal = DateTime(
-      clinicWall.year,
-      clinicWall.month,
-      clinicWall.day,
-      clinicWall.hour,
-      clinicWall.minute,
-    );
+    final startLocal = TimezoneUtils.toDamascus(tsUtc);
+
 
     // 3) مدة الجلسة (افتراضي 30 دقيقة)
     final duration = (appt['durationMinutes'] is int)
@@ -186,7 +181,7 @@ class _AppointmentDetailsPageState extends State<AppointmentDetailsPage> {
           "${clinicName.isNotEmpty ? clinicName : AppLocalizations.of(context)!.clinicNotAvailable}\n"
           "${AppLocalizations.of(context)!.reasonForAppointment}: $reasonText",
       location: location,
-      startDate: startLocal, // وقت العيادة ثابت (لا toLocal/‏toUtc)
+      startDate: startLocal,
       endDate: endLocal,
       allDay: false,
     );
@@ -209,11 +204,15 @@ class _AppointmentDetailsPageState extends State<AppointmentDetailsPage> {
     final appt = widget.appointment;
     final locale = Localizations.localeOf(context).toString();
 
-    // Show time/date in clinic TZ (UTC+3), not device local
-    final tsClinic = DateTime.parse(appt['timestamp'].toString()).toUtc().add(const Duration(hours: 3));
+    final tsUtc = DateTime.parse(appt['timestamp'].toString()).toUtc();
+    final tsClinic = TimezoneUtils.toDamascus(tsUtc);
+
     final formattedDate = DateFormat('EEEE, d MMMM yyyy', locale).format(tsClinic);
-    final formattedTime = MaterialLocalizations.of(context)
-        .formatTimeOfDay(TimeOfDay(hour: tsClinic.hour, minute: tsClinic.minute), alwaysUse24HourFormat: false);
+    final formattedTime = MaterialLocalizations.of(context).formatTimeOfDay(
+      TimeOfDay(hour: tsClinic.hour, minute: tsClinic.minute),
+      alwaysUse24HourFormat: false,
+    );
+
 
     final doctorName = [
       (appt['doctorTitle'] ?? appt['doctor_title'] ?? '').toString().trim(),
@@ -1047,14 +1046,13 @@ class _AppointmentDetailsPageState extends State<AppointmentDetailsPage> {
     // --- Locale ---
     final String locale = Localizations.localeOf(context).toString();
 
-    // --- Timestamp UTC → Syria time ---
     final DateTime tsUtc = DateTime.parse(appt['timestamp'].toString()).toUtc();
-    final DateTime tsClinic = tsUtc.add(const Duration(hours: 3)); // Syria TZ
+    final DateTime tsClinic = TimezoneUtils.toDamascus(tsUtc);
 
-    // --- Date & Time ---
-    final String formattedDate = DateFormat('EEEE, d MMMM yyyy', locale).format(tsClinic);
-// ✅ دايماً استعملها
-    final String formattedTime = format12hLocalized(context, tsUtc);
+    final String formattedDate =
+    DateFormat('EEEE, d MMMM yyyy', locale).format(tsClinic);
+
+    final String formattedTime = TimezoneUtils.format12hLocalized(context, tsUtc);
 
 
 
@@ -1735,11 +1733,9 @@ class DoctorAppointmentsBottomSheet extends StatelessWidget {
                                     runSpacing: 10.h,
                                     children: times.map<Widget>((slot) {
                                       // ✅ نستخدم time_utils لتنسيق الوقت
-                                      final tsUtc = DateTime.parse(
-                                          slot['timestamp'].toString())
-                                          .toUtc();
-                                      final formattedTime =
-                                      format12hLocalized(context, tsUtc);
+                                      final tsUtc = DateTime.parse(slot['timestamp'].toString()).toUtc();
+                                      final formattedTime = TimezoneUtils.format12hLocalized(context, tsUtc);
+
 
                                       return GestureDetector(
                                         onTap: () {

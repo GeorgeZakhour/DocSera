@@ -25,9 +25,10 @@ class AppointmentCancelledPage extends StatelessWidget {
     final appointmentDate =
     rawTimestamp != null ? DateTime.parse(rawTimestamp) : DateTime.now();
     final locale = Localizations.localeOf(context).languageCode;
-    final formattedDate = formatBusinessDate(context, appointment);
+    final formattedDate = TimezoneUtils.formatBusinessDate(context, appointment);
     final tsUtc = appointmentDate.toUtc();
-    final formattedTime = format12hLocalized(context, tsUtc);
+    final formattedTime = TimezoneUtils.format12hLocalized(context, tsUtc);
+
 
     // ✅ الطبيب
     final doctorId = appointment['doctor_id'] ?? appointment['doctorId'] ?? "";

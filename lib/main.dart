@@ -22,6 +22,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
+import 'package:timezone/data/latest.dart' as tz;
 import 'Business_Logic/Authentication/auth_cubit.dart';
 import 'app/const.dart';
 import 'services/supabase/supabase_user_service.dart';
@@ -30,6 +31,7 @@ import 'dart:developer';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
+  tz.initializeTimeZones(); // 👈 مهم جداً لمرة واحدة فقط
 
   await Supabase.initialize(
     url: SupabaseKeys.supabaseUrl,

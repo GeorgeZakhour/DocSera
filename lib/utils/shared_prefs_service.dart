@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'dart:convert';
 import 'package:docsera/Business_Logic/Account_page/user_cubit.dart';
+import 'package:docsera/utils/time_utils.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
@@ -203,7 +204,7 @@ class SharedPrefsService {
         .listen((appointmentsData) async {
       List<Map<String, dynamic>> upcoming = [];
       List<Map<String, dynamic>> past = [];
-      DateTime now = DateTime.now().toLocal();
+      DateTime now = TimezoneUtils.toDamascus(DateTime.now().toUtc());
 
       for (var appointment in appointmentsData) {
         appointment = Map<String, dynamic>.from(appointment);

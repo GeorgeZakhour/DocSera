@@ -30,6 +30,8 @@ import 'package:url_launcher/url_launcher.dart';
 import 'package:characters/characters.dart'; // ضيف هذا لو ما كان موجود
 import 'dart:convert';
 
+import '../../../utils/time_utils.dart';
+
 class PendingMessage {
   final String type; // 'image' أو 'pdf'
   final List<File> files;
@@ -1248,7 +1250,7 @@ class _ConversationPageState extends State<ConversationPage> with AutomaticKeepA
                     padding: EdgeInsets.only(top: 1.h), // زيادة دقة التحكم بالمسافة
                     child: Text(
                       time != null
-                          ? intl.DateFormat('HH:mm').format(time.toLocal())
+                          ? intl.DateFormat('HH:mm').format(TimezoneUtils.toDamascus(time))
                           : '',
                       style: AppTextStyles.getText3(context).copyWith(
                         fontSize: 10.sp,
@@ -1388,7 +1390,7 @@ class _ConversationPageState extends State<ConversationPage> with AutomaticKeepA
                     padding: EdgeInsets.only(top: 1.h), // زيادة دقة التحكم بالمسافة
                     child: Text(
                       time != null
-                          ? intl.DateFormat('HH:mm').format(time.toLocal())
+                          ? intl.DateFormat('HH:mm').format(TimezoneUtils.toDamascus(time))
                           : '',
                       style: AppTextStyles.getText3(context).copyWith(
                         fontSize: 10.sp,
@@ -1451,7 +1453,7 @@ class _ConversationPageState extends State<ConversationPage> with AutomaticKeepA
                     Align(
                     alignment: Alignment.bottomRight,
                     child: Text(
-                      time != null ? intl.DateFormat('HH:mm').format(time.toLocal()) : '',
+                      time != null ? intl.DateFormat('HH:mm').format(TimezoneUtils.toDamascus(time)) : '',
                       style: AppTextStyles.getText3(context).copyWith(
                         fontSize: 10.sp,
                         color: isUser ? Colors.white70 : Colors.black54,

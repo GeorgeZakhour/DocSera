@@ -68,6 +68,7 @@
   "patientName": "المريض: {name}",
   "bookAgain": "احجز مرة أخرى",
   "waitingConfirmation": "بانتظار تأكيد الموعد",
+  "statusRejected": "تم رفض الموعد من الطبيب ",
   "loadMoreAppointments": "تحميل المزيد..",
   "unknownDate": "التاريخ غير معروف",
   "unknownTime": "الوقت غير معروف",

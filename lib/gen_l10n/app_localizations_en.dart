@@ -51,7 +51,8 @@ class AppLocalizationsEn extends AppLocalizations {
   String get myPractitioners => 'My Practitioners';
 
   @override
-  String get noPractitionersAdded => 'You haven\'t added any practitioners yet.';
+  String get noPractitionersAdded =>
+      'You haven\'t added any practitioners yet.';
 
   @override
   String get unknownSpecialty => 'Unknown Specialty';
@@ -66,7 +67,8 @@ class AppLocalizationsEn extends AppLocalizations {
   String get bannerTitle3 => 'Important Health Alert';
 
   @override
-  String get bannerText1 => 'Recurring, cramp-like abdominal pain? Here\'s what could be behind it.';
+  String get bannerText1 =>
+      'Recurring, cramp-like abdominal pain? Here\'s what could be behind it.';
 
   @override
   String get bannerText2 => 'Discover the benefits of preventive healthcare.';
@@ -90,7 +92,8 @@ class AppLocalizationsEn extends AppLocalizations {
   String get areYouAHealthProfessional => 'Are you a health professional?';
 
   @override
-  String get improveDailyLife => 'Improve your daily life with our solutions for health professionals.';
+  String get improveDailyLife =>
+      'Improve your daily life with our solutions for health professionals.';
 
   @override
   String get registerAsDoctor => 'REGISTER AS A DOCTOR';
@@ -117,25 +120,29 @@ class AppLocalizationsEn extends AppLocalizations {
   String get fasterAccess => 'Faster and easier access to care';
 
   @override
-  String get fasterAccessDescription => 'Book video or in-person appointments and get reminders so you never miss one.';
+  String get fasterAccessDescription =>
+      'Book video or in-person appointments and get reminders so you never miss one.';
 
   @override
   String get receiveCare => 'Receive care on your terms';
 
   @override
-  String get receiveCareDescription => 'Message your practitioners, get preventive advice and care when you need it.';
+  String get receiveCareDescription =>
+      'Message your practitioners, get preventive advice and care when you need it.';
 
   @override
   String get manageHealth => 'Manage your health';
 
   @override
-  String get manageHealthDescription => 'Easily keep in one place all your health information and that of those who are important to you.';
+  String get manageHealthDescription =>
+      'Easily keep in one place all your health information and that of those who are important to you.';
 
   @override
   String get planAppointments => 'Plan your appointments';
 
   @override
-  String get planAppointmentsDescription => 'Find a healthcare professional and book an appointment online at any time.';
+  String get planAppointmentsDescription =>
+      'Find a healthcare professional and book an appointment online at any time.';
 
   @override
   String get logInCapital => 'LOG IN';
@@ -153,7 +160,8 @@ class AppLocalizationsEn extends AppLocalizations {
   String get noPastAppointments => 'No past appointments';
 
   @override
-  String get noAppointmentsDescription => 'Take charge of your health. Easily book your next appointment.';
+  String get noAppointmentsDescription =>
+      'Take charge of your health. Easily book your next appointment.';
 
   @override
   String bookedOn(Object date) {
@@ -177,6 +185,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get waitingConfirmation => 'Waiting for confirmation';
 
   @override
+  String get statusRejected => 'Rejected';
+
+  @override
   String get loadMoreAppointments => 'Load more..';
 
   @override
@@ -192,7 +203,8 @@ class AppLocalizationsEn extends AppLocalizations {
   String get somethingWentWrong => 'Something went wrong. Please try again.';
 
   @override
-  String get cancelReasonQuestion => 'Why do you want to cancel this appointment?';
+  String get cancelReasonQuestion =>
+      'Why do you want to cancel this appointment?';
 
   @override
   String get typeReasonHere => 'Type your reason here...';
@@ -201,16 +213,19 @@ class AppLocalizationsEn extends AppLocalizations {
   String get reasonRequired => 'You must provide a reason to cancel.';
 
   @override
-  String get tooLateToCancel => 'It\'s too late to cancel this appointment now.';
+  String get tooLateToCancel =>
+      'It\'s too late to cancel this appointment now.';
 
   @override
   String get notAllowed => 'Not allowed';
 
   @override
-  String get cancelTimeLimitNote => 'For the respect of doctors\' time and other patients, appointments must be cancelled at least 24 hours before the scheduled time. Late cancellations are not allowed.';
+  String get cancelTimeLimitNote =>
+      'For the respect of doctors\' time and other patients, appointments must be cancelled at least 24 hours before the scheduled time. Late cancellations are not allowed.';
 
   @override
-  String get appointmentCancelledMessage => 'The appointment has been successfully cancelled. You can book a new appointment at any time.';
+  String get appointmentCancelledMessage =>
+      'The appointment has been successfully cancelled. You can book a new appointment at any time.';
 
   @override
   String get toAppointmentPage => 'Back to Appointments Page';
@@ -219,19 +234,24 @@ class AppLocalizationsEn extends AppLocalizations {
   String get tooLateToReschedule => 'Too late to reschedule this appointment.';
 
   @override
-  String get rescheduleTimeLimitNote => 'For the respect of doctors\' time and other patients, appointments must be rescheduled at least 24 hours before the scheduled time. Late rescheduling is not allowed.';
+  String get rescheduleTimeLimitNote =>
+      'For the respect of doctors\' time and other patients, appointments must be rescheduled at least 24 hours before the scheduled time. Late rescheduling is not allowed.';
 
   @override
-  String get appointmentRescheduleNoWarning => 'You can now proceed to reschedule.';
+  String get appointmentRescheduleNoWarning =>
+      'You can now proceed to reschedule.';
 
   @override
-  String get noAvailableAppointmentsRes => 'No other appointments are available for rescheduling.';
+  String get noAvailableAppointmentsRes =>
+      'No other appointments are available for rescheduling.';
 
   @override
-  String get cancelInsteadNote => 'You can cancel this appointment instead if needed.';
+  String get cancelInsteadNote =>
+      'You can cancel this appointment instead if needed.';
 
   @override
-  String get rescheduleReasonQuestion => 'Why do you want to reschedule this appointment?';
+  String get rescheduleReasonQuestion =>
+      'Why do you want to reschedule this appointment?';
 
   @override
   String get confirmReschedule => 'Confirm Reschedule';
@@ -246,7 +266,8 @@ class AppLocalizationsEn extends AppLocalizations {
   String get manageDocuments => 'Manage your documents';
 
   @override
-  String get manageDocumentsDescription => 'Easily access your documents and share them with your practitioners at any time.';
+  String get manageDocumentsDescription =>
+      'Easily access your documents and share them with your practitioners at any time.';
 
   @override
   String get notes => 'Notes';
@@ -255,7 +276,8 @@ class AppLocalizationsEn extends AppLocalizations {
   String get takeNotesTitle => 'Take important notes\n about your health';
 
   @override
-  String get takeNotesDescription => 'For example, track symptoms, note mental health concerns, and prepare questions for your practitioners.';
+  String get takeNotesDescription =>
+      'For example, track symptoms, note mental health concerns, and prepare questions for your practitioners.';
 
   @override
   String get addDocument => 'Add Document';
@@ -264,10 +286,12 @@ class AppLocalizationsEn extends AppLocalizations {
   String get uploadingDocument => 'Uploading document...';
 
   @override
-  String get documentTooLarge => 'The compressed file exceeds 2 MB. Please reduce the number of images or use smaller ones.';
+  String get documentTooLarge =>
+      'The compressed file exceeds 2 MB. Please reduce the number of images or use smaller ones.';
 
   @override
-  String get pdfTooLarge => 'The PDF file is too large. Please use a file smaller than 2MB.';
+  String get pdfTooLarge =>
+      'The PDF file is too large. Please use a file smaller than 2MB.';
 
   @override
   String get chooseAddDocumentMethod => 'Choose a method';
@@ -279,7 +303,8 @@ class AppLocalizationsEn extends AppLocalizations {
   String get sendRequests => 'Send requests';
 
   @override
-  String get sendRequestsDescription => 'You can send specific requests to your practitioners to ask about prescriptions, test results, referral letters, and more.';
+  String get sendRequestsDescription =>
+      'You can send specific requests to your practitioners to ask about prescriptions, test results, referral letters, and more.';
 
   @override
   String get sendMessage => 'Send a message';
@@ -288,10 +313,12 @@ class AppLocalizationsEn extends AppLocalizations {
   String get easilySendMessages => 'Easily send messages to practitioners';
 
   @override
-  String get sendMessagesDescription => 'Start a conversation with your practitioners. Ask about exam results, request referral letters, and more.';
+  String get sendMessagesDescription =>
+      'Start a conversation with your practitioners. Ask about exam results, request referral letters, and more.';
 
   @override
-  String get fileTooLarge => 'The total size of images is too large (max 4MB). Please reduce the number or size of images.';
+  String get fileTooLarge =>
+      'The total size of images is too large (max 4MB). Please reduce the number or size of images.';
 
   @override
   String get chooseAttachmentType => 'Send attachment';
@@ -336,7 +363,8 @@ class AppLocalizationsEn extends AppLocalizations {
   String get didYouKnow => 'Did you know that?';
 
   @override
-  String get didYouKnowDesc => 'You can also book appointments for your relatives by creating dedicated profiles for them.';
+  String get didYouKnowDesc =>
+      'You can also book appointments for your relatives by creating dedicated profiles for them.';
 
   @override
   String get manageMyRelatives => 'Manage my relatives';
@@ -416,7 +444,8 @@ class AppLocalizationsEn extends AppLocalizations {
   String get dobRequired => 'Date of birth is required';
 
   @override
-  String get buildingNrError => 'Please fill Street, City, and Country before adding a Building Number.';
+  String get buildingNrError =>
+      'Please fill Street, City, and Country before adding a Building Number.';
 
   @override
   String get updateSuccess => 'Profile updated successfully!';
@@ -427,7 +456,8 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
-  String get infoText => 'Changes made to your profile will be shared with your practitioners.';
+  String get infoText =>
+      'Changes made to your profile will be shared with your practitioners.';
 
   @override
   String get requiredField => 'This field is required';
@@ -436,7 +466,8 @@ class AppLocalizationsEn extends AppLocalizations {
   String get minTwoLettersError => 'Please enter at least two letters';
 
   @override
-  String get fillFullAddress => 'Please fill Street, City, and Country before adding a Building Number.';
+  String get fillFullAddress =>
+      'Please fill Street, City, and Country before adding a Building Number.';
 
   @override
   String get enterPhoneOptional => 'Enter phone number (optional)';
@@ -451,7 +482,8 @@ class AppLocalizationsEn extends AppLocalizations {
   String get enterBuildingOptional => 'Enter building number (optional)';
 
   @override
-  String get authorizationStatement => 'I declare that I am the legal representative of my relative, or that I am authorized to use the Doctolib services to manage medical data on their behalf.';
+  String get authorizationStatement =>
+      'I declare that I am the legal representative of my relative, or that I am authorized to use the Doctolib services to manage medical data on their behalf.';
 
   @override
   String get add => 'Add';
@@ -520,7 +552,8 @@ class AppLocalizationsEn extends AppLocalizations {
   String get noRelativesTitle => 'Look after your relatives on DocSera';
 
   @override
-  String get noRelativesDesc => 'Add your relatives to your account to manage their appointments and their health documents with ease.';
+  String get noRelativesDesc =>
+      'Add your relatives to your account to manage their appointments and their health documents with ease.';
 
   @override
   String bornOn(Object date) {
@@ -573,7 +606,8 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
-  String get removeRelativeDesc => 'By removing this relative from your account, you will no longer have access to their documents or appointment history.';
+  String get removeRelativeDesc =>
+      'By removing this relative from your account, you will no longer have access to their documents or appointment history.';
 
   @override
   String get remove => 'Remove';
@@ -595,7 +629,8 @@ class AppLocalizationsEn extends AppLocalizations {
   String get accountHolder => 'Account Holder';
 
   @override
-  String get invalidPhoneNumber => 'Invalid phone number.\nIt must either start with 9 and be 9 digits, or start with 09 and be 10 digits.';
+  String get invalidPhoneNumber =>
+      'Invalid phone number.\nIt must either start with 9 and be 9 digits, or start with 09 and be 10 digits.';
 
   @override
   String get addEmailTitle => 'Add Email';
@@ -649,7 +684,8 @@ class AppLocalizationsEn extends AppLocalizations {
   String get fingerprintTitle => 'Unlock with Fingerprint';
 
   @override
-  String get fingerprintDescription => 'Use your fingerprint to quickly and securely log in.';
+  String get fingerprintDescription =>
+      'Use your fingerprint to quickly and securely log in.';
 
   @override
   String get faceIdPrompt => 'Authenticate with Face ID';
@@ -718,7 +754,8 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
-  String get phoneUpdatedWithoutVerification => 'Phone updated without verification';
+  String get phoneUpdatedWithoutVerification =>
+      'Phone updated without verification';
 
   @override
   String get phoneUpdatedSuccess => 'Phone number verified and updated!';
@@ -733,10 +770,12 @@ class AppLocalizationsEn extends AppLocalizations {
   String get verifyLater => 'Verify later';
 
   @override
-  String get alreadyExistsPhone => 'A DocSera account already exists with this phone number';
+  String get alreadyExistsPhone =>
+      'A DocSera account already exists with this phone number';
 
   @override
-  String get alreadyExistsEmail => 'A DocSera account already exists with this email';
+  String get alreadyExistsEmail =>
+      'A DocSera account already exists with this email';
 
   @override
   String get changePassword => 'Change Password';
@@ -751,7 +790,8 @@ class AppLocalizationsEn extends AppLocalizations {
   String get incorrectCurrentPassword => 'Incorrect current password';
 
   @override
-  String get passwordMatchError => 'New password cannot be the same as current password';
+  String get passwordMatchError =>
+      'New password cannot be the same as current password';
 
   @override
   String get passwordUpdatedSuccess => 'Password updated successfully!';
@@ -810,7 +850,8 @@ class AppLocalizationsEn extends AppLocalizations {
   String get reportIllicitContent => 'Report illicit content';
 
   @override
-  String get deleteAccountWarningText => 'You can delete your DocSera account and associated data at any time. This will not automatically delete your personal data from the databases of the healthcare professionals with whom you have booked appointments. Healthcare professionals may have a legitimate interest in keeping your personal data. You are free to exercise your rights of access, rectification or deletion and contact them directly.';
+  String get deleteAccountWarningText =>
+      'You can delete your DocSera account and associated data at any time. This will not automatically delete your personal data from the databases of the healthcare professionals with whom you have booked appointments. Healthcare professionals may have a legitimate interest in keeping your personal data. You are free to exercise your rights of access, rectification or deletion and contact them directly.';
 
   @override
   String get confirmDeleteMyAccount => 'DELETE MY ACCOUNT';
@@ -819,7 +860,8 @@ class AppLocalizationsEn extends AppLocalizations {
   String get goodbyeMessage => 'We\'re sad to see you go 😔';
 
   @override
-  String get goodbyeSubtext => 'Your account has been successfully deleted. We hope to see you again someday.';
+  String get goodbyeSubtext =>
+      'Your account has been successfully deleted. We hope to see you again someday.';
 
   @override
   String get searchTitle => 'Search';
@@ -837,7 +879,8 @@ class AppLocalizationsEn extends AppLocalizations {
   String get noResultsTitle => 'No Results Found';
 
   @override
-  String get noResultsSubtitle => 'Try using another keyword or check your spelling.';
+  String get noResultsSubtitle =>
+      'Try using another keyword or check your spelling.';
 
   @override
   String get searchBySpecialty => 'Search by specialty';
@@ -852,10 +895,12 @@ class AppLocalizationsEn extends AppLocalizations {
   String get selectCityPlaceholder => 'Select a city';
 
   @override
-  String get locationPermissionDenied => 'Location permission is denied. Please enable it in settings.';
+  String get locationPermissionDenied =>
+      'Location permission is denied. Please enable it in settings.';
 
   @override
-  String get locationError => 'Unable to access your location. Please enable location services.';
+  String get locationError =>
+      'Unable to access your location. Please enable location services.';
 
   @override
   String get showResults => 'Show results';
@@ -1071,13 +1116,15 @@ class AppLocalizationsEn extends AppLocalizations {
   String get cannotSendMessageTitle => 'Message not allowed';
 
   @override
-  String get thisPatientCannotMessageDoctor => 'Sorry, this patient cannot send a message to doctor';
+  String get thisPatientCannotMessageDoctor =>
+      'Sorry, this patient cannot send a message to doctor';
 
   @override
   String get ok => 'OK';
 
   @override
-  String get haveYouVisitedBefore => 'Have you visited this practitioner in the past?';
+  String get haveYouVisitedBefore =>
+      'Have you visited this practitioner in the past?';
 
   @override
   String get yes => 'Yes';
@@ -1152,7 +1199,8 @@ class AppLocalizationsEn extends AppLocalizations {
   String get appointmentConfirmed => 'Appointment Confirmed';
 
   @override
-  String get appointmentConfirmedMessage => 'A confirmation has been sent to your email';
+  String get appointmentConfirmedMessage =>
+      'A confirmation has been sent to your email';
 
   @override
   String get addToCalendar => 'Add to my calendar';
@@ -1161,7 +1209,8 @@ class AppLocalizationsEn extends AppLocalizations {
   String get sendDocuments => 'Send Documents';
 
   @override
-  String get sendDocumentsSubtitle => 'Send documents to your practitioner before your consultation';
+  String get sendDocumentsSubtitle =>
+      'Send documents to your practitioner before your consultation';
 
   @override
   String get viewMoreDetails => 'View More Details';
@@ -1184,25 +1233,30 @@ class AppLocalizationsEn extends AppLocalizations {
   String get loginFirst => 'Please log in first.';
 
   @override
-  String get slotAlreadyBooked => 'Sorry, this time slot has just been booked. Please choose another time.';
+  String get slotAlreadyBooked =>
+      'Sorry, this time slot has just been booked. Please choose another time.';
 
   @override
   String get errorBookingAppointment => 'Error booking appointment';
 
   @override
-  String get appointmentAddedToCalendar => '📅 Appointment added to your calendar!';
+  String get appointmentAddedToCalendar =>
+      '📅 Appointment added to your calendar!';
 
   @override
-  String get appointmentFailedToAdd => '⚠️ Failed to add appointment to the calendar.';
+  String get appointmentFailedToAdd =>
+      '⚠️ Failed to add appointment to the calendar.';
 
   @override
-  String get errorLoadingAppointments => 'An error occurred while loading appointments.';
+  String get errorLoadingAppointments =>
+      'An error occurred while loading appointments.';
 
   @override
   String get awaitingDoctorConfirmation => 'Awaiting Doctor Confirmation';
 
   @override
-  String get waitingForDoctorToApprove => 'Your request has been sent successfully. The doctor will review and approve the appointment shortly.';
+  String get waitingForDoctorToApprove =>
+      'Your request has been sent successfully. The doctor will review and approve the appointment shortly.';
 
   @override
   String get backToHome => 'Back to Home';
@@ -1262,19 +1316,24 @@ class AppLocalizationsEn extends AppLocalizations {
   String get sharedFromApp => 'Shared from DocSera App';
 
   @override
-  String get youAreAboutToReschedule => 'You\'re about to move your appointment at the last minute';
+  String get youAreAboutToReschedule =>
+      'You\'re about to move your appointment at the last minute';
 
   @override
-  String get youAreAboutToCancel => 'You\'re about to cancel your appointment at the last minute';
+  String get youAreAboutToCancel =>
+      'You\'re about to cancel your appointment at the last minute';
 
   @override
-  String get lastMinuteWarning => 'This appointment is in less than 48 hours. It is unlikely to be booked by another patient.';
+  String get lastMinuteWarning =>
+      'This appointment is in less than 48 hours. It is unlikely to be booked by another patient.';
 
   @override
-  String get respectPractitionerReschedule => 'Out of respect to your practitioner, you should only move if absolutely necessary.';
+  String get respectPractitionerReschedule =>
+      'Out of respect to your practitioner, you should only move if absolutely necessary.';
 
   @override
-  String get respectPractitionerCancel => 'Out of respect to your practitioner, you should only cancel if absolutely necessary.';
+  String get respectPractitionerCancel =>
+      'Out of respect to your practitioner, you should only cancel if absolutely necessary.';
 
   @override
   String get continuing => 'CONTINUE';
@@ -1292,31 +1351,39 @@ class AppLocalizationsEn extends AppLocalizations {
   String get appointmentCancelled => 'Appointment canceled';
 
   @override
-  String get appointmentCancelNoWarning => 'Appointment canceled without warning';
+  String get appointmentCancelNoWarning =>
+      'Appointment canceled without warning';
 
   @override
-  String get doctorIdMissingError => 'Doctor ID is missing. Unable to open profile.';
+  String get doctorIdMissingError =>
+      'Doctor ID is missing. Unable to open profile.';
 
   @override
-  String get rescheduleWarningTitle => 'You\'re about to move your appointment at the last minute';
+  String get rescheduleWarningTitle =>
+      'You\'re about to move your appointment at the last minute';
 
   @override
-  String get cancelWarningTitle => 'You\'re about to cancel your appointment at the last minute';
+  String get cancelWarningTitle =>
+      'You\'re about to cancel your appointment at the last minute';
 
   @override
-  String get appointmentShortNoticeWarning => 'This appointment is in less than 48 hours. It is unlikely to be booked by another patient.';
+  String get appointmentShortNoticeWarning =>
+      'This appointment is in less than 48 hours. It is unlikely to be booked by another patient.';
 
   @override
-  String get rescheduleRespectNotice => 'Out of respect to your practitioner, you should only move if absolutely necessary';
+  String get rescheduleRespectNotice =>
+      'Out of respect to your practitioner, you should only move if absolutely necessary';
 
   @override
-  String get cancelRespectNotice => 'Out of respect to your practitioner, you should only cancel if absolutely necessary';
+  String get cancelRespectNotice =>
+      'Out of respect to your practitioner, you should only cancel if absolutely necessary';
 
   @override
   String get sendDocument => 'Send document';
 
   @override
-  String get sendDocumentsLater => 'Sending documents will be enabled later once the doctor app is ready';
+  String get sendDocumentsLater =>
+      'Sending documents will be enabled later once the doctor app is ready';
 
   @override
   String get sendDocumentsTo => 'Send documents to';
@@ -1325,7 +1392,8 @@ class AppLocalizationsEn extends AppLocalizations {
   String get beforeConsultation => 'before consultation';
 
   @override
-  String get exampleDocuments => 'For example, referral, test results, prescriptions';
+  String get exampleDocuments =>
+      'For example, referral, test results, prescriptions';
 
   @override
   String get sizeLimit => 'Size';
@@ -1366,7 +1434,8 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
-  String get faceIdNoCredentials => 'No saved credentials found for Face ID login.';
+  String get faceIdNoCredentials =>
+      'No saved credentials found for Face ID login.';
 
   @override
   String get logInWithFaceId => 'Log in with Face ID';
@@ -1387,16 +1456,19 @@ class AppLocalizationsEn extends AppLocalizations {
   String get biometricPrompt => 'Please verify using face or fingerprint';
 
   @override
-  String get logInFailed => 'Login failed. Please check your credentials and try again.';
+  String get logInFailed =>
+      'Login failed. Please check your credentials and try again.';
 
   @override
   String get errorUserNotFound => 'لا يوجد حساب بهذا البريد أو الرقم.';
 
   @override
-  String get errorWrongPassword => 'كلمة المرور غير صحيحة، يرجى المحاولة مجددًا.';
+  String get errorWrongPassword =>
+      'كلمة المرور غير صحيحة، يرجى المحاولة مجددًا.';
 
   @override
-  String get errorGenericLogin => 'فشل تسجيل الدخول، تحقق من البيانات وحاول مرة أخرى.';
+  String get errorGenericLogin =>
+      'فشل تسجيل الدخول، تحقق من البيانات وحاول مرة أخرى.';
 
   @override
   String get authenticating => 'Authenticating...';
@@ -1414,19 +1486,22 @@ class AppLocalizationsEn extends AppLocalizations {
   String get enterEmail => 'Please enter your email';
 
   @override
-  String get errorCheckingEmail => 'An error occurred while checking the email. Please try again.';
+  String get errorCheckingEmail =>
+      'An error occurred while checking the email. Please try again.';
 
   @override
   String get emailAlreadyRegistered => 'ُEmail already registered';
 
   @override
-  String get emailAlreadyRegisteredContent => 'Email you entered is already registered in DocSera';
+  String get emailAlreadyRegisteredContent =>
+      'Email you entered is already registered in DocSera';
 
   @override
   String get phoneAlreadyRegistered => 'Phone number already registered';
 
   @override
-  String get phoneAlreadyRegisteredContent => 'Phone number you entered is already registered in DocSera';
+  String get phoneAlreadyRegisteredContent =>
+      'Phone number you entered is already registered in DocSera';
 
   @override
   String get loginWithEmail => 'Login with Email';
@@ -1471,40 +1546,49 @@ class AppLocalizationsEn extends AppLocalizations {
   String get strongPassword => 'Password strength: Strong';
 
   @override
-  String get useEightCharacters => 'Use 8 characters or more for your password.';
+  String get useEightCharacters =>
+      'Use 8 characters or more for your password.';
 
   @override
-  String get passwordTooSimple => 'Your password is too simple. Try adding special characters, numbers, and capital letters.';
+  String get passwordTooSimple =>
+      'Your password is too simple. Try adding special characters, numbers, and capital letters.';
 
   @override
-  String get passwordRepeatedCharacters => 'Avoid repeated characters like \'aaa\' or \'111\'.';
+  String get passwordRepeatedCharacters =>
+      'Avoid repeated characters like \'aaa\' or \'111\'.';
 
   @override
   String get termsOfUseTitle => 'Terms of Use and Privacy Policy';
 
   @override
-  String get termsOfUseDescription => 'To create a DocSera account, please accept the terms of use.';
+  String get termsOfUseDescription =>
+      'To create a DocSera account, please accept the terms of use.';
 
   @override
   String get acceptTerms => 'I have read and accepted the Terms of Use';
 
   @override
-  String get dataProcessingInfo => 'You can find more information on data processing in our ';
+  String get dataProcessingInfo =>
+      'You can find more information on data processing in our ';
 
   @override
   String get dataProtectionNotice => 'data protection notices.';
 
   @override
-  String get marketingPreferencesTitle => 'Stay connected with our latest updates';
+  String get marketingPreferencesTitle =>
+      'Stay connected with our latest updates';
 
   @override
-  String get marketingPreferencesSubtitle => 'Get personalized emails and push notifications about health tips and our services.';
+  String get marketingPreferencesSubtitle =>
+      'Get personalized emails and push notifications about health tips and our services.';
 
   @override
-  String get marketingCheckboxText => 'Helpful tips to manage my health and marketing information about our services';
+  String get marketingCheckboxText =>
+      'Helpful tips to manage my health and marketing information about our services';
 
   @override
-  String get privacyPolicyInfo => 'You can change your choice anytime in your settings. To learn more, ';
+  String get privacyPolicyInfo =>
+      'You can change your choice anytime in your settings. To learn more, ';
 
   @override
   String get privacyPolicyLink => 'see the privacy policy.';
@@ -1591,13 +1675,15 @@ class AppLocalizationsEn extends AppLocalizations {
   String get welcomeToDocsera => 'Welcome to DocSera,';
 
   @override
-  String get welcomeMessageInfo => 'Easily book your appointments, manage your medical files, and stay connected with doctors — all in one secure and fast place.';
+  String get welcomeMessageInfo =>
+      'Easily book your appointments, manage your medical files, and stay connected with doctors — all in one secure and fast place.';
 
   @override
   String get goToHomepage => 'Go to Homepage';
 
   @override
-  String get serverConnectionError => 'Cannot connect to the server. Please check your internet connection and try again.';
+  String get serverConnectionError =>
+      'Cannot connect to the server. Please check your internet connection and try again.';
 
   @override
   String verificationError(Object errorMessage) {
@@ -1605,7 +1691,8 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
-  String get unexpectedError => 'An unexpected error occurred. Please try again later.';
+  String get unexpectedError =>
+      'An unexpected error occurred. Please try again later.';
 
   @override
   String get documentAddedSuccessfully => 'Document added successfully!';
@@ -1671,7 +1758,8 @@ class AppLocalizationsEn extends AppLocalizations {
   String get treatmentPlan => 'Treatment plan';
 
   @override
-  String get identityProof => 'Proof of identity (ID card, passport, residence permit)';
+  String get identityProof =>
+      'Proof of identity (ID card, passport, residence permit)';
 
   @override
   String get insuranceProof => 'Public insurance proof';
@@ -1737,7 +1825,8 @@ class AppLocalizationsEn extends AppLocalizations {
   String get deleteDocument => 'Delete Document';
 
   @override
-  String get confirmDeleteDocument => 'Are you sure you want to delete this document?';
+  String get confirmDeleteDocument =>
+      'Are you sure you want to delete this document?';
 
   @override
   String get downloadSuccess => 'The file has been downloaded successfully';
@@ -1785,7 +1874,8 @@ class AppLocalizationsEn extends AppLocalizations {
   String get unsavedNoteTitle => 'Unsaved Changes';
 
   @override
-  String get unsavedNoteMessage => 'Do you want to save this note before exiting?';
+  String get unsavedNoteMessage =>
+      'Do you want to save this note before exiting?';
 
   @override
   String get noteContent => 'Write your note here...';
@@ -1811,13 +1901,16 @@ class AppLocalizationsEn extends AppLocalizations {
   String get selectMessageReason => 'What is the reason for this message?';
 
   @override
-  String get failedToLoadReasons => 'Failed to load message reasons. Please try again later.';
+  String get failedToLoadReasons =>
+      'Failed to load message reasons. Please try again later.';
 
   @override
-  String get noReasonsAddedByDoctor => 'This doctor has not added any message reasons yet.';
+  String get noReasonsAddedByDoctor =>
+      'This doctor has not added any message reasons yet.';
 
   @override
-  String get noEmergencySupport => 'Your practitioner cannot address medical emergencies by message. In case of a medical emergency, call 112.';
+  String get noEmergencySupport =>
+      'Your practitioner cannot address medical emergencies by message. In case of a medical emergency, call 112.';
 
   @override
   String get reasonTestResults => 'Request sending of test results';
@@ -1853,16 +1946,19 @@ class AppLocalizationsEn extends AppLocalizations {
   String get sendMyMessage => 'SEND MY MESSAGE';
 
   @override
-  String get messageHint => 'Explain the reason for your message. Provide any relevant information to your practitioner.';
+  String get messageHint =>
+      'Explain the reason for your message. Provide any relevant information to your practitioner.';
 
   @override
   String get helpTitle => 'What should I add in my request?';
 
   @override
-  String get helpMessage1 => 'Include essential, relevant, and necessary information for the physician to process your request.';
+  String get helpMessage1 =>
+      'Include essential, relevant, and necessary information for the physician to process your request.';
 
   @override
-  String get helpMessage2 => 'If necessary (e.g., for a certificate of illness), the doctor may require you to make an appointment for an examination. In the event of an emergency, contact 112.';
+  String get helpMessage2 =>
+      'If necessary (e.g., for a certificate of illness), the doctor may require you to make an appointment for an examination. In the event of an emergency, contact 112.';
 
   @override
   String get yesterday => 'Yesterday';
@@ -1896,7 +1992,8 @@ class AppLocalizationsEn extends AppLocalizations {
   String get writeYourMessage => 'Write your message...';
 
   @override
-  String get waitingDoctorReply => 'Please wait for the doctor to reply to your request.';
+  String get waitingDoctorReply =>
+      'Please wait for the doctor to reply to your request.';
 
   @override
   String get read => 'Read';
@@ -1946,19 +2043,23 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
-  String get documentAccessInfo => 'Only you can access and manage documents stored here.';
+  String get documentAccessInfo =>
+      'Only you can access and manage documents stored here.';
 
   @override
-  String get notesAccessInfo => 'Only you can access and manage your notes securely.';
+  String get notesAccessInfo =>
+      'Only you can access and manage your notes securely.';
 
   @override
-  String get messageAccessInfo => 'You can message your doctor directly here. All your conversations are securely stored and easily accessible.';
+  String get messageAccessInfo =>
+      'You can message your doctor directly here. All your conversations are securely stored and easily accessible.';
 
   @override
   String get accountPrivacyInfoLine1 => 'Your personal data stays personal.';
 
   @override
-  String get accountPrivacyInfoLine2 => 'We protect your information with industry-leading security.';
+  String get accountPrivacyInfoLine2 =>
+      'We protect your information with industry-leading security.';
 
   @override
   String get forgotPasswordButton => 'Forget your password?';
@@ -1976,13 +2077,15 @@ class AppLocalizationsEn extends AppLocalizations {
   String get notActivated => 'Not activated';
 
   @override
-  String get encryptedDocumentsFullDescription => 'Your medical documents are securely stored with advanced encryption, ensuring that only you can access and manage them safely.';
+  String get encryptedDocumentsFullDescription =>
+      'Your medical documents are securely stored with advanced encryption, ensuring that only you can access and manage them safely.';
 
   @override
   String get twoFactorAuthHeadline => 'Extra security beyond your password';
 
   @override
-  String get twoFactorAuthFullDescription => 'For extra protection, a verification code is sent to you by email or SMS when you log in from a new device.';
+  String get twoFactorAuthFullDescription =>
+      'For extra protection, a verification code is sent to you by email or SMS when you log in from a new device.';
 
   @override
   String get activate2FA => 'Activate Two-Factor Authentication';
@@ -1991,7 +2094,8 @@ class AppLocalizationsEn extends AppLocalizations {
   String get deactivate2FA => 'Deactivate Two-Factor Authentication';
 
   @override
-  String get twoFactorDeactivateWarning => 'Disabling 2FA will make your account less secure. Are you sure you want to proceed?';
+  String get twoFactorDeactivateWarning =>
+      'Disabling 2FA will make your account less secure. Are you sure you want to proceed?';
 
   @override
   String get errorOccurred => 'An error occurred. Please try again';

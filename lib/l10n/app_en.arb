@@ -64,6 +64,7 @@
   "patientName": "Patient: {name}",
   "bookAgain": "Book again",
   "waitingConfirmation": "Waiting for confirmation",
+  "statusRejected": "Rejected",
   "loadMoreAppointments": "Load more..",
   "unknownDate": "Unknown Date",
   "unknownTime": "Unknown Time",

@@ -3,50 +3,12 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:docsera/utils/shared_prefs_service.dart';
 
+import '../../utils/time_utils.dart';
+
 class SupabaseUserService {
   final SupabaseClient _supabase = Supabase.instance.client;
   final SharedPrefsService _sharedPrefsService = SharedPrefsService();
 
-  // /// ✅ توليد بريد مزيف جديد باستخدام جدول `metadata` في Supabase
-  // Future<String> generateNextFakeEmail() async {
-  //   final response = await _supabase
-  //       .from('metadata')
-  //       .select()
-  //       .eq('id', 'emailCounter')
-  //       .maybeSingle();
-  //
-  //   if (response == null || response['lastFakeEmailNumber'] == null) {
-  //     throw Exception("Metadata not found or corrupted");
-  //   }
-  //
-  //   int currentNumber = response['lastFakeEmailNumber'];
-  //   int nextNumber = currentNumber + 1;
-  //
-  //   final updateResponse = await _supabase
-  //       .from('metadata')
-  //       .update({'lastFakeEmailNumber': nextNumber})
-  //       .eq('id', 'emailCounter');
-  //
-  //   if (updateResponse.error != null) {
-  //     throw Exception("Failed to update counter: ${updateResponse.error!.message}");
-  //   }
-  //
-  //   final padded = nextNumber.toString().padLeft(7, '0');
-  //   final fakeEmail = 'user$padded@docsera.com';
-  //   print("📬 Generated from counter: $fakeEmail");
-  //
-  //   return fakeEmail;
-  // }
-
-  // /// ✅ التحقق إذا كان البريد المزيف مستخدم
-  // Future<bool> isFakeEmailUsedInAuth(String fakeEmail) async {
-  //   try {
-  //     final result = await _supabase.auth.admin.listUsers(email: fakeEmail);
-  //     return result.users.isNotEmpty;
-  //   } catch (e) {
-  //     return false;
-  //   }
-  // }
 
   /// ✅ التحقق مما إذا كان رقم الهاتف موجود مسبقًا في Supabase
   Future<bool> isPhoneNumberExists(String phoneNumber) async {
@@ -443,13 +405,21 @@ extension SupabaseUserServiceAppointments on SupabaseUserService {
           .order('timestamp');
 
       final data = response;
-      final now = DateTime.now().toLocal();
+      final now = TimezoneUtils.toDamascus(DateTime.now().toUtc());
 
       List<Map<String, dynamic>> upcoming = [];
       List<Map<String, dynamic>> past = [];
 
       for (var appt in data) {
-        final timestamp = DateTime.tryParse(appt['timestamp'] ?? '') ?? now;
+        final status = (appt['status'] ?? '').toString();
+        final isRejected = status == 'rejected';
+        final isBooked = appt['booked'] == true;
+
+        // ✅ عرض فقط المواعيد المحجوزة أو المرفوضة (وليس المسودة)
+        if (!isBooked && !isRejected) continue;
+
+        final timestampUtc = DateTime.tryParse(appt['timestamp'] ?? '')?.toUtc();
+        final timestamp = TimezoneUtils.toDamascus(timestampUtc ?? now);
 
         if (appt.containsKey('booking_timestamp')) {
           appt['booking_timestamp'] = appt['booking_timestamp']?.toString();
@@ -457,12 +427,14 @@ extension SupabaseUserServiceAppointments on SupabaseUserService {
 
         appt['timestamp'] = timestamp.toIso8601String();
 
+        // ✅ تصنيف قادم / سابق
         if (timestamp.isAfter(now)) {
           upcoming.add(appt);
         } else {
           past.add(appt);
         }
       }
+
 
       await _sharedPrefsService.saveData('upcomingAppointments', upcoming);
       await _sharedPrefsService.saveData('pastAppointments', past);
@@ -485,14 +457,21 @@ extension SupabaseUserServiceAppointments on SupabaseUserService {
         .eq('user_id', userId)
         .order('timestamp', ascending: true)
         .map((event) {
-      final now = DateTime.now().toLocal();
+      final now = TimezoneUtils.toDamascus(DateTime.now().toUtc());
       List<Map<String, dynamic>> all = [];
 
       for (final appt in event) {
-        // ✅ تصفية الحجوزات المؤكدة فقط
-        if (appt['booked'] != true) continue;
+        final status = (appt['status'] ?? '').toString();
+        final isRejected = status == 'rejected';
+        final isBooked = appt['booked'] == true;
 
-        final timestamp = DateTime.tryParse(appt['timestamp'] ?? '') ?? now;
+        // ✅ نسمح فقط بالمواعيد المحجوزة أو المرفوضة
+        if (!isBooked && !isRejected) continue;
+
+
+
+        final timestampUtc = DateTime.tryParse(appt['timestamp'] ?? '')?.toUtc();
+        final timestamp = TimezoneUtils.toDamascus(timestampUtc ?? now);
 
         appt['timestamp'] = timestamp.toIso8601String();
         appt['booking_timestamp'] = appt['booking_timestamp']?.toString();

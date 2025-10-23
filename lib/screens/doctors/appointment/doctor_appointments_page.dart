@@ -328,9 +328,8 @@ class _DoctorAppointmentsPageState extends State<DoctorAppointmentsPage> {
                     children: times.map((slot) {
                       final DateTime tsUtc = slot['timestamp'] as DateTime; // UTC
                       final String id = slot['id'] as String;
+                      final String label = TimezoneUtils.format12hLocalized(context, tsUtc);
 
-                      // صيغة الوقت المحلي (UTC+3) مع تعريب ص/م تلقائي:
-                      final String label = format12hLocalized(context, tsUtc);
 
                       return GestureDetector(
                         onTap: () => _onSlotSelected(id, tsUtc, label),

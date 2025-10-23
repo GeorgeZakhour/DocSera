@@ -92,9 +92,10 @@ class AppointmentConfirmedPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final formattedDate = formatBusinessDate(context, appointment);
+    final formattedDate = TimezoneUtils.formatBusinessDate(context, appointment);
     final tsUtc = DateTime.parse(appointment['timestamp'].toString()).toUtc();
-    final formattedTime = format12hLocalized(context, tsUtc);
+    final formattedTime = TimezoneUtils.format12hLocalized(context, tsUtc);
+
 
     // مدة الموعد (اختياري لعرضها بجانب الوقت)
     final int? durationMinutes =

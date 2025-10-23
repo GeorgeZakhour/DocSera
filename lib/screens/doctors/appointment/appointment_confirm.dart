@@ -6,6 +6,7 @@ import 'package:docsera/screens/doctors/appointment/confirmation_page.dart'; // 
 import 'package:docsera/screens/doctors/appointment/waiting_for_confirmation_page.dart';
 import 'package:docsera/utils/doctor_image_utils.dart';
 import 'package:docsera/utils/page_transitions.dart';
+import 'package:docsera/utils/time_utils.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:docsera/gen_l10n/app_localizations.dart';
@@ -337,14 +338,12 @@ class _ConfirmationPageState extends State<ConfirmationPage> {
   Widget build(BuildContext context) {
     final isArabic = Localizations.localeOf(context).languageCode == 'ar';
 
-    // للعرض فقط:
-    // - التاريخ من timestamp محلي
-    // - الوقت من widget.appointmentTime (جاهز 12 ساعة)
-    final localTs = widget.appointmentTimestamp.toLocal();
+
+    final damascusTs = TimezoneUtils.toDamascus(widget.appointmentTimestamp);
     final dateOnly = DateFormat(
       'EEEE, d MMMM',
       Localizations.localeOf(context).toString(),
-    ).format(localTs);
+    ).format(damascusTs);
     final displayDateTime = '$dateOnly • ${widget.appointmentTime}';
 
     final imageResult = resolveDoctorImagePathAndWidget(
