@@ -2,7 +2,7 @@ name: docsera
 description: "DocSera is a modern and intuitive application for scheduling doctor appointments, managing medical consultations, and keeping track of healthcare needs. Empowering users to access and book healthcare services anytime, anywhere."
 publish_to: 'none'
 
-version: 1.0.0+6
+version: 1.0.0+7
 
 environment:
   sdk: '>=3.6.0 <4.0.0'

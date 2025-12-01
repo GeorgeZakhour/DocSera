@@ -1,4 +1,5 @@
 import 'dart:io';
+import 'dart:ui';
 import 'package:docsera/screens/home/Document/add_image_preview_sheet.dart';
 import 'package:docsera/screens/home/Document/document_info_screen.dart';
 import 'package:docsera/screens/home/Document/multi_page_upload_screen.dart';
@@ -9,6 +10,7 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:path/path.dart' as path;
+import 'package:path_provider/path_provider.dart';
 import 'package:syncfusion_flutter_pdf/pdf.dart';
 import 'package:docsera/gen_l10n/app_localizations.dart';
 import 'package:docsera/app/const.dart';
@@ -16,8 +18,13 @@ import 'package:docsera/app/text_styles.dart';
 
 class SendDocumentToDoctorPage extends StatefulWidget {
   final String doctorName;
+  final String appointmentId; // 👈 جديد
 
-  const SendDocumentToDoctorPage({Key? key, required this.doctorName}) : super(key: key);
+  const SendDocumentToDoctorPage({
+    Key? key,
+    required this.doctorName,
+    required this.appointmentId,
+  }) : super(key: key);
 
   @override
   State<SendDocumentToDoctorPage> createState() => _SendDocumentToDoctorPageState();
@@ -137,6 +144,13 @@ class _SendDocumentToDoctorPageState extends State<SendDocumentToDoctorPage> {
     );
   }
 
+  Future<File> _persistImage(String originalPath) async {
+    final dir = await getTemporaryDirectory();
+    final newPath = '${dir.path}/${DateTime.now().millisecondsSinceEpoch}.jpg';
+    return File(originalPath).copy(newPath);
+  }
+
+
   void _pickAndUploadFile(BuildContext context) {
     showModalBottomSheet(
       context: context,
@@ -168,7 +182,11 @@ class _SendDocumentToDoctorPageState extends State<SendDocumentToDoctorPage> {
                     onTap: () async {
                       Navigator.pop(context);
                       final pickedImage = await ImagePicker().pickImage(source: ImageSource.camera);
-                      if (pickedImage != null) _handleImagePicked(context, pickedImage.path);
+                      if (pickedImage != null) {
+                        final safeFile = await _persistImage(pickedImage.path);
+                        _handleImagePicked(context, safeFile.path);
+                      }
+
                     },
                   ),
                   _buildIconAction(
@@ -179,8 +197,10 @@ class _SendDocumentToDoctorPageState extends State<SendDocumentToDoctorPage> {
                       Navigator.pop(context);
                       final result = await FilePicker.platform.pickFiles(type: FileType.image);
                       if (result != null && result.files.isNotEmpty) {
-                        _handleImagePicked(context, result.files.first.path!);
+                        final safeFile = await _persistImage(result.files.first.path!);
+                        _handleImagePicked(context, safeFile.path);
                       }
+
                     },
                   ),
                   _buildIconAction(
@@ -232,6 +252,19 @@ class _SendDocumentToDoctorPageState extends State<SendDocumentToDoctorPage> {
     );
   }
 
+  Future<File> _forceToJpg(String path) async {
+    final dir = await getTemporaryDirectory();
+    final newPath = '${dir.path}/${DateTime.now().millisecondsSinceEpoch}.jpg';
+
+    final bytes = await File(path).readAsBytes();
+    final decoded = await decodeImageFromList(bytes);
+
+    final buffer = await decoded.toByteData(format: ImageByteFormat.png);
+    final file = File(newPath)..writeAsBytesSync(buffer!.buffer.asUint8List());
+    return file;
+  }
+
+
   void _handleImagePicked(BuildContext context, String imagePath) {
     showModalBottomSheet(
       context: context,
@@ -240,9 +273,16 @@ class _SendDocumentToDoctorPageState extends State<SendDocumentToDoctorPage> {
       builder: (sheetContext) {
         return AddImagePreviewSheet(
           imagePath: imagePath,
-          onAdd: () {
+          onAdd: () async {
             Navigator.pop(sheetContext);
-            _goToMultiImageUploadFlow(sheetContext, imagePath);
+
+            // IMPORTANT — convert + persist
+            final fixedFile = await _forceToJpg(imagePath);
+            final safeFile = await _persistImage(fixedFile.path);
+
+            Future.microtask(() {
+              _goToMultiImageUploadFlow(context, safeFile.path);
+            });
           },
         );
       },
@@ -250,33 +290,47 @@ class _SendDocumentToDoctorPageState extends State<SendDocumentToDoctorPage> {
   }
 
 
-  void _goToMultiImageUploadFlow(BuildContext context, String firstImagePath) {
-    Navigator.push(
+
+
+  Future<void> _goToMultiImageUploadFlow(BuildContext context, String firstImagePath) async {
+    final result = await Navigator.push(
       context,
       MaterialPageRoute(
         builder: (_) => MultiPageUploadScreen(
-            images: [firstImagePath],
-            isSendMode: true,
+          images: [firstImagePath],
+          isSendMode: true,
+          appointmentId: widget.appointmentId, // 👈 جديد
         ),
       ),
     );
+
+    if (result == true) {
+      Navigator.pop(context, true);   // ⬅ يرجع إلى AppointmentDetailsPage
+    }
   }
+
 
   void _handlePdfPicked(BuildContext context, String pdfPath) async {
     final fileName = path.basenameWithoutExtension(pdfPath);
     final pageCount = await getPdfPageCount(pdfPath);
 
-    Navigator.push(
+    final result = await Navigator.push(
       context,
       MaterialPageRoute(
         builder: (_) => DocumentInfoScreen(
           images: [pdfPath],
           initialName: fileName,
           pageCount: pageCount,
-          isSendMode: true
+          isSendMode: true,
+          appointmentId: widget.appointmentId,   // 👈 جديد
         ),
       ),
     );
+
+
+    if (result == true) {
+      Navigator.pop(context, true);  // ⬅ يرجع إلى AppointmentDetailsPage
+    }
   }
 
   Future<int> getPdfPageCount(String path) async {

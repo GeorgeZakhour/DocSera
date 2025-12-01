@@ -722,6 +722,90 @@ abstract class AppLocalizations {
   /// **'Log out'**
   String get logOut;
 
+  /// No description provided for @pointsHistory.
+  ///
+  /// In en, this message translates to:
+  /// **'Points History'**
+  String get pointsHistory;
+
+  /// No description provided for @noData.
+  ///
+  /// In en, this message translates to:
+  /// **'No data available'**
+  String get noData;
+
+  /// No description provided for @points.
+  ///
+  /// In en, this message translates to:
+  /// **'points'**
+  String get points;
+
+  /// No description provided for @time.
+  ///
+  /// In en, this message translates to:
+  /// **'Time'**
+  String get time;
+
+  /// No description provided for @rewardPoints.
+  ///
+  /// In en, this message translates to:
+  /// **'Earned Points'**
+  String get rewardPoints;
+
+  /// No description provided for @errorOccurred.
+  ///
+  /// In en, this message translates to:
+  /// **'An error occurred. Please try again'**
+  String get errorOccurred;
+
+  /// No description provided for @completedAppointment.
+  ///
+  /// In en, this message translates to:
+  /// **'Completed Appointment'**
+  String get completedAppointment;
+
+  /// No description provided for @withDoctor.
+  ///
+  /// In en, this message translates to:
+  /// **'with'**
+  String get withDoctor;
+
+  /// No description provided for @onDate.
+  ///
+  /// In en, this message translates to:
+  /// **'on'**
+  String get onDate;
+
+  /// No description provided for @patient.
+  ///
+  /// In en, this message translates to:
+  /// **'Patient'**
+  String get patient;
+
+  /// No description provided for @doctor.
+  ///
+  /// In en, this message translates to:
+  /// **'Doctor'**
+  String get doctor;
+
+  /// No description provided for @relative.
+  ///
+  /// In en, this message translates to:
+  /// **'Relative'**
+  String get relative;
+
+  /// No description provided for @accomplishedAt.
+  ///
+  /// In en, this message translates to:
+  /// **'Accomplished at'**
+  String get accomplishedAt;
+
+  /// No description provided for @close.
+  ///
+  /// In en, this message translates to:
+  /// **'Close'**
+  String get close;
+
   /// No description provided for @noName.
   ///
   /// In en, this message translates to:
@@ -2348,6 +2432,12 @@ abstract class AppLocalizations {
   /// **'Send Documents'**
   String get sendDocuments;
 
+  /// No description provided for @sentDocuments.
+  ///
+  /// In en, this message translates to:
+  /// **'Attached Documents'**
+  String get sentDocuments;
+
   /// No description provided for @sendDocumentsSubtitle.
   ///
   /// In en, this message translates to:
@@ -2359,6 +2449,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'View More Details'**
   String get viewMoreDetails;
+
+  /// No description provided for @view.
+  ///
+  /// In en, this message translates to:
+  /// **'View'**
+  String get view;
 
   /// No description provided for @appointmentWith.
   ///
@@ -2455,12 +2551,6 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Cancel Appointment'**
   String get cancelAppointment;
-
-  /// No description provided for @patient.
-  ///
-  /// In en, this message translates to:
-  /// **'Patient'**
-  String get patient;
 
   /// No description provided for @shareAppointmentDetails.
   ///
@@ -3949,12 +4039,6 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Disabling 2FA will make your account less secure. Are you sure you want to proceed?'**
   String get twoFactorDeactivateWarning;
-
-  /// No description provided for @errorOccurred.
-  ///
-  /// In en, this message translates to:
-  /// **'An error occurred. Please try again'**
-  String get errorOccurred;
 }
 
 class _AppLocalizationsDelegate

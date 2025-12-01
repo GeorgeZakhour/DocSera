@@ -14,6 +14,7 @@ import 'package:docsera/utils/page_transitions.dart';
 import 'package:docsera/screens/doctors/doctor_profile_page.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:docsera/gen_l10n/app_localizations.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 
 class AppointmentConfirmedPage extends StatelessWidget {
   final Map<String, dynamic> appointment;
@@ -90,6 +91,105 @@ class AppointmentConfirmedPage extends StatelessWidget {
     });
   }
 
+  String get _appointmentId {
+    return appointment['id']?.toString()
+        ?? appointment['appointmentId']?.toString()
+        ?? "";
+  }
+
+  List<Map<String, dynamic>> appointmentAttachments() {
+    final raw = appointment['attachments'];
+
+    if (raw == null) return [];
+
+    if (raw is List) {
+      return raw.map((e) => Map<String, dynamic>.from(e)).toList();
+    }
+
+    return [];
+  }
+  Widget _attachmentTile(Map<String, dynamic> att) {
+    final name = att['name'] ?? 'Document';
+    final type = att['file_type'] ?? '';
+    final uploadDate = att['uploaded_at']?.toString().substring(0, 10) ?? '';
+    final pages = att['page_count'] ?? 1;
+
+    final icon = type == 'pdf'
+        ? Icons.picture_as_pdf
+        : Icons.image;
+
+    return Container(
+      margin: EdgeInsets.only(top: 10),
+      padding: EdgeInsets.all(14),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(12),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.06),
+            blurRadius: 4,
+            offset: Offset(0, 2),
+          )
+        ],
+      ),
+      child: Row(
+        children: [
+          Icon(icon, color: AppColors.main, size: 26),
+          SizedBox(width: 12),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(name,
+                    style: TextStyle(
+                      fontWeight: FontWeight.bold,
+                      fontSize: 13,
+                    )),
+                SizedBox(height: 3),
+                Text(
+                  type == 'pdf' ? "$pages pages" : "Image",
+                  style: TextStyle(fontSize: 11, color: Colors.grey),
+                ),
+                Text(
+                  uploadDate,
+                  style: TextStyle(fontSize: 11, color: Colors.grey),
+                ),
+              ],
+            ),
+          ),
+          TextButton(
+            onPressed: () {
+              _openAttachment(att);
+            },
+            child: Text("View", style: TextStyle(color: AppColors.main)),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Future<void> _openAttachment(Map<String, dynamic> att) async {
+    final path = att['paths'][0];
+    final bucket = att['bucket'];
+
+    final url = Supabase.instance.client.storage
+        .from(bucket)
+        .getPublicUrl(path);
+
+    // Navigator.push(
+    //   context,
+    //   MaterialPageRoute(
+    //     builder: (_) => AttachmentViewerPage(
+    //       url: url,
+    //       type: att['file_type'],
+    //     ),
+    //   ),
+    // );
+  }
+
+
+
+
   @override
   Widget build(BuildContext context) {
     final formattedDate = TimezoneUtils.formatBusinessDate(context, appointment);
@@ -111,6 +211,7 @@ class AppointmentConfirmedPage extends StatelessWidget {
       height: 44,
     );
     final imageProvider = imageResult.imageProvider;
+    final attachments = appointmentAttachments();
 
     return WillPopScope(
       onWillPop: () async {
@@ -319,12 +420,31 @@ class AppointmentConfirmedPage extends StatelessWidget {
                       SendDocumentToDoctorPage(
                         doctorName:
                         "${appointment['doctorTitle'] ?? ''} ${appointment['doctorName'] ?? ''}".trim(),
+                        appointmentId: _appointmentId,   // 👈 إضافة الـ ID
                       ),
                     ),
                   );
                 },
               ),
+
               SizedBox(height: 5.h),
+
+              if (attachments.isNotEmpty)
+                Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    SizedBox(height: 20),
+                    Text(
+                      AppLocalizations.of(context)!.sendDocuments,
+                      style: AppTextStyles.getTitle1(context).copyWith(
+                        fontSize: 13,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                    SizedBox(height: 8),
+                    ...attachments.map((att) => _attachmentTile(att)).toList(),
+                  ],
+                ),
 
               // عرض تفاصيل الموعد
               _buildInfoCard(

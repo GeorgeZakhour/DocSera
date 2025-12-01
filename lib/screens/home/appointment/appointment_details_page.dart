@@ -1030,6 +1030,93 @@ class _AppointmentDetailsPageState extends State<AppointmentDetailsPage> {
     }
   }
 
+  List<Map<String, dynamic>> _appointmentAttachments() {
+    final raw = widget.appointment['attachments'];
+
+    if (raw == null) return [];
+
+    if (raw is List) {
+      return raw.map((e) => Map<String, dynamic>.from(e)).toList();
+    }
+
+    return [];
+  }
+
+  Widget _attachmentTile(Map<String, dynamic> att) {
+    final name = att['name'] ?? 'Document';
+    final type = att['file_type'] ?? '';
+    final uploadDate = att['uploaded_at']?.toString().substring(0, 10) ?? '';
+    final pages = att['page_count'] ?? 1;
+
+    final icon = Icons.attach_file;
+
+    return Container(
+      margin: EdgeInsets.only(top: 5),
+      padding: EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(12),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.06),
+            blurRadius: 4,
+            offset: Offset(0, 2),
+          )
+        ],
+      ),
+      child: Row(
+        children: [
+          Icon(icon, color: AppColors.main, size: 18),
+          SizedBox(width: 12),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(name,
+                    style: TextStyle(
+                      fontWeight: FontWeight.bold,
+                      fontSize: 11,
+                    )),
+                Text(
+                  type == 'pdf' ? "$pages pages" : "Image",
+                  style: TextStyle(fontSize: 9, color: Colors.grey),
+                ),
+                Text(
+                  uploadDate,
+                  style: TextStyle(fontSize: 9, color: Colors.grey),
+                ),
+              ],
+            ),
+          ),
+          TextButton(
+            onPressed: () {
+              _openAttachment(att);
+            },
+            child: Text(AppLocalizations.of(context)!.view, style: TextStyle(color: AppColors.main, fontSize: 10)),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Future<void> _openAttachment(Map<String, dynamic> att) async {
+    final path = att['paths'][0];
+    final bucket = att['bucket'];
+
+    final url = Supabase.instance.client.storage
+        .from(bucket)
+        .getPublicUrl(path);
+
+    // Navigator.push(
+    //   context,
+    //   MaterialPageRoute(
+    //     builder: (_) => AttachmentViewerPage(
+    //       url: url,
+    //       type: att['file_type'],
+    //     ),
+    //   ),
+    // );
+  }
 
 
   @override
@@ -1104,6 +1191,7 @@ class _AppointmentDetailsPageState extends State<AppointmentDetailsPage> {
       height: 40,
     );
     final imageProvider = imageResult.imageProvider;
+    final attachments = _appointmentAttachments();
 
     return BaseScaffold(
       title: Text(
@@ -1268,15 +1356,29 @@ class _AppointmentDetailsPageState extends State<AppointmentDetailsPage> {
                             ),
                             elevation: 0, // ✅ No shadow to match the UI
                             child: InkWell(
-                              onTap: () {
-                                Navigator.push(
+                              onTap: () async {
+                                final result = await Navigator.push(
                                   context,
                                   fadePageRoute(
                                     SendDocumentToDoctorPage(
                                       doctorName: doctorName, // متوفر في المتغيرات
+                                      appointmentId: _appointmentId(),   // 👈 جديد
                                     ),
                                   ),
                                 );
+
+                                if (result == true) {
+                                  final updated = await Supabase.instance.client
+                                      .from("appointments")
+                                      .select()
+                                      .eq("id", _appointmentId())
+                                      .single();
+
+                                  setState(() {
+                                    widget.appointment.clear();
+                                    widget.appointment.addAll(updated);
+                                  });
+                                }
                               },
                               borderRadius: BorderRadius.circular(12.r),
                               child: Padding(
@@ -1316,9 +1418,28 @@ class _AppointmentDetailsPageState extends State<AppointmentDetailsPage> {
                           // if (_selectedImageFiles.isNotEmpty) _buildPreviewAttachment(),
 
 
-                          if (widget.isUpcoming) SizedBox  (height: 8.h),
+                          if (widget.isUpcoming) SizedBox  (height: 5.h),
 
-                          Card(
+                          if (attachments.isNotEmpty)
+                            Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                SizedBox(height: 12),
+                                Text(
+                                  AppLocalizations.of(context)!.sentDocuments,
+                                  style: AppTextStyles.getTitle1(context).copyWith(
+                                    fontSize: 10,
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                                ),
+                                SizedBox(height: 3),
+                                ...attachments.map((att) => _attachmentTile(att)).toList(),
+                              ],
+                            ),
+
+                          if (attachments.isNotEmpty) SizedBox  (height: 12.h),
+
+                            Card(
                             color: AppColors.background2, // ✅ Light background like in the design
                             shape: RoundedRectangleBorder(
                               borderRadius: BorderRadius.circular(12.r),

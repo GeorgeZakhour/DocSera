@@ -346,6 +346,48 @@ class AppLocalizationsAr extends AppLocalizations {
   String get logOut => 'تسجيل الخروج';
 
   @override
+  String get pointsHistory => 'سجل النقاط';
+
+  @override
+  String get noData => 'لا توجد بيانات';
+
+  @override
+  String get points => 'نقطة';
+
+  @override
+  String get time => 'الوقت';
+
+  @override
+  String get rewardPoints => 'النقاط المكتسبة';
+
+  @override
+  String get errorOccurred => 'حدث خطأ، يرجى المحاولة مرة أخرى';
+
+  @override
+  String get completedAppointment => 'موعد مكتمل';
+
+  @override
+  String get withDoctor => 'مع';
+
+  @override
+  String get onDate => 'بتاريخ';
+
+  @override
+  String get patient => 'المريض';
+
+  @override
+  String get doctor => 'الطبيب';
+
+  @override
+  String get relative => 'قريب';
+
+  @override
+  String get accomplishedAt => 'أُنجز في';
+
+  @override
+  String get close => 'إغلاق';
+
+  @override
   String get noName => 'لا يوجد اسم';
 
   @override
@@ -1198,10 +1240,16 @@ class AppLocalizationsAr extends AppLocalizations {
   String get sendDocuments => 'إرسال المستندات';
 
   @override
+  String get sentDocuments => 'المستندات المرفقة';
+
+  @override
   String get sendDocumentsSubtitle => 'إرسل المستندات إلى طبيبك قبل الموعد';
 
   @override
   String get viewMoreDetails => 'عرض تفاصيل الموعد';
+
+  @override
+  String get view => 'عرض';
 
   @override
   String appointmentWith(Object doctorName) {
@@ -1254,9 +1302,6 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get cancelAppointment => 'إلغاء الموعد';
-
-  @override
-  String get patient => 'المريض';
 
   @override
   String get shareAppointmentDetails => 'مشاركة تفاصيل الموعد';
@@ -2072,7 +2117,4 @@ class AppLocalizationsAr extends AppLocalizations {
   @override
   String get twoFactorDeactivateWarning =>
       'سيؤدي إلغاء التحقق بخطوتين إلى تقليل أمان حسابك. هل أنت متأكد أنك تريد المتابعة؟';
-
-  @override
-  String get errorOccurred => 'حدث خطأ، يرجى المحاولة مرة أخرى';
 }

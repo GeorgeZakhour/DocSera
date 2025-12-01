@@ -12,8 +12,9 @@ import 'add_image_preview_sheet.dart';
 class MultiPageUploadScreen extends StatefulWidget {
   final List<String> images;
   final bool isSendMode;
+  final String? appointmentId;
 
-  const MultiPageUploadScreen({super.key, required this.images, this.isSendMode = false,});
+  const MultiPageUploadScreen({super.key, required this.images, this.isSendMode = false, this.appointmentId});
 
   @override
   State<MultiPageUploadScreen> createState() => _MultiPageUploadScreenState();

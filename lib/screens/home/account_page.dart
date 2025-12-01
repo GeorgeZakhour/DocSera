@@ -7,6 +7,7 @@ import 'package:docsera/models/sign_up_info.dart';
 import 'package:docsera/screens/auth/sign_up/sign_up_phone.dart';
 import 'package:docsera/screens/home/account/goodbye_page.dart';
 import 'package:docsera/screens/home/account/legal_information.dart';
+import 'package:docsera/screens/home/account/points_history_page.dart';
 import 'package:docsera/screens/home/shimmer/shimmer_widgets.dart';
 import 'package:docsera/services/supabase/supabase_otp_service.dart';
 import 'package:docsera/services/supabase/supabase_user_service.dart';
@@ -1738,6 +1739,8 @@ class _AccountScreenState extends State<AccountScreen> {
                 SizedBox(height: 5.h),
                 _buildAccountBannerCard(),
                 SizedBox(height: 5.h),
+                _buildPointsCard(context, state),
+                Divider(color: Colors.grey[200], height: 2.h),
                 _buildSectionTitle(AppLocalizations.of(context)!.personalInformation),
                 Divider(color: Colors.grey[200], height: 2.h),
                 _buildEditableListTile(Icons.person, AppLocalizations.of(context)!.myProfile, state.userName, 'firstName'),
@@ -2047,6 +2050,65 @@ class _AccountScreenState extends State<AccountScreen> {
     );
   }
 
+  Widget _buildPointsCard(BuildContext context, UserLoaded state) {
+    return InkWell(
+      borderRadius: BorderRadius.circular(12.r),
+      onTap: () {
+        Navigator.push(
+          context,
+          fadePageRoute(PointsHistoryPage(userId: state.userId)),
+        );
+      },
+      child: Padding(
+        padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 12.h),
+        child: Container(
+          padding: EdgeInsets.all(18.w),
+          decoration: BoxDecoration(
+            color: AppColors.main.withOpacity(0.1),
+            borderRadius: BorderRadius.circular(14.r),
+            border: Border.all(color: AppColors.main.withOpacity(0.25), width: 1),
+          ),
+          child: Row(
+            children: [
+              Container(
+                padding: EdgeInsets.all(8.w),
+                decoration: BoxDecoration(
+                  color: AppColors.main.withOpacity(0.15),
+                  shape: BoxShape.circle,
+                ),
+                child: Icon(Icons.stars, color: AppColors.main, size: 18.sp),
+              ),
+              SizedBox(width: 14.w),
+
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    AppLocalizations.of(context)!.rewardPoints,
+                    style: AppTextStyles.getTitle1(context)
+                        .copyWith(color: AppColors.mainDark),
+                  ),
+                  SizedBox(height: 4.h),
+
+                  Text(
+                    "${state.userPoints} ${AppLocalizations.of(context)!.points}",
+                    style: AppTextStyles.getText2(context)
+                        .copyWith(color: AppColors.main),
+                  ),
+                ],
+              ),
+
+              Spacer(),
+
+              Icon(Icons.arrow_forward_ios, size: 14.sp, color: AppColors.main),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+
 
   /// **🔵 عنصر عنوان لقسم معين**
   Widget _buildSectionTitle(String title) {
@@ -2059,6 +2121,7 @@ class _AccountScreenState extends State<AccountScreen> {
       ),
     );
   }
+
 
   /// **🟢 عنصر عرض معلومات المستخدم مع إمكانية التعديل**
   Widget _buildEditableListTile(

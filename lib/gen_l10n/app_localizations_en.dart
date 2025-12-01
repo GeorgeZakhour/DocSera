@@ -351,6 +351,48 @@ class AppLocalizationsEn extends AppLocalizations {
   String get logOut => 'Log out';
 
   @override
+  String get pointsHistory => 'Points History';
+
+  @override
+  String get noData => 'No data available';
+
+  @override
+  String get points => 'points';
+
+  @override
+  String get time => 'Time';
+
+  @override
+  String get rewardPoints => 'Earned Points';
+
+  @override
+  String get errorOccurred => 'An error occurred. Please try again';
+
+  @override
+  String get completedAppointment => 'Completed Appointment';
+
+  @override
+  String get withDoctor => 'with';
+
+  @override
+  String get onDate => 'on';
+
+  @override
+  String get patient => 'Patient';
+
+  @override
+  String get doctor => 'Doctor';
+
+  @override
+  String get relative => 'Relative';
+
+  @override
+  String get accomplishedAt => 'Accomplished at';
+
+  @override
+  String get close => 'Close';
+
+  @override
   String get noName => 'No name provided';
 
   @override
@@ -1209,11 +1251,17 @@ class AppLocalizationsEn extends AppLocalizations {
   String get sendDocuments => 'Send Documents';
 
   @override
+  String get sentDocuments => 'Attached Documents';
+
+  @override
   String get sendDocumentsSubtitle =>
       'Send documents to your practitioner before your consultation';
 
   @override
   String get viewMoreDetails => 'View More Details';
+
+  @override
+  String get view => 'View';
 
   @override
   String appointmentWith(Object doctorName) {
@@ -1269,9 +1317,6 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get cancelAppointment => 'Cancel Appointment';
-
-  @override
-  String get patient => 'Patient';
 
   @override
   String get shareAppointmentDetails => 'Share appointment details';
@@ -2096,7 +2141,4 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get twoFactorDeactivateWarning =>
       'Disabling 2FA will make your account less secure. Are you sure you want to proceed?';
-
-  @override
-  String get errorOccurred => 'An error occurred. Please try again';
 }

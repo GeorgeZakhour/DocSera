@@ -64,6 +64,11 @@
     <string>يحتاج DocSera إلى الوصول إلى الكاميرا لالتقاط الصور وإرفاقها بالمستندات.</string>
     <key>NSMicrophoneUsageDescription</key>
     <string>يحتاج DocSera إلى الوصول إلى الميكروفون في حال تسجيل فيديو أو صوت.</string>
+    <key>NSPhotoLibraryAddUsageDescription</key>
+    <string>يحتاج DocSera إلى إذن لحفظ الصور التي تقوم بتحميلها أو التقاطها.</string>
+
+    <key>PHPhotoLibraryPreventAutomaticLimitedAccessAlert</key>
+    <false/>
 
 </dict>
 </plist>

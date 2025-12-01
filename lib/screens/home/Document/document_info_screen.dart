@@ -20,6 +20,7 @@ class DocumentInfoScreen extends StatefulWidget {
   final bool cameFromConversation;
   final String? conversationDoctorName;
   final bool isSendMode; // ← جديد
+  final String? appointmentId;
 
   const DocumentInfoScreen({
     Key? key,
@@ -31,9 +32,8 @@ class DocumentInfoScreen extends StatefulWidget {
     this.cameFromConversation = false,
     this.conversationDoctorName,
     this.isSendMode = false, // ← افتراضي رفع عادي
+    this.appointmentId,
   }) : super(key: key);
-
-
 
   @override
   State<DocumentInfoScreen> createState() => _DocumentInfoScreenState();
@@ -68,8 +68,6 @@ class _DocumentInfoScreenState extends State<DocumentInfoScreen> {
       _nameController.text = widget.initialName!;
     }
 
-
-    // فقط 3 تدرجات من كل لون
     final List<Color> mainShades = [
       AppColors.main,
       AppColors.main.withOpacity(0.4),
@@ -82,7 +80,6 @@ class _DocumentInfoScreenState extends State<DocumentInfoScreen> {
       AppColors.yellow.withOpacity(0.75),
     ];
 
-    // دمجهم بالتناوب
     avatarColors = List.generate(6, (index) {
       final i = index ~/ 2;
       return index % 2 == 0 ? mainShades[i] : yellowShades[i];
@@ -90,7 +87,6 @@ class _DocumentInfoScreenState extends State<DocumentInfoScreen> {
 
     _fetchPatients();
   }
-
 
   List<Color> generateShades(Color baseColor, int count) {
     return List.generate(count, (index) {
@@ -115,7 +111,8 @@ class _DocumentInfoScreenState extends State<DocumentInfoScreen> {
 
     if (userResponse == null) return;
 
-    final userName = "${userResponse['first_name'] ?? ''} ${userResponse['last_name'] ?? ''}".trim();
+    final userName =
+    "${userResponse['first_name'] ?? ''} ${userResponse['last_name'] ?? ''}".trim();
     _patients.add({'id': userId, 'name': userName});
 
     // ✅ جلب الأقارب من جدول relatives
@@ -125,13 +122,13 @@ class _DocumentInfoScreenState extends State<DocumentInfoScreen> {
         .eq('user_id', userId);
 
     for (var relative in relativesResponse) {
-      final name = "${relative['first_name'] ?? ''} ${relative['last_name'] ?? ''}".trim();
+      final name =
+      "${relative['first_name'] ?? ''} ${relative['last_name'] ?? ''}".trim();
       _patients.add({'id': relative['id'], 'name': name});
     }
 
     setState(() {});
   }
-
 
   @override
   Widget build(BuildContext context) {
@@ -159,7 +156,8 @@ class _DocumentInfoScreenState extends State<DocumentInfoScreen> {
                 Center(
                   child: Text(
                     locale.addNewDocument,
-                    style: AppTextStyles.getTitle1(context).copyWith(color: AppColors.mainDark),
+                    style: AppTextStyles.getTitle1(context)
+                        .copyWith(color: AppColors.mainDark),
                   ),
                 ),
               ],
@@ -167,14 +165,11 @@ class _DocumentInfoScreenState extends State<DocumentInfoScreen> {
           ),
         ),
       ),
-
       body: Padding(
         padding: EdgeInsets.symmetric(horizontal: 20.w, vertical: 10.h),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // ✅ Document Name
-
             SizedBox(height: 6.h),
             TextFormField(
               controller: _nameController,
@@ -183,23 +178,26 @@ class _DocumentInfoScreenState extends State<DocumentInfoScreen> {
               decoration: InputDecoration(
                 labelText: "${locale.nameOfTheDocument} (${locale.optional})",
                 floatingLabelBehavior: FloatingLabelBehavior.auto,
-                labelStyle: AppTextStyles.getText3(context).copyWith(color: Colors.grey),
-                floatingLabelStyle: AppTextStyles.getText3(context).copyWith(color: AppColors.main, fontSize: 14.sp),
-                hintStyle: AppTextStyles.getText3(context).copyWith(color: Colors.grey, fontSize: 11.sp),
-                contentPadding: EdgeInsets.symmetric(vertical: 12.h, horizontal: 14.w),
+                labelStyle: AppTextStyles.getText3(context)
+                    .copyWith(color: Colors.grey),
+                floatingLabelStyle: AppTextStyles.getText3(context)
+                    .copyWith(color: AppColors.main, fontSize: 14.sp),
+                hintStyle: AppTextStyles.getText3(context)
+                    .copyWith(color: Colors.grey, fontSize: 11.sp),
+                contentPadding:
+                EdgeInsets.symmetric(vertical: 12.h, horizontal: 14.w),
                 enabledBorder: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(25.r),
-                  borderSide: BorderSide(color: Colors.grey),
+                  borderSide: const BorderSide(color: Colors.grey),
                 ),
                 focusedBorder: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(25.r),
-                  borderSide: BorderSide(color: AppColors.main, width: 2),
+                  borderSide:
+                  const BorderSide(color: AppColors.main, width: 2),
                 ),
               ),
             ),
 
-
-            // ✅ Document Type Dropdown
             SizedBox(height: 10.h),
             _buildDropdownField(
               value: _selectedType,
@@ -209,17 +207,14 @@ class _DocumentInfoScreenState extends State<DocumentInfoScreen> {
                   value: entry.key,
                   child: Text(
                     entry.value(locale),
-                    style: AppTextStyles.getText2(context), // ✅ ستايل موحّد
+                    style: AppTextStyles.getText2(context),
                   ),
                 );
               }).toList(),
               onChanged: (value) => setState(() => _selectedType = value),
             ),
 
-
             SizedBox(height: 20.h),
-
-            // ✅ Patient Concerned Dropdown
             _buildDropdownField(
               value: _selectedPatientId,
               hint: locale.patientConcerned,
@@ -231,7 +226,7 @@ class _DocumentInfoScreenState extends State<DocumentInfoScreen> {
                 final firstName = names.isNotEmpty ? names[0] : '';
                 final lastName = names.length > 1 ? names[1] : '';
                 final initials = getInitials(firstName, lastName);
-                final color = avatarColors[index % avatarColors.length]; // ✅ تدرج لوني
+                final color = avatarColors[index % avatarColors.length];
 
                 return DropdownMenuItem<String>(
                   value: patient['id'],
@@ -242,7 +237,8 @@ class _DocumentInfoScreenState extends State<DocumentInfoScreen> {
                         backgroundColor: color,
                         child: Text(
                           initials,
-                          style: AppTextStyles.getText3(context).copyWith(color: Colors.white),
+                          style: AppTextStyles.getText3(context)
+                              .copyWith(color: Colors.white),
                         ),
                       ),
                       SizedBox(width: 10.w),
@@ -251,37 +247,36 @@ class _DocumentInfoScreenState extends State<DocumentInfoScreen> {
                   ),
                 );
               }).toList(),
-
-
               onChanged: (value) => setState(() => _selectedPatientId = value),
             ),
 
-
-
             const Spacer(),
 
-
-            // ✅ Lock Info
             Row(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                Icon(Icons.lock, color: AppColors.mainDark, size: 12.sp,),
+                Icon(
+                  Icons.lock,
+                  color: AppColors.mainDark,
+                  size: 12.sp,
+                ),
                 SizedBox(width: 4.w),
                 Text(
                   locale.documentWillBeEncrypted,
-                  style: AppTextStyles.getText3(context).copyWith(color: Colors.blueGrey),
+                  style: AppTextStyles.getText3(context)
+                      .copyWith(color: Colors.blueGrey),
                 ),
               ],
             ),
 
             SizedBox(height: 10.h),
 
-            // ✅ Submit Button
             ElevatedButton(
               onPressed: isFormValid && !_isUploading ? _submitDocument : null,
               style: ElevatedButton.styleFrom(
                 minimumSize: Size(double.infinity, 48.h),
-                backgroundColor: isFormValid && !_isUploading ? AppColors.main : Colors.grey,
+                backgroundColor:
+                isFormValid && !_isUploading ? AppColors.main : Colors.grey,
                 padding: EdgeInsets.symmetric(vertical: 12.h),
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(8.0),
@@ -291,7 +286,7 @@ class _DocumentInfoScreenState extends State<DocumentInfoScreen> {
                   ? SizedBox(
                 width: 24.w,
                 height: 24.w,
-                child: CircularProgressIndicator(
+                child: const CircularProgressIndicator(
                   color: Colors.white,
                   strokeWidth: 2.5,
                 ),
@@ -308,11 +303,9 @@ class _DocumentInfoScreenState extends State<DocumentInfoScreen> {
                       fontWeight: FontWeight.bold,
                     ),
                   ),
-
                 ),
               ),
             ),
-
           ],
         ),
       ),
@@ -324,25 +317,38 @@ class _DocumentInfoScreenState extends State<DocumentInfoScreen> {
     if (isArabic) {
       return firstName.isNotEmpty ? firstName[0] : '';
     } else {
-      return "${firstName.isNotEmpty ? firstName[0].toUpperCase() : ''}${lastName.isNotEmpty ? lastName[0].toUpperCase() : ''}";
+      return "${firstName.isNotEmpty ? firstName[0].toUpperCase() : ''}"
+          "${lastName.isNotEmpty ? lastName[0].toUpperCase() : ''}";
     }
   }
 
   Future<List<File>> compressImages(List<File> imageFiles) async {
+    debugPrint("==============================================");
+    debugPrint("🔵 START compressImages()");
+    debugPrint("Number of input images = ${imageFiles.length}");
+    debugPrint("==============================================");
+
     int totalOriginalSize = 0;
     int totalCompressedSize = 0;
     List<File> compressedImages = [];
 
-    for (final file in imageFiles) {
+    for (int index = 0; index < imageFiles.length; index++) {
+      final file = imageFiles[index];
       final realFile = File(file.absolute.path);
+
+      debugPrint("----------------------------------------------");
+      debugPrint("🖼️ Image #$index");
+      debugPrint("Real path: ${realFile.path}");
+      debugPrint("Exists: ${realFile.existsSync()}");
+
       final int originalSize = await realFile.length();
       totalOriginalSize += originalSize;
 
-      debugPrint("🖼️ Real image path: ${realFile.path}");
-      debugPrint("📄 Real image size: ${(originalSize / 1024).toStringAsFixed(2)} KB");
+      debugPrint(
+          "Original size: ${(originalSize / 1024).toStringAsFixed(2)} KB");
 
       if (originalSize <= 200 * 1024) {
-        debugPrint("📷 Skipped compression (small file)");
+        debugPrint("⚪ Skipped compression (small file)");
         totalCompressedSize += originalSize;
         compressedImages.add(realFile);
         continue;
@@ -356,71 +362,252 @@ class _DocumentInfoScreenState extends State<DocumentInfoScreen> {
       } else if (originalSize <= 2000 * 1024) {
         quality = 35;
       } else {
-        quality = 25; // fallback للصور الكبيرة
+        quality = 25;
       }
 
       final targetPath = '${realFile.path}_compressed.jpg';
 
-      final XFile? compressed = await FlutterImageCompress.compressAndGetFile(
-        realFile.absolute.path,
-        targetPath,
-        quality: quality,
-        keepExif: true,
-        format: CompressFormat.jpeg,
-      );
+      debugPrint("🔧 Compressing...");
+      debugPrint("Target path: $targetPath");
+      debugPrint("Quality: $quality");
 
-      if (compressed != null) {
-        final File compressedFile = File(compressed.path);
-        final int compressedSize = await compressedFile.length();
+      XFile? compressed;
+      try {
+        compressed = await FlutterImageCompress.compressAndGetFile(
+          realFile.absolute.path,
+          targetPath,
+          quality: quality,
+          keepExif: true,
+          format: CompressFormat.jpeg,
+        );
+      } catch (e) {
+        debugPrint("❌ ERROR: Compression crashed: $e");
+      }
 
-        final int maxAllowedSize = 2 * 1024 * 1024; // 2MB (or any threshold you want per image)
-
-        if (compressedSize >= originalSize || compressedSize > maxAllowedSize) {
-          debugPrint("📷 Compression skipped (inefficient or too big): original ${originalSize / 1024} KB, compressed ${compressedSize / 1024} KB");
-          totalCompressedSize += originalSize;
-          compressedImages.add(realFile);
-        } else {
-          debugPrint("📉 Compressed size: ${(compressedSize / 1024).toStringAsFixed(2)} KB");
-          debugPrint("🗜️ Compression saved: ${(100 - (compressedSize / originalSize * 100)).toStringAsFixed(2)}%");
-          totalCompressedSize += compressedSize;
-          compressedImages.add(compressedFile);
-        }
-      } else {
-        debugPrint("⚠️ Compression failed, using original");
+      if (compressed == null) {
+        debugPrint("⚠️ Compression returned NULL, using original");
         totalCompressedSize += originalSize;
         compressedImages.add(realFile);
+        continue;
+      }
+
+      final File compressedFile = File(compressed.path);
+      final int compressedSize = await compressedFile.length();
+
+      debugPrint("Compressed exists: ${compressedFile.existsSync()}");
+      debugPrint("Compressed path: ${compressedFile.path}");
+      debugPrint(
+          "Compressed size: ${(compressedSize / 1024).toStringAsFixed(2)} KB");
+
+      final int maxAllowedSize = 2 * 1024 * 1024;
+
+      if (compressedSize >= originalSize || compressedSize > maxAllowedSize) {
+        debugPrint("⚠️ Compression skipped (inefficient or >2MB)");
+        totalCompressedSize += originalSize;
+        compressedImages.add(realFile);
+      } else {
+        debugPrint(
+            "📉 Compression saved: ${(100 - (compressedSize / originalSize * 100)).toStringAsFixed(2)}%");
+        totalCompressedSize += compressedSize;
+        compressedImages.add(compressedFile);
       }
     }
 
-    debugPrint("📦 Total original size: ${(totalOriginalSize / 1024).toStringAsFixed(2)} KB");
-    debugPrint("📦 Total compressed size: ${(totalCompressedSize / 1024).toStringAsFixed(2)} KB");
+    debugPrint("==============================================");
+    debugPrint(
+        "📦 Total original size: ${(totalOriginalSize / 1024).toStringAsFixed(2)} KB");
+    debugPrint(
+        "📦 Total compressed size: ${(totalCompressedSize / 1024).toStringAsFixed(2)} KB");
+    debugPrint(
+        "🟦 Final compressed image count: ${compressedImages.length}");
+
+    for (final f in compressedImages) {
+      debugPrint(
+          " • ${f.path}   size = ${(await f.length()) / 1024} KB");
+    }
+    debugPrint("==============================================");
 
     if (totalCompressedSize > 2 * 1024 * 1024) {
-      throw Exception("💥 Document too large after compression: ${(totalCompressedSize / 1024).toStringAsFixed(2)} KB");
+      throw Exception(
+          "💥 Document too large after compression: ${(totalCompressedSize / 1024).toStringAsFixed(2)} KB");
     }
 
+    debugPrint("🟢 END compressImages()");
     return compressedImages;
   }
 
-  void _submitDocument() async {
-    setState(() => _isUploading = true);
-    final locale = AppLocalizations.of(context)!;
-
-    // ✅ تحقق إذا الوضع هو "إرسال فقط"
-    if (widget.isSendMode) {
-      Navigator.popUntil(context, (route) => route.isFirst);
+  Future<void> _submitAppointmentAttachment(AppLocalizations locale) async {
+    if (widget.appointmentId == null || widget.appointmentId!.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          backgroundColor: AppColors.orangeText.withOpacity(0.8),
-          content: Text(locale.sendDocumentsLater),
+          backgroundColor: AppColors.red.withOpacity(0.8),
+          content: Text(locale.somethingWentWrong),
         ),
       );
       return;
     }
 
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final userId = prefs.getString('userId');
+      if (userId == null || userId.isEmpty) {
+        throw Exception("User ID not found");
+      }
+
+      final tempId = DateTime.now().millisecondsSinceEpoch.toString();
+      final name = _nameController.text.trim().isEmpty
+          ? await _generateAutoName(userId)
+          : _nameController.text.trim();
+
+      final uploadedAt = DateTime.now();
+      final isPdf = widget.images.first.toLowerCase().endsWith('.pdf');
+      final fileType = isPdf ? 'pdf' : 'image';
+
+      // 🧮 تجهيز الملفات
+      final List<File> filesToUpload;
+
+      if (isPdf) {
+        // ✅ PDF نفس ما كان (حد 5MB)
+        final pdfFile = File(widget.images.first);
+        final sizeInBytes = await pdfFile.length();
+        if (sizeInBytes > 5 * 1024 * 1024) {
+          throw Exception("PDF too large");
+        }
+        filesToUpload = [pdfFile];
+      } else {
+        // ✅ في sendMode لموعد → لا نضغط الصور، فقط نتأكد من الحجم (حد 5MB لكل صورة)
+        debugPrint("📂 Preparing image files for appointment attachment (NO COMPRESSION)");
+        filesToUpload = [];
+        for (final imgPath in widget.images) {
+          final file = File(imgPath);
+          debugPrint("➡ Image path: ${file.path} | exists: ${file.existsSync()}");
+          if (!file.existsSync()) {
+            throw Exception("Image file not found: ${file.path}");
+          }
+          final size = await file.length();
+          debugPrint("   size: ${(size / 1024).toStringAsFixed(2)} KB");
+          if (size > 5 * 1024 * 1024) {
+            throw Exception("Document too large");
+          }
+          filesToUpload.add(file);
+        }
+      }
+
+      final supabase = Supabase.instance.client;
+      final storage = supabase.storage.from('appointments-attachments');
+      final List<String> paths = [];
+
+      // 📤 رفع الملفات إلى bucket appointments-attachments
+      for (int i = 0; i < filesToUpload.length; i++) {
+        final fileToUpload = filesToUpload[i];
+        final fileName = isPdf ? 'file.pdf' : 'page_$i.jpg';
+        final filePath =
+            '$userId/${widget.appointmentId}/$tempId/$fileName';
+
+        debugPrint("--------------------------------------------------");
+        debugPrint("UPLOAD START");
+        debugPrint("isPdf = $isPdf");
+        debugPrint("file index = $i");
+        debugPrint("fileToUpload.exists = ${fileToUpload.existsSync()}");
+        debugPrint("fileToUpload.path = ${fileToUpload.path}");
+
+        final fileSize = await fileToUpload.length();
+        debugPrint(
+            "fileToUpload.size = ${(fileSize / 1024).toStringAsFixed(2)} KB");
+
+        debugPrint("filePath = $filePath");
+        debugPrint("--------------------------------------------------");
+
+        try {
+          debugPrint("TRYING SUPABASE UPLOAD: $filePath");
+          final response = await storage.upload(
+            filePath,
+            fileToUpload,
+          );
+          debugPrint("UPLOAD SUCCESS: $response");
+        } catch (err, st) {
+          debugPrint("UPLOAD ERROR:");
+          debugPrint("error = $err");
+          debugPrint("stacktrace = $st");
+          rethrow;
+        }
+
+        debugPrint("UPLOAD FINISHED");
+        debugPrint("--------------------------------------------------");
+        paths.add(filePath);
+      }
+
+      final attachment = {
+        'id': tempId,
+        'bucket': 'appointments-attachments',
+        'file_type': fileType,
+        'name': name,
+        'patient_id': _selectedPatientId,
+        'page_count':
+        isPdf ? (widget.pageCount ?? 1) : filesToUpload.length,
+        'paths': paths,
+        'uploaded_at': uploadedAt.toIso8601String(),
+        'uploaded_by_id': userId,
+      };
+
+      final apptRow = await supabase
+          .from('appointments')
+          .select('attachments')
+          .eq('id', widget.appointmentId!)
+          .maybeSingle();
+
+      final List<dynamic> attachments =
+          (apptRow?['attachments'] as List?)?.toList() ?? [];
+      attachments.add(attachment);
+
+      await supabase
+          .from('appointments')
+          .update({'attachments': attachments})
+          .eq('id', widget.appointmentId!);
+
+      if (!mounted) return;
+
+      Navigator.pop(context, true); // يرجع لـ SendDocumentToDoctorPage
+
+      if (widget.cameFromMultiPage && Navigator.canPop(context)) {
+        Navigator.pop(context);
+      }
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          backgroundColor: AppColors.main.withOpacity(0.8),
+          content: Text(locale.documentUploadedSuccessfully),
+        ),
+      );
+    } catch (e) {
+      debugPrint("❌ Upload appointment attachment error: $e");
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            backgroundColor: AppColors.red.withOpacity(0.8),
+            content: Text(
+              e.toString().contains("PDF too large")
+                  ? locale.pdfTooLarge
+                  : e.toString().contains("Document too large")
+                  ? locale.documentTooLarge
+                  : locale.uploadFailed,
+            ),
+          ),
+        );
+      }
+    }
+  }
+
+  void _submitDocument() async {
+    final locale = AppLocalizations.of(context)!;
     setState(() => _isUploading = true);
 
     try {
+      if (widget.isSendMode) {
+        await _submitAppointmentAttachment(locale);
+        return;
+      }
+
       debugPrint("📤 Starting document submission...");
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
@@ -433,7 +620,9 @@ class _DocumentInfoScreenState extends State<DocumentInfoScreen> {
       final prefs = await SharedPreferences.getInstance();
       final userId = prefs.getString('userId');
       debugPrint("👤 Loaded userId: $userId");
-      if (userId == null || userId.isEmpty) throw Exception("User ID not found");
+      if (userId == null || userId.isEmpty) {
+        throw Exception("User ID not found");
+      }
 
       final tempId = DateTime.now().millisecondsSinceEpoch.toString();
       debugPrint("🆔 Generated temp ID used in file name: $tempId");
@@ -466,7 +655,8 @@ class _DocumentInfoScreenState extends State<DocumentInfoScreen> {
         filesToUpload = await compressImages(
           widget.images.map((e) => File(File(e).absolute.path)).toList(),
         );
-        debugPrint("✅ Compression done. Pages: ${filesToUpload.length}");
+        debugPrint(
+            "✅ Compression done. Pages: ${filesToUpload.length}");
       }
 
       final supabase = Supabase.instance.client;
@@ -478,8 +668,11 @@ class _DocumentInfoScreenState extends State<DocumentInfoScreen> {
 
         debugPrint("📤 Uploading file: $filePath");
 
-        await supabase.storage.from('documents').upload(filePath, fileToUpload);
-        final publicUrl = supabase.storage.from('documents').getPublicUrl(filePath);
+        await supabase.storage
+            .from('documents')
+            .upload(filePath, fileToUpload);
+        final publicUrl =
+        supabase.storage.from('documents').getPublicUrl(filePath);
         uploadedUrls.add(publicUrl);
 
         debugPrint("✅ Uploaded $fileName - URL: $publicUrl");
@@ -488,7 +681,9 @@ class _DocumentInfoScreenState extends State<DocumentInfoScreen> {
       String previewUrl = uploadedUrls.first;
       if (isPdf) {
         debugPrint("🖼 Generating PDF thumbnail...");
-        final generated = await context.read<DocumentsCubit>().generatePdfThumbnail(
+        final generated = await context
+            .read<DocumentsCubit>()
+            .generatePdfThumbnail(
           widget.images.first,
           tempId,
           userId,
@@ -497,7 +692,8 @@ class _DocumentInfoScreenState extends State<DocumentInfoScreen> {
           previewUrl = generated;
           debugPrint("✅ Thumbnail generated: $previewUrl");
         } else {
-          debugPrint("⚠️ Thumbnail generation failed, using first URL");
+          debugPrint(
+              "⚠️ Thumbnail generation failed, using first URL");
         }
       }
 
@@ -510,7 +706,8 @@ class _DocumentInfoScreenState extends State<DocumentInfoScreen> {
         patientId: _selectedPatientId!,
         previewUrl: previewUrl,
         pages: isPdf && widget.pageCount != null
-            ? List.generate(widget.pageCount!, (index) => uploadedUrls.first)
+            ? List.generate(
+            widget.pageCount!, (index) => uploadedUrls.first)
             : uploadedUrls,
         uploadedAt: uploadedAt,
         uploadedById: userId,
@@ -525,8 +722,8 @@ class _DocumentInfoScreenState extends State<DocumentInfoScreen> {
           .select('id')
           .single();
 
-      final realId = response['id']; // هذا هو UUID الحقيقي من Supabase
-      debugPrint("✅ Document inserted");
+      final realId = response['id'];
+      debugPrint("✅ Document inserted with id = $realId");
 
       if (!mounted) return;
       context.read<DocumentsCubit>().listenToDocuments(context);
@@ -578,23 +775,19 @@ class _DocumentInfoScreenState extends State<DocumentInfoScreen> {
     return locale == 'ar' ? ' ملف $nextNumber' : 'Document $nextNumber';
   }
 
-
-
-
-
-
   Widget _buildDropdownField({
     required String? value,
     required String hint,
     required List<DropdownMenuItem<String>> items,
     required void Function(String?) onChanged,
-    DropdownButtonBuilder? selectedItemBuilder, // ✅ أضف هذا
+    DropdownButtonBuilder? selectedItemBuilder,
   }) {
     return DropdownButtonHideUnderline(
       child: DropdownButtonFormField<String>(
         value: value,
         isExpanded: true,
-        icon: Icon(Icons.arrow_drop_down, color: AppColors.main, size: 22.sp),
+        icon:
+        Icon(Icons.arrow_drop_down, color: AppColors.main, size: 22.sp),
         borderRadius: BorderRadius.circular(15.r),
         menuMaxHeight: 380.h,
         dropdownColor: Colors.white.withOpacity(0.99),
@@ -603,17 +796,22 @@ class _DocumentInfoScreenState extends State<DocumentInfoScreen> {
         decoration: InputDecoration(
           labelText: hint,
           floatingLabelBehavior: FloatingLabelBehavior.auto,
-          labelStyle: AppTextStyles.getText3(context).copyWith(color: Colors.grey, fontSize: 12.sp),
-          floatingLabelStyle: AppTextStyles.getText3(context).copyWith(color: AppColors.main, fontSize: 14.sp),
-          hintStyle: AppTextStyles.getText3(context).copyWith(color: Colors.grey, fontSize: 11.sp),
-          contentPadding: EdgeInsets.symmetric(vertical: 12.h, horizontal: 14.w),
+          labelStyle: AppTextStyles.getText3(context)
+              .copyWith(color: Colors.grey, fontSize: 12.sp),
+          floatingLabelStyle: AppTextStyles.getText3(context)
+              .copyWith(color: AppColors.main, fontSize: 14.sp),
+          hintStyle: AppTextStyles.getText3(context)
+              .copyWith(color: Colors.grey, fontSize: 11.sp),
+          contentPadding:
+          EdgeInsets.symmetric(vertical: 12.h, horizontal: 14.w),
           enabledBorder: OutlineInputBorder(
             borderRadius: BorderRadius.circular(25.r),
             borderSide: const BorderSide(color: Colors.grey),
           ),
           focusedBorder: OutlineInputBorder(
             borderRadius: BorderRadius.circular(25.r),
-            borderSide: const BorderSide(color: AppColors.main, width: 2),
+            borderSide:
+            const BorderSide(color: AppColors.main, width: 2),
           ),
         ),
         items: items,
