@@ -1,16 +1,19 @@
 import 'dart:ui';
 
+import 'package:docsera/Business_Logic/Messages_page/conversation_cubit.dart';
 import 'package:docsera/app/const.dart';
 import 'package:docsera/app/text_styles.dart';
 import 'package:docsera/models/document.dart';
 import 'package:docsera/models/patient_profile.dart';
 import 'package:docsera/screens/home/account/add_relative.dart';
-import 'package:docsera/screens/home/messages/conversation_page.dart';
+import 'package:docsera/screens/home/messages/conversation/conversation_page.dart';
 import 'package:docsera/screens/home/messages/message_select_reason_page.dart';
+import 'package:docsera/services/supabase/supabase_conversation_service.dart';
 import 'package:docsera/utils/doctor_image_utils.dart';
 import 'package:docsera/utils/page_transitions.dart';
 import 'package:docsera/widgets/base_scaffold.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_svg/svg.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:docsera/gen_l10n/app_localizations.dart';
@@ -472,19 +475,20 @@ class _SelectPatientForMessagePageState extends State<SelectPatientForMessagePag
                   Navigator.push(
                     context,
                     fadePageRoute(
-                      ConversationPage(
-                        conversationId: conversationId,
-                        doctorName: widget.doctorName,
-                        doctorSpecialty: widget.specialty,
-                        doctorImage: widget.doctorImage,
-                        isClosed: docData['is_closed'] ?? false,
-                        patientName: docData['patient_name'] ?? selectedPatientName,
-                        accountHolderName: userName,
-                        selectedReason: docData['selected_reason'] ?? '',
-                        attachedDocument: widget.attachedDocument,
+                      BlocProvider(
+                        create: (_) => ConversationCubit(ConversationService()),
+                        child: ConversationPage(
+                          conversationId: conversationId,
+                          doctorName: widget.doctorName,
+                          patientName: docData['patient_name'] ?? selectedPatientName,
+                          accountHolderName: userName,
+                          doctorAvatar: widget.doctorImage,      // ImageProvider جاهز
+                        )
+
                       ),
                     ),
                   );
+
                 } else {
                   final patientProfile = PatientProfile(
                     patientId: selectedPatientId!,

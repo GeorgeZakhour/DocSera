@@ -258,9 +258,22 @@ class _DocumentsPageState extends State<DocumentsPage> with AutomaticKeepAliveCl
     super.build(context);
     final notesState = context.watch<NotesCubit>().state;
     final hasNotes = notesState is NotesLoaded && notesState.notes.isNotEmpty;
+    final t = AppLocalizations.of(context)!;
 
     return Scaffold(
       backgroundColor: AppColors.background,
+      appBar: AppBar(
+        backgroundColor: AppColors.main,
+        elevation: 0,
+        iconTheme: const IconThemeData(color: Colors.white),
+        title: Text(
+          t.health_documents_title,
+          style: AppTextStyles.getTitle1(context).copyWith(
+            color: Colors.white,
+            fontSize: 12.sp,
+          ),
+        ),
+      ),
       body: BlocBuilder<DocumentsCubit, DocumentsState>(
         builder: (context, state) {
           final isLoggedIn = state is DocumentsLoaded;

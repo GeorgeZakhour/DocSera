@@ -596,6 +596,355 @@
   "verificationError": "حدث خطأ أثناء التحقق من الرقم: {errorMessage}",
   "unexpectedError": "حدث خطأ غير متوقع. يرجى المحاولة مرة أخرى لاحقًا.",
 
+  "@HealthPage================================": "Health Page",
+
+    "health_tab": "الصحة",
+    "health_patientName": "الملف الصحي",
+    "health_patientSubtitle": "معلوماتك الصحية في مكان واحد",
+    "health_switch": "تبديل",
+
+    "health_summary": "الملف الصحي",
+    "health_personalRecords_title": "السجلات الشخصية",
+    "health_personalRecords_subtitle": "ملفاتك الخاصة وتقارير زياراتك الطبية.",
+    "health_noReports": "لا توجد تقارير زيارات.",
+
+    "health_reports_title": "تقارير الزيارات الطبية",
+    "health_reports_desc": "التقارير الطبية التي يكتبها الطبيب خلال الزيارات السابقة.",
+
+    "health_allergies_title": "الحساسيّات",
+    "health_allergies_desc": "الأدوية أو الأطعمة أو المواد التي لديك حساسية تجاهها",
+
+    "health_chronic_title": "الأمراض المزمنة",
+    "health_chronic_desc": "مثل السكري والضغط والربو وغيرها",
+
+    "health_operations_title": "العمليات السابقة",
+    "health_operations_desc": "سجّل العمليات الجراحية التي خضعت لها",
+
+    "health_genetic_title": "الأمراض الوراثية",
+    "health_genetic_desc": "الأمراض الوراثية لديك أو ضمن العائلة",
+
+    "health_family_title": "التاريخ العائلي",
+    "health_family_desc": "أمراض شائعة ضمن العائلة",
+
+    "health_vaccines_title": "اللقاحات",
+    "health_vaccines_desc": "اللقاحات المهمة التي حصلت عليها",
+
+    "health_documents_title": "الوثائق الطبية",
+    "health_documents_desc": "التقارير والتحاليل وصور الأشعة والملاحظات",
+
+    "health_other_title": "معلومات أخرى",
+    "health_other_desc": "أي معلومات صحية إضافية",
+    "health_search_hint": "ابحث عن اسم {value}...",
+
+
+    "addAllergy_step1_title": "اختر الحساسيّة",
+    "addAllergy_step2_title": "حدّد شدة الحساسيّة",
+    "addAllergy_step3_title": "منذ متى تعرف عنها؟",
+    "addAllergy_step4_title": "مراجعة المعلومات",
+
+    "addAllergy_search_hint": "ابحث عن اسم الحساسيّة...",
+
+    "addAllergy_severity_title": "ما هي شدة هذه الحساسيّة؟",
+    "low": "خفيفة",
+    "medium": "متوسّطة",
+    "high": "شديدة",
+
+    "addAllergy_year_title": "متى عرفت لأول مرة عن هذه الحساسيّة؟",
+
+    "addAllergy_recap_title": "تأكيد المعلومات",
+    "addAllergy_recap_allergy": "الحساسيّة",
+    "addAllergy_recap_severity": "الشدة",
+    "addAllergy_recap_year": "السنة",
+    "addAllergy_year_hint": "اختر السنة",
+    "addAllergy_recap_description": "إضافة هذه المعلومة تساعد الطبيب على تقييم حالتك الصحية بشكل أفضل.",
+    "addAllergy_step1_desc": "ابحث عن الحساسية ضمن القائمة الطبية واختر العنصر الصحيح.",
+    "noResults": "لا توجد نتائج مطابقة.",
+    "addAllergy_severity_desc": "اختر شدة الحساسية كما تحدث معك عادة.",
+    "addAllergy_year_desc": "اختر السنة التقريبية التي بدأت فيها هذه الحساسية.",
+    "next": "التالي",
+    "skip": "تخطي",
+    "save": "حفظ",
+
+    "allergies_empty_title": "لا توجد حساسيّات مسجّلة حتى الآن",
+    "allergies_empty_subtitle": "أضِف حساسيّاتك المهمّة ليتمكن الأطباء من أخذها بعين الاعتبار أثناء العلاج.",
+    "allergies_empty_add": "إضافة حساسيّة",
+    "allergies_empty_no_allergies": "لا أعاني من أي حساسيّة",
+
+    "allergies_no_allergies_title": "تم تسجيل أنك لا تعاني من حساسيّات",
+    "allergies_no_allergies_subtitle": "يمكنك دائماً تعديل هذه المعلومة أو إضافة حساسيّة جديدة في أي وقت.",
+    "allergies_no_allergies_change": "تعديل هذه المعلومة",
+    "allergies_no_allergies_add": "إضافة حساسيّة",
+
+    "allergies_header_title": "حساسيّاتك المسجّلة",
+    "allergies_header_subtitle": "تأكّد من أن المعلومات دائماً محدّثة.",
+    "allergies_header_add_btn": "إضافة",
+    "already_added": "مضافة مسبقًا",
+
+    "severity_mild": "خفيفة",
+    "severity_moderate": "متوسّطة",
+    "severity_severe": "شديدة",
+
+    "confirmed_true": "مؤكّدة من الطبيب",
+    "confirmed_false": "غير مؤكّدة",
+    "showDetails": "عرض التفاصيل",
+    "notProvided": "غير مضاف",
+    "severity": "الشدة",
+    "year": "السنة",
+    "source": "المصدر",
+    "proofs": "الإثباتات",
+    "addedAt": "تاريخ الإضافة",
+    "updatedAt": "تاريخ التعديل",
+    "deleteTheAllergy": "حذف الحساسية",
+    "areYouSureToDeleteAllergy": "هل أنت متأكد أنك تريد حذف هذه الحساسية؟",
+    "allergy_information": "معلومات الحساسية",
+    "allergyName": "الحساسية",
+    "description": "الوصف",
+
+    "health_vaccines_title": "اللقاحات",
+    "health_vaccines_desc": "سجل لقاحاتك بالكامل في مكان واحد",
+
+    "vaccines_add_button": "إضافة لقاح",
+
+    "vaccines_empty_title": "لا توجد لقاحات مُضافة",
+    "vaccines_empty_subtitle": "قم بتتبع سجل اللقاحات بسهولة",
+    "vaccines_empty_add": "إضافة لقاح",
+    "vaccines_empty_no_records": "لا يوجد لدي لقاحات",
+
+    "vaccines_no_records_title": "لا يوجد سجل لقاحات",
+    "vaccines_no_records_subtitle": "يمكنك تعديل ذلك في أي وقت",
+    "vaccines_no_records_change": "تغيير القرار",
+    "vaccines_no_records_add": "إضافة لقاح",
+
+    "vaccine_information": "معلومات اللقاح",
+    "vaccine_name": "اسم اللقاح",
+
+    "deleteTheVaccine": "حذف اللقاح",
+    "areYouSureToDeleteVaccine": "هل أنت متأكد من رغبتك في حذف هذا اللقاح؟",
+
+    "addVaccine_step1_title": "اختر اللقاح",
+    "addVaccine_step1_desc": "ابحث عن اللقاح ضمن القائمة الطبية واختر العنصر الصحيح.",
+
+    "addVaccine_step2_title": "متى تلقيت هذا اللقاح؟",
+    "addVaccine_step2_desc": "اختر السنة التقريبية التي تلقيت فيها هذا اللقاح.",
+
+    "addVaccine_step3_title": "مراجعة المعلومات",
+    "addVaccine_recap_description": "إضافة هذه المعلومة تساعد الأطباء على فهم تاريخ تطعيمك بشكل أفضل.",
+
+    "vaccines_header_title": "لقاحاتك",
+    "vaccines_header_subtitle": "تجد هنا اللقاحات الحالية والسابقـة.",
+
+
+    "chronic_add_button": "إضافة",
+    "chronic_empty_title": "لا توجد أمراض مزمنة مسجّلة",
+    "chronic_empty_subtitle": "أضِف الأمراض المزمنة التي تعاني منها لمساعدة الأطباء على فهم حالتك الصحية.",
+    "chronic_empty_add": "إضافة مرض مزمن",
+    "chronic_empty_no_records": "لا أعاني من أمراض مزمنة",
+
+    "chronic_no_records_title": "تم تسجيل أنك لا تعاني من أمراض مزمنة",
+    "chronic_no_records_subtitle": "يمكنك دائمًا تعديل هذه المعلومة أو إضافة مرض جديد لاحقًا.",
+    "chronic_no_records_change": "تعديل هذه المعلومة",
+    "chronic_no_records_add": "إضافة مرض مزمن",
+
+    "chronic_information": "معلومات المرض المزمن",
+    "chronic_name": "اسم المرض",
+
+    "deleteTheChronic": "حذف المرض المزمن",
+    "areYouSureToDeleteChronic": "هل أنت متأكد أنك تريد حذف هذا المرض المزمن؟",
+
+    "addChronic_step1_title": "اختر المرض المزمن",
+    "addChronic_step2_title": "شدة المرض",
+    "addChronic_step3_title": "سنة التشخيص",
+    "addChronic_step4_title": "مراجعة المعلومات",
+
+    "chronic_already_added": "مضاف مسبقًا",
+
+    "addChronic_step1_desc": "ابحث عن المرض المزمن ضمن القائمة الطبية واختر العنصر الصحيح.",
+
+    "addChronic_severity_title": "ما هي شدة هذا المرض المزمن؟",
+    "addChronic_severity_desc": "اختر مستوى الشدة كما يؤثر عليك عادة.",
+
+    "addChronic_year_title": "متى تم تشخيص هذا المرض؟",
+    "addChronic_year_desc": "اختر السنة التقريبية للتشخيص.",
+
+    "addChronic_recap_title": "تأكيد المعلومات",
+    "addChronic_recap_severity": "الشدة",
+    "addChronic_recap_description": "إضافة هذه المعلومة يساعد الطبيب على تقييم حالتك الصحية بدقة.",
+
+    "chronic_header_title": "الأمراض المزمنة",
+    "chronic_header_subtitle": "هنا تجد الأمراض المزمنة التي تم تشخيصها والتي تحتاج متابعة مستمرة.",
+
+    "surgery_add_button": "إضافة عملية جراحية",
+    "surgery_empty_title": "لا توجد عمليات جراحية مسجّلة",
+    "surgery_empty_subtitle": "أضِف العمليات الجراحية التي قمت بها ليتمكن الأطباء من فهم تاريخك الصحي بشكل أفضل.",
+    "surgery_empty_add": "إضافة عملية",
+    "surgery_empty_no_records": "لم أقم بأي عملية جراحية من قبل",
+
+    "surgery_no_records_title": "تم تسجيل أنك لم تقم بأي عملية جراحية",
+    "surgery_no_records_subtitle": "يمكنك دائماً تعديل هذه المعلومة أو إضافة عملية جديدة في أي وقت.",
+    "surgery_no_records_change": "تعديل هذه المعلومة",
+    "surgery_no_records_add": "إضافة عملية",
+
+    "surgery_information": "معلومات العملية الجراحية",
+    "surgery_name": "اسم العملية",
+
+    "deleteTheSurgery": "حذف العملية",
+    "areYouSureToDeleteSurgery": "هل أنت متأكد من رغبتك بحذف هذه العملية؟",
+
+    "addSurgery_step1_title": "اختر العملية",
+    "addSurgery_step2_title": "متى أُجريت؟",
+    "addSurgery_step3_title": "مراجعة المعلومات",
+
+    "addSurgery_step1_desc": "ابحث عن العملية ضمن القائمة الطبية واختر العنصر الصحيح.",
+    "addSurgery_step2_desc": "اختر السنة التي أجريت فيها هذه العملية.",
+    "addSurgery_recap_description": "مشاركة هذه المعلومة تساعد الطبيب على فهم تاريخك الصحي بشكل أفضل.",
+
+    "surgeries_header_title": "العمليات الجراحية",
+    "surgeries_header_subtitle": "هنا تجد العمليات الجراحية التي خضعت لها سابقاً أو التي تم توثيقها.",
+
+    "health_genetic_title": "الأمراض الوراثية",
+
+    "health_medications_title": "الأدوية",
+    "health_medications_desc": "قائمة الأدوية التي يتناولها المريض",
+
+    "medications_add_button": "إضافة دواء",
+
+    "medications_empty_title": "لا يوجد أدوية مضافة",
+    "medications_empty_subtitle": "قم بتتبع الأدوية التي تتناولها بشكل منتظم.",
+    "medications_empty_add": "إضافة دواء",
+    "medications_empty_no_records": "لا أتناول أي دواء",
+
+    "medications_no_records_title": "لا يوجد سجلات أدوية",
+    "medications_no_records_subtitle": "لقد حدّدت أنك لا تتناول أي دواء.",
+    "medications_no_records_change": "تغيير القرار",
+    "medications_no_records_add": "إضافة دواء",
+
+    "medications_information": "معلومات الدواء",
+    "medications_name": "اسم الدواء",
+
+    "deleteTheMedication": "حذف الدواء",
+    "areYouSureToDeleteMedication": "هل أنت متأكد أنك تريد حذف هذا الدواء؟",
+
+    "medications_add_title": "إضافة دواء",
+    "medications_step2_title": "متى بدأت تناول هذا الدواء؟",
+    "medications_step3_title": "ما هي الجرعة وتواتر الاستخدام؟",
+    "medications_recap_title": "ملخص الدواء",
+
+    "medications_no_results": "لا يوجد أدوية مطابقة",
+    "medications_search_value": "دواء",
+    "medications_search_header": "ابحث عن الدواء",
+
+    "medications_step2_date_label": "تاريخ البدء",
+    "medications_start_date": "تاريخ البدء",
+
+    "medications_dosage_title": "الجرعة وتواترها",
+
+    "medications_step3_optional": "اختياري",
+    "medications_step3_example": "مثال: حبتان صباحاً ومساءً",
+
+    "medications_header_title": "أدويتك",
+    "medications_header_subtitle": "تجد هنا أدويتك الحالية والسابقة.",
+
+    "family_add_button": "إضافة حالة عائلية",
+    "family_empty_title": "لا توجد سوابق عائلية",
+    "family_empty_subtitle": "قم بتسجيل الحالات الوراثية الشائعة في عائلتك.",
+    "family_empty_add": "إضافة حالة عائلية",
+    "family_empty_no_records": "لا أملك أي سوابق عائلية",
+
+    "family_no_records_title": "لا توجد حالات عائلية",
+    "family_no_records_subtitle": "يمكنك إضافة الحالات لاحقاً في أي وقت.",
+    "family_no_records_change": "تغيير القرار",
+    "family_no_records_add": "إضافة حالة عائلية",
+
+    "family_information": "معلومات الحالة العائلية",
+    "family_name": "اسم الحالة",
+
+    "deleteTheFamily": "حذف الحالة العائلية",
+    "areYouSureToDeleteFamily": "هل أنت متأكد من أنك تريد حذف هذه الحالة العائلية؟",
+
+    "addFamily_step1_title": "اختر الحالة",
+    "addFamily_step1_desc": "ابحث عن الحالة التي تم تشخيصها لدى أحد أفراد عائلتك.",
+
+    "addFamily_step2_title": "أي من أفراد عائلتك مصاب بهذه الحالة؟",
+    "addFamily_step2_desc": "اختر جميع الأقارب الذين تم تشخيصهم بهذه الحالة.",
+    "addFamily_step3_title": "في أي عمر تم تشخيص الحالة؟",
+    "addFamily_step3_fieldHint": "أدخل العمر (اختياري)",
+    "addFamily_step4_title": "مراجعة المعلومات",
+
+    "family_member": "القريب",
+    "family_condition": "الحالة المرضية",
+    "family_members": "الأفراد المصابون",
+    "family_age_at_diagnosis": "العمر وقت التشخيص",
+
+    "family_father": "الأب",
+    "family_mother": "الأم",
+    "family_brother": "الأخ",
+    "family_sister": "الأخت",
+
+    "family_maternal_grandfather": "الجد من جهة الأم",
+    "family_maternal_grandmother": "الجدة من جهة الأم",
+
+    "family_paternal_grandfather": "الجد من جهة الأب",
+    "family_paternal_grandmother": "الجدة من جهة الأب",
+
+    "family_daughter": "الابنة",
+    "family_son": "الابن",
+
+    "family_uncle": "العم / الخال",
+    "family_aunt": "العمة / الخالة",
+
+    "family_cousin_f": "ابنة العم / ابنة الخال",
+    "family_cousin_m": "ابن العم / ابن الخال",
+
+    "addFamily_recap_description": "راجع المعلومات جيداً قبل الحفظ. يمكنك تعديلها لاحقاً من صفحة السجل الطبي.",
+
+    "family_header_title": "سجل العائلة",
+    "family_header_subtitle": "تجد هنا الحالات الصحية الموروثة ضمن العائلة.",
+
+    "health_reports_title": "تقارير الزيارات",
+    "health_reports_desc": "التقارير التي كتبها الأطباء خلال زياراتك",
+
+    "search_doctor": "البحث باسم الطبيب",
+    "all_years": "كل السنوات",
+
+    "health_report_exportPdf": "تصدير كملف PDF",
+    "health_report_sharePdf": "مشاركة التقرير",
+
+    "health_report_diagnosis": "التشخيص",
+    "health_report_recommendation": "التوصيات",
+    "health_report_clinic": "معلومات العيادة",
+    "loading": "جاري التحميل...",
+    "health_noReports_hint": "لا توجد تقارير زيارات لهذا المريض.",
+    "health_report_details_title": "تفاصيل التقرير الطبي",
+    "health_report_section_summary": "ملخص الزيارة",
+    "health_report_diagnosis": "التشخيص",
+    "health_report_recommendations": "التوصيات",
+    "health_report_section_clinic": "معلومات العيادة",
+    "health_report_clinicName": "اسم العيادة",
+    "health_report_clinicAddress": "عنوان العيادة",
+    "health_report_visit_date_label": "تاريخ الزيارة",
+
+    "search_doctor": "ابحث باسم الطبيب",
+
+    "health_reports_title": "التقارير الطبية",
+    "health_noReports": "لا توجد تقارير متاحة",
+    "health_report_added": "تمت إضافة تقرير طبي",
+    "health_report_added_for_date": "تمت إضافة تقرير للموعد بتاريخ {date}",
+    "health_report_id": "رقم التقرير",
+
+    "all_label": "الكل",
+    "month_jan": "يناير",
+    "month_feb": "فبراير",
+    "month_mar": "مارس",
+    "month_apr": "أبريل",
+    "month_may": "مايو",
+    "month_jun": "يونيو",
+    "month_jul": "يوليو",
+    "month_aug": "أغسطس",
+    "month_sep": "سبتمبر",
+    "month_oct": "أكتوبر",
+    "month_nov": "نوفمبر",
+    "month_dec": "ديسمبر",
+
   "@DocumentsPage================================": {
     "description": " صفحة المستندات"
   },

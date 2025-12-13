@@ -839,7 +839,7 @@ class AppLocalizationsAr extends AppLocalizations {
   String get guest => 'ضيف';
 
   @override
-  String get notProvided => 'غير متوفر';
+  String get notProvided => 'غير مضاف';
 
   @override
   String get verified => 'تم التحقق';
@@ -1720,6 +1720,797 @@ class AppLocalizationsAr extends AppLocalizations {
   @override
   String get unexpectedError =>
       'حدث خطأ غير متوقع. يرجى المحاولة مرة أخرى لاحقًا.';
+
+  @override
+  String get health_tab => 'الصحة';
+
+  @override
+  String get health_patientName => 'الملف الصحي';
+
+  @override
+  String get health_patientSubtitle => 'معلوماتك الصحية في مكان واحد';
+
+  @override
+  String get health_switch => 'تبديل';
+
+  @override
+  String get health_summary => 'الملف الصحي';
+
+  @override
+  String get health_personalRecords_title => 'السجلات الشخصية';
+
+  @override
+  String get health_personalRecords_subtitle =>
+      'ملفاتك الخاصة وتقارير زياراتك الطبية.';
+
+  @override
+  String get health_noReports => 'لا توجد تقارير متاحة';
+
+  @override
+  String get health_reports_title => 'التقارير الطبية';
+
+  @override
+  String get health_reports_desc => 'التقارير التي كتبها الأطباء خلال زياراتك';
+
+  @override
+  String get health_allergies_title => 'الحساسيّات';
+
+  @override
+  String get health_allergies_desc =>
+      'الأدوية أو الأطعمة أو المواد التي لديك حساسية تجاهها';
+
+  @override
+  String get health_chronic_title => 'الأمراض المزمنة';
+
+  @override
+  String get health_chronic_desc => 'مثل السكري والضغط والربو وغيرها';
+
+  @override
+  String get health_operations_title => 'العمليات السابقة';
+
+  @override
+  String get health_operations_desc => 'سجّل العمليات الجراحية التي خضعت لها';
+
+  @override
+  String get health_genetic_title => 'الأمراض الوراثية';
+
+  @override
+  String get health_genetic_desc => 'الأمراض الوراثية لديك أو ضمن العائلة';
+
+  @override
+  String get health_family_title => 'التاريخ العائلي';
+
+  @override
+  String get health_family_desc => 'أمراض شائعة ضمن العائلة';
+
+  @override
+  String get health_vaccines_title => 'اللقاحات';
+
+  @override
+  String get health_vaccines_desc => 'سجل لقاحاتك بالكامل في مكان واحد';
+
+  @override
+  String get health_documents_title => 'الوثائق الطبية';
+
+  @override
+  String get health_documents_desc =>
+      'التقارير والتحاليل وصور الأشعة والملاحظات';
+
+  @override
+  String get health_other_title => 'معلومات أخرى';
+
+  @override
+  String get health_other_desc => 'أي معلومات صحية إضافية';
+
+  @override
+  String health_search_hint(Object value) {
+    return 'ابحث عن اسم $value...';
+  }
+
+  @override
+  String get addAllergy_step1_title => 'اختر الحساسيّة';
+
+  @override
+  String get addAllergy_step2_title => 'حدّد شدة الحساسيّة';
+
+  @override
+  String get addAllergy_step3_title => 'منذ متى تعرف عنها؟';
+
+  @override
+  String get addAllergy_step4_title => 'مراجعة المعلومات';
+
+  @override
+  String get addAllergy_search_hint => 'ابحث عن اسم الحساسيّة...';
+
+  @override
+  String get addAllergy_severity_title => 'ما هي شدة هذه الحساسيّة؟';
+
+  @override
+  String get low => 'خفيفة';
+
+  @override
+  String get medium => 'متوسّطة';
+
+  @override
+  String get high => 'شديدة';
+
+  @override
+  String get addAllergy_year_title => 'متى عرفت لأول مرة عن هذه الحساسيّة؟';
+
+  @override
+  String get addAllergy_recap_title => 'تأكيد المعلومات';
+
+  @override
+  String get addAllergy_recap_allergy => 'الحساسيّة';
+
+  @override
+  String get addAllergy_recap_severity => 'الشدة';
+
+  @override
+  String get addAllergy_recap_year => 'السنة';
+
+  @override
+  String get addAllergy_year_hint => 'اختر السنة';
+
+  @override
+  String get addAllergy_recap_description =>
+      'إضافة هذه المعلومة تساعد الطبيب على تقييم حالتك الصحية بشكل أفضل.';
+
+  @override
+  String get addAllergy_step1_desc =>
+      'ابحث عن الحساسية ضمن القائمة الطبية واختر العنصر الصحيح.';
+
+  @override
+  String get noResults => 'لا توجد نتائج مطابقة.';
+
+  @override
+  String get addAllergy_severity_desc => 'اختر شدة الحساسية كما تحدث معك عادة.';
+
+  @override
+  String get addAllergy_year_desc =>
+      'اختر السنة التقريبية التي بدأت فيها هذه الحساسية.';
+
+  @override
+  String get next => 'التالي';
+
+  @override
+  String get skip => 'تخطي';
+
+  @override
+  String get allergies_empty_title => 'لا توجد حساسيّات مسجّلة حتى الآن';
+
+  @override
+  String get allergies_empty_subtitle =>
+      'أضِف حساسيّاتك المهمّة ليتمكن الأطباء من أخذها بعين الاعتبار أثناء العلاج.';
+
+  @override
+  String get allergies_empty_add => 'إضافة حساسيّة';
+
+  @override
+  String get allergies_empty_no_allergies => 'لا أعاني من أي حساسيّة';
+
+  @override
+  String get allergies_no_allergies_title =>
+      'تم تسجيل أنك لا تعاني من حساسيّات';
+
+  @override
+  String get allergies_no_allergies_subtitle =>
+      'يمكنك دائماً تعديل هذه المعلومة أو إضافة حساسيّة جديدة في أي وقت.';
+
+  @override
+  String get allergies_no_allergies_change => 'تعديل هذه المعلومة';
+
+  @override
+  String get allergies_no_allergies_add => 'إضافة حساسيّة';
+
+  @override
+  String get allergies_header_title => 'حساسيّاتك المسجّلة';
+
+  @override
+  String get allergies_header_subtitle =>
+      'تأكّد من أن المعلومات دائماً محدّثة.';
+
+  @override
+  String get allergies_header_add_btn => 'إضافة';
+
+  @override
+  String get already_added => 'مضافة مسبقًا';
+
+  @override
+  String get severity_mild => 'خفيفة';
+
+  @override
+  String get severity_moderate => 'متوسّطة';
+
+  @override
+  String get severity_severe => 'شديدة';
+
+  @override
+  String get confirmed_true => 'مؤكّدة من الطبيب';
+
+  @override
+  String get confirmed_false => 'غير مؤكّدة';
+
+  @override
+  String get showDetails => 'عرض التفاصيل';
+
+  @override
+  String get severity => 'الشدة';
+
+  @override
+  String get year => 'السنة';
+
+  @override
+  String get source => 'المصدر';
+
+  @override
+  String get proofs => 'الإثباتات';
+
+  @override
+  String get addedAt => 'تاريخ الإضافة';
+
+  @override
+  String get updatedAt => 'تاريخ التعديل';
+
+  @override
+  String get deleteTheAllergy => 'حذف الحساسية';
+
+  @override
+  String get areYouSureToDeleteAllergy =>
+      'هل أنت متأكد أنك تريد حذف هذه الحساسية؟';
+
+  @override
+  String get allergy_information => 'معلومات الحساسية';
+
+  @override
+  String get allergyName => 'الحساسية';
+
+  @override
+  String get description => 'الوصف';
+
+  @override
+  String get vaccines_add_button => 'إضافة لقاح';
+
+  @override
+  String get vaccines_empty_title => 'لا توجد لقاحات مُضافة';
+
+  @override
+  String get vaccines_empty_subtitle => 'قم بتتبع سجل اللقاحات بسهولة';
+
+  @override
+  String get vaccines_empty_add => 'إضافة لقاح';
+
+  @override
+  String get vaccines_empty_no_records => 'لا يوجد لدي لقاحات';
+
+  @override
+  String get vaccines_no_records_title => 'لا يوجد سجل لقاحات';
+
+  @override
+  String get vaccines_no_records_subtitle => 'يمكنك تعديل ذلك في أي وقت';
+
+  @override
+  String get vaccines_no_records_change => 'تغيير القرار';
+
+  @override
+  String get vaccines_no_records_add => 'إضافة لقاح';
+
+  @override
+  String get vaccine_information => 'معلومات اللقاح';
+
+  @override
+  String get vaccine_name => 'اسم اللقاح';
+
+  @override
+  String get deleteTheVaccine => 'حذف اللقاح';
+
+  @override
+  String get areYouSureToDeleteVaccine =>
+      'هل أنت متأكد من رغبتك في حذف هذا اللقاح؟';
+
+  @override
+  String get addVaccine_step1_title => 'اختر اللقاح';
+
+  @override
+  String get addVaccine_step1_desc =>
+      'ابحث عن اللقاح ضمن القائمة الطبية واختر العنصر الصحيح.';
+
+  @override
+  String get addVaccine_step2_title => 'متى تلقيت هذا اللقاح؟';
+
+  @override
+  String get addVaccine_step2_desc =>
+      'اختر السنة التقريبية التي تلقيت فيها هذا اللقاح.';
+
+  @override
+  String get addVaccine_step3_title => 'مراجعة المعلومات';
+
+  @override
+  String get addVaccine_recap_description =>
+      'إضافة هذه المعلومة تساعد الأطباء على فهم تاريخ تطعيمك بشكل أفضل.';
+
+  @override
+  String get vaccines_header_title => 'لقاحاتك';
+
+  @override
+  String get vaccines_header_subtitle => 'تجد هنا اللقاحات الحالية والسابقـة.';
+
+  @override
+  String get chronic_add_button => 'إضافة';
+
+  @override
+  String get chronic_empty_title => 'لا توجد أمراض مزمنة مسجّلة';
+
+  @override
+  String get chronic_empty_subtitle =>
+      'أضِف الأمراض المزمنة التي تعاني منها لمساعدة الأطباء على فهم حالتك الصحية.';
+
+  @override
+  String get chronic_empty_add => 'إضافة مرض مزمن';
+
+  @override
+  String get chronic_empty_no_records => 'لا أعاني من أمراض مزمنة';
+
+  @override
+  String get chronic_no_records_title => 'تم تسجيل أنك لا تعاني من أمراض مزمنة';
+
+  @override
+  String get chronic_no_records_subtitle =>
+      'يمكنك دائمًا تعديل هذه المعلومة أو إضافة مرض جديد لاحقًا.';
+
+  @override
+  String get chronic_no_records_change => 'تعديل هذه المعلومة';
+
+  @override
+  String get chronic_no_records_add => 'إضافة مرض مزمن';
+
+  @override
+  String get chronic_information => 'معلومات المرض المزمن';
+
+  @override
+  String get chronic_name => 'اسم المرض';
+
+  @override
+  String get deleteTheChronic => 'حذف المرض المزمن';
+
+  @override
+  String get areYouSureToDeleteChronic =>
+      'هل أنت متأكد أنك تريد حذف هذا المرض المزمن؟';
+
+  @override
+  String get addChronic_step1_title => 'اختر المرض المزمن';
+
+  @override
+  String get addChronic_step2_title => 'شدة المرض';
+
+  @override
+  String get addChronic_step3_title => 'سنة التشخيص';
+
+  @override
+  String get addChronic_step4_title => 'مراجعة المعلومات';
+
+  @override
+  String get chronic_already_added => 'مضاف مسبقًا';
+
+  @override
+  String get addChronic_step1_desc =>
+      'ابحث عن المرض المزمن ضمن القائمة الطبية واختر العنصر الصحيح.';
+
+  @override
+  String get addChronic_severity_title => 'ما هي شدة هذا المرض المزمن؟';
+
+  @override
+  String get addChronic_severity_desc => 'اختر مستوى الشدة كما يؤثر عليك عادة.';
+
+  @override
+  String get addChronic_year_title => 'متى تم تشخيص هذا المرض؟';
+
+  @override
+  String get addChronic_year_desc => 'اختر السنة التقريبية للتشخيص.';
+
+  @override
+  String get addChronic_recap_title => 'تأكيد المعلومات';
+
+  @override
+  String get addChronic_recap_severity => 'الشدة';
+
+  @override
+  String get addChronic_recap_description =>
+      'إضافة هذه المعلومة يساعد الطبيب على تقييم حالتك الصحية بدقة.';
+
+  @override
+  String get chronic_header_title => 'الأمراض المزمنة';
+
+  @override
+  String get chronic_header_subtitle =>
+      'هنا تجد الأمراض المزمنة التي تم تشخيصها والتي تحتاج متابعة مستمرة.';
+
+  @override
+  String get surgery_add_button => 'إضافة عملية جراحية';
+
+  @override
+  String get surgery_empty_title => 'لا توجد عمليات جراحية مسجّلة';
+
+  @override
+  String get surgery_empty_subtitle =>
+      'أضِف العمليات الجراحية التي قمت بها ليتمكن الأطباء من فهم تاريخك الصحي بشكل أفضل.';
+
+  @override
+  String get surgery_empty_add => 'إضافة عملية';
+
+  @override
+  String get surgery_empty_no_records => 'لم أقم بأي عملية جراحية من قبل';
+
+  @override
+  String get surgery_no_records_title => 'تم تسجيل أنك لم تقم بأي عملية جراحية';
+
+  @override
+  String get surgery_no_records_subtitle =>
+      'يمكنك دائماً تعديل هذه المعلومة أو إضافة عملية جديدة في أي وقت.';
+
+  @override
+  String get surgery_no_records_change => 'تعديل هذه المعلومة';
+
+  @override
+  String get surgery_no_records_add => 'إضافة عملية';
+
+  @override
+  String get surgery_information => 'معلومات العملية الجراحية';
+
+  @override
+  String get surgery_name => 'اسم العملية';
+
+  @override
+  String get deleteTheSurgery => 'حذف العملية';
+
+  @override
+  String get areYouSureToDeleteSurgery =>
+      'هل أنت متأكد من رغبتك بحذف هذه العملية؟';
+
+  @override
+  String get addSurgery_step1_title => 'اختر العملية';
+
+  @override
+  String get addSurgery_step2_title => 'متى أُجريت؟';
+
+  @override
+  String get addSurgery_step3_title => 'مراجعة المعلومات';
+
+  @override
+  String get addSurgery_step1_desc =>
+      'ابحث عن العملية ضمن القائمة الطبية واختر العنصر الصحيح.';
+
+  @override
+  String get addSurgery_step2_desc => 'اختر السنة التي أجريت فيها هذه العملية.';
+
+  @override
+  String get addSurgery_recap_description =>
+      'مشاركة هذه المعلومة تساعد الطبيب على فهم تاريخك الصحي بشكل أفضل.';
+
+  @override
+  String get surgeries_header_title => 'العمليات الجراحية';
+
+  @override
+  String get surgeries_header_subtitle =>
+      'هنا تجد العمليات الجراحية التي خضعت لها سابقاً أو التي تم توثيقها.';
+
+  @override
+  String get health_medications_title => 'الأدوية';
+
+  @override
+  String get health_medications_desc => 'قائمة الأدوية التي يتناولها المريض';
+
+  @override
+  String get medications_add_button => 'إضافة دواء';
+
+  @override
+  String get medications_empty_title => 'لا يوجد أدوية مضافة';
+
+  @override
+  String get medications_empty_subtitle =>
+      'قم بتتبع الأدوية التي تتناولها بشكل منتظم.';
+
+  @override
+  String get medications_empty_add => 'إضافة دواء';
+
+  @override
+  String get medications_empty_no_records => 'لا أتناول أي دواء';
+
+  @override
+  String get medications_no_records_title => 'لا يوجد سجلات أدوية';
+
+  @override
+  String get medications_no_records_subtitle =>
+      'لقد حدّدت أنك لا تتناول أي دواء.';
+
+  @override
+  String get medications_no_records_change => 'تغيير القرار';
+
+  @override
+  String get medications_no_records_add => 'إضافة دواء';
+
+  @override
+  String get medications_information => 'معلومات الدواء';
+
+  @override
+  String get medications_name => 'اسم الدواء';
+
+  @override
+  String get deleteTheMedication => 'حذف الدواء';
+
+  @override
+  String get areYouSureToDeleteMedication =>
+      'هل أنت متأكد أنك تريد حذف هذا الدواء؟';
+
+  @override
+  String get medications_add_title => 'إضافة دواء';
+
+  @override
+  String get medications_step2_title => 'متى بدأت تناول هذا الدواء؟';
+
+  @override
+  String get medications_step3_title => 'ما هي الجرعة وتواتر الاستخدام؟';
+
+  @override
+  String get medications_recap_title => 'ملخص الدواء';
+
+  @override
+  String get medications_no_results => 'لا يوجد أدوية مطابقة';
+
+  @override
+  String get medications_search_value => 'دواء';
+
+  @override
+  String get medications_search_header => 'ابحث عن الدواء';
+
+  @override
+  String get medications_step2_date_label => 'تاريخ البدء';
+
+  @override
+  String get medications_start_date => 'تاريخ البدء';
+
+  @override
+  String get medications_dosage_title => 'الجرعة وتواترها';
+
+  @override
+  String get medications_step3_optional => 'اختياري';
+
+  @override
+  String get medications_step3_example => 'مثال: حبتان صباحاً ومساءً';
+
+  @override
+  String get medications_header_title => 'أدويتك';
+
+  @override
+  String get medications_header_subtitle => 'تجد هنا أدويتك الحالية والسابقة.';
+
+  @override
+  String get family_add_button => 'إضافة حالة عائلية';
+
+  @override
+  String get family_empty_title => 'لا توجد سوابق عائلية';
+
+  @override
+  String get family_empty_subtitle =>
+      'قم بتسجيل الحالات الوراثية الشائعة في عائلتك.';
+
+  @override
+  String get family_empty_add => 'إضافة حالة عائلية';
+
+  @override
+  String get family_empty_no_records => 'لا أملك أي سوابق عائلية';
+
+  @override
+  String get family_no_records_title => 'لا توجد حالات عائلية';
+
+  @override
+  String get family_no_records_subtitle =>
+      'يمكنك إضافة الحالات لاحقاً في أي وقت.';
+
+  @override
+  String get family_no_records_change => 'تغيير القرار';
+
+  @override
+  String get family_no_records_add => 'إضافة حالة عائلية';
+
+  @override
+  String get family_information => 'معلومات الحالة العائلية';
+
+  @override
+  String get family_name => 'اسم الحالة';
+
+  @override
+  String get deleteTheFamily => 'حذف الحالة العائلية';
+
+  @override
+  String get areYouSureToDeleteFamily =>
+      'هل أنت متأكد من أنك تريد حذف هذه الحالة العائلية؟';
+
+  @override
+  String get addFamily_step1_title => 'اختر الحالة';
+
+  @override
+  String get addFamily_step1_desc =>
+      'ابحث عن الحالة التي تم تشخيصها لدى أحد أفراد عائلتك.';
+
+  @override
+  String get addFamily_step2_title => 'أي من أفراد عائلتك مصاب بهذه الحالة؟';
+
+  @override
+  String get addFamily_step2_desc =>
+      'اختر جميع الأقارب الذين تم تشخيصهم بهذه الحالة.';
+
+  @override
+  String get addFamily_step3_title => 'في أي عمر تم تشخيص الحالة؟';
+
+  @override
+  String get addFamily_step3_fieldHint => 'أدخل العمر (اختياري)';
+
+  @override
+  String get addFamily_step4_title => 'مراجعة المعلومات';
+
+  @override
+  String get family_member => 'القريب';
+
+  @override
+  String get family_condition => 'الحالة المرضية';
+
+  @override
+  String get family_members => 'الأفراد المصابون';
+
+  @override
+  String get family_age_at_diagnosis => 'العمر وقت التشخيص';
+
+  @override
+  String get family_father => 'الأب';
+
+  @override
+  String get family_mother => 'الأم';
+
+  @override
+  String get family_brother => 'الأخ';
+
+  @override
+  String get family_sister => 'الأخت';
+
+  @override
+  String get family_maternal_grandfather => 'الجد من جهة الأم';
+
+  @override
+  String get family_maternal_grandmother => 'الجدة من جهة الأم';
+
+  @override
+  String get family_paternal_grandfather => 'الجد من جهة الأب';
+
+  @override
+  String get family_paternal_grandmother => 'الجدة من جهة الأب';
+
+  @override
+  String get family_daughter => 'الابنة';
+
+  @override
+  String get family_son => 'الابن';
+
+  @override
+  String get family_uncle => 'العم / الخال';
+
+  @override
+  String get family_aunt => 'العمة / الخالة';
+
+  @override
+  String get family_cousin_f => 'ابنة العم / ابنة الخال';
+
+  @override
+  String get family_cousin_m => 'ابن العم / ابن الخال';
+
+  @override
+  String get addFamily_recap_description =>
+      'راجع المعلومات جيداً قبل الحفظ. يمكنك تعديلها لاحقاً من صفحة السجل الطبي.';
+
+  @override
+  String get family_header_title => 'سجل العائلة';
+
+  @override
+  String get family_header_subtitle =>
+      'تجد هنا الحالات الصحية الموروثة ضمن العائلة.';
+
+  @override
+  String get search_doctor => 'ابحث باسم الطبيب';
+
+  @override
+  String get all_years => 'كل السنوات';
+
+  @override
+  String get health_report_exportPdf => 'تصدير كملف PDF';
+
+  @override
+  String get health_report_sharePdf => 'مشاركة التقرير';
+
+  @override
+  String get health_report_diagnosis => 'التشخيص';
+
+  @override
+  String get health_report_recommendation => 'التوصيات';
+
+  @override
+  String get health_report_clinic => 'معلومات العيادة';
+
+  @override
+  String get loading => 'جاري التحميل...';
+
+  @override
+  String get health_noReports_hint => 'لا توجد تقارير زيارات لهذا المريض.';
+
+  @override
+  String get health_report_details_title => 'تفاصيل التقرير الطبي';
+
+  @override
+  String get health_report_section_summary => 'ملخص الزيارة';
+
+  @override
+  String get health_report_recommendations => 'التوصيات';
+
+  @override
+  String get health_report_section_clinic => 'معلومات العيادة';
+
+  @override
+  String get health_report_clinicName => 'اسم العيادة';
+
+  @override
+  String get health_report_clinicAddress => 'عنوان العيادة';
+
+  @override
+  String get health_report_visit_date_label => 'تاريخ الزيارة';
+
+  @override
+  String get health_report_added => 'تمت إضافة تقرير طبي';
+
+  @override
+  String health_report_added_for_date(Object date) {
+    return 'تمت إضافة تقرير للموعد بتاريخ $date';
+  }
+
+  @override
+  String get health_report_id => 'رقم التقرير';
+
+  @override
+  String get all_label => 'الكل';
+
+  @override
+  String get month_jan => 'يناير';
+
+  @override
+  String get month_feb => 'فبراير';
+
+  @override
+  String get month_mar => 'مارس';
+
+  @override
+  String get month_apr => 'أبريل';
+
+  @override
+  String get month_may => 'مايو';
+
+  @override
+  String get month_jun => 'يونيو';
+
+  @override
+  String get month_jul => 'يوليو';
+
+  @override
+  String get month_aug => 'أغسطس';
+
+  @override
+  String get month_sep => 'سبتمبر';
+
+  @override
+  String get month_oct => 'أكتوبر';
+
+  @override
+  String get month_nov => 'نوفمبر';
+
+  @override
+  String get month_dec => 'ديسمبر';
 
   @override
   String get documentAddedSuccessfully => 'تمت إضافة المستند بنجاح!';

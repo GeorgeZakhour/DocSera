@@ -959,7 +959,7 @@ abstract class AppLocalizations {
   /// No description provided for @save.
   ///
   /// In en, this message translates to:
-  /// **'SAVE'**
+  /// **'Save'**
   String get save;
 
   /// No description provided for @genderRequired.
@@ -3295,6 +3295,1506 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'An unexpected error occurred. Please try again later.'**
   String get unexpectedError;
+
+  /// No description provided for @health_tab.
+  ///
+  /// In en, this message translates to:
+  /// **'Health'**
+  String get health_tab;
+
+  /// No description provided for @health_patientName.
+  ///
+  /// In en, this message translates to:
+  /// **'Health Profile'**
+  String get health_patientName;
+
+  /// No description provided for @health_patientSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Your medical history in one place'**
+  String get health_patientSubtitle;
+
+  /// No description provided for @health_switch.
+  ///
+  /// In en, this message translates to:
+  /// **'Switch'**
+  String get health_switch;
+
+  /// No description provided for @health_summary.
+  ///
+  /// In en, this message translates to:
+  /// **'Health summary'**
+  String get health_summary;
+
+  /// No description provided for @health_personalRecords_title.
+  ///
+  /// In en, this message translates to:
+  /// **'Personal Records'**
+  String get health_personalRecords_title;
+
+  /// No description provided for @health_personalRecords_subtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Your private documents and visit reports.'**
+  String get health_personalRecords_subtitle;
+
+  /// No description provided for @health_noReports.
+  ///
+  /// In en, this message translates to:
+  /// **'No reports available'**
+  String get health_noReports;
+
+  /// No description provided for @health_reports_title.
+  ///
+  /// In en, this message translates to:
+  /// **'Visit Reports'**
+  String get health_reports_title;
+
+  /// No description provided for @health_reports_desc.
+  ///
+  /// In en, this message translates to:
+  /// **'Reports written by your doctors during visits'**
+  String get health_reports_desc;
+
+  /// No description provided for @health_allergies_title.
+  ///
+  /// In en, this message translates to:
+  /// **'Allergies'**
+  String get health_allergies_title;
+
+  /// No description provided for @health_allergies_desc.
+  ///
+  /// In en, this message translates to:
+  /// **'Drugs, foods or substances you are allergic to'**
+  String get health_allergies_desc;
+
+  /// No description provided for @health_chronic_title.
+  ///
+  /// In en, this message translates to:
+  /// **'Chronic conditions'**
+  String get health_chronic_title;
+
+  /// No description provided for @health_chronic_desc.
+  ///
+  /// In en, this message translates to:
+  /// **'Diabetes, hypertension, asthma and others'**
+  String get health_chronic_desc;
+
+  /// No description provided for @health_operations_title.
+  ///
+  /// In en, this message translates to:
+  /// **'Previous surgeries'**
+  String get health_operations_title;
+
+  /// No description provided for @health_operations_desc.
+  ///
+  /// In en, this message translates to:
+  /// **'Track the surgeries you had'**
+  String get health_operations_desc;
+
+  /// No description provided for @health_genetic_title.
+  ///
+  /// In en, this message translates to:
+  /// **'Genetic Conditions'**
+  String get health_genetic_title;
+
+  /// No description provided for @health_genetic_desc.
+  ///
+  /// In en, this message translates to:
+  /// **'Genetic diseases in you or your family'**
+  String get health_genetic_desc;
+
+  /// No description provided for @health_family_title.
+  ///
+  /// In en, this message translates to:
+  /// **'Family history'**
+  String get health_family_title;
+
+  /// No description provided for @health_family_desc.
+  ///
+  /// In en, this message translates to:
+  /// **'Common illnesses in your family'**
+  String get health_family_desc;
+
+  /// No description provided for @health_vaccines_title.
+  ///
+  /// In en, this message translates to:
+  /// **'Vaccinations'**
+  String get health_vaccines_title;
+
+  /// No description provided for @health_vaccines_desc.
+  ///
+  /// In en, this message translates to:
+  /// **'All your vaccination history in one place'**
+  String get health_vaccines_desc;
+
+  /// No description provided for @health_documents_title.
+  ///
+  /// In en, this message translates to:
+  /// **'Documents'**
+  String get health_documents_title;
+
+  /// No description provided for @health_documents_desc.
+  ///
+  /// In en, this message translates to:
+  /// **'Reports, tests, imaging and notes'**
+  String get health_documents_desc;
+
+  /// No description provided for @health_other_title.
+  ///
+  /// In en, this message translates to:
+  /// **'Other info'**
+  String get health_other_title;
+
+  /// No description provided for @health_other_desc.
+  ///
+  /// In en, this message translates to:
+  /// **'Additional health information'**
+  String get health_other_desc;
+
+  /// No description provided for @health_search_hint.
+  ///
+  /// In en, this message translates to:
+  /// **'Search for {value}...'**
+  String health_search_hint(Object value);
+
+  /// No description provided for @addAllergy_step1_title.
+  ///
+  /// In en, this message translates to:
+  /// **'Select an allergy'**
+  String get addAllergy_step1_title;
+
+  /// No description provided for @addAllergy_step2_title.
+  ///
+  /// In en, this message translates to:
+  /// **'Select severity'**
+  String get addAllergy_step2_title;
+
+  /// No description provided for @addAllergy_step3_title.
+  ///
+  /// In en, this message translates to:
+  /// **'Since when?'**
+  String get addAllergy_step3_title;
+
+  /// No description provided for @addAllergy_step4_title.
+  ///
+  /// In en, this message translates to:
+  /// **'Review your information'**
+  String get addAllergy_step4_title;
+
+  /// No description provided for @addAllergy_search_hint.
+  ///
+  /// In en, this message translates to:
+  /// **'Search allergy name...'**
+  String get addAllergy_search_hint;
+
+  /// No description provided for @addAllergy_severity_title.
+  ///
+  /// In en, this message translates to:
+  /// **'How severe is this allergy?'**
+  String get addAllergy_severity_title;
+
+  /// No description provided for @low.
+  ///
+  /// In en, this message translates to:
+  /// **'Mild'**
+  String get low;
+
+  /// No description provided for @medium.
+  ///
+  /// In en, this message translates to:
+  /// **'Moderate'**
+  String get medium;
+
+  /// No description provided for @high.
+  ///
+  /// In en, this message translates to:
+  /// **'Severe'**
+  String get high;
+
+  /// No description provided for @addAllergy_year_title.
+  ///
+  /// In en, this message translates to:
+  /// **'When did you first know about this allergy?'**
+  String get addAllergy_year_title;
+
+  /// No description provided for @addAllergy_recap_title.
+  ///
+  /// In en, this message translates to:
+  /// **'Confirm your information'**
+  String get addAllergy_recap_title;
+
+  /// No description provided for @addAllergy_recap_allergy.
+  ///
+  /// In en, this message translates to:
+  /// **'Allergy'**
+  String get addAllergy_recap_allergy;
+
+  /// No description provided for @addAllergy_recap_severity.
+  ///
+  /// In en, this message translates to:
+  /// **'Severity'**
+  String get addAllergy_recap_severity;
+
+  /// No description provided for @addAllergy_recap_year.
+  ///
+  /// In en, this message translates to:
+  /// **'Year'**
+  String get addAllergy_recap_year;
+
+  /// No description provided for @addAllergy_year_hint.
+  ///
+  /// In en, this message translates to:
+  /// **'Select year'**
+  String get addAllergy_year_hint;
+
+  /// No description provided for @addAllergy_recap_description.
+  ///
+  /// In en, this message translates to:
+  /// **'Adding this information helps doctors evaluate your health more accurately.'**
+  String get addAllergy_recap_description;
+
+  /// No description provided for @addAllergy_step1_desc.
+  ///
+  /// In en, this message translates to:
+  /// **'Search for your allergy in the medical list and select the correct item.'**
+  String get addAllergy_step1_desc;
+
+  /// No description provided for @noResults.
+  ///
+  /// In en, this message translates to:
+  /// **'No matching results.'**
+  String get noResults;
+
+  /// No description provided for @addAllergy_severity_desc.
+  ///
+  /// In en, this message translates to:
+  /// **'Choose how strong or severe your allergy usually is.'**
+  String get addAllergy_severity_desc;
+
+  /// No description provided for @addAllergy_year_desc.
+  ///
+  /// In en, this message translates to:
+  /// **'Select the approximate year when this allergy began.'**
+  String get addAllergy_year_desc;
+
+  /// No description provided for @next.
+  ///
+  /// In en, this message translates to:
+  /// **'Next'**
+  String get next;
+
+  /// No description provided for @skip.
+  ///
+  /// In en, this message translates to:
+  /// **'Skip'**
+  String get skip;
+
+  /// No description provided for @allergies_empty_title.
+  ///
+  /// In en, this message translates to:
+  /// **'No allergies recorded yet'**
+  String get allergies_empty_title;
+
+  /// No description provided for @allergies_empty_subtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Add your important allergies so doctors can consider them during treatment.'**
+  String get allergies_empty_subtitle;
+
+  /// No description provided for @allergies_empty_add.
+  ///
+  /// In en, this message translates to:
+  /// **'Add an allergy'**
+  String get allergies_empty_add;
+
+  /// No description provided for @allergies_empty_no_allergies.
+  ///
+  /// In en, this message translates to:
+  /// **'I don’t have any allergies'**
+  String get allergies_empty_no_allergies;
+
+  /// No description provided for @allergies_no_allergies_title.
+  ///
+  /// In en, this message translates to:
+  /// **'Marked as having no allergies'**
+  String get allergies_no_allergies_title;
+
+  /// No description provided for @allergies_no_allergies_subtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'You can always change this or add a new allergy later.'**
+  String get allergies_no_allergies_subtitle;
+
+  /// No description provided for @allergies_no_allergies_change.
+  ///
+  /// In en, this message translates to:
+  /// **'Change this information'**
+  String get allergies_no_allergies_change;
+
+  /// No description provided for @allergies_no_allergies_add.
+  ///
+  /// In en, this message translates to:
+  /// **'Add an allergy'**
+  String get allergies_no_allergies_add;
+
+  /// No description provided for @allergies_header_title.
+  ///
+  /// In en, this message translates to:
+  /// **'Your recorded allergies'**
+  String get allergies_header_title;
+
+  /// No description provided for @allergies_header_subtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Make sure this information is always up to date.'**
+  String get allergies_header_subtitle;
+
+  /// No description provided for @allergies_header_add_btn.
+  ///
+  /// In en, this message translates to:
+  /// **'Add'**
+  String get allergies_header_add_btn;
+
+  /// No description provided for @already_added.
+  ///
+  /// In en, this message translates to:
+  /// **'Already added'**
+  String get already_added;
+
+  /// No description provided for @severity_mild.
+  ///
+  /// In en, this message translates to:
+  /// **'Mild'**
+  String get severity_mild;
+
+  /// No description provided for @severity_moderate.
+  ///
+  /// In en, this message translates to:
+  /// **'Moderate'**
+  String get severity_moderate;
+
+  /// No description provided for @severity_severe.
+  ///
+  /// In en, this message translates to:
+  /// **'Severe'**
+  String get severity_severe;
+
+  /// No description provided for @confirmed_true.
+  ///
+  /// In en, this message translates to:
+  /// **'Confirmed by doctor'**
+  String get confirmed_true;
+
+  /// No description provided for @confirmed_false.
+  ///
+  /// In en, this message translates to:
+  /// **'Not confirmed'**
+  String get confirmed_false;
+
+  /// No description provided for @showDetails.
+  ///
+  /// In en, this message translates to:
+  /// **'Show details'**
+  String get showDetails;
+
+  /// No description provided for @severity.
+  ///
+  /// In en, this message translates to:
+  /// **'Severity'**
+  String get severity;
+
+  /// No description provided for @year.
+  ///
+  /// In en, this message translates to:
+  /// **'Year'**
+  String get year;
+
+  /// No description provided for @source.
+  ///
+  /// In en, this message translates to:
+  /// **'Source'**
+  String get source;
+
+  /// No description provided for @proofs.
+  ///
+  /// In en, this message translates to:
+  /// **'Proofs'**
+  String get proofs;
+
+  /// No description provided for @addedAt.
+  ///
+  /// In en, this message translates to:
+  /// **'Added at'**
+  String get addedAt;
+
+  /// No description provided for @updatedAt.
+  ///
+  /// In en, this message translates to:
+  /// **'Updated at'**
+  String get updatedAt;
+
+  /// No description provided for @deleteTheAllergy.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete the allergy'**
+  String get deleteTheAllergy;
+
+  /// No description provided for @areYouSureToDeleteAllergy.
+  ///
+  /// In en, this message translates to:
+  /// **'Are you sure you want to delete this allergy?'**
+  String get areYouSureToDeleteAllergy;
+
+  /// No description provided for @allergy_information.
+  ///
+  /// In en, this message translates to:
+  /// **'Information'**
+  String get allergy_information;
+
+  /// No description provided for @allergyName.
+  ///
+  /// In en, this message translates to:
+  /// **'Allergy'**
+  String get allergyName;
+
+  /// No description provided for @description.
+  ///
+  /// In en, this message translates to:
+  /// **'Description'**
+  String get description;
+
+  /// No description provided for @vaccines_add_button.
+  ///
+  /// In en, this message translates to:
+  /// **'Add a vaccine'**
+  String get vaccines_add_button;
+
+  /// No description provided for @vaccines_empty_title.
+  ///
+  /// In en, this message translates to:
+  /// **'No vaccines added yet'**
+  String get vaccines_empty_title;
+
+  /// No description provided for @vaccines_empty_subtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Track your vaccination history easily'**
+  String get vaccines_empty_subtitle;
+
+  /// No description provided for @vaccines_empty_add.
+  ///
+  /// In en, this message translates to:
+  /// **'Add a vaccine'**
+  String get vaccines_empty_add;
+
+  /// No description provided for @vaccines_empty_no_records.
+  ///
+  /// In en, this message translates to:
+  /// **'I have no vaccines'**
+  String get vaccines_empty_no_records;
+
+  /// No description provided for @vaccines_no_records_title.
+  ///
+  /// In en, this message translates to:
+  /// **'No vaccinations recorded'**
+  String get vaccines_no_records_title;
+
+  /// No description provided for @vaccines_no_records_subtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'You can update this at any time'**
+  String get vaccines_no_records_subtitle;
+
+  /// No description provided for @vaccines_no_records_change.
+  ///
+  /// In en, this message translates to:
+  /// **'Change decision'**
+  String get vaccines_no_records_change;
+
+  /// No description provided for @vaccines_no_records_add.
+  ///
+  /// In en, this message translates to:
+  /// **'Add a vaccine'**
+  String get vaccines_no_records_add;
+
+  /// No description provided for @vaccine_information.
+  ///
+  /// In en, this message translates to:
+  /// **'Vaccine Information'**
+  String get vaccine_information;
+
+  /// No description provided for @vaccine_name.
+  ///
+  /// In en, this message translates to:
+  /// **'Vaccine'**
+  String get vaccine_name;
+
+  /// No description provided for @deleteTheVaccine.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete the vaccine'**
+  String get deleteTheVaccine;
+
+  /// No description provided for @areYouSureToDeleteVaccine.
+  ///
+  /// In en, this message translates to:
+  /// **'Are you sure you want to delete this vaccine?'**
+  String get areYouSureToDeleteVaccine;
+
+  /// No description provided for @addVaccine_step1_title.
+  ///
+  /// In en, this message translates to:
+  /// **'Choose the vaccine'**
+  String get addVaccine_step1_title;
+
+  /// No description provided for @addVaccine_step1_desc.
+  ///
+  /// In en, this message translates to:
+  /// **'Search for the vaccine in the medical list and select the correct item.'**
+  String get addVaccine_step1_desc;
+
+  /// No description provided for @addVaccine_step2_title.
+  ///
+  /// In en, this message translates to:
+  /// **'When did you receive this vaccine?'**
+  String get addVaccine_step2_title;
+
+  /// No description provided for @addVaccine_step2_desc.
+  ///
+  /// In en, this message translates to:
+  /// **'Select the approximate year you received this vaccine.'**
+  String get addVaccine_step2_desc;
+
+  /// No description provided for @addVaccine_step3_title.
+  ///
+  /// In en, this message translates to:
+  /// **'Review information'**
+  String get addVaccine_step3_title;
+
+  /// No description provided for @addVaccine_recap_description.
+  ///
+  /// In en, this message translates to:
+  /// **'Adding this information helps doctors better understand your vaccination history.'**
+  String get addVaccine_recap_description;
+
+  /// No description provided for @vaccines_header_title.
+  ///
+  /// In en, this message translates to:
+  /// **'Your Vaccinations'**
+  String get vaccines_header_title;
+
+  /// No description provided for @vaccines_header_subtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Here you can find your current and past vaccinations.'**
+  String get vaccines_header_subtitle;
+
+  /// No description provided for @chronic_add_button.
+  ///
+  /// In en, this message translates to:
+  /// **'Add'**
+  String get chronic_add_button;
+
+  /// No description provided for @chronic_empty_title.
+  ///
+  /// In en, this message translates to:
+  /// **'No chronic diseases recorded'**
+  String get chronic_empty_title;
+
+  /// No description provided for @chronic_empty_subtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Add any chronic conditions you have to help doctors better understand your health.'**
+  String get chronic_empty_subtitle;
+
+  /// No description provided for @chronic_empty_add.
+  ///
+  /// In en, this message translates to:
+  /// **'Add chronic disease'**
+  String get chronic_empty_add;
+
+  /// No description provided for @chronic_empty_no_records.
+  ///
+  /// In en, this message translates to:
+  /// **'I have no chronic diseases'**
+  String get chronic_empty_no_records;
+
+  /// No description provided for @chronic_no_records_title.
+  ///
+  /// In en, this message translates to:
+  /// **'You have indicated no chronic diseases'**
+  String get chronic_no_records_title;
+
+  /// No description provided for @chronic_no_records_subtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'You can always update this information or add a new condition later.'**
+  String get chronic_no_records_subtitle;
+
+  /// No description provided for @chronic_no_records_change.
+  ///
+  /// In en, this message translates to:
+  /// **'Change this information'**
+  String get chronic_no_records_change;
+
+  /// No description provided for @chronic_no_records_add.
+  ///
+  /// In en, this message translates to:
+  /// **'Add chronic disease'**
+  String get chronic_no_records_add;
+
+  /// No description provided for @chronic_information.
+  ///
+  /// In en, this message translates to:
+  /// **'Chronic Disease Information'**
+  String get chronic_information;
+
+  /// No description provided for @chronic_name.
+  ///
+  /// In en, this message translates to:
+  /// **'Disease Name'**
+  String get chronic_name;
+
+  /// No description provided for @deleteTheChronic.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete Chronic Disease'**
+  String get deleteTheChronic;
+
+  /// No description provided for @areYouSureToDeleteChronic.
+  ///
+  /// In en, this message translates to:
+  /// **'Are you sure you want to delete this chronic disease?'**
+  String get areYouSureToDeleteChronic;
+
+  /// No description provided for @addChronic_step1_title.
+  ///
+  /// In en, this message translates to:
+  /// **'Select chronic disease'**
+  String get addChronic_step1_title;
+
+  /// No description provided for @addChronic_step2_title.
+  ///
+  /// In en, this message translates to:
+  /// **'Severity level'**
+  String get addChronic_step2_title;
+
+  /// No description provided for @addChronic_step3_title.
+  ///
+  /// In en, this message translates to:
+  /// **'Diagnosis year'**
+  String get addChronic_step3_title;
+
+  /// No description provided for @addChronic_step4_title.
+  ///
+  /// In en, this message translates to:
+  /// **'Review information'**
+  String get addChronic_step4_title;
+
+  /// No description provided for @chronic_already_added.
+  ///
+  /// In en, this message translates to:
+  /// **'Already added'**
+  String get chronic_already_added;
+
+  /// No description provided for @addChronic_step1_desc.
+  ///
+  /// In en, this message translates to:
+  /// **'Search and select the correct chronic disease from the medical list.'**
+  String get addChronic_step1_desc;
+
+  /// No description provided for @addChronic_severity_title.
+  ///
+  /// In en, this message translates to:
+  /// **'How severe is this condition?'**
+  String get addChronic_severity_title;
+
+  /// No description provided for @addChronic_severity_desc.
+  ///
+  /// In en, this message translates to:
+  /// **'Choose the severity level as it usually affects you.'**
+  String get addChronic_severity_desc;
+
+  /// No description provided for @addChronic_year_title.
+  ///
+  /// In en, this message translates to:
+  /// **'When was this disease diagnosed?'**
+  String get addChronic_year_title;
+
+  /// No description provided for @addChronic_year_desc.
+  ///
+  /// In en, this message translates to:
+  /// **'Select the approximate year of diagnosis.'**
+  String get addChronic_year_desc;
+
+  /// No description provided for @addChronic_recap_title.
+  ///
+  /// In en, this message translates to:
+  /// **'Confirm information'**
+  String get addChronic_recap_title;
+
+  /// No description provided for @addChronic_recap_severity.
+  ///
+  /// In en, this message translates to:
+  /// **'Severity'**
+  String get addChronic_recap_severity;
+
+  /// No description provided for @addChronic_recap_description.
+  ///
+  /// In en, this message translates to:
+  /// **'This information helps doctors better assess your condition.'**
+  String get addChronic_recap_description;
+
+  /// No description provided for @chronic_header_title.
+  ///
+  /// In en, this message translates to:
+  /// **'Chronic Conditions'**
+  String get chronic_header_title;
+
+  /// No description provided for @chronic_header_subtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Here you can find diagnosed chronic diseases that require ongoing monitoring.'**
+  String get chronic_header_subtitle;
+
+  /// No description provided for @surgery_add_button.
+  ///
+  /// In en, this message translates to:
+  /// **'Add surgery'**
+  String get surgery_add_button;
+
+  /// No description provided for @surgery_empty_title.
+  ///
+  /// In en, this message translates to:
+  /// **'No surgeries recorded yet'**
+  String get surgery_empty_title;
+
+  /// No description provided for @surgery_empty_subtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Add your previous surgeries so doctors can better understand your medical background.'**
+  String get surgery_empty_subtitle;
+
+  /// No description provided for @surgery_empty_add.
+  ///
+  /// In en, this message translates to:
+  /// **'Add a surgery'**
+  String get surgery_empty_add;
+
+  /// No description provided for @surgery_empty_no_records.
+  ///
+  /// In en, this message translates to:
+  /// **'I have never had surgery'**
+  String get surgery_empty_no_records;
+
+  /// No description provided for @surgery_no_records_title.
+  ///
+  /// In en, this message translates to:
+  /// **'You indicated that you have no surgical history'**
+  String get surgery_no_records_title;
+
+  /// No description provided for @surgery_no_records_subtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'You can always update this information or add a surgery at any time.'**
+  String get surgery_no_records_subtitle;
+
+  /// No description provided for @surgery_no_records_change.
+  ///
+  /// In en, this message translates to:
+  /// **'Change this information'**
+  String get surgery_no_records_change;
+
+  /// No description provided for @surgery_no_records_add.
+  ///
+  /// In en, this message translates to:
+  /// **'Add a surgery'**
+  String get surgery_no_records_add;
+
+  /// No description provided for @surgery_information.
+  ///
+  /// In en, this message translates to:
+  /// **'Surgery information'**
+  String get surgery_information;
+
+  /// No description provided for @surgery_name.
+  ///
+  /// In en, this message translates to:
+  /// **'Surgery name'**
+  String get surgery_name;
+
+  /// No description provided for @deleteTheSurgery.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete surgery'**
+  String get deleteTheSurgery;
+
+  /// No description provided for @areYouSureToDeleteSurgery.
+  ///
+  /// In en, this message translates to:
+  /// **'Are you sure you want to delete this surgery?'**
+  String get areYouSureToDeleteSurgery;
+
+  /// No description provided for @addSurgery_step1_title.
+  ///
+  /// In en, this message translates to:
+  /// **'Choose a surgery'**
+  String get addSurgery_step1_title;
+
+  /// No description provided for @addSurgery_step2_title.
+  ///
+  /// In en, this message translates to:
+  /// **'When was it done?'**
+  String get addSurgery_step2_title;
+
+  /// No description provided for @addSurgery_step3_title.
+  ///
+  /// In en, this message translates to:
+  /// **'Review information'**
+  String get addSurgery_step3_title;
+
+  /// No description provided for @addSurgery_step1_desc.
+  ///
+  /// In en, this message translates to:
+  /// **'Search for the surgery from the medical list and choose the correct item.'**
+  String get addSurgery_step1_desc;
+
+  /// No description provided for @addSurgery_step2_desc.
+  ///
+  /// In en, this message translates to:
+  /// **'Choose the year when you had this surgery.'**
+  String get addSurgery_step2_desc;
+
+  /// No description provided for @addSurgery_recap_description.
+  ///
+  /// In en, this message translates to:
+  /// **'Providing this information helps your doctor understand your medical background better.'**
+  String get addSurgery_recap_description;
+
+  /// No description provided for @surgeries_header_title.
+  ///
+  /// In en, this message translates to:
+  /// **'Surgeries'**
+  String get surgeries_header_title;
+
+  /// No description provided for @surgeries_header_subtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Here you can find previously performed or documented surgical procedures.'**
+  String get surgeries_header_subtitle;
+
+  /// No description provided for @health_medications_title.
+  ///
+  /// In en, this message translates to:
+  /// **'Medications'**
+  String get health_medications_title;
+
+  /// No description provided for @health_medications_desc.
+  ///
+  /// In en, this message translates to:
+  /// **'List of medicines currently used'**
+  String get health_medications_desc;
+
+  /// No description provided for @medications_add_button.
+  ///
+  /// In en, this message translates to:
+  /// **'Add medication'**
+  String get medications_add_button;
+
+  /// No description provided for @medications_empty_title.
+  ///
+  /// In en, this message translates to:
+  /// **'No medications added'**
+  String get medications_empty_title;
+
+  /// No description provided for @medications_empty_subtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Track the medications you take regularly.'**
+  String get medications_empty_subtitle;
+
+  /// No description provided for @medications_empty_add.
+  ///
+  /// In en, this message translates to:
+  /// **'Add a medication'**
+  String get medications_empty_add;
+
+  /// No description provided for @medications_empty_no_records.
+  ///
+  /// In en, this message translates to:
+  /// **'I am not taking any medication'**
+  String get medications_empty_no_records;
+
+  /// No description provided for @medications_no_records_title.
+  ///
+  /// In en, this message translates to:
+  /// **'No medications recorded'**
+  String get medications_no_records_title;
+
+  /// No description provided for @medications_no_records_subtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'You stated that you take no medications.'**
+  String get medications_no_records_subtitle;
+
+  /// No description provided for @medications_no_records_change.
+  ///
+  /// In en, this message translates to:
+  /// **'Change selection'**
+  String get medications_no_records_change;
+
+  /// No description provided for @medications_no_records_add.
+  ///
+  /// In en, this message translates to:
+  /// **'Add medication'**
+  String get medications_no_records_add;
+
+  /// No description provided for @medications_information.
+  ///
+  /// In en, this message translates to:
+  /// **'Medication information'**
+  String get medications_information;
+
+  /// No description provided for @medications_name.
+  ///
+  /// In en, this message translates to:
+  /// **'Medication name'**
+  String get medications_name;
+
+  /// No description provided for @deleteTheMedication.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete medication'**
+  String get deleteTheMedication;
+
+  /// No description provided for @areYouSureToDeleteMedication.
+  ///
+  /// In en, this message translates to:
+  /// **'Are you sure you want to delete this medication?'**
+  String get areYouSureToDeleteMedication;
+
+  /// No description provided for @medications_add_title.
+  ///
+  /// In en, this message translates to:
+  /// **'Add a medication'**
+  String get medications_add_title;
+
+  /// No description provided for @medications_step2_title.
+  ///
+  /// In en, this message translates to:
+  /// **'When did you start taking this medication?'**
+  String get medications_step2_title;
+
+  /// No description provided for @medications_step3_title.
+  ///
+  /// In en, this message translates to:
+  /// **'What dosage and frequency do you take?'**
+  String get medications_step3_title;
+
+  /// No description provided for @medications_recap_title.
+  ///
+  /// In en, this message translates to:
+  /// **'Medication recap'**
+  String get medications_recap_title;
+
+  /// No description provided for @medications_no_results.
+  ///
+  /// In en, this message translates to:
+  /// **'No medications found'**
+  String get medications_no_results;
+
+  /// No description provided for @medications_search_value.
+  ///
+  /// In en, this message translates to:
+  /// **'medication'**
+  String get medications_search_value;
+
+  /// No description provided for @medications_search_header.
+  ///
+  /// In en, this message translates to:
+  /// **'Search your medication'**
+  String get medications_search_header;
+
+  /// No description provided for @medications_step2_date_label.
+  ///
+  /// In en, this message translates to:
+  /// **'Start date'**
+  String get medications_step2_date_label;
+
+  /// No description provided for @medications_start_date.
+  ///
+  /// In en, this message translates to:
+  /// **'Start date'**
+  String get medications_start_date;
+
+  /// No description provided for @medications_dosage_title.
+  ///
+  /// In en, this message translates to:
+  /// **'Dosage and frequency'**
+  String get medications_dosage_title;
+
+  /// No description provided for @medications_step3_optional.
+  ///
+  /// In en, this message translates to:
+  /// **'Optional'**
+  String get medications_step3_optional;
+
+  /// No description provided for @medications_step3_example.
+  ///
+  /// In en, this message translates to:
+  /// **'Example: 2 pills morning and evening'**
+  String get medications_step3_example;
+
+  /// No description provided for @medications_header_title.
+  ///
+  /// In en, this message translates to:
+  /// **'Your medications'**
+  String get medications_header_title;
+
+  /// No description provided for @medications_header_subtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Here you can find your current and past medications.'**
+  String get medications_header_subtitle;
+
+  /// No description provided for @family_add_button.
+  ///
+  /// In en, this message translates to:
+  /// **'Add Family Condition'**
+  String get family_add_button;
+
+  /// No description provided for @family_empty_title.
+  ///
+  /// In en, this message translates to:
+  /// **'No Family History'**
+  String get family_empty_title;
+
+  /// No description provided for @family_empty_subtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Track hereditary conditions that run in your family.'**
+  String get family_empty_subtitle;
+
+  /// No description provided for @family_empty_add.
+  ///
+  /// In en, this message translates to:
+  /// **'Add a family condition'**
+  String get family_empty_add;
+
+  /// No description provided for @family_empty_no_records.
+  ///
+  /// In en, this message translates to:
+  /// **'I have no family history'**
+  String get family_empty_no_records;
+
+  /// No description provided for @family_no_records_title.
+  ///
+  /// In en, this message translates to:
+  /// **'No Family Conditions Recorded'**
+  String get family_no_records_title;
+
+  /// No description provided for @family_no_records_subtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'You can always update this later.'**
+  String get family_no_records_subtitle;
+
+  /// No description provided for @family_no_records_change.
+  ///
+  /// In en, this message translates to:
+  /// **'Change my decision'**
+  String get family_no_records_change;
+
+  /// No description provided for @family_no_records_add.
+  ///
+  /// In en, this message translates to:
+  /// **'Add family condition'**
+  String get family_no_records_add;
+
+  /// No description provided for @family_information.
+  ///
+  /// In en, this message translates to:
+  /// **'Family Condition Information'**
+  String get family_information;
+
+  /// No description provided for @family_name.
+  ///
+  /// In en, this message translates to:
+  /// **'Condition Name'**
+  String get family_name;
+
+  /// No description provided for @deleteTheFamily.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete Family Condition'**
+  String get deleteTheFamily;
+
+  /// No description provided for @areYouSureToDeleteFamily.
+  ///
+  /// In en, this message translates to:
+  /// **'Are you sure you want to delete this family condition?'**
+  String get areYouSureToDeleteFamily;
+
+  /// No description provided for @addFamily_step1_title.
+  ///
+  /// In en, this message translates to:
+  /// **'Select the condition'**
+  String get addFamily_step1_title;
+
+  /// No description provided for @addFamily_step1_desc.
+  ///
+  /// In en, this message translates to:
+  /// **'Search for the condition diagnosed in your family.'**
+  String get addFamily_step1_desc;
+
+  /// No description provided for @addFamily_step2_title.
+  ///
+  /// In en, this message translates to:
+  /// **'Which family members have this condition?'**
+  String get addFamily_step2_title;
+
+  /// No description provided for @addFamily_step2_desc.
+  ///
+  /// In en, this message translates to:
+  /// **'Select all relatives who have been diagnosed.'**
+  String get addFamily_step2_desc;
+
+  /// No description provided for @addFamily_step3_title.
+  ///
+  /// In en, this message translates to:
+  /// **'At what age was the condition diagnosed?'**
+  String get addFamily_step3_title;
+
+  /// No description provided for @addFamily_step3_fieldHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter age (optional)'**
+  String get addFamily_step3_fieldHint;
+
+  /// No description provided for @addFamily_step4_title.
+  ///
+  /// In en, this message translates to:
+  /// **'Review information'**
+  String get addFamily_step4_title;
+
+  /// No description provided for @family_member.
+  ///
+  /// In en, this message translates to:
+  /// **'Family member'**
+  String get family_member;
+
+  /// No description provided for @family_condition.
+  ///
+  /// In en, this message translates to:
+  /// **'Condition'**
+  String get family_condition;
+
+  /// No description provided for @family_members.
+  ///
+  /// In en, this message translates to:
+  /// **'Family members'**
+  String get family_members;
+
+  /// No description provided for @family_age_at_diagnosis.
+  ///
+  /// In en, this message translates to:
+  /// **'Age at diagnosis'**
+  String get family_age_at_diagnosis;
+
+  /// No description provided for @family_father.
+  ///
+  /// In en, this message translates to:
+  /// **'Father'**
+  String get family_father;
+
+  /// No description provided for @family_mother.
+  ///
+  /// In en, this message translates to:
+  /// **'Mother'**
+  String get family_mother;
+
+  /// No description provided for @family_brother.
+  ///
+  /// In en, this message translates to:
+  /// **'Brother'**
+  String get family_brother;
+
+  /// No description provided for @family_sister.
+  ///
+  /// In en, this message translates to:
+  /// **'Sister'**
+  String get family_sister;
+
+  /// No description provided for @family_maternal_grandfather.
+  ///
+  /// In en, this message translates to:
+  /// **'Maternal grandfather'**
+  String get family_maternal_grandfather;
+
+  /// No description provided for @family_maternal_grandmother.
+  ///
+  /// In en, this message translates to:
+  /// **'Maternal grandmother'**
+  String get family_maternal_grandmother;
+
+  /// No description provided for @family_paternal_grandfather.
+  ///
+  /// In en, this message translates to:
+  /// **'Paternal grandfather'**
+  String get family_paternal_grandfather;
+
+  /// No description provided for @family_paternal_grandmother.
+  ///
+  /// In en, this message translates to:
+  /// **'Paternal grandmother'**
+  String get family_paternal_grandmother;
+
+  /// No description provided for @family_daughter.
+  ///
+  /// In en, this message translates to:
+  /// **'Daughter'**
+  String get family_daughter;
+
+  /// No description provided for @family_son.
+  ///
+  /// In en, this message translates to:
+  /// **'Son'**
+  String get family_son;
+
+  /// No description provided for @family_uncle.
+  ///
+  /// In en, this message translates to:
+  /// **'Uncle'**
+  String get family_uncle;
+
+  /// No description provided for @family_aunt.
+  ///
+  /// In en, this message translates to:
+  /// **'Aunt'**
+  String get family_aunt;
+
+  /// No description provided for @family_cousin_f.
+  ///
+  /// In en, this message translates to:
+  /// **'Cousin (F)'**
+  String get family_cousin_f;
+
+  /// No description provided for @family_cousin_m.
+  ///
+  /// In en, this message translates to:
+  /// **'Cousin (M)'**
+  String get family_cousin_m;
+
+  /// No description provided for @addFamily_recap_description.
+  ///
+  /// In en, this message translates to:
+  /// **'Please review the information carefully before saving. You can edit it later from your medical record.'**
+  String get addFamily_recap_description;
+
+  /// No description provided for @family_header_title.
+  ///
+  /// In en, this message translates to:
+  /// **'Family History'**
+  String get family_header_title;
+
+  /// No description provided for @family_header_subtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Here you can find inherited or family-related medical conditions.'**
+  String get family_header_subtitle;
+
+  /// No description provided for @search_doctor.
+  ///
+  /// In en, this message translates to:
+  /// **'Search by doctor name'**
+  String get search_doctor;
+
+  /// No description provided for @all_years.
+  ///
+  /// In en, this message translates to:
+  /// **'All years'**
+  String get all_years;
+
+  /// No description provided for @health_report_exportPdf.
+  ///
+  /// In en, this message translates to:
+  /// **'Export as PDF'**
+  String get health_report_exportPdf;
+
+  /// No description provided for @health_report_sharePdf.
+  ///
+  /// In en, this message translates to:
+  /// **'Share report'**
+  String get health_report_sharePdf;
+
+  /// No description provided for @health_report_diagnosis.
+  ///
+  /// In en, this message translates to:
+  /// **'Diagnosis'**
+  String get health_report_diagnosis;
+
+  /// No description provided for @health_report_recommendation.
+  ///
+  /// In en, this message translates to:
+  /// **'Recommendations'**
+  String get health_report_recommendation;
+
+  /// No description provided for @health_report_clinic.
+  ///
+  /// In en, this message translates to:
+  /// **'Clinic information'**
+  String get health_report_clinic;
+
+  /// No description provided for @loading.
+  ///
+  /// In en, this message translates to:
+  /// **'Loading...'**
+  String get loading;
+
+  /// No description provided for @health_noReports_hint.
+  ///
+  /// In en, this message translates to:
+  /// **'No visit reports found for this patient.'**
+  String get health_noReports_hint;
+
+  /// No description provided for @health_report_details_title.
+  ///
+  /// In en, this message translates to:
+  /// **'Report Details'**
+  String get health_report_details_title;
+
+  /// No description provided for @health_report_section_summary.
+  ///
+  /// In en, this message translates to:
+  /// **'Visit Summary'**
+  String get health_report_section_summary;
+
+  /// No description provided for @health_report_recommendations.
+  ///
+  /// In en, this message translates to:
+  /// **'Recommendations'**
+  String get health_report_recommendations;
+
+  /// No description provided for @health_report_section_clinic.
+  ///
+  /// In en, this message translates to:
+  /// **'Clinic Information'**
+  String get health_report_section_clinic;
+
+  /// No description provided for @health_report_clinicName.
+  ///
+  /// In en, this message translates to:
+  /// **'Clinic Name'**
+  String get health_report_clinicName;
+
+  /// No description provided for @health_report_clinicAddress.
+  ///
+  /// In en, this message translates to:
+  /// **'Clinic Address'**
+  String get health_report_clinicAddress;
+
+  /// No description provided for @health_report_visit_date_label.
+  ///
+  /// In en, this message translates to:
+  /// **'Visit Date'**
+  String get health_report_visit_date_label;
+
+  /// No description provided for @health_report_added.
+  ///
+  /// In en, this message translates to:
+  /// **'Medical report added'**
+  String get health_report_added;
+
+  /// No description provided for @health_report_added_for_date.
+  ///
+  /// In en, this message translates to:
+  /// **'Report is added for the appointment of {date}'**
+  String health_report_added_for_date(Object date);
+
+  /// No description provided for @health_report_id.
+  ///
+  /// In en, this message translates to:
+  /// **'Report ID'**
+  String get health_report_id;
+
+  /// No description provided for @all_label.
+  ///
+  /// In en, this message translates to:
+  /// **'All'**
+  String get all_label;
+
+  /// No description provided for @month_jan.
+  ///
+  /// In en, this message translates to:
+  /// **'Jan'**
+  String get month_jan;
+
+  /// No description provided for @month_feb.
+  ///
+  /// In en, this message translates to:
+  /// **'Feb'**
+  String get month_feb;
+
+  /// No description provided for @month_mar.
+  ///
+  /// In en, this message translates to:
+  /// **'Mar'**
+  String get month_mar;
+
+  /// No description provided for @month_apr.
+  ///
+  /// In en, this message translates to:
+  /// **'Apr'**
+  String get month_apr;
+
+  /// No description provided for @month_may.
+  ///
+  /// In en, this message translates to:
+  /// **'May'**
+  String get month_may;
+
+  /// No description provided for @month_jun.
+  ///
+  /// In en, this message translates to:
+  /// **'Jun'**
+  String get month_jun;
+
+  /// No description provided for @month_jul.
+  ///
+  /// In en, this message translates to:
+  /// **'Jul'**
+  String get month_jul;
+
+  /// No description provided for @month_aug.
+  ///
+  /// In en, this message translates to:
+  /// **'Aug'**
+  String get month_aug;
+
+  /// No description provided for @month_sep.
+  ///
+  /// In en, this message translates to:
+  /// **'Sep'**
+  String get month_sep;
+
+  /// No description provided for @month_oct.
+  ///
+  /// In en, this message translates to:
+  /// **'Oct'**
+  String get month_oct;
+
+  /// No description provided for @month_nov.
+  ///
+  /// In en, this message translates to:
+  /// **'Nov'**
+  String get month_nov;
+
+  /// No description provided for @month_dec.
+  ///
+  /// In en, this message translates to:
+  /// **'Dec'**
+  String get month_dec;
 
   /// No description provided for @documentAddedSuccessfully.
   ///

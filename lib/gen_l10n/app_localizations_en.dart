@@ -471,7 +471,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get selectCountry => 'Select Country';
 
   @override
-  String get save => 'SAVE';
+  String get save => 'Save';
 
   @override
   String get genderRequired => 'Gender is required';
@@ -1738,6 +1738,811 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get unexpectedError =>
       'An unexpected error occurred. Please try again later.';
+
+  @override
+  String get health_tab => 'Health';
+
+  @override
+  String get health_patientName => 'Health Profile';
+
+  @override
+  String get health_patientSubtitle => 'Your medical history in one place';
+
+  @override
+  String get health_switch => 'Switch';
+
+  @override
+  String get health_summary => 'Health summary';
+
+  @override
+  String get health_personalRecords_title => 'Personal Records';
+
+  @override
+  String get health_personalRecords_subtitle =>
+      'Your private documents and visit reports.';
+
+  @override
+  String get health_noReports => 'No reports available';
+
+  @override
+  String get health_reports_title => 'Visit Reports';
+
+  @override
+  String get health_reports_desc =>
+      'Reports written by your doctors during visits';
+
+  @override
+  String get health_allergies_title => 'Allergies';
+
+  @override
+  String get health_allergies_desc =>
+      'Drugs, foods or substances you are allergic to';
+
+  @override
+  String get health_chronic_title => 'Chronic conditions';
+
+  @override
+  String get health_chronic_desc => 'Diabetes, hypertension, asthma and others';
+
+  @override
+  String get health_operations_title => 'Previous surgeries';
+
+  @override
+  String get health_operations_desc => 'Track the surgeries you had';
+
+  @override
+  String get health_genetic_title => 'Genetic Conditions';
+
+  @override
+  String get health_genetic_desc => 'Genetic diseases in you or your family';
+
+  @override
+  String get health_family_title => 'Family history';
+
+  @override
+  String get health_family_desc => 'Common illnesses in your family';
+
+  @override
+  String get health_vaccines_title => 'Vaccinations';
+
+  @override
+  String get health_vaccines_desc =>
+      'All your vaccination history in one place';
+
+  @override
+  String get health_documents_title => 'Documents';
+
+  @override
+  String get health_documents_desc => 'Reports, tests, imaging and notes';
+
+  @override
+  String get health_other_title => 'Other info';
+
+  @override
+  String get health_other_desc => 'Additional health information';
+
+  @override
+  String health_search_hint(Object value) {
+    return 'Search for $value...';
+  }
+
+  @override
+  String get addAllergy_step1_title => 'Select an allergy';
+
+  @override
+  String get addAllergy_step2_title => 'Select severity';
+
+  @override
+  String get addAllergy_step3_title => 'Since when?';
+
+  @override
+  String get addAllergy_step4_title => 'Review your information';
+
+  @override
+  String get addAllergy_search_hint => 'Search allergy name...';
+
+  @override
+  String get addAllergy_severity_title => 'How severe is this allergy?';
+
+  @override
+  String get low => 'Mild';
+
+  @override
+  String get medium => 'Moderate';
+
+  @override
+  String get high => 'Severe';
+
+  @override
+  String get addAllergy_year_title =>
+      'When did you first know about this allergy?';
+
+  @override
+  String get addAllergy_recap_title => 'Confirm your information';
+
+  @override
+  String get addAllergy_recap_allergy => 'Allergy';
+
+  @override
+  String get addAllergy_recap_severity => 'Severity';
+
+  @override
+  String get addAllergy_recap_year => 'Year';
+
+  @override
+  String get addAllergy_year_hint => 'Select year';
+
+  @override
+  String get addAllergy_recap_description =>
+      'Adding this information helps doctors evaluate your health more accurately.';
+
+  @override
+  String get addAllergy_step1_desc =>
+      'Search for your allergy in the medical list and select the correct item.';
+
+  @override
+  String get noResults => 'No matching results.';
+
+  @override
+  String get addAllergy_severity_desc =>
+      'Choose how strong or severe your allergy usually is.';
+
+  @override
+  String get addAllergy_year_desc =>
+      'Select the approximate year when this allergy began.';
+
+  @override
+  String get next => 'Next';
+
+  @override
+  String get skip => 'Skip';
+
+  @override
+  String get allergies_empty_title => 'No allergies recorded yet';
+
+  @override
+  String get allergies_empty_subtitle =>
+      'Add your important allergies so doctors can consider them during treatment.';
+
+  @override
+  String get allergies_empty_add => 'Add an allergy';
+
+  @override
+  String get allergies_empty_no_allergies => 'I don’t have any allergies';
+
+  @override
+  String get allergies_no_allergies_title => 'Marked as having no allergies';
+
+  @override
+  String get allergies_no_allergies_subtitle =>
+      'You can always change this or add a new allergy later.';
+
+  @override
+  String get allergies_no_allergies_change => 'Change this information';
+
+  @override
+  String get allergies_no_allergies_add => 'Add an allergy';
+
+  @override
+  String get allergies_header_title => 'Your recorded allergies';
+
+  @override
+  String get allergies_header_subtitle =>
+      'Make sure this information is always up to date.';
+
+  @override
+  String get allergies_header_add_btn => 'Add';
+
+  @override
+  String get already_added => 'Already added';
+
+  @override
+  String get severity_mild => 'Mild';
+
+  @override
+  String get severity_moderate => 'Moderate';
+
+  @override
+  String get severity_severe => 'Severe';
+
+  @override
+  String get confirmed_true => 'Confirmed by doctor';
+
+  @override
+  String get confirmed_false => 'Not confirmed';
+
+  @override
+  String get showDetails => 'Show details';
+
+  @override
+  String get severity => 'Severity';
+
+  @override
+  String get year => 'Year';
+
+  @override
+  String get source => 'Source';
+
+  @override
+  String get proofs => 'Proofs';
+
+  @override
+  String get addedAt => 'Added at';
+
+  @override
+  String get updatedAt => 'Updated at';
+
+  @override
+  String get deleteTheAllergy => 'Delete the allergy';
+
+  @override
+  String get areYouSureToDeleteAllergy =>
+      'Are you sure you want to delete this allergy?';
+
+  @override
+  String get allergy_information => 'Information';
+
+  @override
+  String get allergyName => 'Allergy';
+
+  @override
+  String get description => 'Description';
+
+  @override
+  String get vaccines_add_button => 'Add a vaccine';
+
+  @override
+  String get vaccines_empty_title => 'No vaccines added yet';
+
+  @override
+  String get vaccines_empty_subtitle => 'Track your vaccination history easily';
+
+  @override
+  String get vaccines_empty_add => 'Add a vaccine';
+
+  @override
+  String get vaccines_empty_no_records => 'I have no vaccines';
+
+  @override
+  String get vaccines_no_records_title => 'No vaccinations recorded';
+
+  @override
+  String get vaccines_no_records_subtitle => 'You can update this at any time';
+
+  @override
+  String get vaccines_no_records_change => 'Change decision';
+
+  @override
+  String get vaccines_no_records_add => 'Add a vaccine';
+
+  @override
+  String get vaccine_information => 'Vaccine Information';
+
+  @override
+  String get vaccine_name => 'Vaccine';
+
+  @override
+  String get deleteTheVaccine => 'Delete the vaccine';
+
+  @override
+  String get areYouSureToDeleteVaccine =>
+      'Are you sure you want to delete this vaccine?';
+
+  @override
+  String get addVaccine_step1_title => 'Choose the vaccine';
+
+  @override
+  String get addVaccine_step1_desc =>
+      'Search for the vaccine in the medical list and select the correct item.';
+
+  @override
+  String get addVaccine_step2_title => 'When did you receive this vaccine?';
+
+  @override
+  String get addVaccine_step2_desc =>
+      'Select the approximate year you received this vaccine.';
+
+  @override
+  String get addVaccine_step3_title => 'Review information';
+
+  @override
+  String get addVaccine_recap_description =>
+      'Adding this information helps doctors better understand your vaccination history.';
+
+  @override
+  String get vaccines_header_title => 'Your Vaccinations';
+
+  @override
+  String get vaccines_header_subtitle =>
+      'Here you can find your current and past vaccinations.';
+
+  @override
+  String get chronic_add_button => 'Add';
+
+  @override
+  String get chronic_empty_title => 'No chronic diseases recorded';
+
+  @override
+  String get chronic_empty_subtitle =>
+      'Add any chronic conditions you have to help doctors better understand your health.';
+
+  @override
+  String get chronic_empty_add => 'Add chronic disease';
+
+  @override
+  String get chronic_empty_no_records => 'I have no chronic diseases';
+
+  @override
+  String get chronic_no_records_title =>
+      'You have indicated no chronic diseases';
+
+  @override
+  String get chronic_no_records_subtitle =>
+      'You can always update this information or add a new condition later.';
+
+  @override
+  String get chronic_no_records_change => 'Change this information';
+
+  @override
+  String get chronic_no_records_add => 'Add chronic disease';
+
+  @override
+  String get chronic_information => 'Chronic Disease Information';
+
+  @override
+  String get chronic_name => 'Disease Name';
+
+  @override
+  String get deleteTheChronic => 'Delete Chronic Disease';
+
+  @override
+  String get areYouSureToDeleteChronic =>
+      'Are you sure you want to delete this chronic disease?';
+
+  @override
+  String get addChronic_step1_title => 'Select chronic disease';
+
+  @override
+  String get addChronic_step2_title => 'Severity level';
+
+  @override
+  String get addChronic_step3_title => 'Diagnosis year';
+
+  @override
+  String get addChronic_step4_title => 'Review information';
+
+  @override
+  String get chronic_already_added => 'Already added';
+
+  @override
+  String get addChronic_step1_desc =>
+      'Search and select the correct chronic disease from the medical list.';
+
+  @override
+  String get addChronic_severity_title => 'How severe is this condition?';
+
+  @override
+  String get addChronic_severity_desc =>
+      'Choose the severity level as it usually affects you.';
+
+  @override
+  String get addChronic_year_title => 'When was this disease diagnosed?';
+
+  @override
+  String get addChronic_year_desc =>
+      'Select the approximate year of diagnosis.';
+
+  @override
+  String get addChronic_recap_title => 'Confirm information';
+
+  @override
+  String get addChronic_recap_severity => 'Severity';
+
+  @override
+  String get addChronic_recap_description =>
+      'This information helps doctors better assess your condition.';
+
+  @override
+  String get chronic_header_title => 'Chronic Conditions';
+
+  @override
+  String get chronic_header_subtitle =>
+      'Here you can find diagnosed chronic diseases that require ongoing monitoring.';
+
+  @override
+  String get surgery_add_button => 'Add surgery';
+
+  @override
+  String get surgery_empty_title => 'No surgeries recorded yet';
+
+  @override
+  String get surgery_empty_subtitle =>
+      'Add your previous surgeries so doctors can better understand your medical background.';
+
+  @override
+  String get surgery_empty_add => 'Add a surgery';
+
+  @override
+  String get surgery_empty_no_records => 'I have never had surgery';
+
+  @override
+  String get surgery_no_records_title =>
+      'You indicated that you have no surgical history';
+
+  @override
+  String get surgery_no_records_subtitle =>
+      'You can always update this information or add a surgery at any time.';
+
+  @override
+  String get surgery_no_records_change => 'Change this information';
+
+  @override
+  String get surgery_no_records_add => 'Add a surgery';
+
+  @override
+  String get surgery_information => 'Surgery information';
+
+  @override
+  String get surgery_name => 'Surgery name';
+
+  @override
+  String get deleteTheSurgery => 'Delete surgery';
+
+  @override
+  String get areYouSureToDeleteSurgery =>
+      'Are you sure you want to delete this surgery?';
+
+  @override
+  String get addSurgery_step1_title => 'Choose a surgery';
+
+  @override
+  String get addSurgery_step2_title => 'When was it done?';
+
+  @override
+  String get addSurgery_step3_title => 'Review information';
+
+  @override
+  String get addSurgery_step1_desc =>
+      'Search for the surgery from the medical list and choose the correct item.';
+
+  @override
+  String get addSurgery_step2_desc =>
+      'Choose the year when you had this surgery.';
+
+  @override
+  String get addSurgery_recap_description =>
+      'Providing this information helps your doctor understand your medical background better.';
+
+  @override
+  String get surgeries_header_title => 'Surgeries';
+
+  @override
+  String get surgeries_header_subtitle =>
+      'Here you can find previously performed or documented surgical procedures.';
+
+  @override
+  String get health_medications_title => 'Medications';
+
+  @override
+  String get health_medications_desc => 'List of medicines currently used';
+
+  @override
+  String get medications_add_button => 'Add medication';
+
+  @override
+  String get medications_empty_title => 'No medications added';
+
+  @override
+  String get medications_empty_subtitle =>
+      'Track the medications you take regularly.';
+
+  @override
+  String get medications_empty_add => 'Add a medication';
+
+  @override
+  String get medications_empty_no_records => 'I am not taking any medication';
+
+  @override
+  String get medications_no_records_title => 'No medications recorded';
+
+  @override
+  String get medications_no_records_subtitle =>
+      'You stated that you take no medications.';
+
+  @override
+  String get medications_no_records_change => 'Change selection';
+
+  @override
+  String get medications_no_records_add => 'Add medication';
+
+  @override
+  String get medications_information => 'Medication information';
+
+  @override
+  String get medications_name => 'Medication name';
+
+  @override
+  String get deleteTheMedication => 'Delete medication';
+
+  @override
+  String get areYouSureToDeleteMedication =>
+      'Are you sure you want to delete this medication?';
+
+  @override
+  String get medications_add_title => 'Add a medication';
+
+  @override
+  String get medications_step2_title =>
+      'When did you start taking this medication?';
+
+  @override
+  String get medications_step3_title =>
+      'What dosage and frequency do you take?';
+
+  @override
+  String get medications_recap_title => 'Medication recap';
+
+  @override
+  String get medications_no_results => 'No medications found';
+
+  @override
+  String get medications_search_value => 'medication';
+
+  @override
+  String get medications_search_header => 'Search your medication';
+
+  @override
+  String get medications_step2_date_label => 'Start date';
+
+  @override
+  String get medications_start_date => 'Start date';
+
+  @override
+  String get medications_dosage_title => 'Dosage and frequency';
+
+  @override
+  String get medications_step3_optional => 'Optional';
+
+  @override
+  String get medications_step3_example =>
+      'Example: 2 pills morning and evening';
+
+  @override
+  String get medications_header_title => 'Your medications';
+
+  @override
+  String get medications_header_subtitle =>
+      'Here you can find your current and past medications.';
+
+  @override
+  String get family_add_button => 'Add Family Condition';
+
+  @override
+  String get family_empty_title => 'No Family History';
+
+  @override
+  String get family_empty_subtitle =>
+      'Track hereditary conditions that run in your family.';
+
+  @override
+  String get family_empty_add => 'Add a family condition';
+
+  @override
+  String get family_empty_no_records => 'I have no family history';
+
+  @override
+  String get family_no_records_title => 'No Family Conditions Recorded';
+
+  @override
+  String get family_no_records_subtitle => 'You can always update this later.';
+
+  @override
+  String get family_no_records_change => 'Change my decision';
+
+  @override
+  String get family_no_records_add => 'Add family condition';
+
+  @override
+  String get family_information => 'Family Condition Information';
+
+  @override
+  String get family_name => 'Condition Name';
+
+  @override
+  String get deleteTheFamily => 'Delete Family Condition';
+
+  @override
+  String get areYouSureToDeleteFamily =>
+      'Are you sure you want to delete this family condition?';
+
+  @override
+  String get addFamily_step1_title => 'Select the condition';
+
+  @override
+  String get addFamily_step1_desc =>
+      'Search for the condition diagnosed in your family.';
+
+  @override
+  String get addFamily_step2_title =>
+      'Which family members have this condition?';
+
+  @override
+  String get addFamily_step2_desc =>
+      'Select all relatives who have been diagnosed.';
+
+  @override
+  String get addFamily_step3_title =>
+      'At what age was the condition diagnosed?';
+
+  @override
+  String get addFamily_step3_fieldHint => 'Enter age (optional)';
+
+  @override
+  String get addFamily_step4_title => 'Review information';
+
+  @override
+  String get family_member => 'Family member';
+
+  @override
+  String get family_condition => 'Condition';
+
+  @override
+  String get family_members => 'Family members';
+
+  @override
+  String get family_age_at_diagnosis => 'Age at diagnosis';
+
+  @override
+  String get family_father => 'Father';
+
+  @override
+  String get family_mother => 'Mother';
+
+  @override
+  String get family_brother => 'Brother';
+
+  @override
+  String get family_sister => 'Sister';
+
+  @override
+  String get family_maternal_grandfather => 'Maternal grandfather';
+
+  @override
+  String get family_maternal_grandmother => 'Maternal grandmother';
+
+  @override
+  String get family_paternal_grandfather => 'Paternal grandfather';
+
+  @override
+  String get family_paternal_grandmother => 'Paternal grandmother';
+
+  @override
+  String get family_daughter => 'Daughter';
+
+  @override
+  String get family_son => 'Son';
+
+  @override
+  String get family_uncle => 'Uncle';
+
+  @override
+  String get family_aunt => 'Aunt';
+
+  @override
+  String get family_cousin_f => 'Cousin (F)';
+
+  @override
+  String get family_cousin_m => 'Cousin (M)';
+
+  @override
+  String get addFamily_recap_description =>
+      'Please review the information carefully before saving. You can edit it later from your medical record.';
+
+  @override
+  String get family_header_title => 'Family History';
+
+  @override
+  String get family_header_subtitle =>
+      'Here you can find inherited or family-related medical conditions.';
+
+  @override
+  String get search_doctor => 'Search by doctor name';
+
+  @override
+  String get all_years => 'All years';
+
+  @override
+  String get health_report_exportPdf => 'Export as PDF';
+
+  @override
+  String get health_report_sharePdf => 'Share report';
+
+  @override
+  String get health_report_diagnosis => 'Diagnosis';
+
+  @override
+  String get health_report_recommendation => 'Recommendations';
+
+  @override
+  String get health_report_clinic => 'Clinic information';
+
+  @override
+  String get loading => 'Loading...';
+
+  @override
+  String get health_noReports_hint =>
+      'No visit reports found for this patient.';
+
+  @override
+  String get health_report_details_title => 'Report Details';
+
+  @override
+  String get health_report_section_summary => 'Visit Summary';
+
+  @override
+  String get health_report_recommendations => 'Recommendations';
+
+  @override
+  String get health_report_section_clinic => 'Clinic Information';
+
+  @override
+  String get health_report_clinicName => 'Clinic Name';
+
+  @override
+  String get health_report_clinicAddress => 'Clinic Address';
+
+  @override
+  String get health_report_visit_date_label => 'Visit Date';
+
+  @override
+  String get health_report_added => 'Medical report added';
+
+  @override
+  String health_report_added_for_date(Object date) {
+    return 'Report is added for the appointment of $date';
+  }
+
+  @override
+  String get health_report_id => 'Report ID';
+
+  @override
+  String get all_label => 'All';
+
+  @override
+  String get month_jan => 'Jan';
+
+  @override
+  String get month_feb => 'Feb';
+
+  @override
+  String get month_mar => 'Mar';
+
+  @override
+  String get month_apr => 'Apr';
+
+  @override
+  String get month_may => 'May';
+
+  @override
+  String get month_jun => 'Jun';
+
+  @override
+  String get month_jul => 'Jul';
+
+  @override
+  String get month_aug => 'Aug';
+
+  @override
+  String get month_sep => 'Sep';
+
+  @override
+  String get month_oct => 'Oct';
+
+  @override
+  String get month_nov => 'Nov';
+
+  @override
+  String get month_dec => 'Dec';
 
   @override
   String get documentAddedSuccessfully => 'Document added successfully!';

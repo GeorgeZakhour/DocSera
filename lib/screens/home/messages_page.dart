@@ -1,8 +1,10 @@
-  import 'package:docsera/Business_Logic/Messages_page/messages_cubit.dart';
+  import 'package:docsera/Business_Logic/Messages_page/conversation_cubit.dart';
+import 'package:docsera/Business_Logic/Messages_page/messages_cubit.dart';
   import 'package:docsera/Business_Logic/Messages_page/messages_state.dart';
-  import 'package:docsera/screens/home/messages/conversation_page.dart';
+  import 'package:docsera/screens/home/messages/conversation/conversation_page.dart';
   import 'package:docsera/screens/home/shimmer/shimmer_widgets.dart';
   import 'package:docsera/screens/search_page.dart';
+import 'package:docsera/services/supabase/supabase_conversation_service.dart';
 import 'package:docsera/utils/doctor_image_utils.dart';
   import 'package:flutter/material.dart';
   import 'package:flutter_bloc/flutter_bloc.dart';
@@ -488,19 +490,20 @@ import 'package:docsera/utils/doctor_image_utils.dart';
           await Navigator.push(
             context,
             MaterialPageRoute(
-              builder: (_) => ConversationPage(
-                conversationId: convo.id,
-                doctorName: convo.doctorName ?? '',
-                doctorSpecialty: convo.doctorSpecialty ?? '',
-                doctorImage: imageResult.imageProvider,
-                isClosed: convo.isClosed,
-                patientName: convo.patientName ?? '',
-                accountHolderName: convo.accountHolderName ?? '',
-                selectedReason: convo.selectedReason ?? '',
+              builder: (_) => BlocProvider(
+                create: (_) => ConversationCubit(ConversationService()),
+                child: ConversationPage(
+                  conversationId: convo.id,
+                  doctorName: convo.doctorName ?? '',
+                  patientName: convo.patientName ?? '',
+                  accountHolderName: convo.accountHolderName ?? '',
+                  doctorAvatar: imageResult.imageProvider,      // أهم شيء
+                ),
 
               ),
             ),
           );
+
 
           context.read<MessagesCubit>().loadMessages(context); // ✅ reload after returning
         },

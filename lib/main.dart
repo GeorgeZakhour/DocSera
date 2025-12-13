@@ -6,6 +6,7 @@ import 'package:docsera/Business_Logic/Authentication/auth_state.dart' as custom
 import 'package:docsera/Business_Logic/Available_appointments_page/doctor_schedule_cubit.dart';
 import 'package:docsera/Business_Logic/Documents_page/documents/documents_cubit.dart';
 import 'package:docsera/Business_Logic/Documents_page/notes/notes_cubit.dart';
+import 'package:docsera/Business_Logic/Health_page/patient_switcher_cubit.dart';
 import 'package:docsera/Business_Logic/Main_page/main_screen_cubit.dart';
 import 'package:docsera/Business_Logic/Messages_page/messages_cubit.dart';
 import 'package:docsera/splash_screen.dart';
@@ -23,6 +24,7 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:timezone/data/latest.dart' as tz;
+import 'Business_Logic/Account_page/user_state.dart';
 import 'Business_Logic/Authentication/auth_cubit.dart';
 import 'app/const.dart';
 import 'services/supabase/supabase_user_service.dart';
@@ -79,6 +81,9 @@ await Socket.connect('192.168.1.1', 80, timeout: Duration(seconds: 1))
         BlocProvider(create: (context) => UserCubit(supabaseService, prefs)),
         BlocProvider(create: (context) => DoctorScheduleCubit()),
         BlocProvider(create: (context) => NotesCubit()),
+        BlocProvider(create: (_) => PatientSwitcherCubit()),
+
+
       ],
       child: BlocListener<AuthCubit, custom_auth.AppAuthState>(
         listener: (context, state) {
@@ -87,7 +92,18 @@ await Socket.connect('192.168.1.1', 80, timeout: Duration(seconds: 1))
           context.read<DocumentsCubit>().listenToDocuments(context);
           context.read<NotesCubit>().listenToNotes(context);
           context.read<UserCubit>().loadUserData(context);
+
+          // 🔵 بعد تحميل بيانات المستخدم – جهّز PatientSwitcherCubit
+          final userState = context.read<UserCubit>().state;
+          if (userState is UserLoaded) {
+            context.read<PatientSwitcherCubit>().switchToUser(
+              userState.userId,
+              userState.userName,
+            );
+          }
+
         },
+
         child: MyApp(savedLocale: savedLocale),
       ),
     ),

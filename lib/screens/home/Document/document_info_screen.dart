@@ -454,38 +454,38 @@ class _DocumentInfoScreenState extends State<DocumentInfoScreen> {
         throw Exception("User ID not found");
       }
 
-      final tempId = DateTime.now().millisecondsSinceEpoch.toString();
-      final name = _nameController.text.trim().isEmpty
+      // 🆔 ID ثابت للـ attachment نفسه
+      final String attachmentId = DateTime.now().millisecondsSinceEpoch.toString();
+
+      // 📄 اسم الملف (إما من المستخدم أو Auto Name)
+      final String name = _nameController.text.trim().isEmpty
           ? await _generateAutoName(userId)
           : _nameController.text.trim();
 
-      final uploadedAt = DateTime.now();
-      final isPdf = widget.images.first.toLowerCase().endsWith('.pdf');
-      final fileType = isPdf ? 'pdf' : 'image';
+      final DateTime uploadedAt = DateTime.now();
 
-      // 🧮 تجهيز الملفات
-      final List<File> filesToUpload;
+      final bool isPdf = widget.images.first.toLowerCase().endsWith('.pdf');
+      final String fileType = isPdf ? 'pdf' : 'image';
+
+      // 🧮 تجهيز الملفات للرفع
+      final List<File> filesToUpload = [];
 
       if (isPdf) {
-        // ✅ PDF نفس ما كان (حد 5MB)
+        // ✅ PDF بدون ضغط – حد 5MB
         final pdfFile = File(widget.images.first);
         final sizeInBytes = await pdfFile.length();
         if (sizeInBytes > 5 * 1024 * 1024) {
           throw Exception("PDF too large");
         }
-        filesToUpload = [pdfFile];
+        filesToUpload.add(pdfFile);
       } else {
-        // ✅ في sendMode لموعد → لا نضغط الصور، فقط نتأكد من الحجم (حد 5MB لكل صورة)
-        debugPrint("📂 Preparing image files for appointment attachment (NO COMPRESSION)");
-        filesToUpload = [];
+        // ✅ sendMode لموعد: لا ضغط، فقط تأكد أن كل صورة <= 5MB
         for (final imgPath in widget.images) {
           final file = File(imgPath);
-          debugPrint("➡ Image path: ${file.path} | exists: ${file.existsSync()}");
           if (!file.existsSync()) {
             throw Exception("Image file not found: ${file.path}");
           }
           final size = await file.length();
-          debugPrint("   size: ${(size / 1024).toStringAsFixed(2)} KB");
           if (size > 5 * 1024 * 1024) {
             throw Exception("Document too large");
           }
@@ -493,63 +493,45 @@ class _DocumentInfoScreenState extends State<DocumentInfoScreen> {
         }
       }
 
+      // 📤 الرفع إلى Bucket appointments-attachments
       final supabase = Supabase.instance.client;
       final storage = supabase.storage.from('appointments-attachments');
+
       final List<String> paths = [];
 
-      // 📤 رفع الملفات إلى bucket appointments-attachments
       for (int i = 0; i < filesToUpload.length; i++) {
         final fileToUpload = filesToUpload[i];
-        final fileName = isPdf ? 'file.pdf' : 'page_$i.jpg';
-        final filePath =
-            '$userId/${widget.appointmentId}/$tempId/$fileName';
 
-        debugPrint("--------------------------------------------------");
-        debugPrint("UPLOAD START");
-        debugPrint("isPdf = $isPdf");
-        debugPrint("file index = $i");
-        debugPrint("fileToUpload.exists = ${fileToUpload.existsSync()}");
-        debugPrint("fileToUpload.path = ${fileToUpload.path}");
+        // نفس الفولدَر لكل Attachment، أسماء الملفات فقط تختلف
+        final String fileName = isPdf ? 'file.pdf' : 'page_$i.jpg';
+        final String filePath = '$userId/${widget.appointmentId}/$attachmentId/$fileName';
 
-        final fileSize = await fileToUpload.length();
-        debugPrint(
-            "fileToUpload.size = ${(fileSize / 1024).toStringAsFixed(2)} KB");
-
-        debugPrint("filePath = $filePath");
-        debugPrint("--------------------------------------------------");
-
-        try {
-          debugPrint("TRYING SUPABASE UPLOAD: $filePath");
-          final response = await storage.upload(
-            filePath,
-            fileToUpload,
-          );
-          debugPrint("UPLOAD SUCCESS: $response");
-        } catch (err, st) {
-          debugPrint("UPLOAD ERROR:");
-          debugPrint("error = $err");
-          debugPrint("stacktrace = $st");
-          rethrow;
-        }
-
-        debugPrint("UPLOAD FINISHED");
-        debugPrint("--------------------------------------------------");
+        await storage.upload(filePath, fileToUpload);
         paths.add(filePath);
       }
 
-      final attachment = {
-        'id': tempId,
-        'bucket': 'appointments-attachments',
-        'file_type': fileType,
+      // ✅ عدد الصفحات
+      final int pageCount = isPdf
+          ? (widget.pageCount ?? 1)
+          : filesToUpload.length;
+
+      // ✅ JSON النهائي للـ Attachment (الشكل الموحد)
+      final Map<String, dynamic> attachment = {
+        'id': attachmentId,
         'name': name,
+        'bucket': 'appointments-attachments',
+        'file_type': fileType,                 // "pdf" | "image"
+        'paths': paths,                        // relative storage paths
+        'page_count': pageCount,
+        'preview_path': paths.isNotEmpty ? paths.first : null,
         'patient_id': _selectedPatientId,
-        'page_count':
-        isPdf ? (widget.pageCount ?? 1) : filesToUpload.length,
-        'paths': paths,
-        'uploaded_at': uploadedAt.toIso8601String(),
         'uploaded_by_id': userId,
+        'uploaded_at': uploadedAt.toIso8601String(),
+        'source': 'appointment',
+        'appointment_id': widget.appointmentId,
       };
 
+      // 📥 قراءة الـ attachments الحالية من الموعد
       final apptRow = await supabase
           .from('appointments')
           .select('attachments')
@@ -558,8 +540,11 @@ class _DocumentInfoScreenState extends State<DocumentInfoScreen> {
 
       final List<dynamic> attachments =
           (apptRow?['attachments'] as List?)?.toList() ?? [];
+
+      // ➕ إضافة الـ attachment الجديد
       attachments.add(attachment);
 
+      // 💾 تحديث الموعد
       await supabase
           .from('appointments')
           .update({'attachments': attachments})
@@ -567,8 +552,10 @@ class _DocumentInfoScreenState extends State<DocumentInfoScreen> {
 
       if (!mounted) return;
 
-      Navigator.pop(context, true); // يرجع لـ SendDocumentToDoctorPage
+      // ✅ رجوع إلى صفحة الإرسال
+      Navigator.pop(context, true);
 
+      // إذا جاي من MultiPage ترجع لورا كمان
       if (widget.cameFromMultiPage && Navigator.canPop(context)) {
         Navigator.pop(context);
       }

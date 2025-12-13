@@ -7,7 +7,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:docsera/gen_l10n/app_localizations.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:docsera/screens/home/appointments_page.dart';
-import 'package:docsera/screens/home/documents_page.dart';
+import 'package:docsera/screens/home/health_page.dart';
 import 'package:docsera/screens/home/messages_page.dart';
 import 'package:docsera/screens/auth/identification_page.dart';
 import 'package:docsera/screens/home/account_page.dart';
@@ -20,11 +20,11 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:docsera/main.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
-
 class CustomBottomNavigationBar extends StatefulWidget {
   final int initialIndex;
 
-  const CustomBottomNavigationBar({Key? key, this.initialIndex = 0}) : super(key: key);
+  const CustomBottomNavigationBar({Key? key, this.initialIndex = 0})
+      : super(key: key);
 
   @override
   _CustomBottomNavigationBarState createState() =>
@@ -32,12 +32,11 @@ class CustomBottomNavigationBar extends StatefulWidget {
 }
 
 class _CustomBottomNavigationBarState extends State<CustomBottomNavigationBar>
-    with SingleTickerProviderStateMixin, AutomaticKeepAliveClientMixin  {
+    with SingleTickerProviderStateMixin, AutomaticKeepAliveClientMixin {
   @override
-  bool get wantKeepAlive => true; // ✅ يمنع إعادة تحميل الصفحة عند التنقل
+  bool get wantKeepAlive => true;
 
   bool isLoaded = false;
-  // bool isLoggedIn = false;
   int _currentIndex = 0;
   late bool isLoggedIn;
   late List<Widget> _pages;
@@ -48,9 +47,7 @@ class _CustomBottomNavigationBarState extends State<CustomBottomNavigationBar>
   void initState() {
     super.initState();
     _currentIndex = widget.initialIndex;
-    // _checkLoginStatus();
 
-    // ✅ تفعيل الاستماع مباشرة في البداية
     Future.microtask(() {
       final authState = context.read<AuthCubit>().state;
       if (authState is AuthAuthenticated) {
@@ -61,11 +58,10 @@ class _CustomBottomNavigationBarState extends State<CustomBottomNavigationBar>
     _pages = [
       MainScreen(),
       AppointmentsPage(),
-      DocumentsPage(),
+      const HealthPage(), // 🔹 بدل DocumentsPage
       MessagesPage(),
       AccountScreen(onLogout: () => _logout(context)),
     ];
-
 
     _animationController = AnimationController(
       duration: const Duration(milliseconds: 300),
@@ -85,7 +81,7 @@ class _CustomBottomNavigationBarState extends State<CustomBottomNavigationBar>
 
   Future<void> _logout(BuildContext context) async {
     try {
-      await Supabase.instance.client.auth.signOut(); // ✅ تسجيل الخروج من Supabase
+      await Supabase.instance.client.auth.signOut();
       SharedPreferences prefs = await SharedPreferences.getInstance();
       await prefs.setBool('isLoggedIn', false);
       setState(() {
@@ -94,7 +90,7 @@ class _CustomBottomNavigationBarState extends State<CustomBottomNavigationBar>
       });
       Navigator.pushAndRemoveUntil(
         context,
-        fadePageRoute(CustomBottomNavigationBar()),
+        fadePageRoute(const CustomBottomNavigationBar()),
             (Route<dynamic> route) => false,
       );
     } catch (e) {
@@ -131,19 +127,22 @@ class _CustomBottomNavigationBarState extends State<CustomBottomNavigationBar>
       builder: (BuildContext bottomSheetContext) {
         return StatefulBuilder(
           builder: (BuildContext innerContext, StateSetter setState) {
-            String currentLocale = Localizations.localeOf(innerContext).languageCode;
+            String currentLocale =
+                Localizations.localeOf(innerContext).languageCode;
             bool isArabic = currentLocale == 'ar';
 
             return Directionality(
-              textDirection: isArabic ? TextDirection.rtl : TextDirection.ltr,
+              textDirection:
+              isArabic ? TextDirection.rtl : TextDirection.ltr,
               child: Padding(
-                padding: const EdgeInsets.symmetric(vertical: 20, horizontal: 10),
+                padding: const EdgeInsets.symmetric(
+                    vertical: 20, horizontal: 10),
                 child: Column(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    // ✅ Title
                     Padding(
-                      padding: const EdgeInsets.symmetric(vertical: 10),
+                      padding:
+                      const EdgeInsets.symmetric(vertical: 10),
                       child: Text(
                         AppLocalizations.of(innerContext)!.chooseLanguage,
                         style: TextStyle(
@@ -155,12 +154,12 @@ class _CustomBottomNavigationBarState extends State<CustomBottomNavigationBar>
                       ),
                     ),
                     const Divider(),
-
-                    // ✅ Arabic Option
                     ListTile(
                       dense: true,
-                      contentPadding: EdgeInsets.symmetric(vertical: 2.h, horizontal: 16.w),
-                      leading: const Icon(Icons.language, color: AppColors.main),
+                      contentPadding: EdgeInsets.symmetric(
+                          vertical: 2.h, horizontal: 16.w),
+                      leading: const Icon(Icons.language,
+                          color: AppColors.main),
                       title: const Text(
                         "العربية",
                         style: TextStyle(
@@ -170,20 +169,21 @@ class _CustomBottomNavigationBarState extends State<CustomBottomNavigationBar>
                         ),
                       ),
                       trailing: currentLocale == 'ar'
-                          ? const Icon(Icons.check, color: AppColors.main) // ✅ Show checkmark if selected
+                          ? const Icon(Icons.check,
+                          color: AppColors.main)
                           : null,
                       onTap: () {
                         _changeLanguage("ar");
-                        setState(() {}); // ✅ Update UI instantly
+                        setState(() {});
                       },
                     ),
                     Divider(color: Colors.grey[300]),
-
-                    // ✅ English Option
                     ListTile(
                       dense: true,
-                      contentPadding: EdgeInsets.symmetric(vertical: 2.h, horizontal: 16.w),
-                      leading: const Icon(Icons.language, color: AppColors.main),
+                      contentPadding: EdgeInsets.symmetric(
+                          vertical: 2.h, horizontal: 16.w),
+                      leading: const Icon(Icons.language,
+                          color: AppColors.main),
                       title: const Text(
                         "English",
                         style: TextStyle(
@@ -193,11 +193,12 @@ class _CustomBottomNavigationBarState extends State<CustomBottomNavigationBar>
                         ),
                       ),
                       trailing: currentLocale == 'en'
-                          ? const Icon(Icons.check, color: AppColors.main) // ✅ Show checkmark if selected
+                          ? const Icon(Icons.check,
+                          color: AppColors.main)
                           : null,
                       onTap: () {
                         _changeLanguage("en");
-                        setState(() {}); // ✅ Update UI instantly
+                        setState(() {});
                       },
                     ),
                   ],
@@ -210,21 +211,19 @@ class _CustomBottomNavigationBarState extends State<CustomBottomNavigationBar>
     );
   }
 
-  /// ✅ تغيير اللغة بناءً على اختيار المستخدم
   void _changeLanguage(String languageCode) {
     final myAppState = MyApp.of(context);
     if (myAppState != null) {
       myAppState.changeLanguage(languageCode);
     }
 
-    setState(() {}); // ✅ Refresh UI
-    Navigator.pop(context); // ✅ Close the Bottom Sheet
+    setState(() {});
+    Navigator.pop(context);
   }
-
 
   @override
   Widget build(BuildContext context) {
-    super.build(context); // ✅ Required for AutomaticKeepAliveClientMixin to work properly
+    super.build(context);
 
     final authState = context.watch<AuthCubit>().state;
     final bool isLoggedIn = authState is AuthAuthenticated;
@@ -232,6 +231,9 @@ class _CustomBottomNavigationBarState extends State<CustomBottomNavigationBar>
     double screenWidth = MediaQuery.of(context).size.width;
     double buttonWidth = screenWidth / 5;
     DateTime? _lastBackPressed;
+
+    final bool isArabicLocale =
+        Localizations.localeOf(context).languageCode == 'ar';
 
     return WillPopScope(
       onWillPop: () async {
@@ -242,10 +244,10 @@ class _CustomBottomNavigationBarState extends State<CustomBottomNavigationBar>
           return false;
         }
 
-        // ✅ تفادي الضغط المكرر خلال ثانية
         if (_lastBackPressed != null &&
-            DateTime.now().difference(_lastBackPressed!) < const Duration(seconds: 1)) {
-          return true; // ✅ فعلاً خروج
+            DateTime.now().difference(_lastBackPressed!) <
+                const Duration(seconds: 1)) {
+          return true;
         }
 
         _lastBackPressed = DateTime.now();
@@ -262,8 +264,10 @@ class _CustomBottomNavigationBarState extends State<CustomBottomNavigationBar>
                   child: Material(
                     color: Colors.transparent,
                     child: AlertDialog(
-                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16.r)),
-                      contentPadding: EdgeInsets.symmetric(horizontal: 24.w, vertical: 20.h),
+                      shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(16.r)),
+                      contentPadding: EdgeInsets.symmetric(
+                          horizontal: 24.w, vertical: 20.h),
                       content: Column(
                         mainAxisSize: MainAxisSize.min,
                         children: [
@@ -274,7 +278,8 @@ class _CustomBottomNavigationBarState extends State<CustomBottomNavigationBar>
                           ),
                           SizedBox(height: 12.h),
                           Text(
-                            AppLocalizations.of(innerContext)!.areYouSureToExit,
+                            AppLocalizations.of(innerContext)!
+                                .areYouSureToExit,
                             style: AppTextStyles.getText2(innerContext),
                             textAlign: TextAlign.center,
                           ),
@@ -283,22 +288,31 @@ class _CustomBottomNavigationBarState extends State<CustomBottomNavigationBar>
                             style: ElevatedButton.styleFrom(
                               backgroundColor: AppColors.main,
                               elevation: 0,
-                              padding: EdgeInsets.symmetric(horizontal: 24.w, vertical: 12.h),
-                              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10.r)),
+                              padding: EdgeInsets.symmetric(
+                                  horizontal: 24.w, vertical: 12.h),
+                              shape: RoundedRectangleBorder(
+                                  borderRadius:
+                                  BorderRadius.circular(10.r)),
                             ),
-                            onPressed: () => Navigator.of(innerContext).pop(true),
+                            onPressed: () =>
+                                Navigator.of(innerContext).pop(true),
                             child: Center(
                               child: Text(
                                 AppLocalizations.of(innerContext)!.exit,
-                                style: AppTextStyles.getText2(innerContext).copyWith(color: Colors.white),
+                                style: AppTextStyles
+                                    .getText2(innerContext)
+                                    .copyWith(color: Colors.white),
                               ),
                             ),
                           ),
                           TextButton(
-                            onPressed: () => Navigator.of(innerContext).pop(false),
+                            onPressed: () =>
+                                Navigator.of(innerContext).pop(false),
                             child: Text(
                               AppLocalizations.of(innerContext)!.cancel,
-                              style: AppTextStyles.getText2(innerContext).copyWith(
+                              style: AppTextStyles
+                                  .getText2(innerContext)
+                                  .copyWith(
                                 fontWeight: FontWeight.bold,
                                 color: AppColors.blackText,
                               ),
@@ -316,40 +330,42 @@ class _CustomBottomNavigationBarState extends State<CustomBottomNavigationBar>
 
         return shouldExit == true;
       },
-
       child: Theme(
         data: Theme.of(context).copyWith(
-          splashColor: Colors.transparent, // 🚀 إلغاء تأثير النقر
-          highlightColor: Colors.transparent, // 🔥 إلغاء تأثير التوهج
+          splashColor: Colors.transparent,
+          highlightColor: Colors.transparent,
         ),
         child: Scaffold(
-          backgroundColor: AppColors.main,// يجب أن يكون نفس لون الـ AppBar
-          appBar: AppBar(
-            backgroundColor: AppColors.main.withOpacity(1), // تأكد من أن الشفافية 100%
-            surfaceTintColor: Colors.transparent, // يمنع تأثير الظل الغامق الذي يظهر عند التمرير
-            shadowColor: Colors.transparent, // 🔹 إزالة الظل تمامًا
+          backgroundColor: AppColors.main,
+          appBar: _currentIndex == 2
+              ? null
+              : AppBar(
+            backgroundColor: AppColors.main.withOpacity(1),
+            surfaceTintColor: Colors.transparent,
+            shadowColor: Colors.transparent,
             elevation: 0,
             centerTitle: true,
-      
             title: Row(
               children: [
-                // ✅ الجزء الأول: زر تغيير اللغة (يظهر فقط في الصفحة الرئيسية)
                 if (_currentIndex == 0)
                   Padding(
-                    padding: const EdgeInsets.only(left: 4), // 🔹 تقليل المسافة أكثر
+                    padding: const EdgeInsets.only(left: 4),
                     child: TextButton(
                       onPressed: _showLanguageSelectionSheet,
                       style: TextButton.styleFrom(
                         padding: EdgeInsets.zero,
                         tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                        minimumSize: const Size(40, 40), // ✅ جعل الزر صغيرًا لكنه قابل للنقر بسهولة
+                        minimumSize: const Size(40, 40),
                       ),
                       child: Row(
                         children: [
-                          const Icon(Icons.language_rounded, color: AppColors.whiteText, size: 20),
+                          const Icon(Icons.language_rounded,
+                              color: AppColors.whiteText, size: 20),
                           const SizedBox(width: 4),
                           Text(
-                            Localizations.localeOf(context).languageCode.toUpperCase(),
+                            Localizations.localeOf(context)
+                                .languageCode
+                                .toUpperCase(),
                             style: const TextStyle(
                               color: AppColors.whiteText,
                               fontWeight: FontWeight.bold,
@@ -361,9 +377,7 @@ class _CustomBottomNavigationBarState extends State<CustomBottomNavigationBar>
                     ),
                   )
                 else
-                  const SizedBox(width: 40), // ✅ تعويض المساحة عند إخفاء الزر
-      
-                // ✅ الجزء الثاني: الشعار في المنتصف دائمًا
+                  const SizedBox(width: 40),
                 Expanded(
                   child: Center(
                     child: _currentIndex == 0
@@ -372,7 +386,7 @@ class _CustomBottomNavigationBarState extends State<CustomBottomNavigationBar>
                       height: 18,
                     )
                         : Text(
-                      _getTitle(_currentIndex), // ✅ العنوان من arb files
+                      _getTitle(_currentIndex, isArabicLocale),
                       style: const TextStyle(
                         color: AppColors.whiteText,
                         fontWeight: FontWeight.bold,
@@ -381,11 +395,9 @@ class _CustomBottomNavigationBarState extends State<CustomBottomNavigationBar>
                     ),
                   ),
                 ),
-      
-                // ✅ الجزء الثالث: زر تسجيل الدخول (يظهر فقط إذا لم يكن المستخدم مسجلًا الدخول)
                 if (_currentIndex == 0 && !isLoggedIn)
                   Padding(
-                    padding: const EdgeInsets.only(right: 0), // 🔹 تقليل المسافة أكثر
+                    padding: const EdgeInsets.only(right: 0),
                     child: TextButton(
                       onPressed: () {
                         Navigator.push(
@@ -400,39 +412,42 @@ class _CustomBottomNavigationBarState extends State<CustomBottomNavigationBar>
                       ),
                       child: Text(
                         AppLocalizations.of(context)!.logInAppbar,
-                        style:  TextStyle(color: AppColors.whiteText,
-                          fontSize: Localizations.localeOf(context).languageCode == 'ar' ? 11 : 12, // ✅ تصغير الخط في العربية
+                        style: TextStyle(
+                          color: AppColors.whiteText,
+                          fontSize:
+                          Localizations.localeOf(context)
+                              .languageCode ==
+                              'ar'
+                              ? 11
+                              : 12,
                         ),
                       ),
                     ),
                   )
                 else
-                  const SizedBox(width: 50), // ✅ تعويض المساحة عند إخفاء الزر
+                  const SizedBox(width: 50),
               ],
             ),
           ),
-      
-      
-      
           body: Stack(
             alignment: Alignment.bottomCenter,
             children: [
               SafeArea(
                 child: _pages[_currentIndex],
               ),
-      
-      
-        // ✅ **PERFECTLY CENTERED Animated Indicator**
               AnimatedBuilder(
                 animation: _animation,
                 builder: (context, child) {
-                  bool isRtl = Directionality.of(context) == TextDirection.rtl;
-      
+                  bool isRtl =
+                      Directionality.of(context) == TextDirection.rtl;
+
                   return Positioned(
                     bottom: 0,
                     left: isRtl
-                        ? ((4 - _animation.value) * buttonWidth) + (buttonWidth * 0.05) // 🔹 عكس الحساب عند RTL
-                        : (_animation.value * buttonWidth) + (buttonWidth * 0.05), // الوضع الطبيعي
+                        ? ((4 - _animation.value) * buttonWidth) +
+                        (buttonWidth * 0.05)
+                        : (_animation.value * buttonWidth) +
+                        (buttonWidth * 0.05),
                     child: Container(
                       width: buttonWidth * 0.9,
                       height: 2,
@@ -444,7 +459,6 @@ class _CustomBottomNavigationBarState extends State<CustomBottomNavigationBar>
                   );
                 },
               ),
-      
             ],
           ),
           bottomNavigationBar: BottomNavigationBar(
@@ -457,31 +471,51 @@ class _CustomBottomNavigationBarState extends State<CustomBottomNavigationBar>
             selectedFontSize: 10,
             unselectedFontSize: 9,
             selectedLabelStyle: TextStyle(
-              fontFamily: Localizations.localeOf(context).languageCode == 'ar' ? 'Cairo' : 'Montserrat',
+              fontFamily: isArabicLocale ? 'Cairo' : 'Montserrat',
               fontWeight: FontWeight.w600,
             ),
             unselectedLabelStyle: TextStyle(
-              fontFamily: Localizations.localeOf(context).languageCode == 'ar' ? 'Cairo' : 'Montserrat',
+              fontFamily: isArabicLocale ? 'Cairo' : 'Montserrat',
               fontWeight: FontWeight.w400,
             ),
             enableFeedback: false,
             mouseCursor: SystemMouseCursors.basic,
             items: [
-              _buildNavItem('assets/icons/home.svg', 'assets/icons/home-on_.svg', AppLocalizations.of(context)!.home, 0, 18.h),
-              _buildNavItem('assets/icons/appointment.svg', 'assets/icons/appointment-on.svg', AppLocalizations.of(context)!.appointments, 1, 22.h),
-              _buildNavItem('assets/icons/document.svg', 'assets/icons/document-on.svg', AppLocalizations.of(context)!.documents, 2, 18.h),
+              _buildNavItem(
+                  'assets/icons/home.svg',
+                  'assets/icons/home-on_.svg',
+                  AppLocalizations.of(context)!.home,
+                  0,
+                  18.h),
+              _buildNavItem(
+                  'assets/icons/appointment.svg',
+                  'assets/icons/appointment-on.svg',
+                  AppLocalizations.of(context)!.appointments,
+                  1,
+                  22.h),
+              _buildNavItem(
+                'assets/icons/health.svg',
+                'assets/icons/health-on.svg',
+                AppLocalizations.of(context)!.health_tab,
+                2,
+                22.h,
+              ),
               _buildMessagesNavItem(context),
               _buildNavItem(
-                isLoggedIn ? 'assets/icons/account.svg' : 'assets/icons/login.svg',
-                isLoggedIn ? 'assets/icons/account-on.svg' : 'assets/icons/login-on.svg',
-                isLoggedIn ? AppLocalizations.of(context)!.account : AppLocalizations.of(context)!.logIn,
+                isLoggedIn
+                    ? 'assets/icons/account.svg'
+                    : 'assets/icons/login.svg',
+                isLoggedIn
+                    ? 'assets/icons/account-on.svg'
+                    : 'assets/icons/login-on.svg',
+                isLoggedIn
+                    ? AppLocalizations.of(context)!.account
+                    : AppLocalizations.of(context)!.logIn,
                 4,
                 isLoggedIn ? 22.h : 17.h,
               ),
             ],
           ),
-      
-      
         ),
       ),
     );
@@ -505,7 +539,6 @@ class _CustomBottomNavigationBarState extends State<CustomBottomNavigationBar>
           clipBehavior: Clip.none,
           alignment: Alignment.center,
           children: [
-            // ✅ الأيقونة
             SvgPicture.asset(
               isSelected
                   ? 'assets/icons/conversation-on.svg'
@@ -513,15 +546,13 @@ class _CustomBottomNavigationBarState extends State<CustomBottomNavigationBar>
               color: isSelected ? AppColors.main : Colors.black,
               height: 18.h,
             ),
-
-            // ✅ الدائرة الحمراء فقط إذا unreadCount > 0
             if (unreadCount > 0)
               Positioned(
                 top: -4,
                 right: -8,
                 child: AnimatedOpacity(
                   opacity: unreadCount > 0 ? 1.0 : 0.0,
-                  duration: Duration(milliseconds: 250),
+                  duration: const Duration(milliseconds: 250),
                   curve: Curves.easeInOut,
                   child: Container(
                     padding: EdgeInsets.all(1.5),
@@ -553,28 +584,27 @@ class _CustomBottomNavigationBarState extends State<CustomBottomNavigationBar>
     );
   }
 
-
-
-  BottomNavigationBarItem _buildNavItem(String iconPath, String activeIconPath, String label, int index,double height) {
+  BottomNavigationBarItem _buildNavItem(
+      String iconPath, String activeIconPath, String label, int index, double height) {
     return BottomNavigationBarItem(
       icon: SvgPicture.asset(
         _currentIndex == index ? activeIconPath : iconPath,
-        color: _currentIndex == index ? AppColors.main : Colors.black,
-        height: height, // Adjust size as needed
+        color:
+        _currentIndex == index ? AppColors.main : Colors.black,
+        height: height,
       ),
       label: label,
     );
   }
 
-
-  String _getTitle(int index) {
+  String _getTitle(int index, bool isArabicLocale) {
     switch (index) {
       case 0:
         return AppLocalizations.of(context)!.home;
       case 1:
         return AppLocalizations.of(context)!.appointments;
       case 2:
-        return AppLocalizations.of(context)!.documents;
+        return AppLocalizations.of(context)!.health_tab;
       case 3:
         return AppLocalizations.of(context)!.messages;
       case 4:

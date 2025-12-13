@@ -1,11 +1,13 @@
 import 'dart:io';
 import 'dart:ui';
 
+import 'package:docsera/Business_Logic/Messages_page/conversation_cubit.dart';
 import 'package:docsera/Business_Logic/Messages_page/messages_cubit.dart';
 import 'package:docsera/app/const.dart';
 import 'package:docsera/app/text_styles.dart';
 import 'package:docsera/models/document.dart';
 import 'package:docsera/models/patient_profile.dart';
+import 'package:docsera/services/supabase/supabase_conversation_service.dart';
 import 'package:docsera/utils/doctor_image_utils.dart';
 import 'package:docsera/widgets/base_scaffold.dart';
 import 'package:file_picker/file_picker.dart';
@@ -17,7 +19,7 @@ import 'package:flutter_svg/svg.dart';
 import 'package:image_picker/image_picker.dart';import 'package:shared_preferences/shared_preferences.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
-import 'conversation_page.dart';
+import 'conversation/conversation_page.dart';
 
 class WriteMessagePage extends StatefulWidget {
   final String doctorName;
@@ -612,21 +614,20 @@ class _WriteMessagePageState extends State<WriteMessagePage> {
                             Navigator.pushReplacement(
                               context,
                               MaterialPageRoute(
-                                builder: (_) => ConversationPage(
-                                  conversationId: conversationId,
-                                  doctorName: widget.doctorName,
-                                  doctorSpecialty: widget.doctorSpecialty,
-                                  doctorImage: widget.doctorImage,
-                                  isClosed: false,
-                                  patientName: widget.patientProfile.patientName,
-                                  accountHolderName: accountHolderName,
-                                  selectedReason: widget.selectedReason,
-                                  selectedImageFiles: _selectedImageFiles,
-                                  pendingFileType: _pendingFileType,
-                                  attachedDocument: _attachedDocument,
+                                builder: (_) => BlocProvider(
+                                  create: (_) => ConversationCubit(ConversationService()),
+                                  child: ConversationPage(
+                                    conversationId: conversationId,
+                                    doctorName: widget.doctorName,
+                                    patientName: widget.patientProfile.patientName,
+                                    accountHolderName: accountHolderName,
+                                    doctorAvatar: widget.doctorImage,
+                                  ),
+
                                 ),
                               ),
                             );
+
                           }
 
                           setState(() => _isSending = false);

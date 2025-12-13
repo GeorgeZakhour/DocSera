@@ -582,6 +582,353 @@
   "verificationError": "An error occurred while verifying the number: {errorMessage}",
   "unexpectedError": "An unexpected error occurred. Please try again later.",
 
+
+
+  "@HealthPage================================": "Health Page",
+
+    "health_tab": "Health",
+    "health_patientName": "Health Profile",
+    "health_patientSubtitle": "Your medical history in one place",
+    "health_switch": "Switch",
+
+    "health_summary": "Health summary",
+    "health_personalRecords_title": "Personal Records",
+    "health_personalRecords_subtitle": "Your private documents and visit reports.",
+    "health_noReports": "No visit reports found.",
+
+    "health_reports_title": "Visit Reports",
+    "health_reports_desc": "Medical reports written by your doctor for previous visits.",
+
+    "health_allergies_title": "Allergies",
+    "health_allergies_desc": "Drugs, foods or substances you are allergic to",
+
+    "health_chronic_title": "Chronic conditions",
+    "health_chronic_desc": "Diabetes, hypertension, asthma and others",
+
+    "health_operations_title": "Previous surgeries",
+    "health_operations_desc": "Track the surgeries you had",
+
+    "health_genetic_title": "Genetic diseases",
+    "health_genetic_desc": "Genetic diseases in you or your family",
+
+    "health_family_title": "Family history",
+    "health_family_desc": "Common illnesses in your family",
+
+    "health_vaccines_title": "Vaccinations",
+    "health_vaccines_desc": "Important vaccines you received",
+
+    "health_documents_title": "Documents",
+    "health_documents_desc": "Reports, tests, imaging and notes",
+
+    "health_other_title": "Other info",
+    "health_other_desc": "Additional health information",
+    "health_search_hint": "Search for {value}...",
+
+    "addAllergy_step1_title": "Select an allergy",
+    "addAllergy_step2_title": "Select severity",
+    "addAllergy_step3_title": "Since when?",
+    "addAllergy_step4_title": "Review your information",
+
+    "addAllergy_search_hint": "Search allergy name...",
+
+    "addAllergy_severity_title": "How severe is this allergy?",
+    "low": "Mild",
+    "medium": "Moderate",
+    "high": "Severe",
+
+    "addAllergy_year_title": "When did you first know about this allergy?",
+
+    "addAllergy_recap_title": "Confirm your information",
+    "addAllergy_recap_allergy": "Allergy",
+    "addAllergy_recap_severity": "Severity",
+    "addAllergy_recap_year": "Year",
+    "addAllergy_year_hint": "Select year",
+    "addAllergy_recap_description": "Adding this information helps doctors evaluate your health more accurately.",
+    "addAllergy_step1_desc": "Search for your allergy in the medical list and select the correct item.",
+    "noResults": "No matching results.",
+    "addAllergy_severity_desc": "Choose how strong or severe your allergy usually is.",
+    "addAllergy_year_desc": "Select the approximate year when this allergy began.",
+    "next": "Next",
+    "skip": "Skip",
+    "save": "Save",
+
+    "allergies_empty_title": "No allergies recorded yet",
+    "allergies_empty_subtitle": "Add your important allergies so doctors can consider them during treatment.",
+    "allergies_empty_add": "Add an allergy",
+    "allergies_empty_no_allergies": "I don’t have any allergies",
+
+    "allergies_no_allergies_title": "Marked as having no allergies",
+    "allergies_no_allergies_subtitle": "You can always change this or add a new allergy later.",
+    "allergies_no_allergies_change": "Change this information",
+    "allergies_no_allergies_add": "Add an allergy",
+
+    "allergies_header_title": "Your recorded allergies",
+    "allergies_header_subtitle": "Make sure this information is always up to date.",
+    "allergies_header_add_btn": "Add",
+    "already_added": "Already added",
+
+    "severity_mild": "Mild",
+    "severity_moderate": "Moderate",
+    "severity_severe": "Severe",
+
+    "confirmed_true": "Confirmed by doctor",
+    "confirmed_false": "Not confirmed",
+    "showDetails": "Show details",
+    "notProvided": "Not provided",
+    "severity": "Severity",
+    "year": "Year",
+    "source": "Source",
+    "proofs": "Proofs",
+    "addedAt": "Added at",
+    "updatedAt": "Updated at",
+    "deleteTheAllergy": "Delete the allergy",
+    "areYouSureToDeleteAllergy": "Are you sure you want to delete this allergy?",
+    "allergy_information": "Information",
+    "allergyName": "Allergy",
+    "description": "Description",
+
+    "health_vaccines_title": "Vaccinations",
+    "health_vaccines_desc": "All your vaccination history in one place",
+
+    "vaccines_add_button": "Add a vaccine",
+
+    "vaccines_empty_title": "No vaccines added yet",
+    "vaccines_empty_subtitle": "Track your vaccination history easily",
+    "vaccines_empty_add": "Add a vaccine",
+    "vaccines_empty_no_records": "I have no vaccines",
+
+    "vaccines_no_records_title": "No vaccinations recorded",
+    "vaccines_no_records_subtitle": "You can update this at any time",
+    "vaccines_no_records_change": "Change decision",
+    "vaccines_no_records_add": "Add a vaccine",
+
+    "vaccine_information": "Vaccine Information",
+    "vaccine_name": "Vaccine",
+
+    "deleteTheVaccine": "Delete the vaccine",
+    "areYouSureToDeleteVaccine": "Are you sure you want to delete this vaccine?",
+
+    "addVaccine_step1_title": "Choose the vaccine",
+    "addVaccine_step1_desc": "Search for the vaccine in the medical list and select the correct item.",
+
+    "addVaccine_step2_title": "When did you receive this vaccine?",
+    "addVaccine_step2_desc": "Select the approximate year you received this vaccine.",
+
+    "addVaccine_step3_title": "Review information",
+    "addVaccine_recap_description": "Adding this information helps doctors better understand your vaccination history.",
+
+    "vaccines_header_title": "Your Vaccinations",
+    "vaccines_header_subtitle": "Here you can find your current and past vaccinations.",
+
+
+    "chronic_add_button": "Add",
+    "chronic_empty_title": "No chronic diseases recorded",
+    "chronic_empty_subtitle": "Add any chronic conditions you have to help doctors better understand your health.",
+    "chronic_empty_add": "Add chronic disease",
+    "chronic_empty_no_records": "I have no chronic diseases",
+
+    "chronic_no_records_title": "You have indicated no chronic diseases",
+    "chronic_no_records_subtitle": "You can always update this information or add a new condition later.",
+    "chronic_no_records_change": "Change this information",
+    "chronic_no_records_add": "Add chronic disease",
+
+    "chronic_information": "Chronic Disease Information",
+    "chronic_name": "Disease Name",
+
+    "deleteTheChronic": "Delete Chronic Disease",
+    "areYouSureToDeleteChronic": "Are you sure you want to delete this chronic disease?",
+
+    "addChronic_step1_title": "Select chronic disease",
+    "addChronic_step2_title": "Severity level",
+    "addChronic_step3_title": "Diagnosis year",
+    "addChronic_step4_title": "Review information",
+
+    "chronic_already_added": "Already added",
+
+    "addChronic_step1_desc": "Search and select the correct chronic disease from the medical list.",
+
+    "addChronic_severity_title": "How severe is this condition?",
+    "addChronic_severity_desc": "Choose the severity level as it usually affects you.",
+
+    "addChronic_year_title": "When was this disease diagnosed?",
+    "addChronic_year_desc": "Select the approximate year of diagnosis.",
+
+    "addChronic_recap_title": "Confirm information",
+    "addChronic_recap_severity": "Severity",
+    "addChronic_recap_description": "This information helps doctors better assess your condition.",
+
+    "chronic_header_title": "Chronic Conditions",
+    "chronic_header_subtitle": "Here you can find diagnosed chronic diseases that require ongoing monitoring.",
+
+    "surgery_add_button": "Add surgery",
+    "surgery_empty_title": "No surgeries recorded yet",
+    "surgery_empty_subtitle": "Add your previous surgeries so doctors can better understand your medical background.",
+    "surgery_empty_add": "Add a surgery",
+    "surgery_empty_no_records": "I have never had surgery",
+
+    "surgery_no_records_title": "You indicated that you have no surgical history",
+    "surgery_no_records_subtitle": "You can always update this information or add a surgery at any time.",
+    "surgery_no_records_change": "Change this information",
+    "surgery_no_records_add": "Add a surgery",
+
+    "surgery_information": "Surgery information",
+    "surgery_name": "Surgery name",
+
+    "deleteTheSurgery": "Delete surgery",
+    "areYouSureToDeleteSurgery": "Are you sure you want to delete this surgery?",
+
+    "addSurgery_step1_title": "Choose a surgery",
+    "addSurgery_step2_title": "When was it done?",
+    "addSurgery_step3_title": "Review information",
+
+    "addSurgery_step1_desc": "Search for the surgery from the medical list and choose the correct item.",
+    "addSurgery_step2_desc": "Choose the year when you had this surgery.",
+    "addSurgery_recap_description": "Providing this information helps your doctor understand your medical background better.",
+
+    "surgeries_header_title": "Surgeries",
+    "surgeries_header_subtitle": "Here you can find previously performed or documented surgical procedures.",
+
+    "health_genetic_title": "Genetic Conditions",
+
+    "health_medications_title": "Medications",
+    "health_medications_desc": "List of medicines currently used",
+
+    "medications_add_button": "Add medication",
+
+    "medications_empty_title": "No medications added",
+    "medications_empty_subtitle": "Track the medications you take regularly.",
+    "medications_empty_add": "Add a medication",
+    "medications_empty_no_records": "I am not taking any medication",
+
+    "medications_no_records_title": "No medications recorded",
+    "medications_no_records_subtitle": "You stated that you take no medications.",
+    "medications_no_records_change": "Change selection",
+    "medications_no_records_add": "Add medication",
+
+    "medications_information": "Medication information",
+    "medications_name": "Medication name",
+
+    "deleteTheMedication": "Delete medication",
+    "areYouSureToDeleteMedication": "Are you sure you want to delete this medication?",
+
+    "medications_add_title": "Add a medication",
+    "medications_step2_title": "When did you start taking this medication?",
+    "medications_step3_title": "What dosage and frequency do you take?",
+    "medications_recap_title": "Medication recap",
+
+    "medications_no_results": "No medications found",
+    "medications_search_value": "medication",
+    "medications_search_header": "Search your medication",
+
+    "medications_step2_date_label": "Start date",
+    "medications_start_date": "Start date",
+
+    "medications_dosage_title": "Dosage and frequency",
+
+    "medications_step3_optional": "Optional",
+    "medications_step3_example": "Example: 2 pills morning and evening",
+
+    "medications_header_title": "Your medications",
+    "medications_header_subtitle": "Here you can find your current and past medications.",
+
+    "family_add_button": "Add Family Condition",
+    "family_empty_title": "No Family History",
+    "family_empty_subtitle": "Track hereditary conditions that run in your family.",
+    "family_empty_add": "Add a family condition",
+    "family_empty_no_records": "I have no family history",
+
+    "family_no_records_title": "No Family Conditions Recorded",
+    "family_no_records_subtitle": "You can always update this later.",
+    "family_no_records_change": "Change my decision",
+    "family_no_records_add": "Add family condition",
+
+    "family_information": "Family Condition Information",
+    "family_name": "Condition Name",
+
+    "deleteTheFamily": "Delete Family Condition",
+    "areYouSureToDeleteFamily": "Are you sure you want to delete this family condition?",
+
+
+    "addFamily_step1_title": "Select the condition",
+    "addFamily_step1_desc": "Search for the condition diagnosed in your family.",
+    "addFamily_step2_title": "Which family members have this condition?",
+    "addFamily_step2_desc": "Select all relatives who have been diagnosed.",
+    "addFamily_step3_title": "At what age was the condition diagnosed?",
+    "addFamily_step3_fieldHint": "Enter age (optional)",
+    "addFamily_step4_title": "Review information",
+    "family_member": "Family member",
+
+    "family_condition": "Condition",
+    "family_members": "Family members",
+    "family_age_at_diagnosis": "Age at diagnosis",
+
+    "family_father": "Father",
+    "family_mother": "Mother",
+    "family_brother": "Brother",
+    "family_sister": "Sister",
+    "family_maternal_grandfather": "Maternal grandfather",
+    "family_maternal_grandmother": "Maternal grandmother",
+    "family_paternal_grandfather": "Paternal grandfather",
+    "family_paternal_grandmother": "Paternal grandmother",
+    "family_daughter": "Daughter",
+    "family_son": "Son",
+    "family_uncle": "Uncle",
+    "family_aunt": "Aunt",
+    "family_cousin_f": "Cousin (F)",
+    "family_cousin_m": "Cousin (M)",
+
+    "addFamily_recap_description": "Please review the information carefully before saving. You can edit it later from your medical record.",
+
+    "family_header_title": "Family History",
+    "family_header_subtitle": "Here you can find inherited or family-related medical conditions.",
+
+    "health_reports_title": "Visit Reports",
+    "health_reports_desc": "Reports written by your doctors during visits",
+
+    "search_doctor": "Search by doctor name",
+    "all_years": "All years",
+
+    "health_report_exportPdf": "Export as PDF",
+    "health_report_sharePdf": "Share report",
+
+    "health_report_diagnosis": "Diagnosis",
+    "health_report_recommendation": "Recommendations",
+    "health_report_clinic": "Clinic information",
+    "loading": "Loading...",
+    "health_noReports_hint": "No visit reports found for this patient.",
+    "health_report_details_title": "Report Details",
+    "health_report_section_summary": "Visit Summary",
+    "health_report_diagnosis": "Diagnosis",
+    "health_report_recommendations": "Recommendations",
+    "health_report_section_clinic": "Clinic Information",
+    "health_report_clinicName": "Clinic Name",
+    "health_report_clinicAddress": "Clinic Address",
+    "health_report_visit_date_label": "Visit Date",
+
+    "search_doctor": "Search by doctor name",
+
+    "health_reports_title": "Visit Reports",
+    "health_noReports": "No reports available",
+    "health_report_added": "Medical report added",
+    "health_report_added_for_date": "Report is added for the appointment of {date}",
+    "health_report_id": "Report ID",
+
+
+    "all_label": "All",
+    "month_jan": "Jan",
+    "month_feb": "Feb",
+    "month_mar": "Mar",
+    "month_apr": "Apr",
+    "month_may": "May",
+    "month_jun": "Jun",
+    "month_jul": "Jul",
+    "month_aug": "Aug",
+    "month_sep": "Sep",
+    "month_oct": "Oct",
+    "month_nov": "Nov",
+    "month_dec": "Dec",
+
+
   "@DocumentsPage================================": "👤Documents Page",
 
   "documentAddedSuccessfully": "Document added successfully!",
