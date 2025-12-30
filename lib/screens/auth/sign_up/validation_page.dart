@@ -7,6 +7,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import '../../../app/const.dart';
 import '../../../app/text_styles.dart';
+import '../../../utils/full_page_loader.dart';
 import '../../../utils/page_transitions.dart';
 import '../../../models/sign_up_info.dart';
 import 'package:docsera/gen_l10n/app_localizations.dart';
@@ -31,7 +32,7 @@ class _ValidationPageState extends State<ValidationPage> {
   bool isLoading = true; // Show loading indicator while sending OTP
 
 
-  int _secondsRemaining = 20;
+  int _secondsRemaining = 60;
 
   Timer? _resendTimer;
 
@@ -53,10 +54,31 @@ class _ValidationPageState extends State<ValidationPage> {
     });
 
     try {
+      // --------------------------------------------------
+      // 📱 SMS (كما هو – OTP محلي + Snackbar)
+      // --------------------------------------------------
       if (widget.validationType == 'SMS') {
-        sentCode = await _supabaseOTPService.sendOTPToPhone(widget.signUpInfo.phoneNumber!);
-      } else if (widget.validationType == 'Email') {
-        sentCode = await _supabaseOTPService.sendOTPToEmail(widget.signUpInfo.email!);
+        sentCode = await _supabaseOTPService
+            .sendOTPToPhone(widget.signUpInfo.phoneNumber!);
+
+        print('Sent SMS OTP: $sentCode'); // Debug only
+
+        // ✅ إظهار OTP في Snackbar (Debug فقط)
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('OTP: $sentCode'),
+            backgroundColor: AppColors.main.withOpacity(0.9),
+            duration: const Duration(seconds: 10),
+          ),
+        );
+      }
+
+      // --------------------------------------------------
+      // 📧 Email (Edge Function فقط – بدون OTP محلي)
+      // --------------------------------------------------
+      else if (widget.validationType == 'Email') {
+        await _supabaseOTPService
+            .sendEmailOtp(widget.signUpInfo.email!);
       }
 
       setState(() {
@@ -64,23 +86,29 @@ class _ValidationPageState extends State<ValidationPage> {
       });
 
       _startResendTimer();
-
-      print('Sent OTP: $sentCode'); // Debugging message
-
-      // ✅ عرض OTP في Snackbar (لأغراض الديباغ فقط)
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('OTP: $sentCode'),
-          backgroundColor: AppColors.main.withOpacity(0.9),
-          duration: const Duration(seconds: 10),
-        ),
-      );
-
     } catch (e) {
       setState(() {
         isLoading = false;
       });
 
+      final errorMessage = e.toString();
+
+      // 🔒 Rate limit (OTP_TOO_FREQUENT)
+      if (errorMessage.contains('429') ||
+          errorMessage.contains('OTP_TOO_FREQUENT')) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
+              AppLocalizations.of(context)!
+                  .pleaseWaitBeforeRequestingAnotherCode,
+            ),
+            backgroundColor: AppColors.red.withOpacity(0.85),
+          ),
+        );
+        return;
+      }
+
+      // ❌ Generic error
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text(AppLocalizations.of(context)!.otpSendFailed),
@@ -93,43 +121,79 @@ class _ValidationPageState extends State<ValidationPage> {
         ),
       );
     }
+
   }
 
   /// Validate the entered OTP
   Future<void> _validateCode() async {
-    setState(() {
-      isCodeValid = _codeController.text == sentCode;
-    });
+    // --------------------------------------------------
+    // 📱 SMS (كما هو – مقارنة محلية)
+    // --------------------------------------------------
+    if (widget.validationType == 'SMS') {
+      setState(() {
+        isCodeValid = _codeController.text == sentCode;
+      });
 
-    if (isCodeValid) {
-      if (widget.validationType == 'SMS') {
-        if (widget.signUpInfo.email == null) {
-          Navigator.push(
-            context,
-            fadePageRoute(RecapPage(signUpInfo: widget.signUpInfo..phoneVerified = true)),
-          );
-        } else {
-          Navigator.push(
-            context,
-            fadePageRoute(ValidationPage(
-              validationType: 'Email',
+      if (!isCodeValid) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(AppLocalizations.of(context)!.invalidCode),
+            backgroundColor: AppColors.red,
+          ),
+        );
+        return;
+      }
+
+      // SMS صحيح
+      if (widget.signUpInfo.email == null) {
+        Navigator.push(
+          context,
+          fadePageRoute(
+            RecapPage(
               signUpInfo: widget.signUpInfo..phoneVerified = true,
-            )),
-          );
-        }
+            ),
+          ),
+        );
       } else {
         Navigator.push(
           context,
-          fadePageRoute(RecapPage(
-            signUpInfo: widget.signUpInfo..emailVerified = true,
-          )),
+          fadePageRoute(
+            ValidationPage(
+              validationType: 'Email',
+              signUpInfo: widget.signUpInfo..phoneVerified = true,
+            ),
+          ),
         );
       }
-    } else {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(AppLocalizations.of(context)!.invalidCode),
-          backgroundColor: AppColors.red,
+
+      return;
+    }
+
+    // --------------------------------------------------
+    // 📧 Email (RPC تحقق – بدون معرفة OTP)
+    // --------------------------------------------------
+    if (widget.validationType == 'Email') {
+      final isValid = await _supabaseOTPService.verifyEmailOtp(
+        widget.signUpInfo.email!,
+        _codeController.text,
+      );
+
+      if (!isValid) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(AppLocalizations.of(context)!.invalidCode),
+            backgroundColor: AppColors.red,
+          ),
+        );
+        return;
+      }
+
+      Navigator.push(
+        context,
+        fadePageRoute(
+          RecapPage(
+            signUpInfo: widget.signUpInfo..emailVerified = true,
+          ),
         ),
       );
     }
@@ -138,7 +202,7 @@ class _ValidationPageState extends State<ValidationPage> {
   void _startResendTimer() {
     _resendTimer?.cancel();
     setState(() {
-      _secondsRemaining = 20;
+      _secondsRemaining = 60;
       canResend = false;
     });
 
@@ -208,7 +272,7 @@ class _ValidationPageState extends State<ValidationPage> {
             SizedBox(height: 20.h),
 
             if (isLoading)
-              Center(child: CircularProgressIndicator(color: AppColors.main))
+              Center(child: FullPageLoader())
             else ...[
               // OTP Input Field
               TextFormField(

@@ -96,39 +96,50 @@ class _DocumentInfoScreenState extends State<DocumentInfoScreen> {
   }
 
   Future<void> _fetchPatients() async {
-    SharedPreferences prefs = await SharedPreferences.getInstance();
-    final userId = prefs.getString('userId') ?? '';
-    if (userId.isEmpty) return;
+    try {
+      final supabase = Supabase.instance.client;
 
-    final supabase = Supabase.instance.client;
+      final response = await supabase.rpc('rpc_get_my_patient_context');
 
-    // ✅ جلب بيانات المستخدم الأساسي
-    final userResponse = await supabase
-        .from('users')
-        .select('first_name, last_name')
-        .eq('id', userId)
-        .maybeSingle();
+      if (response == null) return;
 
-    if (userResponse == null) return;
+      final Map<String, dynamic> data = Map<String, dynamic>.from(response);
 
-    final userName =
-    "${userResponse['first_name'] ?? ''} ${userResponse['last_name'] ?? ''}".trim();
-    _patients.add({'id': userId, 'name': userName});
+      final List<Map<String, String>> patients = [];
 
-    // ✅ جلب الأقارب من جدول relatives
-    final relativesResponse = await supabase
-        .from('relatives')
-        .select('id, first_name, last_name')
-        .eq('user_id', userId);
+      // 👤 المستخدم الأساسي
+      final user = data['user'];
+      if (user != null) {
+        final userName =
+        "${user['first_name'] ?? ''} ${user['last_name'] ?? ''}".trim();
 
-    for (var relative in relativesResponse) {
-      final name =
-      "${relative['first_name'] ?? ''} ${relative['last_name'] ?? ''}".trim();
-      _patients.add({'id': relative['id'], 'name': name});
+        patients.add({
+          'id': user['id'],
+          'name': userName,
+        });
+      }
+
+      // 👨‍👩‍👧 الأقارب
+      final relatives = data['relatives'] as List<dynamic>;
+      for (final r in relatives) {
+        final name =
+        "${r['first_name'] ?? ''} ${r['last_name'] ?? ''}".trim();
+
+        patients.add({
+          'id': r['id'],
+          'name': name,
+        });
+      }
+
+      if (!mounted) return;
+      setState(() {
+        _patients = patients;
+      });
+    } catch (e) {
+      debugPrint('❌ Failed to load patients via RPC: $e');
     }
-
-    setState(() {});
   }
+
 
   @override
   Widget build(BuildContext context) {
@@ -713,7 +724,7 @@ class _DocumentInfoScreenState extends State<DocumentInfoScreen> {
       debugPrint("✅ Document inserted with id = $realId");
 
       if (!mounted) return;
-      context.read<DocumentsCubit>().listenToDocuments(context);
+      // context.read<DocumentsCubit>().listenToDocuments(context);
 
       Navigator.pop(context);
       if (widget.cameFromMultiPage && Navigator.canPop(context)) {

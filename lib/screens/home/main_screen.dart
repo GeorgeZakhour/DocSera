@@ -6,7 +6,7 @@ import 'package:docsera/Business_Logic/Main_page/main_screen_cubit.dart';
 import 'package:docsera/Business_Logic/Main_page/main_screen_state.dart';
 import 'package:docsera/app/text_styles.dart';
 import 'package:docsera/screens/home/shimmer/shimmer_widgets.dart';
-import 'package:docsera/services/supabase/supabase_user_service.dart';
+import 'package:docsera/services/supabase/user/supabase_user_service.dart';
 import 'package:docsera/utils/custom_clippers.dart';
 import 'package:docsera/utils/doctor_image_utils.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -40,12 +40,7 @@ class _MainScreenState extends State<MainScreen> with AutomaticKeepAliveClientMi
 
   static bool _bannersLoadedOnce = false; // ✅ يبقى محفوظ بعد التنقل
   bool _bannerColorsReady = false;
-  final SupabaseUserService _supabaseService = SupabaseUserService();
-  final SharedPrefsService _sharedPrefsService = SharedPrefsService();
-  List<Map<String, dynamic>> favoriteDoctors = [];
-  // bool isLoggedIn = false;
-  // late bool isLoggedIn; // ✅ إذا كنت مضطر تستخدمه داخل method مؤقتًا فقط
-  bool _isFetchingFavorites = false; // ✅ Prevent duplicate calls
+
   StreamSubscription? _favoritesListener; // ✅ إضافة متغير لحفظ `listener`
   bool _isFirstLoad = true; // ✅ يظهر `Shimmer` فقط عند تشغيل التطبيق لأول مرة
   bool _didLoadFavoritesOnce = false;
@@ -58,14 +53,12 @@ class _MainScreenState extends State<MainScreen> with AutomaticKeepAliveClientMi
     super.initState();
     print("📌 MainScreen: initState() -> Checking login status...");
     _bannerColorsReady = _bannersLoadedOnce; // ✅ إذا كانت محمّلة سابقًا، لا تعيد تحميلها
-    // _checkLoginStatus(context);
     context.read<MainScreenCubit>().loadMainScreen(context);
   }
 
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
-    // _checkLoginStatus(); // ✅ Always refresh when returning
   }
 
   @override
@@ -76,39 +69,6 @@ class _MainScreenState extends State<MainScreen> with AutomaticKeepAliveClientMi
     }
     super.dispose();
   }
-
-  Future<void> _checkLoginStatus(BuildContext context) async {
-    if (_isFetchingFavorites) return;
-    _isFetchingFavorites = true;
-
-    final authState = context.read<AuthCubit>().state;
-    if (authState is! AuthAuthenticated) {
-      _isFetchingFavorites = false;
-      return;
-    }
-
-    final userId = authState.user.id;
-
-    var cachedDoctors = await _sharedPrefsService.loadData('favoriteDoctors');
-    if (cachedDoctors != null) {
-      favoriteDoctors = List<Map<String, dynamic>>.from(cachedDoctors);
-      if (mounted) setState(() {});
-    }
-
-    if (_favoritesListener != null) {
-      _isFetchingFavorites = false;
-      return;
-    }
-
-    _favoritesListener = _supabaseService.listenToFavoriteDoctors(userId).listen((updatedDoctors) async {
-      favoriteDoctors = updatedDoctors;
-      if (mounted) setState(() {});
-      await _sharedPrefsService.saveData('favoriteDoctors', updatedDoctors);
-    });
-
-    _isFetchingFavorites = false;
-  }
-
 
 
 
@@ -311,7 +271,9 @@ class _MainScreenState extends State<MainScreen> with AutomaticKeepAliveClientMi
                   style: AppTextStyles.getText2(context).copyWith(fontWeight: FontWeight.w500, color: AppColors.red)
                 ),
                 onTap: () async {
-                  await _removeFromFavorites(doctor['id']);
+                  context
+                      .read<MainScreenCubit>()
+                      .removeFromFavorites(context, doctor['id']);
                   Navigator.pop(context);
                 },
               ),
@@ -322,44 +284,11 @@ class _MainScreenState extends State<MainScreen> with AutomaticKeepAliveClientMi
     );
   }
 
-  Future<void> _removeFromFavorites(String doctorId) async {
-    final authState = context.read<AuthCubit>().state;
-    final userId = (authState is AuthAuthenticated) ? authState.user.id : null;
-
-    if (userId == null || doctorId.isEmpty) {
-      print("❌ Error: User ID or Doctor ID is missing!");
-      return;
-    }
-
-    try {
-      await _supabaseService.removeDoctorFromFavorites(userId, doctorId);
-
-      setState(() {
-        favoriteDoctors.removeWhere((doc) => doc['id'] == doctorId);
-      });
-
-      print("❌ Doctor removed from favorites -> Supabase updated.");
-    } catch (e) {
-      print("❌ Error removing doctor from favorites: $e");
-    }
-  }
-
 
 
   @override
   Widget build(BuildContext context) {
     super.build(context); // ✅ Important to call super.build when using AutomaticKeepAliveClientMixin
-
-    // final authState = context.watch<AuthCubit>().state;
-    // final bool isLoggedIn = authState is AuthAuthenticated;
-    //
-    // if (isLoggedIn && !_didLoadFavoritesOnce) {
-    //   _didLoadFavoritesOnce = true;
-    //   _checkLoginStatus(context);
-    // } else if (!isLoggedIn && _didLoadFavoritesOnce) {
-    //   _didLoadFavoritesOnce = false;
-    //   favoriteDoctors.clear();
-    // }
 
     return FutureBuilder<SharedPreferences>(
       future: SharedPreferences.getInstance(),
@@ -378,7 +307,6 @@ class _MainScreenState extends State<MainScreen> with AutomaticKeepAliveClientMi
                 _isFirstLoad = false;
 
                 final bool isLoggedIn = state.isLoggedIn;
-                favoriteDoctors = state.favoriteDoctors;
 
                 return _buildMainScreenContent(context, isLoggedIn, state.favoriteDoctors);
               }
@@ -502,9 +430,6 @@ class _MainScreenState extends State<MainScreen> with AutomaticKeepAliveClientMi
   Widget _buildMainScreenContent(BuildContext context, bool isLoggedIn, List<Map<String, dynamic>> favoriteDoctors) {
     final double screenHeight = MediaQuery.of(context).size.height;
     final ScrollController scrollController = ScrollController();
-
-    final authState = context.watch<AuthCubit>().state;
-    final bool isLoggedIn = authState is AuthAuthenticated;
 
 
     // ✅ Define bannerData list to pass to `BannersSection`

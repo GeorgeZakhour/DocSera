@@ -48,7 +48,6 @@ class _SearchPageState extends State<SearchPage> {
       setState(() {}); // Redraw UI when focus changes
     });
 
-    _loadUserId(); // Load user ID and fetch favorites
     _fetchFavoriteDoctors(); // ✅ Load favorite doctors on page load
   }
 
@@ -59,63 +58,25 @@ class _SearchPageState extends State<SearchPage> {
     super.dispose();
   }
 
-  /// **Retrieve the logged-in user ID**
-  void _loadUserId() async {
-    User? user = Supabase.instance.client.auth.currentUser;
-    if (user != null) {
-      setState(() => _userId = user.id);
-      _fetchFavoriteDoctors(); // Load favorite doctors once we have the user ID
-    }
-  }
-
   /// **Fetch favorite doctors from Firestore**
   Future<void> _fetchFavoriteDoctors() async {
     try {
-      // 🔹 جلب userId من SharedPreferences أولًا
-      SharedPreferences prefs = await SharedPreferences.getInstance();
-      String? userId = prefs.getString('userId');
+      final client = Supabase.instance.client;
 
-      // 🔹 إذا كان null، جرب من Supabase
-      userId ??= Supabase.instance.client.auth.currentUser?.id;
+      final res = await client.rpc('rpc_get_my_favorite_doctors');
 
-      if (userId == null) {
-        print("❌ No user logged in! Cannot fetch favorites.");
+      if (res == null || res is! List) {
+        setState(() => _favoriteDoctors = []);
         return;
       }
-
-      print("🟢 Fetching favorites for User ID: $userId");
-
-      final response = await Supabase.instance.client
-          .from('users')
-          .select('favorites')
-          .eq('id', userId)
-          .single();
-
-      final favorites = response['favorites'] as List<dynamic>?;
-
-      if (favorites == null || favorites.isEmpty) {
-        print("❌ No favorite doctors found!");
-        setState(() {
-          _favoriteDoctors = [];
-        });
-        return;
-      }
-
-      print("⭐ Favorite Doctor IDs: $favorites");
-
-      final doctorsResponse = await Supabase.instance.client
-          .from('doctors')
-          .select()
-          .inFilter('id', favorites);
 
       setState(() {
-        _favoriteDoctors = List<Map<String, dynamic>>.from(doctorsResponse);
+        _favoriteDoctors = List<Map<String, dynamic>>.from(res);
       });
 
-      print("✅ Total Favorite Doctors Loaded: ${_favoriteDoctors.length}");
-
     } catch (e) {
-      print("❌ Error fetching favorite doctors: $e");
+      debugPrint("❌ Failed to fetch favorite doctors: $e");
+      setState(() => _favoriteDoctors = []);
     }
   }
 

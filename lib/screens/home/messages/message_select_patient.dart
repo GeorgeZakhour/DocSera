@@ -66,63 +66,52 @@ class _SelectPatientForMessagePageState extends State<SelectPatientForMessagePag
   }
 
   Future<void> _loadUserInfo() async {
-    SharedPreferences prefs = await SharedPreferences.getInstance();
-    userId = prefs.getString('userId');
+    final client = Supabase.instance.client;
 
-    if (userId == null) return;
+    try {
+      final ctx = await client.rpc('rpc_get_my_patient_context');
 
-    final String currentUserId = userId!;
+      if (ctx == null) {
+        debugPrint("❌ rpc_get_my_patient_context returned null");
+        return;
+      }
 
-    final response = await Supabase.instance.client
-        .from('users')
-        .select()
-        .eq('id', currentUserId)
-        .maybeSingle();
+      final user = ctx['user'];
+      final rels = ctx['relatives'] as List<dynamic>;
 
-    final userData = response;
+      final firstName = user['first_name'] ?? '';
+      final lastName  = user['last_name'] ?? '';
+      final gender    = user['gender'] ?? '';
+      final dob       = user['date_of_birth'];
 
-
-    if (userData != null) {
-      String firstName = userData['first_name'] ?? "";
-      String lastName = userData['last_name'] ?? "";
-      String gender = userData['gender'] ?? "";
-      String? dobString = userData['date_of_birth'];
-
-      int age = _calculateAge(dobString);
+      final age = _calculateAge(dob);
 
       setState(() {
-        userName = "$firstName $lastName";
+        userId = user['id'];
+        userName = "$firstName $lastName".trim();
         userGender = gender;
         userAge = age;
-      });
 
-      _loadRelatives();
+        // افتراضيًا: المستخدم نفسه
+        selectedPatientId = userId;
+        selectedPatientName = userName;
+        selectedPatientGender = gender;
+        selectedPatientAge = age;
+
+        relatives = rels.map<Map<String, dynamic>>((r) {
+          return {
+            "id": r["id"],
+            "first_name": r["first_name"] ?? "",
+            "last_name": r["last_name"] ?? "",
+            "gender": r["gender"] ?? "",
+            "age": _calculateAge(r["date_of_birth"]),
+          };
+        }).toList();
+      });
+    } catch (e) {
+      debugPrint("❌ Failed to load patient context: $e");
     }
   }
-
-  Future<void> _loadRelatives() async {
-    if (userId == null) return;
-
-    final String currentUserId = userId!;
-
-    final response = await Supabase.instance.client
-        .from('relatives')
-        .select()
-        .eq('user_id', currentUserId);
-
-    setState(() {
-      relatives = response.map<Map<String, dynamic>>((data) {
-        return {
-          "id": data["id"] ?? "",
-          "firstName": data["first_name"] ?? "",
-          "lastName": data["last_name"] ?? "",
-          "gender": data["gender"] ?? "",
-          "age": _calculateAge(data["date_of_birth"]) ?? 0,
-        };
-      }).toList();
-    });
-  }
-
 
   int _calculateAge(String? dobString) {
     if (dobString == null || dobString.isEmpty) return 0;
@@ -147,11 +136,34 @@ class _SelectPatientForMessagePageState extends State<SelectPatientForMessagePag
     return firstChar == 'ه' ? 'هـ' : firstChar;
   }
 
-  Widget _buildPatientTile(String id, String firstName, String lastName, String gender, int age, bool isMainUser, bool isFirst, bool isLast) {
-    bool isArabic = RegExp(r'[\u0600-\u06FF]').hasMatch(firstName);
-    String avatarText = isArabic
-        ? normalizeArabicInitial(firstName).toUpperCase()
-        : "${firstName[0].toUpperCase()}${lastName[0].toUpperCase()}";
+  Widget _buildPatientTile(
+      String id,
+      String firstName,
+      String lastName,
+      String gender,
+      int age,
+      bool isMainUser,
+      bool isFirst,
+      bool isLast,
+      ) {
+    final safeFirst = firstName.trim();
+    final safeLast  = lastName.trim();
+
+    final isArabic = RegExp(r'[\u0600-\u06FF]').hasMatch(safeFirst);
+
+    String avatarText;
+
+    if (isArabic) {
+      avatarText = safeFirst.isNotEmpty
+          ? normalizeArabicInitial(safeFirst).toUpperCase()
+          : "?";
+    } else {
+      final f = safeFirst.isNotEmpty ? safeFirst[0].toUpperCase() : "";
+      final l = safeLast.isNotEmpty ? safeLast[0].toUpperCase() : "";
+      avatarText = (f + l).isNotEmpty ? f + l : "?";
+    }
+
+    final displayName = [safeFirst, safeLast].where((e) => e.isNotEmpty).join(" ");
 
     return Column(
       children: [
@@ -159,7 +171,7 @@ class _SelectPatientForMessagePageState extends State<SelectPatientForMessagePag
           onTap: () {
             setState(() {
               selectedPatientId = id;
-              selectedPatientName = "$firstName $lastName";
+              selectedPatientName = displayName;
               selectedPatientGender = gender;
               selectedPatientAge = age;
             });
@@ -167,7 +179,9 @@ class _SelectPatientForMessagePageState extends State<SelectPatientForMessagePag
           child: Container(
             padding: EdgeInsets.symmetric(vertical: 12.h, horizontal: 16.w),
             decoration: BoxDecoration(
-              color: selectedPatientId == id ? AppColors.main.withOpacity(0.1) : Colors.transparent,
+              color: selectedPatientId == id
+                  ? AppColors.main.withOpacity(0.1)
+                  : Colors.transparent,
               borderRadius: BorderRadius.only(
                 topLeft: isFirst ? Radius.circular(12.r) : Radius.zero,
                 topRight: isFirst ? Radius.circular(12.r) : Radius.zero,
@@ -178,11 +192,14 @@ class _SelectPatientForMessagePageState extends State<SelectPatientForMessagePag
             child: Row(
               children: [
                 CircleAvatar(
-                  backgroundColor: selectedPatientId == id ? AppColors.main : Colors.grey.shade400,
+                  backgroundColor: selectedPatientId == id
+                      ? AppColors.main
+                      : Colors.grey.shade400,
                   radius: 20.sp,
                   child: Text(
                     avatarText,
-                    style: AppTextStyles.getTitle1(context).copyWith(color: Colors.white),
+                    style: AppTextStyles.getTitle1(context)
+                        .copyWith(color: Colors.white),
                   ),
                 ),
                 SizedBox(width: 12.w),
@@ -192,7 +209,9 @@ class _SelectPatientForMessagePageState extends State<SelectPatientForMessagePag
                     Row(
                       children: [
                         Text(
-                          "$firstName $lastName",
+                          displayName.isNotEmpty
+                              ? displayName
+                              : AppLocalizations.of(context)!.unknown,
                           style: AppTextStyles.getTitle1(context).copyWith(
                             fontSize: 12.sp,
                             fontWeight: FontWeight.bold,
@@ -220,20 +239,23 @@ class _SelectPatientForMessagePageState extends State<SelectPatientForMessagePag
                         fontSize: 10.sp,
                       ),
                     ),
-
-
                   ],
                 ),
                 const Spacer(),
                 Icon(
-                  selectedPatientId == id ? Icons.radio_button_checked : Icons.radio_button_off,
-                  color: selectedPatientId == id ? AppColors.main : Colors.grey,
+                  selectedPatientId == id
+                      ? Icons.radio_button_checked
+                      : Icons.radio_button_off,
+                  color: selectedPatientId == id
+                      ? AppColors.main
+                      : Colors.grey,
                 ),
               ],
             ),
           ),
         ),
-        if (!isLast) Divider(color: Colors.grey.shade300, thickness: 1, height: 1),
+        if (!isLast)
+          Divider(color: Colors.grey.shade300, thickness: 1, height: 1),
       ],
     );
   }
@@ -246,14 +268,14 @@ class _SelectPatientForMessagePageState extends State<SelectPatientForMessagePag
     }
 
     for (int i = 0; i < relatives.length; i++) {
-      bool isFirst = userId == null && i == 0;
-      bool isLast = i == relatives.length - 1;
+      final isFirst = userId == null && i == 0;
+      final isLast  = i == relatives.length - 1;
 
       patientTiles.add(
         _buildPatientTile(
           relatives[i]["id"] ?? "",
-          relatives[i]["firstName"] ?? "",
-          relatives[i]["lastName"] ?? "",
+          relatives[i]["first_name"] ?? "",
+          relatives[i]["last_name"] ?? "",
           relatives[i]["gender"] ?? "",
           relatives[i]["age"] ?? 0,
           false,
@@ -262,6 +284,7 @@ class _SelectPatientForMessagePageState extends State<SelectPatientForMessagePag
         ),
       );
     }
+
 
     return Container(
       decoration: BoxDecoration(

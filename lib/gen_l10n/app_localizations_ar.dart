@@ -184,6 +184,12 @@ class AppLocalizationsAr extends AppLocalizations {
   String get waitingConfirmation => 'بانتظار تأكيد الموعد';
 
   @override
+  String get cancelledByYou => 'تم الإلغاء من قبلك';
+
+  @override
+  String get cancelledByDoctor => 'تم الإلغاء من قبل الطبيب';
+
+  @override
   String get statusRejected => 'تم رفض الموعد من الطبيب ';
 
   @override
@@ -237,6 +243,10 @@ class AppLocalizationsAr extends AppLocalizations {
   @override
   String get appointmentRescheduleNoWarning =>
       'يمكنك الآن متابعة إعادة الجدولة.';
+
+  @override
+  String get rescheduleWarningText =>
+      'إعادة جدولة الموعد تعني إلغاء الموعد الحالي تلقائيًا. قد يتطلب الموعد الجديد موافقة الطبيب. يرجى التأكد قبل المتابعة';
 
   @override
   String get noAvailableAppointmentsRes =>
@@ -681,6 +691,9 @@ class AppLocalizationsAr extends AppLocalizations {
   String get invalidEmail => 'البريد الإلكتروني غير صالح';
 
   @override
+  String get hide => 'إخفاء';
+
+  @override
   String get loginSection => 'تسجيل الدخول';
 
   @override
@@ -688,6 +701,17 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get passwordHidden => '••••••••••••••••';
+
+  @override
+  String get otpRequestFailed =>
+      'تعذّر إرسال رمز التحقق. يرجى المحاولة مرة أخرى.';
+
+  @override
+  String get twoFactorUpdateFailed =>
+      'تعذّر تحديث المصادقة الثنائية. يرجى المحاولة لاحقًا.';
+
+  @override
+  String get invalidOtp => 'رمز التحقق غير صحيح';
 
   @override
   String get settings => 'الإعدادات';
@@ -703,6 +727,12 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get twoFactorAuthActivated => 'مفعلة';
+
+  @override
+  String get twoFactorActivatedSuccess => 'تم تفعيل المصادقة الثنائية بنجاح.';
+
+  @override
+  String get twoFactorDeactivatedSuccess => 'تم إيقاف المصادقة الثنائية بنجاح.';
 
   @override
   String get encryptedDocuments => 'المستندات المشفرة';
@@ -737,6 +767,12 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get biometricTitle => 'المصادقة البيومترية';
+
+  @override
+  String get faceIdEnabled => 'تم تفعيل المصادقة البيومترية';
+
+  @override
+  String get faceIdDisabled => 'تم إيقاف المصادقة البيومترية';
 
   @override
   String get confidentiality => 'الخصوصية';
@@ -1130,6 +1166,21 @@ class AppLocalizationsAr extends AppLocalizations {
   String get noAccountQuestion => 'ليس لديك حساب؟';
 
   @override
+  String get shareDoctorProfile => 'مشاركة ملف الطبيب';
+
+  @override
+  String get scanToOpenInApp => 'امسح الرمز لفتح ملف الطبيب داخل تطبيق DocSera';
+
+  @override
+  String get copyLink => 'نسخ الرابط';
+
+  @override
+  String get linkCopied => 'تم نسخ الرابط';
+
+  @override
+  String get share => 'مشاركة';
+
+  @override
   String get makeAppointment => 'حجز موعد';
 
   @override
@@ -1443,6 +1494,10 @@ class AppLocalizationsAr extends AppLocalizations {
   String get alreadyHaveAccount => 'لديك حساب بالفعل؟';
 
   @override
+  String get accountDisabled =>
+      'تم تعطيل حسابك. يرجى التواصل مع الدعم في حال كان هذا الإجراء عن طريق الخطأ.';
+
+  @override
   String get login => 'تسجيل الدخول';
 
   @override
@@ -1645,6 +1700,10 @@ class AppLocalizationsAr extends AppLocalizations {
       'فشل في إرسال رمز التحقق. يرجى المحاولة مرة أخرى.';
 
   @override
+  String get pleaseWaitBeforeRequestingAnotherCode =>
+      'يرجى الانتظار قبل طلب رمز تحقق جديد';
+
+  @override
   String get tryAgain => 'أعد المحاولة';
 
   @override
@@ -1720,6 +1779,13 @@ class AppLocalizationsAr extends AppLocalizations {
   @override
   String get unexpectedError =>
       'حدث خطأ غير متوقع. يرجى المحاولة مرة أخرى لاحقًا.';
+
+  @override
+  String get health_loggedOut_title => 'ملفك الصحي في مكان واحد';
+
+  @override
+  String get health_loggedOut_description =>
+      'سجّل الدخول للاحتفاظ بملفك الطبي وإدارته بشكل آمن.';
 
   @override
   String get health_tab => 'الصحة';
@@ -2725,7 +2791,7 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get noEmergencySupport =>
-      'لا يمكن للطبيب معالجة الحالات الطارئة عبر الرسائل. في حال وجود حالة طبية طارئة، اتصل بالرقم 112.';
+      'لا يمكن للطبيب معالجة الحالات الطبية الطارئة عبر الرسائل. في حال وجود حالة طبية طارئة، يرجى الاتصال بالإسعاف على الرقم 110.';
 
   @override
   String get reasonTestResults => 'طلب إرسال نتائج الفحوصات';

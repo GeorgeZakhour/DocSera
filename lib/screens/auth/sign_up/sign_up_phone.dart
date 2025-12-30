@@ -1,11 +1,12 @@
 import 'package:docsera/app/text_styles.dart';
 import 'package:docsera/screens/auth/sign_up/sign_up_identity.dart';
-import 'package:docsera/services/supabase/supabase_user_service.dart';
+import 'package:docsera/services/supabase/user/supabase_user_service.dart';
 import 'package:docsera/utils/page_transitions.dart';
 import 'package:docsera/utils/text_direction_utils.dart';
 import 'package:docsera/widgets/base_scaffold.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 import '../../../app/const.dart';
 import '../../../models/sign_up_info.dart';
 import 'package:docsera/gen_l10n/app_localizations.dart';
@@ -21,7 +22,6 @@ class SignUpFirstPage extends StatefulWidget {
 
 class _SignUpFirstPageState extends State<SignUpFirstPage> {
   final TextEditingController _phoneController = TextEditingController();
-  final SupabaseUserService _supabaseUserService = SupabaseUserService();
 
   bool isValid = false;
   bool hasInput = false;
@@ -40,19 +40,24 @@ class _SignUpFirstPageState extends State<SignUpFirstPage> {
     if (!isValid) return;
 
     setState(() => isChecking = true);
+
     final formattedPhone = getFormattedPhoneNumber();
 
     try {
-      // ✅ تحقق من التكرار في Firestore حسب رقم الهاتف
-      final isDuplicate = await _supabaseUserService.isPhoneNumberExists(formattedPhone);
-      if (isDuplicate) {
+      final res = await Supabase.instance.client.rpc(
+        'rpc_is_phone_available',
+        params: {'e164': formattedPhone},
+      );
+
+      final bool isAvailable = res == true || res == 't' || res == 1;
+
+      if (!isAvailable) {
         setState(() => isChecking = false);
         _showDuplicateDialog(context);
         return;
       }
 
-
-      // ✅ تخزين البيانات
+      // ✅ حفظ البيانات
       widget.signUpInfo.phoneNumber = formattedPhone;
       widget.signUpInfo.email = null;
 
@@ -60,11 +65,13 @@ class _SignUpFirstPageState extends State<SignUpFirstPage> {
 
       Navigator.push(
         context,
-        fadePageRoute(SignUpSecondPage(signUpInfo: widget.signUpInfo)),
+        fadePageRoute(
+          SignUpSecondPage(signUpInfo: widget.signUpInfo),
+        ),
       );
-
     } catch (e) {
       setState(() => isChecking = false);
+
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text(AppLocalizations.of(context)!.unexpectedError),
@@ -73,6 +80,7 @@ class _SignUpFirstPageState extends State<SignUpFirstPage> {
       );
     }
   }
+
 
 
   /// **📌 تحويل الرقم إلى الصيغة الدولية (00963)**

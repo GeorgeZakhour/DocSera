@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:io';
 import 'package:docsera/app/text_styles.dart';
 import 'package:docsera/services/supabase/supabase_otp_service.dart';
 import 'package:docsera/utils/page_transitions.dart';
@@ -12,11 +13,12 @@ import '../../../app/const.dart';
 import 'package:docsera/gen_l10n/app_localizations.dart';
 import 'package:device_info_plus/device_info_plus.dart';
 
+import '../../../utils/full_page_loader.dart';
+
 class LoginOTPPage extends StatefulWidget {
   final String phoneNumber;
-  final String userId;
 
-  const LoginOTPPage({Key? key, required this.phoneNumber, required this.userId}) : super(key: key);
+  const LoginOTPPage({Key? key, required this.phoneNumber}) : super(key: key);
 
   @override
   State<LoginOTPPage> createState() => _LoginOTPPageState();
@@ -42,9 +44,24 @@ class _LoginOTPPageState extends State<LoginOTPPage> {
 
   Future<String> getDeviceId() async {
     final info = DeviceInfoPlugin();
-    final androidInfo = await info.androidInfo;
-    return androidInfo.id ?? androidInfo.serialNumber ?? androidInfo.device ?? '';
+
+    try {
+      if (Platform.isIOS) {
+        final ios = await info.iosInfo;
+        return ios.identifierForVendor ?? 'ios-unknown';
+      }
+
+      if (Platform.isAndroid) {
+        final android = await info.androidInfo;
+        return android.id ?? android.device ?? 'android-unknown';
+      }
+
+      return 'unknown-platform';
+    } catch (e) {
+      return 'unknown-device';
+    }
   }
+
 
   Future<void> _sendOTP() async {
     setState(() {
@@ -52,7 +69,12 @@ class _LoginOTPPageState extends State<LoginOTPPage> {
     });
 
     try {
-      sentCode = await _supabaseService.sendOTPToPhone(widget.phoneNumber);
+      sentCode = await Supabase.instance.client.rpc(
+        'send_login_otp',
+        params: {
+          'p_phone': widget.phoneNumber,
+        },
+      );
       setState(() {
         isLoading = false;
       });
@@ -88,36 +110,39 @@ class _LoginOTPPageState extends State<LoginOTPPage> {
 
 
   Future<void> _validateCode() async {
-    setState(() {
-      isCodeValid = _codeController.text == sentCode;
-    });
+    setState(() => isLoading = true);
 
-    if (isCodeValid) {
+    try {
       final deviceId = await getDeviceId();
 
-      await Supabase.instance.client
-          .from('users')
-          .update({
-        'trustedDevices': Supabase.instance.client.rpc('array_append_distinct', params: {
-          'array': 'trustedDevices',
-          'value': deviceId,
-        })
-      })
-          .eq('id', widget.userId);
+      final res = await Supabase.instance.client.rpc(
+        'verify_login_otp',
+        params: {
+          'p_phone': widget.phoneNumber,
+          'p_code': _codeController.text.trim(),
+          'p_device_id': deviceId,
+        },
+      );
 
+
+      if (res != true) {
+        throw Exception('invalid_otp');
+      }
 
       Navigator.pushAndRemoveUntil(
         context,
         fadePageRoute(CustomBottomNavigationBar()),
-            (route) => false,
+            (_) => false,
       );
-    } else {
+    } catch (_) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text(AppLocalizations.of(context)!.invalidCode),
           backgroundColor: AppColors.red,
         ),
       );
+    } finally {
+      setState(() => isLoading = false);
     }
   }
 
@@ -183,7 +208,7 @@ class _LoginOTPPageState extends State<LoginOTPPage> {
             SizedBox(height: 20.h),
 
             if (isLoading)
-              Center(child: CircularProgressIndicator(color: AppColors.main))
+              Center(child: FullPageLoader())
             else ...[
               TextFormField(
                 controller: _codeController,

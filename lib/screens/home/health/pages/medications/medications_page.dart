@@ -14,6 +14,7 @@ import 'package:docsera/screens/home/health/widgets/health_record_card.dart';
 import 'package:docsera/screens/home/health/widgets/health_record_details_dialog.dart';
 import 'package:docsera/screens/home/health/widgets/health_record_options_menu.dart';
 
+import '../../../../../utils/full_page_loader.dart';
 import 'add_medication_bottom_sheet.dart';
 
 import 'package:flutter/material.dart';
@@ -96,7 +97,7 @@ class MedicationsPage extends StatelessWidget {
                 builder: (context, state) {
                   if (state.isLoading && state.records.isEmpty) {
                     return const Center(
-                      child: CircularProgressIndicator(color: AppColors.main),
+                      child: FullPageLoader(),
                     );
                   }
 

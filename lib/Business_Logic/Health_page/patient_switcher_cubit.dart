@@ -1,103 +1,109 @@
 import 'package:flutter_bloc/flutter_bloc.dart';
 
-/// الحالة العامة للـ Patient Switcher:
-/// userId = المستخدم الرئيسي
-/// relativeId = القريب
-/// المهم: واحد منهم فقط يكون NOT NULL
+/// Patient Switcher State
+/// ---------------------------------------------------------------------------
+/// - mainUserId     : ID المستخدم الأساسي (ثابت طوال الجلسة)
+/// - mainUserName   : اسم المستخدم الأساسي (ثابت ولا يتغير)
+///
+/// - userId         : يُستخدم عندما يكون المستخدم الأساسي هو المختار
+/// - relativeId     : يُستخدم عندما يكون قريب هو المختار
+///
+/// - patientName    : الاسم المعروض حاليًا (يتغير حسب الاختيار)
+/// ---------------------------------------------------------------------------
 class PatientSwitcherState {
   final String? mainUserId;
-  final String? userId;       // null إذا اخترنا قريب
-  final String? relativeId;   // null إذا اخترنا المستخدم الرئيسي
-  final String patientName;
-  final List<Map<String, dynamic>> relatives;
+  final String mainUserName;
 
-  PatientSwitcherState({
+  final String? userId;       // null إذا كان المختار قريب
+  final String? relativeId;   // null إذا كان المختار المستخدم الأساسي
+
+  final String patientName;
+
+  const PatientSwitcherState({
     required this.mainUserId,
+    required this.mainUserName,
     required this.userId,
     required this.relativeId,
     required this.patientName,
-    required this.relatives,
   });
 
   PatientSwitcherState copyWith({
     String? mainUserId,
+    String? mainUserName,
     String? userId,
     String? relativeId,
     String? patientName,
-    List<Map<String, dynamic>>? relatives,
     bool resetRelative = false,
   }) {
     return PatientSwitcherState(
       mainUserId: mainUserId ?? this.mainUserId,
+      mainUserName: mainUserName ?? this.mainUserName,
       userId: userId ?? this.userId,
       relativeId: resetRelative ? null : (relativeId ?? this.relativeId),
       patientName: patientName ?? this.patientName,
-      relatives: relatives ?? this.relatives,
     );
   }
-
 }
 
 class PatientSwitcherCubit extends Cubit<PatientSwitcherState> {
   PatientSwitcherCubit()
       : super(
-    PatientSwitcherState(
-      mainUserId: null,   // ← سيتم تعبئتها فور فتح HealthPage
+    const PatientSwitcherState(
+      mainUserId: null,
+      mainUserName: "",
       userId: null,
       relativeId: null,
       patientName: "",
-      relatives: [],
     ),
   );
 
-
-  /// عند تحميل بيانات المستخدم الرئيسي
-  void setMainUser(String id, String name) {
+  // ---------------------------------------------------------------------------
+  // INITIAL SET — called once after Auth success
+  // ---------------------------------------------------------------------------
+  void setMainUser({
+    required String id,
+    required String name,
+  }) {
     emit(
-      state.copyWith(
+      PatientSwitcherState(
         mainUserId: id,
+        mainUserName: name,
         userId: id,
         relativeId: null,
-        patientName: name,
+        patientName: name, // البداية دائمًا المستخدم الأساسي
       ),
     );
   }
 
-
-  void switchToUser(String id, String name) {
-    print("👤 switchToUser → id=$id name=$name");
+  // ---------------------------------------------------------------------------
+  // SWITCH TO MAIN USER
+  // ---------------------------------------------------------------------------
+  void switchToUser() {
+    if (state.mainUserId == null) return;
 
     emit(
       state.copyWith(
-        userId: id,
-        patientName: name,
-        resetRelative: true,   // ← هذا يمسح relativeId
+        userId: state.mainUserId,
+        relativeId: null,
+        patientName: state.mainUserName,
+        resetRelative: true,
       ),
     );
-
-    print("👉 NEW STATE (User) → userId=${state.userId} relativeId=${state.relativeId}");
   }
 
-
-  void switchToRelative(String id, String name) {
-    print("👤 switchToRelative → id=$id name=$name");
-
+  // ---------------------------------------------------------------------------
+  // SWITCH TO RELATIVE
+  // ---------------------------------------------------------------------------
+  void switchToRelative({
+    required String relativeId,
+    required String relativeName,
+  }) {
     emit(
       state.copyWith(
         userId: null,
-        relativeId: id,
-        patientName: name,
-        resetRelative: false,
+        relativeId: relativeId,
+        patientName: relativeName,
       ),
     );
-
-    print("👉 NEW STATE (Relative) → userId=${state.userId} relativeId=${state.relativeId}");
-  }
-
-
-
-
-  void updateRelatives(List<Map<String, dynamic>> newList) {
-    emit(state.copyWith(relatives: newList));
   }
 }

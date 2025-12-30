@@ -70,5 +70,16 @@
     <key>PHPhotoLibraryPreventAutomaticLimitedAccessAlert</key>
     <false/>
 
+	<!-- ✅ Deep Link: docsera://doctor/<doctorId> -->
+	<key>CFBundleURLTypes</key>
+	<array>
+		<dict>
+			<key>CFBundleURLSchemes</key>
+			<array>
+				<string>docsera</string>
+			</array>
+		</dict>
+	</array>
+
 </dict>
 </plist>

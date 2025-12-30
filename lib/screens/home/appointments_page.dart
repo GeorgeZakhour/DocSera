@@ -4,7 +4,7 @@ import 'dart:ui';
   import 'package:docsera/Business_Logic/Appointments_page/appointments_cubit.dart';
   import 'package:docsera/Business_Logic/Appointments_page/appointments_state.dart';
 import 'package:docsera/screens/home/shimmer/shimmer_widgets.dart';
-import 'package:docsera/services/supabase/supabase_user_service.dart';
+import 'package:docsera/services/supabase/user/supabase_user_service.dart';
 import 'package:docsera/utils/doctor_image_utils.dart';
 import 'package:docsera/utils/time_utils.dart';
   import 'package:flutter_bloc/flutter_bloc.dart';
@@ -319,10 +319,37 @@ import 'package:docsera/gen_l10n/app_localizations.dart';
       );
     }
 
+    String _getStatusLabel(BuildContext context, String status) {
+      switch (status) {
+        case 'cancelled_by_patient':
+          return AppLocalizations.of(context)!.cancelledByYou;
+        case 'cancelled_by_doctor':
+          return AppLocalizations.of(context)!.cancelledByDoctor;
+        case 'never_arrived_cancelled':
+          return AppLocalizations.of(context)!.appointmentCancelled;
+        case 'rejected':
+          return AppLocalizations.of(context)!.statusRejected;
+        default:
+          return AppLocalizations.of(context)!.appointmentConfirmed;
+      }
+    }
+
+
     /// 🔹 **Appointment Card**
     Widget _buildAppointmentCard(Map<String, dynamic> appt) {
       final bool needsConfirmation = appt['is_confirmed'] == false && appt['booked'] == true;
       final bool isRejected = (appt['is_confirmed'] == true && appt['booked'] == false && appt['status']?.toString() == 'rejected');
+      final String status = appt['status']?.toString() ?? '';
+
+      final bool isCancelledByPatient = status == 'cancelled_by_patient';
+      final bool isCancelledByDoctor = status == 'cancelled_by_doctor';
+      final bool isNeverArrivedCancelled = status == 'never_arrived_cancelled';
+
+      final bool isCancelled =
+          isCancelledByPatient || isCancelledByDoctor || isNeverArrivedCancelled;
+
+      final bool isRedState = isRejected || isCancelled;
+
 
       final tsUtc = DateTime.parse(appt['timestamp'].toString()).toUtc();
       final bookingTs = appt['booking_timestamp'] != null
@@ -353,8 +380,8 @@ import 'package:docsera/gen_l10n/app_localizations.dart';
           "gender": appt['doctor_gender'] ?? appt['doctorGender'],
           "title": appt['doctor_title'] ?? appt['doctorTitle'],
         },
-        width: needsConfirmation || isRejected ? 32 : 40,
-        height: needsConfirmation || isRejected ? 32 : 40,
+        width: needsConfirmation || isRedState ? 32 : 40,
+        height: needsConfirmation || isRedState ? 32 : 40,
       );
 
       print("🖼️ AppointmentCard RAW doctor_image = ${appt['doctor_image'] ?? appt['doctorImage']}");
@@ -383,7 +410,7 @@ import 'package:docsera/gen_l10n/app_localizations.dart';
               Positioned.fill(
                 child: Container(
                   decoration: BoxDecoration(
-                    color: isRejected
+                    color: isRedState
                         ? AppColors.red.withOpacity(0.09)
                         : (needsConfirmation
                         ? AppColors.grayMain.withOpacity(0.12)
@@ -400,7 +427,7 @@ import 'package:docsera/gen_l10n/app_localizations.dart';
                     color: Colors.white.withOpacity(0.45), // frosted white blend
                     borderRadius: BorderRadius.circular(25.r),
                     border: Border.all(
-                      color: isRejected
+                      color: isRedState
                           ? AppColors.red.withOpacity(0.4)
                           : (needsConfirmation
                           ? AppColors.grayMain.withOpacity(0.4)
@@ -410,7 +437,7 @@ import 'package:docsera/gen_l10n/app_localizations.dart';
                   ),
                   padding: EdgeInsets.symmetric(
                     horizontal: 18.w,
-                    vertical: (needsConfirmation || isRejected) ? 10.h : 16.h,
+                    vertical: (needsConfirmation || isRedState) ? 10.h : 16.h,
                   ),
 
                   // 🩺 Card content
@@ -423,7 +450,7 @@ import 'package:docsera/gen_l10n/app_localizations.dart';
                           Icon(
                             Icons.calendar_today_rounded,
                             size: 13.sp,
-                            color: isRejected
+                            color: isRedState
                                 ? AppColors.red
                                 : (needsConfirmation
                                 ? AppColors.grayMain
@@ -434,7 +461,7 @@ import 'package:docsera/gen_l10n/app_localizations.dart';
                             formattedDate,
                             style: AppTextStyles.getText3(context).copyWith(
                               fontWeight: FontWeight.w600,
-                              color: isRejected
+                              color: isRedState
                                   ? AppColors.red
                                   : (needsConfirmation
                                   ? AppColors.grayMain
@@ -445,7 +472,7 @@ import 'package:docsera/gen_l10n/app_localizations.dart';
                           Icon(
                             Icons.access_time_rounded,
                             size: 13.sp,
-                            color: isRejected
+                            color: isRedState
                                 ? AppColors.red
                                 : (needsConfirmation
                                 ? AppColors.grayMain
@@ -456,7 +483,7 @@ import 'package:docsera/gen_l10n/app_localizations.dart';
                             formattedTime,
                             style: AppTextStyles.getText3(context).copyWith(
                               fontWeight: FontWeight.w600,
-                              color: isRejected
+                              color: isRedState
                                   ? AppColors.red
                                   : (needsConfirmation
                                   ? AppColors.grayMain
@@ -466,13 +493,13 @@ import 'package:docsera/gen_l10n/app_localizations.dart';
                         ],
                       ),
 
-                      SizedBox(height: (needsConfirmation || isRejected) ? 8.h : 14.h),
+                      SizedBox(height: (needsConfirmation || isRedState) ? 8.h : 14.h),
 
                       // 👨‍⚕️ Doctor Info
                       GestureDetector(
                         behavior: HitTestBehavior.opaque,
                         onTap: () {
-                          if (!needsConfirmation && !isRejected) {
+                          if (!needsConfirmation && !isRedState) {
                             Navigator.push(
                               context,
                               fadePageRoute(AppointmentDetailsPage(
@@ -486,7 +513,7 @@ import 'package:docsera/gen_l10n/app_localizations.dart';
                           crossAxisAlignment: CrossAxisAlignment.center,
                           children: [
                             CircleAvatar(
-                              radius: (needsConfirmation || isRejected) ? 18.r : 22.r,
+                              radius: (needsConfirmation || isRedState) ? 18.r : 22.r,
                               backgroundColor: Colors.white.withOpacity(0.6),
                               backgroundImage: imageProvider,
                             ),
@@ -499,7 +526,7 @@ import 'package:docsera/gen_l10n/app_localizations.dart';
                                     doctorName,
                                     style: AppTextStyles.getText2(context).copyWith(
                                       fontWeight: FontWeight.bold,
-                                      color: isRejected
+                                      color: isRedState
                                           ? Colors.grey.shade700
                                           : AppColors.mainDark,
                                     ),
@@ -513,26 +540,26 @@ import 'package:docsera/gen_l10n/app_localizations.dart';
                                 ],
                               ),
                             ),
-                            if (!needsConfirmation && !isRejected)
+                            if (!needsConfirmation && !isRedState)
                               Icon(Icons.arrow_forward_ios_rounded,
                                   color: Colors.grey.shade400, size: 15.sp),
                           ],
                         ),
                       ),
 
-                      SizedBox(height: (needsConfirmation || isRejected) ? 6.h : 12.h),
+                      SizedBox(height: (needsConfirmation || isRedState) ? 6.h : 12.h),
 
                       // 🏥 Reason
                       Row(
                         children: [
                           Icon(
                             Icons.local_hospital_outlined,
-                            color: isRejected
+                            color: isRedState
                                 ? AppColors.red
                                 : (needsConfirmation
                                 ? AppColors.grayMain
                                 : AppColors.main.withOpacity(0.8)),
-                            size: (needsConfirmation || isRejected) ? 13.sp : 15.sp,
+                            size: (needsConfirmation || isRedState) ? 13.sp : 15.sp,
                           ),
                           SizedBox(width: 5.w),
                           Flexible(
@@ -549,7 +576,7 @@ import 'package:docsera/gen_l10n/app_localizations.dart';
 
                       Divider(
                         color: Colors.grey.withOpacity(0.22),
-                        height: (needsConfirmation || isRejected) ? 14.h : 20.h,
+                        height: (needsConfirmation || isRedState) ? 14.h : 20.h,
                       ),
 
                       // 👤 Patient + Status
@@ -568,7 +595,7 @@ import 'package:docsera/gen_l10n/app_localizations.dart';
                                   Text(
                                     patientName,
                                     style: AppTextStyles.getText3(context).copyWith(
-                                      color: isRejected
+                                      color: isRedState
                                           ? Colors.grey.shade700
                                           : AppColors.mainDark,
                                       fontWeight: FontWeight.w500,
@@ -576,7 +603,7 @@ import 'package:docsera/gen_l10n/app_localizations.dart';
                                   ),
                                 ],
                               ),
-                              if (!needsConfirmation && !isRejected)
+                              if (!needsConfirmation && !isRedState)
                                 Padding(
                                   padding: EdgeInsets.only(top: 3.h),
                                   child: Row(
@@ -603,34 +630,34 @@ import 'package:docsera/gen_l10n/app_localizations.dart';
                             padding: EdgeInsets.symmetric(
                               horizontal: 10.w,
                               vertical:
-                              (needsConfirmation || isRejected) ? 4.h : 6.h,
+                              (needsConfirmation || isRedState) ? 4.h : 6.h,
                             ),
                             decoration: BoxDecoration(
                               borderRadius: BorderRadius.circular(20.r),
                               border: Border.all(
-                                color: isRejected
+                                color: isRedState
                                     ? AppColors.red.withOpacity(0.7)
                                     : (needsConfirmation
                                     ? AppColors.grayMain.withOpacity(0.7)
                                     : AppColors.main.withOpacity(0.7)),
                                 width: 1,
                               ),
-                              color: isRejected
+                              color: isRedState
                                   ? AppColors.red.withOpacity(0.06)
                                   : (needsConfirmation
                                   ? AppColors.grayMain.withOpacity(0.06)
                                   : AppColors.main.withOpacity(0.08)),
                             ),
                             child: Text(
-                              isRejected
-                                  ? AppLocalizations.of(context)!.statusRejected
+                              isRedState
+                                  ? _getStatusLabel(context, status)
                                   : (needsConfirmation
                                   ? AppLocalizations.of(context)!
                                   .waitingConfirmation
                                   : AppLocalizations.of(context)!
                                   .appointmentConfirmed),
                               style: AppTextStyles.getText3(context).copyWith(
-                                color: isRejected
+                                color: isRedState
                                     ? AppColors.red
                                     : (needsConfirmation
                                     ? AppColors.grayMain

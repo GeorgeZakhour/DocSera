@@ -8,6 +8,8 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:intl/intl.dart' as intl;
 import 'package:supabase_flutter/supabase_flutter.dart';
 
+import '../../../utils/full_page_loader.dart';
+
 class DoctorConversationPage extends StatefulWidget {
   final String conversationId;
   final String patientName;
@@ -242,7 +244,7 @@ class _DoctorConversationPageState extends State<DoctorConversationPage> {
                 child: StreamBuilder<List<Map<String, dynamic>>>(
                   stream: _messageStreamController.stream,
                   builder: (context, snapshot) {
-                    if (!snapshot.hasData) return const Center(child: CircularProgressIndicator());
+                    if (!snapshot.hasData) return const Center(child: FullPageLoader());
                     final messages = snapshot.data!;
 
                     WidgetsBinding.instance.addPostFrameCallback((_) {

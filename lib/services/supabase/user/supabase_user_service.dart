@@ -1,9 +1,10 @@
 import 'dart:async';
+import 'dart:convert';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:docsera/utils/shared_prefs_service.dart';
 
-import '../../utils/time_utils.dart';
+import '../../../utils/time_utils.dart';
 
 class SupabaseUserService {
   final SupabaseClient _supabase = Supabase.instance.client;
@@ -27,87 +28,118 @@ class SupabaseUserService {
   }
 
 /// ✅ إضافة مستخدم جديد إلى جدول Supabase (آمن ضد null)
-Future<void> addUser(String userId, Map<String, dynamic> userData) async {
-  try {
-    // 🕐 إضافة حقول الوقت
-    userData['created_at'] = DateTime.now().toUtc().toIso8601String();
-    userData['updated_at'] = DateTime.now().toUtc().toIso8601String();
-    userData['id'] = userId;
+  /// ✅ إضافة مستخدم جديد (يعتمد على auth.uid)
+  Future<void> addUser(Map<String, dynamic> userData) async {
+    try {
+      // 🕐 timestamps
+      userData['created_at'] =
+          DateTime.now().toUtc().toIso8601String();
+      userData['updated_at'] =
+          DateTime.now().toUtc().toIso8601String();
 
-    // 🧹 تنظيف البيانات من أي null
-    final safeData = <String, dynamic>{};
-    userData.forEach((key, value) {
-      if (value == null) { 
-        // 🔄 استبدال null حسب نوع الحقل المتوقع
-        safeData[key] = (key.contains('verified') ||
-                key.contains('accepted') ||
-                key.contains('checked') ||
-                key.contains('enabled'))
-            ? false
-            : "";
-      } else {
-        safeData[key] = value;
-      }
-    });
+      // 🧹 تنظيف null
+      final safeData = <String, dynamic>{};
+      userData.forEach((key, value) {
+        if (value == null) {
+          safeData[key] =
+          (key.contains('verified') ||
+              key.contains('accepted') ||
+              key.contains('checked') ||
+              key.contains('enabled'))
+              ? false
+              : "";
+        } else {
+          safeData[key] = value;
+        }
+      });
 
-    // 🧠 طباعة القيم قبل الإدخال لمعرفة النوع والقيم
-    print("📤 [DEBUG] Inserting userData into Supabase:");
-    safeData.forEach((key, value) {
-      print("   ➡️ $key (${value.runtimeType}): $value");
-    });
+      print("📤 inserting user:");
+      safeData.forEach((k, v) => print("  $k => $v"));
 
-    // ✅ تنفيذ الإدخال
-    final response = await _supabase.from('users').insert(safeData).select();
+      await _supabase
+          .from('users')
+          .insert(safeData);
 
-    print("✅ [DEBUG] User inserted successfully: $response");
-  } catch (e, s) {
-    print("❌ [DEBUG] addUser() failed with error: $e");
-    print(s);
-    throw Exception('Failed to add user: ${e.toString()}');
+    } catch (e, s) {
+      print("❌ addUser failed: $e");
+      print(s);
+      rethrow;
+    }
   }
-}
+
 
 
 
   /// ✅ جلب بيانات مستخدم حسب ID
+  /// ✅ جلب بيانات المستخدم الحالي (من RPC) — لا تمرر userId للـ DB
   Future<Map<String, dynamic>?> getUserData(String userId) async {
     try {
-      final response = await _supabase
-          .from('users')
-          .select()
-          .eq('id', userId)
-          .maybeSingle();
+      // ✅ rpc_get_my_user يعتمد على auth.uid() داخل قاعدة البيانات
+      final dynamic res = await _supabase.rpc('rpc_get_my_user');
 
-      return response;
+      // Supabase rpc قد يرجع null أو Map أو JSON (dynamic)
+      if (res == null) return null;
+
+      if (res is Map<String, dynamic>) {
+        return res;
+      }
+      // في حال رجعت String JSON (حسب إعدادات/نسخ)
+      if (res is String) {
+        return (jsonDecode(res) as Map).cast<String, dynamic>();
+      }
+
+      // أي شكل غير متوقع
+      throw Exception('rpc_get_my_user returned unsupported type: ${res.runtimeType}');
     } catch (e) {
-      throw Exception('Failed to fetch user data: $e');
+      throw Exception('Failed to fetch user data via RPC: $e');
     }
   }
 
   /// ✅ البحث عن مستخدم عبر البريد أو الهاتف
-  Future<Map<String, dynamic>> getUserByEmailOrPhone(String input) async {
+  /// ✅ Pre-login lookup (works with strict RLS) via RPC
+  /// Returns only: email, is_active, user_id
+  Future<Map<String, dynamic>> getLoginInfoByEmailOrPhone(String input) async {
     try {
-      final emailQuery = await _supabase
-          .from('users')
-          .select()
-          .eq('email', input)
-          .maybeSingle();
+      final identifier = input.trim();
 
-      if (emailQuery != null) return emailQuery;
+      final dynamic res = await _supabase.rpc(
+        'rpc_get_login_info',
+        params: {'p_identifier': identifier},
+      );
 
-      final phoneQuery = await _supabase
-          .from('users')
-          .select()
-          .eq('phone_number', input)
-          .maybeSingle();
+      if (res == null) {
+        throw Exception('User not found');
+      }
 
-      if (phoneQuery != null) return phoneQuery;
+      // Supabase can return either Map or List depending on version/settings
+      if (res is List) {
+        if (res.isEmpty) throw Exception('User not found');
+        return Map<String, dynamic>.from(res.first as Map);
+      }
 
-      throw Exception('User not found');
+      if (res is Map) {
+        return Map<String, dynamic>.from(res);
+      }
+
+      throw Exception('rpc_get_login_info returned unsupported type: ${res.runtimeType}');
     } catch (e) {
-      throw Exception('Error retrieving user: $e');
+      throw Exception('Error retrieving login info via RPC: $e');
     }
   }
+
+  Future<Map<String, dynamic>> getMySecurityState() async {
+    final res = await _supabase.rpc('rpc_get_my_security_state');
+
+    if (res == null) {
+      throw Exception('Security state not found');
+    }
+
+    if (res is Map<String, dynamic>) return res;
+    if (res is String) return jsonDecode(res) as Map<String, dynamic>;
+
+    throw Exception('Invalid security state response');
+  }
+
 
   /// ✅ تحديث بيانات مستخدم
   Future<void> updateUser(String userId, Map<String, dynamic> updatedData) async {
@@ -216,20 +248,30 @@ extension SupabaseUserServiceFavorites on SupabaseUserService {
     }
   }
 
-  Map<String, dynamic> _buildDoctorInfo(Map<String, dynamic> doctor, String doctorId) {
+  Map<String, dynamic> _buildDoctorInfo(
+      Map<String, dynamic> doctor,
+      String doctorId,
+      ) {
     final gender = (doctor['gender'] ?? "male").toLowerCase();
-    final title = (doctor['title'] ?? "").toLowerCase();
-    String doctorImage = doctor['doctor_image'] ?? "";
+    final title  = (doctor['title'] ?? "").toLowerCase();
 
-    if (doctorImage.isEmpty || !doctorImage.startsWith("http")) {
-      doctorImage = (title == "dr.")
-          ? (gender == "female"
-          ? 'assets/images/female-doc.png'
-          : 'assets/images/male-doc.png')
-          : (gender == "female"
-          ? 'assets/images/female-phys.png'
-          : 'assets/images/male-phys.png');
+    String? rawImage = doctor['doctor_image'];
+    String? imageUrl;
+
+    if (rawImage != null && rawImage.isNotEmpty) {
+      // 🔥 نفس منطق DoctorProfile
+      imageUrl = rawImage; // فقط اسم الملف
+
     }
+
+    // fallback فقط إذا لا يوجد صورة أصلًا
+    imageUrl ??= (title == "dr.")
+        ? (gender == "female"
+        ? 'assets/images/female-doc.png'
+        : 'assets/images/male-doc.png')
+        : (gender == "female"
+        ? 'assets/images/female-phys.png'
+        : 'assets/images/male-phys.png');
 
     return {
       'id': doctorId,
@@ -237,14 +279,13 @@ extension SupabaseUserServiceFavorites on SupabaseUserService {
       'first_name': doctor['first_name'] ?? "",
       'last_name': doctor['last_name'] ?? "",
       'specialty': doctor['specialty'] ?? "",
-      'doctor_image': doctorImage,
+      'doctor_image': imageUrl,
       'gender': gender,
       'clinic': doctor['clinic'] ?? "",
       'phone_number': doctor['phone_number'] ?? "",
       'email': doctor['email'] ?? "",
       'profile_description': doctor['profile_description'] ?? "",
       'specialties': doctor['specialties'] ?? [],
-      'website': doctor['website'] ?? "",
       'address': doctor['address'] ?? {},
       'location': doctor['location'] ?? {},
       'opening_hours': doctor['opening_hours'] ?? {},
@@ -255,33 +296,36 @@ extension SupabaseUserServiceFavorites on SupabaseUserService {
     };
   }
 
+
   /// ✅ جلب بيانات الأطباء من قائمة المفضلات
-  Future<List<Map<String, dynamic>>> getFavoriteDoctors(String userId) async {
+  /// Query واحد – بدون inFilter – متوافق مع UUID + RLS
+  Future<List<Map<String, dynamic>>> getFavoriteDoctors() async {
     try {
-      final favorites = await getUserFavorites(userId);
-      if (favorites.isEmpty) return [];
+      final dynamic res =
+      await _supabase.rpc('rpc_get_my_favorite_doctors');
 
-      final List<Map<String, dynamic>> doctors = [];
-
-      final responses = await Future.wait(favorites.map((doctorId) {
-        return _supabase.from('doctors').select().eq('id', doctorId).maybeSingle();
-      }));
-
-      for (int i = 0; i < responses.length; i++) {
-        final doctor = responses[i];
-        final doctorId = favorites[i];
-        if (doctor != null) {
-          final docInfo = _buildDoctorInfo(doctor, doctorId);
-          doctors.add(docInfo);
-        }
+      if (res == null) {
+        await _sharedPrefsService.saveData('favoriteDoctors', []);
+        return [];
       }
 
+      final List<dynamic> list =
+      res is String ? jsonDecode(res) : res;
+
+      final doctors = list
+          .map<Map<String, dynamic>>(
+            (doctor) => _buildDoctorInfo(
+          doctor as Map<String, dynamic>,
+          doctor['id'] as String,
+        ),
+      )
+          .toList();
 
       await _sharedPrefsService.saveData('favoriteDoctors', doctors);
       return doctors;
     } catch (e) {
-      print("❌ Error fetching favorite doctors: $e");
-      throw Exception("Error fetching favorite doctors: $e");
+      print("❌ getFavoriteDoctors failed: $e");
+      return [];
     }
   }
 
@@ -301,59 +345,14 @@ extension SupabaseUserServiceFavorites on SupabaseUserService {
 
 
   /// ✅ الاستماع لتحديثات قائمة الأطباء المفضلين في الوقت الحقيقي
-  Stream<List<Map<String, dynamic>>> listenToFavoriteDoctors(String userId) {
-    return _supabase
-        .from('users')
-        .stream(primaryKey: ['id'])
-        .eq('id', userId)
-        .asyncMap((event) async {
-      if (event.isEmpty || event.first['favorites'] == null) return <Map<String, dynamic>>[];
+  /// بدون inFilter – آمن مع UUID + RLS
+  Stream<List<Map<String, dynamic>>> listenToFavoriteDoctors() async* {
+    yield await getFavoriteDoctors();
 
-      final List<String> favoriteIds = List<String>.from(event.first['favorites']);
-      List<Map<String, dynamic>> doctors = [];
-
-      for (final doctorId in favoriteIds) {
-        final doctor = await _supabase
-            .from('doctors')
-            .select()
-            .eq('id', doctorId)
-            .maybeSingle();
-
-        if (doctor != null) {
-          String gender = (doctor['gender'] ?? "male").toLowerCase();
-          String title = (doctor['title'] ?? "").toLowerCase();
-          String doctorImage = doctor['doctor_image'] ?? "";
-
-
-          doctors.add({
-            'id': doctorId,
-            'title': doctor['title'] ?? "",
-            'first_name': doctor['first_name'] ?? "",
-            'last_name': doctor['last_name'] ?? "",
-            'specialty': doctor['specialty'] ?? "",
-            'doctor_image': doctorImage,
-            'gender': gender,
-            'clinic': doctor['clinic'] ?? "",
-            'phone_number': doctor['phone_number'] ?? "",
-            'email': doctor['email'] ?? "",
-            'profile_description': doctor['profile_description'] ?? "",
-            'specialties': doctor['specialties'] ?? [],
-            'website': doctor['website'] ?? "",
-            'address': doctor['address'] ?? {},
-            'location': doctor['location'] ?? {},
-            'opening_hours': doctor['opening_hours'] ?? {},
-            'languages': doctor['languages'] ?? [],
-            'last_updated': doctor['last_updated'] != null
-                ? DateTime.parse(doctor['last_updated']).millisecondsSinceEpoch
-                : 0,
-          });
-        }
-      }
-
-      await _sharedPrefsService.saveData('favoriteDoctors', doctors);
-      return doctors;
-    });
+    yield* Stream.periodic(const Duration(seconds: 15))
+        .asyncMap((_) => getFavoriteDoctors());
   }
+
 
 
   /// ✅ تحميل بيانات مخزنة بالكاش

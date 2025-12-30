@@ -3,6 +3,8 @@ import 'package:docsera/widgets/base_scaffold.dart';
 import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
+import '../../../utils/full_page_loader.dart';
+
 class PatientProfilePage extends StatelessWidget {
   final String doctorId;
   final String patientId;
@@ -21,7 +23,7 @@ class PatientProfilePage extends StatelessWidget {
             .eq('id', patientId)
             .maybeSingle(),
         builder: (context, snapshot) {
-          if (!snapshot.hasData) return const Center(child: CircularProgressIndicator());
+          if (!snapshot.hasData) return const Center(child: FullPageLoader());
           if (snapshot.data == null) return const Center(child: Text('Patient not found'));
 
           var data = snapshot.data as Map<String, dynamic>;

@@ -1297,6 +1297,13 @@
             </list>
           </value>
         </entry>
+        <entry key="qr_flutter">
+          <value>
+            <list>
+              <option value="$USER_HOME$/.pub-cache/hosted/pub.dev/qr_flutter-4.1.0/lib" />
+            </list>
+          </value>
+        </entry>
         <entry key="quill_native_bridge">
           <value>
             <list>
@@ -2104,6 +2111,7 @@
       <root url="file://$USER_HOME$/.pub-cache/hosted/pub.dev/provider-6.1.5/lib" />
       <root url="file://$USER_HOME$/.pub-cache/hosted/pub.dev/pushy_flutter-2.0.38/lib" />
       <root url="file://$USER_HOME$/.pub-cache/hosted/pub.dev/qr-3.0.2/lib" />
+      <root url="file://$USER_HOME$/.pub-cache/hosted/pub.dev/qr_flutter-4.1.0/lib" />
       <root url="file://$USER_HOME$/.pub-cache/hosted/pub.dev/quill_native_bridge-11.0.1/lib" />
       <root url="file://$USER_HOME$/.pub-cache/hosted/pub.dev/quill_native_bridge_android-0.0.1+2/lib" />
       <root url="file://$USER_HOME$/.pub-cache/hosted/pub.dev/quill_native_bridge_ios-0.0.1/lib" />

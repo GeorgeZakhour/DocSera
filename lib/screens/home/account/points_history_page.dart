@@ -9,6 +9,7 @@ import 'package:docsera/gen_l10n/app_localizations.dart';
 import 'package:intl/intl.dart';
 import '../../../Business_Logic/Account_page/points_history/points_history_cubit.dart';
 import '../../../Business_Logic/Account_page/points_history/points_history_state.dart';
+import '../../../utils/full_page_loader.dart';
 
 
 class PointsHistoryPage extends StatefulWidget {
@@ -121,7 +122,7 @@ class _PointsHistoryPageState extends State<PointsHistoryPage>
           },
           builder: (context, state) {
             if (state is PointsHistoryLoading) {
-              return const Center(child: CircularProgressIndicator());
+              return const Center(child: FullPageLoader());
             }
 
             if (state is PointsHistoryError) {

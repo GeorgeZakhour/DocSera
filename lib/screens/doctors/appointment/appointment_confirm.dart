@@ -151,137 +151,74 @@ class _ConfirmationPageState extends State<ConfirmationPage> {
     try {
       final supabase = Supabase.instance.client;
 
-      // 👤 المستخدم
+      // 🔐 التأكد من المستخدم
       final authUser = supabase.auth.currentUser;
-      String? userId = authUser?.id;
-      String userName = (authUser?.userMetadata?['full_name'] as String?) ?? '';
-
-      if (userId == null || userId.isEmpty) {
-        final prefs = await SharedPreferences.getInstance();
-        userId = prefs.getString('userId');
-        userName = prefs.getString('userName') ?? userName;
-      }
-      if (userId == null || userId.isEmpty) {
+      if (authUser == null) {
         if (!mounted) return;
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text(AppLocalizations.of(context)!.loginFirst)),
         );
-        setState(() => _submitting = false);
         return;
       }
 
-      final reasonId = widget.appointmentDetails.reasonId ?? '';
+      final userId = authUser.id;
+
+      // 📝 السبب
+      final reasonId = widget.appointmentDetails.reasonId;
       final reasonText = await _ensureReasonLabelText();
 
+      final prefs = await SharedPreferences.getInstance();
+      final accountName = prefs.getString('userName') ?? 'Unknown';
 
-      // ⚙️ هل الطبيب يتطلب موافقة؟
-      final doctorInfo = await supabase
-          .from('doctors')
-          .select('require_confirmation')
-          .eq('id', widget.appointmentDetails.doctorId)
-          .maybeSingle();
 
-      final requiresConfirmation =
-          (doctorInfo?['require_confirmation'] as bool?) ?? true;
-
-      // 🕒 نحفظ UTC في timestamp/booking_timestamp
-      final bookingTimestampUtc = DateTime.now().toUtc();
+      // 🕒 التوقيت (UTC)
       final slotUtc = widget.appointmentTimestamp.toUtc();
 
-      final prefs = await SharedPreferences.getInstance();
-      final accountName = prefs.getString('userName') ?? "Unknown";
-      // العنوان كـ JSON (Map) للحفظ في jsonb
+      // 🏥 العنوان (jsonb)
       final Map<String, dynamic>? addrMap =
       _normalizeClinicAddressToMap(widget.appointmentDetails.clinicAddress);
 
-      // تطبيع جنس الطبيب إلى العربية عند وجود قيم إنجليزية
+      // 👨‍⚕️ تطبيع جنس الطبيب
       final String rawGender = widget.appointmentDetails.doctorGender;
       final String normalizedDoctorGender = () {
         final g = rawGender.trim().toLowerCase();
         if (g == 'male' || g == 'm') return 'ذكر';
         if (g == 'female' || g == 'f') return 'أنثى';
-        return rawGender; // اتركه كما هو إن كان عربي أصلاً
+        return rawGender;
       }();
 
-      // 🆕 الإدخال — ❌ لا نرسل appointment_date/time: الـ Trigger سيحسبهما من timestamp (UTC+3)
-      final insertPayload = {
-        'doctor_id': widget.appointmentDetails.doctorId,
-        'user_id': userId,
-        'timestamp': slotUtc.toIso8601String(),                    // UTC
-        'reason_id': reasonId.isNotEmpty ? reasonId : null,   // ✅ خزن الـ id
-        'reason': reasonText,                                // النص للعرض
-        'booked': true,
-        'new_patient': widget.appointmentDetails.newPatient,
-        'patient_name': widget.appointmentDetails.patientName,
-        'user_gender': widget.appointmentDetails.patientGender,
-        'user_age': widget.appointmentDetails.patientAge,
-        'clinic_address': addrMap,
-        'location': widget.appointmentDetails.location,
-        'doctor_title': widget.appointmentDetails.doctorTitle,
-        'doctor_image': widget.appointmentDetails.image,
-        'doctor_specialty': widget.appointmentDetails.specialty,
-        'account_name': accountName,
-        'booking_timestamp': bookingTimestampUtc.toIso8601String(),// UTC
-        'doctor_name': widget.appointmentDetails.doctorName,
-        'doctor_gender': normalizedDoctorGender,                   // عربي
-        'clinic': widget.appointmentDetails.clinicName,
-        'is_docsera_user': true,
-        'booked_via': 'DocSera',
-        'attachments': null,
-        'is_confirmed': !requiresConfirmation,
-        if (widget.appointmentDetails.isRelative)
-          'relative_id': widget.appointmentDetails.patientId,
-      };
+      // 🚀 استدعاء RPC (الحجز الحقيقي)
+      final appointmentId = await supabase.rpc(
+        'book_appointment_by_patient',
+        params: {
+          'p_doctor_id': widget.appointmentDetails.doctorId,
+          'p_timestamp': slotUtc.toIso8601String(),
+          'p_reason_id': reasonId,
+          'p_reason_text': reasonText,
+          'p_patient_name': widget.appointmentDetails.patientName,
+          'p_user_gender': widget.appointmentDetails.patientGender,
+          'p_user_age': widget.appointmentDetails.patientAge,
+          'p_new_patient': widget.appointmentDetails.newPatient,
+          'p_clinic_address': addrMap,
+          'p_location': widget.appointmentDetails.location,
+          'p_doctor_title': widget.appointmentDetails.doctorTitle,
+          'p_doctor_image': widget.appointmentDetails.image,
+          'p_doctor_specialty': widget.appointmentDetails.specialty,
+          'p_doctor_name': widget.appointmentDetails.doctorName,
+          'p_doctor_gender': normalizedDoctorGender,
+          'p_clinic': widget.appointmentDetails.clinicName,
 
-      print("📝 [ConfirmationPage] Insert Payload:");
-      insertPayload.forEach((key, value) {
-        print("   $key: $value");
-      });
+          // ✅ هذا السطر الجديد
+          'p_account_name': accountName,
 
-// ركز على الموقع
-      final loc = widget.appointmentDetails.location;
-      if (loc == null || (loc is Map && loc.isEmpty)) {
-        print("⚠️ [ConfirmationPage] Location is EMPTY or NULL!");
-      } else {
-        print("✅ [ConfirmationPage] Location to insert = $loc");
-      }
+          'p_relative_id': widget.appointmentDetails.isRelative
+              ? widget.appointmentDetails.patientId
+              : null,
+        },
+      );
 
-      final inserted = await supabase
-          .from('appointments')
-          .insert(insertPayload)
-          .select('id')
-          .single();
 
-      // 📌 إضافة الطبيب إلى قائمة الأطباء الذين زارهم المريض/القريب
-      try {
-        final targetTable =
-        widget.appointmentDetails.isRelative ? 'relatives' : 'users';
-        final targetId = widget.appointmentDetails.patientId;
-
-        final existingDoctorsResponse = await supabase
-            .from(targetTable)
-            .select('doctors')
-            .eq('id', targetId)
-            .maybeSingle();
-
-        List<String> existingDoctors = [];
-        if (existingDoctorsResponse != null &&
-            existingDoctorsResponse['doctors'] is List) {
-          existingDoctors = List<String>.from(existingDoctorsResponse['doctors']);
-        }
-
-        if (!existingDoctors.contains(widget.appointmentDetails.doctorId)) {
-          existingDoctors.add(widget.appointmentDetails.doctorId);
-          await supabase
-              .from(targetTable)
-              .update({'doctors': existingDoctors})
-              .eq('id', targetId);
-        }
-      } catch (_) {
-        // تجاهل أخطاء التحديث غير الحرجة
-      }
-
-      // ⏭️ التوجيه — للعرض يمكنك تمرير الوقت النصّي القادم من الصفحة الحالية
+      // 📦 بيانات التنقّل (للعرض فقط)
       final navPayload = {
         'doctorId': widget.appointmentDetails.doctorId,
         'doctorName': widget.appointmentDetails.doctorName,
@@ -290,36 +227,42 @@ class _ConfirmationPageState extends State<ConfirmationPage> {
         'doctor_image': widget.appointmentDetails.image,
         'specialty': widget.appointmentDetails.specialty,
         'clinic': widget.appointmentDetails.clinicName,
-        'clinicAddress': addrMap, // Map لسهولة العرض
+        'clinicAddress': addrMap,
         'location': widget.appointmentDetails.location,
         'patientName': widget.appointmentDetails.patientName,
-        'reasonId': reasonId,       // ✅ جديد
-        'reason': reasonText,       // النص للعرض
-        'timestamp': slotUtc.toIso8601String(),                    // UTC
-        'bookingTimestamp': bookingTimestampUtc.toIso8601String(), // UTC
-        'appointmentId': inserted['id'],
-        // للعرض فقط (من الصفحة): 12 ساعة جاهز
+        'reasonId': reasonId,
+        'reason': reasonText,
+        'timestamp': slotUtc.toIso8601String(),
+        'bookingTimestamp': DateTime.now().toUtc().toIso8601String(),
+        'appointmentId': appointmentId,
         'appointmentTimeDisplay': widget.appointmentTime,
       };
 
-
       if (!mounted) return;
 
-      if (requiresConfirmation) {
-        Navigator.pushReplacement(
-          context,
-          fadePageRoute(WaitingForConfirmationPage(appointment: navPayload)),
-        );
-      } else {
+      // 🧭 نحدد الوجهة حسب is_confirmed من قاعدة البيانات
+      final row = await supabase
+          .from('appointments')
+          .select('is_confirmed')
+          .eq('id', appointmentId)
+          .single();
+
+      final isConfirmed = row['is_confirmed'] as bool;
+
+      if (isConfirmed) {
         Navigator.pushReplacement(
           context,
           fadePageRoute(AppointmentConfirmedPage(appointment: navPayload)),
         );
-        print("🧭 [ConfirmationPage] Navigating to AppointmentConfirmedPage");
-        print("   appointmentId = ${navPayload['appointmentId']}");
+      } else {
+        Navigator.pushReplacement(
+          context,
+          fadePageRoute(WaitingForConfirmationPage(appointment: navPayload)),
+        );
       }
     } catch (e) {
-      final msg = e.toString().toLowerCase().contains('duplicate') ||
+      final msg =
+      e.toString().toLowerCase().contains('duplicate') ||
           e.toString().toLowerCase().contains('unique')
           ? AppLocalizations.of(context)!.slotAlreadyBooked
           : '${AppLocalizations.of(context)!.errorBookingAppointment}: $e';
@@ -333,6 +276,197 @@ class _ConfirmationPageState extends State<ConfirmationPage> {
       if (mounted) setState(() => _submitting = false);
     }
   }
+
+
+//   Future<void> _confirmBooking(BuildContext context) async {
+//     if (_submitting) return;
+//     setState(() => _submitting = true);
+//
+//     try {
+//       final supabase = Supabase.instance.client;
+//
+//       // 👤 المستخدم
+//       final authUser = supabase.auth.currentUser;
+//       String? userId = authUser?.id;
+//       String userName = (authUser?.userMetadata?['full_name'] as String?) ?? '';
+//
+//       if (userId == null || userId.isEmpty) {
+//         final prefs = await SharedPreferences.getInstance();
+//         userId = prefs.getString('userId');
+//         userName = prefs.getString('userName') ?? userName;
+//       }
+//       if (userId == null || userId.isEmpty) {
+//         if (!mounted) return;
+//         ScaffoldMessenger.of(context).showSnackBar(
+//           SnackBar(content: Text(AppLocalizations.of(context)!.loginFirst)),
+//         );
+//         setState(() => _submitting = false);
+//         return;
+//       }
+//
+//       final reasonId = widget.appointmentDetails.reasonId ?? '';
+//       final reasonText = await _ensureReasonLabelText();
+//
+//
+//       // ⚙️ هل الطبيب يتطلب موافقة؟
+//       final doctorInfo = await supabase
+//           .from('doctors')
+//           .select('require_confirmation')
+//           .eq('id', widget.appointmentDetails.doctorId)
+//           .maybeSingle();
+//
+//       final requiresConfirmation =
+//           (doctorInfo?['require_confirmation'] as bool?) ?? true;
+//
+//       // 🕒 نحفظ UTC في timestamp/booking_timestamp
+//       final bookingTimestampUtc = DateTime.now().toUtc();
+//       final slotUtc = widget.appointmentTimestamp.toUtc();
+//
+//       final prefs = await SharedPreferences.getInstance();
+//       final accountName = prefs.getString('userName') ?? "Unknown";
+//       // العنوان كـ JSON (Map) للحفظ في jsonb
+//       final Map<String, dynamic>? addrMap =
+//       _normalizeClinicAddressToMap(widget.appointmentDetails.clinicAddress);
+//
+//       // تطبيع جنس الطبيب إلى العربية عند وجود قيم إنجليزية
+//       final String rawGender = widget.appointmentDetails.doctorGender;
+//       final String normalizedDoctorGender = () {
+//         final g = rawGender.trim().toLowerCase();
+//         if (g == 'male' || g == 'm') return 'ذكر';
+//         if (g == 'female' || g == 'f') return 'أنثى';
+//         return rawGender; // اتركه كما هو إن كان عربي أصلاً
+//       }();
+//
+//       // 🆕 الإدخال — ❌ لا نرسل appointment_date/time: الـ Trigger سيحسبهما من timestamp (UTC+3)
+//       final insertPayload = {
+//         'doctor_id': widget.appointmentDetails.doctorId,
+//         'user_id': userId,
+//         'timestamp': slotUtc.toIso8601String(),                    // UTC
+//         'reason_id': reasonId.isNotEmpty ? reasonId : null,   // ✅ خزن الـ id
+//         'reason': reasonText,                                // النص للعرض
+//         'booked': true,
+//         'new_patient': widget.appointmentDetails.newPatient,
+//         'patient_name': widget.appointmentDetails.patientName,
+//         'user_gender': widget.appointmentDetails.patientGender,
+//         'user_age': widget.appointmentDetails.patientAge,
+//         'clinic_address': addrMap,
+//         'location': widget.appointmentDetails.location,
+//         'doctor_title': widget.appointmentDetails.doctorTitle,
+//         'doctor_image': widget.appointmentDetails.image,
+//         'doctor_specialty': widget.appointmentDetails.specialty,
+//         'account_name': accountName,
+//         'booking_timestamp': bookingTimestampUtc.toIso8601String(),// UTC
+//         'doctor_name': widget.appointmentDetails.doctorName,
+//         'doctor_gender': normalizedDoctorGender,                   // عربي
+//         'clinic': widget.appointmentDetails.clinicName,
+//         'is_docsera_user': true,
+//         'booked_via': 'DocSera',
+//         'attachments': null,
+//         'is_confirmed': !requiresConfirmation,
+//         if (widget.appointmentDetails.isRelative)
+//           'relative_id': widget.appointmentDetails.patientId,
+//       };
+//
+//       print("📝 [ConfirmationPage] Insert Payload:");
+//       insertPayload.forEach((key, value) {
+//         print("   $key: $value");
+//       });
+//
+// // ركز على الموقع
+//       final loc = widget.appointmentDetails.location;
+//       if (loc == null || (loc is Map && loc.isEmpty)) {
+//         print("⚠️ [ConfirmationPage] Location is EMPTY or NULL!");
+//       } else {
+//         print("✅ [ConfirmationPage] Location to insert = $loc");
+//       }
+//
+//       final inserted = await supabase
+//           .from('appointments')
+//           .insert(insertPayload)
+//           .select('id')
+//           .single();
+//
+//       // 📌 إضافة الطبيب إلى قائمة الأطباء الذين زارهم المريض/القريب
+//       try {
+//         final targetTable =
+//         widget.appointmentDetails.isRelative ? 'relatives' : 'users';
+//         final targetId = widget.appointmentDetails.patientId;
+//
+//         final existingDoctorsResponse = await supabase
+//             .from(targetTable)
+//             .select('doctors')
+//             .eq('id', targetId)
+//             .maybeSingle();
+//
+//         List<String> existingDoctors = [];
+//         if (existingDoctorsResponse != null &&
+//             existingDoctorsResponse['doctors'] is List) {
+//           existingDoctors = List<String>.from(existingDoctorsResponse['doctors']);
+//         }
+//
+//         if (!existingDoctors.contains(widget.appointmentDetails.doctorId)) {
+//           existingDoctors.add(widget.appointmentDetails.doctorId);
+//           await supabase
+//               .from(targetTable)
+//               .update({'doctors': existingDoctors})
+//               .eq('id', targetId);
+//         }
+//       } catch (_) {
+//         // تجاهل أخطاء التحديث غير الحرجة
+//       }
+//
+//       // ⏭️ التوجيه — للعرض يمكنك تمرير الوقت النصّي القادم من الصفحة الحالية
+//       final navPayload = {
+//         'doctorId': widget.appointmentDetails.doctorId,
+//         'doctorName': widget.appointmentDetails.doctorName,
+//         'doctorTitle': widget.appointmentDetails.doctorTitle,
+//         'doctorGender': normalizedDoctorGender,
+//         'doctor_image': widget.appointmentDetails.image,
+//         'specialty': widget.appointmentDetails.specialty,
+//         'clinic': widget.appointmentDetails.clinicName,
+//         'clinicAddress': addrMap, // Map لسهولة العرض
+//         'location': widget.appointmentDetails.location,
+//         'patientName': widget.appointmentDetails.patientName,
+//         'reasonId': reasonId,       // ✅ جديد
+//         'reason': reasonText,       // النص للعرض
+//         'timestamp': slotUtc.toIso8601String(),                    // UTC
+//         'bookingTimestamp': bookingTimestampUtc.toIso8601String(), // UTC
+//         'appointmentId': inserted['id'],
+//         // للعرض فقط (من الصفحة): 12 ساعة جاهز
+//         'appointmentTimeDisplay': widget.appointmentTime,
+//       };
+//
+//
+//       if (!mounted) return;
+//
+//       if (requiresConfirmation) {
+//         Navigator.pushReplacement(
+//           context,
+//           fadePageRoute(WaitingForConfirmationPage(appointment: navPayload)),
+//         );
+//       } else {
+//         Navigator.pushReplacement(
+//           context,
+//           fadePageRoute(AppointmentConfirmedPage(appointment: navPayload)),
+//         );
+//         print("🧭 [ConfirmationPage] Navigating to AppointmentConfirmedPage");
+//         print("   appointmentId = ${navPayload['appointmentId']}");
+//       }
+//     } catch (e) {
+//       final msg = e.toString().toLowerCase().contains('duplicate') ||
+//           e.toString().toLowerCase().contains('unique')
+//           ? AppLocalizations.of(context)!.slotAlreadyBooked
+//           : '${AppLocalizations.of(context)!.errorBookingAppointment}: $e';
+//
+//       if (mounted) {
+//         ScaffoldMessenger.of(context).showSnackBar(
+//           SnackBar(content: Text(msg)),
+//         );
+//       }
+//     } finally {
+//       if (mounted) setState(() => _submitting = false);
+//     }
+//   }
 
   @override
   Widget build(BuildContext context) {

@@ -1,14 +1,14 @@
+import 'package:docsera/Business_Logic/Account_page/relatives/relatives_cubit.dart';
 import 'package:docsera/app/const.dart';
 import 'package:docsera/app/text_styles.dart';
-import 'package:docsera/services/supabase/supabase_user_service.dart';
 import 'package:docsera/utils/text_direction_utils.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:docsera/gen_l10n/app_localizations.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:intl/intl.dart';
-import 'package:shared_preferences/shared_preferences.dart';
-import 'package:supabase_flutter/supabase_flutter.dart';
+
 
 class EditRelativePage extends StatefulWidget {
   final String relativeId;
@@ -61,7 +61,12 @@ class _EditRelativePageState extends State<EditRelativePage> {
   void _populateFields() {
     firstNameController.text = widget.relativeData['first_name'] ?? "";
     lastNameController.text = widget.relativeData['last_name'] ?? "";
-    dateOfBirthController.text = widget.relativeData['date_of_birth'] ?? "";
+    final rawDob = widget.relativeData['date_of_birth'];
+    if (rawDob != null && rawDob.toString().isNotEmpty) {
+      final parsed = DateTime.parse(rawDob);
+      dateOfBirthController.text =
+          DateFormat('dd.MM.yyyy').format(parsed);
+    }
     emailController.text = widget.relativeData['email'] ?? "";
     phoneController.text = _formatPhoneForDisplay(widget.relativeData['phone_number'] ?? "");
     streetController.text = widget.relativeData['address']?['street'] ?? "";
@@ -72,63 +77,99 @@ class _EditRelativePageState extends State<EditRelativePage> {
     _validateForm();
   }
 
+  String _formatPhoneNumber(String input) {
+    final trimmed = input.trim();
+    if (trimmed.startsWith('09')) {
+      return '00963${trimmed.substring(1)}';
+    } else if (trimmed.startsWith('9')) {
+      return '00963$trimmed';
+    } else {
+      return trimmed; // fallback
+    }
+  }
+
+
   Future<void> _updateRelative() async {
-    final isValid = _formKey.currentState!.validate();
+    final isValid = _formKey.currentState?.validate() ?? false;
+
     if (!isValid) {
-      setState(() {}); // لإجبار الفورم يعيد بناء نفسه ويظهر الأخطاء
+      setState(() {});
       return;
     }
 
-    SharedPreferences prefs = await SharedPreferences.getInstance();
-    String userId = prefs.getString('userId') ?? "";
-    if (userId.isEmpty) return;
+    final dobText = dateOfBirthController.text.trim();
+    if (dobText.isEmpty) {
+      throw Exception('DOB_EMPTY');
+    }
 
-    final supabase = Supabase.instance.client;
+    print('🟡 EDIT PAGE → relativeId = ${widget.relativeId}');
+    print('🟡 EDIT PAGE → payload = ${{
+      'first_name': firstNameController.text.trim(),
+      'last_name': lastNameController.text.trim(),
+      'gender': gender,
+      'date_of_birth': DateFormat('dd.MM.yyyy')
+          .parse(dateOfBirthController.text)
+          .toIso8601String(),
+      'email': emailController.text.trim().isEmpty
+          ? null
+          : emailController.text.trim(),
+      'phone_number': phoneController.text.trim().isEmpty
+          ? null
+          : _formatPhoneNumber(phoneController.text.trim()),
+      'address': {
+        'street': streetController.text.trim(),
+        'buildingNr': buildingNrController.text.trim(),
+        'city': cityController.text.trim(),
+        'country': countryController.text.trim(),
+      },
+    }}');
+
 
     try {
-      final updatedData = {
-        'first_name': firstNameController.text,
-        'last_name': lastNameController.text,
-        'date_of_birth': dateOfBirthController.text,
-        'gender': gender,
-        'email': emailController.text,
-        'phone_number': phoneController.text,
-        'address': {
-          'street': streetController.text,
-          'buildingNr': buildingNrController.text,
-          'city': cityController.text,
-          'country': countryController.text,
+      await context.read<RelativesCubit>().updateRelative(
+        widget.relativeId,
+        {
+          'first_name': firstNameController.text.trim(),
+          'last_name': lastNameController.text.trim(),
+          'gender': gender,
+          'date_of_birth': DateFormat('dd.MM.yyyy')
+              .parse(dateOfBirthController.text)
+              .toIso8601String(),
+          'email': emailController.text.trim().isEmpty
+              ? null
+              : emailController.text.trim(),
+          'phone_number': phoneController.text.trim().isEmpty
+              ? null
+              : _formatPhoneNumber(phoneController.text.trim()),
+          'address': {
+            'street': streetController.text.trim(),
+            'buildingNr': buildingNrController.text.trim(),
+            'city': cityController.text.trim(),
+            'country': countryController.text.trim(),
+          },
         },
-      };
-
-      final response = await supabase
-          .from('relatives')
-          .update(updatedData)
-          .eq('id', widget.relativeId)
-          .eq('user_id', userId)
-          .select(); // هيك بيشتغل
-
-      if (response.isEmpty) {
-        throw Exception("لم يتم تحديث البيانات");
-      }
-
+      );
 
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text(AppLocalizations.of(context)!.updateSuccess),
-          backgroundColor: AppColors.main.withOpacity(0.7),
+          backgroundColor: AppColors.main.withOpacity(0.8),
         ),
       );
+
       Navigator.pop(context, true);
     } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text(AppLocalizations.of(context)!.updateFailed(e.toString())),
-          backgroundColor: AppColors.red.withOpacity(0.7),
+          content: Text(
+            AppLocalizations.of(context)!.updateFailed(e.toString()),
+          ),
+          backgroundColor: AppColors.red.withOpacity(0.8),
         ),
       );
     }
   }
+
 
   /// ✅ Date picker for date of birth
   Future<void> _pickDate() async {
@@ -782,7 +823,8 @@ class _EditRelativePageState extends State<EditRelativePage> {
               ? '00963${trimmed.substring(1)}'
               : '00963$trimmed';
 
-          final isDuplicate = await SupabaseUserService().isPhoneNumberExists(formatted);
+          final isDuplicate =
+          await context.read<RelativesCubit>().isPhoneDuplicate(formatted);
 
           setState(() {
             phoneErrorText = isDuplicate
@@ -872,13 +914,11 @@ class _EditRelativePageState extends State<EditRelativePage> {
 
         // ✅ تحقق من التكرار إذا كان الإيميل صالح
         if (emailRegex.hasMatch(value)) {
-          final exists = await Supabase.instance.client
-              .from('relatives')
-              .select('email')
-              .eq('email', value.trim())
-              .maybeSingle();
+          final exists = await context
+              .read<RelativesCubit>()
+              .isEmailDuplicate(value.trim());
 
-          if (exists != null) {
+          if (exists) {
             ScaffoldMessenger.of(context).showSnackBar(SnackBar(
               content: Text(AppLocalizations.of(context)!.emailAlreadyRegistered),
               backgroundColor: AppColors.red.withOpacity(0.8),

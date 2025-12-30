@@ -68,52 +68,49 @@ class _SelectPatientPageState extends State<SelectPatientPage> {
   }
 
   Future<void> _loadUserInfo() async {
-    final currentUser = Supabase.instance.client.auth.currentUser;
-    if (currentUser == null) {
-      debugPrint("❌ Supabase user is not logged in.");
-      return;
-    }
-
-    userId = currentUser.id;
+    final client = Supabase.instance.client;
 
     try {
-      final response = await Supabase.instance.client
-          .from('users')
-          .select()
-          .eq('id', userId!)
-          .maybeSingle();
+      final ctx = await client.rpc('rpc_get_my_patient_context');
 
-      if (response != null) {
-        final firstName = response['first_name'] ?? "";
-        final lastName = response['last_name'] ?? "";
-        final gender = response['gender'] ?? "";
-        final dobString = response['date_of_birth'];
-        final phoneNumber = response['phone_number'] ?? "";
-        final email = response['email'] ?? "";
-
-        final age = _calculateAge(dobString);
-
-        setState(() {
-          userName = "$firstName $lastName";
-          userGender = gender;
-          userAge = age;
-          patientDOB = dobString ?? "";
-          patientPhoneNumber = phoneNumber;
-          patientEmail = email;
-
-          // ✅ اختيار افتراضي للمستخدم الأساسي
-          selectedPatientId = userId;
-          selectedPatientName = userName.trim();
-          selectedPatientGender = userGender;
-          selectedPatientAge = userAge;
-        });
-
-        await _loadRelatives();
-      } else {
-        debugPrint("❌ No user found with this ID.");
+      if (ctx == null) {
+        debugPrint("❌ rpc_get_my_patient_context returned null");
+        return;
       }
+
+      final user = ctx['user'];
+      final rels = ctx['relatives'] as List<dynamic>;
+
+      final firstName = user['first_name'] ?? '';
+      final lastName  = user['last_name'] ?? '';
+      final gender    = user['gender'] ?? '';
+      final dob       = user['date_of_birth'];
+
+      final age = _calculateAge(dob);
+
+      setState(() {
+        userId = user['id'];
+        userName = "$firstName $lastName".trim();
+        userGender = gender;
+        userAge = age;
+
+        selectedPatientId = userId;
+        selectedPatientName = userName;
+        selectedPatientGender = gender;
+        selectedPatientAge = age;
+
+        relatives = rels.map<Map<String, dynamic>>((r) {
+          return {
+            "id": r["id"],
+            "first_name": r["first_name"] ?? "",
+            "last_name": r["last_name"] ?? "",
+            "gender": r["gender"] ?? "",
+            "age": _calculateAge(r["date_of_birth"]),
+          };
+        }).toList();
+      });
     } catch (e) {
-      debugPrint("❌ Error loading user info from Supabase: $e");
+      debugPrint("❌ Failed to load patient context: $e");
     }
   }
 
@@ -133,30 +130,35 @@ class _SelectPatientPageState extends State<SelectPatientPage> {
     }
   }
 
-  Future<void> _loadRelatives() async {
-    if (userId == null) return;
-
-    try {
-      final response = await Supabase.instance.client
-          .from('relatives')
-          .select()
-          .eq('user_id', userId!);
-
-      setState(() {
-        relatives = response.map<Map<String, dynamic>>((data) {
-          return {
-            "id": data["id"] ?? "",
-            "first_name": data["first_name"] ?? "",
-            "last_name": data["last_name"] ?? "",
-            "gender": data["gender"] ?? "",
-            "age": _calculateAge(data["date_of_birth"]),
-          };
-        }).toList();
-      });
-    } catch (e) {
-      debugPrint("❌ Error loading relatives from Supabase: $e");
-    }
-  }
+  // Future<void> _loadRelatives() async {
+  //   final client = Supabase.instance.client;
+  //
+  //   try {
+  //     final res = await client.rpc('rpc_get_my_relatives');
+  //
+  //     if (res == null || res is! List) {
+  //       debugPrint("⚠️ rpc_get_my_relatives returned empty or invalid data");
+  //       setState(() {
+  //         relatives = [];
+  //       });
+  //       return;
+  //     }
+  //
+  //     setState(() {
+  //       relatives = res.map<Map<String, dynamic>>((r) {
+  //         return {
+  //           "id": r["id"],
+  //           "first_name": r["first_name"] ?? "",
+  //           "last_name": r["last_name"] ?? "",
+  //           "gender": r["gender"] ?? "",
+  //           "age": _calculateAge(r["date_of_birth"]),
+  //         };
+  //       }).toList();
+  //     });
+  //   } catch (e) {
+  //     debugPrint("❌ Error loading relatives via rpc_get_my_relatives: $e");
+  //   }
+  // }
 
   void _showAddRelativeSheet() async {
     await showModalBottomSheet(
@@ -182,8 +184,9 @@ class _SelectPatientPageState extends State<SelectPatientPage> {
     );
 
     if (mounted) {
-      _loadRelatives();
+      await _loadUserInfo();
     }
+
   }
 
   Future<void> _fetchLatestDoctorImage() async {
@@ -359,21 +362,24 @@ class _SelectPatientPageState extends State<SelectPatientPage> {
     final tiles = <Widget>[];
 
     if (userId != null) {
-      final nameParts = userName.split(" ");
-      final firstName = nameParts.isNotEmpty ? nameParts.first : "";
-      final lastName = nameParts.length > 1 ? nameParts[1] : "";
+      final parts = userName.trim().split(" ");
+      final firstName = parts.isNotEmpty ? parts.first : "";
+      final lastName  = parts.length > 1 ? parts[1] : "";
 
-      tiles.add(_buildPatientTile(
-        userId!,
-        firstName,
-        lastName,
-        userGender,
-        userAge,
-        true,
-        true,
-        relatives.isEmpty,
-      ));
+      tiles.add(
+        _buildPatientTile(
+          userId!,
+          firstName,
+          lastName,
+          userGender,
+          userAge,
+          true,
+          true,
+          relatives.isEmpty,
+        ),
+      );
     }
+
 
     for (int i = 0; i < relatives.length; i++) {
       final isFirst = userId == null && i == 0;
@@ -423,6 +429,8 @@ class _SelectPatientPageState extends State<SelectPatientPage> {
     return firstChar == 'ه' ? 'هـ' : firstChar;
   }
 
+
+
   Widget _buildPatientTile(
       String id,
       String firstName,
@@ -434,10 +442,17 @@ class _SelectPatientPageState extends State<SelectPatientPage> {
       bool isLast,
       ) {
     final isArabic = RegExp(r'[\u0600-\u06FF]').hasMatch(firstName);
-    final avatarText = isArabic
-        ? normalizeArabicInitial(firstName).toUpperCase()
-        : "${firstName.isNotEmpty ? firstName[0].toUpperCase() : ''}${lastName.isNotEmpty ? lastName[0].toUpperCase() : ''}";
+    String avatarText;
 
+    if (isArabic) {
+      avatarText = firstName.isNotEmpty
+          ? normalizeArabicInitial(firstName).toUpperCase()
+          : "?";
+    } else {
+      final f = firstName.isNotEmpty ? firstName[0].toUpperCase() : "";
+      final l = lastName.isNotEmpty ? lastName[0].toUpperCase() : "";
+      avatarText = (f + l).isNotEmpty ? f + l : "?";
+    }
     return Column(
       children: [
         GestureDetector(

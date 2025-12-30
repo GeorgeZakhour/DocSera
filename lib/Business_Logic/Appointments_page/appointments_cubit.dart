@@ -147,7 +147,7 @@ import 'package:bloc/bloc.dart';
 import 'package:docsera/Business_Logic/Appointments_page/appointments_state.dart';
 import 'package:docsera/Business_Logic/Authentication/auth_cubit.dart';
 import 'package:docsera/Business_Logic/Authentication/auth_state.dart';
-import 'package:docsera/services/supabase/supabase_user_service.dart';
+import 'package:docsera/services/supabase/user/supabase_user_service.dart';
 import 'package:flutter/widgets.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:shared_preferences/shared_preferences.dart';

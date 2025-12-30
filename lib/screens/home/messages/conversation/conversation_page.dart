@@ -22,6 +22,8 @@ import 'package:flutter_svg/svg.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
+import '../../../../utils/full_page_loader.dart';
+
 class ConversationPage extends StatefulWidget {
   final String conversationId;
   final String doctorName;
@@ -355,7 +357,7 @@ class _ConversationPageState extends State<ConversationPage> {
                   builder: (context, state) {
                     if (state.isLoading) {
                       return Center(
-                        child: CircularProgressIndicator(color: AppColors.main),
+                        child: FullPageLoader(),
                       );
                     }
 

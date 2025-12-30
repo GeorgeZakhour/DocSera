@@ -2,7 +2,7 @@ import 'dart:async';
 import 'package:bloc/bloc.dart';
 import 'package:docsera/Business_Logic/Authentication/auth_cubit.dart';
 import 'package:docsera/Business_Logic/Authentication/auth_state.dart';
-import 'package:docsera/services/supabase/supabase_user_service.dart';
+import 'package:docsera/services/supabase/user/supabase_user_service.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -47,7 +47,7 @@ class UserCubit extends Cubit<UserState> {
       }
 
       // ----- Fetch from Supabase -----
-      final userData = await _supabaseUserService.getUserData(userId);
+      final userData = await Supabase.instance.client.rpc('rpc_get_my_user');
       if (userData == null) {
         emit(UserError("User data not found"));
         return;
@@ -79,7 +79,7 @@ class UserCubit extends Cubit<UserState> {
       callback: (payload) async {
         print("🔄 Realtime Update Received for user $userId");
 
-        final userData = await SupabaseUserService().getUserData(userId);
+        final userData = await Supabase.instance.client.rpc('rpc_get_my_user');
         if (userData != null) {
           _emitUserStateFromMap(userData, userId);
         }
@@ -91,21 +91,60 @@ class UserCubit extends Cubit<UserState> {
   // 🔁 Convert Map → UserLoaded + Save to Cache
   // ---------------------------------------------------------------------------
   Future<void> _emitUserStateFromMap(
-      Map<String, dynamic> userData, String userId) async {
+      Map<String, dynamic> userData,
+      String userId,
+      ) async {
+    final bool isActive = userData['is_active'] == true;
+
     final firstName = userData['first_name']?.toString() ?? '';
-    final lastName = userData['last_name']?.toString() ?? '';
-    final userName = "$firstName $lastName".trim();
+    final lastName  = userData['last_name']?.toString() ?? '';
+    final userName  = "$firstName $lastName".trim();
 
     final userEmail = (userData['email']?.toString() ?? '').trim();
     final userPhone = (userData['phone_number']?.toString() ?? '').trim();
+
     final isPhoneVerified = userData['phone_verified'] == true;
     final isEmailVerified = userData['email_verified'] == true;
-    final is2FAEnabled = userData['two_factor_auth_enabled'] == true;
+    final is2FAEnabled    = userData['two_factor_auth_enabled'] == true;
 
-    /// ⭐ Get user points from Supabase
     final int userPoints = userData['points'] ?? 0;
 
-    // ----- Save to SharedPreferences -----
+    // 🟢 NEW FIELDS
+    final String? gender = userData['gender'];
+    final String? dateOfBirth = userData['date_of_birth'];
+    final Map<String, dynamic>? address =
+    (userData['address'] as Map?)?.cast<String, dynamic>();
+
+    if (!isActive) {
+      // 🚫 الحساب معطّل (Soft deleted)
+
+      // 1️⃣ أوقف أي realtime listener
+      await _userChannel?.unsubscribe();
+
+      // 2️⃣ Sign out من Supabase Auth
+      await Supabase.instance.client.auth.signOut();
+
+      // 3️⃣ نظّف الكاش (مع الحفاظ على FaceID إذا أردت)
+      final wasFaceIdEnabled = _prefs.getBool('enableFaceID') ?? false;
+      final biometricType = _prefs.getString('biometricType');
+
+      await _prefs.clear();
+
+      if (wasFaceIdEnabled) {
+        await _prefs.setBool('enableFaceID', true);
+      }
+      if (biometricType != null) {
+        await _prefs.setString('biometricType', biometricType);
+      }
+
+      // 4️⃣ Emit حالة خاصة
+      emit(AccountDeactivated());
+
+      return; // ⛔ لا تكمل
+    }
+
+
+    // ----- Cache -----
     await _prefs.setString('userName', userName);
     await _prefs.setString('userEmail', userEmail);
     await _prefs.setString('userPhone', userPhone);
@@ -113,19 +152,25 @@ class UserCubit extends Cubit<UserState> {
     await _prefs.setBool('isEmailVerified', isEmailVerified);
     await _prefs.setInt('userPoints', userPoints);
 
-    print("📤 [UserCubit] Emitting UserLoaded with points = $userPoints");
+    emit(
+      UserLoaded(
+        userId: userId,
+        userName: userName,
+        userEmail: userEmail,
+        userPhone: userPhone,
+        isPhoneVerified: isPhoneVerified,
+        isEmailVerified: isEmailVerified,
+        is2FAEnabled: is2FAEnabled,
+        userPoints: userPoints,
 
-    emit(UserLoaded(
-      userId: userId,
-      userName: userName,
-      userEmail: userEmail,
-      userPhone: userPhone,
-      isPhoneVerified: isPhoneVerified,
-      isEmailVerified: isEmailVerified,
-      is2FAEnabled: is2FAEnabled,
-      userPoints: userPoints,
-    ));
+        // 🟢 PASS THEM HERE
+        gender: gender,
+        dateOfBirth: dateOfBirth,
+        address: address,
+      ),
+    );
   }
+
 
   // ---------------------------------------------------------------------------
   // 📴 Dispose
@@ -186,8 +231,6 @@ class UserCubit extends Cubit<UserState> {
     try {
       bool wasFaceIdEnabled = _prefs.getBool('enableFaceID') ?? false;
       String? biometricType = _prefs.getString('biometricType');
-      String? savedPhone = _prefs.getString('userPhone');
-      String? savedPassword = _prefs.getString('userPassword');
 
       await _prefs.clear();
 
@@ -195,14 +238,11 @@ class UserCubit extends Cubit<UserState> {
       if (biometricType != null) {
         await _prefs.setString('biometricType', biometricType);
       }
-      if (savedPhone != null && savedPassword != null) {
-        await _prefs.setString('userPhone', savedPhone);
-        await _prefs.setString('userPassword', savedPassword);
-      }
 
       emit(NotLogged());
     } catch (e) {
       emit(UserError("Failed to log out: $e"));
     }
   }
+
 }

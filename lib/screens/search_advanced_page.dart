@@ -164,28 +164,22 @@ class _SearchAdvancedPageState extends State<SearchAdvancedPage> {
   // ========= مفضلة المستخدم =========
   Future<void> _loadUserIdAndFavorites() async {
     try {
-      SharedPreferences prefs = await SharedPreferences.getInstance();
-      String? uid = prefs.getString('userId') ?? Supabase.instance.client.auth.currentUser?.id;
-      _userId = uid;
-      if (uid != null) {
-        final response = await Supabase.instance.client
-            .from('users')
-            .select('favorites')
-            .eq('id', uid)
-            .single();
+      final client = Supabase.instance.client;
 
-        final favIds = (response['favorites'] as List?)?.cast<dynamic>() ?? [];
-        if (favIds.isEmpty) return;
+      final res = await client.rpc('rpc_get_my_favorite_doctors');
 
-        final List docs = await Supabase.instance.client
-            .from('doctors')
-            .select('*')
-            .inFilter('id', favIds);
-
-        setState(() => _favoriteDoctors = docs.cast<Map<String, dynamic>>());
+      if (res == null || res is! List) {
+        setState(() => _favoriteDoctors = []);
+        return;
       }
-    } catch (_) {
-      // تجاهل
+
+      setState(() {
+        _favoriteDoctors = List<Map<String, dynamic>>.from(res);
+      });
+
+    } catch (e) {
+      debugPrint("❌ Failed to load favorite doctors: $e");
+      setState(() => _favoriteDoctors = []);
     }
   }
 

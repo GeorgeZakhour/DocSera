@@ -10,6 +10,8 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:docsera/gen_l10n/app_localizations.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
+import '../../../utils/full_page_loader.dart';
+
 class SelectMessageReasonPage extends StatefulWidget {
   final String doctorId; // ✅ نضيف doctorId لنعمل query
   final String doctorName;
@@ -126,7 +128,7 @@ class _SelectMessageReasonPageState extends State<SelectMessageReasonPage> {
                   ? Center(
                 child: Padding(
                   padding: EdgeInsets.only(top: 40.h),
-                  child: const CircularProgressIndicator(color: AppColors.main),
+                  child: const FullPageLoader(),
                 ),
               )
                   : _hasError

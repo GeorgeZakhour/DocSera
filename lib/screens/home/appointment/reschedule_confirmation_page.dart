@@ -2,6 +2,7 @@ import 'package:docsera/app/const.dart';
 import 'package:docsera/app/text_styles.dart';
 import 'package:docsera/models/appointment_details.dart';
 import 'package:docsera/screens/doctors/appointment/confirmation_page.dart';
+import 'package:docsera/screens/doctors/appointment/waiting_for_confirmation_page.dart';
 import 'package:docsera/utils/doctor_image_utils.dart';
 import 'package:docsera/utils/page_transitions.dart';
 import 'package:docsera/utils/time_utils.dart';
@@ -37,74 +38,128 @@ class RescheduleConfirmationPage extends StatelessWidget {
     return TimezoneUtils.format12hLocalized(context, utc);
   }
 
-  Future<void> _confirmReschedule(BuildContext context) async {
-    final prefs = await SharedPreferences.getInstance();
-    final userId = prefs.getString('userId');
-    final userName = prefs.getString('userName') ?? "Unknown";
-
-    if (userId == null) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(AppLocalizations.of(context)!.somethingWentWrong)),
-      );
-      return;
-    }
-
-    final supabase = Supabase.instance.client;
-
-    // 🕓 نحفظ دائماً كـ UTC
-    final DateTime nowUtc = DateTime.now().toUtc();
-    final DateTime newTsUtc = newTimestamp.toUtc();
-
-    try {
-      final docRow = await supabase
-          .from('doctors')
-          .select('require_confirmation')
-          .eq('id', newAppointment.doctorId)
-          .maybeSingle();
-
-      final bool requiresConfirmation = (docRow?['require_confirmation'] as bool?) ?? true;
-      final bool isConfirmed = !requiresConfirmation;
+  // Future<void> _confirmReschedule(BuildContext context) async {
+  //   final prefs = await SharedPreferences.getInstance();
+  //   final userId = prefs.getString('userId');
+  //   final userName = prefs.getString('userName') ?? "Unknown";
+  //
+  //   if (userId == null) {
+  //     ScaffoldMessenger.of(context).showSnackBar(
+  //       SnackBar(content: Text(AppLocalizations.of(context)!.somethingWentWrong)),
+  //     );
+  //     return;
+  //   }
+  //
+  //   final supabase = Supabase.instance.client;
+  //
+  //   // 🕓 نحفظ دائماً كـ UTC
+  //   final DateTime nowUtc = DateTime.now().toUtc();
+  //   final DateTime newTsUtc = newTimestamp.toUtc();
+  //
+  //   try {
+  //     final docRow = await supabase
+  //         .from('doctors')
+  //         .select('require_confirmation')
+  //         .eq('id', newAppointment.doctorId)
+  //         .maybeSingle();
+  //
+  //     final bool requiresConfirmation = (docRow?['require_confirmation'] as bool?) ?? true;
+  //     final bool isConfirmed = !requiresConfirmation;
+  //
 
       // 🆕 إدراج الموعد الجديد
-      final insertRes = await supabase
-          .from('appointments')
-          .insert({
-        'user_id': userId,
-        'doctor_id': newAppointment.doctorId,
-        'timestamp': newTsUtc.toIso8601String(),
-        'booked': true,
-        'patient_name': newAppointment.patientName,
-        'user_gender': newAppointment.patientGender,
-        'user_age': newAppointment.patientAge,
-        'new_patient': newAppointment.newPatient,
-        'reason_id': newAppointment.reasonId,
-        'reason': newAppointment.reason,
-        'clinic_address': newAppointment.clinicAddress,
-        'location': newAppointment.location,
-        'doctor_title': newAppointment.doctorTitle,
-        'doctor_image': newAppointment.image,
-        'doctor_specialty': newAppointment.specialty,
-        'doctor_name': newAppointment.doctorName,
-        'doctor_gender': newAppointment.doctorGender,
-        'clinic': newAppointment.clinicName,
-        'account_name': userName,
-        'booking_timestamp': nowUtc.toIso8601String(),
-        'is_docsera_user': true,
-        'booked_via': 'DocSera',
-        'attachments': null,
-        'is_confirmed': isConfirmed,
-        if (newAppointment.isRelative) 'relative_id': newAppointment.patientId,
-      })
-          .select()
-          .single();
+      // final insertRes = await supabase
+      //     .from('appointments')
+      //     .insert({
+      //   'user_id': userId,
+      //   'doctor_id': newAppointment.doctorId,
+      //   'timestamp': newTsUtc.toIso8601String(),
+      //   'booked': true,
+      //   'patient_name': newAppointment.patientName,
+      //   'user_gender': newAppointment.patientGender,
+      //   'user_age': newAppointment.patientAge,
+      //   'new_patient': newAppointment.newPatient,
+      //   'reason_id': newAppointment.reasonId,
+      //   'reason': newAppointment.reason,
+      //   'clinic_address': newAppointment.clinicAddress,
+      //   'location': newAppointment.location,
+      //   'doctor_title': newAppointment.doctorTitle,
+      //   'doctor_image': newAppointment.image,
+      //   'doctor_specialty': newAppointment.specialty,
+      //   'doctor_name': newAppointment.doctorName,
+      //   'doctor_gender': newAppointment.doctorGender,
+      //   'clinic': newAppointment.clinicName,
+      //   'account_name': userName,
+      //   'booking_timestamp': nowUtc.toIso8601String(),
+      //   'is_docsera_user': true,
+      //   'booked_via': 'DocSera',
+      //   'attachments': null,
+      //   'is_confirmed': isConfirmed,
+      //   if (newAppointment.isRelative) 'relative_id': newAppointment.patientId,
+      // })
+      //     .select()
+      //     .single();
 
-      final newRow = Map<String, dynamic>.from(insertRes as Map);
-      final insertedApptId = (newRow['id'] ?? '').toString();
+      // final newRow = Map<String, dynamic>.from(insertRes as Map);
+      // final insertedApptId = (newRow['id'] ?? '').toString();
 
       // 🗑️ حذف الموعد القديم
-      await supabase.from('appointments').delete().eq('id', oldAppointmentId);
+      // await supabase.from('appointments').delete().eq('id', oldAppointmentId);
 
       // 📦 تحضير البيانات للتنقل
+  //     final navPayload = {
+  //       'doctorId': newAppointment.doctorId,
+  //       'doctorName': newAppointment.doctorName,
+  //       'doctorTitle': newAppointment.doctorTitle,
+  //       'doctorGender': newAppointment.doctorGender,
+  //       'doctor_image': newAppointment.image,
+  //       'specialty': newAppointment.specialty,
+  //       'clinicName': newAppointment.clinicName,
+  //       'clinicAddress': newAppointment.clinicAddress,
+  //       'location': newAppointment.location,
+  //       'patientName': newAppointment.patientName,
+  //       'reason': newAppointment.reason,
+  //       'timestamp': newTsUtc.toIso8601String(),
+  //       'bookingTimestamp': nowUtc.toIso8601String(),
+  //       'appointmentId': insertedApptId,
+  //       'account_name': userName,
+  //       'is_confirmed': isConfirmed,
+  //     };
+  //
+  //     await Navigator.pushReplacement(
+  //       context,
+  //       fadePageRoute(AppointmentConfirmedPage(appointment: navPayload)),
+  //     );
+  //   } catch (e) {
+  //     ScaffoldMessenger.of(context).showSnackBar(
+  //       SnackBar(content: Text(AppLocalizations.of(context)!.somethingWentWrong)),
+  //     );
+  //   }
+  // }
+
+  Future<void> _confirmReschedule(BuildContext context) async {
+    final supabase = Supabase.instance.client;
+
+    try {
+      final res = await supabase.rpc(
+        'reschedule_appointment_by_patient',
+        params: {
+          'p_old_appointment_id': oldAppointmentId,
+          'p_new_timestamp': newTimestamp.toIso8601String(),
+        },
+      );
+
+      // 🔑 RPC RETURNS TABLE → List<Map>
+      if (res == null || res is! List || res.isEmpty) {
+        throw Exception('Invalid RPC response');
+      }
+
+      final row = res.first as Map<String, dynamic>;
+
+      final String appointmentId = row['appointment_id'] as String;
+      final bool isConfirmed = row['is_confirmed'] == true;
+
+      // 📦 بيانات التنقل (UI فقط)
       final navPayload = {
         'doctorId': newAppointment.doctorId,
         'doctorName': newAppointment.doctorName,
@@ -117,23 +172,38 @@ class RescheduleConfirmationPage extends StatelessWidget {
         'location': newAppointment.location,
         'patientName': newAppointment.patientName,
         'reason': newAppointment.reason,
-        'timestamp': newTsUtc.toIso8601String(),
-        'bookingTimestamp': nowUtc.toIso8601String(),
-        'appointmentId': insertedApptId,
-        'account_name': userName,
-        'is_confirmed': isConfirmed,
+        'timestamp': newTimestamp.toIso8601String(),
+        'appointmentId': appointmentId,
       };
 
-      await Navigator.pushReplacement(
-        context,
-        fadePageRoute(AppointmentConfirmedPage(appointment: navPayload)),
-      );
-    } catch (e) {
+      // 🧭 التوجيه الصحيح
+      if (isConfirmed) {
+        await Navigator.pushReplacement(
+          context,
+          fadePageRoute(
+            AppointmentConfirmedPage(appointment: navPayload),
+          ),
+        );
+      } else {
+        await Navigator.pushReplacement(
+          context,
+          fadePageRoute(
+            WaitingForConfirmationPage(appointment: navPayload),
+          ),
+        );
+      }
+    } catch (e, s) {
+      debugPrint('❌ Reschedule failed: $e');
+      debugPrint('$s');
+
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(AppLocalizations.of(context)!.somethingWentWrong)),
+        SnackBar(
+          content: Text(AppLocalizations.of(context)!.somethingWentWrong),
+        ),
       );
     }
   }
+
 
   Widget _buildDetail(
       BuildContext context,
@@ -280,7 +350,44 @@ class RescheduleConfirmationPage extends StatelessWidget {
               ),
               SizedBox(height: 6.h),
               _buildDetail(context, newTimestamp, newAppointment, false),
-              SizedBox(height: 20.h),
+              SizedBox(height: 8.h),
+              // ⚠️ Reschedule warning (Glass container)
+              ClipRRect(
+                borderRadius: BorderRadius.circular(12.r),
+                child: Container(
+                  padding: EdgeInsets.all(12.w),
+                  decoration: BoxDecoration(
+                    color: AppColors.main.withOpacity(0.08),
+                    borderRadius: BorderRadius.circular(12.r),
+                    border: Border.all(
+                      color: AppColors.main.withOpacity(0.35),
+                      width: 0.8,
+                    ),
+                  ),
+                  child: Row(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Icon(
+                        Icons.info_outline,
+                        color: AppColors.mainDark,
+                        size: 18.sp,
+                      ),
+                      SizedBox(width: 10.w),
+                      Expanded(
+                        child: Text(
+                          AppLocalizations.of(context)!.rescheduleWarningText,
+                          style: AppTextStyles.getText2(context).copyWith(
+                            fontSize: 11.sp,
+                            color: Colors.black87,
+                            height: 1.4,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+              SizedBox(height: 8.h),
               ElevatedButton(
                 onPressed: () => _confirmReschedule(context),
                 style: ElevatedButton.styleFrom(
@@ -297,6 +404,7 @@ class RescheduleConfirmationPage extends StatelessWidget {
                       .copyWith(fontSize: 10.sp, color: Colors.white),
                 ),
               ),
+              SizedBox(height: 8.h),
             ],
           ),
         ),
@@ -304,3 +412,5 @@ class RescheduleConfirmationPage extends StatelessWidget {
     );
   }
 }
+
+

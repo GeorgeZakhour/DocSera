@@ -13,6 +13,7 @@ import 'package:docsera/screens/home/health/widgets/health_no_items_view.dart';
 import 'package:docsera/screens/home/health/widgets/health_record_card.dart';
 import 'package:docsera/screens/home/health/widgets/health_record_details_dialog.dart';
 import 'package:docsera/screens/home/health/widgets/health_record_options_menu.dart';
+import 'package:docsera/utils/full_page_loader.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
@@ -95,7 +96,7 @@ class FamilyHistoryPage extends StatelessWidget {
                 builder: (context, state) {
                   if (state.isLoading && state.records.isEmpty) {
                     return const Center(
-                      child: CircularProgressIndicator(color: AppColors.main),
+                      child: FullPageLoader(),
                     );
                   }
 

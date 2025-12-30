@@ -422,6 +422,18 @@ abstract class AppLocalizations {
   /// **'Waiting for confirmation'**
   String get waitingConfirmation;
 
+  /// No description provided for @cancelledByYou.
+  ///
+  /// In en, this message translates to:
+  /// **'Cancelled by you'**
+  String get cancelledByYou;
+
+  /// No description provided for @cancelledByDoctor.
+  ///
+  /// In en, this message translates to:
+  /// **'Cancelled by doctor'**
+  String get cancelledByDoctor;
+
   /// No description provided for @statusRejected.
   ///
   /// In en, this message translates to:
@@ -523,6 +535,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'You can now proceed to reschedule.'**
   String get appointmentRescheduleNoWarning;
+
+  /// No description provided for @rescheduleWarningText.
+  ///
+  /// In en, this message translates to:
+  /// **'Rescheduling the appointment will automatically cancel the current one. The new appointment may require the doctor’s approval. Please make sure before proceeding'**
+  String get rescheduleWarningText;
 
   /// No description provided for @noAvailableAppointmentsRes.
   ///
@@ -1346,6 +1364,12 @@ abstract class AppLocalizations {
   /// **'Invalid email address'**
   String get invalidEmail;
 
+  /// No description provided for @hide.
+  ///
+  /// In en, this message translates to:
+  /// **'Hide'**
+  String get hide;
+
   /// No description provided for @loginSection.
   ///
   /// In en, this message translates to:
@@ -1363,6 +1387,24 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'••••••••••••••••'**
   String get passwordHidden;
+
+  /// No description provided for @otpRequestFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Failed to send verification code. Please try again.'**
+  String get otpRequestFailed;
+
+  /// No description provided for @twoFactorUpdateFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Unable to update two-factor authentication. Please try again later.'**
+  String get twoFactorUpdateFailed;
+
+  /// No description provided for @invalidOtp.
+  ///
+  /// In en, this message translates to:
+  /// **'Invalid verification code'**
+  String get invalidOtp;
 
   /// No description provided for @settings.
   ///
@@ -1393,6 +1435,18 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Activated'**
   String get twoFactorAuthActivated;
+
+  /// No description provided for @twoFactorActivatedSuccess.
+  ///
+  /// In en, this message translates to:
+  /// **'Two-factor authentication has been successfully activated.'**
+  String get twoFactorActivatedSuccess;
+
+  /// No description provided for @twoFactorDeactivatedSuccess.
+  ///
+  /// In en, this message translates to:
+  /// **'Two-factor authentication has been successfully deactivated.'**
+  String get twoFactorDeactivatedSuccess;
 
   /// No description provided for @encryptedDocuments.
   ///
@@ -1459,6 +1513,18 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Biometric Authentication'**
   String get biometricTitle;
+
+  /// No description provided for @faceIdEnabled.
+  ///
+  /// In en, this message translates to:
+  /// **'Biometric authentication enabled'**
+  String get faceIdEnabled;
+
+  /// No description provided for @faceIdDisabled.
+  ///
+  /// In en, this message translates to:
+  /// **'Biometric authentication disabled'**
+  String get faceIdDisabled;
 
   /// No description provided for @confidentiality.
   ///
@@ -2216,6 +2282,36 @@ abstract class AppLocalizations {
   /// **'Don\'t have an account?'**
   String get noAccountQuestion;
 
+  /// No description provided for @shareDoctorProfile.
+  ///
+  /// In en, this message translates to:
+  /// **'Share Doctor Profile'**
+  String get shareDoctorProfile;
+
+  /// No description provided for @scanToOpenInApp.
+  ///
+  /// In en, this message translates to:
+  /// **'Scan to open this doctor in the DocSera app'**
+  String get scanToOpenInApp;
+
+  /// No description provided for @copyLink.
+  ///
+  /// In en, this message translates to:
+  /// **'Copy link'**
+  String get copyLink;
+
+  /// No description provided for @linkCopied.
+  ///
+  /// In en, this message translates to:
+  /// **'Link copied'**
+  String get linkCopied;
+
+  /// No description provided for @share.
+  ///
+  /// In en, this message translates to:
+  /// **'Share'**
+  String get share;
+
   /// No description provided for @makeAppointment.
   ///
   /// In en, this message translates to:
@@ -2786,6 +2882,12 @@ abstract class AppLocalizations {
   /// **'I already have an account'**
   String get alreadyHaveAccount;
 
+  /// No description provided for @accountDisabled.
+  ///
+  /// In en, this message translates to:
+  /// **'Your account has been deactivated. Please contact support if you believe this is a mistake.'**
+  String get accountDisabled;
+
   /// No description provided for @login.
   ///
   /// In en, this message translates to:
@@ -3152,6 +3254,12 @@ abstract class AppLocalizations {
   /// **'Failed to send OTP. Please try again.'**
   String get otpSendFailed;
 
+  /// No description provided for @pleaseWaitBeforeRequestingAnotherCode.
+  ///
+  /// In en, this message translates to:
+  /// **'Please wait before requesting another verification code'**
+  String get pleaseWaitBeforeRequestingAnotherCode;
+
   /// No description provided for @tryAgain.
   ///
   /// In en, this message translates to:
@@ -3295,6 +3403,18 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'An unexpected error occurred. Please try again later.'**
   String get unexpectedError;
+
+  /// No description provided for @health_loggedOut_title.
+  ///
+  /// In en, this message translates to:
+  /// **'Your health history in one place'**
+  String get health_loggedOut_title;
+
+  /// No description provided for @health_loggedOut_description.
+  ///
+  /// In en, this message translates to:
+  /// **'Sign in to securely store and manage your medical records, reports, and history.'**
+  String get health_loggedOut_description;
 
   /// No description provided for @health_tab.
   ///
@@ -5201,7 +5321,7 @@ abstract class AppLocalizations {
   /// No description provided for @noEmergencySupport.
   ///
   /// In en, this message translates to:
-  /// **'Your practitioner cannot address medical emergencies by message. In case of a medical emergency, call 112.'**
+  /// **'Your practitioner cannot handle medical emergencies via messages. In case of a medical emergency, please call 110 (Ambulance).'**
   String get noEmergencySupport;
 
   /// No description provided for @reasonTestResults.

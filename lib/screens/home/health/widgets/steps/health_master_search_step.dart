@@ -6,6 +6,8 @@ import 'package:docsera/app/text_styles.dart';
 import 'package:docsera/app/const.dart';
 import 'package:docsera/gen_l10n/app_localizations.dart';
 
+import '../../../../../utils/full_page_loader.dart';
+
 /// ----------------------------------------------------------------
 /// GENERIC MASTER SEARCH STEP  (with header text + ARB support)
 /// ----------------------------------------------------------------
@@ -131,7 +133,7 @@ class _HealthMasterSearchStepState<T> extends State<HealthMasterSearchStep<T>> {
         /// RESULTS LIST
         Expanded(
           child: _loading
-              ? const Center(child: CircularProgressIndicator(color: AppColors.main))
+              ? const Center(child: FullPageLoader())
               : _results.isEmpty
               ? Center(
             child: Text(

@@ -15,6 +15,8 @@ import 'package:intl/intl.dart' as intl;
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:transparent_image/transparent_image.dart';
 
+import '../../../../../utils/full_page_loader.dart';
+
 class MessagesListView extends StatelessWidget {
   final List<Map<String, dynamic>> messages;
   final int pendingCount;
@@ -612,11 +614,8 @@ class MessagesListView extends StatelessWidget {
                 child: SizedBox(
                   width: 120.w,
                   height: 120.w,
-                  child: Center(
-                    child: CircularProgressIndicator(
-                      strokeWidth: 2,
-                      color: AppColors.main,
-                    ),
+                  child: const Center(
+                    child: FullPageLoader(),
                   ),
                 ),
               );

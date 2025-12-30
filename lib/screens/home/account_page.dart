@@ -1,5 +1,10 @@
 import 'dart:async';
 import 'dart:io';
+import 'package:docsera/Business_Logic/Account_page/danger/account_danger_cubit.dart';
+import 'package:docsera/Business_Logic/Account_page/profile/account_profile_cubit.dart';
+import 'package:docsera/Business_Logic/Account_page/profile/account_profile_state.dart';
+import 'package:docsera/Business_Logic/Account_page/security/account_security_cubit.dart';
+import 'package:docsera/Business_Logic/Account_page/security/account_security_state.dart';
 import 'package:docsera/Business_Logic/Authentication/auth_cubit.dart';
 import 'package:docsera/Business_Logic/Authentication/auth_state.dart';
 import 'package:docsera/main.dart';
@@ -9,8 +14,6 @@ import 'package:docsera/screens/home/account/goodbye_page.dart';
 import 'package:docsera/screens/home/account/legal_information.dart';
 import 'package:docsera/screens/home/account/points_history_page.dart';
 import 'package:docsera/screens/home/shimmer/shimmer_widgets.dart';
-import 'package:docsera/services/supabase/supabase_otp_service.dart';
-import 'package:docsera/services/supabase/supabase_user_service.dart';
 import 'package:docsera/utils/custom_clippers.dart';
 import 'package:docsera/utils/text_direction_utils.dart';
 import 'package:flutter/services.dart';
@@ -27,8 +30,6 @@ import 'package:flutter_svg/svg.dart';
 import 'package:local_auth/local_auth.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:docsera/utils/input_decoration.dart';
-import 'dart:convert';
-import 'package:crypto/crypto.dart';
 import '../../Business_Logic/Account_page/user_cubit.dart';
 import '../../Business_Logic/Account_page/user_state.dart';
 import 'package:package_info_plus/package_info_plus.dart';
@@ -48,7 +49,6 @@ class AccountScreen extends StatefulWidget {
 }
 
 class _AccountScreenState extends State<AccountScreen> {
-  bool isFaceIdEnabled = false;
   final LocalAuthentication auth = LocalAuthentication();
   String biometricType = "Biometric Authentication"; // Default fallback
   IconData biometricIcon = Icons.fingerprint; // Default icon
@@ -60,22 +60,26 @@ class _AccountScreenState extends State<AccountScreen> {
   void initState() {
     super.initState();
 
+    final authCubit = context.read<AuthCubit>();
+    final authState = authCubit.state;
+
+    if (authState is AuthAuthenticated) {
+      // 🔹 تحميل المستخدم الأساسي
+      context.read<UserCubit>().loadUserData(context);
+
+      // 🔹 تحميل كل تبويبات الحساب فورًا
+      context.read<AccountProfileCubit>().loadProfile();
+    }
+
     PackageInfo.fromPlatform().then((info) {
-      print("📦 FULL PackageInfo: ${info.toString()}");
+      if (!mounted) return;
       setState(() {
         appVersion = 'v${info.version}';
       });
     });
-
-    _loadFaceIdPreference();
-
-    Future.delayed(Duration.zero, () async {
-      final prefs = await SharedPreferences.getInstance();
-      final userCubit = context.read<UserCubit>();
-      await userCubit.loadUserData(context, useCache: true);
-      userCubit.startRealtimeUserListener(prefs.getString('userId') ?? '');
-    });
   }
+
+
 
 
 
@@ -92,18 +96,6 @@ class _AccountScreenState extends State<AccountScreen> {
     }
   }
 
-
-
-  Future<void> _loadFaceIdPreference() async {
-    final prefs = await SharedPreferences.getInstance();
-    bool isEnabled = prefs.getBool('enableFaceID') ?? false;
-
-    setState(() {
-      isFaceIdEnabled = isEnabled;
-    });
-
-    print("🟢 [DEBUG] Face ID Enabled: $isFaceIdEnabled");
-  }
 
 
   Future<void> _detectBiometricType() async {
@@ -160,28 +152,6 @@ class _AccountScreenState extends State<AccountScreen> {
 
 
 
-
-
-
-
-
-  Future<bool> _authenticateWithFaceID() async {
-    try {
-      bool authenticated = await auth.authenticate(
-        localizedReason: AppLocalizations.of(context)!.faceIdPrompt,
-        options: const AuthenticationOptions(
-          biometricOnly: true,
-          useErrorDialogs: true,
-          stickyAuth: true,
-        ),
-      );
-      return authenticated;
-    } catch (e) {
-      print("❌ Face ID Error: $e");
-      return false;
-    }
-  }
-
   @override
   void dispose() {
     super.dispose();
@@ -210,33 +180,6 @@ class _AccountScreenState extends State<AccountScreen> {
     return "00963$phone";
   }
 
-  // Future<bool> _isPhoneNumberDuplicate(String phone) async {
-  //   final String formatted = _formatPhoneForBackend(phone);
-  //   final String fakeEmail = "$formatted@docsera.com";
-  //
-  //   final response = await Supabase.instance.client
-  //       .from('users')
-  //       .select('id')
-  //       .eq('fakeEmail', fakeEmail)
-  //       .maybeSingle();
-  //
-  //   return response != null;
-  // }
-
-
-  Future<bool> _isPhoneNumberDuplicate(String phone) async {
-    final String formatted = _formatPhoneForBackend(phone);
-
-    final response = await Supabase.instance.client
-        .from('users')
-        .select('id')
-        .eq('phone_number', formatted)
-        .maybeSingle();
-
-    return response != null;
-  }
-
-
   bool _isValidPhoneNumber(String input) {
     if (!input.startsWith('9') && !input.startsWith('09')) return false;
     int requiredLength = input.startsWith('09') ? 10 : 9;
@@ -244,10 +187,18 @@ class _AccountScreenState extends State<AccountScreen> {
   }
 
 
-  void _showEditFieldSheet(BuildContext context, String fieldType, String currentValue, {String? customTitle}) {
+  void _showEditFieldSheet(
+      BuildContext context,
+      String fieldType,
+      String currentValue, {
+        String? customTitle,
+      }) {
+    final profileState = context.read<AccountProfileCubit>().state;
+    if (profileState is! AccountProfileLoaded) return;
 
-    final state = context.read<UserCubit>().state;
-    if (state is! UserLoaded) return;
+    // ---------------------------------------------------------------------------
+    // Helpers (نفس منطقك السابق)
+    // ---------------------------------------------------------------------------
 
     String formatPhoneForDisplay(String phone) {
       if (phone.startsWith('00963')) return '0${phone.substring(5)}';
@@ -262,26 +213,45 @@ class _AccountScreenState extends State<AccountScreen> {
       return phone;
     }
 
-    final RegExp emailRegex = RegExp(r'^[^@]+@[^@]+\.[^@]+$');
-    String formattedCurrentValue = fieldType == 'phoneNumber' ? formatPhoneForDisplay(state.userPhone) : currentValue;
-    final originalNormalizedValue = fieldType == 'phoneNumber' ? state.userPhone : currentValue;
+    final emailRegex = RegExp(r'^[^@]+@[^@]+\.[^@]+$');
 
-    final TextEditingController fieldController = TextEditingController(
-      text: formattedCurrentValue == AppLocalizations.of(context)!.notProvided ? '' : formattedCurrentValue,
+    final originalNormalizedValue =
+    fieldType == 'phoneNumber' ? profileState.phone : profileState.email;
+
+    final formattedCurrentValue =
+    fieldType == 'phoneNumber'
+        ? formatPhoneForDisplay(profileState.phone)
+        : profileState.email;
+
+
+    final controller = TextEditingController(
+      text: formattedCurrentValue ==
+          AppLocalizations.of(context)!.notProvided
+          ? ''
+          : formattedCurrentValue,
     );
+
+    bool isNotVerified =
+        fieldType == 'phoneNumber' && !profileState.isPhoneVerified;
+
 
     String? errorMessage;
     bool isChecking = false;
-    bool isNotVerified = (fieldType == 'phoneNumber' && !state.isPhoneVerified);
 
-    String title = customTitle ??
+    final title = customTitle ??
         (fieldType == 'phoneNumber'
             ? AppLocalizations.of(context)!.editPhoneNumber
             : AppLocalizations.of(context)!.editEmail);
 
-    String hintText = fieldType == 'phoneNumber'
+    final hintText = fieldType == 'phoneNumber'
         ? AppLocalizations.of(context)!.newPhoneNumber
         : AppLocalizations.of(context)!.newEmailAddress;
+
+    final securityCubit = context.read<AccountSecurityCubit>();
+
+    // ---------------------------------------------------------------------------
+    // Bottom Sheet
+    // ---------------------------------------------------------------------------
 
     showModalBottomSheet(
       context: context,
@@ -293,51 +263,68 @@ class _AccountScreenState extends State<AccountScreen> {
       builder: (context) {
         return Padding(
           padding: MediaQuery.of(context).viewInsets,
-          child: Container(
-            padding: EdgeInsets.all(16.w),
-            child: StatefulBuilder(
-              builder: (context, setState) {
-                return Column(
+          child: StatefulBuilder(
+            builder: (context, setState) {
+              return Padding(
+                padding: EdgeInsets.all(16.w),
+                child: Column(
                   mainAxisSize: MainAxisSize.min,
                   children: [
+                    // ---------------------------------------------------------------------------
+                    // Header
+                    // ---------------------------------------------------------------------------
                     Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
                         Text(title, style: AppTextStyles.getTitle1(context)),
-                        IconButton(icon: const Icon(Icons.close), onPressed: () => Navigator.pop(context)),
+                        IconButton(
+                          icon: const Icon(Icons.close),
+                          onPressed: () => Navigator.pop(context),
+                        ),
                       ],
                     ),
+
                     SizedBox(height: 12.h),
+
+                    // ---------------------------------------------------------------------------
+                    // Input
+                    // ---------------------------------------------------------------------------
                     TextFormField(
-                      controller: fieldController,
-                      keyboardType: fieldType == 'phoneNumber' ? TextInputType.number : TextInputType.emailAddress,
-                      textDirection: detectTextDirection(fieldController.text),
+                      controller: controller,
+                      keyboardType: fieldType == 'phoneNumber'
+                          ? TextInputType.number
+                          : TextInputType.emailAddress,
+                      textDirection: detectTextDirection(controller.text),
                       textAlign: getTextAlign(context),
                       style: AppTextStyles.getText2(context).copyWith(fontSize: 12.sp),
                       maxLength: fieldType == 'phoneNumber' ? 10 : 100,
                       decoration: getInputDecoration(hintText: hintText).copyWith(
-                        errorText: errorMessage,
                         counterText: "",
-                        prefixText: fieldType == 'phoneNumber' ? "+963 | " : null,
+                        errorText: errorMessage,
+                        prefixText:
+                        fieldType == 'phoneNumber' ? "+963 | " : null,
                         suffixIcon: Row(
                           mainAxisSize: MainAxisSize.min,
                           children: [
                             if (fieldType == 'phoneNumber' &&
-                                fieldController.text.isNotEmpty &&
-                                normalizePhoneNumber(fieldController.text.trim()) != originalNormalizedValue)
+                                controller.text.isNotEmpty &&
+                                normalizePhoneNumber(controller.text) !=
+                                    originalNormalizedValue)
                               Padding(
                                 padding: EdgeInsets.symmetric(horizontal: 6.w),
                                 child: Container(
                                   width: 20.w,
                                   height: 20.w,
                                   decoration: BoxDecoration(
-                                    color: _isValidPhoneNumber(fieldController.text.trim())
+                                    color: _isValidPhoneNumber(controller.text)
                                         ? AppColors.main.withOpacity(0.8)
                                         : AppColors.red.withOpacity(0.8),
                                     shape: BoxShape.circle,
                                   ),
                                   child: Icon(
-                                    _isValidPhoneNumber(fieldController.text.trim()) ? Icons.check : Icons.close,
+                                    _isValidPhoneNumber(controller.text)
+                                        ? Icons.check
+                                        : Icons.close,
                                     color: Colors.white,
                                     size: 14.sp,
                                   ),
@@ -345,7 +332,8 @@ class _AccountScreenState extends State<AccountScreen> {
                               ),
                             if (isNotVerified)
                               Container(
-                                padding: EdgeInsets.symmetric(horizontal: 8.w, vertical: 8.h),
+                                padding: EdgeInsets.symmetric(
+                                    horizontal: 8.w, vertical: 6.h),
                                 margin: EdgeInsets.all(8.w),
                                 decoration: BoxDecoration(
                                   color: AppColors.yellow.withOpacity(0.1),
@@ -364,65 +352,91 @@ class _AccountScreenState extends State<AccountScreen> {
                         ),
                       ),
                       inputFormatters: [
-                        FilteringTextInputFormatter.deny(RegExp(r'[\u0600-\u06FF]')), // منع كل الحروف العربية
+                        FilteringTextInputFormatter.deny(
+                          RegExp(r'[\u0600-\u06FF]'),
+                        ),
                       ],
-                      onChanged: (_) {
-                        setState(() => errorMessage = null);
-                      },
+                      onChanged: (_) => setState(() => errorMessage = null),
                     ),
+
                     SizedBox(height: 16.h),
+
+                    // ---------------------------------------------------------------------------
+                    // Save / Verify Button
+                    // ---------------------------------------------------------------------------
                     ElevatedButton(
-                      onPressed: () async {
-                        final newRaw = fieldController.text.trim();
-                        final newNormalized = fieldType == 'phoneNumber'
-                            ? normalizePhoneNumber(newRaw)
-                            : newRaw;
+                      onPressed: isChecking
+                          ? null
+                          : () async {
+                        final raw = controller.text.trim();
+                        final normalized =
+                        fieldType == 'phoneNumber'
+                            ? normalizePhoneNumber(raw)
+                            : raw;
 
-                        if (fieldType == 'phoneNumber' && !_isValidPhoneNumber(newRaw)) {
-                          setState(() => errorMessage = AppLocalizations.of(context)!.invalidPhoneNumber);
+                        // Validation
+                        if (fieldType == 'phoneNumber' &&
+                            !_isValidPhoneNumber(raw)) {
+                          setState(() => errorMessage =
+                              AppLocalizations.of(context)!
+                                  .invalidPhoneNumber);
                           return;
                         }
 
-                        if (fieldType == 'email' && !emailRegex.hasMatch(newRaw)) {
-                          setState(() => errorMessage = AppLocalizations.of(context)!.invalidEmail);
+                        if (fieldType == 'email' &&
+                            !emailRegex.hasMatch(raw)) {
+                          setState(() => errorMessage =
+                              AppLocalizations.of(context)!
+                                  .invalidEmail);
                           return;
                         }
 
-                        if (newNormalized == originalNormalizedValue) {
-                          setState(() => errorMessage = AppLocalizations.of(context)!.samePhone);
+                        if (normalized == originalNormalizedValue) {
+                          setState(() => errorMessage =
+                              AppLocalizations.of(context)!.samePhone);
                           return;
                         }
 
                         setState(() => isChecking = true);
 
-                        bool isDuplicate = false;
+                        bool available;
                         if (fieldType == 'phoneNumber') {
-                          isDuplicate = await _isPhoneNumberDuplicate(newNormalized);
+                          available = await securityCubit
+                              .checkPhoneAvailability(normalized);
                         } else {
-                          isDuplicate = await SupabaseUserService().doesUserExist(email: newRaw);
+                          available = await securityCubit.checkEmailAvailability(
+                            raw.trim().toLowerCase(),
+                          );
+
                         }
 
                         setState(() => isChecking = false);
 
-                        if (isDuplicate) {
-                          setState(() => errorMessage = fieldType == 'phoneNumber'
-                              ? AppLocalizations.of(context)!.alreadyExistsPhone
-                              : AppLocalizations.of(context)!.alreadyExistsEmail);
-                        } else {
-                          Navigator.pop(context);
-                          _sendOTPAndShowSheet(
-                            context,
-                            newRaw,
-                            fieldType,
-                            originalNormalizedValue,
-                          );
+                        if (!available) {
+                          setState(() => errorMessage =
+                          fieldType == 'phoneNumber'
+                              ? AppLocalizations.of(context)!
+                              .alreadyExistsPhone
+                              : AppLocalizations.of(context)!
+                              .alreadyExistsEmail);
+                          return;
                         }
+
+                        Navigator.pop(context);
+
+                        _showOtpSheetWithCubit(
+                          context,
+                          fieldType: fieldType,
+                          targetValue: normalized,
+                        );
                       },
                       style: ElevatedButton.styleFrom(
                         backgroundColor: AppColors.main,
                         foregroundColor: Colors.white,
                         padding: EdgeInsets.symmetric(vertical: 14.h),
-                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(8),
+                        ),
                         minimumSize: Size(double.infinity, 50.h),
                       ),
                       child: isChecking
@@ -431,53 +445,48 @@ class _AccountScreenState extends State<AccountScreen> {
                         height: 16.h,
                         child: const CircularProgressIndicator(
                           strokeWidth: 2,
-                          valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                          valueColor:
+                          AlwaysStoppedAnimation<Color>(Colors.white),
                         ),
                       )
                           : Text(
                         (fieldType == 'phoneNumber' && isNotVerified)
                             ? AppLocalizations.of(context)!.verify
-                            : (fieldType == 'email' && originalNormalizedValue.isEmpty)
+                            : (fieldType == 'email' &&
+                            originalNormalizedValue.isEmpty)
                             ? AppLocalizations.of(context)!.add
                             : AppLocalizations.of(context)!.save,
-                        style: AppTextStyles.getTitle1(context).copyWith(color: Colors.white),
+                        style: AppTextStyles.getTitle1(context)
+                            .copyWith(color: Colors.white),
                       ),
                     ),
                   ],
-                );
-              },
-            ),
+                ),
+              );
+            },
           ),
         );
       },
     );
   }
 
-  void _sendOTPAndShowSheet(BuildContext context, String newValue, String fieldType, String oldValue) async {
-    final otpService = SupabaseOTPService();
-    String sentOTP = fieldType == 'phoneNumber'
-        ? await otpService.sendOTPToPhone(newValue)
-        : await otpService.sendOTPToEmail(newValue);
+  void _showOtpSheetWithCubit(
+      BuildContext context, {
+        required String fieldType,
+        required String targetValue,
+      }) {
+    final security = context.read<AccountSecurityCubit>();
+    final isPhone = fieldType == 'phoneNumber';
 
-    final TextEditingController otpController = TextEditingController();
-    bool isCodeValid = true;
-    int timerSeconds = 60;
-    bool canResend = false;
-    Timer? resendTimer;
-
-    if (!context.mounted) return; // ✅ Ensure widget is mounted before proceeding
-
-    void startTimer(Function updateUI) {
-      resendTimer?.cancel();
-      resendTimer = Timer.periodic(const Duration(seconds: 1), (timer) {
-        if (timerSeconds > 0) {
-          updateUI(() => timerSeconds--);
-        } else {
-          timer.cancel();
-          updateUI(() => canResend = true);
-        }
-      });
+    // 🔹 اطلب OTP (ولا تهتم بالنتيجة هنا)
+    if (isPhone) {
+      security.requestPhoneOtp(targetValue);
+    } else {
+      security.requestEmailOtp(targetValue);
     }
+
+    final otpController = TextEditingController();
+    bool invalid = false;
 
     showModalBottomSheet(
       context: context,
@@ -486,146 +495,97 @@ class _AccountScreenState extends State<AccountScreen> {
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
       ),
-      builder: (context) {
-        return StatefulBuilder(
-          builder: (context, setState) {
-            if (resendTimer == null) startTimer(setState);
+      builder: (_) {
+        return BlocConsumer<AccountSecurityCubit, AccountSecurityState>(
+          listener: (context, s) async {
+            // ✅ نجاح التحقق
+            if (s is AccountOtpVerified) {
+              Navigator.pop(context);
+              await context.read<AccountProfileCubit>().loadProfile();
+              context.read<AccountSecurityCubit>().reset();
+
+
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(
+                  content: Text(
+                    isPhone
+                        ? AppLocalizations.of(context)!.phoneUpdatedSuccess
+                        : AppLocalizations.of(context)!.emailUpdatedSuccess,
+                  ),
+                  backgroundColor: AppColors.main,
+                ),
+              );
+            }
+
+            // ❌ فشل OTP request أو verify
+            if (s is AccountSecurityError) {
+              if (s.message.contains('OTP')) {
+                // ابقَ في نفس الصفحة
+                invalid = true;
+                (context as Element).markNeedsBuild();
+              } else {
+                Navigator.pop(context);
+              }
+
+              ScaffoldMessenger.of(context)
+                ..hideCurrentSnackBar()
+                ..showSnackBar(
+                  SnackBar(
+                    content: Text(
+                      _mapSecurityError(context, s.message),
+                    ),
+                    backgroundColor: AppColors.red,
+                  ),
+                );
+
+            }
+
+          },
+          builder: (context, s) {
+            final loading = s is AccountSecurityLoading;
 
             return Padding(
-              padding: EdgeInsets.only(bottom: MediaQuery.of(context).viewInsets.bottom),
+              padding: EdgeInsets.only(
+                bottom: MediaQuery.of(context).viewInsets.bottom,
+              ),
               child: Container(
                 padding: EdgeInsets.all(16.w),
                 child: Column(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        Text(
-                          AppLocalizations.of(context)!.pleaseConfirm(
-                              fieldType == 'phoneNumber'
-                                  ? AppLocalizations.of(context)!.phone
-                                  : AppLocalizations.of(context)!.email
-                          ),
-                          style: AppTextStyles.getTitle1(context),
-                        ),
-                        IconButton(
-                          icon: const Icon(Icons.close),
-                          onPressed: () {
-                            resendTimer?.cancel();
-                            Navigator.pop(context);
-                          },
-                        )
-                      ],
-                    ),
-                    SizedBox(height: 12.h),
                     TextFormField(
                       controller: otpController,
-                      textDirection: detectTextDirection(otpController.text), // ✅ ضبط الاتجاه ديناميكيًا
-                      textAlign: getTextAlign(context),
-                      style: AppTextStyles.getText1(context),
                       keyboardType: TextInputType.number,
                       maxLength: 6,
-                      decoration: getInputDecoration(hintText: AppLocalizations.of(context)!.sixDigitCode).copyWith(
-                        errorText: isCodeValid ? null : 'Invalid code',
-                      ),
-                    ),
-                    SizedBox(height: 8.h),
-                    Text(
-                      AppLocalizations.of(context)!.sentVerificationMessage(
-                        fieldType == 'phoneNumber'
-                            ? AppLocalizations.of(context)!.sms
-                            : AppLocalizations.of(context)!.email,
-                        newValue,
-                      ),
-                      style: AppTextStyles.getText3(context),
-                    ),
-                    SizedBox(height: 4.h),
-                    GestureDetector(
-                      onTap: canResend
-                          ? () async {
-                        setState(() {
-                          timerSeconds = 60;
-                          canResend = false;
-                        });
-                        startTimer(setState);
-
-                        final otp = fieldType == 'phoneNumber'
-                            ? await otpService.sendOTPToPhone(newValue)
-                            : await otpService.sendOTPToEmail(newValue);
-                        if (context.mounted) {
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            SnackBar(
-                              content: Text('OTP: $otp'),
-                              backgroundColor: AppColors.main.withOpacity(0.9),
-                              duration: const Duration(seconds: 3),
-                            ),
-                          );
-                        }
-                      }
-                          : null,
-                      child: Text(
-                        canResend
-                            ? AppLocalizations.of(context)!.resendCode
-                            : AppLocalizations.of(context)!.resendIn(timerSeconds.toString()),
-                        style: TextStyle(
-                          color: canResend ? AppColors.main : Colors.grey,
-                          fontWeight: FontWeight.bold,
-                          fontSize: 11.sp
-                        ),
+                      decoration: getInputDecoration(
+                        hintText:
+                        AppLocalizations.of(context)!.sixDigitCode,
+                      ).copyWith(
+                        errorText: invalid
+                            ? AppLocalizations.of(context)!.invalidOtp
+                            : null,
                       ),
                     ),
                     SizedBox(height: 16.h),
                     ElevatedButton(
-                      onPressed: () async {
-                        bool isValid = await otpService.validateOTP(newValue, otpController.text.trim());
-                        if (isValid) {
-                          resendTimer?.cancel();
-                          if (context.mounted) { // ✅ Ensure widget is mounted before accessing context
-                            // context.read<UserCubit>().updateUserData(fieldType, newValue, isVerified: true);
-                            if (fieldType == 'phoneNumber') {
-                              String newPhoneFormatted = _formatPhoneForBackend(newValue);
-
-
-
-
-                              await context.read<UserCubit>().updateUserPhone(
-                                context,
-                                newPhoneFormatted,
-                                isVerified: true,
-                              );
-
-                            } else {
-                              await context.read<UserCubit>().updateUserData(context, fieldType, newValue, isVerified: true);
-                            }
-
-                          }
-                          if (context.mounted) {
-                            Navigator.pop(context);
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              SnackBar(
-                                content: Text(fieldType == 'phoneNumber'
-                                    ? AppLocalizations.of(context)!.phoneUpdatedSuccess
-                                    : AppLocalizations.of(context)!.emailUpdatedSuccess),
-                                backgroundColor: AppColors.main.withOpacity(0.9),
-                              ),
-                            );
-                          }
+                      onPressed: loading
+                          ? null
+                          : () async {
+                        final otp = otpController.text.trim();
+                        if (otp.length != 6) {
+                          invalid = true;
+                          (context as Element).markNeedsBuild();
+                          return;
+                        }
+                        if (isPhone) {
+                          security.verifyPhoneOtp(targetValue, otp);
                         } else {
-                          setState(() {
-                            isCodeValid = false;
-                          });
+                          security.verifyEmailOtp(targetValue, otp);
                         }
                       },
-                      style: ElevatedButton.styleFrom(
-                        elevation: 0,
-                        backgroundColor: AppColors.main,
-                        padding: EdgeInsets.symmetric(vertical: 12.h),
-                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8.r)),
-                        minimumSize: Size(double.infinity, 50.h),
-                      ),
-                      child: Text(AppLocalizations.of(context)!.continueButton,
-                          style: AppTextStyles.getTitle1(context).copyWith(color: Colors.white)),
+                      child: loading
+                          ? const CircularProgressIndicator()
+                          : Text(AppLocalizations.of(context)!.continueButton),
                     ),
                   ],
                 ),
@@ -637,35 +597,13 @@ class _AccountScreenState extends State<AccountScreen> {
     );
   }
 
-  Future<bool> _checkForDuplicate(String fieldType, String newValue) async {
-    try {
-      final state = context.read<UserCubit>().state;
-      if (state is! UserLoaded) return false;
-
-      print("🔍 Checking for duplicate in Supabase: $fieldType - $newValue");
-
-      final response = await Supabase.instance.client
-          .from('users')
-          .select('id')
-          .eq(fieldType, newValue)
-          .neq('id', state.userId) // ✅ استثني المستخدم الحالي
-          .maybeSingle();
-
-      final isDuplicate = response != null;
-
-      print("⚠️ Is Duplicate: $isDuplicate");
-      return isDuplicate;
-    } catch (e) {
-      print("❌ Supabase duplicate check error: $e");
-      return false;
-    }
-  }
 
 
 
   ///====================================================///
   void _showChangePasswordSheet(BuildContext context) {
-    final TextEditingController currentPasswordController = TextEditingController();
+    final TextEditingController currentPasswordController =
+    TextEditingController();
     final TextEditingController newPasswordController = TextEditingController();
 
     bool isCurrentPasswordVisible = false;
@@ -677,6 +615,11 @@ class _AccountScreenState extends State<AccountScreen> {
     Color newPasswordStrengthColor = Colors.transparent;
     bool isUpdating = false;
 
+    final securityCubit = context.read<AccountSecurityCubit>();
+
+    // ---------------------------------------------------------------------------
+    // Password validation logic (نفس منطقك السابق)
+    // ---------------------------------------------------------------------------
     void _validateNewPassword(String password, Function setState) {
       if (password.isEmpty) {
         setState(() {
@@ -690,71 +633,69 @@ class _AccountScreenState extends State<AccountScreen> {
       final hasUppercase = password.contains(RegExp(r'[A-Z]'));
       final hasLowercase = password.contains(RegExp(r'[a-z]'));
       final hasNumber = password.contains(RegExp(r'[0-9]'));
-      final hasSymbol = password.contains(RegExp(r'[!@#$%^&*(),.?":{}|<>]'));
+      final hasSymbol =
+      password.contains(RegExp(r'[!@#$%^&*(),.?":{}|<>]'));
       final hasExcessiveRepeatedCharacters =
-      password.contains(RegExp(r'(.)\1{2,}')); // Three or more repeated characters
-      final isSimplePattern = password.contains(RegExp(r'(abcd|qwerty|1234)')); // Simple patterns
+      password.contains(RegExp(r'(.)\1{2,}'));
+      final isSimplePattern =
+      password.contains(RegExp(r'(abcd|qwerty|1234)'));
 
-      if (password.length < 8) {
+      if (password.length < 8 || isSimplePattern) {
         setState(() {
-          newPasswordStrength = AppLocalizations.of(context)!.weakPassword;
+          newPasswordStrength =
+              AppLocalizations.of(context)!.weakPassword;
           newPasswordStrengthColor = AppColors.red;
           isNewPasswordValid = false;
         });
-      }
-      // Rule: Simple patterns
-      else if (isSimplePattern) {
+      } else if (hasExcessiveRepeatedCharacters &&
+          (!hasUppercase ||
+              !hasLowercase ||
+              !hasNumber ||
+              !hasSymbol)) {
         setState(() {
-          newPasswordStrength = AppLocalizations.of(context)!.weakPassword;
-          newPasswordStrengthColor = AppColors.red;
-          isNewPasswordValid = false;
-        });
-      }
-      // Rule: Excessive repeated characters (only penalize if password doesn't meet complexity)
-      else if (hasExcessiveRepeatedCharacters &&
-          (!hasUppercase || !hasLowercase || !hasNumber || !hasSymbol)) {
-        setState(() {
-          newPasswordStrength = AppLocalizations.of(context)!.fairPassword;
+          newPasswordStrength =
+              AppLocalizations.of(context)!.fairPassword;
           newPasswordStrengthColor = Colors.orange;
           isNewPasswordValid = false;
         });
-      }
-      // Rule: Missing complexity
-      else if (!hasUppercase || !hasLowercase || !hasNumber || !hasSymbol) {
+      } else if (!hasUppercase ||
+          !hasLowercase ||
+          !hasNumber ||
+          !hasSymbol) {
         setState(() {
-          newPasswordStrength = AppLocalizations.of(context)!.fairPassword;
+          newPasswordStrength =
+              AppLocalizations.of(context)!.fairPassword;
           newPasswordStrengthColor = Colors.orange;
           isNewPasswordValid = false;
         });
-      }
-      // Rule: Good password (length < 12 but meets complexity)
-      else if (password.length < 12) {
+      } else if (password.length < 12) {
         setState(() {
-          newPasswordStrength = AppLocalizations.of(context)!.goodPassword;
-          newPasswordStrengthColor = Colors.green[300]!;
+          newPasswordStrength =
+              AppLocalizations.of(context)!.goodPassword;
+          newPasswordStrengthColor = Colors.green.shade300;
           isNewPasswordValid = true;
         });
-      }
-      // Rule: Strong password (length >= 12 and meets complexity)
-      else {
+      } else {
         setState(() {
-          newPasswordStrength = AppLocalizations.of(context)!.strongPassword;
-          newPasswordStrengthColor = Colors.green[800]!;
+          newPasswordStrength =
+              AppLocalizations.of(context)!.strongPassword;
+          newPasswordStrengthColor = Colors.green.shade800;
           isNewPasswordValid = true;
         });
       }
     }
-
 
     void _checkPasswordsDifference(Function setState) {
-      String currentPassword = currentPasswordController.text.trim();
-      String newPassword = newPasswordController.text.trim();
-
       setState(() {
-        isNewPasswordDifferent = currentPassword != newPassword;
+        isNewPasswordDifferent =
+            currentPasswordController.text.trim() !=
+                newPasswordController.text.trim();
       });
     }
 
+    // ---------------------------------------------------------------------------
+    // Bottom Sheet
+    // ---------------------------------------------------------------------------
     showModalBottomSheet(
       context: context,
       backgroundColor: AppColors.background2,
@@ -763,414 +704,213 @@ class _AccountScreenState extends State<AccountScreen> {
         borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
       ),
       builder: (context) {
-        return StatefulBuilder(
-          builder: (context, setState) {
-            return Padding(
-              padding: EdgeInsets.only(bottom: MediaQuery.of(context).viewInsets.bottom),
-              child: Container(
-                padding: EdgeInsets.all(16.w),
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        Text(AppLocalizations.of(context)!.changePassword, style: AppTextStyles.getTitle1(context)),
-                        IconButton(
-                          icon: const Icon(Icons.close),
-                          onPressed: () => Navigator.pop(context),
-                        )
-                      ],
-                    ),
-                    SizedBox(height: 12.h),
+        return BlocListener<AccountSecurityCubit, AccountSecurityState>(
+          listener: (context, state) {
+            if (state is AccountPasswordInvalid) {
+              setState(() {
+                isUpdating = false;
+                isCurrentPasswordValid = false;
+              });
+            }
 
-                    // ✅ Current Password Field with Smaller Eye Icon
-                    TextFormField(
-                      controller: currentPasswordController,
-                      style: AppTextStyles.getText2(context).copyWith(fontSize: 12.sp),
-                      textDirection: detectTextDirection(currentPasswordController.text),
-                      textAlign: getTextAlign(context),
-                      obscureText: !isCurrentPasswordVisible,
-                      inputFormatters: [
-                        FilteringTextInputFormatter.deny(RegExp(r'[\u0600-\u06FF]')), // يمنع الأحرف العربية
-                      ],
-                      decoration: getInputDecoration(hintText: AppLocalizations.of(context)!.currentPassword).copyWith(
-                        contentPadding: EdgeInsets.symmetric(vertical: 10.h, horizontal: 12.w),
-                        errorText: isCurrentPasswordValid ? null : AppLocalizations.of(context)!.incorrectCurrentPassword,
-                        hintStyle: AppTextStyles.getText3(context).copyWith(fontSize: 11.sp, color: Colors.grey),
-                        suffixIcon: IconButton(
-                          icon: Icon(
-                            isCurrentPasswordVisible ? Icons.visibility : Icons.visibility_off,
-                            size: 16.sp,
+            if (state is AccountSecurityError) {
+              setState(() => isUpdating = false);
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(
+                  content: Text(
+                    AppLocalizations.of(context)!.somethingWentWrong,
+                  ),
+                  backgroundColor: AppColors.red,
+                ),
+              );
+            }
+
+            if (state is AccountPasswordChanged) {
+              Navigator.pop(context);
+            }
+          },
+          child: StatefulBuilder(
+            builder: (context, setState) {
+              return Padding(
+                padding: EdgeInsets.only(
+                  bottom: MediaQuery.of(context).viewInsets.bottom,
+                ),
+                child: Container(
+                  padding: EdgeInsets.all(16.w),
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      // ---------------------------------------------------------------------------
+                      // Header
+                      // ---------------------------------------------------------------------------
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          Text(
+                            AppLocalizations.of(context)!.changePassword,
+                            style: AppTextStyles.getTitle1(context),
                           ),
-                          onPressed: () => setState(() => isCurrentPasswordVisible = !isCurrentPasswordVisible),
-                        ),
-                      ),
-                    ),
-
-                    SizedBox(height: 12.h),
-
-                    // ✅ New Password Field with Smaller Eye Icon
-                    TextFormField(
-                      controller: newPasswordController,
-                      textDirection: detectTextDirection(newPasswordController.text),
-                      textAlign: getTextAlign(context),
-                      obscureText: !isNewPasswordVisible,
-                      inputFormatters: [
-                        FilteringTextInputFormatter.deny(RegExp(r'[\u0600-\u06FF]')), // يمنع الأحرف العربية
-                      ],
-                      style: AppTextStyles.getText2(context).copyWith(fontSize: 12.sp),
-                      onChanged: (value) {
-                        _validateNewPassword(value, setState);
-                        _checkPasswordsDifference(setState);
-                      },
-                      decoration: getInputDecoration(
-                        hintText: AppLocalizations.of(context)!.newPassword,
-                      ).copyWith(
-                        contentPadding: EdgeInsets.symmetric(vertical: 10.h, horizontal: 12.w),
-                        hintStyle: AppTextStyles.getText3(context).copyWith(fontSize: 11.sp, color: Colors.grey),
-                        errorText: isNewPasswordDifferent ? null : AppLocalizations.of(context)!.passwordMatchError,
-                        suffixIcon: IconButton(
-                          icon: Icon(
-                            isNewPasswordVisible ? Icons.visibility : Icons.visibility_off,
-                            size: 16.sp,
+                          IconButton(
+                            icon: const Icon(Icons.close),
+                            onPressed: () => Navigator.pop(context),
                           ),
-                          onPressed: () => setState(() => isNewPasswordVisible = !isNewPasswordVisible),
+                        ],
+                      ),
+
+                      SizedBox(height: 12.h),
+
+                      // ---------------------------------------------------------------------------
+                      // Current Password
+                      // ---------------------------------------------------------------------------
+                      TextFormField(
+                        controller: currentPasswordController,
+                        obscureText: !isCurrentPasswordVisible,
+                        style: AppTextStyles.getText2(context)
+                            .copyWith(fontSize: 12.sp),
+                        textDirection: detectTextDirection(
+                            currentPasswordController.text),
+                        textAlign: getTextAlign(context),
+                        inputFormatters: [
+                          FilteringTextInputFormatter.deny(
+                            RegExp(r'[\u0600-\u06FF]'),
+                          ),
+                        ],
+                        decoration: getInputDecoration(
+                          hintText:
+                          AppLocalizations.of(context)!.currentPassword,
+                        ).copyWith(
+                          contentPadding: EdgeInsets.symmetric(
+                              vertical: 10.h, horizontal: 12.w),
+                          errorText: isCurrentPasswordValid
+                              ? null
+                              : AppLocalizations.of(context)!
+                              .incorrectCurrentPassword,
+                          suffixIcon: IconButton(
+                            icon: Icon(
+                              isCurrentPasswordVisible
+                                  ? Icons.visibility
+                                  : Icons.visibility_off,
+                              size: 16.sp,
+                            ),
+                            onPressed: () => setState(() =>
+                            isCurrentPasswordVisible =
+                            !isCurrentPasswordVisible),
+                          ),
                         ),
                       ),
-                    ),
 
+                      SizedBox(height: 12.h),
 
-                    SizedBox(height: 6.h),
-                    Text(newPasswordStrength, style: TextStyle(color: newPasswordStrengthColor, fontSize: 12)),
-
-                    SizedBox(height: 16.h),
-                    ElevatedButton(
-                      onPressed: isUpdating || !isNewPasswordDifferent
-                          ? null
-                          : () async {
-                        setState(() => isUpdating = true);
-
-                        String currentPassword = currentPasswordController.text.trim();
-                        String newPassword = newPasswordController.text.trim();
-
-                        if (!isNewPasswordValid || !isNewPasswordDifferent) {
-                          setState(() => isUpdating = false);
-                          return;
-                        }
-
-                        bool reauthSuccess = await _reauthenticateUser(currentPassword);
-                        if (!reauthSuccess) {
-                          setState(() {
-                            isCurrentPasswordValid = false;
-                            isUpdating = false;
-                          });
-                          return;
-                        }
-
-                        await _updatePasswordSupabase(newPassword);
-                        if (mounted) Navigator.pop(context);
-                      },
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: AppColors.main,
-                        padding: EdgeInsets.symmetric(vertical: 14.h),
-                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
-                        minimumSize: Size(double.infinity, 50.h),
-                      ),
-                      child: isUpdating
-                          ? SizedBox(
-                        width: 16.w,
-                        height: 16.h,
-                        child: const CircularProgressIndicator(
-                          strokeWidth: 2,
-                          valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                      // ---------------------------------------------------------------------------
+                      // New Password
+                      // ---------------------------------------------------------------------------
+                      TextFormField(
+                        controller: newPasswordController,
+                        obscureText: !isNewPasswordVisible,
+                        style: AppTextStyles.getText2(context)
+                            .copyWith(fontSize: 12.sp),
+                        textDirection: detectTextDirection(
+                            newPasswordController.text),
+                        textAlign: getTextAlign(context),
+                        inputFormatters: [
+                          FilteringTextInputFormatter.deny(
+                            RegExp(r'[\u0600-\u06FF]'),
+                          ),
+                        ],
+                        onChanged: (value) {
+                          _validateNewPassword(value, setState);
+                          _checkPasswordsDifference(setState);
+                        },
+                        decoration: getInputDecoration(
+                          hintText:
+                          AppLocalizations.of(context)!.newPassword,
+                        ).copyWith(
+                          contentPadding: EdgeInsets.symmetric(
+                              vertical: 10.h, horizontal: 12.w),
+                          errorText: isNewPasswordDifferent
+                              ? null
+                              : AppLocalizations.of(context)!
+                              .passwordMatchError,
+                          suffixIcon: IconButton(
+                            icon: Icon(
+                              isNewPasswordVisible
+                                  ? Icons.visibility
+                                  : Icons.visibility_off,
+                              size: 16.sp,
+                            ),
+                            onPressed: () => setState(() =>
+                            isNewPasswordVisible =
+                            !isNewPasswordVisible),
+                          ),
                         ),
-                      )
-                          : Text(
-                        AppLocalizations.of(context)!.save,
-                        style: AppTextStyles.getTitle1(context).copyWith(color: Colors.white),
                       ),
-                    ),
-                  ],
-                ),
-              ),
-            );
-          },
-        );
-      },
-    );
-  }
 
-  void _showResetPasswordViaOTPSheet(BuildContext context) async {
-    final userState = context.read<UserCubit>().state;
-    final phone = userState is UserLoaded ? userState.userPhone : '';
-    final formattedPhone = _formatPhoneForBackend(phone);
+                      SizedBox(height: 6.h),
+                      Text(
+                        newPasswordStrength,
+                        style: TextStyle(
+                          color: newPasswordStrengthColor,
+                          fontSize: 12,
+                        ),
+                      ),
 
+                      SizedBox(height: 16.h),
 
-    final otpService = SupabaseOTPService();
-    await otpService.sendOTPToPhone(formattedPhone);
+                      // ---------------------------------------------------------------------------
+                      // Save Button
+                      // ---------------------------------------------------------------------------
+                      ElevatedButton(
+                        onPressed: isUpdating ||
+                            !isNewPasswordValid ||
+                            !isNewPasswordDifferent
+                            ? null
+                            : () async {
+                          setState(() => isUpdating = true);
 
-    final TextEditingController otpController = TextEditingController();
-    bool isCodeValid = true;
-    int timerSeconds = 60;
-    bool canResend = false;
-    Timer? resendTimer;
-
-    void startTimer(Function updateUI) {
-      resendTimer?.cancel();
-      resendTimer = Timer.periodic(const Duration(seconds: 1), (timer) {
-        if (timerSeconds > 0) {
-          updateUI(() => timerSeconds--);
-        } else {
-          timer.cancel();
-          updateUI(() => canResend = true);
-        }
-      });
-    }
-
-    showModalBottomSheet(
-      context: context,
-      backgroundColor: AppColors.background2,
-      isScrollControlled: true,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
-      ),
-      builder: (context) {
-        return StatefulBuilder(
-          builder: (context, setState) {
-            if (resendTimer == null) startTimer(setState);
-
-            return Padding(
-              padding: EdgeInsets.only(bottom: MediaQuery.of(context).viewInsets.bottom),
-              child: Container(
-                padding: EdgeInsets.all(16.w),
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        Text(AppLocalizations.of(context)!.pleaseConfirm(AppLocalizations.of(context)!.phone),
-                            style: AppTextStyles.getTitle1(context)),
-                        IconButton(
-                          icon: const Icon(Icons.close),
-                          onPressed: () {
-                            resendTimer?.cancel();
-                            Navigator.pop(context);
-                          },
+                          await securityCubit.changePassword(
+                            current: currentPasswordController.text
+                                .trim(),
+                            next: newPasswordController.text.trim(),
+                          );
+                        },
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: AppColors.main,
+                          padding:
+                          EdgeInsets.symmetric(vertical: 14.h),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(8),
+                          ),
+                          minimumSize:
+                          Size(double.infinity, 50.h),
+                        ),
+                        child: isUpdating
+                            ? SizedBox(
+                          width: 16.w,
+                          height: 16.h,
+                          child:
+                          const CircularProgressIndicator(
+                            strokeWidth: 2,
+                            valueColor:
+                            AlwaysStoppedAnimation<Color>(
+                                Colors.white),
+                          ),
                         )
-                      ],
-                    ),
-                    SizedBox(height: 12.h),
-                    TextFormField(
-                      controller: otpController,
-                      textDirection: detectTextDirection(otpController.text),
-                      textAlign: getTextAlign(context),
-                      style: AppTextStyles.getText1(context),
-                      keyboardType: TextInputType.number,
-                      maxLength: 6,
-                      decoration: getInputDecoration(hintText: AppLocalizations.of(context)!.sixDigitCode)
-                          .copyWith(errorText: isCodeValid ? null : 'Invalid code'),
-                    ),
-                    SizedBox(height: 16.h),
-                    ElevatedButton(
-                      onPressed: () async {
-                        bool isValid = await otpService.validateOTP(formattedPhone, otpController.text.trim());
-                        if (isValid) {
-                          resendTimer?.cancel();
-                          Navigator.pop(context); // ✅ أغلق شيت OTP
-                          _showEnterNewPasswordSheet(context); // ✅ افتح شيت تغيير كلمة المرور الجديدة
-                        } else {
-                          setState(() => isCodeValid = false);
-                        }
-                      },
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: AppColors.main,
-                        padding: EdgeInsets.symmetric(vertical: 12.h),
-                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8.r)),
-                        minimumSize: Size(double.infinity, 50.h),
+                            : Text(
+                          AppLocalizations.of(context)!.save,
+                          style: AppTextStyles.getTitle1(
+                              context)
+                              .copyWith(color: Colors.white),
+                        ),
                       ),
-                      child: Text(AppLocalizations.of(context)!.continueButton,
-                          style: AppTextStyles.getTitle1(context).copyWith(color: Colors.white)),
-                    ),
-                  ],
+                    ],
+                  ),
                 ),
-              ),
-            );
-          },
+              );
+            },
+          ),
         );
       },
     );
-  }
-
-  void _showEnterNewPasswordSheet(BuildContext context) {
-    final TextEditingController pass1 = TextEditingController();
-    final TextEditingController pass2 = TextEditingController();
-    bool isVisible1 = false;
-    bool isVisible2 = false;
-    bool isValid = false;
-    bool isMatching = true;
-    bool isUpdating = false;
-
-    showModalBottomSheet(
-      context: context,
-      backgroundColor: AppColors.background2,
-      isScrollControlled: true,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
-      ),
-      builder: (context) {
-        return StatefulBuilder(
-          builder: (context, setState) {
-            return Padding(
-              padding: EdgeInsets.only(bottom: MediaQuery.of(context).viewInsets.bottom),
-              child: Container(
-                padding: EdgeInsets.all(16.w),
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        Text(AppLocalizations.of(context)!.resetPassword,
-                            style: AppTextStyles.getTitle1(context)),
-                        IconButton(icon: const Icon(Icons.close), onPressed: () => Navigator.pop(context))
-                      ],
-                    ),
-                    SizedBox(height: 12.h),
-                    TextFormField(
-                      controller: pass1,
-                      obscureText: !isVisible1,
-                      onChanged: (_) => setState(() {
-                        isValid = pass1.text.length >= 8;
-                        isMatching = pass1.text == pass2.text;
-                      }),
-                      decoration: getInputDecoration(
-                        hintText: AppLocalizations.of(context)!.newPassword,
-                      ).copyWith(
-                        suffixIcon: IconButton(
-                          icon: Icon(isVisible1 ? Icons.visibility : Icons.visibility_off, size: 16.sp),
-                          onPressed: () => setState(() => isVisible1 = !isVisible1),
-                        ),
-                      ),
-                    ),
-                    SizedBox(height: 12.h),
-                    TextFormField(
-                      controller: pass2,
-                      obscureText: !isVisible2,
-                      onChanged: (_) => setState(() {
-                        isMatching = pass1.text == pass2.text;
-                      }),
-                      decoration: getInputDecoration(
-                        hintText: AppLocalizations.of(context)!.confirmPassword,
-                      ).copyWith(
-                        errorText: isMatching ? null : AppLocalizations.of(context)!.passwordMatchError,
-                        suffixIcon: IconButton(
-                          icon: Icon(isVisible2 ? Icons.visibility : Icons.visibility_off, size: 16.sp),
-                          onPressed: () => setState(() => isVisible2 = !isVisible2),
-                        ),
-                      ),
-                    ),
-                    SizedBox(height: 16.h),
-                    ElevatedButton(
-                      onPressed: (!isValid || !isMatching || isUpdating)
-                          ? null
-                          : () async {
-                        setState(() => isUpdating = true);
-                        try {
-                          await Supabase.instance.client.auth.updateUser(
-                            UserAttributes(password: pass1.text.trim()),
-                          );
-                          Navigator.pop(context);
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            SnackBar(
-                              content: Text(AppLocalizations.of(context)!.passwordUpdatedSuccess),
-                              backgroundColor: AppColors.main,
-                            ),
-                          );
-                        } catch (e) {
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            SnackBar(
-                              content: Text(AppLocalizations.of(context)!.passwordUpdatedFailed(e.toString())),
-                              backgroundColor: AppColors.red,
-                            ),
-                          );
-                        }
-                      },
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: AppColors.main,
-                        padding: EdgeInsets.symmetric(vertical: 12.h),
-                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8.r)),
-                        minimumSize: Size(double.infinity, 50.h),
-                      ),
-                      child: isUpdating
-                          ? const CircularProgressIndicator(color: Colors.white, strokeWidth: 2)
-                          : Text(AppLocalizations.of(context)!.save,
-                          style: AppTextStyles.getTitle1(context).copyWith(color: Colors.white)),
-                    ),
-                  ],
-                ),
-              ),
-            );
-          },
-        );
-      },
-    );
-  }
-
-  Future<bool> _reauthenticateUser(String currentPassword) async {
-    try {
-      final state = context.read<UserCubit>().state;
-      if (state is! UserLoaded) return false;
-
-      final email = state.userEmail;
-      if (email == null || email.isEmpty) return false;
-
-      final res = await Supabase.instance.client.auth.signInWithPassword(
-        email: email,
-        password: currentPassword,
-      );
-
-      return res.user != null;
-    } on AuthException catch (e) {
-      print("❌ Re-authentication failed: ${e.message}");
-      return false;
-    } catch (e) {
-      print("❌ Re-authentication failed: $e");
-      return false;
-    }
-  }
-
-
-  Future<void> _updatePasswordSupabase(String newPassword) async {
-    try {
-      await Supabase.instance.client.auth.updateUser(
-        UserAttributes(password: newPassword),
-      );
-
-      print("✅ Password updated successfully");
-
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(AppLocalizations.of(context)!.passwordUpdatedSuccess),
-          backgroundColor: AppColors.main.withOpacity(0.9),
-        ),
-      );
-    } catch (e) {
-      print("❌ Error updating password: $e");
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(AppLocalizations.of(context)!.passwordUpdatedFailed(e.toString())),
-          backgroundColor: AppColors.red.withOpacity(0.8),
-        ),
-      );
-    }
-  }
-
-
-
-  String _hashPassword(String password) {
-    return sha256.convert(utf8.encode(password)).toString();
   }
 
 
@@ -1353,13 +1093,17 @@ class _AccountScreenState extends State<AccountScreen> {
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
+              // ------------------------------------------------------------------
+              // Header
+              // ------------------------------------------------------------------
               Stack(
                 alignment: Alignment.center,
                 children: [
                   Center(
                     child: Text(
                       AppLocalizations.of(context)!.twoFactorAuth,
-                      style: AppTextStyles.getTitle1(context).copyWith(fontWeight: FontWeight.bold),
+                      style: AppTextStyles.getTitle1(context)
+                          .copyWith(fontWeight: FontWeight.bold),
                     ),
                   ),
                   Positioned(
@@ -1371,13 +1115,25 @@ class _AccountScreenState extends State<AccountScreen> {
                   ),
                 ],
               ),
+
               SizedBox(height: 20.h),
-              Image.asset('assets/images/two_factor.png', height: 100.h),
+
+              Image.asset(
+                'assets/images/two_factor.png',
+                height: 100.h,
+              ),
+
               SizedBox(height: 20.h),
+
+              // ------------------------------------------------------------------
+              // Status Badge
+              // ------------------------------------------------------------------
               Container(
                 padding: EdgeInsets.symmetric(horizontal: 14.w, vertical: 6.h),
                 decoration: BoxDecoration(
-                  color: is2FAEnabled ? const Color(0xFFDFF6F3) : const Color(0xFFFFEAE6),
+                  color: is2FAEnabled
+                      ? const Color(0xFFDFF6F3)
+                      : const Color(0xFFFFEAE6),
                   borderRadius: BorderRadius.circular(30.r),
                 ),
                 child: Text(
@@ -1385,17 +1141,27 @@ class _AccountScreenState extends State<AccountScreen> {
                       ? AppLocalizations.of(context)!.activated
                       : AppLocalizations.of(context)!.notActivated,
                   style: TextStyle(
-                    color: is2FAEnabled ? const Color(0xFF00B7A0) : const Color(0xFFFF6B6B),
+                    color: is2FAEnabled
+                        ? const Color(0xFF00B7A0)
+                        : const Color(0xFFFF6B6B),
                     fontWeight: FontWeight.bold,
                     fontSize: 12.sp,
                   ),
                 ),
               ),
+
               SizedBox(height: 16.h),
+
+              // ------------------------------------------------------------------
+              // Description
+              // ------------------------------------------------------------------
               Text(
                 AppLocalizations.of(context)!.twoFactorAuthHeadline,
                 textAlign: TextAlign.center,
-                style: AppTextStyles.getText2(context).copyWith(fontWeight: FontWeight.bold, fontSize: 12.sp),
+                style: AppTextStyles.getText2(context).copyWith(
+                  fontWeight: FontWeight.bold,
+                  fontSize: 12.sp,
+                ),
               ),
               SizedBox(height: 6.h),
               Text(
@@ -1403,93 +1169,132 @@ class _AccountScreenState extends State<AccountScreen> {
                 textAlign: TextAlign.center,
                 style: AppTextStyles.getText3(context),
               ),
+
               SizedBox(height: 20.h),
-              ElevatedButton(
-                onPressed: () async {
-                  final userId = (context.read<AuthCubit>().state as AuthAuthenticated).user.id;
-                  final newValue = !is2FAEnabled;
 
-                  if (!newValue) {
-                    final confirm = await showDialog<bool>(
-                      context: context,
-                      builder: (_) => AlertDialog(
-                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16.r)),
-                        contentPadding: EdgeInsets.symmetric(horizontal: 24.w, vertical: 20.h),
-                        content: Column(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            Text(
-                              AppLocalizations.of(context)!.deactivate2FA,
-                              style: AppTextStyles.getTitle2(context),
-                              textAlign: TextAlign.center,
+              // ------------------------------------------------------------------
+              // Action Button (Cubit only)
+              // ------------------------------------------------------------------
+              BlocBuilder<AccountSecurityCubit, AccountSecurityState>(
+                builder: (context, state) {
+                  final isLoading = state is AccountSecurityUpdating;
+
+                  return ElevatedButton(
+                    onPressed: isLoading
+                        ? null
+                        : () async {
+                      final newValue = !is2FAEnabled;
+
+                      // ----------------------------------------------
+                      // Confirm before deactivation
+                      // ----------------------------------------------
+                      if (!newValue) {
+                        final confirm = await showDialog<bool>(
+                          context: context,
+                          builder: (_) => AlertDialog(
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(16.r),
                             ),
-                            SizedBox(height: 12.h),
-                            Text(
-                              AppLocalizations.of(context)!.twoFactorDeactivateWarning,
-                              style: AppTextStyles.getText2(context),
-                              textAlign: TextAlign.center,
+                            contentPadding: EdgeInsets.symmetric(
+                              horizontal: 24.w,
+                              vertical: 20.h,
                             ),
-                            SizedBox(height: 24.h),
-                            ElevatedButton(
-                              style: ElevatedButton.styleFrom(
-                                backgroundColor: AppColors.red,
-                                elevation: 0,
-                                padding: EdgeInsets.symmetric(horizontal: 24.w, vertical: 12.h),
-                                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10.r)),
-                              ),
-                              onPressed: () {
-                                Navigator.pop(context, true);
-                              },
-                              child: Center(
-                                child: Text(
-                                  AppLocalizations.of(context)!.deactivate2FA,
-                                  style: AppTextStyles.getText2(context).copyWith(color: Colors.white),
+                            content: Column(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                Text(
+                                  AppLocalizations.of(context)!
+                                      .deactivate2FA,
+                                  style:
+                                  AppTextStyles.getTitle2(context),
+                                  textAlign: TextAlign.center,
                                 ),
-                              ),
-                            ),
-                            TextButton(
-                              onPressed: () => Navigator.pop(context, false),
-                              child: Text(
-                                AppLocalizations.of(context)!.cancel,
-                                style: AppTextStyles.getText2(context).copyWith(
-                                  fontWeight: FontWeight.bold,
-                                  color: AppColors.blackText,
+                                SizedBox(height: 12.h),
+                                Text(
+                                  AppLocalizations.of(context)!
+                                      .twoFactorDeactivateWarning,
+                                  style:
+                                  AppTextStyles.getText2(context),
+                                  textAlign: TextAlign.center,
                                 ),
-                              ),
+                                SizedBox(height: 24.h),
+                                ElevatedButton(
+                                  style: ElevatedButton.styleFrom(
+                                    backgroundColor: AppColors.red,
+                                    elevation: 0,
+                                    padding: EdgeInsets.symmetric(
+                                      horizontal: 24.w,
+                                      vertical: 12.h,
+                                    ),
+                                    shape: RoundedRectangleBorder(
+                                      borderRadius:
+                                      BorderRadius.circular(10.r),
+                                    ),
+                                  ),
+                                  onPressed: () =>
+                                      Navigator.pop(context, true),
+                                  child: Text(
+                                    AppLocalizations.of(context)!
+                                        .deactivate2FA,
+                                    style: AppTextStyles.getText2(context)
+                                        .copyWith(color: Colors.white),
+                                  ),
+                                ),
+                                TextButton(
+                                  onPressed: () =>
+                                      Navigator.pop(context, false),
+                                  child: Text(
+                                    AppLocalizations.of(context)!.cancel,
+                                    style: AppTextStyles.getText2(context)
+                                        .copyWith(
+                                      fontWeight: FontWeight.bold,
+                                      color: AppColors.blackText,
+                                    ),
+                                  ),
+                                ),
+                              ],
                             ),
-                          ],
-                        ),
+                          ),
+                        );
+
+                        if (confirm != true) return;
+                      }
+
+                      // ----------------------------------------------
+                      // Cubit call ONLY
+                      // ----------------------------------------------
+                      context
+                          .read<AccountSecurityCubit>()
+                          .toggleTwoFactor(enable: newValue);
+                    },
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: AppColors.main,
+                      padding: EdgeInsets.symmetric(vertical: 14.h, horizontal: 14.h),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12.r),
                       ),
-                    );
-
-                    if (confirm != true) return;
-                  }
-
-                  await Supabase.instance.client
-                      .from('users')
-                      .update({'two_factor_auth_enabled': newValue})
-                      .eq('id', userId);
-
-
-                  Navigator.pop(context);
-                  await context.read<UserCubit>().loadUserData(context, useCache: false);
-                },
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: AppColors.main,
-                  padding: EdgeInsets.symmetric(vertical: 14.h),
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12.r)),
-                ),
-                child: Center(
-                  child: Text(
-                    is2FAEnabled
-                        ? AppLocalizations.of(context)!.deactivate2FA
-                        : AppLocalizations.of(context)!.activate2FA,
-                    style: AppTextStyles.getText2(context).copyWith(
-                      color: Colors.white,
-                      fontWeight: FontWeight.bold,
                     ),
-                  ),
-                ),
+                    child: isLoading
+                        ? SizedBox(
+                      width: 18.w,
+                      height: 18.w,
+                      child: const CircularProgressIndicator(
+                        strokeWidth: 2,
+                        valueColor:
+                        AlwaysStoppedAnimation<Color>(Colors.white),
+                      ),
+                    )
+                        : Text(
+                      is2FAEnabled
+                          ? AppLocalizations.of(context)!.deactivate2FA
+                          : AppLocalizations.of(context)!.activate2FA,
+                      style: AppTextStyles.getText2(context).copyWith(
+                        color: Colors.white,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                  );
+                },
               ),
             ],
           ),
@@ -1507,116 +1312,96 @@ class _AccountScreenState extends State<AccountScreen> {
       ),
       isScrollControlled: true,
       builder: (_) {
-        return Padding(
-          padding: EdgeInsets.symmetric(horizontal: 20.w, vertical: 24.h),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Stack(
-                alignment: Alignment.center,
+        return BlocBuilder<AccountDangerCubit, AccountDangerState>(
+            builder: (context, state) {
+              final isLoading = state is AccountDangerLoading;
+            return Padding(
+              padding: EdgeInsets.symmetric(horizontal: 20.w, vertical: 24.h),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
                 children: [
-                  Center(
+                  // ------------------------------------------------------------------
+                  // Header
+                  // ------------------------------------------------------------------
+                  Stack(
+                    alignment: Alignment.center,
+                    children: [
+                      Center(
+                        child: Text(
+                          AppLocalizations.of(context)!.deleteMyAccount,
+                          style: AppTextStyles.getTitle1(context).copyWith(
+                            fontWeight: FontWeight.bold,
+                          ),
+                          textAlign: TextAlign.center,
+                        ),
+                      ),
+                      Positioned(
+                        right: 0,
+                        child: IconButton(
+                          icon: const Icon(Icons.close),
+                          onPressed: () => Navigator.pop(context),
+                        ),
+                      ),
+                    ],
+                  ),
+
+                  SizedBox(height: 20.h),
+
+                  // ------------------------------------------------------------------
+                  // Warning Text
+                  // ------------------------------------------------------------------
+                  Text(
+                    AppLocalizations.of(context)!.deleteAccountWarningText,
+                    style: AppTextStyles.getText2(context).copyWith(
+                      color: Colors.black87,
+                    ),
+                    textAlign: TextAlign.center,
+                  ),
+
+                  SizedBox(height: 16.h),
+
+                  // ------------------------------------------------------------------
+                  // Cancel
+                  // ------------------------------------------------------------------
+                  TextButton(
+                    onPressed: () => Navigator.pop(context),
+                    style: TextButton.styleFrom(padding: EdgeInsets.zero),
                     child: Text(
-                      AppLocalizations.of(context)!.deleteMyAccount,
-                      style: AppTextStyles.getTitle1(context).copyWith(fontWeight: FontWeight.bold),
-                      textAlign: TextAlign.center,
+                      AppLocalizations.of(context)!.cancel,
+                      style: AppTextStyles.getText2(context).copyWith(
+                        fontWeight: FontWeight.bold,
+                        color: AppColors.blackText,
+                      ),
                     ),
                   ),
-                  Positioned(
-                    right: 0,
-                    child: IconButton(
-                      icon: const Icon(Icons.close),
-                      onPressed: () => Navigator.pop(context),
+
+                  // ------------------------------------------------------------------
+                  // Confirm Delete (🔥 ONLY Cubit Call)
+                  // ------------------------------------------------------------------
+                  TextButton(
+                    onPressed: () async {
+                      Navigator.pop(context); // ⬅️ أغلق الشيت فقط
+                      await context.read<AccountDangerCubit>().deleteMyAccount();
+                    },
+                    style: TextButton.styleFrom(padding: EdgeInsets.zero),
+                    child: isLoading
+                        ? const SizedBox(
+                      width: 20,
+                      height: 20,
+                      child: CircularProgressIndicator(strokeWidth: 2),
+                    )
+                        : Text(
+                      AppLocalizations.of(context)!.confirmDeleteMyAccount,
+                      style: AppTextStyles.getText2(context).copyWith(
+                        fontWeight: FontWeight.bold,
+                        color: Colors.red,
+                      ),
                     ),
                   ),
                 ],
               ),
-              SizedBox(height: 20.h),
-              Text(
-                AppLocalizations.of(context)!.deleteAccountWarningText,
-                style: AppTextStyles.getText2(context).copyWith(color: Colors.black87),
-                textAlign: TextAlign.center,
-              ),
-              SizedBox(height: 16.h),
-              TextButton(
-                onPressed: () => Navigator.pop(context),
-                style: TextButton.styleFrom(padding: EdgeInsets.zero),
-                child: Text(
-                  AppLocalizations.of(context)!.cancel,
-                  style: AppTextStyles.getText2(context).copyWith(
-                    fontWeight: FontWeight.bold,
-                    color: AppColors.blackText,
-                  ),
-                ),
-              ),
-              TextButton(
-
-                onPressed: () async {
-                  Navigator.pop(context); // إغلاق الشيت
-
-                  final user = Supabase.instance.client.auth.currentUser;
-                  final userId = user?.id;
-
-                  String? phone;
-                  String? email;
-
-                  if (userId != null) {
-                    // ✅ جلب بيانات Supabase
-                    final data = await Supabase.instance.client
-                        .from('users')
-                        .select('phone_number, email')
-                        .eq('id', userId)
-                        .maybeSingle();
-
-                    if (data == null) {
-                      print("❌ No user data found.");
-                      return;
-                    }
-
-                    phone = data['phone_number']?.toString();
-                    email = data['email']?.toString();
-
-                    print("🧾 [DEBUG] userId: $userId");
-                    print("📞 [DEBUG] phone from Supabase: $phone");
-                    print("📧 [DEBUG] email from Supabase: $email");
-
-                    final service = SupabaseUserService();
-
-                    showDialog(
-                      context: context,
-                      barrierDismissible: false,
-                      builder: (_) => Center(child: CircularProgressIndicator(color: AppColors.grayMain)),
-                    );
-
-                    try {
-                      await service.deleteUserAccount(userId, phoneNumber: phone, email: email);
-                      Navigator.pushAndRemoveUntil(
-                        context,
-                        fadePageRoute(const GoodbyePage()),
-                            (route) => false,
-                      );
-                    } catch (e) {
-                      Navigator.pop(context);
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        SnackBar(content: Text(AppLocalizations.of(context)!.errorOccurred)),
-                      );
-                    }
-                  }
-                },
-                style: TextButton.styleFrom(padding: EdgeInsets.zero),
-                child: Text(
-                  AppLocalizations.of(context)!.confirmDeleteMyAccount,
-                  style: AppTextStyles.getText2(context).copyWith(
-                    fontWeight: FontWeight.bold,
-                    color: Colors.red,
-                  ),
-                ),
-              ),
-
-
-
-            ],
-          ),
+            );
+          }
         );
       },
     );
@@ -1659,27 +1444,59 @@ class _AccountScreenState extends State<AccountScreen> {
     );
   }
 
+  String _mapSecurityError(BuildContext context, String code) {
+    switch (code) {
+      case 'INVALID_OTP':
+        return AppLocalizations.of(context)!.invalidOtp;
 
+      case 'OTP_REQUEST_FAILED':
+        return AppLocalizations.of(context)!.otpRequestFailed;
+
+      case 'PHONE_ALREADY_EXISTS':
+        return AppLocalizations.of(context)!.alreadyExistsPhone;
+
+      case 'EMAIL_ALREADY_EXISTS':
+        return AppLocalizations.of(context)!.alreadyExistsEmail;
+
+      case 'TWO_FACTOR_UPDATE_FAILED':
+        return AppLocalizations.of(context)!.twoFactorUpdateFailed;
+
+      default:
+        return AppLocalizations.of(context)!.somethingWentWrong;
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: AppColors.background2,
-      body: BlocBuilder<UserCubit, UserState>( // ⬅️ Use BlocBuilder instead of BlocConsumer
-        builder: (context, state) {
-          print("🟢 [DEBUG] BlocBuilder received state: $state");
+    return BlocBuilder<AuthCubit, AppAuthState>(
+      builder: (context, authState) {
 
-          if (state is UserLoading) {
-            return _buildShimmerLoading(); // ⬅️ Show loading state
-          } else if (state is NotLogged) {
-            return _buildLoginPrompt(context); // ⬅️ Show login screen if user is not logged in
-          } else if (state is UserLoaded) {
-            return _buildAccountContent(context, state); // ⬅️ Directly show loaded user data
-          } else {
-            return _buildShimmerLoading(); // ⬅️ Fallback to loading state
-          }
-        },
-      ),
+        if (authState is AuthUnauthenticated) {
+          return Scaffold(
+            backgroundColor: AppColors.background2,
+            body: _buildLoginPrompt(context),
+          );
+        }
+
+        if (authState is AuthLoading || authState is AuthInitial) {
+          return Scaffold(
+            backgroundColor: AppColors.background2,
+            body: _buildShimmerLoading(),
+          );
+        }
+
+        if (authState is AuthAuthenticated) {
+          return _AuthenticatedAccountView(
+            onLogout: widget.onLogout,
+            buildShimmer: _buildShimmerLoading,
+            buildAccountContent: _buildAccountContent,
+            mapSecurityError: _mapSecurityError,
+          );
+        }
+
+
+        return const SizedBox.shrink();
+      },
     );
   }
 
@@ -1730,9 +1547,6 @@ class _AccountScreenState extends State<AccountScreen> {
   Widget _buildAccountContent(BuildContext context, UserLoaded state) {
     return Column(
       children: [
-        if (state.userId.isEmpty)
-          _buildLoginPrompt(context)
-        else
           Expanded(
             child: ListView(
               children: [
@@ -1743,24 +1557,74 @@ class _AccountScreenState extends State<AccountScreen> {
                 Divider(color: Colors.grey[200], height: 2.h),
                 _buildSectionTitle(AppLocalizations.of(context)!.personalInformation),
                 Divider(color: Colors.grey[200], height: 2.h),
-                _buildEditableListTile(Icons.person, AppLocalizations.of(context)!.myProfile, state.userName, 'firstName'),
+                BlocBuilder<AccountProfileCubit, AccountProfileState>(
+                  builder: (context, profileState) {
+                    final subtitle = profileState is AccountProfileLoaded
+                        ? profileState.fullName
+                        : AppLocalizations.of(context)!.loading;
+
+                    return _buildEditableListTile(
+                      Icons.person,
+                      AppLocalizations.of(context)!.myProfile,
+                      subtitle,
+                      'profile',
+                    );
+                  },
+                ),
                 Divider(color: Colors.grey[200], height: 2.h),
                 _buildEditableListTile(Icons.people, AppLocalizations.of(context)!.myRelatives, AppLocalizations.of(context)!.myRelativesDescription, 'firstName'),
                 Divider(color: Colors.grey[200], height: 2.h),
                 const SizedBox(height: 15),
                 _buildSectionTitle(AppLocalizations.of(context)!.loginSection),
                 Divider(color: Colors.grey[200], height: 2.h),
-                _buildEditableListTile(Icons.phone, AppLocalizations.of(context)!.phone, _formatPhoneForDisplay(state.userPhone), 'phoneNumber', isVerified: state.isPhoneVerified),
-                Divider(color: Colors.grey[200], height: 2.h),
-                _buildEditableListTile(
-                  Icons.email,
-                  AppLocalizations.of(context)!.email,
-                  (state.userEmail == null || state.userEmail!.isEmpty)
-                      ? AppLocalizations.of(context)!.notProvided
-                      : state.userEmail!,
-                  'email',
-                  isVerified: state.isEmailVerified,
+                BlocBuilder<AccountProfileCubit, AccountProfileState>(
+                  builder: (context, profileState) {
+                    final phone = profileState is AccountProfileLoaded
+                        ? profileState.phone
+                        : '';
+
+                    final isVerified = profileState is AccountProfileLoaded
+                        ? profileState.isPhoneVerified
+                        : false;
+
+                    final subtitle = phone.isEmpty
+                        ? AppLocalizations.of(context)!.notProvided
+                        : _formatPhoneForDisplay(phone);
+
+                    return _buildEditableListTile(
+                      Icons.phone,
+                      AppLocalizations.of(context)!.phone,
+                      subtitle,
+                      'phoneNumber',
+                      isVerified: isVerified,
+                    );
+                  },
                 ),
+                Divider(color: Colors.grey[200], height: 2.h),
+                BlocBuilder<AccountProfileCubit, AccountProfileState>(
+                  builder: (context, profileState) {
+                    final email = profileState is AccountProfileLoaded
+                        ? profileState.email
+                        : '';
+
+                    final isVerified = profileState is AccountProfileLoaded
+                        ? profileState.isEmailVerified
+                        : false;
+
+                    final subtitle = email.isEmpty
+                        ? AppLocalizations.of(context)!.notProvided
+                        : email;
+
+                    return _buildEditableListTile(
+                      Icons.email,
+                      AppLocalizations.of(context)!.email,
+                      subtitle,
+                      'email',
+                      isVerified: isVerified,
+                    );
+                  },
+                ),
+
 
                 Divider(color: Colors.grey[200], height: 2.h),
                 _buildEditableListTile(Icons.lock, AppLocalizations.of(context)!.password, AppLocalizations.of(context)!.passwordHidden, 'password'),
@@ -2141,18 +2005,25 @@ class _AccountScreenState extends State<AccountScreen> {
         } else if (title == AppLocalizations.of(context)!.myRelatives) {
           Navigator.push(context, fadePageRoute(const MyRelativesPage()));
         } else if (title == AppLocalizations.of(context)!.phone) {
-          _showEditFieldSheet(context, 'phoneNumber', state.userPhone);
+          final profile = context.read<AccountProfileCubit>().state;
+          if (profile is AccountProfileLoaded) {
+            _showEditFieldSheet(context, 'phoneNumber', profile.phone);
+          }
         } else if (title == AppLocalizations.of(context)!.email) {
-          final hasEmail = state.userEmail != null && state.userEmail!.isNotEmpty;
-          _showEditFieldSheet(
-            context,
-            'email',
-            state.userEmail ?? '',
-            customTitle: (state.userEmail == null || state.userEmail!.isEmpty)
-                ? AppLocalizations.of(context)!.addEmailTitle
-                : null,
-          );
+          final profile = context.read<AccountProfileCubit>().state;
 
+          if (profile is AccountProfileLoaded) {
+            final email = profile.email;
+
+            _showEditFieldSheet(
+              context,
+              'email',
+              email,
+              customTitle: email.isEmpty
+                  ? AppLocalizations.of(context)!.addEmailTitle
+                  : null,
+            );
+          }
         } else if (title == AppLocalizations.of(context)!.password) {
           _showChangePasswordSheet(context);
         } else if (title == AppLocalizations.of(context)!.language) {
@@ -2217,44 +2088,49 @@ class _AccountScreenState extends State<AccountScreen> {
             if (trailingWidget != null)
               trailingWidget
             else if (field == 'faceId')
-              Transform.scale(
-                scale: 0.8, // ✅ تقليل حجم الـ Switch بشكل عام
-                child: Switch(
-                  value: isFaceIdEnabled,
-                  onChanged: (bool value) async {
-                    bool authenticated = await _authenticateWithFaceID();
-                    if (authenticated) {
-                      final prefs = await SharedPreferences.getInstance();
-                      await prefs.setBool('enableFaceID', value);
-                      setState(() {
-                        isFaceIdEnabled = value;
-                      });
-                      print("✅ Face ID Preference Saved: $value");
-                    } else {
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        SnackBar(content: Text(AppLocalizations.of(context)!.faceIdFailed)),
-                      );
-                    }
-                  },
-                  activeColor: Colors.white, // ✅ لون الدائرة عند التفعيل
-                  activeTrackColor: AppColors.main.withOpacity(0.8), // ✅ لون المسار عند التفعيل
-                  inactiveTrackColor: Colors.grey[400], // ✅ لون المسار عند التعطيل
-                  trackOutlineColor: MaterialStateProperty.all(Colors.transparent), // ✅ إزالة أي حدود
-                  materialTapTargetSize: MaterialTapTargetSize.shrinkWrap, // ✅ تقليل المساحة القابلة للنقر
-                  thumbColor: MaterialStateProperty.resolveWith<Color>((states) {
-                    if (states.contains(MaterialState.selected)) {
-                      return AppColors.main; // ✅ لون الدائرة عند التفعيل
-                    }
-                    return Colors.grey[400]!; // ✅ لون الدائرة عند التعطيل
-                  }),
-                  thumbIcon: MaterialStateProperty.resolveWith<Icon?>((states) {
-                    return Icon(
-                      Icons.circle, // ✅ تغيير شكل الـ thumb
-                      size: 30, // ✅ تكبير الدائرة (thumb)
-                      color: Colors.grey[200], // ✅ جعل لونها أبيض
-                    );
-                  }),
-                ),
+              BlocBuilder<AccountSecurityCubit, AccountSecurityState>(
+                builder: (context, state) {
+                  final bool isEnabled =
+                      state is AccountBiometricState && state.enabled;
+
+                  final bool isLoading = state is AccountBiometricChecking;
+
+                  return Transform.scale(
+                    scale: 0.8,
+                    child: Switch(
+                      value: isEnabled,
+                      onChanged: isLoading
+                          ? null
+                          : (value) {
+                        context
+                            .read<AccountSecurityCubit>()
+                            .toggleBiometric(enable: value);
+                      },
+                      activeColor: Colors.white,
+                      activeTrackColor: AppColors.main.withOpacity(0.8),
+                      inactiveTrackColor: Colors.grey[400],
+                      trackOutlineColor:
+                      MaterialStateProperty.all(Colors.transparent),
+                      materialTapTargetSize:
+                      MaterialTapTargetSize.shrinkWrap,
+                      thumbColor:
+                      MaterialStateProperty.resolveWith<Color>((states) {
+                        if (states.contains(MaterialState.selected)) {
+                          return AppColors.main;
+                        }
+                        return Colors.grey[400]!;
+                      }),
+                      thumbIcon:
+                      MaterialStateProperty.resolveWith<Icon?>((states) {
+                        return const Icon(
+                          Icons.circle,
+                          size: 30,
+                          color: Colors.white,
+                        );
+                      }),
+                    ),
+                  );
+                },
               )
             else
               Row(
@@ -2295,3 +2171,182 @@ class _AccountScreenState extends State<AccountScreen> {
 }
 
 
+class _AuthenticatedAccountView extends StatelessWidget {
+  final VoidCallback onLogout;
+
+  final Widget Function() buildShimmer;
+  final Widget Function(BuildContext, UserLoaded) buildAccountContent;
+  final String Function(BuildContext, String) mapSecurityError;
+
+  const _AuthenticatedAccountView({
+    required this.onLogout,
+    required this.buildShimmer,
+    required this.buildAccountContent,
+    required this.mapSecurityError,
+  });
+
+
+  @override
+  Widget build(BuildContext context) {
+    return MultiBlocListener(
+      listeners: [
+
+        // 👤 User loaded → load account profile
+        BlocListener<UserCubit, UserState>(
+          listenWhen: (_, current) => current is UserLoaded,
+          listener: (context, state) {
+            context.read<AccountProfileCubit>().loadProfile();
+          },
+        ),
+
+        // 🔐 Account Security listeners
+        BlocListener<AccountSecurityCubit, AccountSecurityState>(
+          listenWhen: (_, s) => s is AccountSecurityError,
+          listener: (context, s) {
+            final error = s as AccountSecurityError;
+
+            ScaffoldMessenger.of(context)
+              ..hideCurrentSnackBar()
+              ..showSnackBar(
+                SnackBar(
+                  content: Text(
+                    mapSecurityError(context, error.message),
+                  ),
+                  backgroundColor: AppColors.red,
+                ),
+              );
+          },
+        ),
+
+        BlocListener<AccountSecurityCubit, AccountSecurityState>(
+          listenWhen: (_, s) => s is AccountPasswordChanged,
+          listener: (context, s) {
+            ScaffoldMessenger.of(context)
+              ..hideCurrentSnackBar()
+              ..showSnackBar(
+                SnackBar(
+                  content: Text(
+                    AppLocalizations.of(context)!.passwordUpdatedSuccess,
+                  ),
+                  backgroundColor: AppColors.main,
+                ),
+              );
+          },
+        ),
+
+        BlocListener<AccountSecurityCubit, AccountSecurityState>(
+          listenWhen: (_, s) =>
+          s is AccountOtpSent || s is AccountOtpVerified,
+          listener: (context, s) {
+            if (s is AccountOtpSent) {
+              ScaffoldMessenger.of(context)
+                ..hideCurrentSnackBar()
+                ..showSnackBar(
+                  SnackBar(
+                    duration: const Duration(seconds: 20),
+                    backgroundColor: AppColors.mainDark,
+                    content: Text('OTP: ${s.otp}'),
+                  ),
+                );
+            }
+
+            if (s is AccountOtpVerified) {
+              ScaffoldMessenger.of(context).hideCurrentSnackBar();
+            }
+          },
+        ),
+
+        BlocListener<AccountSecurityCubit, AccountSecurityState>(
+          listenWhen: (_, s) => s is AccountTwoFactorUpdated,
+          listener: (context, s) {
+            final state = s as AccountTwoFactorUpdated;
+
+            Navigator.pop(context);
+
+            context.read<UserCubit>().loadUserData(
+              context,
+              useCache: false,
+            );
+
+            ScaffoldMessenger.of(context)
+              ..hideCurrentSnackBar()
+              ..showSnackBar(
+                SnackBar(
+                  content: Text(
+                    state.enabled
+                        ? AppLocalizations.of(context)!
+                        .twoFactorActivatedSuccess
+                        : AppLocalizations.of(context)!
+                        .twoFactorDeactivatedSuccess,
+                  ),
+                  backgroundColor: AppColors.main,
+                ),
+              );
+          },
+        ),
+
+        BlocListener<AccountSecurityCubit, AccountSecurityState>(
+          listenWhen: (_, s) => s is AccountBiometricUpdated,
+          listener: (context, s) {
+            final state = s as AccountBiometricUpdated;
+
+            ScaffoldMessenger.of(context)
+              ..hideCurrentSnackBar()
+              ..showSnackBar(
+                SnackBar(
+                  content: Text(
+                    state.enabled
+                        ? AppLocalizations.of(context)!.faceIdEnabled
+                        : AppLocalizations.of(context)!.faceIdDisabled,
+                  ),
+                  backgroundColor: AppColors.main,
+                ),
+              );
+          },
+        ),
+
+        // ☠️ Account danger
+        BlocListener<AccountDangerCubit, AccountDangerState>(
+          listener: (context, s) async {
+            if (s is AccountDangerError) {
+              ScaffoldMessenger.of(context)
+                ..hideCurrentSnackBar()
+                ..showSnackBar(
+                  SnackBar(
+                    content: Text(s.message),
+                    backgroundColor: AppColors.red,
+                  ),
+                );
+            }
+
+            if (s is AccountDangerSuccess) {
+              await context.read<AuthCubit>().signOut();
+
+              Navigator.pushAndRemoveUntil(
+                context,
+                fadePageRoute(const GoodbyePage()),
+                    (_) => false,
+              );
+            }
+          },
+        ),
+      ],
+      child: Scaffold(
+        backgroundColor: AppColors.background2,
+        body: BlocBuilder<UserCubit, UserState>(
+          builder: (context, state) {
+            if (state is UserLoading) {
+              return buildShimmer();
+            }
+
+            if (state is UserLoaded) {
+              return buildAccountContent(context, state);
+            }
+
+            return buildShimmer();
+          },
+        ),
+      ),
+    );
+  }
+}

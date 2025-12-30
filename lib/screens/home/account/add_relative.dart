@@ -1,14 +1,14 @@
+import 'package:docsera/Business_Logic/Account_page/relatives/relatives_cubit.dart';
 import 'package:docsera/app/text_styles.dart';
-import 'package:docsera/services/supabase/supabase_user_service.dart';
+import 'package:docsera/services/supabase/user/supabase_user_service.dart';
 import 'package:docsera/utils/text_direction_utils.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 import 'package:docsera/app/const.dart';
 import 'package:intl/intl.dart';
 import 'package:docsera/gen_l10n/app_localizations.dart';
-import 'package:supabase_flutter/supabase_flutter.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 
 
 class AddRelativePage extends StatefulWidget {
@@ -20,9 +20,6 @@ class AddRelativePage extends StatefulWidget {
 
 class _AddRelativePageState extends State<AddRelativePage> {
   final _formKey = GlobalKey<FormState>();
-  String userId = "";
-  String accountHolderEmail = "";
-  String accountHolderPhone = "";
   String gender = "";
   String country = "";
   bool isFormValid = false;
@@ -49,11 +46,7 @@ class _AddRelativePageState extends State<AddRelativePage> {
   final TextEditingController cityController = TextEditingController();
   final TextEditingController countryController = TextEditingController();
 
-  @override
-  void initState() {
-    super.initState();
-    _loadUserId();
-  }
+
 
   @override
   void dispose() {
@@ -69,35 +62,6 @@ class _AddRelativePageState extends State<AddRelativePage> {
     super.dispose();
   }
 
-  Future<void> _loadUserId() async {
-    SharedPreferences prefs = await SharedPreferences.getInstance();
-    userId = prefs.getString('userId') ?? "";
-
-    if (userId.isNotEmpty) {
-      _fetchUserInfo();
-    } else {
-      print("❌ SharedPreferences userId is empty!");
-    }
-  }
-
-
-  /// ✅ Fetch user’s email & phone for fallback data
-  void _fetchUserInfo() async {
-    Supabase.instance.client
-        .from('users')
-        .select('email, phone_number')
-        .eq('id', userId)
-        .maybeSingle()
-        .then((data) {
-      if (data != null) {
-        if (!mounted) return;
-        setState(() {
-          accountHolderEmail = data['email'] ?? "";
-          accountHolderPhone = data['phone_number'] ?? "";
-        });
-      }
-    });
-  }
 
   String _formatPhoneNumber(String input) {
     final trimmed = input.trim();
@@ -110,23 +74,24 @@ class _AddRelativePageState extends State<AddRelativePage> {
     }
   }
 
-  void _saveRelative() async {
+  Future<void> _saveRelative() async {
     final isValid = _formKey.currentState?.validate() ?? false;
 
-
     if (!isValid || !isAuthorized) {
-      setState(() {}); // 🔁 لتحديث واجهة الأخطاء الحمراء
+      setState(() {});
       return;
     }
 
-    // ✅ Check if building number is alone
+    // 🛑 تحقق العنوان
     if (buildingNrController.text.isNotEmpty &&
         (streetController.text.isEmpty ||
             cityController.text.isEmpty ||
             countryController.text.isEmpty)) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
-          content: Text('Please fill Street, City, and Country before adding a Building Number.'),
+          content: Text(
+            'Please fill Street, City, and Country before adding a Building Number.',
+          ),
           backgroundColor: AppColors.red,
         ),
       );
@@ -134,35 +99,45 @@ class _AddRelativePageState extends State<AddRelativePage> {
     }
 
     try {
-      await Supabase.instance.client
-          .from('relatives')
-          .insert({
-        'user_id': userId,
-        'first_name': firstNameController.text,
-        'last_name': lastNameController.text,
-        'date_of_birth': DateFormat('dd.MM.yyyy').parse(dateOfBirthController.text).toIso8601String(),
+      await context.read<RelativesCubit>().addRelative({
+        'first_name': firstNameController.text.trim(),
+        'last_name': lastNameController.text.trim(),
         'gender': gender,
-        'email': emailController.text.isNotEmpty ? emailController.text : accountHolderEmail,
-        'phone_number': phoneController.text.isNotEmpty
-            ? _formatPhoneNumber(phoneController.text)
-            : accountHolderPhone,
+        'date_of_birth': DateFormat('dd.MM.yyyy')
+            .parse(dateOfBirthController.text)
+            .toIso8601String(),
+        'email': emailController.text.trim().isEmpty
+            ? null
+            : emailController.text.trim(),
+        'phone_number': phoneController.text.trim().isEmpty
+            ? null
+            : _formatPhoneNumber(phoneController.text.trim()),
         'address': {
-          'street': streetController.text,
-          'buildingNr': buildingNrController.text,
-          'city': cityController.text,
-          'country': countryController.text,
+          'street': streetController.text.trim(),
+          'buildingNr': buildingNrController.text.trim(),
+          'city': cityController.text.trim(),
+          'country': countryController.text.trim(),
         },
-        'created_at': DateTime.now().toIso8601String(),
       });
 
+
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(AppLocalizations.of(context)!.relativeAddedSuccess), backgroundColor: AppColors.main.withOpacity(0.7)),
+        SnackBar(
+          content:
+          Text(AppLocalizations.of(context)!.relativeAddedSuccess),
+          backgroundColor: AppColors.main.withOpacity(0.8),
+        ),
       );
 
       Navigator.pop(context, true);
     } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(AppLocalizations.of(context)!.relativeAddFailed(e.toString())), backgroundColor: AppColors.red.withOpacity(0.7)),
+        SnackBar(
+          content: Text(
+            AppLocalizations.of(context)!.relativeAddFailed(e.toString()),
+          ),
+          backgroundColor: AppColors.red.withOpacity(0.8),
+        ),
       );
     }
   }
@@ -872,7 +847,8 @@ class _AddRelativePageState extends State<AddRelativePage> {
                 ? '00963${trimmed.substring(1)}'
                 : '00963$trimmed';
 
-            final isDuplicate = await SupabaseUserService().isPhoneNumberExists(formatted);
+            final isDuplicate =
+            await context.read<RelativesCubit>().isPhoneDuplicate(formatted);
 
             setState(() {
               phoneErrorText = isDuplicate
@@ -963,13 +939,11 @@ class _AddRelativePageState extends State<AddRelativePage> {
 
         // ✅ تحقق من التكرار إذا كان الإيميل صالح
         if (emailRegex.hasMatch(value)) {
-          final exists = await Supabase.instance.client
-              .from('relatives')
-              .select('email')
-              .eq('email', value.trim())
-              .maybeSingle();
+          final exists = await context
+              .read<RelativesCubit>()
+              .isEmailDuplicate(value.trim());
 
-          if (exists != null) {
+          if (exists) {
             ScaffoldMessenger.of(context).showSnackBar(SnackBar(
               content: Text(AppLocalizations.of(context)!.emailAlreadyRegistered),
               backgroundColor: AppColors.red.withOpacity(0.8),

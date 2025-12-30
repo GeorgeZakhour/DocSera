@@ -1,5 +1,10 @@
+import 'dart:async';
 import 'dart:io';
 
+import 'package:docsera/Business_Logic/Account_page/danger/account_danger_cubit.dart';
+import 'package:docsera/Business_Logic/Account_page/profile/account_profile_cubit.dart';
+import 'package:docsera/Business_Logic/Account_page/relatives/relatives_cubit.dart';
+import 'package:docsera/Business_Logic/Account_page/security/account_security_cubit.dart';
 import 'package:docsera/Business_Logic/Account_page/user_cubit.dart';
 import 'package:docsera/Business_Logic/Appointments_page/appointments_cubit.dart';
 import 'package:docsera/Business_Logic/Authentication/auth_state.dart' as custom_auth;
@@ -9,6 +14,8 @@ import 'package:docsera/Business_Logic/Documents_page/notes/notes_cubit.dart';
 import 'package:docsera/Business_Logic/Health_page/patient_switcher_cubit.dart';
 import 'package:docsera/Business_Logic/Main_page/main_screen_cubit.dart';
 import 'package:docsera/Business_Logic/Messages_page/messages_cubit.dart';
+import 'package:docsera/screens/doctors/doctor_profile_page.dart';
+import 'package:docsera/services/supabase/user/account_relatives_service.dart';
 import 'package:docsera/splash_screen.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/foundation.dart';
@@ -27,8 +34,13 @@ import 'package:timezone/data/latest.dart' as tz;
 import 'Business_Logic/Account_page/user_state.dart';
 import 'Business_Logic/Authentication/auth_cubit.dart';
 import 'app/const.dart';
-import 'services/supabase/supabase_user_service.dart';
+import 'services/supabase/user/account_danger_service.dart';
+import 'services/supabase/user/account_profile_service.dart';
+import 'services/supabase/user/account_security_service.dart';
+import 'services/supabase/user/supabase_user_service.dart';
 import 'dart:developer';
+import 'package:app_links/app_links.dart';
+
 
 
 void main() async {
@@ -79,6 +91,22 @@ await Socket.connect('192.168.1.1', 80, timeout: Duration(seconds: 1))
         BlocProvider(create: (context) => MessagesCubit()),
         BlocProvider(create: (context) => DocumentsCubit()),
         BlocProvider(create: (context) => UserCubit(supabaseService, prefs)),
+        BlocProvider(
+          create: (_) => AccountProfileCubit(
+            service: AccountProfileService(),
+          ),
+        ),
+
+        BlocProvider(
+          create: (_) => RelativesCubit(AccountRelativesService()),
+        ),
+
+        BlocProvider(
+          create: (_) => AccountSecurityCubit(service: AccountSecurityService()),
+        ),
+        BlocProvider(
+          create: (_) => AccountDangerCubit(service: AccountDangerService()),
+        ),
         BlocProvider(create: (context) => DoctorScheduleCubit()),
         BlocProvider(create: (context) => NotesCubit()),
         BlocProvider(create: (_) => PatientSwitcherCubit()),
@@ -86,26 +114,35 @@ await Socket.connect('192.168.1.1', 80, timeout: Duration(seconds: 1))
 
       ],
       child: BlocListener<AuthCubit, custom_auth.AppAuthState>(
-        listener: (context, state) {
-          context.read<MainScreenCubit>().loadMainScreen(context);
-          context.read<AppointmentsCubit>().loadAppointments(context);
-          context.read<DocumentsCubit>().listenToDocuments(context);
-          context.read<NotesCubit>().listenToNotes(context);
-          context.read<UserCubit>().loadUserData(context);
-
-          // 🔵 بعد تحميل بيانات المستخدم – جهّز PatientSwitcherCubit
-          final userState = context.read<UserCubit>().state;
-          if (userState is UserLoaded) {
-            context.read<PatientSwitcherCubit>().switchToUser(
-              userState.userId,
-              userState.userName,
-            );
+        listenWhen: (previous, current) {
+          // 🔴 امنع التنفيذ عند tokenRefreshed
+          if (previous is custom_auth.AuthAuthenticated &&
+              current is custom_auth.AuthAuthenticated) {
+            return false;
           }
-
+          return true;
         },
+        listener: (context, state) {
+          if (state is custom_auth.AuthAuthenticated) {
+            // 🔹 هذه تُستدعى مرة واحدة فقط
+            context.read<MainScreenCubit>().loadMainScreen(context);
+            context.read<AppointmentsCubit>().loadAppointments(context);
+            context.read<DocumentsCubit>().listenToDocuments(context);
+            context.read<NotesCubit>().listenToNotes(context);
 
+            final userCubit = context.read<UserCubit>();
+            userCubit.loadUserData(context, useCache: true);
+            userCubit.startRealtimeUserListener(state.user.id);
+
+            final userState = userCubit.state;
+            if (userState is UserLoaded) {
+              context.read<PatientSwitcherCubit>().switchToUser();
+            }
+          }
+        },
         child: MyApp(savedLocale: savedLocale),
       ),
+
     ),
   );
 }
@@ -128,12 +165,113 @@ class MyApp extends StatefulWidget {
 
 class _MyAppState extends State<MyApp> {
   late Locale _locale;
+  final GlobalKey<NavigatorState> _navKey = GlobalKey<NavigatorState>();
+  late final AppLinks _appLinks;
+  StreamSubscription<Uri>? _linkSub;
+
 
   @override
   void initState() {
     super.initState();
     _locale = Locale(widget.savedLocale);
+    _initDeepLinks();
   }
+
+  @override
+  void dispose() {
+    _linkSub?.cancel();
+    super.dispose();
+  }
+
+
+  Future<void> _initDeepLinks() async {
+    _appLinks = AppLinks();
+
+    // 🔹 1) App opened from terminated state
+    try {
+      final Uri? initialUri = await _appLinks.getInitialLink();
+      if (initialUri != null) {
+        _handleUri(initialUri);
+      }
+    } catch (e) {
+      log('❌ getInitialAppLink error: $e');
+    }
+
+    // 🔹 2) App already running
+    _linkSub = _appLinks.uriLinkStream.listen(
+          (uri) {
+        _handleUri(uri);
+      },
+      onError: (err) {
+        log('❌ uriLinkStream error: $err');
+      },
+    );
+  }
+
+  void _handleUri(Uri uri) {
+    String? doctorToken;
+
+    // docsera://doctor/<public_token>
+    if (uri.scheme == 'docsera') {
+      if (uri.host == 'doctor' && uri.pathSegments.isNotEmpty) {
+        doctorToken = uri.pathSegments.first;
+      }
+    }
+
+    // https://docsera.app/doctor/<public_token> (للمستقبل)
+    if (uri.scheme.startsWith('http')) {
+      if (uri.pathSegments.length >= 2 &&
+          uri.pathSegments.first == 'doctor') {
+        doctorToken = uri.pathSegments[1];
+      }
+    }
+
+    if (doctorToken == null || doctorToken.isEmpty) {
+      log('⚠️ Ignored deep link: $uri');
+      return;
+    }
+
+    _resolveDoctorByPublicToken(doctorToken);
+  }
+
+  Future<void> _resolveDoctorByPublicToken(String token) async {
+    try {
+      final res = await Supabase.instance.client
+          .from('doctors')
+          .select('id')
+          .eq('public_token', token)
+          .maybeSingle();
+
+      if (res == null) {
+        log('❌ Invalid doctor public_token: $token');
+        return;
+      }
+
+      final doctorId = res['id'] as String;
+
+      _navigateToDoctor(doctorId);
+    } catch (e) {
+      log('❌ Failed to resolve doctor token: $e');
+    }
+  }
+
+  void _navigateToDoctor(String doctorId) {
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      final nav = _navKey.currentState;
+      if (nav == null) return;
+
+      nav.push(
+        MaterialPageRoute(
+          builder: (_) => DoctorProfilePage(
+            doctorId: doctorId,
+          ),
+        ),
+      );
+    });
+  }
+
+
+
 
   /// ✅ `getter` عام لإتاحة `_locale` خارج `MyAppState`
   Locale get currentLocale => _locale;
@@ -162,6 +300,7 @@ class _MyAppState extends State<MyApp> {
               FocusManager.instance.primaryFocus?.unfocus();
             },
             child: MaterialApp(
+              navigatorKey: _navKey,
               debugShowCheckedModeBanner: false,
               theme: ThemeData(
 

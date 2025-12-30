@@ -11,6 +11,7 @@ import 'package:http/http.dart' as http;
 import 'package:path/path.dart' as path;
 import 'package:path_provider/path_provider.dart';
 import 'package:flutter_pdfview/flutter_pdfview.dart';
+import '../../../utils/full_page_loader.dart';
 import 'document_options_bottom_sheet.dart';
 
 class DocumentPreviewPage extends StatefulWidget {
@@ -245,7 +246,7 @@ class _DocumentPreviewPageState extends State<DocumentPreviewPage> {
       body: Builder(
         builder: (context) {
           if (isPdf) return _buildPdfViewer();
-          if (isImage) return _imagesLoaded ? _buildImageViewer() : const Center(child: CircularProgressIndicator(color: AppColors.main));
+          if (isImage) return _imagesLoaded ? _buildImageViewer() : const Center(child: FullPageLoader());
           return Center(child: Text('❌ نوع غير مدعوم', style: TextStyle(color: Colors.red)));
         },
       ),

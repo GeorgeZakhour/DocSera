@@ -1,14 +1,17 @@
+import 'package:docsera/Business_Logic/Account_page/profile/account_profile_cubit.dart';
+import 'package:docsera/Business_Logic/Account_page/profile/account_profile_state.dart';
 import 'package:docsera/app/text_styles.dart';
 import 'package:docsera/utils/text_direction_utils.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:shared_preferences/shared_preferences.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:docsera/app/const.dart';
 import 'package:intl/intl.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:docsera/gen_l10n/app_localizations.dart';
-import 'package:supabase_flutter/supabase_flutter.dart';
 import 'dart:ui';
+
+import '../../../utils/full_page_loader.dart';
 
 
 class EditProfilePage extends StatefulWidget {
@@ -20,13 +23,12 @@ class EditProfilePage extends StatefulWidget {
 
 class _EditProfilePageState extends State<EditProfilePage> {
   final _formKey = GlobalKey<FormState>();
-  String userId = "";
+  // String userId = "";
   String gender = "";
-  String country = "";
   bool isFormValid = false;
   final arabicNameRegex = RegExp(r'^[\u0600-\u06FF\s]{2,}$');
+  bool _formInitialized = false;
 
-  final List<String> genderOptions = ["ذكر", "أنثى"];
 
   final List<String> cityOptions = [
     "دمشق", "حلب", "حمص", "حماة", "اللاذقية", "دير الزور",
@@ -45,8 +47,12 @@ class _EditProfilePageState extends State<EditProfilePage> {
   @override
   void initState() {
     super.initState();
-    _loadUserId();
+
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      context.read<AccountProfileCubit>().loadProfile();
+    });
   }
+
 
   @override
   void dispose() {
@@ -59,42 +65,6 @@ class _EditProfilePageState extends State<EditProfilePage> {
     cityController.dispose();
     countryController.dispose();
     super.dispose();
-  }
-
-  /// ✅ Load userId from SharedPreferences
-  Future<void> _loadUserId() async {
-    SharedPreferences prefs = await SharedPreferences.getInstance();
-    userId = prefs.getString('userId') ?? "";
-    if (userId.isNotEmpty) {
-      _fetchUserData();
-    }
-  }
-
-  /// ✅ Fetch user data from Supabase and populate fields
-  void _fetchUserData() async {
-    if (userId.isEmpty) return;
-
-    final supabase = Supabase.instance.client;
-    final response = await supabase
-        .from('users')
-        .select()
-        .eq('id', userId)
-        .single();
-
-    if (response.isNotEmpty) {
-      final userData = response;
-      setState(() {
-        gender = userData['gender'] ?? "";
-        firstNameController.text = userData['first_name'] ?? "";
-        lastNameController.text = userData['last_name'] ?? "";
-        dateOfBirthController.text = _formatDate(userData['date_of_birth']);
-        streetController.text = userData['address']?['street'] ?? "";
-        buildingNrController.text = userData['address']?['buildingNr'] ?? "";
-        cityController.text = userData['address']?['city'] ?? "";
-        countryController.text = userData['address']?['country'] ?? "";
-        _validateForm();
-      });
-    }
   }
 
 
@@ -117,6 +87,7 @@ class _EditProfilePageState extends State<EditProfilePage> {
         (streetController.text.isEmpty ||
             cityController.text.isEmpty ||
             countryController.text.isEmpty)) {
+
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text(AppLocalizations.of(context)!.buildingNrError),
@@ -126,35 +97,29 @@ class _EditProfilePageState extends State<EditProfilePage> {
       return;
     }
 
-    final supabase = Supabase.instance.client;
+    await context.read<AccountProfileCubit>().updateProfile(
+      firstName: firstNameController.text.trim(),
+      lastName: lastNameController.text.trim(),
+      gender: gender,
+      dateOfBirth: _convertToIsoDate(dateOfBirthController.text),
+      address: {
+        'street': streetController.text.trim(),
+        'buildingNr': buildingNrController.text.trim(),
+        'city': cityController.text.trim(),
+        'country': countryController.text.trim(),
+      },
+    );
 
-    try {
-      await supabase
-          .from('users')
-          .update({
-        'gender': gender,
-        'first_name': firstNameController.text,
-        'last_name': lastNameController.text,
-        'date_of_birth': _convertToIsoDate(dateOfBirthController.text),
-        'address': {
-          'street': streetController.text,
-          'buildingNr': buildingNrController.text,
-          'city': cityController.text,
-          'country': countryController.text,
-        },
-      })
-          .eq('id', userId);
+    if (!mounted) return;
 
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(AppLocalizations.of(context)!.updateSuccess), backgroundColor: AppColors.main.withOpacity(0.7)),
-      );
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(AppLocalizations.of(context)!.updateSuccess),
+        backgroundColor: AppColors.main.withOpacity(0.7),
+      ),
+    );
 
-      Navigator.pop(context, true); // ✅ رجّع true عند نجاح الحفظ
-    } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(AppLocalizations.of(context)!.updateFailed(e.toString())), backgroundColor: AppColors.red.withOpacity(0.7)),
-      );
-    }
+    Navigator.pop(context, true);
   }
 
   String _convertToIsoDate(String formattedDate) {
@@ -206,35 +171,82 @@ class _EditProfilePageState extends State<EditProfilePage> {
 
   /// ✅ Validate form and address fields
   void _validateForm() {
-    setState(() {
-      bool isAddressEmpty = streetController.text.isEmpty &&
-          cityController.text.isEmpty &&
-          countryController.text.isEmpty &&
-          buildingNrController.text.isEmpty;
+    final isAddressEmpty =
+        streetController.text.isEmpty &&
+            cityController.text.isEmpty &&
+            countryController.text.isEmpty &&
+            buildingNrController.text.isEmpty;
 
-      bool isAddressValid = (streetController.text.isNotEmpty &&
-          cityController.text.isNotEmpty &&
-          countryController.text.isNotEmpty) ||
-          isAddressEmpty;
+    final isAddressValid =
+        (streetController.text.isNotEmpty &&
+            cityController.text.isNotEmpty &&
+            countryController.text.isNotEmpty) ||
+            isAddressEmpty;
 
-      // ✅ Check if building number exists without other fields
-      bool isBuildingNrAlone = buildingNrController.text.isNotEmpty &&
-          (streetController.text.isEmpty ||
-              cityController.text.isEmpty ||
-              countryController.text.isEmpty);
+    // ❗ building number موجود بدون باقي العنوان
+    final isBuildingNrAlone =
+        buildingNrController.text.isNotEmpty &&
+            (streetController.text.isEmpty ||
+                cityController.text.isEmpty ||
+                countryController.text.isEmpty);
 
-      isFormValid = firstNameController.text.isNotEmpty &&
-          lastNameController.text.isNotEmpty &&
-          dateOfBirthController.text.isNotEmpty &&
-          gender.isNotEmpty &&
-          isAddressValid &&
-          !isBuildingNrAlone;
-    });
+    final valid =
+        firstNameController.text.isNotEmpty &&
+            lastNameController.text.isNotEmpty &&
+            dateOfBirthController.text.isNotEmpty &&
+            gender.isNotEmpty &&
+            isAddressValid &&
+            !isBuildingNrAlone;
+
+    if (valid != isFormValid) {
+      setState(() {
+        isFormValid = valid;
+      });
+    }
   }
+
+
+  void _fillFormFromProfile(AccountProfileLoaded state) {
+    firstNameController.text = state.firstName;
+    lastNameController.text = state.lastName;
+    gender = state.gender ?? '';
+    dateOfBirthController.text = _formatDate(state.dateOfBirth);
+
+    final address = state.address ?? {};
+    streetController.text = address['street'] ?? '';
+    buildingNrController.text = address['buildingNr'] ?? '';
+    cityController.text = address['city'] ?? '';
+    countryController.text = address['country'] ?? '';
+
+    _validateForm();
+  }
+
 
 
   @override
   Widget build(BuildContext context) {
+    return BlocConsumer<AccountProfileCubit, AccountProfileState>(
+      listener: (context, state) {
+        if (state is AccountProfileLoaded && !_formInitialized) {
+          _fillFormFromProfile(state);
+          _formInitialized = true;
+        }
+      },
+      builder: (context, state) {
+        if (state is AccountProfileLoading) {
+          return const Scaffold(
+            backgroundColor: AppColors.background2,
+            body: Center(child: FullPageLoader()),
+          );
+        }
+
+        return _buildForm();
+    },
+    );
+
+  }
+
+  _buildForm(){
     return Scaffold(
       backgroundColor: AppColors.background2,
       appBar: AppBar(
@@ -245,8 +257,8 @@ class _EditProfilePageState extends State<EditProfilePage> {
         title: Padding(
           padding: EdgeInsets.only(top: 35.h, bottom: 8.h),
           child: Text(
-            AppLocalizations.of(context)!.editMyProfile,
-            style: AppTextStyles.getTitle1(context).copyWith(fontSize: 12.sp ,color: Colors.black)
+              AppLocalizations.of(context)!.editMyProfile,
+              style: AppTextStyles.getTitle1(context).copyWith(fontSize: 12.sp ,color: Colors.black)
           ),
         ),
         centerTitle: true,
@@ -459,100 +471,6 @@ class _EditProfilePageState extends State<EditProfilePage> {
     );
   }
 
-  /// 📝 Build TextField
-  Widget _buildTextField({
-    required TextEditingController controller,
-    String hintText = "",
-    String? Function(String?)? validator,
-  }) {
-    return TextFormField(
-      controller: controller,
-      textDirection: detectTextDirection(controller.text), // ✅ ضبط الاتجاه ديناميكيًا
-      textAlign: getTextAlign(context),
-      decoration: _inputDecoration(hintText: hintText),
-      validator: validator,
-      style: AppTextStyles.getText2(context),
-    );
-  }
-
-  /// 🔽 Build Dropdown with Empty Option Support
-  Widget _buildDropdown({
-    required String? value,
-    required List<String> options,
-    required void Function(String?) onChanged,
-    String hintText = "",
-  }) {
-
-    final genderDisplayMap = {
-      "ذكر": AppLocalizations.of(context)!.male,
-      "أنثى": AppLocalizations.of(context)!.female,
-    };
-
-
-    final cityDisplayMap = {
-      "دمشق": AppLocalizations.of(context)!.damascus,
-      "حلب": AppLocalizations.of(context)!.aleppo,
-      "حمص": AppLocalizations.of(context)!.homs,
-      "حماة": AppLocalizations.of(context)!.hama,
-      "اللاذقية": AppLocalizations.of(context)!.latakia,
-      "دير الزور": AppLocalizations.of(context)!.deirEzzor,
-      "الرقة": AppLocalizations.of(context)!.raqqa,
-      "إدلب": AppLocalizations.of(context)!.idlib,
-      "درعا": AppLocalizations.of(context)!.daraa,
-      "طرطوس": AppLocalizations.of(context)!.tartus,
-      "الحسكة": AppLocalizations.of(context)!.alHasakah,
-      "القامشلي": AppLocalizations.of(context)!.qamishli,
-      "السويداء": AppLocalizations.of(context)!.suwayda,
-    };
-
-    final countryDisplayMap = {
-      "سوريا": AppLocalizations.of(context)!.syria,
-    };
-
-
-
-    return DropdownButtonFormField<String>(
-      value: value?.isEmpty ?? true ? null : value,
-      hint: Text(hintText, style: AppTextStyles.getText2(context)),
-      items: options.map((String option) {
-        return DropdownMenuItem<String>(
-          value: option,
-          child: Text(
-            option.isEmpty ? '—' :
-            genderDisplayMap[option] ??
-                cityDisplayMap[option] ??
-                countryDisplayMap[option] ??
-                option,
-            style: AppTextStyles.getText2(context),
-          ),
-        );
-      }).toList(),
-      decoration: _inputDecoration(),
-      onChanged: onChanged,
-    );
-  }
-
-
-  /// 🎨 Standard Input Decoration
-  InputDecoration _inputDecoration({String hintText = ""}) {
-    return InputDecoration(
-      hintText: hintText,
-      hintStyle: AppTextStyles.getText2(context).copyWith(color: Colors.grey),
-      border: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(16.r),
-        borderSide: const BorderSide(color: Colors.grey, width: 0.6),
-      ),
-      focusedBorder: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(25.r),
-        borderSide: const BorderSide(color: AppColors.main, width: 1.2),
-      ),
-      errorBorder: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(16.r),
-        borderSide: const BorderSide(color: AppColors.red, width: 1),
-      ),
-      contentPadding: EdgeInsets.symmetric(horizontal: 12.w, vertical: 10.h),
-    );
-  }
 
   Widget _buildValidatedFieldArabic({
     required TextEditingController controller,
@@ -654,10 +572,6 @@ class _EditProfilePageState extends State<EditProfilePage> {
     bool isRequired = false,
   }) {
     final localizedLabel = isRequired ? '$labelText *' : labelText;
-
-    final isValid = controller.text.isEmpty
-        ? null
-        : RegExp(r'^\d{1,3}$').hasMatch(controller.text);
 
     return TextFormField(
       controller: controller,

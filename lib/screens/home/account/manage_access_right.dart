@@ -1,11 +1,12 @@
+import 'package:docsera/app/const.dart';
 import 'package:docsera/app/text_styles.dart';
+import 'package:docsera/Business_Logic/Account_page/relatives/relatives_cubit.dart';
 import 'package:docsera/widgets/base_scaffold.dart';
 import 'package:flutter/material.dart';
-import 'package:shared_preferences/shared_preferences.dart';
-import 'package:docsera/app/const.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:docsera/gen_l10n/app_localizations.dart';
-import 'package:supabase_flutter/supabase_flutter.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class ManageAccessRightsPage extends StatefulWidget {
   final String relativeId;
@@ -18,113 +19,139 @@ class ManageAccessRightsPage extends StatefulWidget {
   }) : super(key: key);
 
   @override
-  _ManageAccessRightsPageState createState() => _ManageAccessRightsPageState();
+  State<ManageAccessRightsPage> createState() =>
+      _ManageAccessRightsPageState();
 }
 
-
 class _ManageAccessRightsPageState extends State<ManageAccessRightsPage> {
-  String userId = "";
-  String userName = "";
+  String _accountHolderName = '';
 
   @override
   void initState() {
     super.initState();
-    _loadUserData();
+    _loadAccountHolder();
   }
 
-  Future<void> _loadUserData() async {
-    SharedPreferences prefs = await SharedPreferences.getInstance();
-    userId = prefs.getString('userId') ?? "";
-    userName = prefs.getString('userName') ?? AppLocalizations.of(context)!.accountHolder;// جلب اسم المستخدم
-    setState(() {});
+  Future<void> _loadAccountHolder() async {
+    final prefs = await SharedPreferences.getInstance();
+    setState(() {
+      _accountHolderName =
+          prefs.getString('userName') ??
+              AppLocalizations.of(context)!.accountHolder;
+    });
   }
 
-  void _removeRelative() async {
-    try {
-      final response = await Supabase.instance.client
-          .from('relatives')
-          .delete()
-          .eq('id', widget.relativeId)
-          .eq('user_id', userId);
+  String _getInitials(String name) {
+    final trimmed = name.trim();
 
-
-      if (!mounted) return;
-      Navigator.pop(context, true); // Close confirmation dialog
-      Navigator.pop(context, true); // Return to MyRelativesPage
-
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(AppLocalizations.of(context)!.relativeRemoved(widget.relativeName)),
-          backgroundColor: AppColors.main.withOpacity(0.9),
-        ),
-      );
-    } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(AppLocalizations.of(context)!.relativeRemoveFailed(widget.relativeName, e.toString())),
-          backgroundColor: AppColors.yellow.withOpacity(0.9),
-        ),
-      );
+    // 1️⃣ اسم فارغ كليًا
+    if (trimmed.isEmpty) {
+      return '؟';
     }
+
+    // 2️⃣ تقسيم مع تنظيف الفراغات
+    final parts = trimmed
+        .split(RegExp(r'\s+'))
+        .where((p) => p.isNotEmpty)
+        .toList();
+
+    if (parts.isEmpty) {
+      return '؟';
+    }
+
+    final first = parts[0];
+    final last = parts.length > 1 ? parts.last : null;
+
+    final isArabic = RegExp(r'[\u0600-\u06FF]').hasMatch(first);
+
+    // 3️⃣ عربي
+    if (isArabic) {
+      return first.characters.first;
+    }
+
+    // 4️⃣ لاتيني
+    final firstChar = first.characters.isNotEmpty
+        ? first.characters.first
+        : '';
+
+    final lastChar = (last != null && last.characters.isNotEmpty)
+        ? last.characters.first
+        : '';
+
+    final initials = (firstChar + lastChar).toUpperCase();
+
+    return initials.isEmpty ? '?' : initials;
   }
 
 
-
-  /// ✅ إظهار نافذة التأكيد عند حذف القريب
-  void _showRemoveConfirmationDialog() {
-    String firstName = widget.relativeName.split(' ')[0]; // Extract only first name
+  void _showRemoveConfirmation() {
+    final firstName = widget.relativeName.split(' ').first;
 
     showDialog(
       context: context,
-      barrierDismissible: true, // Allow closing by tapping outside
-      builder: (context) => AlertDialog(
-        backgroundColor: Colors.white, // Ensure white background
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8.r)),
+      barrierDismissible: true,
+      builder: (_) => AlertDialog(
+        backgroundColor: AppColors.background2, // ✅ خلفية الديالوج
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(10.r),
+        ),
         title: Text(
-          AppLocalizations.of(context)!.removeRelativeTitle(firstName),
+          AppLocalizations.of(context)!
+              .removeRelativeTitle(firstName),
           textAlign: TextAlign.center,
-          style: AppTextStyles.getTitle2(context).copyWith(
-            fontWeight: FontWeight.bold,
-            color: Colors.black87,)
-         ),
+          style: AppTextStyles.getTitle2(context)
+              .copyWith(fontWeight: FontWeight.bold),
+        ),
         content: Text(
           AppLocalizations.of(context)!.removeRelativeDesc,
           textAlign: TextAlign.center,
-          style: AppTextStyles.getText2(context).copyWith(
-            color: Colors.black87),
-          ),
+          style: AppTextStyles.getText2(context),
+        ),
         actions: [
           Column(
             children: [
-              // ✅ REMOVE Button (Red, on top)
+              // 🔴 REMOVE
               SizedBox(
-                width: double.infinity, // Full width button
+                width: double.infinity,
                 child: TextButton(
-                  onPressed: _removeRelative,
-                  style: TextButton.styleFrom(
-                    backgroundColor: AppColors.red, // Red background
-                    padding: EdgeInsets.symmetric(vertical: 14.h),
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8.r)),
+                  onPressed: () async {
+                    await context
+                        .read<RelativesCubit>()
+                        .deactivateRelative(widget.relativeId);
 
+                    if (!mounted) return;
+                    Navigator.pop(context); // dialog
+                    Navigator.pop(context, true); // page
+                  },
+                  style: TextButton.styleFrom(
+                    backgroundColor: AppColors.red,
+                    padding: EdgeInsets.symmetric(vertical: 14.h),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(8.r),
+                    ),
                   ),
-                  child: Text(AppLocalizations.of(context)!.remove.toUpperCase(),
-                      style: AppTextStyles.getText2(context).copyWith(color: Colors.white, fontWeight: FontWeight.bold)),
+                  child: Text(
+                    AppLocalizations.of(context)!.remove.toUpperCase(),
+                    style: AppTextStyles.getText2(context)
+                        .copyWith(color: Colors.white),
                   ),
                 ),
+              ),
 
               SizedBox(height: 8.h),
 
-              // ✅ CANCEL Button (Black, below)
+              // ⚫ CANCEL
               SizedBox(
-                width: double.infinity, // Full width button
+                width: double.infinity,
                 child: TextButton(
                   onPressed: () => Navigator.pop(context),
                   style: TextButton.styleFrom(
-                    backgroundColor: Colors.white, // White background
-                    padding: const EdgeInsets.symmetric(vertical: 14),
+                    foregroundColor: Colors.black, // ✅ نص أسود
                   ),
-                  child: Text(AppLocalizations.of(context)!.cancel.toUpperCase(),
-                      style: AppTextStyles.getText2(context).copyWith(color: Colors.black87),
+                  child: Text(
+                    AppLocalizations.of(context)!.cancel.toUpperCase(),
+                    style: AppTextStyles.getText2(context)
+                        .copyWith(color: Colors.black),
                   ),
                 ),
               ),
@@ -135,43 +162,59 @@ class _ManageAccessRightsPageState extends State<ManageAccessRightsPage> {
     );
   }
 
-  // Function to get initials from the full name
-  String _getInitials(String name) {
-    List<String> words = name.trim().split(' ');
-    if (words.isEmpty) return "أ";
-
-    String firstChar = words[0].isNotEmpty ? words[0][0] : "";
-
-    bool isArabic = RegExp(r'[\u0600-\u06FF]').hasMatch(firstChar);
-    if (isArabic) {
-      return firstChar == 'ه' ? 'هـ' : firstChar;
-    }
-
-    String firstInitial = words[0].isNotEmpty ? words[0][0].toUpperCase() : "";
-    String lastInitial = words.length > 1 && words.last.isNotEmpty ? words.last[0][0].toUpperCase() : "";
-    return (firstInitial + lastInitial).isNotEmpty ? (firstInitial + lastInitial) : "A";
+  Widget _permissionItem(String text, String boldText) {
+    return Padding(
+      padding: EdgeInsets.symmetric(vertical: 6.h),
+      child: Row(
+        children: [
+          Icon(Icons.check, color: AppColors.main, size: 16.sp),
+          SizedBox(width: 8.w),
+          Expanded(
+            child: Text.rich(
+              TextSpan(
+                text: '$text ',
+                style: AppTextStyles.getText3(context),
+                children: [
+                  TextSpan(
+                    text: boldText,
+                    style: AppTextStyles.getText3(context)
+                        .copyWith(fontWeight: FontWeight.bold),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
   }
-
-
 
   @override
   Widget build(BuildContext context) {
     return BaseScaffold(
-      color: Color.lerp(AppColors.background2, AppColors.mainDark, 0.05) ?? AppColors.background2, // ✅ Fallback color
+      color: Color.lerp(
+          AppColors.background2, AppColors.mainDark, 0.05) ??
+          AppColors.background2,
       title: Text(
         AppLocalizations.of(context)!.manageAccessRights,
-        style: AppTextStyles.getTitle1(context).copyWith(color: Colors.white),
+        style:
+        AppTextStyles.getTitle1(context).copyWith(color: Colors.white),
       ),
       child: Padding(
         padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 20.h),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
+            /// 🔹 Title (Relative)
             Text(
-              AppLocalizations.of(context)!.accessRightsFor(widget.relativeName),
-              style: AppTextStyles.getText2(context).copyWith(fontWeight: FontWeight.bold),
+              AppLocalizations.of(context)!
+                  .accessRightsFor(widget.relativeName),
+              style: AppTextStyles.getText2(context)
+                  .copyWith(fontWeight: FontWeight.bold),
             ),
             SizedBox(height: 16.h),
+
+            /// 🔹 Main Card
             Container(
               padding: EdgeInsets.all(12.w),
               decoration: BoxDecoration(
@@ -180,12 +223,12 @@ class _ManageAccessRightsPageState extends State<ManageAccessRightsPage> {
               ),
               child: Column(
                 children: [
+                  /// Account Holder Card
                   Container(
                     padding: EdgeInsets.all(12.w),
                     decoration: BoxDecoration(
-                      color: Colors.white,
-                      borderRadius: BorderRadius.circular(8.r),
                       border: Border.all(color: Colors.grey.shade300),
+                      borderRadius: BorderRadius.circular(8.r),
                     ),
                     child: Row(
                       children: [
@@ -193,87 +236,83 @@ class _ManageAccessRightsPageState extends State<ManageAccessRightsPage> {
                           radius: 15.r,
                           backgroundColor: AppColors.orangeText,
                           child: Text(
-                            _getInitials(userName),
-                            style: AppTextStyles.getText3(context).copyWith(
-                                color: Colors.white, fontWeight: FontWeight.bold),
+                            _getInitials(_accountHolderName),
+                            style: AppTextStyles.getText3(context)
+                                .copyWith(
+                                color: Colors.white,
+                                fontWeight: FontWeight.bold),
                           ),
                         ),
                         SizedBox(width: 12.w),
                         Expanded(
                           child: Row(
                             children: [
-                              Text(userName.toUpperCase(), style: AppTextStyles.getText2(context).copyWith(fontWeight: FontWeight.bold)),
-                              Text(" (${AppLocalizations.of(context)!.you})", style: AppTextStyles.getText2(context)),
-
+                              Text(
+                                (_accountHolderName.isEmpty
+                                    ? AppLocalizations.of(context)!.unknown
+                                    : _accountHolderName).toUpperCase()
+                                ,
+                                style: AppTextStyles.getText2(context)
+                                    .copyWith(fontWeight: FontWeight.bold),
+                              ),
+                              Text(
+                                ' (${AppLocalizations.of(context)!.you})',
+                                style: AppTextStyles.getText2(context),
+                              ),
                             ],
                           ),
                         ),
-
                       ],
                     ),
                   ),
-                  SizedBox(height: 25.h),
+                  SizedBox(height: 24.h),
+
                   Align(
                     alignment: AlignmentDirectional.centerStart,
-                    child: Text(AppLocalizations.of(context)!.thisPersonCan, style: AppTextStyles.getText2(context).copyWith(fontWeight: FontWeight.bold)),
+                    child: Text(
+                      AppLocalizations.of(context)!.thisPersonCan,
+                      style: AppTextStyles.getText2(context)
+                          .copyWith(fontWeight: FontWeight.bold),
+                    ),
                   ),
                   SizedBox(height: 8.h),
-                  _buildPermissionItem(AppLocalizations.of(context)!.bookRescheduleCancel, AppLocalizations.of(context)!.allAppointments),
-                  _buildPermissionItem(AppLocalizations.of(context)!.addAndManage, AppLocalizations.of(context)!.allDocuments),
-                  _buildPermissionItem(AppLocalizations.of(context)!.updateIdentity, AppLocalizations.of(context)!.contactInfo),
-                  SizedBox(height: 8.h),
+                  _permissionItem(
+                    AppLocalizations.of(context)!
+                        .bookRescheduleCancel,
+                    AppLocalizations.of(context)!.allAppointments,
+                  ),
+                  _permissionItem(
+                    AppLocalizations.of(context)!.addAndManage,
+                    AppLocalizations.of(context)!.allDocuments,
+                  ),
+                  _permissionItem(
+                    AppLocalizations.of(context)!.updateIdentity,
+                    AppLocalizations.of(context)!.contactInfo,
+                  ),
                 ],
               ),
             ),
-            SizedBox(height: 10.h),
 
+            SizedBox(height: 20.h),
+            /// 🔻 Remove Button (Bottom)
             Center(
-              child: TextButton(
-                onPressed: _showRemoveConfirmationDialog,
-                style: TextButton.styleFrom(
-                  foregroundColor: AppColors.red,
-                ),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Icon(Icons.delete_forever_outlined, color: AppColors.red, size: 20.sp),
-                    SizedBox(width: 8.w),
-                    Text(
-                      AppLocalizations.of(context)!.removeThisRelative.toUpperCase(),
-                      style: AppTextStyles.getText2(context).copyWith(fontWeight: FontWeight.bold),
-                    ),
-                  ],
+              child: TextButton.icon(
+                onPressed: _showRemoveConfirmation,
+                icon: Icon(Icons.delete_forever_outlined,
+                    color: AppColors.red),
+                label: Text(
+                  AppLocalizations.of(context)!
+                      .removeThisRelative
+                      .toUpperCase(),
+                  style: AppTextStyles.getText2(context)
+                      .copyWith(
+                      color: AppColors.red,
+                      fontWeight: FontWeight.bold),
                 ),
               ),
             ),
           ],
         ),
-      ),
-    );
-  }
-
-  Widget _buildPermissionItem(String text, String boldText) {
-    return Padding(
-      padding: EdgeInsets.symmetric(vertical: 5.h),
-      child: Row(
-        children: [
-          Icon(Icons.check, color: AppColors.main, size: 16.sp),
-          SizedBox(width: 8.w),
-          Expanded(
-            child: Text.rich(
-              TextSpan(
-                text: "$text ",
-                style: AppTextStyles.getText3(context),
-                children: [
-                  TextSpan(
-                    text: boldText,
-                    style: AppTextStyles.getText3(context).copyWith(fontWeight: FontWeight.bold),
-                  ),
-                ],
-              ),
-            ),
-          ),
-        ],
       ),
     );
   }

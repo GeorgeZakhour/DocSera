@@ -1,10 +1,13 @@
 import 'dart:async';
+import 'dart:io';
 import 'dart:math';
 import 'package:docsera/app/const.dart';
 import 'package:docsera/app/text_styles.dart';
 import 'package:docsera/models/sign_up_info.dart';
+import 'package:docsera/screens/auth/login/login_otp.dart';
 import 'package:docsera/screens/auth/sign_up/sign_up_phone.dart';
-import 'package:docsera/services/supabase/supabase_user_service.dart';
+import 'package:docsera/services/biometrics/biometric_storage.dart';
+import 'package:docsera/services/supabase/user/supabase_user_service.dart';
 import 'package:docsera/utils/text_direction_utils.dart';
 import 'package:docsera/widgets/custom_bottom_navigation_bar.dart';
 import 'package:docsera/utils/custom_clippers.dart';
@@ -18,6 +21,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:docsera/Business_Logic/Account_page/user_cubit.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
+import 'package:device_info_plus/device_info_plus.dart';
 
 class LoginPage extends StatefulWidget {
   final Animation<double> backgroundHeightAnimation;
@@ -42,6 +46,7 @@ class _LoginPageState extends State<LoginPage> {
   bool _passwordEmpty = false;
   bool _biometricAvailable = false;
   bool _isFaceID = false;
+  bool _canUseBiometric = false;
 
 
   final Random _random = Random();
@@ -55,25 +60,48 @@ class _LoginPageState extends State<LoginPage> {
     _getAppVersion();
     _generateLogos();
     _startAnimationLoop();
-    _checkBiometricType();
+
+    _checkBiometricReadiness();
     _tryAutoBiometricLogin();
   }
 
-  Future<void> _checkBiometricType() async {
-    final prefs = await SharedPreferences.getInstance();
-    final isBiometricEnabled = prefs.getBool('enableFaceID') ?? false;
 
-    if (!isBiometricEnabled) return;
 
-    final availableBiometrics = await _localAuth.getAvailableBiometrics();
+  Future<void> _checkBiometricReadiness() async {
+    // ⛔ إذا المستخدم مسجّل دخول، لا نعرض الزر
+    if (Supabase.instance.client.auth.currentUser != null) {
+      setState(() => _canUseBiometric = false);
+      return;
+    }
+
+    // 1️⃣ هل البيومتريك مفعّل من الإعدادات؟
+    final enabled = await BiometricStorage.isEnabled();
+    if (!enabled) {
+      setState(() => _canUseBiometric = false);
+      return;
+    }
+
+    // 2️⃣ هل هناك Credentials محفوظة؟
+    final creds = await BiometricStorage.getCredentials();
+    if (creds == null) {
+      setState(() => _canUseBiometric = false);
+      return;
+    }
+
+    // 3️⃣ هل الجهاز يدعم Biometric؟
+    final available = await _localAuth.getAvailableBiometrics();
+    if (available.isEmpty) {
+      setState(() => _canUseBiometric = false);
+      return;
+    }
+
+    // ✅ جاهز 100%
     setState(() {
-      _biometricAvailable = availableBiometrics.isNotEmpty;
-      _isFaceID = availableBiometrics.contains(BiometricType.face);
+      _canUseBiometric = true;
+      _isFaceID = available.contains(BiometricType.face);
     });
-
-    print("✅ Biometric available: $_biometricAvailable");
-    print("✅ Is Face ID: $_isFaceID");
   }
+
 
 
   void _getAppVersion() async {
@@ -116,174 +144,303 @@ class _LoginPageState extends State<LoginPage> {
     });
   }
 
-  Future<void> _saveUserDataToPrefs(Map<String, dynamic> userData, String password) async {
-    final prefs = await SharedPreferences.getInstance();
 
-    await prefs.setBool('isLoggedIn', true);
-    await prefs.setString('userId', userData['uid']);
-    await prefs.setString('userName', '${userData['firstName']} ${userData['lastName']}');
-    await prefs.setString('userEmail', userData['email'] ?? '');
-    final rawPhone = userData['phone_number'] ?? '';
-    final displayPhone = rawPhone.startsWith('00963') ? '0${rawPhone.substring(5)}' : rawPhone;
-    await prefs.setString('userPhone', displayPhone);
-    await prefs.setString('userPassword', password);
-
-    print("✅ Saved userPhone (for display): $displayPhone");
-    print("✅ Saved userPhone: ${userData['phoneNumber']}");
-  }
 
 
   Future<void> _authenticateBiometric() async {
     try {
       setState(() => _isAuthenticating = true);
+
       final prefs = await SharedPreferences.getInstance();
-      final savedPhone = prefs.getString('userPhone');
-      final savedPassword = prefs.getString('userPassword');
 
-      if (savedPhone != null && savedPassword != null) {
-        final authenticated = await _localAuth.authenticate(
-          localizedReason: AppLocalizations.of(context)!.biometricPrompt,
-          options: const AuthenticationOptions(biometricOnly: true),
-        );
+      // 🔐 Biometric credentials (EMAIL-based)
+      final email = prefs.getString('biometric_login');
+      final password = prefs.getString('userPassword');
 
-        if (authenticated) {
-          final formattedDisplayPhone = savedPhone.startsWith('00963')
-              ? '0${savedPhone.substring(5)}'
-              : savedPhone;
-
-          print("🔁 Converted savedPhone for input field: $formattedDisplayPhone");
-
-          _inputController.text = formattedDisplayPhone;
-          _passwordController.text = savedPassword;
-          _loginWithCredentials();
-        }
-        else {
-          setState(() {
-            _authFailed = true;
-            _isAuthenticating = false;
-          });
-        }
-      } else {
+      if (email == null || password == null) {
         setState(() {
           _authFailed = true;
           _isAuthenticating = false;
         });
+        return;
       }
 
-    } catch (_) {
+      final authenticated = await _localAuth.authenticate(
+        localizedReason: AppLocalizations.of(context)!.biometricPrompt,
+        options: const AuthenticationOptions(
+          biometricOnly: true,
+          stickyAuth: true,
+          useErrorDialogs: true,
+        ),
+      );
+
+      if (!authenticated) {
+        setState(() {
+          _authFailed = true;
+          _isAuthenticating = false;
+        });
+        return;
+      }
+
+      // ✅ Autofill credentials (EMAIL + PASSWORD)
+      _inputController.text = email;
+      _passwordController.text = password;
+
+      // 🔁 Continue normal login flow
+      await _loginWithCredentials();
+    } catch (e) {
+      debugPrint("❌ Biometric auth error: $e");
       setState(() => _isAuthenticating = false);
     }
   }
 
   Future<void> _tryAutoBiometricLogin() async {
     final prefs = await SharedPreferences.getInstance();
+
     final isBiometricEnabled = prefs.getBool('enableFaceID') ?? false;
-    final savedPhone = prefs.getString('userPhone');
-    final savedPassword = prefs.getString('userPassword');
 
-    // ✅ إضافة طباعة توضح إذا الرقم بصيغة العرض أو بصيغة 00963
-    if (savedPhone != null && savedPhone.startsWith('00963')) {
-      print("⚠️ [BIOMETRIC] Saved phone is in backend format: $savedPhone");
-    } else {
-      print("🟢 [BIOMETRIC] Saved phone for display: $savedPhone");
-    }
+    // 🔐 Biometric credentials (EMAIL-based)
+    final email = prefs.getString('biometric_login');
+    final password = prefs.getString('userPassword');
 
-    print("🟢 Biometric Enabled: $isBiometricEnabled");
-    print("🟢 Saved Password: $savedPassword");
+    print("🟢 [BIOMETRIC] Enabled: $isBiometricEnabled");
+    print("🟢 [BIOMETRIC] Saved email: ${email ?? 'NOT FOUND'}");
+    print("🟢 [BIOMETRIC] Password exists: ${password != null}");
 
-    if (isBiometricEnabled && savedPhone != null && savedPassword != null && Supabase.instance.client.auth.currentUser == null) {
-      Future.delayed(const Duration(milliseconds: 300), _authenticateBiometric);
-    }
+    // ⛔ لا تحاول البيومتريك إذا كان المستخدم مسجّل دخول أصلًا
+    if (Supabase.instance.client.auth.currentUser != null) return;
+
+    if (!isBiometricEnabled || email == null || password == null) return;
+
+    // ⏱ تأخير بسيط حتى يستقر الـ UI
+    Future.delayed(
+      const Duration(milliseconds: 300),
+      _authenticateBiometric,
+    );
   }
 
 
 
-Future<void> _loginWithCredentials() async {
+  Future<void> _loginWithCredentials() async {
     FocusScope.of(context).unfocus();
+
     var input = _inputController.text.trim();
     final password = _passwordController.text.trim();
 
-    // 🟢 تأكد أن الإيميل دائمًا بحروف صغيرة (lowercase)
+    // 🟢 Always lowercase emails
     if (input.contains('@')) {
       input = input.toLowerCase();
-}
+    }
 
-  setState(() {
-    _inputEmpty = input.isEmpty;
-    _passwordEmpty = password.isEmpty;
-    _authFailed = false;
-  });
+    setState(() {
+      _inputEmpty = input.isEmpty;
+      _passwordEmpty = password.isEmpty;
+      _authFailed = false;
+    });
 
-  if (_inputEmpty || _passwordEmpty) return;
+    if (_inputEmpty || _passwordEmpty) return;
 
-  setState(() => _isLoading = true);
+    setState(() => _isLoading = true);
 
-  try {
-    final isPhone = RegExp(r'^0\d{9}$').hasMatch(input) || input.startsWith('00963');
-    final formattedPhone = isPhone ? _formatPhone(input) : input;
+    try {
+      // ---------------------------------------------------------------------
+      // 1️⃣ Detect phone vs email + normalize
+      // ---------------------------------------------------------------------
+      final isPhone =
+          RegExp(r'^0\d{9}$').hasMatch(input) ||
+              RegExp(r'^00963\d{9}$').hasMatch(input);
 
-    final userDoc = await _supabaseUserService.getUserByEmailOrPhone(formattedPhone);
-    final userData = userDoc;
-    if (userData == null) throw Exception("user not found");
+      final formattedInput =
+      isPhone ? _formatPhone(input) : input;
 
-    final email = userData['email'];
-    if (email == null) throw Exception("email not found");
+      print("📥 [INPUT] المستخدم أدخل: $input");
+      if (isPhone) {
+        print("📞 [FORMAT] رقم هاتف بعد التنسيق: $formattedInput");
+      } else {
+        print("📧 [FORMAT] إيميل");
+      }
 
-    final response = await Supabase.instance.client.auth.signInWithPassword(
-      email: email,
-      password: password,
-    );
+      // ---------------------------------------------------------------------
+      // 2️⃣ PRE-AUTH lookup (anonymous, RLS-safe)
+      // ---------------------------------------------------------------------
+      final loginInfo =
+      await _supabaseUserService.getLoginInfoByEmailOrPhone(
+        formattedInput,
+      );
 
-    final supabaseUser = response.user;
-    if (supabaseUser == null) throw Exception("wrong password");
+      final email = loginInfo['email']?.toString();
+      if (email == null || email.isEmpty) {
+        throw Exception("user not found");
+      }
 
-    final userId = supabaseUser.id;
-    if (userId == null) throw Exception("invalid user");
+      final isActive = loginInfo['is_active'] == true;
+      if (!isActive) {
+        // ⛔ Do NOT authenticate disabled accounts
+        throw Exception("account_disabled");
+      }
 
-    await _saveUserDataToPrefs({...userData, 'uid': userId}, password);
+      print("📨 [AUTH EMAIL] $email");
 
-    context.read<UserCubit>().loadUserData(context);
+      // ---------------------------------------------------------------------
+      // 3️⃣ Supabase Auth (password validation)
+      // ---------------------------------------------------------------------
+      final response =
+      await Supabase.instance.client.auth.signInWithPassword(
+        email: email,
+        password: password,
+      );
 
-    if (mounted) {
+      final supabaseUser = response.user;
+      if (supabaseUser == null) {
+        throw Exception("wrong password");
+      }
+
+      // 🔐 Save biometric credentials (EMAIL-BASED)
+      final prefs = await SharedPreferences.getInstance();
+
+      final isEnabled = await BiometricStorage.isEnabled();
+      if (isEnabled) {
+        await BiometricStorage.saveCredentials(
+          email: email,
+          password: password,
+        );
+      }
+
+
+
+      final userId = supabaseUser.id;
+      print("✅ [LOGIN SUCCESS] userId = $userId");
+
+      // ---------------------------------------------------------------------
+      // 4️⃣ Persist minimal auth data (biometric only)
+      // ---------------------------------------------------------------------
+      await prefs.setBool('isLoggedIn', true);
+      await prefs.setString('userId', userId);
+      await prefs.setString('userEmail', email);
+      await prefs.setString('userPassword', password);
+
+      print("💾 [PREFS] Saved auth credentials");
+
+      // ---------------------------------------------------------------------
+      // 5️⃣ POST-AUTH security state (RLS-safe, auth.uid)
+      // ---------------------------------------------------------------------
+      final securityState =
+      await _supabaseUserService.getMySecurityState();
+
+      final bool is2FAEnabled =
+          securityState['two_factor_auth_enabled'] == true;
+
+      final List trustedDevices =
+          (securityState['trusted_devices'] as List?) ?? [];
+
+      final String? phone =
+      securityState['phone_number']?.toString();
+
+      final deviceId = await getDeviceId();
+
+      print("🛡️ [2FA] Enabled: $is2FAEnabled");
+      print("🧩 [DEVICE] Current: $deviceId");
+      print("🧩 [DEVICE] Trusted: ${trustedDevices.contains(deviceId)}");
+
+      // ---------------------------------------------------------------------
+      // 6️⃣ 2FA routing
+      // ---------------------------------------------------------------------
+      if (is2FAEnabled && !trustedDevices.contains(deviceId)) {
+        if (phone == null || phone.isEmpty) {
+          throw Exception("phone_not_available_for_2fa");
+        }
+
+        print("🚨 [2FA] Redirecting to OTP");
+
+        if (!mounted) return;
+
+        Navigator.pushAndRemoveUntil(
+          context,
+          MaterialPageRoute(
+            builder: (_) => LoginOTPPage(
+              phoneNumber: phone,
+            ),
+          ),
+              (_) => false,
+        );
+
+        return; // ⛔ stop normal navigation
+      }
+
+      // ---------------------------------------------------------------------
+      // 7️⃣ Enter app normally
+      // ---------------------------------------------------------------------
+      print("✅ [NAVIGATION] Entering app");
+
+      context.read<UserCubit>().loadUserData(context);
+
+      if (!mounted) return;
+
       Navigator.pushReplacement(
         context,
-        MaterialPageRoute(builder: (_) => CustomBottomNavigationBar()),
-      );
-    }
-  } catch (e) {
-    print("❌ Login failed: $e");
-    String message;
-    final errorStr = e.toString().toLowerCase();
-
-    if (errorStr.contains('invalid login credentials') ||
-        errorStr.contains('wrong password') ||
-        errorStr.contains('invalid email or password')) {
-      message = AppLocalizations.of(context)!.errorWrongPassword;
-    } else if (errorStr.contains('user not found') ||
-               errorStr.contains('no user') ||
-               errorStr.contains('not found')) {
-      message = AppLocalizations.of(context)!.errorUserNotFound;
-    } else {
-      message = AppLocalizations.of(context)!.errorGenericLogin;
-    }
-
-    setState(() => _authFailed = true);
-
-    if (context.mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(message, textAlign: TextAlign.center),
-          backgroundColor: Colors.redAccent,
-          behavior: SnackBarBehavior.floating,
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
-          duration: const Duration(seconds: 3),
+        MaterialPageRoute(
+          builder: (_) => CustomBottomNavigationBar(),
         ),
       );
+    } catch (e) {
+      print("❌ Login failed: $e");
+
+      String message;
+      final errorStr = e.toString().toLowerCase();
+
+      if (errorStr.contains('wrong password') ||
+          errorStr.contains('invalid login credentials') ||
+          errorStr.contains('invalid email or password')) {
+        message = AppLocalizations.of(context)!.errorWrongPassword;
+      } else if (errorStr.contains('account_disabled')) {
+        message = AppLocalizations.of(context)!.accountDisabled;
+      } else if (errorStr.contains('user not found') ||
+          errorStr.contains('not found')) {
+        message = AppLocalizations.of(context)!.errorUserNotFound;
+      } else {
+        message = AppLocalizations.of(context)!.errorGenericLogin;
+      }
+
+      setState(() => _authFailed = true);
+
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(message, textAlign: TextAlign.center),
+            backgroundColor: Colors.redAccent,
+            behavior: SnackBarBehavior.floating,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(10),
+            ),
+            duration: const Duration(seconds: 3),
+          ),
+        );
+      }
+    } finally {
+      setState(() => _isLoading = false);
     }
-  } finally {
-    setState(() => _isLoading = false);
   }
-}
+
+  /// ✅ الحصول على معرف الجهاز بطريقة آمنة تعمل على Android و iOS
+  Future<String> getDeviceId() async {
+    final info = DeviceInfoPlugin();
+
+    try {
+      if (Platform.isIOS) {
+        final ios = await info.iosInfo;
+        return ios.identifierForVendor ?? 'ios-unknown';
+      }
+
+      if (Platform.isAndroid) {
+        final android = await info.androidInfo;
+        return android.id ?? android.device ?? 'android-unknown';
+      }
+
+      return 'unknown-platform';
+    } catch (e) {
+      return 'unknown-device';
+    }
+  }
 
 
   String _formatPhone(String phone) {
@@ -525,7 +682,7 @@ Future<void> _loginWithCredentials() async {
           ),
 
 
-          if (!_isAuthenticating && _biometricAvailable)
+          if (!_isAuthenticating && _canUseBiometric)
             Positioned(
               bottom: isKeyboardVisible ? 40.h : 65.h,
               left: 0,

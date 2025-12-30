@@ -1,7 +1,9 @@
 import 'dart:ui';
-
-import 'package:docsera/Business_Logic/Account_page/user_cubit.dart';
-import 'package:docsera/Business_Logic/Account_page/user_state.dart';
+import 'package:docsera/Business_Logic/Account_page/profile/account_profile_cubit.dart';
+import 'package:docsera/Business_Logic/Account_page/profile/account_profile_state.dart';
+import 'package:docsera/Business_Logic/Account_page/relatives/relatives_cubit.dart';
+import 'package:docsera/Business_Logic/Authentication/auth_cubit.dart';
+import 'package:docsera/Business_Logic/Authentication/auth_state.dart';
 import 'package:docsera/Business_Logic/Health_page/patient_switcher_cubit.dart';
 import 'package:docsera/app/const.dart';
 import 'package:docsera/app/text_styles.dart';
@@ -15,6 +17,7 @@ import 'package:docsera/screens/home/health/pages/medications/medications_page.d
 import 'package:docsera/screens/home/health/pages/surgeries/surgeries_page.dart';
 import 'package:docsera/screens/home/health/pages/vaccinations/vaccinations_page.dart';
 import 'package:docsera/screens/home/health/pages/visit_reports/visit_reports_page.dart';
+import 'package:docsera/utils/full_page_loader.dart';
 import 'package:docsera/utils/page_transitions.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -22,7 +25,52 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 class HealthPage extends StatelessWidget {
-  const HealthPage({Key? key}) : super(key: key);
+  const HealthPage({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return BlocBuilder<AuthCubit, AppAuthState>(
+      builder: (context, authState) {
+        if (authState is AuthLoading || authState is AuthInitial) {
+          return const Center(child: FullPageLoader());
+        }
+
+        if (authState is AuthUnauthenticated) {
+          return const HealthLoggedOutView();
+        }
+
+        if (authState is AuthAuthenticated) {
+          return const HealthAuthenticatedView();
+        }
+
+        return const SizedBox.shrink();
+      },
+    );
+  }
+}
+
+class HealthAuthenticatedView extends StatefulWidget {
+  const HealthAuthenticatedView({super.key});
+
+  @override
+  State<HealthAuthenticatedView> createState() =>
+      _HealthAuthenticatedViewState();
+}
+
+class _HealthAuthenticatedViewState extends State<HealthAuthenticatedView> {
+
+  @override
+  void initState() {
+    super.initState();
+
+    // 1) تحميل الأقارب (كما هو)
+    context.read<RelativesCubit>().loadRelatives();
+    // 2) تحميل البروفايل (مصدر اسم المستخدم الأساسي الحقيقي)
+    context.read<AccountProfileCubit>().loadProfile();
+  }
+
+
+
 
   @override
   Widget build(BuildContext context) {
@@ -31,93 +79,80 @@ class HealthPage extends StatelessWidget {
     final summary = _buildHealthSummary(t);
     final personal = _buildPersonalRecords(t);
 
+    return MultiBlocListener(
+      listeners: [
+        BlocListener<AccountProfileCubit, AccountProfileState>(
+          listenWhen: (prev, curr) => curr is AccountProfileLoaded,
+          listener: (context, state) {
+            final s = state as AccountProfileLoaded;
 
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      _ensureMainUserSet(context);
-    });
-    // _loadRelatives(context);
+            // الاسم يأتي من جدول users عبر rpc_get_my_user
+            final mainName = (s.fullName).trim();
 
-
-    return Container(
-      decoration: BoxDecoration(
-        gradient: LinearGradient(
-          begin: Alignment.topCenter,
-          end: Alignment.bottomCenter,
-
-          /// اللون العلوي يتماشى مع لون الـ Scaffold الرئيسي (AppColors.main)
-          colors: [
-            AppColors.main,
-            AppColors.background,
-          ],
-
-          /// الأبيض يظهر بشكل مبكر جداً (60%)
-          stops: const [0.0, 0.80],
+            // hydrate PatientSwitcher
+            context.read<PatientSwitcherCubit>().setMainUser(
+              id: s.userId,
+              name: mainName.isEmpty
+                  ? AppLocalizations.of(context)!.unknown
+                  : mainName,
+            );
+          },
         ),
-      ),
+      ],
+      child: Container(
+        decoration: const BoxDecoration(
+          gradient: LinearGradient(
+            begin: Alignment.topCenter,
+            end: Alignment.bottomCenter,
+            colors: [AppColors.main, AppColors.background],
+            stops: [0.0, 0.80],
+          ),
+        ),
+        child: SafeArea(
+          top: true,
+          bottom: false,
+          child: BlocBuilder<PatientSwitcherCubit, PatientSwitcherState>(
+            builder: (context, state) {
+              if (state.mainUserId == null) {
+                return const Center(child: FullPageLoader(size: 28));
+              }
 
-      child: SafeArea(
-        top: true,
-        bottom: false,
-        child: SingleChildScrollView(
-          physics: const BouncingScrollPhysics(),
-          padding: EdgeInsets.fromLTRB(16.w, 12.h, 16.w, 24.h),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
+              return SingleChildScrollView(
+                physics: const BouncingScrollPhysics(),
+                padding: EdgeInsets.fromLTRB(16.w, 12.h, 16.w, 24.h),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    SizedBox(height: 10.h),
+                    _buildPatientGlassSwitcher(context),
+                    SizedBox(height: 20.h),
 
-              SizedBox(height: 10.h),
-              _buildPatientGlassSwitcher(context),
+                    _buildSectionTitle(
+                      context,
+                      t.health_summary,
+                      t.health_patientSubtitle,
+                    ),
+                    SizedBox(height: 14.h),
+                    _buildCategoriesGrid(context, summary, isArabic),
 
-              SizedBox(height: 20.h),
+                    SizedBox(height: 18.h),
 
-              // ---------------------------
-              // FIRST TITLE — HEALTH SUMMARY
-              // ---------------------------
-              _buildSectionTitle(
-                context,
-                t.health_summary,
-                t.health_patientSubtitle,
-              ),
-
-              SizedBox(height: 14.h),
-              _buildCategoriesGrid(context, summary, isArabic),
-
-              SizedBox(height: 18.h),
-
-              // ---------------------------
-              // SECOND TITLE — PERSONAL RECORDS
-              // ---------------------------
-              _build2ndSectionTitle(
-                context,
-                t.health_personalRecords_title,
-                t.health_personalRecords_subtitle,
-              ),
-
-              SizedBox(height: 10.h),
-              _buildCategoriesGrid(context, personal, isArabic),
-            ],
+                    _build2ndSectionTitle(
+                      context,
+                      t.health_personalRecords_title,
+                      t.health_personalRecords_subtitle,
+                    ),
+                    SizedBox(height: 10.h),
+                    _buildCategoriesGrid(context, personal, isArabic),
+                  ],
+                ),
+              );
+            },
           ),
         ),
       ),
     );
   }
-
-
-
-  void _ensureMainUserSet(BuildContext context) {
-    print("🩺 [_ensureMainUserSet] called");
-
-    final cubit = context.read<PatientSwitcherCubit>();
-    final userState = context.read<UserCubit>().state;
-
-    if (userState is UserLoaded) {
-      if (cubit.state.mainUserId == null) {
-        cubit.setMainUser(userState.userId, userState.userName);
-      }
-    }
-  }
-
-
 
 
   Widget _buildPatientGlassSwitcher(BuildContext context) {
@@ -126,12 +161,7 @@ class HealthPage extends StatelessWidget {
     return BlocBuilder<PatientSwitcherCubit, PatientSwitcherState>(
       builder: (context, state) {
         return GestureDetector(
-          onTap: () {print("MAIN USER ID = ${state.mainUserId}");
-          print("RELATIVES COUNT = ${state.relatives.length}");
-          print("RELATIVES = ${state.relatives}");
-          _loadRelatives(context, forceReload: true);
-          _openPatientPopup(context);
-          },
+          onTap: () => _openPatientPopup(context),
           child: ClipRRect(
             borderRadius: BorderRadius.circular(18.r),
             child: BackdropFilter(
@@ -143,7 +173,9 @@ class HealthPage extends StatelessWidget {
                   color: AppColors.background.withOpacity(0.18),
                   borderRadius: BorderRadius.circular(18.r),
                   border: Border.all(
-                      color: AppColors.main.withOpacity(0.35), width: 0.8),
+                    color: AppColors.main.withOpacity(0.35),
+                    width: 0.8,
+                  ),
                   boxShadow: [
                     BoxShadow(
                       color: Colors.black.withOpacity(0.05),
@@ -153,7 +185,8 @@ class HealthPage extends StatelessWidget {
                   ],
                 ),
                 child: Row(
-                  textDirection: isArabic ? TextDirection.rtl : TextDirection.ltr,
+                  textDirection:
+                  isArabic ? TextDirection.rtl : TextDirection.ltr,
                   children: [
                     Expanded(
                       child: Text(
@@ -204,64 +237,15 @@ class HealthPage extends StatelessWidget {
     );
   }
 
-  void _loadRelatives(BuildContext context, {bool forceReload = false}) {
-    final cubit = context.read<PatientSwitcherCubit>();
-    final supabase = Supabase.instance.client;
-
-    final String? userId = cubit.state.mainUserId;
-
-    print("👨‍👩‍👧 [_loadRelatives] called → "
-        "forceReload=$forceReload, mainUserId=$userId, "
-        "current relatives count=${cubit.state.relatives.length}");
-
-    if (userId == null || userId.isEmpty) {
-      print("⚠️ [_loadRelatives] mainUserId is null/empty → abort");
-      return;
-    }
-
-    if (!forceReload && cubit.state.relatives.isNotEmpty) {
-      print("✅ [_loadRelatives] relatives already loaded and forceReload=false → skip fetching");
-      return;
-    }
-
-    Future.microtask(() async {
-      try {
-        print("🛰 [_loadRelatives] fetching from Supabase for user_id=$userId ...");
-        final result = await supabase
-            .from("relatives")
-            .select()
-            .eq("user_id", userId);
-
-        print("✅ [_loadRelatives] fetched ${result.length} relatives from DB");
-
-        cubit.updateRelatives(
-          List<Map<String, dynamic>>.from(result),
-        );
-      } catch (e) {
-        print("❌ [_loadRelatives] Error fetching relatives: $e");
-      }
-    });
-  }
 
 
-
-
-
-  void _openPatientPopup(BuildContext context) {
-    final cubit = context.read<PatientSwitcherCubit>();
-
-    // _loadRelatives(context, forceReload: true); // <– NEW
-
-    final state = cubit.state;
-    final isArabic = Directionality.of(context) == TextDirection.rtl;
-    final mainUserName = context.read<UserCubit>().state is UserLoaded
-        ? (context.read<UserCubit>().state as UserLoaded).userName
-        : "";
+  void _openPatientPopup(BuildContext pageContext) {
+    final state = context.read<PatientSwitcherCubit>().state;
 
     showDialog(
-      context: context,
+      context: pageContext,
       barrierColor: Colors.black.withOpacity(0.35),
-      builder: (_) {
+      builder: (dialogContext) {
         return Center(
           child: Material(
             color: Colors.transparent,
@@ -271,13 +255,6 @@ class HealthPage extends StatelessWidget {
               decoration: BoxDecoration(
                 color: Colors.white,
                 borderRadius: BorderRadius.circular(20.r),
-                boxShadow: [
-                  BoxShadow(
-                    color: Colors.black.withOpacity(0.15),
-                    blurRadius: 20,
-                    offset: Offset(0, 8),
-                  ),
-                ],
               ),
               child: Column(
                 mainAxisSize: MainAxisSize.min,
@@ -285,61 +262,72 @@ class HealthPage extends StatelessWidget {
                 children: [
                   Text(
                     AppLocalizations.of(context)!.health_switch,
-                    style: AppTextStyles.getTitle1(context).copyWith(
-                      fontSize: 14.sp,
-                      color: AppColors.mainDark,
-                    ),
+                    style: AppTextStyles.getTitle1(context)
+                        .copyWith(fontSize: 14.sp),
                   ),
-
                   SizedBox(height: 12.h),
+                  BlocBuilder<RelativesCubit, RelativesState>(
+                    builder: (context, relState) {
+                      if (relState is RelativesLoading) {
+                        return const Center(child: FullPageLoader(size: 24));
+                      }
 
-                  /// Main User
-                  _patientOption(
-                    context,
-                    id: state.userId!,
-                    name: mainUserName,
-                    selected: state.relativeId == null,
-                  ),
+                      if (relState is! RelativesLoaded) {
+                        return const SizedBox.shrink();
+                      }
 
+                      return Column(
+                        mainAxisSize: MainAxisSize.min,
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          /// المستخدم الأساسي
+                          _patientOption(
+                            context,
+                            id: state.mainUserId!,
+                            name: state.mainUserName,
+                            selected: state.relativeId == null,
+                          ),
 
+                          const SizedBox(height: 6),
 
-                  SizedBox(height: 6.h),
+                          /// الأقارب
+                          ...relState.relatives.map((r) {
+                            final name =
+                            "${r['first_name'] ?? ''} ${r['last_name'] ?? ''}".trim();
 
-                  /// Relatives
-                  ...state.relatives.map((r) {
-                    final rName = "${r["first_name"]} ${r["last_name"]}";
-                    return Column(
-                      children: [
-                        _patientOption(
-                          context,
-                          id: r["id"],
-                          name: rName,
-                          selected: state.relativeId == r["id"],
-                        ),
-                        SizedBox(height: 6.h),
-                      ],
-                    );
-                  }),
+                            return Padding(
+                              padding: EdgeInsets.only(top: 6.h),
+                              child: _patientOption(
+                                context,
+                                id: r['id'],
+                                name: name.isEmpty
+                                    ? AppLocalizations.of(context)!.unknown
+                                    : name,
+                                selected: state.relativeId == r['id'],
+                              ),
+                            );
+                          }),
 
-                  SizedBox(height: 12.h),
-                  Divider(),
+                          const SizedBox(height: 12),
+                          const Divider(),
 
-                  /// Add new relative
-                  GestureDetector(
-                    onTap: () {
-                      Navigator.pop(context);
-                      _openAddRelativeSheet(context);
+                          GestureDetector(
+                            onTap: () {
+                              Navigator.of(dialogContext).pop(); // أغلق dialog
+                              _openAddRelativeSheet(pageContext);
+                            },
+                            child: Padding(
+                              padding: EdgeInsets.symmetric(vertical: 10.h),
+                              child: Text(
+                                "+ ${AppLocalizations.of(context)!.addRelative}",
+                                style: AppTextStyles.getTitle1(context)
+                                    .copyWith(color: AppColors.main),
+                              ),
+                            ),
+                          ),
+                        ],
+                      );
                     },
-                    child: Padding(
-                      padding: EdgeInsets.symmetric(vertical: 10.h),
-                      child: Text(
-                        "+ ${AppLocalizations.of(context)!.addRelative}",
-                        style: AppTextStyles.getTitle1(context).copyWith(
-                          fontSize: 13.sp,
-                          color: AppColors.main,
-                        ),
-                      ),
-                    ),
                   ),
                 ],
               ),
@@ -357,40 +345,26 @@ class HealthPage extends StatelessWidget {
         required bool selected,
       }) {
     final switcher = context.read<PatientSwitcherCubit>();
-
-    final currentUserId =
-        (context.read<UserCubit>().state as UserLoaded).userId;
+    final mainUserId = switcher.state.mainUserId;
 
     return GestureDetector(
       onTap: () {
-        final currentUser = (context.read<UserCubit>().state as UserLoaded);
-
-        print("📌 TAP ON PATIENT OPTION → id=$id name=$name");
-        print("📌 CURRENT USER → ${currentUser.userId}");
-
-        if (id == currentUser.userId) {
-          print("➡ Switching to MAIN USER");
-          switcher.switchToUser(id, name);
+        if (id == mainUserId) {
+          switcher.switchToUser();
         } else {
-          print("➡ Switching to RELATIVE");
-          switcher.switchToRelative(id, name);
+          switcher.switchToRelative(
+            relativeId: id,
+            relativeName: name,
+          );
         }
-
-        print("🧠 [PatientSwitcher] new state after tap → "
-            "userId=${switcher.state.userId}, "
-            "relativeId=${switcher.state.relativeId}, "
-            "mainUserId=${switcher.state.mainUserId}, "
-            "patientName=${switcher.state.patientName}");
-
         Navigator.pop(context);
-
       },
 
       child: Container(
         width: double.infinity,
         padding: EdgeInsets.symmetric(horizontal: 12.w, vertical: 10.h),
         decoration: BoxDecoration(
-          color: selected ? AppColors.main.withOpacity(0.10) : Colors.transparent,
+          color: selected ? AppColors.main.withOpacity(0.10) : null,
           borderRadius: BorderRadius.circular(12.r),
         ),
         child: Row(
@@ -406,8 +380,10 @@ class HealthPage extends StatelessWidget {
                 name,
                 style: TextStyle(
                   fontSize: 13.sp,
-                  color: selected ? AppColors.mainDark : AppColors.grayMain,
-                  fontWeight: selected ? FontWeight.bold : FontWeight.normal,
+                  color:
+                  selected ? AppColors.mainDark : AppColors.grayMain,
+                  fontWeight:
+                  selected ? FontWeight.bold : FontWeight.normal,
                 ),
               ),
             ),
@@ -430,22 +406,16 @@ class HealthPage extends StatelessWidget {
             color: Colors.white,
             borderRadius: BorderRadius.vertical(top: Radius.circular(20.r)),
           ),
-          child: ClipRRect(
-            borderRadius: BorderRadius.vertical(top: Radius.circular(20.r)),
-            child: const AddRelativePage(),
-          ),
+          child: const AddRelativePage(),
         );
       },
     );
 
-    // NEW: If relative was added → reload immediately
     if (result == true) {
-      print("🔄 New relative added → Reloading relatives...");
-      _loadRelatives(context, forceReload: true);
+      context.read<RelativesCubit>().loadRelatives();
     }
+
   }
-
-
 
 
   Widget _buildSectionTitle(
@@ -672,7 +642,92 @@ class HealthPage extends StatelessWidget {
       ),
     ];
   }
+}
 
+class HealthLoggedOutView extends StatelessWidget {
+  const HealthLoggedOutView({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    final t = AppLocalizations.of(context)!;
+
+    return Container(
+      decoration: const BoxDecoration(
+        gradient: LinearGradient(
+          begin: Alignment.topCenter,
+          end: Alignment.bottomCenter,
+          colors: [
+            AppColors.main,
+            AppColors.background,
+          ],
+          stops: [0.0, 0.8],
+        ),
+      ),
+      child: SafeArea(
+        child: Center(
+          child: Padding(
+            padding: EdgeInsets.symmetric(horizontal: 32.w),
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Icon(
+                  Icons.favorite_rounded,
+                  size: 90.sp,
+                  color: Colors.white,
+                ),
+
+                SizedBox(height: 20.h),
+
+                Text(
+                  t.health_loggedOut_title,
+                  textAlign: TextAlign.center,
+                  style: AppTextStyles.getTitle2(context).copyWith(
+                    color: Colors.white,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+
+                SizedBox(height: 10.h),
+
+                Text(
+                  t.health_loggedOut_description,
+                  textAlign: TextAlign.center,
+                  style: AppTextStyles.getText2(context).copyWith(
+                    color: Colors.white.withOpacity(0.85),
+                  ),
+                ),
+
+                SizedBox(height: 30.h),
+
+                ElevatedButton(
+                  onPressed: () {
+                    Navigator.pushNamed(context, '/login');
+                  },
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.white,
+                    padding: EdgeInsets.symmetric(
+                      horizontal: 36.w,
+                      vertical: 14.h,
+                    ),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(14.r),
+                    ),
+                  ),
+                  child: Text(
+                    t.logIn,
+                    style: AppTextStyles.getTitle2(context).copyWith(
+                      color: AppColors.main,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
 }
 
 class _HealthCategory {
@@ -859,3 +914,4 @@ class HealthSectionPlaceholderPage extends StatelessWidget {
     );
   }
 }
+

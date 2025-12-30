@@ -1,7 +1,7 @@
 import 'package:docsera/app/text_styles.dart';
 import 'package:docsera/screens/auth/login/login_page.dart';
 import 'package:docsera/screens/auth/sign_up/create_password.dart';
-import 'package:docsera/services/supabase/supabase_user_service.dart';
+import 'package:docsera/services/supabase/user/supabase_user_service.dart';
 import 'package:docsera/utils/page_transitions.dart';
 import 'package:docsera/utils/text_direction_utils.dart';
 import 'package:docsera/widgets/base_scaffold.dart';
@@ -9,6 +9,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:docsera/gen_l10n/app_localizations.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 import '../../../app/const.dart';
 import '../../../models/sign_up_info.dart';
 
@@ -23,7 +24,6 @@ class EnterEmailPage extends StatefulWidget {
 
 class _EnterEmailPageState extends State<EnterEmailPage> {
   final TextEditingController _emailController = TextEditingController();
-  final SupabaseUserService _supabaseOTPService = SupabaseUserService();
   bool isValid = false;
   bool hasInput = false;
   bool isChecking = false;
@@ -34,30 +34,37 @@ class _EnterEmailPageState extends State<EnterEmailPage> {
   Future<void> _checkForDuplicates() async {
     if (!isValid) return;
 
-    setState(() {
-      isChecking = true;
-    });
+    setState(() => isChecking = true);
+
+    final email = _emailController.text.trim().toLowerCase();
 
     try {
-      final isDuplicate = await _supabaseOTPService.doesUserExist(email: _emailController.text.trim());
+      final res = await Supabase.instance.client.rpc(
+        'rpc_is_email_available',
+        params: {'p_email': email},
+      );
 
-      setState(() {
-        isChecking = false;
-      });
+      final bool isAvailable = res == true || res == 't' || res == 1;
 
-      if (isDuplicate) {
+      setState(() => isChecking = false);
+
+      if (!isAvailable) {
         _showDuplicateDialog();
-      } else {
-        widget.signUpInfo.email = _emailController.text.trim();
-        Navigator.push(
-          context,
-          fadePageRoute(CreatePasswordPage(signUpInfo: widget.signUpInfo)),
-        );
+        return;
       }
+
+      // ✅ الإيميل متاح
+      widget.signUpInfo.email = email;
+
+      Navigator.push(
+        context,
+        fadePageRoute(
+          CreatePasswordPage(signUpInfo: widget.signUpInfo),
+        ),
+      );
     } catch (e) {
-      setState(() {
-        isChecking = false;
-      });
+      setState(() => isChecking = false);
+
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text(AppLocalizations.of(context)!.errorCheckingEmail),

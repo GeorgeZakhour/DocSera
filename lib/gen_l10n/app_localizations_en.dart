@@ -185,6 +185,12 @@ class AppLocalizationsEn extends AppLocalizations {
   String get waitingConfirmation => 'Waiting for confirmation';
 
   @override
+  String get cancelledByYou => 'Cancelled by you';
+
+  @override
+  String get cancelledByDoctor => 'Cancelled by doctor';
+
+  @override
   String get statusRejected => 'Rejected';
 
   @override
@@ -240,6 +246,10 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get appointmentRescheduleNoWarning =>
       'You can now proceed to reschedule.';
+
+  @override
+  String get rescheduleWarningText =>
+      'Rescheduling the appointment will automatically cancel the current one. The new appointment may require the doctor’s approval. Please make sure before proceeding';
 
   @override
   String get noAvailableAppointmentsRes =>
@@ -687,6 +697,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get invalidEmail => 'Invalid email address';
 
   @override
+  String get hide => 'Hide';
+
+  @override
   String get loginSection => 'Login';
 
   @override
@@ -694,6 +707,17 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get passwordHidden => '••••••••••••••••';
+
+  @override
+  String get otpRequestFailed =>
+      'Failed to send verification code. Please try again.';
+
+  @override
+  String get twoFactorUpdateFailed =>
+      'Unable to update two-factor authentication. Please try again later.';
+
+  @override
+  String get invalidOtp => 'Invalid verification code';
 
   @override
   String get settings => 'Settings';
@@ -709,6 +733,14 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get twoFactorAuthActivated => 'Activated';
+
+  @override
+  String get twoFactorActivatedSuccess =>
+      'Two-factor authentication has been successfully activated.';
+
+  @override
+  String get twoFactorDeactivatedSuccess =>
+      'Two-factor authentication has been successfully deactivated.';
 
   @override
   String get encryptedDocuments => 'Encrypted documents';
@@ -743,6 +775,12 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get biometricTitle => 'Biometric Authentication';
+
+  @override
+  String get faceIdEnabled => 'Biometric authentication enabled';
+
+  @override
+  String get faceIdDisabled => 'Biometric authentication disabled';
 
   @override
   String get confidentiality => 'Confidentiality';
@@ -1140,6 +1178,21 @@ class AppLocalizationsEn extends AppLocalizations {
   String get noAccountQuestion => 'Don\'t have an account?';
 
   @override
+  String get shareDoctorProfile => 'Share Doctor Profile';
+
+  @override
+  String get scanToOpenInApp => 'Scan to open this doctor in the DocSera app';
+
+  @override
+  String get copyLink => 'Copy link';
+
+  @override
+  String get linkCopied => 'Link copied';
+
+  @override
+  String get share => 'Share';
+
+  @override
   String get makeAppointment => 'Make an Appointment';
 
   @override
@@ -1462,6 +1515,10 @@ class AppLocalizationsEn extends AppLocalizations {
   String get alreadyHaveAccount => 'I already have an account';
 
   @override
+  String get accountDisabled =>
+      'Your account has been deactivated. Please contact support if you believe this is a mistake.';
+
+  @override
   String get login => 'Log In';
 
   @override
@@ -1663,6 +1720,10 @@ class AppLocalizationsEn extends AppLocalizations {
   String get otpSendFailed => 'Failed to send OTP. Please try again.';
 
   @override
+  String get pleaseWaitBeforeRequestingAnotherCode =>
+      'Please wait before requesting another verification code';
+
+  @override
   String get tryAgain => 'Try again';
 
   @override
@@ -1738,6 +1799,13 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get unexpectedError =>
       'An unexpected error occurred. Please try again later.';
+
+  @override
+  String get health_loggedOut_title => 'Your health history in one place';
+
+  @override
+  String get health_loggedOut_description =>
+      'Sign in to securely store and manage your medical records, reports, and history.';
 
   @override
   String get health_tab => 'Health';
@@ -2760,7 +2828,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get noEmergencySupport =>
-      'Your practitioner cannot address medical emergencies by message. In case of a medical emergency, call 112.';
+      'Your practitioner cannot handle medical emergencies via messages. In case of a medical emergency, please call 110 (Ambulance).';
 
   @override
   String get reasonTestResults => 'Request sending of test results';

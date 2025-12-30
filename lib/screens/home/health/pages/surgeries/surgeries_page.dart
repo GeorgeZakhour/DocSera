@@ -17,6 +17,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 
 // TODO: Replace with real implementation (similar to AddAllergyBottomSheet)
+import '../../../../../utils/full_page_loader.dart';
 import 'add_surgery_bottom_sheet.dart';
 
 class SurgeriesPage extends StatelessWidget {
@@ -98,7 +99,7 @@ class SurgeriesPage extends StatelessWidget {
                 builder: (context, state) {
                   if (state.isLoading && state.records.isEmpty) {
                     return const Center(
-                      child: CircularProgressIndicator(color: AppColors.main),
+                      child: FullPageLoader(),
                     );
                   }
 

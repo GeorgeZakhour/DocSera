@@ -941,8 +941,7 @@ class _AppointmentDetailsPageState extends State<AppointmentDetailsPage> {
                                 currentContext,
                                 appointmentId: apptId,
                                 doctorId: doctorId,
-                                // يمكنك إرسال السبب إلى لوج/جدول منفصل إن رغبت
-                                // cancelReason: reasonController.text.trim(),
+                                cancelReason: reasonController.text.trim(),
                               );
                               Navigator.pop(currentContext);
 
@@ -989,7 +988,7 @@ class _AppointmentDetailsPageState extends State<AppointmentDetailsPage> {
       BuildContext context, {
         required String appointmentId,
         required String doctorId,
-        // String? cancelReason, // إن أردت تسجيل السبب في جدول آخر
+        String? cancelReason, // إن أردت تسجيل السبب في جدول آخر
       }) async {
     if (appointmentId.trim().isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
@@ -999,11 +998,19 @@ class _AppointmentDetailsPageState extends State<AppointmentDetailsPage> {
     }
 
     try {
-      // نحذف الصف من جدول المواعيد
-      await Supabase.instance.client
-          .from('appointments')
-          .delete()
-          .eq('id', appointmentId);
+      await Supabase.instance.client.rpc(
+        'cancel_appointment_by_patient',
+        params: {
+          'p_appointment_id': appointmentId,
+        },
+      );
+
+
+      //
+      // await Supabase.instance.client
+      //     .from('appointments')
+      //     .delete()
+      //     .eq('id', appointmentId);
 
       if (context.mounted) {
         ScaffoldMessenger.of(context).showSnackBar(

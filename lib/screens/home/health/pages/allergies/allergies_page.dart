@@ -16,6 +16,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 
+import '../../../../../utils/full_page_loader.dart';
+
 
 
 class AllergiesPage extends StatelessWidget {
@@ -102,7 +104,7 @@ class AllergiesPage extends StatelessWidget {
                 builder: (context, state) {
                   if (state.isLoading && state.records.isEmpty) {
                     return const Center(
-                      child: CircularProgressIndicator(color: AppColors.main),
+                      child: FullPageLoader(),
                     );
                   }
 

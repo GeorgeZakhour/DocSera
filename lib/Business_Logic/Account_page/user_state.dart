@@ -21,9 +21,12 @@ class UserLoaded extends UserState {
   final bool isPhoneVerified;
   final bool isEmailVerified;
   final bool is2FAEnabled;
-
-  /// ⭐ NEW FIELD: total points for the user
   final int userPoints;
+
+  // 🔹 ADD THESE
+  final String? gender;
+  final String? dateOfBirth;
+  final Map<String, dynamic>? address;
 
   UserLoaded({
     required this.userId,
@@ -34,6 +37,11 @@ class UserLoaded extends UserState {
     required this.isEmailVerified,
     required this.is2FAEnabled,
     required this.userPoints,
+
+    // 🔹
+    this.gender,
+    this.dateOfBirth,
+    this.address,
   });
 
   @override
@@ -46,9 +54,11 @@ class UserLoaded extends UserState {
     isEmailVerified,
     is2FAEnabled,
     userPoints,
+    gender,
+    dateOfBirth,
+    address,
   ];
 
-  /// 🔁 copyWith (includes userPoints)
   UserLoaded copyWith({
     String? userId,
     String? userName,
@@ -58,6 +68,9 @@ class UserLoaded extends UserState {
     bool? isEmailVerified,
     bool? is2FAEnabled,
     int? userPoints,
+    String? gender,
+    String? dateOfBirth,
+    Map<String, dynamic>? address,
   }) {
     return UserLoaded(
       userId: userId ?? this.userId,
@@ -68,6 +81,9 @@ class UserLoaded extends UserState {
       isEmailVerified: isEmailVerified ?? this.isEmailVerified,
       is2FAEnabled: is2FAEnabled ?? this.is2FAEnabled,
       userPoints: userPoints ?? this.userPoints,
+      gender: gender ?? this.gender,
+      dateOfBirth: dateOfBirth ?? this.dateOfBirth,
+      address: address ?? this.address,
     );
   }
 }
@@ -81,3 +97,8 @@ class UserError extends UserState {
   @override
   List<Object?> get props => [message];
 }
+
+class AccountDeactivated extends UserState {
+    AccountDeactivated();
+}
+

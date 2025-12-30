@@ -9,8 +9,10 @@ import 'package:docsera/screens/doctors/appointment/select_patient_page.dart';
 import 'package:docsera/utils/doctor_image_utils.dart';
 import 'package:flutter/material.dart';
 import 'package:docsera/app/const.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_quill/flutter_quill.dart' as quill;
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:qr_flutter/qr_flutter.dart';
 import 'package:share_plus/share_plus.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
@@ -21,6 +23,7 @@ import 'package:docsera/app/text_styles.dart';
 // ✅ استيراد صفحة نتائج الخرائط
 import 'package:docsera/screens/map_results_page.dart';
 
+import '../../utils/full_page_loader.dart';
 import 'auth/login/doctor_login_page.dart';
 import 'auth/register/doctor_registration_page.dart';
 
@@ -42,8 +45,8 @@ class _DoctorProfilePageState extends State<DoctorProfilePage> {
   bool _showAppBar = false;
   bool _isFavorite = false;
   final ScrollController _scrollController = ScrollController();
-  RealtimeChannel? _doctorChannel;
   Map<String, dynamic>? _doctorData;
+  String? _userId;
 
   bool _expandedImageOverlay = false;
   List<String> _expandedImageUrls = [];
@@ -105,6 +108,9 @@ class _DoctorProfilePageState extends State<DoctorProfilePage> {
   void initState() {
     super.initState();
     _scrollController.addListener(_onScroll);
+
+    _userId = Supabase.instance.client.auth.currentUser?.id;
+
     print("🩺 DoctorProfilePage INIT - doctorId: ${widget.doctorId}");
     if (widget.doctor != null && widget.doctor!.isNotEmpty) {
       _doctorData = {...widget.doctor!};
@@ -121,124 +127,31 @@ class _DoctorProfilePageState extends State<DoctorProfilePage> {
 
   @override
   void dispose() {
-    _doctorChannel?.unsubscribe();
     _scrollController.dispose();
     super.dispose();
   }
 
   Future<void> _loadDoctorProfile() async {
-    if (widget.doctorId.isEmpty) {
-      print("❌ Error: Doctor ID is missing in DoctorProfilePage.");
-      return;
-    }
+    final doctorId = widget.doctorId.trim();
+    if (doctorId.isEmpty) return;
 
-    print("✅ Loading Doctor Profile for ID: ${widget.doctorId}");
-    final prefs = await SharedPreferences.getInstance();
-    final String doctorId = widget.doctorId.trim();
-
+    // 1️⃣ استخدم البيانات الممررة إن وُجدت
     if (widget.doctor != null && widget.doctor!.isNotEmpty) {
-      print("⚡ Using Passed Doctor Data for ID: $doctorId (FIRST CASE)");
+      _doctorData = Map<String, dynamic>.from(widget.doctor!);
+    }
+
+    // 2️⃣ fetch واحد فقط (authoritative)
+    final response = await Supabase.instance.client
+        .from('doctors')
+        .select()
+        .eq('id', doctorId)
+        .maybeSingle();
+
+    if (response != null && mounted) {
       setState(() {
-        _doctorData = Map<String, dynamic>.from(widget.doctor!);
+        _doctorData = response;
       });
-    } else {
-      String? cachedData = prefs.getString('doctor_$doctorId');
-      if (cachedData != null) {
-        Map<String, dynamic> cachedDoctor = json.decode(cachedData);
-        print("⚡ Loaded Cached Doctor Data: ${cachedDoctor['first_name']} ${cachedDoctor['last_name']} (SECOND CASE)");
-
-        setState(() {
-          _doctorData = {...cachedDoctor};
-        });
-      }
     }
-
-    try {
-      final response = await Supabase.instance.client
-          .from('doctors')
-          .select()
-          .eq('id', doctorId)
-          .maybeSingle();
-
-      if (response != null) {
-        print("📥 Loaded Fresh Doctor from Supabase: ${response['first_name']} ${response['last_name']} (THIRD CASE)");
-
-        await prefs.setString('doctor_$doctorId', json.encode(response));
-
-        setState(() {
-          _doctorData = {...response};
-        });
-      } else {
-        print("❌ Doctor not found in Supabase.");
-      }
-
-      final client = Supabase.instance.client;
-
-      _doctorChannel = client
-          .channel('public:doctors:profile')
-          .onPostgresChanges(
-        event: PostgresChangeEvent.all,
-        schema: 'public',
-        table: 'doctors',
-        filter: PostgresChangeFilter(
-          type: PostgresChangeFilterType.eq,
-          column: 'id',
-          value: widget.doctorId,
-        ),
-        callback: (payload) async {
-          final updatedDoctor = payload.newRecord;
-          print("📡 Supabase Realtime Update: $updatedDoctor");
-
-          final prefs = await SharedPreferences.getInstance();
-          await prefs.setString('doctor_${widget.doctorId}', json.encode(updatedDoctor));
-
-          if (mounted) {
-            setState(() {
-              _doctorData = updatedDoctor;
-            });
-          }
-        },
-      )
-          .subscribe();
-    } catch (e) {
-      print("❌ Error loading doctor from Supabase: $e");
-    }
-  }
-
-  // ✅ Share Doctor Profile Function
-  void _shareDoctorProfile() {
-    bool isArabic = Localizations.localeOf(context).languageCode == 'ar';
-
-    String doctorName = "${_doctorData?['first_name']} ${_doctorData?['last_name']}";
-    String specialty = _doctorData?['specialty'] ?? AppLocalizations.of(context)!.unknownSpecialty;
-    String clinic = _doctorData?['clinic'] ?? AppLocalizations.of(context)!.clinicNotAvailable;
-    Map<String, dynamic>? address = _doctorData?['address'];
-    String fullAddress = address != null
-        ? "${address['street'] ?? ''}, ${address['city'] ?? ''}, ${address['country'] ?? ''}"
-        : AppLocalizations.of(context)!.addressNotEntered;
-
-    String shareText = isArabic
-        ? """
-  👨‍⚕️ الطبيب: $doctorName
-  💼 التخصص: $specialty
-  🏥 العيادة: $clinic
-  📍 العنوان: $fullAddress
-  📞 الاتصال: ${_doctorData?['phone_number'] ?? AppLocalizations.of(context)!.notProvided}
-  
-  اكتشف هذا الطبيب على تطبيق DocSera!
-  """
-        : """
-  👨‍⚕️ Doctor: $doctorName
-  💼 Specialty: $specialty
-  🏥 Clinic: $clinic
-  📍 Address: $fullAddress
-  📞 Contact: ${_doctorData?['phone_number'] ?? AppLocalizations.of(context)!.notProvided}
-  
-  Check out this doctor on the DocSera App!
-  """;
-
-    Share.share(shareText, subject: isArabic ? "ملف الطبيب - $doctorName" : "Doctor Profile - $doctorName");
-    print("📤 Shared Doctor Profile as Text in ${isArabic ? "Arabic" : "English"}");
   }
 
   void _onScroll() {
@@ -273,19 +186,6 @@ class _DoctorProfilePageState extends State<DoctorProfilePage> {
       case 'ru': return l.languageRussian;
       case 'ku': return l.languageKurdish;
       default:   return code;
-    }
-  }
-
-
-  /// 🔹 Open Google Maps with the given address (يُستخدم فقط عند الحاجة)
-  void _openMaps(String address) async {
-    String encodedAddress = Uri.encodeComponent(address);
-    Uri googleMapsUrl = Uri.parse("https://www.google.com/maps/search/?api=1&query=$encodedAddress");
-
-    if (await canLaunchUrl(googleMapsUrl)) {
-      await launchUrl(googleMapsUrl, mode: LaunchMode.externalApplication);
-    } else {
-      throw 'Could not launch $googleMapsUrl';
     }
   }
 
@@ -1449,7 +1349,6 @@ class _DoctorProfilePageState extends State<DoctorProfilePage> {
     );
   }
 
-  // void _showOpeningHoursDetails(Map<String, dynamic> openingHours) { bool isArabic = Localizations.localeOf(context).languageCode == 'ar'; Map<String, String> daysMap = { "mon": isArabic ? "الإثنين" : "Monday", "tue": isArabic ? "الثلاثاء" : "Tuesday", "wed": isArabic ? "الأربعاء" : "Wednesday", "thu": isArabic ? "الخميس" : "Thursday", "fri": isArabic ? "الجمعة" : "Friday", "sat": isArabic ? "السبت" : "Saturday", "sun": isArabic ? "الأحد" : "Sunday", }; List<String> days = daysMap.keys.toList(); String currentDay = days[DateTime.now().weekday - 1]; showModalBottomSheet( context: context, backgroundColor: AppColors.background2, shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)), builder: (context) { return Padding( padding: EdgeInsets.all(16.w), child: Column( mainAxisSize: MainAxisSize.min, crossAxisAlignment: CrossAxisAlignment.start, children: [ Center( child: Text( AppLocalizations.of(context)!.openingHours, style: AppTextStyles.getTitle1(context).copyWith(fontSize: 12.sp), ), ), SizedBox(height: 25.h), Column( children: days.map((day) { List<dynamic>? slots = openingHours[day] as List<dynamic>?; String formattedHours = (slots != null && slots.isNotEmpty) ? _formatOpeningHours(slots) : AppLocalizations.of(context)!.closed; bool isToday = (day == currentDay); return Padding( padding: const EdgeInsets.symmetric(vertical: 4, horizontal: 8), child: Row( mainAxisAlignment: MainAxisAlignment.spaceBetween, children: [ Text( daysMap[day] ?? day, style: TextStyle( fontSize: 14.sp, fontWeight: isToday ? FontWeight.bold : FontWeight.normal, color: isToday ? AppColors.main : Colors.black87, ), ), Text( formattedHours, style: TextStyle( fontSize: 12.sp, fontWeight: FontWeight.bold, color: isToday ? AppColors.main : Colors.black87, ), textAlign: TextAlign.right, ), ], ), ); }).toList(), ), SizedBox(height: 25.h), ], ), ); }, ); }
 
   void _showOpeningHoursDetails(Map<String, dynamic> openingHours) {
     final isArabic = Localizations.localeOf(context).languageCode == 'ar';
@@ -1591,38 +1490,6 @@ class _DoctorProfilePageState extends State<DoctorProfilePage> {
     }
   }
 
-  String _formatOpeningHours(List<dynamic> slots) {
-    if (slots.isEmpty) return "Closed";
-
-    List<Map<String, dynamic>> formatted = slots.map((slot) {
-      final slotMap = slot as Map<String, dynamic>;
-      final fromRaw = slotMap["from"] ?? '';
-      final toRaw   = slotMap["to"] ?? '';
-
-      return {
-        "from": fromRaw,
-        "to": toRaw,
-        "label": "${_pretty12(context, fromRaw)} - ${_pretty12(context, toRaw)}"
-      };
-    }).toList();
-
-    // ترتيب حسب وقت البدء الحقيقي (وليس النص)
-    formatted.sort((a, b) {
-      final fromA = TimeOfDay(
-        hour: int.parse(a["from"]!.split(":")[0]),
-        minute: int.parse(a["from"]!.split(":")[1]),
-      );
-      final fromB = TimeOfDay(
-        hour: int.parse(b["from"]!.split(":")[0]),
-        minute: int.parse(b["from"]!.split(":")[1]),
-      );
-      return fromA.hour.compareTo(fromB.hour) != 0
-          ? fromA.hour.compareTo(fromB.hour)
-          : fromA.minute.compareTo(fromB.minute);
-    });
-
-    return formatted.map((e) => e["label"]).join(", ");
-  }
 
   void _showLanguagesDetails(List<dynamic> languages) {
     final l = AppLocalizations.of(context)!;
@@ -1718,94 +1585,46 @@ class _DoctorProfilePageState extends State<DoctorProfilePage> {
     );
   }
 
-  Future<String?> _getCurrentUserId() async {
-    SharedPreferences prefs = await SharedPreferences.getInstance();
-    String? userId = prefs.getString('userId');
-    print("🔥 Retrieved User ID in Doctor Profile: $userId");
-    return userId;
-  }
+  Future<void> _loadFavoriteStatus() async {
+    final user = Supabase.instance.client.auth.currentUser;
+    if (user == null) return;
 
-  void _loadFavoriteStatus() async {
-    final String? userId = await _getCurrentUserId();
-    final String? doctorId = widget.doctorId.toString();
+    final res = await Supabase.instance.client
+        .rpc('rpc_get_my_favorite_doctors');
 
-    print("🔹 Checking Favorite Status");
-    print("👤 User ID: $userId");
-    print("🩺 Doctor ID: $doctorId");
-
-    if (userId == null || userId.isEmpty || doctorId == null || doctorId.isEmpty) {
-      print("❌ Error: Doctor ID or User ID is missing! Cannot check favorites.");
+    if (res is! List) {
+      setState(() => _isFavorite = false);
       return;
     }
 
-    try {
-      final response = await Supabase.instance.client
-          .from('users')
-          .select('favorites')
-          .eq('id', userId)
-          .maybeSingle();
+    final isFav = res.any(
+          (d) => d['id'] == widget.doctorId,
+    );
 
-      List<dynamic> favorites = response?['favorites'] ?? [];
+    setState(() {
+      _isFavorite = isFav;
+    });
+  }
 
+  Future<void> _toggleFavoriteStatus() async {
+    final user = Supabase.instance.client.auth.currentUser;
+    if (user == null) {
+      _showLoginPromptDialog();
+      return;
+    }
+
+    final res = await Supabase.instance.client.rpc(
+      'toggle_favorite_doctor',
+      params: {'p_doctor_id': widget.doctorId},
+    );
+
+    if (res is bool) {
       setState(() {
-        _isFavorite = favorites.contains(doctorId);
+        _isFavorite = res;
       });
-
-      print("✅ Favorite status loaded: $_isFavorite");
-    } catch (e) {
-      print("❌ Error loading favorite status: $e");
     }
   }
 
-  void _toggleFavoriteStatus() async {
-    final String? userId = await _getCurrentUserId();
-    final String? doctorId = _doctorData?['id']?.toString();
-
-    print("🔹 Toggling Favorite");
-    print("👤 User ID: $userId");
-    print("🩺 Doctor ID: $doctorId");
-
-    if (userId == null || userId.isEmpty || doctorId == null || doctorId.isEmpty) {
-      print("❌ Error: Doctor ID or User ID is missing!");
-      return;
-    }
-
-    try {
-      final supabase = Supabase.instance.client;
-
-      final response = await supabase
-          .from('users')
-          .select('favorites')
-          .eq('id', userId)
-          .maybeSingle();
-
-      if (response == null) {
-        print("❌ User not found in Supabase.");
-        return;
-      }
-
-      List<dynamic> favorites = response['favorites'] ?? [];
-
-      if (favorites.contains(doctorId)) {
-        favorites.remove(doctorId);
-        await supabase.from('users').update({'favorites': favorites}).eq('id', userId);
-
-        setState(() => _isFavorite = false);
-        print("❌ Doctor removed from favorites");
-      } else {
-        favorites.add(doctorId);
-        await supabase.from('users').update({'favorites': favorites}).eq('id', userId);
-
-        setState(() => _isFavorite = true);
-        print("⭐ Doctor added to favorites");
-      }
-
-      SharedPreferences prefs = await SharedPreferences.getInstance();
-      await prefs.setBool('refreshFavorites', true);
-    } catch (e) {
-      print("❌ Error updating favorites: $e");
-    }
-  }
 
   void _showLoginPromptDialog() {
     final l = AppLocalizations.of(context)!;
@@ -1909,6 +1728,163 @@ class _DoctorProfilePageState extends State<DoctorProfilePage> {
           ),
         );
       },
+    );
+  }
+
+  void _showDoctorQrSheet() {
+    final token = _doctorData?['public_token'];
+    if (token == null || token.isEmpty) return;
+
+    final deepLink = 'docsera://doctor/$token';
+    final l = AppLocalizations.of(context)!;
+
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: Colors.transparent,
+      isScrollControlled: true,
+      builder: (_) {
+        return BackdropFilter(
+          filter: ImageFilter.blur(sigmaX: 12, sigmaY: 12),
+          child: Container(
+            margin: EdgeInsets.all(16.w),
+            padding: EdgeInsets.all(20.w),
+            decoration: BoxDecoration(
+              color: AppColors.background2.withOpacity(0.92),
+              borderRadius: BorderRadius.circular(28.r),
+              border: Border.all(
+                color: AppColors.main.withOpacity(0.25),
+              ),
+            ),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                // ── Handle
+                Container(
+                  width: 40.w,
+                  height: 4.h,
+                  decoration: BoxDecoration(
+                    color: Colors.grey[400],
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                ),
+                SizedBox(height: 20.h),
+
+                // ── Title
+                Text(
+                  l.shareDoctorProfile,
+                  style: AppTextStyles.getTitle1(context).copyWith(fontSize: 13.sp),
+                ),
+                SizedBox(height: 20.h),
+
+                // ── QR
+                Container(
+                  padding: EdgeInsets.all(14.w),
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.circular(20.r),
+                  ),
+                  child: QrImageView(
+                    data: deepLink,
+                    version: QrVersions.auto,
+                    size: 200.w,
+                  ),
+                ),
+
+                SizedBox(height: 16.h),
+
+                // ── Hint
+                Text(
+                  l.scanToOpenInApp,
+                  style: AppTextStyles.getText3(context),
+                  textAlign: TextAlign.center,
+                ),
+
+                SizedBox(height: 20.h),
+
+                // ── Actions
+                Row(
+                  children: [
+                    Expanded(
+                      child: OutlinedButton.icon(
+                        icon: Icon(Icons.copy, size: 16.sp, color: AppColors.mainDark),
+                        label: Text(l.copyLink, style: const TextStyle(color: AppColors.mainDark),),
+                        onPressed: () {
+                          Clipboard.setData(ClipboardData(text: deepLink));
+                          Navigator.pop(context);
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            SnackBar(
+                                backgroundColor: AppColors.main.withOpacity(0.8),
+                                content: Text(l.linkCopied)
+                            ),
+                          );
+                        },
+                      ),
+                    ),
+                    SizedBox(width: 10.w),
+                    Expanded(
+                      child: ElevatedButton.icon(
+                        icon: Icon(Icons.share, size: 16.sp),
+                        label: Text(l.share),
+                        onPressed: () {
+                          _shareDoctorLink();
+                        },
+                      ),
+                    ),
+                  ],
+                ),
+              ],
+            ),
+          ),
+        );
+      },
+    );
+  }
+
+  void _shareDoctorLink() {
+    if (_doctorData == null) return;
+
+    final l = AppLocalizations.of(context)!;
+    final isArabic = Localizations.localeOf(context).languageCode == 'ar';
+
+    final token = _doctorData?['public_token'];
+    if (token == null || token.isEmpty) return;
+
+    final deepLink = 'docsera://doctor/$token';
+
+    final doctorName =
+    "${_doctorData?['title'] ?? ''} ${_doctorData?['first_name'] ?? ''} ${_doctorData?['last_name'] ?? ''}"
+        .trim();
+
+    final specialty =
+        _doctorData?['specialty'] ?? l.unknownSpecialty;
+
+    final text = isArabic
+        ? '''
+👨‍⚕️ $doctorName
+💼 $specialty
+
+افتح ملف الطبيب مباشرة على تطبيق DocSera:
+$deepLink
+'''
+        : '''
+👨‍⚕️ $doctorName
+💼 $specialty
+
+Open the doctor profile directly in DocSera:
+$deepLink
+''';
+
+    // 🔴 الحل هنا
+    final box = context.findRenderObject() as RenderBox?;
+
+    Share.share(
+      text,
+      subject: isArabic
+          ? 'ملف الطبيب على DocSera'
+          : 'Doctor Profile on DocSera',
+      sharePositionOrigin: box != null
+          ? box.localToGlobal(Offset.zero) & box.size
+          : const Rect.fromLTWH(0, 0, 1, 1),
     );
   }
 
@@ -2054,7 +2030,7 @@ class _DoctorProfilePageState extends State<DoctorProfilePage> {
         children: [
           Text("Doctor ID: ${widget.doctorId ?? 'No ID'}"),
           (_doctorData == null || _doctorData!.isEmpty)
-              ? const Center(child: CircularProgressIndicator())
+              ? const Center(child: FullPageLoader())
               : CustomScrollView(
             controller: _scrollController,
             slivers: [
@@ -2069,26 +2045,24 @@ class _DoctorProfilePageState extends State<DoctorProfilePage> {
                   onPressed: () => Navigator.of(context).pop(),
                 ),
                 actions: [
-                  FutureBuilder<String?>(
-                    future: _getCurrentUserId(),
-                    builder: (context, snapshot) {
-                      final userId = snapshot.data;
-                      if (userId == null || userId.isEmpty) return SizedBox.shrink(); // 🔥 Hide icon if not logged in
-
-                      return IconButton(
-                        icon: Icon(
-                          _isFavorite ? Icons.star : Icons.star_border,
-                          color: AppColors.whiteText,
-                        ),
-                        onPressed: _toggleFavoriteStatus,
-                      );
-                    },
+                  if (_userId != null)
+                    IconButton(
+                      icon: Icon(
+                        _isFavorite ? Icons.star : Icons.star_border,
+                        color: AppColors.whiteText,
+                      ),
+                      onPressed: _toggleFavoriteStatus,
+                    ),
+                  IconButton(
+                    icon: Icon(Icons.qr_code_rounded, color: AppColors.whiteText),
+                    onPressed: _showDoctorQrSheet,
                   ),
                   IconButton(
-                    icon: Icon(Icons.share, color: AppColors.whiteText, size: 18.sp),
-                    onPressed: _shareDoctorProfile,
+                    icon: Icon(Icons.share, color: AppColors.whiteText),
+                    onPressed: _shareDoctorLink,
                   ),
                 ],
+
 
                 flexibleSpace: FlexibleSpaceBar(
                   title: Opacity(
@@ -2308,11 +2282,11 @@ class _DoctorProfilePageState extends State<DoctorProfilePage> {
               opacity: bottomButtonOpacity.clamp(0.0, 1.0),
               child: ElevatedButton.icon(
                 onPressed: () async {
-                  final prefs = await SharedPreferences.getInstance();
-                  final userId = prefs.getString('userId');
+                  final user = Supabase.instance.client.auth.currentUser;
 
-                  if (userId == null || userId.isEmpty) {
-                    _showLoginPromptDialog(); // 🔻 تابع أدناه
+                  if (user == null) {
+                    _showLoginPromptDialog();
+                    return;
                   } else {
                     print("➡️ [DoctorProfilePage] Navigating to SelectPatientPage with:");
                     print("- doctorId: $doctorId");

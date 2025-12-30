@@ -12,6 +12,7 @@ import 'package:docsera/gen_l10n/app_localizations.dart';
 
 import '../../../Business_Logic/Doctor/Messages_page/doctor_messages_cubit.dart';
 import '../../../Business_Logic/Doctor/Messages_page/doctor_messages_state.dart';
+import '../../../utils/full_page_loader.dart';
 
 class DoctorMessagesPage extends StatelessWidget {
   final Map<String, dynamic>? doctorData;
@@ -44,7 +45,7 @@ class DoctorMessagesPage extends StatelessWidget {
       body: BlocBuilder<DoctorMessagesCubit, DoctorMessagesState>(
         builder: (context, state) {
           if (state is DoctorMessagesLoading) {
-            return const Center(child: CircularProgressIndicator());
+            return const Center(child: FullPageLoader());
           } else if (state is DoctorMessagesError) {
             return Center(child: Text(state.message));
           } else if (state is DoctorMessagesLoaded) {

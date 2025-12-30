@@ -111,7 +111,7 @@ DoctorImageResult resolveDoctorImagePathAndWidget({
       width: width.w,
       height: height.h,
       child: const Center(
-        child: CircularProgressIndicator(strokeWidth: 1.5),
+        child: SizedBox.shrink(),
       ),
     ),
     errorWidget: (_, __, ___) =>

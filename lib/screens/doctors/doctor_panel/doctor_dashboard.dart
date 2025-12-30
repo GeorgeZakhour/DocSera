@@ -6,6 +6,8 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:intl/intl.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
+import '../../../utils/full_page_loader.dart';
+
 class DoctorDashboard extends StatefulWidget {
   Map<String, dynamic>? doctorData;
 
@@ -252,7 +254,7 @@ class _DoctorDashboardState extends State<DoctorDashboard> {
                       },
                     )
 
-                        : const CircularProgressIndicator(),
+                        : const FullPageLoader(),
                   ),
                 ),
               ),

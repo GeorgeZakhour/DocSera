@@ -10,6 +10,8 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:docsera/gen_l10n/app_localizations.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
+import '../../../utils/full_page_loader.dart';
+
 class SelectReasonPage extends StatefulWidget {
   final PatientProfile patientProfile;
   final AppointmentDetails appointmentDetails;
@@ -83,7 +85,7 @@ class _SelectReasonPageState extends State<SelectReasonPage> {
             SizedBox(height: 15.h),
 
             if (isLoading)
-              Center(child: CircularProgressIndicator(color: AppColors.main))
+              Center(child: FullPageLoader())
             else if (_error != null)
               Text(l.somethingWentWrong, style: AppTextStyles.getText2(context))
             else if (reasons.isEmpty)
