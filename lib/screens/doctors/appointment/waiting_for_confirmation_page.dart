@@ -7,14 +7,12 @@ import 'package:flutter/material.dart';
 import 'package:docsera/gen_l10n/app_localizations.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:flutter_svg/svg.dart';
-import 'package:intl/intl.dart';
 import 'package:docsera/utils/page_transitions.dart';
 
 class WaitingForConfirmationPage extends StatelessWidget {
   final Map<String, dynamic> appointment;
 
-  const WaitingForConfirmationPage({Key? key, required this.appointment})
-      : super(key: key);
+  const WaitingForConfirmationPage({super.key, required this.appointment});
 
 
   @override

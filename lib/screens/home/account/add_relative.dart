@@ -1,6 +1,5 @@
 import 'package:docsera/Business_Logic/Account_page/relatives/relatives_cubit.dart';
 import 'package:docsera/app/text_styles.dart';
-import 'package:docsera/services/supabase/user/supabase_user_service.dart';
 import 'package:docsera/utils/text_direction_utils.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -12,7 +11,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 
 
 class AddRelativePage extends StatefulWidget {
-  const AddRelativePage({Key? key}) : super(key: key);
+  const AddRelativePage({super.key});
 
   @override
   _AddRelativePageState createState() => _AddRelativePageState();
@@ -496,11 +495,11 @@ class _AddRelativePageState extends State<AddRelativePage> {
           contentPadding: EdgeInsets.symmetric(vertical: 12.h, horizontal: 14.w),
           enabledBorder: OutlineInputBorder(
             borderRadius: BorderRadius.circular(25.r),
-            borderSide: BorderSide(color: Colors.grey),
+            borderSide: const BorderSide(color: Colors.grey),
           ),
           focusedBorder: OutlineInputBorder(
             borderRadius: BorderRadius.circular(25.r),
-            borderSide: BorderSide(color: AppColors.main, width: 2),
+            borderSide: const BorderSide(color: AppColors.main, width: 2),
           ),
           errorBorder: OutlineInputBorder(
             borderRadius: BorderRadius.circular(25.r),
@@ -587,8 +586,8 @@ class _AddRelativePageState extends State<AddRelativePage> {
       style: AppTextStyles.getText2(context),
       decoration: InputDecoration(
         labelText: localizedLabel,
-        labelStyle: MaterialStateTextStyle.resolveWith((states) {
-          if (states.contains(MaterialState.error)) {
+        labelStyle: WidgetStateTextStyle.resolveWith((states) {
+          if (states.contains(WidgetState.error)) {
             return AppTextStyles.getText3(context).copyWith(color: AppColors.red);
           }
           return AppTextStyles.getText3(context).copyWith(color: Colors.grey);
@@ -597,11 +596,11 @@ class _AddRelativePageState extends State<AddRelativePage> {
         contentPadding: EdgeInsets.symmetric(vertical: 12.h, horizontal: 14.w),
         enabledBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(25.r),
-          borderSide: BorderSide(color: Colors.grey),
+          borderSide: const BorderSide(color: Colors.grey),
         ),
         focusedBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(25.r),
-          borderSide: BorderSide(color: AppColors.main, width: 2),
+          borderSide: const BorderSide(color: AppColors.main, width: 2),
         ),
         errorBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(25.r),
@@ -649,8 +648,8 @@ class _AddRelativePageState extends State<AddRelativePage> {
       },
       decoration: InputDecoration(
         labelText: localizedLabel,
-        labelStyle: MaterialStateTextStyle.resolveWith((states) {
-          if (states.contains(MaterialState.error)) {
+        labelStyle: WidgetStateTextStyle.resolveWith((states) {
+          if (states.contains(WidgetState.error)) {
             return AppTextStyles.getText3(context).copyWith(color: AppColors.red);
           }
           return AppTextStyles.getText3(context).copyWith(color: Colors.grey);
@@ -659,11 +658,11 @@ class _AddRelativePageState extends State<AddRelativePage> {
         contentPadding: EdgeInsets.symmetric(vertical: 12.h, horizontal: 14.w),
         enabledBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(25.r),
-          borderSide: BorderSide(color: Colors.grey),
+          borderSide: const BorderSide(color: Colors.grey),
         ),
         focusedBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(25.r),
-          borderSide: BorderSide(color: AppColors.main, width: 2),
+          borderSide: const BorderSide(color: AppColors.main, width: 2),
         ),
         errorBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(25.r),
@@ -708,8 +707,8 @@ class _AddRelativePageState extends State<AddRelativePage> {
           textAlign: getTextAlign(context),
           decoration: InputDecoration(
             labelText: localizedLabel,
-            labelStyle: MaterialStateTextStyle.resolveWith((states) {
-              if (states.contains(MaterialState.error)) {
+            labelStyle: WidgetStateTextStyle.resolveWith((states) {
+              if (states.contains(WidgetState.error)) {
                 return AppTextStyles.getText3(context).copyWith(color: AppColors.red);
               }
               return AppTextStyles.getText3(context).copyWith(color: Colors.grey);
@@ -718,11 +717,11 @@ class _AddRelativePageState extends State<AddRelativePage> {
             contentPadding: EdgeInsets.symmetric(vertical: 12.h, horizontal: 14.w),
             enabledBorder: OutlineInputBorder(
               borderRadius: BorderRadius.circular(25.r),
-              borderSide: BorderSide(color: Colors.grey),
+              borderSide: const BorderSide(color: Colors.grey),
             ),
             focusedBorder: OutlineInputBorder(
               borderRadius: BorderRadius.circular(25.r),
-              borderSide: BorderSide(color: AppColors.main, width: 2),
+              borderSide: const BorderSide(color: AppColors.main, width: 2),
             ),
             errorBorder: OutlineInputBorder(
               borderRadius: BorderRadius.circular(25.r),
@@ -764,9 +763,9 @@ class _AddRelativePageState extends State<AddRelativePage> {
       decoration: InputDecoration(
         counterText: "",
         labelText: AppLocalizations.of(context)!.phoneNumber,
-        labelStyle: MaterialStateTextStyle.resolveWith((states) {
+        labelStyle: WidgetStateTextStyle.resolveWith((states) {
           return AppTextStyles.getText3(context).copyWith(
-            color: states.contains(MaterialState.error) ? AppColors.red : Colors.grey,
+            color: states.contains(WidgetState.error) ? AppColors.red : Colors.grey,
           );
         }),
         floatingLabelBehavior: FloatingLabelBehavior.auto,
@@ -813,11 +812,11 @@ class _AddRelativePageState extends State<AddRelativePage> {
         suffixIconConstraints: BoxConstraints(minWidth: 32.w, minHeight: 32.h),
         enabledBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(25.r),
-          borderSide: BorderSide(color: Colors.grey),
+          borderSide: const BorderSide(color: Colors.grey),
         ),
         focusedBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(25.r),
-          borderSide: BorderSide(color: AppColors.main, width: 2),
+          borderSide: const BorderSide(color: AppColors.main, width: 2),
         ),
         errorBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(25.r),
@@ -891,19 +890,19 @@ class _AddRelativePageState extends State<AddRelativePage> {
       style: AppTextStyles.getText2(context),
       decoration: InputDecoration(
         labelText: AppLocalizations.of(context)!.email,
-        labelStyle: MaterialStateTextStyle.resolveWith((states) {
+        labelStyle: WidgetStateTextStyle.resolveWith((states) {
           return AppTextStyles.getText3(context).copyWith(
-            color: states.contains(MaterialState.error) ? AppColors.red : Colors.grey,
+            color: states.contains(WidgetState.error) ? AppColors.red : Colors.grey,
           );
         }),
         floatingLabelBehavior: FloatingLabelBehavior.auto,
         enabledBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(25.r),
-          borderSide: BorderSide(color: Colors.grey),
+          borderSide: const BorderSide(color: Colors.grey),
         ),
         focusedBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(25.r),
-          borderSide: BorderSide(color: AppColors.main, width: 2),
+          borderSide: const BorderSide(color: AppColors.main, width: 2),
         ),
         errorBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(25.r),

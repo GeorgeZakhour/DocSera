@@ -17,7 +17,7 @@ import '../../../Business_Logic/Doctor/Messages_page/doctor_messages_cubit.dart'
 class DoctorDrawer extends StatelessWidget {
   final Map<String, dynamic>? doctorData;
 
-  const DoctorDrawer({Key? key, this.doctorData}) : super(key: key);
+  const DoctorDrawer({super.key, this.doctorData});
 
   @override
   Widget build(BuildContext context) {
@@ -54,7 +54,7 @@ class DoctorDrawer extends StatelessWidget {
 
               Navigator.pushAndRemoveUntil(
                 context,
-                fadePageRoute( CustomBottomNavigationBar()), // ✅ Navigate to home page
+                fadePageRoute( const CustomBottomNavigationBar()), // ✅ Navigate to home page
                     (route) => false, // Remove all previous routes
               );
             },
@@ -96,7 +96,7 @@ class DoctorDrawer extends StatelessWidget {
     print("📸 Selected Avatar: $avatarImage");
 
     return DrawerHeader(
-      decoration: BoxDecoration(color: AppColors.main),
+      decoration: const BoxDecoration(color: AppColors.main),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [

@@ -1,4 +1,3 @@
-import 'package:docsera/screens/doctors/auth/register/doctor_create_password.dart';
 import 'package:docsera/screens/doctors/doctor_panel/doctor_dashboard.dart';
 import 'package:docsera/utils/page_transitions.dart';
 import 'package:docsera/widgets/base_scaffold.dart';
@@ -6,9 +5,10 @@ import 'package:flutter/material.dart';
 import 'package:docsera/app/const.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
-import 'package:uuid/uuid.dart';
 
 class DoctorRegistrationPage extends StatefulWidget {
+  const DoctorRegistrationPage({super.key});
+
   @override
   _DoctorRegistrationPageState createState() => _DoctorRegistrationPageState();
 }
@@ -39,9 +39,9 @@ class _DoctorRegistrationPageState extends State<DoctorRegistrationPage> {
   String _selectedGender = "Male";
   String? _selectedSpecialty;
   bool _isOtherSpecialty = false;
-  List<String> _specialties = [];
+  final List<String> _specialties = [];
   String _selectedCountry = "Syria";
-  List<String> _selectedLanguages = [];
+  final List<String> _selectedLanguages = [];
   final List<String> _availableLanguages = ["العربية", "الإنجليزية", "الفرنسية", "الألمانية", "أخرى"];
   bool _isOtherLanguage = false;
 
@@ -70,8 +70,8 @@ class _DoctorRegistrationPageState extends State<DoctorRegistrationPage> {
     return InputDecoration(
       labelText: label,
       border: OutlineInputBorder(borderRadius: BorderRadius.circular(25.0)),
-      focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(25.0), borderSide: BorderSide(color: AppColors.main, width: 2)),
-      contentPadding: EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+      focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(25.0), borderSide: const BorderSide(color: AppColors.main, width: 2)),
+      contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
     );
   }
 
@@ -85,7 +85,7 @@ class _DoctorRegistrationPageState extends State<DoctorRegistrationPage> {
     }
   }
 
-  Map<String, List<Map<String, String>>> _openingHours = {
+  final Map<String, List<Map<String, String>>> _openingHours = {
     "Monday": [],
     "Tuesday": [],
     "Wednesday": [],
@@ -103,12 +103,12 @@ class _DoctorRegistrationPageState extends State<DoctorRegistrationPage> {
         return Theme(
           data: ThemeData.light().copyWith(
             primaryColor: AppColors.main, // Main color
-            colorScheme: ColorScheme.light(
+            colorScheme: const ColorScheme.light(
               primary: AppColors.main, // Header & buttons
               onPrimary: Colors.white, // Text on header
               onSurface: AppColors.mainDark, // Text on picker
             ),
-            buttonTheme: ButtonThemeData(textTheme: ButtonTextTheme.primary),
+            buttonTheme: const ButtonThemeData(textTheme: ButtonTextTheme.primary),
           ),
           child: child!,
         );
@@ -211,9 +211,9 @@ class _DoctorRegistrationPageState extends State<DoctorRegistrationPage> {
   @override
   Widget build(BuildContext context) {
     return BaseScaffold(
-      title: Text(
+      title: const Text(
       "Doctor Registration", // Dynamic title
-      style: const TextStyle(
+      style: TextStyle(
         color: AppColors.whiteText,
         fontWeight: FontWeight.bold,
         fontSize: 16,

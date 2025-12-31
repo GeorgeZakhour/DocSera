@@ -13,7 +13,7 @@ InputDecoration getInputDecoration({String hintText = ""}) {
     ),
     focusedBorder: OutlineInputBorder(
       borderRadius: BorderRadius.circular(25),
-      borderSide: BorderSide(color: AppColors.main, width: 1.2),
+      borderSide: const BorderSide(color: AppColors.main, width: 1.2),
     ),
     errorBorder: OutlineInputBorder(
       borderRadius: BorderRadius.circular(16),

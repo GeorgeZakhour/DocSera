@@ -6,7 +6,6 @@ import 'package:docsera/screens/home/health/widgets/steps/health_family_member_s
 import 'package:docsera/screens/home/health/widgets/steps/health_master_search_step.dart';
 import 'package:docsera/screens/home/health/widgets/steps/health_recap_step.dart';
 import 'package:docsera/screens/home/health/widgets/steps/health_stepper_bottom_sheet.dart';
-import 'package:docsera/screens/home/health/widgets/steps/health_year_step.dart';
 import 'package:docsera/screens/home/health/widgets/steps/what_age_step.dart';
 
 import 'package:flutter/material.dart';
@@ -31,8 +30,11 @@ class _AddFamilyBottomSheetState extends State<AddFamilyBottomSheet> {
 
   void _next() => setState(() => step++);
   void _back() {
-    if (step == 1) Navigator.pop(context);
-    else setState(() => step--);
+    if (step == 1) {
+      Navigator.pop(context);
+    } else {
+      setState(() => step--);
+    }
   }
 
   Future<void> _save() async {

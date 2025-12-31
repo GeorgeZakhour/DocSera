@@ -23,8 +23,7 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 class CustomBottomNavigationBar extends StatefulWidget {
   final int initialIndex;
 
-  const CustomBottomNavigationBar({Key? key, this.initialIndex = 0})
-      : super(key: key);
+  const CustomBottomNavigationBar({super.key, this.initialIndex = 0});
 
   @override
   _CustomBottomNavigationBarState createState() =>
@@ -56,10 +55,10 @@ class _CustomBottomNavigationBarState extends State<CustomBottomNavigationBar>
     });
 
     _pages = [
-      MainScreen(),
-      AppointmentsPage(),
+      const MainScreen(),
+      const AppointmentsPage(),
       const HealthPage(), // 🔹 بدل DocumentsPage
-      MessagesPage(),
+      const MessagesPage(),
       AccountScreen(onLogout: () => _logout(context)),
     ];
 
@@ -230,7 +229,7 @@ class _CustomBottomNavigationBarState extends State<CustomBottomNavigationBar>
 
     double screenWidth = MediaQuery.of(context).size.width;
     double buttonWidth = screenWidth / 5;
-    DateTime? _lastBackPressed;
+    DateTime? lastBackPressed;
 
     final bool isArabicLocale =
         Localizations.localeOf(context).languageCode == 'ar';
@@ -244,13 +243,13 @@ class _CustomBottomNavigationBarState extends State<CustomBottomNavigationBar>
           return false;
         }
 
-        if (_lastBackPressed != null &&
-            DateTime.now().difference(_lastBackPressed!) <
+        if (lastBackPressed != null &&
+            DateTime.now().difference(lastBackPressed!) <
                 const Duration(seconds: 1)) {
           return true;
         }
 
-        _lastBackPressed = DateTime.now();
+        lastBackPressed = DateTime.now();
 
         final shouldExit = await showGeneralDialog(
           context: context,
@@ -555,7 +554,7 @@ class _CustomBottomNavigationBarState extends State<CustomBottomNavigationBar>
                   duration: const Duration(milliseconds: 250),
                   curve: Curves.easeInOut,
                   child: Container(
-                    padding: EdgeInsets.all(1.5),
+                    padding: const EdgeInsets.all(1.5),
                     decoration: const BoxDecoration(
                       color: Colors.red,
                       shape: BoxShape.circle,

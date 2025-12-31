@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:docsera/app/const.dart';
-import 'package:docsera/app/text_styles.dart';
 
 class HealthInfoRow extends StatelessWidget {
   final String title;

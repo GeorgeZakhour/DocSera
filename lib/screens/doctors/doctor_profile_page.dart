@@ -14,7 +14,6 @@ import 'package:flutter_quill/flutter_quill.dart' as quill;
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:qr_flutter/qr_flutter.dart';
 import 'package:share_plus/share_plus.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:docsera/gen_l10n/app_localizations.dart';
@@ -24,18 +23,16 @@ import 'package:docsera/app/text_styles.dart';
 import 'package:docsera/screens/map_results_page.dart';
 
 import '../../utils/full_page_loader.dart';
-import 'auth/login/doctor_login_page.dart';
-import 'auth/register/doctor_registration_page.dart';
 
 class DoctorProfilePage extends StatefulWidget {
   final String doctorId; // ✅ Make non-nullable
   final Map<String, dynamic>? doctor;
 
   const DoctorProfilePage({
-    Key? key,
+    super.key,
     required this.doctorId,
     this.doctor,
-  }) : super(key: key);
+  });
 
   @override
   _DoctorProfilePageState createState() => _DoctorProfilePageState();
@@ -53,7 +50,7 @@ class _DoctorProfilePageState extends State<DoctorProfilePage> {
   int _initialImageIndex = 0;
   final TransformationController _transformationController = TransformationController();
   Offset _doubleTapPosition = Offset.zero;
-  Map<String, ImageProvider> _imageCache = {};
+  final Map<String, ImageProvider> _imageCache = {};
   double _buttonTopOffset = 0.0;
   bool _isOpeningImageOverlay = false;
 
@@ -87,7 +84,7 @@ class _DoctorProfilePageState extends State<DoctorProfilePage> {
     if (_imageCache.containsKey(url)) return;
 
     final completer = Completer<ImageInfo>();
-    final stream = CachedNetworkImageProvider(url).resolve(ImageConfiguration());
+    final stream = CachedNetworkImageProvider(url).resolve(const ImageConfiguration());
     final listener = ImageStreamListener((ImageInfo info, bool _) {
       completer.complete(info);
     });
@@ -341,7 +338,7 @@ class _DoctorProfilePageState extends State<DoctorProfilePage> {
                             _transformationController.value = Matrix4.identity();
                           } else {
                             final tap = _doubleTapPosition;
-                            final scale = 2.5;
+                            const scale = 2.5;
                             final x = -tap.dx * (scale - 1);
                             final y = -tap.dy * (scale - 1);
                             _transformationController.value = Matrix4.identity()
@@ -469,7 +466,7 @@ class _DoctorProfilePageState extends State<DoctorProfilePage> {
                   borderRadius: BorderRadius.circular(16),
                   border: Border.all(color: AppColors.main, width: 1),
                   image: const DecorationImage(
-                    image: AssetImage('assets/images/map.png'),
+                    image: AssetImage('assets/images/map.webp'),
                     fit: BoxFit.cover,
                   ),
                 ),
@@ -636,7 +633,7 @@ class _DoctorProfilePageState extends State<DoctorProfilePage> {
 
   Widget _buildGallerySection(List<dynamic> galleryUrls) {
     final String? doctorId = _doctorData?['id']?.toString();
-    if (doctorId == null) return SizedBox.shrink();
+    if (doctorId == null) return const SizedBox.shrink();
 
     final cleanedGalleryUrls = galleryUrls.map((e) => e.toString().split('/').last).toList();
     final previewImages = cleanedGalleryUrls.take(4).toList();
@@ -674,7 +671,7 @@ class _DoctorProfilePageState extends State<DoctorProfilePage> {
               GridView.builder(
                 padding: EdgeInsets.zero,
                 shrinkWrap: true,
-                physics: NeverScrollableScrollPhysics(),
+                physics: const NeverScrollableScrollPhysics(),
                 itemCount: previewImages.length,
                 gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
                   crossAxisCount: 4,
@@ -959,7 +956,7 @@ class _DoctorProfilePageState extends State<DoctorProfilePage> {
   }
 
   Widget _buildServicesSection(List<dynamic>? services) {
-    if (services == null || services.isEmpty) return SizedBox.shrink();
+    if (services == null || services.isEmpty) return const SizedBox.shrink();
 
     return GestureDetector(
       onTap: () => _showServicesBottomSheet(services),
@@ -1280,13 +1277,13 @@ class _DoctorProfilePageState extends State<DoctorProfilePage> {
   void _showContactDetails(String? phoneNumber, {String? email}) {
     final l = AppLocalizations.of(context)!;
 
-    String _formatPhone(String raw) {
+    String formatPhone(String raw) {
       if (raw.startsWith('00963')) return '0${raw.substring(5)}';
       if (raw.startsWith('+963')) return '0${raw.substring(4)}';
       return raw;
     }
 
-    final formattedPhone = phoneNumber != null ? _formatPhone(phoneNumber) : null;
+    final formattedPhone = phoneNumber != null ? formatPhone(phoneNumber) : null;
     final formattedEmail = (email ?? '').trim();
 
     showModalBottomSheet(
@@ -1544,7 +1541,7 @@ class _DoctorProfilePageState extends State<DoctorProfilePage> {
   }
 
   Widget _buildFAQsSection(List<dynamic>? faqs) {
-    if (faqs == null || faqs.isEmpty) return SizedBox.shrink();
+    if (faqs == null || faqs.isEmpty) return const SizedBox.shrink();
 
     return Card(
       color: AppColors.background2,
@@ -1920,8 +1917,8 @@ $deepLink
     if (widget.doctorId.isEmpty) {
       print("❌ ERROR: doctorId is unexpectedly empty inside DoctorProfilePage");
       return Scaffold(
-        appBar: AppBar(title: Text("Error")),
-        body: Center(child: Text("Doctor ID is missing. Cannot load profile.")),
+        appBar: AppBar(title: const Text("Error")),
+        body: const Center(child: Text("Doctor ID is missing. Cannot load profile.")),
       );
     }
 
@@ -1999,18 +1996,24 @@ $deepLink
     double opacity = 1.0;
     int visibleSections = 0;
 
-    if (_doctorData?['gallery'] != null && (_doctorData!['gallery'] as List).isNotEmpty)
+    if (_doctorData?['gallery'] != null && (_doctorData!['gallery'] as List).isNotEmpty) {
       visibleSections++;
-    if (profileDescription != null || (specialties != null && specialties.isNotEmpty))
+    }
+    if (profileDescription != null || (specialties != null && specialties.isNotEmpty)) {
       visibleSections++;
-    if (_doctorData?['offered_services'] != null && _doctorData!['offered_services'] is Map<String, dynamic> && (_doctorData!['offered_services'] as Map).isNotEmpty)
+    }
+    if (_doctorData?['offered_services'] != null && _doctorData!['offered_services'] is Map<String, dynamic> && (_doctorData!['offered_services'] as Map).isNotEmpty) {
       visibleSections++;
-    if (street != null || city != null || country != null)
+    }
+    if (street != null || city != null || country != null) {
       visibleSections++;
-    if (_doctorData?['opening_hours'] != null || _doctorData?['languages'] != null || _doctorData?['phone_number'] != null)
+    }
+    if (_doctorData?['opening_hours'] != null || _doctorData?['languages'] != null || _doctorData?['phone_number'] != null) {
       visibleSections++;
-    if (_doctorData?['faqs'] != null && _doctorData!['faqs'] is Map<String, dynamic>)
+    }
+    if (_doctorData?['faqs'] != null && _doctorData!['faqs'] is Map<String, dynamic>) {
       visibleSections++;
+    }
 
 
     if (offset <= fadeStart) {
@@ -2054,11 +2057,11 @@ $deepLink
                       onPressed: _toggleFavoriteStatus,
                     ),
                   IconButton(
-                    icon: Icon(Icons.qr_code_rounded, color: AppColors.whiteText),
+                    icon: const Icon(Icons.qr_code_rounded, color: AppColors.whiteText),
                     onPressed: _showDoctorQrSheet,
                   ),
                   IconButton(
-                    icon: Icon(Icons.share, color: AppColors.whiteText),
+                    icon: const Icon(Icons.share, color: AppColors.whiteText),
                     onPressed: _shareDoctorLink,
                   ),
                 ],
@@ -2076,7 +2079,7 @@ $deepLink
                     fit: StackFit.expand,
                     children: [
                       Image.asset(
-                        'assets/images/doctor_header_pattern.png',
+                        'assets/images/doctor_header_pattern.webp',
                         fit: BoxFit.cover,
                       ),
                       Container(
@@ -2088,7 +2091,7 @@ $deepLink
                           SizedBox(height: 70.h),
                           GestureDetector(
                             onTap: () {
-                              if (avatarPath != null && avatarPath.startsWith('http')) {
+                              if (avatarPath.startsWith('http')) {
                                 _showImageOverlayWithIndex([avatarPath], 0);
                               }
                             },
@@ -2209,7 +2212,7 @@ $deepLink
               child: Container(
                 decoration: BoxDecoration(
                   borderRadius: BorderRadius.circular(30.r),
-                  gradient: LinearGradient(
+                  gradient: const LinearGradient(
                     begin: Alignment.topCenter,
                     end: Alignment.bottomCenter,
                     colors: [

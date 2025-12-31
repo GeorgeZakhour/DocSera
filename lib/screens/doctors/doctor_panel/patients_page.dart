@@ -8,7 +8,7 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 class PatientsPage extends StatefulWidget {
   final Map<String, dynamic>? doctorData;
 
-  const PatientsPage({Key? key, this.doctorData}) : super(key: key);
+  const PatientsPage({super.key, this.doctorData});
 
   @override
   _PatientsPageState createState() => _PatientsPageState();
@@ -116,7 +116,7 @@ class _PatientsPageState extends State<PatientsPage> {
               controller: searchController,
               decoration: InputDecoration(
                 hintText: "Search Patients...",
-                hintStyle: TextStyle(fontSize: 12),
+                hintStyle: const TextStyle(fontSize: 12),
                 prefixIcon: const Icon(Icons.search, color: AppColors.main),
                 filled: true,
                 fillColor: Colors.white,
@@ -126,7 +126,7 @@ class _PatientsPageState extends State<PatientsPage> {
                   borderRadius: BorderRadius.circular(25),
                 ),
                 focusedBorder: OutlineInputBorder(
-                  borderSide: BorderSide(color: AppColors.main),
+                  borderSide: const BorderSide(color: AppColors.main),
                   borderRadius: BorderRadius.circular(20),
                 ),
               ),

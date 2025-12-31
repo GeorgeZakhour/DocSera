@@ -28,8 +28,11 @@ class _AddVaccineBottomSheetState extends State<AddVaccineBottomSheet> {
   void _next() => setState(() => step++);
 
   void _back() {
-    if (step == 1) Navigator.pop(context);
-    else setState(() => step--);
+    if (step == 1) {
+      Navigator.pop(context);
+    } else {
+      setState(() => step--);
+    }
   }
 
   Future<void> _save() async {

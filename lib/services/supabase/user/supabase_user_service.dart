@@ -267,11 +267,11 @@ extension SupabaseUserServiceFavorites on SupabaseUserService {
     // fallback فقط إذا لا يوجد صورة أصلًا
     imageUrl ??= (title == "dr.")
         ? (gender == "female"
-        ? 'assets/images/female-doc.png'
-        : 'assets/images/male-doc.png')
+        ? 'assets/images/female-doc.webp'
+        : 'assets/images/male-doc.webp')
         : (gender == "female"
-        ? 'assets/images/female-phys.png'
-        : 'assets/images/male-phys.png');
+        ? 'assets/images/female-phys.webp'
+        : 'assets/images/male-phys.webp');
 
     return {
       'id': doctorId,

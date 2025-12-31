@@ -95,7 +95,7 @@ class SupabaseSearchService {
           .ilike('specialty', '%$specialty%')
           .limit(limit);
 
-      final Distance dist = const Distance();
+      const Distance dist = Distance();
       final origin = LatLng(userLat, userLng);
 
       // attach _distanceKm and filter unknown coords

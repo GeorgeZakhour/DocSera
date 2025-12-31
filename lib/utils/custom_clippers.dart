@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:path_drawing/path_drawing.dart';
 import 'dart:math' as math;
-import 'package:svg_path_parser/svg_path_parser.dart';
 
 
 /// **🔹 Custom Clipper for the Top Section**

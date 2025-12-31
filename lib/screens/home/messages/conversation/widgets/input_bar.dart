@@ -1,4 +1,3 @@
-import 'dart:io';
 import 'dart:ui';
 import 'package:docsera/app/const.dart';
 import 'package:docsera/app/text_styles.dart';
@@ -12,12 +11,12 @@ class InputBar extends StatelessWidget {
   final bool isEnabled;
 
   const InputBar({
-    Key? key,
+    super.key,
     required this.controller,
     required this.onSend,
     required this.onAddAttachment,
     required this.isEnabled,
-  }) : super(key: key);
+  });
 
   @override
   Widget build(BuildContext context) {

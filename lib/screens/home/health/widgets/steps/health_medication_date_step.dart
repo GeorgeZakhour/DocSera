@@ -29,7 +29,7 @@ class MedicationDateStep extends StatelessWidget {
       builder: (context, child) {
         return Theme(
           data: Theme.of(context).copyWith(
-            colorScheme: ColorScheme.light(
+            colorScheme: const ColorScheme.light(
               primary: AppColors.main,
               onPrimary: Colors.white,
               onSurface: AppColors.mainDark,

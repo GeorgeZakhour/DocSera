@@ -8,7 +8,6 @@ import 'package:docsera/app/text_styles.dart';
 import 'package:docsera/models/document.dart';
 import 'package:docsera/models/patient_profile.dart';
 import 'package:docsera/services/supabase/supabase_conversation_service.dart';
-import 'package:docsera/utils/doctor_image_utils.dart';
 import 'package:docsera/widgets/base_scaffold.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
@@ -31,7 +30,7 @@ class WriteMessagePage extends StatefulWidget {
   final UserDocument? attachedDocument;
 
   const WriteMessagePage({
-    Key? key,
+    super.key,
     required this.doctorName,
     required this.doctorImage,
     required this.doctorImageUrl,
@@ -40,7 +39,7 @@ class WriteMessagePage extends StatefulWidget {
     required this.patientProfile,
     this.attachedDocument,
 
-  }) : super(key: key);
+  });
 
   @override
   State<WriteMessagePage> createState() => _WriteMessagePageState();
@@ -51,12 +50,12 @@ class _WriteMessagePageState extends State<WriteMessagePage> {
   int charCount = 0;
   List<File> _selectedImageFiles = [];
   String? _pendingFileType;
-  bool _showAllAttachments = false;
+  final bool _showAllAttachments = false;
   UserDocument? _attachedDocument;
   bool _expandedImageOverlay = false;
   List<String> _expandedImageUrls = [];
   int _initialImageIndex = 0;
-  bool _shouldAutoScroll = true;
+  final bool _shouldAutoScroll = true;
   bool _isSending = false;
 
 
@@ -285,7 +284,7 @@ class _WriteMessagePageState extends State<WriteMessagePage> {
 
     if (isPdf) {
       final fileName = _selectedImageFiles.first.path.split('/').last;
-      final shortName = fileName.length > 30 ? fileName.substring(0, 27) + '...' : fileName;
+      final shortName = fileName.length > 30 ? '${fileName.substring(0, 27)}...' : fileName;
 
       return Padding(
         padding: EdgeInsets.symmetric(horizontal: 0, vertical: 6.h),
@@ -638,14 +637,14 @@ class _WriteMessagePageState extends State<WriteMessagePage> {
                             : SvgPicture.asset(
                           "assets/icons/send.svg",
                           height: 18.sp,
-                          colorFilter: ColorFilter.mode(AppColors.whiteText, BlendMode.srcIn),
+                          colorFilter: const ColorFilter.mode(AppColors.whiteText, BlendMode.srcIn),
                         ),
 
                         label: _isSending
                             ? SizedBox(
                           width: 18.sp,
                           height: 18.sp,
-                          child: CircularProgressIndicator(
+                          child: const CircularProgressIndicator(
                             strokeWidth: 2,
                             valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
                           ),

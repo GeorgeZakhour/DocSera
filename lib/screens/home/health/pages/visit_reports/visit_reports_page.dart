@@ -1,4 +1,3 @@
-import 'dart:ui';
 import 'package:docsera/Business_Logic/Health_page/patient_switcher_cubit.dart';
 import 'package:docsera/gen_l10n/app_localizations.dart';
 import 'package:docsera/screens/home/health/pages/visit_reports/visit_reports_service.dart';
@@ -248,7 +247,7 @@ class _VisitReportsPageState extends State<VisitReportsPage>
           const SizedBox(width: 12),
           Text(
             AppLocalizations.of(context)!.health_reports_title,
-            style: TextStyle(
+            style: const TextStyle(
               fontSize: 18,
               fontWeight: FontWeight.bold,
               color: AppColors.mainDark,

@@ -1,19 +1,15 @@
   import 'dart:async';
-  import 'dart:convert';
 import 'dart:ui';
   import 'package:docsera/Business_Logic/Appointments_page/appointments_cubit.dart';
   import 'package:docsera/Business_Logic/Appointments_page/appointments_state.dart';
 import 'package:docsera/screens/home/shimmer/shimmer_widgets.dart';
-import 'package:docsera/services/supabase/user/supabase_user_service.dart';
 import 'package:docsera/utils/doctor_image_utils.dart';
 import 'package:docsera/utils/time_utils.dart';
   import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:docsera/gen_l10n/app_localizations.dart';
-  import 'package:docsera/screens/doctors/appointment/select_patient_page.dart';
   import 'package:docsera/screens/home/appointment/appointment_details_page.dart';
   import 'package:docsera/screens/search_page.dart';
   import 'package:docsera/utils/page_transitions.dart';
-  import 'package:docsera/utils/shared_prefs_service.dart';
   import 'package:flutter/material.dart';
   import 'package:docsera/app/const.dart';
   import 'package:intl/intl.dart';
@@ -23,7 +19,7 @@ import 'package:docsera/gen_l10n/app_localizations.dart';
   import 'package:docsera/screens/auth/identification_page.dart';
 
   class AppointmentsPage extends StatefulWidget {
-    const AppointmentsPage({Key? key}) : super(key: key);
+    const AppointmentsPage({super.key});
 
     @override
     _AppointmentsPageState createState() => _AppointmentsPageState();
@@ -106,9 +102,9 @@ import 'package:docsera/gen_l10n/app_localizations.dart';
                 child: BlocBuilder<AppointmentsCubit, AppointmentsState>(
                   buildWhen: (previous, current) => current is! AppointmentsLoading,
                   builder: (context, state) {
-                    if (_isLoading) return _buildShimmerLoading(); // ✅ Prevent flickering
-
-                    else if (state is NotLoggedIn) {
+                    if (_isLoading) {
+                      return _buildShimmerLoading(); // ✅ Prevent flickering
+                    } else if (state is NotLoggedIn) {
                       return _buildLoginPrompt(context);
                     } else if (state is AppointmentsLoading) {
                       return _buildShimmerLoading();
@@ -116,7 +112,7 @@ import 'package:docsera/gen_l10n/app_localizations.dart';
                       return _buildAppointmentsView(context, state);
                     } else if (state is AppointmentsError) {
                       return Center(
-                        child: Text("Error: ${state.message}", style: TextStyle(color: Colors.red)),
+                        child: Text("Error: ${state.message}", style: const TextStyle(color: Colors.red)),
                       );
                     }
                     return const Center(child: Text("Unexpected error"));

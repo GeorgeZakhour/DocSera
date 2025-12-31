@@ -1,6 +1,5 @@
 import 'dart:async';
 import 'dart:convert';
-import 'package:bloc/bloc.dart';
 import 'package:docsera/Business_Logic/Authentication/auth_cubit.dart';
 import 'package:docsera/Business_Logic/Authentication/auth_state.dart';
 import 'package:docsera/Business_Logic/Main_page/main_screen_state.dart';
@@ -22,7 +21,7 @@ class MainScreenCubit extends Cubit<MainScreenState> {
     try {
       if (!_hasLoadedOnce) {
         emit(MainScreenLoading());
-        await Future.delayed(Duration(milliseconds: 100));
+        await Future.delayed(const Duration(milliseconds: 100));
       }
 
       // ✅ استخدم AuthCubit بدل prefs
@@ -32,7 +31,7 @@ class MainScreenCubit extends Cubit<MainScreenState> {
       print("🔐 AuthCubit State: $authState");
 
       if (authState is! AuthAuthenticated) {
-        emit(MainScreenLoaded(isLoggedIn: false, favoriteDoctors: []));
+        emit(MainScreenLoaded(isLoggedIn: false, favoriteDoctors: const []));
         return;
       }
 

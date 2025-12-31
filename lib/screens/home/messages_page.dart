@@ -19,7 +19,7 @@ import 'package:docsera/utils/doctor_image_utils.dart';
   import '../../models/conversation.dart';
 
   class MessagesPage extends StatefulWidget {
-    const MessagesPage({Key? key}) : super(key: key);
+    const MessagesPage({super.key});
 
     @override
     _MessagesPageState createState() => _MessagesPageState();
@@ -193,7 +193,7 @@ import 'package:docsera/utils/doctor_image_utils.dart';
           child: Row(
             children: [
               Image.asset(
-                'assets/images/messages_banner.png', // استبدلها بالصورة المناسبة
+                'assets/images/messages_banner.webp', // استبدلها بالصورة المناسبة
                 width: 45.w,
                 height: 45.w,
               ),
@@ -231,7 +231,7 @@ import 'package:docsera/utils/doctor_image_utils.dart';
         _buildBannerCard(),
       ];
 
-      groupedByDoctor.entries.forEach((entry) {
+      for (var entry in groupedByDoctor.entries) {
         final doctorId = entry.key;
         final convos = entry.value;
         final firstConvo = convos.first;
@@ -244,7 +244,7 @@ import 'package:docsera/utils/doctor_image_utils.dart';
         } else {
           children.add(_buildGroupedDoctorTile(context, convos));
         }
-      });
+      }
 
       children.add(SizedBox(height: 80.h));
 
@@ -394,7 +394,7 @@ import 'package:docsera/utils/doctor_image_utils.dart';
                         child: _buildConversationTile(context, convo, groupCount: convos.length, showDoctorName: false),
                       ),
                     );
-                  }).toList(),
+                  }),
 
                 if (!isExpanded)
                   Divider(color: Colors.grey.shade300, height: 1),

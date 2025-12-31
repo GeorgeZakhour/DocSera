@@ -23,7 +23,7 @@ class DocumentInfoScreen extends StatefulWidget {
   final String? appointmentId;
 
   const DocumentInfoScreen({
-    Key? key,
+    super.key,
     required this.images,
     this.initialName,
     this.pageCount,
@@ -33,7 +33,7 @@ class DocumentInfoScreen extends StatefulWidget {
     this.conversationDoctorName,
     this.isSendMode = false, // ← افتراضي رفع عادي
     this.appointmentId,
-  }) : super(key: key);
+  });
 
   @override
   State<DocumentInfoScreen> createState() => _DocumentInfoScreenState();
@@ -410,7 +410,7 @@ class _DocumentInfoScreenState extends State<DocumentInfoScreen> {
       debugPrint(
           "Compressed size: ${(compressedSize / 1024).toStringAsFixed(2)} KB");
 
-      final int maxAllowedSize = 2 * 1024 * 1024;
+      const int maxAllowedSize = 2 * 1024 * 1024;
 
       if (compressedSize >= originalSize || compressedSize > maxAllowedSize) {
         debugPrint("⚠️ Compression skipped (inefficient or >2MB)");

@@ -11,7 +11,7 @@ import '../../../utils/full_page_loader.dart';
 class DoctorDashboard extends StatefulWidget {
   Map<String, dynamic>? doctorData;
 
-  DoctorDashboard({Key? key,this.doctorData}) : super(key: key);
+  DoctorDashboard({super.key,this.doctorData});
 
   @override
   State<DoctorDashboard> createState() => _DoctorDashboardState();
@@ -123,7 +123,7 @@ class _DoctorDashboardState extends State<DoctorDashboard> {
                         },
                         child: Text(
                           isExpanded ? "Hide Details ▲" : "Show Details >",
-                          style: TextStyle(
+                          style: const TextStyle(
                             color: AppColors.main,
                             fontSize: 12,
                             fontWeight: FontWeight.bold,

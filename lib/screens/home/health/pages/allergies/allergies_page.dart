@@ -271,7 +271,7 @@ class _AllergyRecordsList extends StatelessWidget {
 
           tags: [
             if (severityLabel != null)
-              _tag(severityLabel!, severityColor),
+              _tag(severityLabel, severityColor),
 
             _tag(year, Colors.blueGrey),
 

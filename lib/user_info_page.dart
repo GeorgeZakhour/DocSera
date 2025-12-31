@@ -4,7 +4,7 @@ import 'app/const.dart';
 class UserInfoPage extends StatelessWidget {
   final Map<String, dynamic> userData;
 
-  const UserInfoPage({Key? key, required this.userData}) : super(key: key);
+  const UserInfoPage({super.key, required this.userData});
 
   @override
   Widget build(BuildContext context) {

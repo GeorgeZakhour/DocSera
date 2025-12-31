@@ -37,13 +37,14 @@ extension WidgetKeyExtension on Widget {
 
 
 class DocumentsPage extends StatefulWidget {
-  const DocumentsPage({Key? key}) : super(key: key);
+  const DocumentsPage({super.key});
 
   @override
   _DocumentsPageState createState() => _DocumentsPageState();
 }
 
 class _DocumentsPageState extends State<DocumentsPage> with AutomaticKeepAliveClientMixin {
+  @override
   bool get wantKeepAlive => true;
 
 
@@ -298,7 +299,7 @@ class _DocumentsPageState extends State<DocumentsPage> with AutomaticKeepAliveCl
                   Expanded(
                     child: BlocBuilder<DocumentsCubit, DocumentsState>(
                       builder: (context, state) {
-                        if (_isLoading) return SizedBox();
+                        if (_isLoading) return const SizedBox();
                         if (state is DocumentsLoading) return _buildShimmerLoading();
                         if (state is DocumentsNotLogged) return _buildLoginPrompt();
                         if (state is DocumentsError) return Center(child: Text(state.message));
@@ -326,10 +327,10 @@ class _DocumentsPageState extends State<DocumentsPage> with AutomaticKeepAliveCl
                       children: [
                         if (_selectedTab == 0) ...[
                           FutureBuilder(
-                            future: Future.delayed(Duration(milliseconds: 0)),
+                            future: Future.delayed(const Duration(milliseconds: 0)),
                             builder: (_, snapshot) {
                               return AnimatedSlide(
-                                offset: _isFabExpanded ? Offset.zero : Offset(0, 0.2),
+                                offset: _isFabExpanded ? Offset.zero : const Offset(0, 0.2),
                                 duration: const Duration(milliseconds: 300),
                                 child: AnimatedOpacity(
                                   opacity: _isFabExpanded ? 1 : 0,
@@ -354,10 +355,10 @@ class _DocumentsPageState extends State<DocumentsPage> with AutomaticKeepAliveCl
                           ),
 
                           FutureBuilder(
-                            future: Future.delayed(Duration(milliseconds: 100)),
+                            future: Future.delayed(const Duration(milliseconds: 100)),
                             builder: (_, snapshot) {
                               return AnimatedSlide(
-                                offset: _isFabExpanded ? Offset.zero : Offset(0, 0.2),
+                                offset: _isFabExpanded ? Offset.zero : const Offset(0, 0.2),
                                 duration: const Duration(milliseconds: 300),
                                 child: AnimatedOpacity(
                                   opacity: _isFabExpanded ? 1 : 0,
@@ -384,10 +385,10 @@ class _DocumentsPageState extends State<DocumentsPage> with AutomaticKeepAliveCl
                           ),
 
                           FutureBuilder(
-                            future: Future.delayed(Duration(milliseconds: 150)),
+                            future: Future.delayed(const Duration(milliseconds: 150)),
                             builder: (_, snapshot) {
                               return AnimatedSlide(
-                                offset: _isFabExpanded ? Offset.zero : Offset(0, 0.2),
+                                offset: _isFabExpanded ? Offset.zero : const Offset(0, 0.2),
                                 duration: const Duration(milliseconds: 300),
                                 child: AnimatedOpacity(
                                   opacity: _isFabExpanded ? 1 : 0,
@@ -452,7 +453,7 @@ class _DocumentsPageState extends State<DocumentsPage> with AutomaticKeepAliveCl
                           child: AnimatedRotation(
                             duration: const Duration(milliseconds: 300),
                             turns: _isFabExpanded && _selectedTab == 0 ? 0.125 : 0,
-                            child: Icon(Icons.add, color: Colors.white),
+                            child: const Icon(Icons.add, color: Colors.white),
                           ),
                         ),
                       ],
@@ -797,7 +798,7 @@ class _DocumentsPageState extends State<DocumentsPage> with AutomaticKeepAliveCl
 
   Widget _buildGridView(List<Map<String, dynamic>> displayDocs) {
     return CustomScrollView(
-      physics: BouncingScrollPhysics(),
+      physics: const BouncingScrollPhysics(),
       slivers: [
         // ✅ البانر كعنصر منفصل في الأعلى
         SliverToBoxAdapter(
@@ -895,7 +896,7 @@ class _DocumentsPageState extends State<DocumentsPage> with AutomaticKeepAliveCl
                         child: Container(
                           color: AppColors.red.withOpacity(0.7),
                           alignment: Alignment.center,
-                          child: Icon(Icons.delete, color: Colors.white),
+                          child: const Icon(Icons.delete, color: Colors.white),
                         ),
                       ),
                     ),
@@ -1016,11 +1017,11 @@ class _DocumentsPageState extends State<DocumentsPage> with AutomaticKeepAliveCl
                       ],
                     ),
                   );
-                }).toList(),
+                }),
               ]),
             ),
           );
-        }).toList(),
+        }),
       ],
     );
   }
@@ -1037,7 +1038,7 @@ class _DocumentsPageState extends State<DocumentsPage> with AutomaticKeepAliveCl
         child: Row(
           children: [
             Image.asset(
-              'assets/images/document_banner.png',
+              'assets/images/document_banner.webp',
               width: 45.w,
               height: 45.w,
             ),
@@ -1068,7 +1069,7 @@ class _DocumentsPageState extends State<DocumentsPage> with AutomaticKeepAliveCl
         child: Row(
           children: [
             Image.asset(
-              'assets/images/notes_banner.png', // 🖼️ صورة مختلفة للملاحظات
+              'assets/images/notes_banner.webp', // 🖼️ صورة مختلفة للملاحظات
               width: 45.w,
               height: 45.w,
             ),
@@ -1283,7 +1284,7 @@ class _DocumentsPageState extends State<DocumentsPage> with AutomaticKeepAliveCl
 
   Widget _buildNotesGridView(List<Note> notes) {
     return CustomScrollView(
-      physics: BouncingScrollPhysics(),
+      physics: const BouncingScrollPhysics(),
       slivers: [
         // ✅ البانر
         SliverToBoxAdapter(
@@ -1318,7 +1319,7 @@ class _DocumentsPageState extends State<DocumentsPage> with AutomaticKeepAliveCl
 
   Widget _buildNotesListView(List<Note> notes) {
     return CustomScrollView(
-      physics: BouncingScrollPhysics(),
+      physics: const BouncingScrollPhysics(),
       slivers: [
         // ✅ البانر
         SliverToBoxAdapter(
@@ -1398,7 +1399,7 @@ class _DocumentsPageState extends State<DocumentsPage> with AutomaticKeepAliveCl
               ),
             ),
             SizedBox(width: 8.w),
-            Container(
+            SizedBox(
               height: 30.h,
               child: VerticalDivider(color: Colors.grey.shade300, thickness: 1),
             ),

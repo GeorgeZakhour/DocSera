@@ -4,7 +4,6 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:docsera/app/const.dart';
 import 'package:docsera/app/text_styles.dart';
 import 'package:docsera/models/notes.dart';
-import 'package:docsera/gen_l10n/app_localizations.dart';
 import 'note_editor_page.dart';
 
 class NotePreviewSheet extends StatelessWidget {
@@ -12,10 +11,10 @@ class NotePreviewSheet extends StatelessWidget {
   final ScrollController scrollController;
 
   const NotePreviewSheet({
-    Key? key,
+    super.key,
     required this.note,
     required this.scrollController,
-  }) : super(key: key);
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -76,7 +75,7 @@ class NotePreviewSheet extends StatelessWidget {
                   ),
                 ),
                 IconButton(
-                  icon: Icon(Icons.close, color: Colors.black),
+                  icon: const Icon(Icons.close, color: Colors.black),
                   onPressed: () => Navigator.pop(context),
                 ),
 
@@ -120,9 +119,9 @@ class NotePreviewSheet extends StatelessWidget {
                                 : 'Montserrat',
                             color: Colors.black87,
                           ),
-                          HorizontalSpacing(0, 0),
-                          VerticalSpacing(0, 0),
-                          VerticalSpacing(0, 0),
+                          const HorizontalSpacing(0, 0),
+                          const VerticalSpacing(0, 0),
+                          const VerticalSpacing(0, 0),
                           null,
                         ),
                       ),

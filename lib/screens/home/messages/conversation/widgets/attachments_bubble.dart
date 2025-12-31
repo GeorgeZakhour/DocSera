@@ -3,7 +3,6 @@ import 'package:docsera/app/const.dart';
 import 'package:docsera/app/text_styles.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
-import 'package:flutter_svg/flutter_svg.dart';
 
 class AttachmentsBubble extends StatelessWidget {
   final List<String> urls;
@@ -13,13 +12,13 @@ class AttachmentsBubble extends StatelessWidget {
   final Function(int index) onOpenImage;
 
   const AttachmentsBubble({
-    Key? key,
+    super.key,
     required this.urls,
     required this.isUser,
     required this.time,
     required this.onOpenGrid,
     required this.onOpenImage,
-  }) : super(key: key);
+  });
 
   @override
   Widget build(BuildContext context) {

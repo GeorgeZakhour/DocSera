@@ -1,12 +1,10 @@
 import 'dart:async';
-import 'dart:convert';
 import 'package:docsera/Business_Logic/Authentication/auth_cubit.dart';
 import 'package:docsera/Business_Logic/Authentication/auth_state.dart';
 import 'package:docsera/Business_Logic/Main_page/main_screen_cubit.dart';
 import 'package:docsera/Business_Logic/Main_page/main_screen_state.dart';
 import 'package:docsera/app/text_styles.dart';
 import 'package:docsera/screens/home/shimmer/shimmer_widgets.dart';
-import 'package:docsera/services/supabase/user/supabase_user_service.dart';
 import 'package:docsera/utils/custom_clippers.dart';
 import 'package:docsera/utils/doctor_image_utils.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -16,7 +14,6 @@ import 'package:docsera/screens/doctors/appointment/select_patient_page.dart';
 import 'package:docsera/screens/doctors/auth/doctor_identification_page.dart';
 import 'package:docsera/screens/doctors/doctor_profile_page.dart';
 import 'package:docsera/utils/page_transitions.dart';
-import 'package:docsera/utils/shared_prefs_service.dart';
 import 'package:flutter/material.dart';
 import 'package:docsera/app/const.dart';
 import 'package:docsera/widgets/main_screen_widgets.dart';
@@ -28,7 +25,7 @@ import '../auth/sign_up/WelcomePage.dart';
 
 
 class MainScreen extends StatefulWidget {
-   MainScreen({Key? key}) : super(key: key);
+   const MainScreen({super.key});
 
   @override
   State<MainScreen> createState() => _MainScreenState();
@@ -43,7 +40,7 @@ class _MainScreenState extends State<MainScreen> with AutomaticKeepAliveClientMi
 
   StreamSubscription? _favoritesListener; // ✅ إضافة متغير لحفظ `listener`
   bool _isFirstLoad = true; // ✅ يظهر `Shimmer` فقط عند تشغيل التطبيق لأول مرة
-  bool _didLoadFavoritesOnce = false;
+  final bool _didLoadFavoritesOnce = false;
 
 
 
@@ -437,7 +434,7 @@ class _MainScreenState extends State<MainScreen> with AutomaticKeepAliveClientMi
       {
         "title": AppLocalizations.of(context)!.bannerTitle1,
         "text": AppLocalizations.of(context)!.bannerText1,
-        "imagePath": "assets/images/worker.png",
+        "imagePath": "assets/images/worker.webp",
         "logoPath": "assets/images/docsera_white.svg",
         "isSponsored": true,
         "logoContainerColor": AppColors.main.withOpacity(0.5), // ✅ Now the container has the correct color
@@ -450,7 +447,7 @@ class _MainScreenState extends State<MainScreen> with AutomaticKeepAliveClientMi
       },
       {
         "text": AppLocalizations.of(context)!.bannerText3,
-        "imagePath": "assets/images/worker.png",
+        "imagePath": "assets/images/worker.webp",
         "isSponsored": true,
       },
     ];
@@ -509,8 +506,8 @@ class _MainScreenState extends State<MainScreen> with AutomaticKeepAliveClientMi
 
 
                 // ✅ **"My Practitioners" يظهر فقط إذا كان المستخدم مسجّل الدخول**
-                isLoggedIn && favoriteDoctors.isNotEmpty ? _buildMyPractitionersSection(isLoggedIn, favoriteDoctors) : SizedBox(),
-                isLoggedIn && favoriteDoctors.isNotEmpty ? SizedBox(height: 20.h) : SizedBox(),
+                isLoggedIn && favoriteDoctors.isNotEmpty ? _buildMyPractitionersSection(isLoggedIn, favoriteDoctors) : const SizedBox(),
+                isLoggedIn && favoriteDoctors.isNotEmpty ? SizedBox(height: 20.h) : const SizedBox(),
                 _buildScrollButton(scrollController), // ✅ Button now properly below banners
                 SizedBox(height: 40.h),
                 const FeaturesSection(),
@@ -536,7 +533,7 @@ class _MainScreenState extends State<MainScreen> with AutomaticKeepAliveClientMi
                   imageShapeNumber: 4,
                   secondShapeNumber: 9,
                   shapeColor: Colors.yellow.withOpacity(0.3),
-                  imagePath: 'assets/images/worker.png',
+                  imagePath: 'assets/images/worker.webp',
                   showSecondShape: true,
                 ),
 
@@ -569,7 +566,7 @@ class _MainScreenState extends State<MainScreen> with AutomaticKeepAliveClientMi
                     Supabase.instance.client.auth.signOut(); // ⛔ اختياري فقط
                     // أعد تشغيل التطبيق أو انتقل لشاشة البداية
                   },
-                  child: Text('🧹 Reset Session'),
+                  child: const Text('🧹 Reset Session'),
                 ),
 
 

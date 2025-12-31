@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/rendering.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:docsera/app/const.dart';
@@ -214,7 +213,7 @@ class _PointsHistoryPageState extends State<PointsHistoryPage>
                   AnimatedBuilder(
                     animation: pull,
                     builder: (_, __) {
-                      if (pull.offset == 0 && !pull.isRefreshing) return SizedBox();
+                      if (pull.offset == 0 && !pull.isRefreshing) return const SizedBox();
 
                       double y = pull.offset.clamp(0, pullThreshold);
                       double opacity = (y / pullThreshold).clamp(0.0, 1.0);
@@ -227,7 +226,7 @@ class _PointsHistoryPageState extends State<PointsHistoryPage>
                           child: Container(
                             width: 8,
                             height: 8,
-                            decoration: BoxDecoration(
+                            decoration: const BoxDecoration(
                               color: AppColors.main,
                               shape: BoxShape.circle,
                             ),
@@ -240,7 +239,7 @@ class _PointsHistoryPageState extends State<PointsHistoryPage>
               );
             }
 
-            return SizedBox();
+            return const SizedBox();
           },
         ),
       ),
@@ -258,11 +257,11 @@ class _PointsHistoryPageState extends State<PointsHistoryPage>
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.vertical(bottom: Radius.circular(22.r)),
-        boxShadow: [
+        boxShadow: const [
           BoxShadow(
             color: Colors.black12,
             blurRadius: 8,
-            offset: const Offset(0, 3),
+            offset: Offset(0, 3),
           ),
         ],
       ),
@@ -305,7 +304,7 @@ class _PointsHistoryPageState extends State<PointsHistoryPage>
                 value: _progressAnim.value,
                 minHeight: 13.h,
                 backgroundColor: AppColors.main.withOpacity(0.15),
-                valueColor: AlwaysStoppedAnimation(AppColors.main),
+                valueColor: const AlwaysStoppedAnimation(AppColors.main),
                 borderRadius: BorderRadius.circular(20.r),
               );
             },
@@ -343,7 +342,7 @@ class _PointsHistoryPageState extends State<PointsHistoryPage>
             BoxShadow(
                 color: Colors.grey.withOpacity(0.3),
                 blurRadius: 3,
-                offset: Offset(0, 1))
+                offset: const Offset(0, 1))
           ],
         ),
         child: Row(
@@ -486,7 +485,9 @@ class _PointsHistoryPageState extends State<PointsHistoryPage>
 
 class _HeaderDelegate extends SliverPersistentHeaderDelegate {
   final Widget child;
+  @override
   final double minExtent;
+  @override
   final double maxExtent;
 
   _HeaderDelegate(

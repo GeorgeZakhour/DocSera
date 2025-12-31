@@ -143,7 +143,6 @@
 // }
 
 import 'dart:async';
-import 'package:bloc/bloc.dart';
 import 'package:docsera/Business_Logic/Appointments_page/appointments_state.dart';
 import 'package:docsera/Business_Logic/Authentication/auth_cubit.dart';
 import 'package:docsera/Business_Logic/Authentication/auth_state.dart';

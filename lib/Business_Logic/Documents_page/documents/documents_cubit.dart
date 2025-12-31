@@ -1,10 +1,10 @@
 import 'dart:async';
 import 'dart:io';
-import 'package:bloc/bloc.dart';
 import 'package:docsera/models/document.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/widgets.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:flutter_image_compress/flutter_image_compress.dart';
 import 'package:path/path.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -120,7 +120,7 @@ class DocumentsCubit extends Cubit<DocumentsState> {
 
       final uploadedAt = DateTime.now().toUtc();
       final prefs = await SharedPreferences.getInstance();
-      final docCounterKey = 'lastUploadedDocNumber';
+      const docCounterKey = 'lastUploadedDocNumber';
       int docCounter = prefs.getInt(docCounterKey) ?? 0;
       final autoName = 'Document ${++docCounter}';
       await prefs.setInt(docCounterKey, docCounter);
@@ -166,8 +166,27 @@ class DocumentsCubit extends Cubit<DocumentsState> {
         final fileName = 'page_$i.jpg';
         final path = 'documents/$userId/${DateTime.now().millisecondsSinceEpoch}-$fileName';
 
+        // ✅ Compress image before upload
+        final compressedBytes = await FlutterImageCompress.compressWithFile(
+          file.absolute.path,
+          minWidth: 1920,
+          minHeight: 1920,
+          quality: 85,
+        );
+
         final storage = Supabase.instance.client.storage;
-        await storage.from('documents').upload(path, file);
+
+        if (compressedBytes != null) {
+           await storage.from('documents').uploadBinary(
+            path,
+            compressedBytes,
+            fileOptions: const FileOptions(contentType: 'image/jpeg'),
+          );
+        } else {
+          // Fallback to original if compression fails
+           await storage.from('documents').upload(path, file);
+        }
+
         final url = storage.from('documents').getPublicUrl(path);
         uploadedUrls.add(url);
       }

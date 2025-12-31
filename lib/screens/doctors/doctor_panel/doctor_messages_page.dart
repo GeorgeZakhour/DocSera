@@ -17,7 +17,7 @@ import '../../../utils/full_page_loader.dart';
 class DoctorMessagesPage extends StatelessWidget {
   final Map<String, dynamic>? doctorData;
 
-  const DoctorMessagesPage({Key? key, this.doctorData}) : super(key: key);
+  const DoctorMessagesPage({super.key, this.doctorData});
 
 
   @override
@@ -51,7 +51,7 @@ class DoctorMessagesPage extends StatelessWidget {
           } else if (state is DoctorMessagesLoaded) {
             final conversations = state.conversations;
             if (conversations.isEmpty) {
-              return Center(child: Text('No Message'));
+              return const Center(child: Text('No Message'));
             }
 
             final grouped = <int, List<Conversation>>{};
@@ -88,7 +88,7 @@ class DoctorMessagesPage extends StatelessWidget {
                         ],
                       ),
                     ),
-                    ...convos.map((convo) => _buildConversationTile(context, convo)).toList(),
+                    ...convos.map((convo) => _buildConversationTile(context, convo)),
                   ],
                 );
               },

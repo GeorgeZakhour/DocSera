@@ -5,7 +5,6 @@ import 'package:docsera/utils/time_utils.dart';
 import 'package:docsera/widgets/custom_bottom_navigation_bar.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
-import 'package:intl/intl.dart';
 import 'package:docsera/app/const.dart';
 import 'package:docsera/utils/page_transitions.dart';
 import 'package:docsera/screens/doctors/doctor_profile_page.dart';
@@ -15,8 +14,7 @@ import 'package:docsera/gen_l10n/app_localizations.dart';
 class AppointmentCancelledPage extends StatelessWidget {
   final Map<String, dynamic> appointment;
 
-  const AppointmentCancelledPage({Key? key, required this.appointment})
-      : super(key: key);
+  const AppointmentCancelledPage({super.key, required this.appointment});
 
   @override
   Widget build(BuildContext context) {

@@ -11,12 +11,12 @@ class EditDocumentNameSheet extends StatefulWidget {
   final void Function(String)? onNameUpdated; // ← optional callback
 
   const EditDocumentNameSheet({
-    Key? key,
+    super.key,
     required this.initialName,
     required this.onConfirm,
     required this.onNameUpdated,
 
-  }) : super(key: key);
+  });
 
   @override
   State<EditDocumentNameSheet> createState() => _EditDocumentNameSheetState();

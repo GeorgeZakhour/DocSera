@@ -14,14 +14,14 @@ class MessageBubble extends StatelessWidget {
   final bool isArabic;
 
   const MessageBubble({
-    Key? key,
+    super.key,
     required this.senderName,
     required this.text,
     required this.isUser,
     required this.time,
     required this.showSender,
     required this.isArabic,
-  }) : super(key: key);
+  });
 
   @override
   Widget build(BuildContext context) {

@@ -5,7 +5,6 @@ import 'package:docsera/Business_Logic/Documents_page/notes/notes_cubit.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_quill/flutter_quill.dart';
-import 'package:flutter_quill_extensions/flutter_quill_extensions.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:docsera/gen_l10n/app_localizations.dart';
 
@@ -14,10 +13,10 @@ class NoteEditorPage extends StatefulWidget {
   final ScrollController scrollController;
 
   const NoteEditorPage({
-    Key? key,
+    super.key,
     this.existingNote,
     required this.scrollController,
-  }) : super(key: key);
+  });
 
   @override
   State<NoteEditorPage> createState() => _NoteEditorPageState();
@@ -147,7 +146,7 @@ class _NoteEditorPageState extends State<NoteEditorPage> {
                 style: OutlinedButton.styleFrom(
                   padding:
                       EdgeInsets.symmetric(horizontal: 24.w, vertical: 12.h),
-                  side: BorderSide(color: AppColors.main),
+                  side: const BorderSide(color: AppColors.main),
                   shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(10.r)),
                 ),
@@ -327,9 +326,7 @@ class _NoteEditorPageState extends State<NoteEditorPage> {
                                         canvasColor:
                                             Colors.white.withOpacity(0.95),
                                         cardColor:
-                                            Colors.white.withOpacity(0.95),
-                                        dialogBackgroundColor:
-                                            Colors.white.withOpacity(0.95),
+                                            Colors.white.withOpacity(0.95), dialogTheme: DialogThemeData(backgroundColor: Colors.white.withOpacity(0.95)),
                                       ),
                                       child: QuillSimpleToolbar(
                                         controller: _contentController,

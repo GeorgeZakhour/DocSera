@@ -15,7 +15,6 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:flutter_svg/svg.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:latlong2/latlong.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'home/messages/message_select_patient.dart';
 
@@ -24,10 +23,10 @@ class SearchAdvancedPage extends StatefulWidget {
   final UserDocument? attachedDocument;
 
   const SearchAdvancedPage({
-    Key? key,
+    super.key,
     this.mode = "search",
     this.attachedDocument,
-  }) : super(key: key);
+  });
 
   @override
   State<SearchAdvancedPage> createState() => _SearchAdvancedPageState();
@@ -121,7 +120,7 @@ class _SearchAdvancedPageState extends State<SearchAdvancedPage> {
 
     _loadUserIdAndFavorites();
     _sheetController.addListener(() {
-      final maxExtent = _sheetMax;
+      const maxExtent = _sheetMax;
       final isNowFull = _sheetController.size >= maxExtent - 0.01;
       if (isNowFull != _isFullyExpanded) {
         setState(() => _isFullyExpanded = isNowFull);
@@ -558,7 +557,7 @@ class _SearchAdvancedPageState extends State<SearchAdvancedPage> {
         SizedBox(height: 5.h),
         ListView.builder(
           shrinkWrap: true,
-          physics: ClampingScrollPhysics(),
+          physics: const ClampingScrollPhysics(),
           itemCount: _favoriteDoctors.length,
           itemBuilder: (_, i) => _doctorTile(_favoriteDoctors[i]),
         ),
@@ -1137,7 +1136,7 @@ class _SearchAdvancedPageState extends State<SearchAdvancedPage> {
             alignment: Alignment.center,
             transform: Matrix4.identity()..scale(1.0, -1.0),
             child: Image.asset(
-              'assets/images/map.png',
+              'assets/images/map.webp',
               fit: BoxFit.fitWidth,
               width: double.infinity,
             ),
@@ -1592,13 +1591,13 @@ class FiltersPage extends StatefulWidget {
   final bool isNearbyAvailable;
 
   const FiltersPage({
-    Key? key,
+    super.key,
     required this.initial,
     required this.allSpecs,
     required this.allCities,
     this.selectedSpecialty,
     this.isNearbyAvailable = true,
-  }) : super(key: key);
+  });
 
   @override
   State<FiltersPage> createState() => _FiltersPageState();

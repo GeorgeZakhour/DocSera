@@ -3,7 +3,6 @@ import 'package:docsera/screens/auth/login/login_start.dart';
 import 'package:docsera/utils/custom_clippers.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:docsera/widgets/custom_bottom_navigation_bar.dart';
 import 'dart:async';
@@ -12,9 +11,10 @@ import 'Business_Logic/Authentication/auth_cubit.dart';
 import 'Business_Logic/Authentication/auth_state.dart';
 import 'app/const.dart';
 import 'package:package_info_plus/package_info_plus.dart';
-import 'package:supabase_flutter/supabase_flutter.dart';
 
 class SplashScreen extends StatefulWidget {
+  const SplashScreen({super.key});
+
   @override
   _SplashScreenState createState() => _SplashScreenState();
 }
@@ -161,7 +161,7 @@ class _SplashScreenState extends State<SplashScreen> with TickerProviderStateMix
 
           return FadeTransition(
             opacity: curvedAnimation,
-            child: CustomBottomNavigationBar(),
+            child: const CustomBottomNavigationBar(),
           );
         },
       ),

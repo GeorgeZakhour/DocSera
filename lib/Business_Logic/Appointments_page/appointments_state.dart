@@ -17,7 +17,7 @@ class AppointmentsLoaded extends AppointmentsState {
   final List<Map<String, dynamic>> pastAppointments;
   final int selectedTab; // ✅ Track last selected tab
 
-  AppointmentsLoaded({
+  const AppointmentsLoaded({
     required this.upcomingAppointments,
     required this.pastAppointments,
     required this.selectedTab, // ✅ Ensure this is included

@@ -9,7 +9,6 @@ import 'package:docsera/screens/home/account/add_relative.dart';
 import 'package:docsera/screens/home/messages/conversation/conversation_page.dart';
 import 'package:docsera/screens/home/messages/message_select_reason_page.dart';
 import 'package:docsera/services/supabase/supabase_conversation_service.dart';
-import 'package:docsera/utils/doctor_image_utils.dart';
 import 'package:docsera/utils/page_transitions.dart';
 import 'package:docsera/widgets/base_scaffold.dart';
 import 'package:flutter/material.dart';
@@ -17,7 +16,6 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_svg/svg.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:docsera/gen_l10n/app_localizations.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 class SelectPatientForMessagePage extends StatefulWidget {
@@ -31,7 +29,7 @@ class SelectPatientForMessagePage extends StatefulWidget {
   final UserDocument? attachedDocument;
 
   const SelectPatientForMessagePage({
-    Key? key,
+    super.key,
     required this.doctorId,
     required this.doctorName,
     required this.doctorGender,
@@ -40,7 +38,7 @@ class SelectPatientForMessagePage extends StatefulWidget {
     required this.doctorImage,
     required this.doctorImageUrl,
     this.attachedDocument,
-  }) : super(key: key);
+  });
 
   @override
   State<SelectPatientForMessagePage> createState() => _SelectPatientForMessagePageState();

@@ -12,11 +12,11 @@ class AttachmentsPreviewBar extends StatelessWidget {
   final VoidCallback onClear;
 
   const AttachmentsPreviewBar({
-    Key? key,
+    super.key,
     required this.files,
     required this.type,
     required this.onClear,
-  }) : super(key: key);
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -29,7 +29,7 @@ class AttachmentsPreviewBar extends StatelessWidget {
     if (isPdf) {
       final fileName = files.first.path.split("/").last;
       final shortName =
-      fileName.length > 30 ? fileName.substring(0, 27) + "..." : fileName;
+      fileName.length > 30 ? "${fileName.substring(0, 27)}..." : fileName;
 
       return Padding(
         padding: EdgeInsets.symmetric(horizontal: 12.w, vertical: 4.h),
@@ -101,7 +101,7 @@ class AttachmentsPreviewBar extends StatelessWidget {
                     );
                   }).toList(),
                 ),
-                Spacer(),
+                const Spacer(),
                 IconButton(
                   icon: Icon(Icons.close, color: AppColors.main, size: 20.sp),
                   onPressed: onClear,

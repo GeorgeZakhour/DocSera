@@ -5,7 +5,7 @@ import 'package:docsera/app/const.dart';
 class DoctorAccountPage extends StatelessWidget {
   final Map<String, dynamic>? doctorData;
 
-  const DoctorAccountPage({Key? key, this.doctorData}) : super(key: key);
+  const DoctorAccountPage({super.key, this.doctorData});
 
   @override
   Widget build(BuildContext context) {

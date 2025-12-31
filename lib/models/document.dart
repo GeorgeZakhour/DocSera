@@ -71,7 +71,7 @@ class UserDocument {
   }) {
     return UserDocument(
       id: id,
-      userId: userId ?? this.userId,
+      userId: userId ?? userId,
       name: name ?? this.name,
       type: type ?? this.type,
       fileType: fileType,

@@ -32,13 +32,13 @@ class ConversationPage extends StatefulWidget {
   final ImageProvider doctorAvatar;
 
   const ConversationPage({
-    Key? key,
+    super.key,
     required this.conversationId,
     required this.doctorName,
     required this.patientName,
     required this.accountHolderName,
     required this.doctorAvatar,
-  }) : super(key: key);
+  });
 
   @override
   State<ConversationPage> createState() => _ConversationPageState();
@@ -320,7 +320,7 @@ class _ConversationPageState extends State<ConversationPage> {
               ),
             ),
 
-            SizedBox(width: 10),
+            const SizedBox(width: 10),
 
             Expanded(
               child: Text(
@@ -341,7 +341,7 @@ class _ConversationPageState extends State<ConversationPage> {
       body: Stack(
         children: [
           Positioned.fill(
-            child: Image.asset("assets/images/Chat-BG.png", fit: BoxFit.cover),
+            child: Image.asset("assets/images/Chat-BG.webp", fit: BoxFit.cover),
           ),
 
           Column(
@@ -356,7 +356,7 @@ class _ConversationPageState extends State<ConversationPage> {
                 child: BlocBuilder<ConversationCubit, ConversationState>(
                   builder: (context, state) {
                     if (state.isLoading) {
-                      return Center(
+                      return const Center(
                         child: FullPageLoader(),
                       );
                     }

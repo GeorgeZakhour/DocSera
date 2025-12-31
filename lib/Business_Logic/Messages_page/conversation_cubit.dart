@@ -2,7 +2,6 @@ import 'dart:async';
 
 import 'package:bloc/bloc.dart';
 import 'package:docsera/services/supabase/supabase_conversation_service.dart';
-import 'package:meta/meta.dart';
 
 import 'conversation_state.dart';
 

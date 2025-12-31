@@ -18,7 +18,7 @@ import '../../../utils/full_page_loader.dart';
 class LoginOTPPage extends StatefulWidget {
   final String phoneNumber;
 
-  const LoginOTPPage({Key? key, required this.phoneNumber}) : super(key: key);
+  const LoginOTPPage({super.key, required this.phoneNumber});
 
   @override
   State<LoginOTPPage> createState() => _LoginOTPPageState();
@@ -131,7 +131,7 @@ class _LoginOTPPageState extends State<LoginOTPPage> {
 
       Navigator.pushAndRemoveUntil(
         context,
-        fadePageRoute(CustomBottomNavigationBar()),
+        fadePageRoute(const CustomBottomNavigationBar()),
             (_) => false,
       );
     } catch (_) {
@@ -208,7 +208,7 @@ class _LoginOTPPageState extends State<LoginOTPPage> {
             SizedBox(height: 20.h),
 
             if (isLoading)
-              Center(child: FullPageLoader())
+              const Center(child: FullPageLoader())
             else ...[
               TextFormField(
                 controller: _codeController,
@@ -224,7 +224,7 @@ class _LoginOTPPageState extends State<LoginOTPPage> {
                   enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(25.r)),
                   focusedBorder: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(25.r),
-                    borderSide: BorderSide(color: AppColors.main, width: 2),
+                    borderSide: const BorderSide(color: AppColors.main, width: 2),
                   ),
                 ),
                 onChanged: (_) => setState(() {}),
@@ -254,7 +254,7 @@ class _LoginOTPPageState extends State<LoginOTPPage> {
               LinearProgressIndicator(
                 value: 1.0,
                 backgroundColor: AppColors.background2,
-                valueColor: AlwaysStoppedAnimation(AppColors.main),
+                valueColor: const AlwaysStoppedAnimation(AppColors.main),
                 minHeight: 4.h,
               ),
               SizedBox(height: 20.h),

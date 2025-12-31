@@ -19,10 +19,10 @@ class DoctorAppointmentsPage extends StatefulWidget {
   final AppointmentDetails appointmentDetails;
 
   const DoctorAppointmentsPage({
-    Key? key,
+    super.key,
     required this.patientProfile,
     required this.appointmentDetails,
-  }) : super(key: key);
+  });
 
   @override
   State<DoctorAppointmentsPage> createState() => _DoctorAppointmentsPageState();
@@ -215,7 +215,7 @@ class _DoctorAppointmentsPageState extends State<DoctorAppointmentsPage> {
           OutlinedButton(
             onPressed: _refetch,
             style: OutlinedButton.styleFrom(
-              side: BorderSide(color: AppColors.mainDark),
+              side: const BorderSide(color: AppColors.mainDark),
               shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10.r)),
             ),
             child: Text(

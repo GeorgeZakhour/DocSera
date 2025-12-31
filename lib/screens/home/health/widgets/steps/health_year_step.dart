@@ -88,7 +88,7 @@ class HealthYearStep extends StatelessWidget {
             ),
             focusedBorder: OutlineInputBorder(
               borderRadius: BorderRadius.circular(25.r),
-              borderSide: BorderSide(color: AppColors.main, width: 2),
+              borderSide: const BorderSide(color: AppColors.main, width: 2),
             ),
           ),
           dropdownColor: Colors.white.withOpacity(0.95),

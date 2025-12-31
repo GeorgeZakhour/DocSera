@@ -33,7 +33,6 @@ import 'package:docsera/utils/input_decoration.dart';
 import '../../Business_Logic/Account_page/user_cubit.dart';
 import '../../Business_Logic/Account_page/user_state.dart';
 import 'package:package_info_plus/package_info_plus.dart';
-import 'package:supabase_flutter/supabase_flutter.dart';
 
 import 'account/preferences.dart';
 
@@ -620,7 +619,7 @@ class _AccountScreenState extends State<AccountScreen> {
     // ---------------------------------------------------------------------------
     // Password validation logic (نفس منطقك السابق)
     // ---------------------------------------------------------------------------
-    void _validateNewPassword(String password, Function setState) {
+    void validateNewPassword(String password, Function setState) {
       if (password.isEmpty) {
         setState(() {
           newPasswordStrength = "";
@@ -685,7 +684,7 @@ class _AccountScreenState extends State<AccountScreen> {
       }
     }
 
-    void _checkPasswordsDifference(Function setState) {
+    void checkPasswordsDifference(Function setState) {
       setState(() {
         isNewPasswordDifferent =
             currentPasswordController.text.trim() !=
@@ -818,8 +817,8 @@ class _AccountScreenState extends State<AccountScreen> {
                           ),
                         ],
                         onChanged: (value) {
-                          _validateNewPassword(value, setState);
-                          _checkPasswordsDifference(setState);
+                          validateNewPassword(value, setState);
+                          checkPasswordsDifference(setState);
                         },
                         decoration: getInputDecoration(
                           hintText:
@@ -1047,7 +1046,7 @@ class _AccountScreenState extends State<AccountScreen> {
               ),
               SizedBox(height: 20.h),
               Image.asset(
-                'assets/images/encrypted.png',
+                'assets/images/encrypted.webp',
                 height: 100.h,
               ),
               SizedBox(height: 20.h),
@@ -1119,7 +1118,7 @@ class _AccountScreenState extends State<AccountScreen> {
               SizedBox(height: 20.h),
 
               Image.asset(
-                'assets/images/two_factor.png',
+                'assets/images/two_factor.webp',
                 height: 100.h,
               ),
 
@@ -1512,7 +1511,7 @@ class _AccountScreenState extends State<AccountScreen> {
         child: Row(
           children: [
             Image.asset(
-              'assets/images/account_banner.png',
+              'assets/images/account_banner.webp',
               width: 45.w,
               height: 45.w,
             ),
@@ -1638,36 +1637,35 @@ class _AccountScreenState extends State<AccountScreen> {
                   style: AppTextStyles.getText2(context).copyWith(fontWeight: FontWeight.w500, color: AppColors.grayMain),
                 ),),
                 Divider(color: Colors.grey[200], height: 2.h),
-                if (state is UserLoaded)
-                  _buildEditableListTile(
-                    Icons.key,
-                    AppLocalizations.of(context)!.twoFactorAuth,
-                    state.is2FAEnabled
-                        ? AppLocalizations.of(context)!.activated
-                        : AppLocalizations.of(context)!.notActivated,
-                    '2fa',
-                    trailingWidget: Container(
-                      padding: EdgeInsets.symmetric(horizontal: 8.w, vertical: 4.h),
-                      decoration: BoxDecoration(
+                _buildEditableListTile(
+                  Icons.key,
+                  AppLocalizations.of(context)!.twoFactorAuth,
+                  state.is2FAEnabled
+                      ? AppLocalizations.of(context)!.activated
+                      : AppLocalizations.of(context)!.notActivated,
+                  '2fa',
+                  trailingWidget: Container(
+                    padding: EdgeInsets.symmetric(horizontal: 8.w, vertical: 4.h),
+                    decoration: BoxDecoration(
+                      color: state.is2FAEnabled
+                          ? const Color(0xFFDFF6F3)
+                          : const Color(0xFFFFF4D9),
+                      borderRadius: BorderRadius.circular(12.r),
+                    ),
+                    child: Text(
+                      state.is2FAEnabled
+                          ? AppLocalizations.of(context)!.activated
+                          : AppLocalizations.of(context)!.notActivated,
+                      style: AppTextStyles.getText3(context).copyWith(
                         color: state.is2FAEnabled
-                            ? const Color(0xFFDFF6F3)
-                            : const Color(0xFFFFF4D9),
-                        borderRadius: BorderRadius.circular(12.r),
-                      ),
-                      child: Text(
-                        state.is2FAEnabled
-                            ? AppLocalizations.of(context)!.activated
-                            : AppLocalizations.of(context)!.notActivated,
-                        style: AppTextStyles.getText3(context).copyWith(
-                          color: state.is2FAEnabled
-                              ? const Color(0xFF00B7A0)
-                              : AppColors.yellow,
-                          fontWeight: FontWeight.w400,
-                          fontSize: 8,
-                        ),
+                            ? const Color(0xFF00B7A0)
+                            : AppColors.yellow,
+                        fontWeight: FontWeight.w400,
+                        fontSize: 8,
                       ),
                     ),
                   ),
+                ),
 
                 Divider(color: Colors.grey[200], height: 2.h),
                 _buildEditableListTile(
@@ -1962,7 +1960,7 @@ class _AccountScreenState extends State<AccountScreen> {
                 ],
               ),
 
-              Spacer(),
+              const Spacer(),
 
               Icon(Icons.arrow_forward_ios, size: 14.sp, color: AppColors.main),
             ],
@@ -2110,18 +2108,18 @@ class _AccountScreenState extends State<AccountScreen> {
                       activeTrackColor: AppColors.main.withOpacity(0.8),
                       inactiveTrackColor: Colors.grey[400],
                       trackOutlineColor:
-                      MaterialStateProperty.all(Colors.transparent),
+                      WidgetStateProperty.all(Colors.transparent),
                       materialTapTargetSize:
                       MaterialTapTargetSize.shrinkWrap,
                       thumbColor:
-                      MaterialStateProperty.resolveWith<Color>((states) {
-                        if (states.contains(MaterialState.selected)) {
+                      WidgetStateProperty.resolveWith<Color>((states) {
+                        if (states.contains(WidgetState.selected)) {
                           return AppColors.main;
                         }
                         return Colors.grey[400]!;
                       }),
                       thumbIcon:
-                      MaterialStateProperty.resolveWith<Icon?>((states) {
+                      WidgetStateProperty.resolveWith<Icon?>((states) {
                         return const Icon(
                           Icons.circle,
                           size: 30,

@@ -15,7 +15,7 @@ import 'package:docsera/app/text_styles.dart';
 
 
 class UserProfilePage extends StatefulWidget {
-  const UserProfilePage({Key? key}) : super(key: key);
+  const UserProfilePage({super.key});
 
   @override
   _UserProfilePageState createState() => _UserProfilePageState();

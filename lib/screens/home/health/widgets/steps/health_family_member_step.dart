@@ -90,7 +90,7 @@ class _FamilyMembersStepState extends State<FamilyMembersStep> {
         Expanded(
           child: ListView.separated(
             itemCount: members.length,
-            separatorBuilder: (_, __) => Divider(height: 1),
+            separatorBuilder: (_, __) => const Divider(height: 1),
             itemBuilder: (context, index) {
               final m = members[index];
               final selected = _selected == m;

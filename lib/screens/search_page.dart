@@ -9,7 +9,6 @@ import 'package:docsera/app/text_styles.dart'; //
 import 'package:flutter/material.dart';
 import 'package:docsera/app/const.dart';
 import 'package:docsera/services/supabase/supabase_search_service.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 import 'home/messages/message_select_patient.dart';
@@ -19,10 +18,10 @@ class SearchPage extends StatefulWidget {
   final UserDocument? attachedDocument;
 
   const SearchPage({
-    Key? key,
+    super.key,
     this.mode = "search",
     this.attachedDocument,
-  }) : super(key: key);
+  });
 
   @override
   _SearchPageState createState() => _SearchPageState();
@@ -245,7 +244,7 @@ class _SearchPageState extends State<SearchPage> {
         .eq('user_id', _userId!)
         .limit(1);
 
-    return (result is List && result.isNotEmpty);
+    return (result.isNotEmpty);
   }
 
 
@@ -339,7 +338,7 @@ class _SearchPageState extends State<SearchPage> {
                   ),
                 ],
               ),
-              trailing: Icon(Icons.arrow_forward_ios, size: 12, color: Colors.grey),
+              trailing: const Icon(Icons.arrow_forward_ios, size: 12, color: Colors.grey),
               onTap: () {
                 if (widget.mode == "message") {
                   Navigator.push(context, fadePageRoute(

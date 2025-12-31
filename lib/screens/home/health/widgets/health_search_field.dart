@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:docsera/app/const.dart';
-import 'package:docsera/app/text_styles.dart';
 
 class HealthSearchField extends StatelessWidget {
   final TextEditingController controller;
@@ -42,7 +41,7 @@ class HealthSearchField extends StatelessWidget {
         ),
         focusedBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(16.r),
-          borderSide: BorderSide(color: AppColors.main, width: 1.6),
+          borderSide: const BorderSide(color: AppColors.main, width: 1.6),
         ),
       ),
     );

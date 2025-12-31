@@ -1,4 +1,3 @@
-import 'dart:typed_data';
 import 'dart:ui';
 
 import 'package:docsera/app/const.dart';
@@ -7,10 +6,8 @@ import 'package:docsera/gen_l10n/app_localizations.dart';
 import 'package:docsera/screens/home/health/pages/visit_reports/pdf/visit_report_pdf_generator.dart';
 import 'package:docsera/utils/doctor_image_utils.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart' show rootBundle;
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:pdf/pdf.dart';
-import 'package:pdf/widgets.dart' as pw;
 import 'package:printing/printing.dart';
 
 import 'visit_report_model.dart';

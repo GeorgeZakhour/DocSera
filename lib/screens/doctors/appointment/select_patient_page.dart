@@ -25,7 +25,7 @@ class SelectPatientPage extends StatefulWidget {
   final Map<String, dynamic> clinicLocation;
 
   const SelectPatientPage({
-    Key? key,
+    super.key,
     required this.doctorId,
     required this.doctorName,
     required this.doctorGender,
@@ -35,7 +35,7 @@ class SelectPatientPage extends StatefulWidget {
     required this.clinicName,
     required this.clinicAddress,
     required this.clinicLocation,
-  }) : super(key: key);
+  });
 
   @override
   _SelectPatientPageState createState() => _SelectPatientPageState();

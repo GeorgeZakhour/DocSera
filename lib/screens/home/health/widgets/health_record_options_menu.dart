@@ -35,7 +35,7 @@ class HealthRecordOptionsMenu extends StatelessWidget {
           SizedBox(height: 16.h),
 
           ListTile(
-            leading: Icon(Icons.info_outline, color: AppColors.mainDark),
+            leading: const Icon(Icons.info_outline, color: AppColors.mainDark),
             title: Text(
               showText,
               style: AppTextStyles.getText2(context)
@@ -44,10 +44,10 @@ class HealthRecordOptionsMenu extends StatelessWidget {
             onTap: onShowDetails,
           ),
 
-          Divider(),
+          const Divider(),
 
           ListTile(
-            leading: Icon(Icons.delete_outline, color: AppColors.red),
+            leading: const Icon(Icons.delete_outline, color: AppColors.red),
             title: Text(
               deleteText,
               style: AppTextStyles.getText2(context)

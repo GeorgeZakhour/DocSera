@@ -8,7 +8,6 @@ import 'package:docsera/utils/time_utils.dart';
 import 'package:docsera/widgets/custom_bottom_navigation_bar.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
-import 'package:intl/intl.dart';
 import 'package:docsera/app/const.dart';
 import 'package:docsera/utils/page_transitions.dart';
 import 'package:docsera/screens/doctors/doctor_profile_page.dart';
@@ -19,8 +18,7 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 class AppointmentConfirmedPage extends StatelessWidget {
   final Map<String, dynamic> appointment;
 
-  const AppointmentConfirmedPage({Key? key, required this.appointment})
-      : super(key: key);
+  const AppointmentConfirmedPage({super.key, required this.appointment});
 
   /// إضافة إلى التقويم: نستخدم اللحظة المطلقة من timestamp (محلي الجهاز) ومدة قابلة للتخصيص
   void _addToCalendar(BuildContext context, {int clinicOffsetMinutes = 180}) {
@@ -119,8 +117,8 @@ class AppointmentConfirmedPage extends StatelessWidget {
         : Icons.image;
 
     return Container(
-      margin: EdgeInsets.only(top: 10),
-      padding: EdgeInsets.all(14),
+      margin: const EdgeInsets.only(top: 10),
+      padding: const EdgeInsets.all(14),
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(12),
@@ -128,31 +126,31 @@ class AppointmentConfirmedPage extends StatelessWidget {
           BoxShadow(
             color: Colors.black.withOpacity(0.06),
             blurRadius: 4,
-            offset: Offset(0, 2),
+            offset: const Offset(0, 2),
           )
         ],
       ),
       child: Row(
         children: [
           Icon(icon, color: AppColors.main, size: 26),
-          SizedBox(width: 12),
+          const SizedBox(width: 12),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(name,
-                    style: TextStyle(
+                    style: const TextStyle(
                       fontWeight: FontWeight.bold,
                       fontSize: 13,
                     )),
-                SizedBox(height: 3),
+                const SizedBox(height: 3),
                 Text(
                   type == 'pdf' ? "$pages pages" : "Image",
-                  style: TextStyle(fontSize: 11, color: Colors.grey),
+                  style: const TextStyle(fontSize: 11, color: Colors.grey),
                 ),
                 Text(
                   uploadDate,
-                  style: TextStyle(fontSize: 11, color: Colors.grey),
+                  style: const TextStyle(fontSize: 11, color: Colors.grey),
                 ),
               ],
             ),
@@ -161,7 +159,7 @@ class AppointmentConfirmedPage extends StatelessWidget {
             onPressed: () {
               _openAttachment(att);
             },
-            child: Text("View", style: TextStyle(color: AppColors.main)),
+            child: const Text("View", style: TextStyle(color: AppColors.main)),
           ),
         ],
       ),
@@ -433,7 +431,7 @@ class AppointmentConfirmedPage extends StatelessWidget {
                 Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    SizedBox(height: 20),
+                    const SizedBox(height: 20),
                     Text(
                       AppLocalizations.of(context)!.sendDocuments,
                       style: AppTextStyles.getTitle1(context).copyWith(
@@ -441,8 +439,8 @@ class AppointmentConfirmedPage extends StatelessWidget {
                         fontWeight: FontWeight.bold,
                       ),
                     ),
-                    SizedBox(height: 8),
-                    ...attachments.map((att) => _attachmentTile(att)).toList(),
+                    const SizedBox(height: 8),
+                    ...attachments.map((att) => _attachmentTile(att)),
                   ],
                 ),
 

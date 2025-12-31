@@ -1,4 +1,3 @@
-import 'dart:typed_data';
 import 'dart:ui' as ui;
 
 import 'package:docsera/app/const.dart';
@@ -41,7 +40,7 @@ class _FullMapResultsPageState extends State<FullMapResultsPage> with SingleTick
   // ارتفاع السلايدر السفلي
   static const double _bottomCardHeight = 210;
 
-  bool _isDarkMode = false;
+  final bool _isDarkMode = false;
 
   // الموقع الحي + نبضة
   Position? _currentPosition;
@@ -523,7 +522,6 @@ class _BottomCardsPager extends StatelessWidget {
   final bool fromDoctorProfile; // ✅
 
   const _BottomCardsPager({
-    super.key,
     required this.height,
     required this.controller,
     required this.doctors,
@@ -749,7 +747,7 @@ class _DoctorCard extends StatelessWidget {
                     );
                   },
                   style: OutlinedButton.styleFrom(
-                    side: BorderSide(color: AppColors.main, width: 1),
+                    side: const BorderSide(color: AppColors.main, width: 1),
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(8.r),
                     ),

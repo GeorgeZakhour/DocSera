@@ -13,10 +13,10 @@ class ManageAccessRightsPage extends StatefulWidget {
   final String relativeName;
 
   const ManageAccessRightsPage({
-    Key? key,
+    super.key,
     required this.relativeId,
     required this.relativeName,
-  }) : super(key: key);
+  });
 
   @override
   State<ManageAccessRightsPage> createState() =>
@@ -298,7 +298,7 @@ class _ManageAccessRightsPageState extends State<ManageAccessRightsPage> {
             Center(
               child: TextButton.icon(
                 onPressed: _showRemoveConfirmation,
-                icon: Icon(Icons.delete_forever_outlined,
+                icon: const Icon(Icons.delete_forever_outlined,
                     color: AppColors.red),
                 label: Text(
                   AppLocalizations.of(context)!

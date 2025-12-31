@@ -20,11 +20,11 @@ class DocumentPreviewPage extends StatefulWidget {
   final String? doctorName;
 
   const DocumentPreviewPage({
-    Key? key,
+    super.key,
     required this.document,
     this.cameFromConversation = false,
     this.doctorName,
-  }) : super(key: key);
+  });
 
   @override
   State<DocumentPreviewPage> createState() => _DocumentPreviewPageState();
@@ -60,7 +60,7 @@ class _DocumentPreviewPageState extends State<DocumentPreviewPage> {
     print('📄 pages count: ${widget.document.pages.length}');
     print('📃 is from conversation: ${widget.cameFromConversation}');
 
-    final hasMultipleImagePages = widget.document.pages.length >= 1 &&
+    final hasMultipleImagePages = widget.document.pages.isNotEmpty &&
         widget.document.pages.every((url) =>
         url.toLowerCase().endsWith('.jpg') ||
             url.toLowerCase().endsWith('.jpeg') ||
@@ -212,7 +212,7 @@ class _DocumentPreviewPageState extends State<DocumentPreviewPage> {
           ),
           actions: [
             IconButton(
-              icon: Icon(Icons.more_vert, color: Colors.white),
+              icon: const Icon(Icons.more_vert, color: Colors.white),
               onPressed: () {
                 final fromConversationButNotSaved =
                     widget.cameFromConversation && !widget.document.id!.startsWith('doc_');
@@ -247,7 +247,7 @@ class _DocumentPreviewPageState extends State<DocumentPreviewPage> {
         builder: (context) {
           if (isPdf) return _buildPdfViewer();
           if (isImage) return _imagesLoaded ? _buildImageViewer() : const Center(child: FullPageLoader());
-          return Center(child: Text('❌ نوع غير مدعوم', style: TextStyle(color: Colors.red)));
+          return const Center(child: Text('❌ نوع غير مدعوم', style: TextStyle(color: Colors.red)));
         },
       ),
     );
@@ -310,7 +310,7 @@ class _DocumentPreviewPageState extends State<DocumentPreviewPage> {
                         : Container(
                       height: 200.h,
                       color: Colors.grey[200],
-                      child: Icon(Icons.broken_image, size: 80, color: Colors.grey),
+                      child: const Icon(Icons.broken_image, size: 80, color: Colors.grey),
                     ),
                   ),
                 );

@@ -1,6 +1,5 @@
 import 'dart:async';
 import 'dart:math';
-import 'package:confetti/confetti.dart';
 import 'package:docsera/widgets/custom_bottom_navigation_bar.dart';
 import 'package:docsera/utils/page_transitions.dart';
 import 'package:flutter/material.dart';
@@ -11,7 +10,7 @@ import '../../../app/text_styles.dart';
 import 'package:docsera/gen_l10n/app_localizations.dart';
 
 class GoodbyePage extends StatefulWidget {
-  const GoodbyePage({Key? key}) : super(key: key);
+  const GoodbyePage({super.key});
 
   @override
   State<GoodbyePage> createState() => _GoodbyePageState();

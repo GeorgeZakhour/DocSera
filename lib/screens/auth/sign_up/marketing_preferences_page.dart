@@ -11,7 +11,7 @@ import '../../../models/sign_up_info.dart'; // Import the SignUpInfo model
 class MarketingPreferencesPage extends StatefulWidget {
   final SignUpInfo signUpInfo; // Accept the SignUpInfo object
 
-  const MarketingPreferencesPage({Key? key, required this.signUpInfo}) : super(key: key);
+  const MarketingPreferencesPage({super.key, required this.signUpInfo});
 
   @override
   State<MarketingPreferencesPage> createState() => _MarketingPreferencesPageState();

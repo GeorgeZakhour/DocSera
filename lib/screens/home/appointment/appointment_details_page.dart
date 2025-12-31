@@ -1,11 +1,8 @@
 import 'dart:convert';
-import 'dart:io';
-import 'dart:ui';
 
 import 'package:add_2_calendar/add_2_calendar.dart';
 import 'package:docsera/Business_Logic/Available_appointments_page/doctor_schedule_cubit.dart';
 import 'package:docsera/models/appointment_details.dart';
-import 'package:docsera/models/document.dart';
 import 'package:docsera/models/patient_profile.dart';
 import 'package:docsera/screens/doctors/appointment/select_patient_page.dart';
 import 'package:docsera/screens/home/appointment/reschedule_confirmation_page.dart';
@@ -15,12 +12,9 @@ import 'package:docsera/utils/doctor_image_utils.dart';
 import 'package:docsera/utils/text_direction_utils.dart';
 import 'package:docsera/utils/time_utils.dart';
 import 'package:docsera/widgets/base_scaffold.dart';
-import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
-import 'package:flutter_svg/svg.dart';
-import 'package:image_picker/image_picker.dart';
 import 'package:intl/intl.dart';
 import 'package:docsera/app/const.dart';
 import 'package:docsera/utils/page_transitions.dart';
@@ -41,10 +35,10 @@ class AppointmentDetailsPage extends StatefulWidget {
 
 
   const AppointmentDetailsPage({
-    Key? key,
+    super.key,
     required this.appointment,
     required this.isUpcoming, // Defaults to false (for past appointments)
-  }) : super(key: key);
+  });
 
   @override
   State<AppointmentDetailsPage> createState() => _AppointmentDetailsPageState();
@@ -302,7 +296,7 @@ class _AppointmentDetailsPageState extends State<AppointmentDetailsPage> {
 
   void _showRescheduleAppointmentSheet(BuildContext context) async {
     // --------- Helpers ---------
-    Future<int> _fetchCancellationDeadlineHours(String doctorId) async {
+    Future<int> fetchCancellationDeadlineHours(String doctorId) async {
       final row = await Supabase.instance.client
           .from('doctors')
           .select('cancellation_deadline_hours')
@@ -311,7 +305,7 @@ class _AppointmentDetailsPageState extends State<AppointmentDetailsPage> {
       return (row?['cancellation_deadline_hours'] as int?) ?? 24;
     }
 
-    (bool, bool) _computeFlags({
+    (bool, bool) computeFlags({
       required DateTime apptUtc,
       required int deadlineHours,
     }) {
@@ -333,9 +327,9 @@ class _AppointmentDetailsPageState extends State<AppointmentDetailsPage> {
     }
 
     final tsUtc = DateTime.parse(appt['timestamp'].toString()).toUtc();
-    final deadlineHours = await _fetchCancellationDeadlineHours(doctorId);
+    final deadlineHours = await fetchCancellationDeadlineHours(doctorId);
     final (isTooLate, isShortNotice) =
-    _computeFlags(apptUtc: tsUtc, deadlineHours: deadlineHours);
+    computeFlags(apptUtc: tsUtc, deadlineHours: deadlineHours);
 
     // --------- Too late ---------
     if (isTooLate) {
@@ -582,7 +576,7 @@ class _AppointmentDetailsPageState extends State<AppointmentDetailsPage> {
                             focusedBorder: OutlineInputBorder(
                               borderRadius: BorderRadius.circular(25.r),
                               borderSide:
-                              BorderSide(color: AppColors.main, width: 2),
+                              const BorderSide(color: AppColors.main, width: 2),
                             ),
                           ),
                           onChanged: (_) => setBSState(() => isInvalid = false),
@@ -917,7 +911,7 @@ class _AppointmentDetailsPageState extends State<AppointmentDetailsPage> {
                             ),
                             focusedBorder: OutlineInputBorder(
                               borderRadius: BorderRadius.circular(25.r),
-                              borderSide: BorderSide(color: AppColors.main, width: 2),
+                              borderSide: const BorderSide(color: AppColors.main, width: 2),
                             ),
                           ),
                           onChanged: (_) => setState(() => isInvalid = false),
@@ -1055,11 +1049,11 @@ class _AppointmentDetailsPageState extends State<AppointmentDetailsPage> {
     final uploadDate = att['uploaded_at']?.toString().substring(0, 10) ?? '';
     final pages = att['page_count'] ?? 1;
 
-    final icon = Icons.attach_file;
+    const icon = Icons.attach_file;
 
     return Container(
-      margin: EdgeInsets.only(top: 5),
-      padding: EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+      margin: const EdgeInsets.only(top: 5),
+      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(12),
@@ -1067,30 +1061,30 @@ class _AppointmentDetailsPageState extends State<AppointmentDetailsPage> {
           BoxShadow(
             color: Colors.black.withOpacity(0.06),
             blurRadius: 4,
-            offset: Offset(0, 2),
+            offset: const Offset(0, 2),
           )
         ],
       ),
       child: Row(
         children: [
-          Icon(icon, color: AppColors.main, size: 18),
-          SizedBox(width: 12),
+          const Icon(icon, color: AppColors.main, size: 18),
+          const SizedBox(width: 12),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(name,
-                    style: TextStyle(
+                    style: const TextStyle(
                       fontWeight: FontWeight.bold,
                       fontSize: 11,
                     )),
                 Text(
                   type == 'pdf' ? "$pages pages" : "Image",
-                  style: TextStyle(fontSize: 9, color: Colors.grey),
+                  style: const TextStyle(fontSize: 9, color: Colors.grey),
                 ),
                 Text(
                   uploadDate,
-                  style: TextStyle(fontSize: 9, color: Colors.grey),
+                  style: const TextStyle(fontSize: 9, color: Colors.grey),
                 ),
               ],
             ),
@@ -1099,7 +1093,7 @@ class _AppointmentDetailsPageState extends State<AppointmentDetailsPage> {
             onPressed: () {
               _openAttachment(att);
             },
-            child: Text(AppLocalizations.of(context)!.view, style: TextStyle(color: AppColors.main, fontSize: 10)),
+            child: Text(AppLocalizations.of(context)!.view, style: const TextStyle(color: AppColors.main, fontSize: 10)),
           ),
         ],
       ),
@@ -1167,17 +1161,17 @@ class _AppointmentDetailsPageState extends State<AppointmentDetailsPage> {
       clinicAddress = Map<String, dynamic>.from(rawAddress);
     }
 
-    String _joinNonEmpty(List<String?> parts, {String sep = ' '}) =>
+    String joinNonEmpty(List<String?> parts, {String sep = ' '}) =>
         parts.where((s) => (s ?? '').trim().isNotEmpty).map((s) => s!.trim()).join(sep);
 
-    final String line1 = _joinNonEmpty([clinicAddress['street']?.toString(), clinicAddress['buildingNr']?.toString()]);
-    final String line2 = _joinNonEmpty([clinicAddress['city']?.toString()]);
-    final String line3 = _joinNonEmpty([clinicAddress['country']?.toString()]);
-    final String line4 = _joinNonEmpty([clinicAddress['details']?.toString()]);
-    final String formattedAddress = _joinNonEmpty([line1, line2, line3, line4], sep: '\n');
+    final String line1 = joinNonEmpty([clinicAddress['street']?.toString(), clinicAddress['buildingNr']?.toString()]);
+    final String line2 = joinNonEmpty([clinicAddress['city']?.toString()]);
+    final String line3 = joinNonEmpty([clinicAddress['country']?.toString()]);
+    final String line4 = joinNonEmpty([clinicAddress['details']?.toString()]);
+    final String formattedAddress = joinNonEmpty([line1, line2, line3, line4], sep: '\n');
 
     // --- Doctor info ---
-    final String doctorName = _joinNonEmpty([
+    final String doctorName = joinNonEmpty([
       (appt['doctorTitle'] ?? appt['doctor_title'])?.toString(),
       (appt['doctorName'] ?? appt['doctor_name'])?.toString(),
     ]);
@@ -1316,8 +1310,8 @@ class _AppointmentDetailsPageState extends State<AppointmentDetailsPage> {
                                       style: AppTextStyles.getText2(context).copyWith(color: AppColors.main, fontWeight: FontWeight.bold),
                                     ),
                                     style: ButtonStyle(
-                                      overlayColor: MaterialStateProperty.resolveWith<Color?>(
-                                            (Set<MaterialState> states) {
+                                      overlayColor: WidgetStateProperty.resolveWith<Color?>(
+                                            (Set<WidgetState> states) {
                                           return Colors.transparent; // ✅ No overlay color on press
                                         },
                                       ),
@@ -1335,8 +1329,8 @@ class _AppointmentDetailsPageState extends State<AppointmentDetailsPage> {
                                       style: AppTextStyles.getText2(context).copyWith(color: AppColors.red, fontWeight: FontWeight.bold),
                                     ),
                                     style: ButtonStyle(
-                                      overlayColor: MaterialStateProperty.resolveWith<Color?>(
-                                            (Set<MaterialState> states) {
+                                      overlayColor: WidgetStateProperty.resolveWith<Color?>(
+                                            (Set<WidgetState> states) {
                                           return Colors.transparent; // ✅ No overlay color on press
                                         },
                                       ),
@@ -1431,7 +1425,7 @@ class _AppointmentDetailsPageState extends State<AppointmentDetailsPage> {
                             Column(
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
-                                SizedBox(height: 12),
+                                const SizedBox(height: 12),
                                 Text(
                                   AppLocalizations.of(context)!.sentDocuments,
                                   style: AppTextStyles.getTitle1(context).copyWith(
@@ -1439,8 +1433,8 @@ class _AppointmentDetailsPageState extends State<AppointmentDetailsPage> {
                                     fontWeight: FontWeight.bold,
                                   ),
                                 ),
-                                SizedBox(height: 3),
-                                ...attachments.map((att) => _attachmentTile(att)).toList(),
+                                const SizedBox(height: 3),
+                                ...attachments.map((att) => _attachmentTile(att)),
                               ],
                             ),
 
@@ -1542,7 +1536,7 @@ class _AppointmentDetailsPageState extends State<AppointmentDetailsPage> {
                                     padding: EdgeInsets.symmetric(vertical: 14.h, horizontal: 16.w),
                                     child: Row(
                                       children: [
-                                        Icon(Icons.share, color: AppColors.main, size: 14),
+                                        const Icon(Icons.share, color: AppColors.main, size: 14),
                                         const SizedBox(width: 10),
                                         Text(
                                           AppLocalizations.of(context)!.shareAppointmentDetails,
@@ -1584,7 +1578,7 @@ class _AppointmentDetailsPageState extends State<AppointmentDetailsPage> {
                                   child: Row(
                                     crossAxisAlignment: CrossAxisAlignment.start,
                                     children: [
-                                      Icon(Icons.location_on, color: AppColors.main, size: 20),
+                                      const Icon(Icons.location_on, color: AppColors.main, size: 20),
                                       const SizedBox(width: 12),
                                       Expanded(
                                         child: Column(
@@ -1763,12 +1757,12 @@ class DoctorAppointmentsBottomSheet extends StatelessWidget {
   final DateTime oldTimestamp;
 
   const DoctorAppointmentsBottomSheet({
-    Key? key,
+    super.key,
     required this.patientProfile,
     required this.appointmentDetails,
     required this.oldAppointmentId,
     required this.oldTimestamp,
-  }) : super(key: key);
+  });
 
   @override
   Widget build(BuildContext context) {

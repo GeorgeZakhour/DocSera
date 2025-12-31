@@ -213,7 +213,7 @@ class MedicalRecordsService {
       final merged = <dynamic>[];
 
       for (final row in resEn) {
-        final id = (row as Map<String, dynamic>)['id'] as String;
+        final id = (row)['id'] as String;
         if (!seenIds.contains(id)) {
           seenIds.add(id);
           merged.add(row);
@@ -221,7 +221,7 @@ class MedicalRecordsService {
       }
 
       for (final row in resAr) {
-        final id = (row as Map<String, dynamic>)['id'] as String;
+        final id = (row)['id'] as String;
         if (!seenIds.contains(id)) {
           seenIds.add(id);
           merged.add(row);

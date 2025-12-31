@@ -133,7 +133,7 @@ class AccountSecurityCubit extends Cubit<AccountSecurityState> {
       if (e.toString().toLowerCase().contains('invalid login')) {
         emit(const AccountPasswordInvalid());
       } else {
-        emit(AccountSecurityError('PASSWORD_CHANGE_FAILED'));
+        emit(const AccountSecurityError('PASSWORD_CHANGE_FAILED'));
       }
     }
   }

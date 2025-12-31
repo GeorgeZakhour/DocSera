@@ -9,12 +9,12 @@ class PatientProfilePage extends StatelessWidget {
   final String doctorId;
   final String patientId;
 
-  const PatientProfilePage({Key? key, required this.doctorId, required this.patientId}) : super(key: key);
+  const PatientProfilePage({super.key, required this.doctorId, required this.patientId});
 
   @override
   Widget build(BuildContext context) {
     return BaseScaffold(
-      title: Text("Patient Profile", style: TextStyle(color: AppColors.whiteText, fontSize: 16, fontWeight: FontWeight.bold)),
+      title: const Text("Patient Profile", style: TextStyle(color: AppColors.whiteText, fontSize: 16, fontWeight: FontWeight.bold)),
       child: FutureBuilder(
         future: Supabase.instance.client
             .from('patients')
@@ -48,7 +48,7 @@ class PatientProfilePage extends StatelessWidget {
                         /// **Patient Name (Title)**
                         Row(
                           children: [
-                            Icon(Icons.account_circle_rounded, color: AppColors.mainDark),
+                            const Icon(Icons.account_circle_rounded, color: AppColors.mainDark),
                             const SizedBox(width: 10),
                             Text(
                               data['patientName'] ?? "",
@@ -104,7 +104,7 @@ class PatientProfilePage extends StatelessWidget {
                                 Divider(color: Colors.grey.shade300, thickness: 1),
                             ],
                           );
-                        }).toList(),
+                        }),
                       ],
                     ),
                   ),

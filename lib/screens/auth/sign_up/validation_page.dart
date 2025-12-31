@@ -16,8 +16,7 @@ class ValidationPage extends StatefulWidget {
   final String validationType; // 'SMS' or 'Email'
   final SignUpInfo signUpInfo; // Accept SignUpInfo to pass user data
 
-  const ValidationPage({Key? key, required this.validationType, required this.signUpInfo})
-      : super(key: key);
+  const ValidationPage({super.key, required this.validationType, required this.signUpInfo});
 
   @override
   State<ValidationPage> createState() => _ValidationPageState();
@@ -272,7 +271,7 @@ class _ValidationPageState extends State<ValidationPage> {
             SizedBox(height: 20.h),
 
             if (isLoading)
-              Center(child: FullPageLoader())
+              const Center(child: FullPageLoader())
             else ...[
               // OTP Input Field
               TextFormField(
@@ -287,15 +286,15 @@ class _ValidationPageState extends State<ValidationPage> {
                   errorText: isCodeValid ? null : AppLocalizations.of(context)!.invalidCode,
                   border: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(25.r),
-                    borderSide: BorderSide(color: Colors.grey),
+                    borderSide: const BorderSide(color: Colors.grey),
                   ),
                   enabledBorder: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(25.r),
-                    borderSide: BorderSide(color: Colors.grey),
+                    borderSide: const BorderSide(color: Colors.grey),
                   ),
                   focusedBorder: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(25.r),
-                    borderSide: BorderSide(color: AppColors.main, width: 2),
+                    borderSide: const BorderSide(color: AppColors.main, width: 2),
                   ),
                 ),
                 onChanged: (value) {
@@ -326,13 +325,13 @@ class _ValidationPageState extends State<ValidationPage> {
                   ),
                 ),
               ),
-              Spacer(),
+              const Spacer(),
 
               // Progress Bar
               LinearProgressIndicator(
                 value: 1.0,
                 backgroundColor: AppColors.background2,
-                valueColor: AlwaysStoppedAnimation<Color>(AppColors.main),
+                valueColor: const AlwaysStoppedAnimation<Color>(AppColors.main),
                 minHeight: 4.h,
               ),
               SizedBox(height: 20.h),

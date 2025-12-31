@@ -83,10 +83,10 @@ class _MultiPageUploadScreenState extends State<MultiPageUploadScreen> {
               _pages.add(imagePath);
               _currentPageIndex = _pages.length - 1;
             });
-            Future.delayed(Duration(milliseconds: 100), () {
+            Future.delayed(const Duration(milliseconds: 100), () {
               _pageController.animateToPage(
                 _currentPageIndex,
-                duration: Duration(milliseconds: 300),
+                duration: const Duration(milliseconds: 300),
                 curve: Curves.easeInOut,
               );
             });
@@ -105,10 +105,10 @@ class _MultiPageUploadScreenState extends State<MultiPageUploadScreen> {
         _currentPageIndex = _pages.length - 1;
       }
     });
-    Future.delayed(Duration(milliseconds: 100), () {
+    Future.delayed(const Duration(milliseconds: 100), () {
       _pageController.animateToPage(
         _currentPageIndex,
-        duration: Duration(milliseconds: 300),
+        duration: const Duration(milliseconds: 300),
         curve: Curves.easeInOut,
       );
     });
@@ -168,12 +168,12 @@ class _MultiPageUploadScreenState extends State<MultiPageUploadScreen> {
                     onTap: () {
                       _pageController.animateToPage(
                         index,
-                        duration: Duration(milliseconds: 300),
+                        duration: const Duration(milliseconds: 300),
                         curve: Curves.easeInOut,
                       );
                     },
                     child: AnimatedContainer(
-                      duration: Duration(milliseconds: 300),
+                      duration: const Duration(milliseconds: 300),
                       margin: EdgeInsets.symmetric(horizontal: isSelected ? 4.w : 12.w, vertical: isSelected ? 0 : 20.h),
                       decoration: BoxDecoration(
                         borderRadius: BorderRadius.circular(27.r),
@@ -205,7 +205,7 @@ class _MultiPageUploadScreenState extends State<MultiPageUploadScreen> {
               children: List.generate(_pages.length, (index) {
                 final isSelected = index == _currentPageIndex;
                 return AnimatedContainer(
-                  duration: Duration(milliseconds: 300),
+                  duration: const Duration(milliseconds: 300),
                   margin: EdgeInsets.symmetric(horizontal: 4.w),
                   width: isSelected ? 12.w : 8.w,
                   height: isSelected ? 12.w : 8.w,
@@ -250,11 +250,11 @@ class _MultiPageUploadScreenState extends State<MultiPageUploadScreen> {
                         Expanded(
                           child: Center(
                             child: AnimatedSwitcher(
-                              duration: Duration(milliseconds: 220),
+                              duration: const Duration(milliseconds: 220),
                               transitionBuilder: (child, animation) => ScaleTransition(scale: animation, child: child),
                               child: _showAddOptions
                                   ? Container(
-                                key: ValueKey('options'),
+                                key: const ValueKey('options'),
                                 padding: EdgeInsets.symmetric(horizontal: 8.w, vertical: 8.h),
                                 decoration: BoxDecoration(
                                   color: Colors.white30,
@@ -294,7 +294,7 @@ class _MultiPageUploadScreenState extends State<MultiPageUploadScreen> {
                                 ),
                               )
                                   : _buildActionButton(
-                                key: ValueKey('add'),
+                                key: const ValueKey('add'),
                                 icon: Icons.add,
                                 label: AppLocalizations.of(context)!.addPage,
                                 onTap: () {

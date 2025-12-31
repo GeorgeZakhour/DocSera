@@ -10,10 +10,10 @@ class AddImagePreviewSheet extends StatelessWidget {
 
 
   const AddImagePreviewSheet({
-    Key? key,
+    super.key,
     required this.imagePath,
     required this.onAdd,
-  }) : super(key: key);
+  });
 
 
   @override

@@ -27,17 +27,17 @@ class HealthPrimaryButton extends StatelessWidget {
       child: ElevatedButton(
         onPressed: isEnabled ? onTap : null,
         style: ButtonStyle(
-          backgroundColor: MaterialStateProperty.resolveWith<Color>(
+          backgroundColor: WidgetStateProperty.resolveWith<Color>(
                 (states) {
-              if (states.contains(MaterialState.disabled)) {
+              if (states.contains(WidgetState.disabled)) {
                 return Colors.grey.shade300;
               }
               return AppColors.main;
             },
           ),
-          foregroundColor: MaterialStateProperty.all<Color>(Colors.white),
-          elevation: MaterialStateProperty.all(0),
-          shape: MaterialStateProperty.all(
+          foregroundColor: WidgetStateProperty.all<Color>(Colors.white),
+          elevation: WidgetStateProperty.all(0),
+          shape: WidgetStateProperty.all(
             RoundedRectangleBorder(
               borderRadius: BorderRadius.circular(24.r),
             ),

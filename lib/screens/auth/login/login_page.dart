@@ -279,7 +279,7 @@ class _LogInPageState extends State<LogInPage> {
 
       Navigator.pushAndRemoveUntil(
         context,
-        fadePageRoute(CustomBottomNavigationBar()),
+        fadePageRoute(const CustomBottomNavigationBar()),
             (_) => false,
       );
     } catch (e) {
@@ -455,7 +455,7 @@ class _LogInPageState extends State<LogInPage> {
                   },
                   style: TextButton.styleFrom(
                     padding: EdgeInsets.zero, // ✅ إزالة أي هوامش داخل الزر
-                    minimumSize: Size(0, 0), // ✅ تقليل المساحة القابلة للنقر
+                    minimumSize: const Size(0, 0), // ✅ تقليل المساحة القابلة للنقر
                     tapTargetSize: MaterialTapTargetSize.shrinkWrap, // ✅ تقليل حجم الضغط
                     overlayColor: Colors.transparent, // ✅ تأثير عند النقر
                   ),

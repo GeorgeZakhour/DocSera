@@ -18,7 +18,6 @@ import 'package:docsera/screens/doctors/doctor_profile_page.dart';
 import 'package:docsera/services/supabase/user/account_relatives_service.dart';
 import 'package:docsera/splash_screen.dart';
 import 'package:flutter/cupertino.dart';
-import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:docsera/gen_l10n/app_localizations.dart';
@@ -62,7 +61,7 @@ void main() async {
 
   SystemChrome.setEnabledSystemUIMode(SystemUiMode.edgeToEdge);
   SystemChrome.setSystemUIOverlayStyle(
-    SystemUiOverlayStyle(
+    const SystemUiOverlayStyle(
       statusBarColor: Colors.transparent,
       systemNavigationBarColor: Colors.transparent,
       systemNavigationBarIconBrightness: Brightness.light,
@@ -70,7 +69,7 @@ void main() async {
   );
 
   // ✅ يحفّز ظهور نافذة Local Network على iOS
-await Socket.connect('192.168.1.1', 80, timeout: Duration(seconds: 1))
+await Socket.connect('192.168.1.1', 80, timeout: const Duration(seconds: 1))
     .then((socket) {
   log('Connected to local network');
   socket.destroy();
@@ -313,19 +312,19 @@ class _MyAppState extends State<MyApp> {
                 // ✅ تأثير الضغط المطول لكل الأزرار
                 textButtonTheme: TextButtonThemeData(
                   style: ButtonStyle(
-                    overlayColor: MaterialStateProperty.all(AppColors.main.withOpacity(0.08)),
+                    overlayColor: WidgetStateProperty.all(AppColors.main.withOpacity(0.08)),
                   ),
                 ),
                 outlinedButtonTheme: OutlinedButtonThemeData(
                   style: ButtonStyle(
-                    overlayColor: MaterialStateProperty.all(AppColors.main.withOpacity(0.08)),
+                    overlayColor: WidgetStateProperty.all(AppColors.main.withOpacity(0.08)),
                   ),
                 ),
                 elevatedButtonTheme: ElevatedButtonThemeData(
                   style: ButtonStyle(
-                    backgroundColor: MaterialStateProperty.all(AppColors.main),
-                    foregroundColor: MaterialStateProperty.all(Colors.white),
-                    overlayColor: MaterialStateProperty.all(AppColors.main.withOpacity(0.08)),
+                    backgroundColor: WidgetStateProperty.all(AppColors.main),
+                    foregroundColor: WidgetStateProperty.all(Colors.white),
+                    overlayColor: WidgetStateProperty.all(AppColors.main.withOpacity(0.08)),
                   ),
                 ),
 
@@ -351,15 +350,15 @@ class _MyAppState extends State<MyApp> {
                 /// ✅ Global Input Field Theme
                 inputDecorationTheme: InputDecorationTheme(
                   labelStyle: TextStyle(color: Colors.grey, fontSize: 12.sp), // ✅ لون اللابل دائمًا رمادي
-                  floatingLabelStyle: TextStyle(color: AppColors.main),
-                  hintStyle: TextStyle(color: Colors.grey),
+                  floatingLabelStyle: const TextStyle(color: AppColors.main),
+                  hintStyle: const TextStyle(color: Colors.grey),
                   focusedBorder: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(25.r),
-                    borderSide: BorderSide(color: AppColors.main, width: 2),
+                    borderSide: const BorderSide(color: AppColors.main, width: 2),
                   ),
                   enabledBorder: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(25.r),
-                    borderSide: BorderSide(color: Colors.grey),
+                    borderSide: const BorderSide(color: Colors.grey),
                   ),
                   contentPadding: EdgeInsets.symmetric(vertical: 10.h, horizontal: 12.w),
                 ),
@@ -399,7 +398,7 @@ class _MyAppState extends State<MyApp> {
               // ✅ Make the app title support localization
               onGenerateTitle: (context) => AppLocalizations.of(context)!.appName,
 
-              home: SplashScreen(),
+              home: const SplashScreen(),
 
               routes: {
                 "/login": (context) => const LogInPage(),

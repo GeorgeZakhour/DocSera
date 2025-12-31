@@ -9,13 +9,12 @@ import 'package:docsera/app/const.dart';
 import 'package:intl/intl.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:docsera/gen_l10n/app_localizations.dart';
-import 'dart:ui';
 
 import '../../../utils/full_page_loader.dart';
 
 
 class EditProfilePage extends StatefulWidget {
-  const EditProfilePage({Key? key}) : super(key: key);
+  const EditProfilePage({super.key});
 
   @override
   _EditProfilePageState createState() => _EditProfilePageState();
@@ -499,11 +498,11 @@ class _EditProfilePageState extends State<EditProfilePage> {
           contentPadding: EdgeInsets.symmetric(vertical: 12.h, horizontal: 14.w),
           enabledBorder: OutlineInputBorder(
             borderRadius: BorderRadius.circular(25.r),
-            borderSide: BorderSide(color: Colors.grey),
+            borderSide: const BorderSide(color: Colors.grey),
           ),
           focusedBorder: OutlineInputBorder(
             borderRadius: BorderRadius.circular(25.r),
-            borderSide: BorderSide(color: AppColors.main, width: 2),
+            borderSide: const BorderSide(color: AppColors.main, width: 2),
           ),
           errorBorder: OutlineInputBorder(
             borderRadius: BorderRadius.circular(25.r),
@@ -586,8 +585,8 @@ class _EditProfilePageState extends State<EditProfilePage> {
       style: AppTextStyles.getText2(context),
       decoration: InputDecoration(
         labelText: localizedLabel,
-        labelStyle: MaterialStateTextStyle.resolveWith((states) {
-          if (states.contains(MaterialState.error)) {
+        labelStyle: WidgetStateTextStyle.resolveWith((states) {
+          if (states.contains(WidgetState.error)) {
             return AppTextStyles.getText3(context).copyWith(color: AppColors.red);
           }
           return AppTextStyles.getText3(context).copyWith(color: Colors.grey);
@@ -596,11 +595,11 @@ class _EditProfilePageState extends State<EditProfilePage> {
         contentPadding: EdgeInsets.symmetric(vertical: 12.h, horizontal: 14.w),
         enabledBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(25.r),
-          borderSide: BorderSide(color: Colors.grey),
+          borderSide: const BorderSide(color: Colors.grey),
         ),
         focusedBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(25.r),
-          borderSide: BorderSide(color: AppColors.main, width: 2),
+          borderSide: const BorderSide(color: AppColors.main, width: 2),
         ),
         errorBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(25.r),
@@ -648,8 +647,8 @@ class _EditProfilePageState extends State<EditProfilePage> {
       },
       decoration: InputDecoration(
         labelText: localizedLabel,
-        labelStyle: MaterialStateTextStyle.resolveWith((states) {
-          if (states.contains(MaterialState.error)) {
+        labelStyle: WidgetStateTextStyle.resolveWith((states) {
+          if (states.contains(WidgetState.error)) {
             return AppTextStyles.getText3(context).copyWith(color: AppColors.red);
           }
           return AppTextStyles.getText3(context).copyWith(color: Colors.grey);
@@ -658,11 +657,11 @@ class _EditProfilePageState extends State<EditProfilePage> {
         contentPadding: EdgeInsets.symmetric(vertical: 12.h, horizontal: 14.w),
         enabledBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(25.r),
-          borderSide: BorderSide(color: Colors.grey),
+          borderSide: const BorderSide(color: Colors.grey),
         ),
         focusedBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(25.r),
-          borderSide: BorderSide(color: AppColors.main, width: 2),
+          borderSide: const BorderSide(color: AppColors.main, width: 2),
         ),
         errorBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(25.r),
@@ -707,8 +706,8 @@ class _EditProfilePageState extends State<EditProfilePage> {
           textAlign: getTextAlign(context),
           decoration: InputDecoration(
             labelText: localizedLabel,
-            labelStyle: MaterialStateTextStyle.resolveWith((states) {
-              if (states.contains(MaterialState.error)) {
+            labelStyle: WidgetStateTextStyle.resolveWith((states) {
+              if (states.contains(WidgetState.error)) {
                 return AppTextStyles.getText3(context).copyWith(color: AppColors.red);
               }
               return AppTextStyles.getText3(context).copyWith(color: Colors.grey);
@@ -717,11 +716,11 @@ class _EditProfilePageState extends State<EditProfilePage> {
             contentPadding: EdgeInsets.symmetric(vertical: 12.h, horizontal: 14.w),
             enabledBorder: OutlineInputBorder(
               borderRadius: BorderRadius.circular(25.r),
-              borderSide: BorderSide(color: Colors.grey),
+              borderSide: const BorderSide(color: Colors.grey),
             ),
             focusedBorder: OutlineInputBorder(
               borderRadius: BorderRadius.circular(25.r),
-              borderSide: BorderSide(color: AppColors.main, width: 2),
+              borderSide: const BorderSide(color: AppColors.main, width: 2),
             ),
             errorBorder: OutlineInputBorder(
               borderRadius: BorderRadius.circular(25.r),

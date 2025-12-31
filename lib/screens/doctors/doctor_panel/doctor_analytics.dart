@@ -8,7 +8,7 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 class DoctorAnalyticsPage extends StatefulWidget {
   final Map<String, dynamic>? doctorData;
 
-  const DoctorAnalyticsPage({Key? key, this.doctorData}) : super(key: key);
+  const DoctorAnalyticsPage({super.key, this.doctorData});
 
   @override
   _DoctorAnalyticsPageState createState() => _DoctorAnalyticsPageState();
@@ -214,7 +214,7 @@ class _DoctorAnalyticsPageState extends State<DoctorAnalyticsPage> {
             ),
           ),
         ),
-        if (selectedIndex != null && selectedIndex! >= 0 && selectedIndex! < data.length)
+        if (selectedIndex != null && selectedIndex >= 0 && selectedIndex < data.length)
           Padding(
             padding: const EdgeInsets.symmetric(vertical: 10),
             child: Center(
@@ -225,7 +225,7 @@ class _DoctorAnalyticsPageState extends State<DoctorAnalyticsPage> {
                   borderRadius: BorderRadius.circular(10),
                 ),
                 child: Text(
-                  data.keys.toList()[selectedIndex!],
+                  data.keys.toList()[selectedIndex],
                   style: const TextStyle(color: Colors.white, fontSize: 14, fontWeight: FontWeight.bold),
                 ),
               ),

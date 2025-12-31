@@ -15,10 +15,10 @@ class VisitedDoctorPage extends StatefulWidget {
   final AppointmentDetails appointmentDetails;
 
   const VisitedDoctorPage({
-    Key? key,
+    super.key,
     required this.patientProfile,
     required this.appointmentDetails,
-  }) : super(key: key);
+  });
 
   @override
   _VisitedDoctorPageState createState() => _VisitedDoctorPageState();

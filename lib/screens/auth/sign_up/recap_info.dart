@@ -18,7 +18,7 @@ class RecapPage extends StatelessWidget {
   final SignUpInfo signUpInfo;
   final SupabaseUserService _supabaseUserService = SupabaseUserService();
 
-  RecapPage({Key? key, required this.signUpInfo}) : super(key: key);
+  RecapPage({super.key, required this.signUpInfo});
 
   /// ✅ Device ID موحد Android / iOS
   Future<String> _getDeviceId() async {

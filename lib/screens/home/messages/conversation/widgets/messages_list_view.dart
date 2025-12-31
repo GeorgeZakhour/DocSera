@@ -6,7 +6,6 @@ import 'package:docsera/app/text_styles.dart';
 import 'package:docsera/gen_l10n/app_localizations.dart';
 import 'package:docsera/models/document.dart';
 import 'package:docsera/screens/home/Document/document_preview_page.dart';
-import 'package:docsera/screens/home/shimmer/shimmer_widgets.dart';
 import 'package:docsera/utils/time_utils.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
@@ -37,8 +36,8 @@ class MessagesListView extends StatelessWidget {
   final void Function(List<String> urls, {int initialIndex, bool showAsGrid})
   onOpenImages;
 
-  MessagesListView({
-    Key? key,
+  const MessagesListView({
+    super.key,
     required this.messages,
     required this.pendingCount,
     required this.pendingBuilder,
@@ -49,7 +48,7 @@ class MessagesListView extends StatelessWidget {
     required this.doctorImage,
     required this.resolveImageUrls,
     required this.onOpenImages,
-  }) : super(key: key);
+  });
 
   bool _isArabicText(String text) {
     return RegExp(r'[\u0600-\u06FF]').hasMatch(text);
@@ -508,7 +507,7 @@ class MessagesListView extends StatelessWidget {
                   url = paths.first.toString();
                 }
 
-                if (url == null || url.trim().isEmpty) return;
+                if (url.trim().isEmpty) return;
 
                 final userDoc = UserDocument(
                   id: '',

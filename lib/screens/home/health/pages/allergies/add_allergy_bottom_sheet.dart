@@ -1,5 +1,4 @@
 import 'package:docsera/screens/home/health/models/health_models.dart';
-import 'package:docsera/screens/home/health/services/health_records_service.dart';
 import 'package:docsera/screens/home/health/widgets/steps/health_master_search_step.dart';
 import 'package:docsera/screens/home/health/widgets/steps/health_options_step.dart';
 import 'package:docsera/screens/home/health/widgets/steps/health_recap_step.dart';
@@ -7,7 +6,6 @@ import 'package:docsera/screens/home/health/widgets/steps/health_stepper_bottom_
 import 'package:docsera/screens/home/health/widgets/steps/health_year_step.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:docsera/gen_l10n/app_localizations.dart';
 
 import 'package:docsera/Business_Logic/Health_page/health_cubit.dart';

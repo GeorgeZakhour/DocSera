@@ -211,11 +211,11 @@ class _CreatePasswordPageState extends State<CreatePasswordPage> {
         contentPadding: EdgeInsets.symmetric(vertical: 12.h, horizontal: 14.w),
         enabledBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(25.r),
-          borderSide: BorderSide(color: Colors.grey),
+          borderSide: const BorderSide(color: Colors.grey),
         ),
         focusedBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(25.r),
-          borderSide: BorderSide(color: AppColors.main, width: 2),
+          borderSide: const BorderSide(color: AppColors.main, width: 2),
         ),
         suffixIcon: IconButton(
           icon: Icon(

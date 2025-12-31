@@ -1,7 +1,6 @@
 import 'package:docsera/app/text_styles.dart';
 import 'package:docsera/screens/auth/login/login_page.dart';
 import 'package:docsera/screens/auth/sign_up/create_password.dart';
-import 'package:docsera/services/supabase/user/supabase_user_service.dart';
 import 'package:docsera/utils/page_transitions.dart';
 import 'package:docsera/utils/text_direction_utils.dart';
 import 'package:docsera/widgets/base_scaffold.dart';
@@ -16,7 +15,7 @@ import '../../../models/sign_up_info.dart';
 class EnterEmailPage extends StatefulWidget {
   final SignUpInfo signUpInfo;
 
-  const EnterEmailPage({Key? key, required this.signUpInfo}) : super(key: key);
+  const EnterEmailPage({super.key, required this.signUpInfo});
 
   @override
   State<EnterEmailPage> createState() => _EnterEmailPageState();
@@ -175,15 +174,15 @@ class _EnterEmailPageState extends State<EnterEmailPage> {
                   labelStyle: AppTextStyles.getText2(context).copyWith(color: Colors.grey),
                   border: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(25.r),
-                    borderSide: BorderSide(color: Colors.grey),
+                    borderSide: const BorderSide(color: Colors.grey),
                   ),
                   enabledBorder: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(25.r),
-                    borderSide: BorderSide(color: Colors.grey),
+                    borderSide: const BorderSide(color: Colors.grey),
                   ),
                   focusedBorder: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(25.r),
-                    borderSide: BorderSide(color: AppColors.main, width: 2),
+                    borderSide: const BorderSide(color: AppColors.main, width: 2),
                   ),
                   suffixIcon: hasInput
                       ? Padding(

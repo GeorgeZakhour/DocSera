@@ -29,13 +29,13 @@ class ConfirmationPage extends StatefulWidget {
   final String? reasonLabel;
 
   const ConfirmationPage({
-    Key? key,
+    super.key,
     required this.appointmentDetails,
     required this.appointmentId,
     required this.appointmentTimestamp,
     required this.appointmentTime,
     this.reasonLabel,
-  }) : super(key: key);
+  });
 
   @override
   State<ConfirmationPage> createState() => _ConfirmationPageState();

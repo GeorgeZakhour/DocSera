@@ -1,9 +1,7 @@
-import 'dart:math';
 import 'package:docsera/gen_l10n/app_localizations.dart';
 import 'package:docsera/app/text_styles.dart';
 import 'package:docsera/screens/search_advanced_page.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
-import 'package:docsera/screens/search_page.dart';
 import 'package:docsera/utils/page_transitions.dart';
 import 'package:flutter/material.dart';
 import 'package:docsera/app/const.dart';
@@ -576,7 +574,7 @@ class _BannerLogoState extends State<BannerLogo> {
     if (!_isValid) return const SizedBox(); // ✅ Avoid errors if the image is invalid
 
     return AnimatedOpacity(
-      duration: Duration(milliseconds: 300),
+      duration: const Duration(milliseconds: 300),
       opacity: _isLoaded ? 1.0 : 0.0,
       child: widget.path.toLowerCase().endsWith('.svg')
           ? SvgPicture.asset(

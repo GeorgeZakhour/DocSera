@@ -1,6 +1,5 @@
 import 'package:docsera/app/text_styles.dart';
 import 'package:docsera/screens/auth/sign_up/sign_up_identity.dart';
-import 'package:docsera/services/supabase/user/supabase_user_service.dart';
 import 'package:docsera/utils/page_transitions.dart';
 import 'package:docsera/utils/text_direction_utils.dart';
 import 'package:docsera/widgets/base_scaffold.dart';
@@ -219,11 +218,11 @@ class _SignUpFirstPageState extends State<SignUpFirstPage> {
 
                   border: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(25.r),
-                    borderSide: BorderSide(color: Colors.grey),
+                    borderSide: const BorderSide(color: Colors.grey),
                   ),
                   focusedBorder: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(25.r),
-                    borderSide: BorderSide(color: AppColors.main, width: 2),
+                    borderSide: const BorderSide(color: AppColors.main, width: 2),
                   ),
 
                   // ✅ `suffixIcon` لا يؤثر على موضع `prefixIcon`

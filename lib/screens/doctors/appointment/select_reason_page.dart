@@ -17,10 +17,10 @@ class SelectReasonPage extends StatefulWidget {
   final AppointmentDetails appointmentDetails;
 
   const SelectReasonPage({
-    Key? key,
+    super.key,
     required this.patientProfile,
     required this.appointmentDetails,
-  }) : super(key: key);
+  });
 
   @override
   _SelectReasonPageState createState() => _SelectReasonPageState();
@@ -85,7 +85,7 @@ class _SelectReasonPageState extends State<SelectReasonPage> {
             SizedBox(height: 15.h),
 
             if (isLoading)
-              Center(child: FullPageLoader())
+              const Center(child: FullPageLoader())
             else if (_error != null)
               Text(l.somethingWentWrong, style: AppTextStyles.getText2(context))
             else if (reasons.isEmpty)

@@ -10,9 +10,9 @@ class ClosedBanner extends StatelessWidget {
   final String doctorName;
 
   const ClosedBanner({
-    Key? key,
+    super.key,
     required this.doctorName,
-  }) : super(key: key);
+  });
 
   @override
   Widget build(BuildContext context) {

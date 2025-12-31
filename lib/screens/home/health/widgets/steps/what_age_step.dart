@@ -67,7 +67,7 @@ class _FamilyAgeStepState extends State<FamilyAgeStep> {
           },
         ),
 
-        Spacer(),
+        const Spacer(),
 
         HealthPrimaryButton(
           text: t.next,

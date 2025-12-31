@@ -21,10 +21,10 @@ class SendDocumentToDoctorPage extends StatefulWidget {
   final String appointmentId; // 👈 جديد
 
   const SendDocumentToDoctorPage({
-    Key? key,
+    super.key,
     required this.doctorName,
     required this.appointmentId,
-  }) : super(key: key);
+  });
 
   @override
   State<SendDocumentToDoctorPage> createState() => _SendDocumentToDoctorPageState();
@@ -52,8 +52,8 @@ class _SendDocumentToDoctorPageState extends State<SendDocumentToDoctorPage> {
               children: [
                 const CircleAvatar(
                   backgroundColor: AppColors.main,
-                  child: Icon(Icons.lock, color: Colors.white, size: 14),
                   radius: 12,
+                  child: Icon(Icons.lock, color: Colors.white, size: 14),
                 ),
                 SizedBox(width: 8.w),
                 Expanded(

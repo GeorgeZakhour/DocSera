@@ -62,13 +62,12 @@ class _SignUpSecondPageState extends State<SignUpSecondPage> {
           data: ThemeData.light().copyWith(
             primaryColor: AppColors.main, // ✅ لون الأزرار والنصوص
             hintColor: AppColors.main, // ✅ لون التلميحات
-            colorScheme: ColorScheme.light(
+            colorScheme: const ColorScheme.light(
               primary: AppColors.main, // ✅ لون رئيسي مخصص
               onPrimary: Colors.white, // ✅ لون النصوص في الأزرار
               surface: Colors.white, // ✅ لون الخلفية
               onSurface: AppColors.blackText, // ✅ لون النصوص في التقويم
-            ),
-            dialogBackgroundColor: Colors.white, // ✅ لون خلفية النافذة
+            ), dialogTheme: const DialogThemeData(backgroundColor: Colors.white), // ✅ لون خلفية النافذة
           ),
           child: Directionality(
             textDirection: currentLocale.languageCode == 'ar' ? TextDirection.rtl : TextDirection.ltr,
@@ -303,11 +302,11 @@ class _SignUpSecondPageState extends State<SignUpSecondPage> {
         contentPadding: EdgeInsets.symmetric(vertical: 12.h, horizontal: 14.w),
         enabledBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(25.r),
-          borderSide: BorderSide(color: Colors.grey),
+          borderSide: const BorderSide(color: Colors.grey),
         ),
         focusedBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(25.r),
-          borderSide: BorderSide(color: AppColors.main, width: 2),
+          borderSide: const BorderSide(color: AppColors.main, width: 2),
         ),
         suffixIcon: controller.text.isEmpty
             ? null // ✅ لا تعرض أيقونة إذا كان الحقل فارغًا
@@ -357,11 +356,11 @@ class _SignUpSecondPageState extends State<SignUpSecondPage> {
         contentPadding: EdgeInsets.symmetric(vertical: 12.h, horizontal: 14.w),
         enabledBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(25.r),
-          borderSide: BorderSide(color: Colors.grey),
+          borderSide: const BorderSide(color: Colors.grey),
         ),
         focusedBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(25.r),
-          borderSide: BorderSide(color: AppColors.main, width: 2),
+          borderSide: const BorderSide(color: AppColors.main, width: 2),
         ),
       ),
       dropdownColor: Colors.white.withOpacity(0.95), // ✅ لون خلفية القائمة المنسدلة
@@ -397,7 +396,7 @@ class _SignUpSecondPageState extends State<SignUpSecondPage> {
             ),
             focusedBorder: OutlineInputBorder(
               borderRadius: BorderRadius.circular(25.r),
-              borderSide: BorderSide(color: AppColors.main, width: 2),
+              borderSide: const BorderSide(color: AppColors.main, width: 2),
             ),
             suffixIcon: _dobController.text.isEmpty
                 ? null

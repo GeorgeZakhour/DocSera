@@ -22,7 +22,6 @@ import 'package:docsera/utils/page_transitions.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
-import 'package:supabase_flutter/supabase_flutter.dart';
 
 class HealthPage extends StatelessWidget {
   const HealthPage({super.key});
@@ -180,7 +179,7 @@ class _HealthAuthenticatedViewState extends State<HealthAuthenticatedView> {
                     BoxShadow(
                       color: Colors.black.withOpacity(0.05),
                       blurRadius: 8,
-                      offset: Offset(0, 3),
+                      offset: const Offset(0, 3),
                     )
                   ],
                 ),
@@ -217,7 +216,7 @@ class _HealthAuthenticatedViewState extends State<HealthAuthenticatedView> {
                           BoxShadow(
                             color: Colors.black.withOpacity(0.08),
                             blurRadius: 6,
-                            offset: Offset(0, 2),
+                            offset: const Offset(0, 2),
                           ),
                         ],
                       ),
@@ -749,11 +748,10 @@ class _HealthCategoryCard extends StatelessWidget {
   final VoidCallback onTap;
 
   const _HealthCategoryCard({
-    Key? key,
     required this.category,
     required this.isArabic,
     required this.onTap,
-  }) : super(key: key);
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -844,11 +842,11 @@ class HealthSectionPlaceholderPage extends StatelessWidget {
   final IconData icon;
 
   const HealthSectionPlaceholderPage({
-    Key? key,
+    super.key,
     required this.title,
     required this.description,
     required this.icon,
-  }) : super(key: key);
+  });
 
   @override
   Widget build(BuildContext context) {

@@ -9,7 +9,7 @@ import 'package:table_calendar/table_calendar.dart';
 class DoctorAppointments extends StatefulWidget {
   final Map<String, dynamic>? doctorData;
 
-  const DoctorAppointments({Key? key, this.doctorData}) : super(key: key);
+  const DoctorAppointments({super.key, this.doctorData});
 
   @override
   _DoctorAppointmentsState createState() => _DoctorAppointmentsState();
@@ -18,7 +18,7 @@ class DoctorAppointments extends StatefulWidget {
 class _DoctorAppointmentsState extends State<DoctorAppointments> {
   bool _isCalendarView = true; // ✅ Toggle between weekly & list view
   bool _showFreeSlots = false; // ✅ Track "Show Free Slots" button state
-  CalendarFormat _calendarFormat = CalendarFormat.week;
+  final CalendarFormat _calendarFormat = CalendarFormat.week;
   DateTime _selectedDay = DateTime.now();
   DateTime _focusedDay = DateTime.now();
   String? doctorId;
@@ -371,8 +371,8 @@ class _DoctorAppointmentsState extends State<DoctorAppointments> {
   /// **🔹 Show Dialog for Rotation-based Slots**
   void _showRotationSlotDialog() {
     String selectedDay = "Monday";
-    TimeOfDay startTime = TimeOfDay(hour: 8, minute: 0);
-    TimeOfDay endTime = TimeOfDay(hour: 12, minute: 0);
+    TimeOfDay startTime = const TimeOfDay(hour: 8, minute: 0);
+    TimeOfDay endTime = const TimeOfDay(hour: 12, minute: 0);
 
 
     showDialog(
@@ -605,7 +605,7 @@ class _DoctorAppointmentsState extends State<DoctorAppointments> {
                 color: AppColors.main.withOpacity(0.3),
                 shape: BoxShape.circle,
               ),
-              selectedDecoration: BoxDecoration(
+              selectedDecoration: const BoxDecoration(
                 color: AppColors.main,
                 shape: BoxShape.circle,
               ),
@@ -622,15 +622,16 @@ class _DoctorAppointmentsState extends State<DoctorAppointments> {
           .length
           : 0;
 
-      if (bookedCount == 0)
-        return SizedBox(); // No marker if no booked appointments
+      if (bookedCount == 0) {
+        return const SizedBox(); // No marker if no booked appointments
+      }
 
       return Positioned(
         bottom: -2, // Position below the date
         right: 4, // Move to bottom-right
         child: Container(
           padding: const EdgeInsets.all(6),
-          decoration: BoxDecoration(
+          decoration: const BoxDecoration(
             color: AppColors.yellow, // ✅ Dark Main Color for Badge
             shape: BoxShape.circle,
           ),
@@ -721,7 +722,7 @@ class _DoctorAppointmentsState extends State<DoctorAppointments> {
                   side: BorderSide(color: Colors.grey.shade200, width: 1.5), // ✅ Very thin border
                 ),
                 child: Padding(
-                  padding: isBooked ? EdgeInsets.symmetric(horizontal: 12, vertical: 8): EdgeInsets.symmetric(horizontal: 0, vertical: 0) ,
+                  padding: isBooked ? const EdgeInsets.symmetric(horizontal: 12, vertical: 8): const EdgeInsets.symmetric(horizontal: 0, vertical: 0) ,
                   child: Column(
                     children: [
                       Row(
@@ -731,12 +732,12 @@ class _DoctorAppointmentsState extends State<DoctorAppointments> {
                           Container(
                             decoration: BoxDecoration(
                                 color: isBooked ?AppColors.whiteText : AppColors.main.withOpacity(0.8),
-                                borderRadius: BorderRadius.only(topLeft: Radius.circular(10.0), bottomLeft: Radius.circular(10.0))),
+                                borderRadius: const BorderRadius.only(topLeft: Radius.circular(10.0), bottomLeft: Radius.circular(10.0))),
                             child: Padding(
-                              padding: isBooked ? EdgeInsets.all(0) : EdgeInsets.only(left: 20, right: 20, top:3, bottom: 7),
+                              padding: isBooked ? const EdgeInsets.all(0) : const EdgeInsets.only(left: 20, right: 20, top:3, bottom: 7),
                               child: Column(
                                 children: [
-                                  isBooked ? Icon(Icons.access_time, color: AppColors.main, size: 22) : SizedBox(height: 0),
+                                  isBooked ? const Icon(Icons.access_time, color: AppColors.main, size: 22) : const SizedBox(height: 0),
                                   const SizedBox(height: 5),
                                   Text(
                                     appointment['appointment_time'] ?? "",
@@ -786,8 +787,8 @@ class _DoctorAppointmentsState extends State<DoctorAppointments> {
                                 ),
                               ],
                             )
-                                : Center(
-                                  child: const Text(
+                                : const Center(
+                                  child: Text(
                                                                 "Available",
                                                                 style: TextStyle(
                                   fontSize: 14,
@@ -837,7 +838,7 @@ class _DoctorAppointmentsState extends State<DoctorAppointments> {
               );
             },
           );
-        }).toList(),
+        }),
       ],
     );
   }

@@ -14,7 +14,7 @@ import 'package:confetti/confetti.dart';
 class WelcomePage extends StatefulWidget {
   final SignUpInfo signUpInfo;
 
-  const WelcomePage({Key? key, required this.signUpInfo}) : super(key: key);
+  const WelcomePage({super.key, required this.signUpInfo});
 
   @override
   _WelcomePageState createState() => _WelcomePageState();
@@ -172,7 +172,7 @@ class _WelcomePageState extends State<WelcomePage> {
                     onPressed: () {
                       Navigator.pushAndRemoveUntil(
                         context,
-                        fadePageRoute(CustomBottomNavigationBar()),
+                        fadePageRoute(const CustomBottomNavigationBar()),
                             (route) => false,
                       );
                     },

@@ -20,7 +20,7 @@ class DoctorConversationPage extends StatefulWidget {
   final String doctorImage;
 
   const DoctorConversationPage({
-    Key? key,
+    super.key,
     required this.conversationId,
     required this.patientName,
     required this.accountHolderName,
@@ -28,7 +28,7 @@ class DoctorConversationPage extends StatefulWidget {
     required this.isClosed,
     required this.doctorName,
     required this.doctorImage,
-  }) : super(key: key);
+  });
 
   @override
   State<DoctorConversationPage> createState() => _DoctorConversationPageState();
@@ -236,7 +236,7 @@ class _DoctorConversationPageState extends State<DoctorConversationPage> {
       body: Stack(
         children: [
           Positioned.fill(
-            child: Image.asset('assets/images/Chat-BG.png', fit: BoxFit.cover),
+            child: Image.asset('assets/images/Chat-BG.webp', fit: BoxFit.cover),
           ),
           Column(
             children: [

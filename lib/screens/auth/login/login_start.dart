@@ -44,7 +44,7 @@ class _LoginPageState extends State<LoginPage> {
 
   bool _inputEmpty = false;
   bool _passwordEmpty = false;
-  bool _biometricAvailable = false;
+  final bool _biometricAvailable = false;
   bool _isFaceID = false;
   bool _canUseBiometric = false;
 
@@ -379,7 +379,7 @@ class _LoginPageState extends State<LoginPage> {
       Navigator.pushReplacement(
         context,
         MaterialPageRoute(
-          builder: (_) => CustomBottomNavigationBar(),
+          builder: (_) => const CustomBottomNavigationBar(),
         ),
       );
     } catch (e) {
@@ -659,7 +659,7 @@ class _LoginPageState extends State<LoginPage> {
                 if (!mounted) return;
                 Navigator.pushReplacement(
                   context,
-                  MaterialPageRoute(builder: (_) => CustomBottomNavigationBar()),
+                  MaterialPageRoute(builder: (_) => const CustomBottomNavigationBar()),
                 );
               },
               child: Padding(

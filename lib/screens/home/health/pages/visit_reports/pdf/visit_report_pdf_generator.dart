@@ -160,14 +160,14 @@ class VisitReportPdfGenerator {
     return pw.Container(
       padding: const pw.EdgeInsets.all(14),
       decoration: pw.BoxDecoration(
-        gradient: pw.LinearGradient(
+        gradient: const pw.LinearGradient(
           colors: [
             PdfColor.fromInt(0xFFE6F5F4),
             PdfColors.white,
           ],
         ),
         borderRadius: pw.BorderRadius.circular(14),
-        border: pw.Border.all(color: PdfColor.fromInt(0xFFDDEEEE)),
+        border: pw.Border.all(color: const PdfColor.fromInt(0xFFDDEEEE)),
       ),
       child: pw.Column(
         crossAxisAlignment: pw.CrossAxisAlignment.center,
@@ -183,7 +183,7 @@ class VisitReportPdfGenerator {
           pw.SizedBox(height: 12),
           pw.Text(
             isArabic ? "تقرير زيارة طبية" : "Medical Visit Report",
-            style: pw.TextStyle(font: bold, fontSize: 14, color: PdfColor.fromInt(0xFF006A6E)),
+            style: pw.TextStyle(font: bold, fontSize: 14, color: const PdfColor.fromInt(0xFF006A6E)),
           ),
           pw.SizedBox(height: 6),
           pw.Text(report.doctorName, style: pw.TextStyle(font: regular, fontSize: 11)),
@@ -199,7 +199,7 @@ class VisitReportPdfGenerator {
       width: 28,
       height: 28,
       decoration: pw.BoxDecoration(
-        color: PdfColor.fromInt(0xFFE9F6F5),
+        color: const PdfColor.fromInt(0xFFE9F6F5),
         borderRadius: pw.BorderRadius.circular(8),
       ),
       child: pw.Center(
@@ -221,7 +221,7 @@ class VisitReportPdfGenerator {
       width: 28,
       height: 28,
       decoration: pw.BoxDecoration(
-        color: PdfColor.fromInt(0xFFE9F6F5),
+        color: const PdfColor.fromInt(0xFFE9F6F5),
         borderRadius: pw.BorderRadius.circular(100),
       ),
       child: pw.Stack(
@@ -350,10 +350,10 @@ class VisitReportPdfGenerator {
       decoration: pw.BoxDecoration(
         borderRadius: pw.BorderRadius.circular(14),
         border: pw.Border.all(
-          color: PdfColor.fromInt(0xFFE2ECEB),
+          color: const PdfColor.fromInt(0xFFE2ECEB),
           width: 0.7,
         ),
-        color: PdfColor.fromInt(0xFFFCFEFE),
+        color: const PdfColor.fromInt(0xFFFCFEFE),
       ),
       child: pw.Column(
         crossAxisAlignment: pw.CrossAxisAlignment.start,

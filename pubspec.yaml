@@ -2,7 +2,7 @@ name: docsera
 description: "DocSera is a modern and intuitive application for scheduling doctor appointments, managing medical consultations, and keeping track of healthcare needs. Empowering users to access and book healthcare services anytime, anywhere."
 publish_to: 'none'
 
-version: 1.0.0+9
+version: 1.0.0+10
 
 environment:
   sdk: '>=3.6.0 <4.0.0'
@@ -95,18 +95,12 @@ flutter:
           weight: 400
         - asset: assets/fonts/Montserrat-Bold.ttf
           weight: 700
-        - asset: assets/fonts/Montserrat-Italic.ttf
-          style: italic
-        - asset: assets/fonts/Montserrat-Thin.ttf
-          weight: 100
         - asset: assets/fonts/Montserrat-Light.ttf
           weight: 300
         - asset: assets/fonts/Montserrat-Medium.ttf
           weight: 500
         - asset: assets/fonts/Montserrat-SemiBold.ttf
           weight: 600
-        - asset: assets/fonts/Montserrat-Black.ttf
-          weight: 900
 
 
     - family: IndieFlower

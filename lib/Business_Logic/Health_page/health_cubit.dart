@@ -3,7 +3,6 @@ import 'package:docsera/screens/home/health/models/health_models.dart';
 import 'package:docsera/screens/home/health/services/health_records_service.dart';
 import 'package:equatable/equatable.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
-import '../../screens/home/health/widgets/health_master_item.dart';
 
 class HealthState extends Equatable {
   final bool isLoading;

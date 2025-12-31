@@ -13,7 +13,7 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 class DocumentDetailsPage extends StatefulWidget {
   final UserDocument document;
 
-  const DocumentDetailsPage({Key? key, required this.document}) : super(key: key);
+  const DocumentDetailsPage({super.key, required this.document});
 
   @override
   State<DocumentDetailsPage> createState() => _DocumentDetailsPageState();

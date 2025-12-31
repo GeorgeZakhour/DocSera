@@ -10,9 +10,9 @@ class RelativeBanner extends StatelessWidget {
   final String patientName;
 
   const RelativeBanner({
-    Key? key,
+    super.key,
     required this.patientName,
-  }) : super(key: key);
+  });
 
   bool _isArabicText(String text) {
     return RegExp(r'[\u0600-\u06FF]').hasMatch(text);

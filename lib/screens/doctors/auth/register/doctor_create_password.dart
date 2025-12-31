@@ -63,9 +63,9 @@ class _DoctorCreatePasswordPageState extends State<DoctorCreatePasswordPage> {
   @override
   Widget build(BuildContext context) {
     return BaseScaffold(
-      title: Text(
+      title: const Text(
       "Set Password", // Dynamic title
-      style: const TextStyle(
+      style: TextStyle(
         color: AppColors.whiteText,
         fontWeight: FontWeight.bold,
         fontSize: 16,

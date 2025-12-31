@@ -11,9 +11,9 @@ class DoctorIdentificationPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return BaseScaffold(
-      title: Text(
+      title: const Text(
       "Doctor Identification", // Dynamic title
-      style: const TextStyle(
+      style: TextStyle(
         color: AppColors.whiteText,
         fontWeight: FontWeight.bold,
         fontSize: 16,
@@ -44,7 +44,7 @@ class DoctorIdentificationPage extends StatelessWidget {
               'REGISTER',
               AppColors.whiteText,
               AppColors.main,
-              DoctorRegistrationPage(), // Navigates to Doctor Registration
+              const DoctorRegistrationPage(), // Navigates to Doctor Registration
             ),
 
             // Log In Container
@@ -84,7 +84,7 @@ class DoctorIdentificationPage extends StatelessWidget {
         children: [
           Text(
             text,
-            style: TextStyle(
+            style: const TextStyle(
               fontSize: AppConstants.subTitleFontSize,
               color: AppColors.blackText,
               fontWeight: FontWeight.bold,

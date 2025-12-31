@@ -32,13 +32,13 @@ class ImageOverlayViewer extends StatefulWidget {
   final VoidCallback onClose;
 
   const ImageOverlayViewer({
-    Key? key,
+    super.key,
     required this.imageUrls,
     this.initialIndex = 0,
     this.imageCache,
     required this.onAddToDocuments,
     required this.onClose,
-  }) : super(key: key);
+  });
 
   @override
   State<ImageOverlayViewer> createState() => _ImageOverlayViewerState();

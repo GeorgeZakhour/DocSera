@@ -22,7 +22,7 @@ class SelectMessageReasonPage extends StatefulWidget {
   final UserDocument? attachedDocument;
 
   const SelectMessageReasonPage({
-    Key? key,
+    super.key,
     required this.doctorId,
     required this.doctorName,
     required this.doctorImage,
@@ -30,7 +30,7 @@ class SelectMessageReasonPage extends StatefulWidget {
     required this.doctorSpecialty,
     required this.patientProfile,
     this.attachedDocument,
-  }) : super(key: key);
+  });
 
   @override
   State<SelectMessageReasonPage> createState() => _SelectMessageReasonPageState();

@@ -224,7 +224,7 @@ class ReportCardWidget extends StatelessWidget {
             height: 16,
           ),
 
-          Icon(
+          const Icon(
             Icons.check,
             size: 10,
             color: Colors.white,
