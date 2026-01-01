@@ -458,8 +458,8 @@ class AppointmentConfirmedPage extends StatelessWidget {
                       ),
                     ),
                   );
-                  print("🧭 [AppointmentConfirmedPage] Navigating to AppointmentDetailsPage");
-                  print("   appointmentId = ${appointment['appointmentId'] ?? appointment['id']}");
+                  debugPrint("🧭 [AppointmentConfirmedPage] Navigating to AppointmentDetailsPage");
+                  debugPrint("   appointmentId = ${appointment['appointmentId'] ?? appointment['id']}");
                 },
                 isCentered: true,
               ),

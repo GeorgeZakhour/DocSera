@@ -12,7 +12,7 @@ class AuthenticationService {
       );
       return response;
     } catch (e) {
-      print("❌ Login failed: $e");
+      debugPrint("❌ Login failed: $e");
       return null;
     }
   }
@@ -26,7 +26,7 @@ class AuthenticationService {
       );
       return response;
     } catch (e) {
-      print("❌ Registration failed: $e");
+      debugPrint("❌ Registration failed: $e");
       return null;
     }
   }

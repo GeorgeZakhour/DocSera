@@ -35,7 +35,7 @@ class _LoginPageState extends State<LoginPage> {
   final _inputController = TextEditingController();
   final _passwordController = TextEditingController();
   final _localAuth = LocalAuthentication();
-  final SupabaseUserService _supabaseUserService = SupabaseUserService();
+  late final SupabaseUserService _supabaseUserService;
 
   bool _isAuthenticating = false;
   bool _authFailed = false;
@@ -57,6 +57,7 @@ class _LoginPageState extends State<LoginPage> {
   @override
   void initState() {
     super.initState();
+    _supabaseUserService = context.read<SupabaseUserService>();
     _getAppVersion();
     _generateLogos();
     _startAnimationLoop();
@@ -65,11 +66,18 @@ class _LoginPageState extends State<LoginPage> {
     _tryAutoBiometricLogin();
   }
 
+  @override
+  void dispose() {
+    _timer?.cancel();
+    _inputController.dispose();
+    super.dispose();
+  }
+
 
 
   Future<void> _checkBiometricReadiness() async {
     // ⛔ إذا المستخدم مسجّل دخول، لا نعرض الزر
-    if (Supabase.instance.client.auth.currentUser != null) {
+    if (_supabaseUserService.getCurrentUser() != null) {
       setState(() => _canUseBiometric = false);
       return;
     }
@@ -130,8 +138,10 @@ class _LoginPageState extends State<LoginPage> {
     return logos[_random.nextInt(logos.length)];
   }
 
+  Timer? _timer;
+
   void _startAnimationLoop() {
-    Timer.periodic(const Duration(seconds: 10), (timer) {
+    _timer = Timer.periodic(const Duration(seconds: 10), (timer) {
       if (!mounted) return;
       setState(() => _logosVisible = false);
       Future.delayed(const Duration(seconds: 3), () {
@@ -203,12 +213,12 @@ class _LoginPageState extends State<LoginPage> {
     final email = prefs.getString('biometric_login');
     final password = prefs.getString('userPassword');
 
-    print("🟢 [BIOMETRIC] Enabled: $isBiometricEnabled");
-    print("🟢 [BIOMETRIC] Saved email: ${email ?? 'NOT FOUND'}");
-    print("🟢 [BIOMETRIC] Password exists: ${password != null}");
+    debugPrint("🟢 [BIOMETRIC] Enabled: $isBiometricEnabled");
+    debugPrint("🟢 [BIOMETRIC] Saved email: ${email ?? 'NOT FOUND'}");
+    debugPrint("🟢 [BIOMETRIC] Password exists: ${password != null}");
 
     // ⛔ لا تحاول البيومتريك إذا كان المستخدم مسجّل دخول أصلًا
-    if (Supabase.instance.client.auth.currentUser != null) return;
+    if (_supabaseUserService.getCurrentUser() != null) return;
 
     if (!isBiometricEnabled || email == null || password == null) return;
 
@@ -253,11 +263,11 @@ class _LoginPageState extends State<LoginPage> {
       final formattedInput =
       isPhone ? _formatPhone(input) : input;
 
-      print("📥 [INPUT] المستخدم أدخل: $input");
+      debugPrint("📥 [INPUT] المستخدم أدخل: $input");
       if (isPhone) {
-        print("📞 [FORMAT] رقم هاتف بعد التنسيق: $formattedInput");
+        debugPrint("📞 [FORMAT] رقم هاتف بعد التنسيق: $formattedInput");
       } else {
-        print("📧 [FORMAT] إيميل");
+        debugPrint("📧 [FORMAT] إيميل");
       }
 
       // ---------------------------------------------------------------------
@@ -279,13 +289,13 @@ class _LoginPageState extends State<LoginPage> {
         throw Exception("account_disabled");
       }
 
-      print("📨 [AUTH EMAIL] $email");
+      debugPrint("📨 [AUTH EMAIL] $email");
 
       // ---------------------------------------------------------------------
       // 3️⃣ Supabase Auth (password validation)
       // ---------------------------------------------------------------------
       final response =
-      await Supabase.instance.client.auth.signInWithPassword(
+      await _supabaseUserService.signInWithPassword(
         email: email,
         password: password,
       );
@@ -309,7 +319,7 @@ class _LoginPageState extends State<LoginPage> {
 
 
       final userId = supabaseUser.id;
-      print("✅ [LOGIN SUCCESS] userId = $userId");
+      debugPrint("✅ [LOGIN SUCCESS] userId = $userId");
 
       // ---------------------------------------------------------------------
       // 4️⃣ Persist minimal auth data (biometric only)
@@ -319,7 +329,7 @@ class _LoginPageState extends State<LoginPage> {
       await prefs.setString('userEmail', email);
       await prefs.setString('userPassword', password);
 
-      print("💾 [PREFS] Saved auth credentials");
+      debugPrint("💾 [PREFS] Saved auth credentials");
 
       // ---------------------------------------------------------------------
       // 5️⃣ POST-AUTH security state (RLS-safe, auth.uid)
@@ -338,9 +348,9 @@ class _LoginPageState extends State<LoginPage> {
 
       final deviceId = await getDeviceId();
 
-      print("🛡️ [2FA] Enabled: $is2FAEnabled");
-      print("🧩 [DEVICE] Current: $deviceId");
-      print("🧩 [DEVICE] Trusted: ${trustedDevices.contains(deviceId)}");
+      debugPrint("🛡️ [2FA] Enabled: $is2FAEnabled");
+      debugPrint("🧩 [DEVICE] Current: $deviceId");
+      debugPrint("🧩 [DEVICE] Trusted: ${trustedDevices.contains(deviceId)}");
 
       // ---------------------------------------------------------------------
       // 6️⃣ 2FA routing
@@ -350,7 +360,7 @@ class _LoginPageState extends State<LoginPage> {
           throw Exception("phone_not_available_for_2fa");
         }
 
-        print("🚨 [2FA] Redirecting to OTP");
+        debugPrint("🚨 [2FA] Redirecting to OTP");
 
         if (!mounted) return;
 
@@ -370,9 +380,9 @@ class _LoginPageState extends State<LoginPage> {
       // ---------------------------------------------------------------------
       // 7️⃣ Enter app normally
       // ---------------------------------------------------------------------
-      print("✅ [NAVIGATION] Entering app");
+      debugPrint("✅ [NAVIGATION] Entering app");
 
-      context.read<UserCubit>().loadUserData(context);
+      context.read<UserCubit>().loadUserData(context: context);
 
       if (!mounted) return;
 
@@ -383,7 +393,7 @@ class _LoginPageState extends State<LoginPage> {
         ),
       );
     } catch (e) {
-      print("❌ Login failed: $e");
+      debugPrint("❌ Login failed: $e");
 
       String message;
       final errorStr = e.toString().toLowerCase();
@@ -610,7 +620,7 @@ class _LoginPageState extends State<LoginPage> {
                     ),
                   ),
 
-                  if (Supabase.instance.client.auth.currentUser == null) ...[
+                  if (_supabaseUserService.getCurrentUser() == null) ...[
                     SizedBox(height: 12.h),
                     TextButton(
                       onPressed: () {
@@ -647,8 +657,8 @@ class _LoginPageState extends State<LoginPage> {
                 FocusScope.of(context).unfocus(); // إغلاق الكيبورد
                 await Future.delayed(const Duration(milliseconds: 150));
 
-                if (Supabase.instance.client.auth.currentUser != null) {
-                  await Supabase.instance.client.auth.signOut();
+                if (_supabaseUserService.getCurrentUser() != null) {
+                  await _supabaseUserService.signOut();
                   final prefs = await SharedPreferences.getInstance();
                   await prefs.remove('isLoggedIn');
                   await prefs.remove('userId');
@@ -664,7 +674,7 @@ class _LoginPageState extends State<LoginPage> {
               },
               child: Padding(
                 padding: const EdgeInsets.all(8.0),
-                child: Supabase.instance.client.auth.currentUser == null
+                child: _supabaseUserService.getCurrentUser() == null
                     ? Row(
                   mainAxisSize: MainAxisSize.min,
                   children: [

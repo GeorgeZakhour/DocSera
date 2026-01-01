@@ -1,4 +1,5 @@
 import 'package:docsera/services/supabase/user/account_relatives_service.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
 part 'relatives_state.dart';
@@ -32,23 +33,23 @@ class RelativesCubit extends Cubit<RelativesState> {
 
   Future<void> updateRelative(String id, Map<String, dynamic> data) async {
     try {
-      print('🟠 CUBIT → updateRelative called');
-      print('🟠 CUBIT → id = $id');
-      print('🟠 CUBIT → data = $data');
+      debugPrint('🟠 CUBIT → updateRelative called');
+      debugPrint('🟠 CUBIT → id = $id');
+      debugPrint('🟠 CUBIT → data = $data');
 
       final updated = await _service.updateRelative(id, data);
 
-      print('🟠 CUBIT → updated returned = $updated');
+      debugPrint('🟠 CUBIT → updated returned = $updated');
 
       _cachedRelatives = _cachedRelatives.map((r) {
-        print('🟠 comparing ${r['id']} with ${updated['id']}');
+        debugPrint('🟠 comparing ${r['id']} with ${updated['id']}');
         return r['id'] == updated['id'] ? updated : r;
       }).toList();
 
       emit(RelativesLoaded(_cachedRelatives));
     } catch (e, st) {
-      print('🔴 CUBIT ERROR = $e');
-      print(st);
+      debugPrint('🔴 CUBIT ERROR = $e');
+      debugPrint(st.toString());
       emit(RelativesError(e.toString()));
     }
   }

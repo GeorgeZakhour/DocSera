@@ -72,10 +72,11 @@ class _NoteEditorPageState extends State<NoteEditorPage> {
     final content = _contentController.document.toDelta().toJson();
 
     if (widget.existingNote == null) {
-      context.read<NotesCubit>().addNote(title, content);
+      context.read<NotesCubit>().addNote(title: title, content: content, context: context);
     } else {
       context.read<NotesCubit>().updateNote(
         widget.existingNote!.copyWith(title: title, content: content),
+        context: context
       );
     }
 

@@ -40,7 +40,7 @@ class _DoctorAppointmentsState extends State<DoctorAppointments> {
       try {
         final user = Supabase.instance.client.auth.currentUser;
         if (user == null) {
-          print("❌ No logged-in user.");
+          debugPrint("❌ No logged-in user.");
           return;
         }
 
@@ -51,15 +51,15 @@ class _DoctorAppointmentsState extends State<DoctorAppointments> {
             .maybeSingle();
 
         if (response == null) {
-          print("❌ Doctor not found in Supabase.");
+          debugPrint("❌ Doctor not found in Supabase.");
           return;
         }
 
         doctorId = response['id'];
         await prefs.setString('doctorId', doctorId!); // 🔸 cache it for later
-        print("✅ Doctor ID loaded from Supabase and cached: $doctorId");
+        debugPrint("✅ Doctor ID loaded from Supabase and cached: $doctorId");
       } catch (e) {
-        print("❌ Failed to fetch doctor from Supabase: $e");
+        debugPrint("❌ Failed to fetch doctor from Supabase: $e");
         return;
       }
     }
@@ -107,9 +107,9 @@ class _DoctorAppointmentsState extends State<DoctorAppointments> {
         _appointmentsByDay = groupedAppointments;
       });
 
-      print("✅ Loaded ${_appointmentsByDay.length} days of appointments.");
+      debugPrint("✅ Loaded ${_appointmentsByDay.length} days of appointments.");
     } catch (e) {
-      print("❌ Error fetching appointments: $e");
+      debugPrint("❌ Error fetching appointments: $e");
     }
   }
 
@@ -291,7 +291,7 @@ class _DoctorAppointmentsState extends State<DoctorAppointments> {
   /// **🔹 Add Multiple Slots to Tables Supabase**
   Future<void> _addMultipleSlots(List<DateTime> dates, List<TimeOfDay> times) async {
     if (doctorId == null) {
-      print("❌ doctorId is null.");
+      debugPrint("❌ doctorId is null.");
       return;
     }
 
@@ -303,7 +303,7 @@ class _DoctorAppointmentsState extends State<DoctorAppointments> {
         .maybeSingle();
 
     if (doctorResponse == null) {
-      print("❌ Failed to load doctor info.");
+      debugPrint("❌ Failed to load doctor info.");
       return;
     }
 
@@ -317,14 +317,14 @@ class _DoctorAppointmentsState extends State<DoctorAppointments> {
     final clinicLocation = doctorResponse['location'] ?? {};
 
 
-    print("👨‍⚕️ Doctor Data:");
-    print("- Name: $doctorName");
-    print("- Title: $doctorTitle");
-    print("- Gender: $doctorGender");
-    print("- Image: $doctorImage");
-    print("- Specialty: $doctorSpecialty");
-    print("- Clinic Address: $clinicAddress");
-    print("📦 Full address: ${doctorResponse['address']}");
+    debugPrint("👨‍⚕️ Doctor Data:");
+    debugPrint("- Name: $doctorName");
+    debugPrint("- Title: $doctorTitle");
+    debugPrint("- Gender: $doctorGender");
+    debugPrint("- Image: $doctorImage");
+    debugPrint("- Specialty: $doctorSpecialty");
+    debugPrint("- Clinic Address: $clinicAddress");
+    debugPrint("📦 Full address: ${doctorResponse['address']}");
 
     for (var date in dates) {
       for (var time in times) {
@@ -355,12 +355,12 @@ class _DoctorAppointmentsState extends State<DoctorAppointments> {
             'booked': false,
           });
 
-          print("✅ Added slot: $formattedDate at $formattedTime "
+          debugPrint("✅ Added slot: $formattedDate at $formattedTime "
               "with location=${doctorResponse['location']}");
 
-          print("✅ Added slot: $formattedDate at $formattedTime");
+          debugPrint("✅ Added slot: $formattedDate at $formattedTime");
         } catch (e) {
-          print("❌ Failed to insert slot: $e");
+          debugPrint("❌ Failed to insert slot: $e");
         }
       }
     }
@@ -869,7 +869,7 @@ String _formatTimestamp(dynamic timestamp) {
       return "Invalid Timestamp";
     }
   } catch (e) {
-    print("❌ Error formatting timestamp: $e");
+    debugPrint("❌ Error formatting timestamp: $e");
     return "Invalid Timestamp";
   }
 }
@@ -883,7 +883,7 @@ String _formatDate(dynamic date) {
     }
     return DateFormat('yyyy-MM-dd').format(date); // ✅ Standard date format
   } catch (e) {
-    print("❌ Error parsing date: $e");
+    debugPrint("❌ Error parsing date: $e");
     return "Invalid Date"; // ✅ Fallback for errors
   }
 }

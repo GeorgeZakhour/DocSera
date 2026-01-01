@@ -9,10 +9,13 @@ import '../../models/conversation.dart';
 import 'dart:convert';
 
 class MessagesCubit extends Cubit<MessagesState> {
-  MessagesCubit() : super(MessagesLoading());
+  final SupabaseClient _supabase;
+
+  MessagesCubit({SupabaseClient? supabase}) 
+      : _supabase = supabase ?? Supabase.instance.client,
+        super(MessagesLoading());
 
   RealtimeChannel? _realtimeChannel;
-  final SupabaseClient _supabase = Supabase.instance.client;
 
   /// تحميل المحادثات
   void loadMessages(BuildContext context) {
@@ -80,11 +83,11 @@ class MessagesCubit extends Cubit<MessagesState> {
       final query = isDoctor
           ? _supabase
           .from('conversations')
-          .select('*, messages!messages_conversation_id_fkey(*)')
+          .select() // ✅ OPTIMIZED: No more nested relations
           .eq('doctor_id', userId)
           : _supabase
           .from('conversations')
-          .select('*, messages!messages_conversation_id_fkey(*)')
+          .select() // ✅ OPTIMIZED: No more nested relations
           .contains('participants', [userId]);
 
       final response =
@@ -98,39 +101,25 @@ class MessagesCubit extends Cubit<MessagesState> {
         final unread = convo['unread_count_for_user'] ?? 0;
 
         // ------------------------------
-        // قراءة الرسائل المرفقة
+        // ✅ OPTIMIZED: Use native columns directly
         // ------------------------------
-        final List messagesList = (convo['messages'] ?? []);
-
-        messagesList.sort(
-              (a, b) => DateTime.parse(b['timestamp'])
-              .compareTo(DateTime.parse(a['timestamp'])),
-        );
-
+        String lastMsgText = convo['last_message'] ?? "";
+        
+        // Construct a virtual "last message" object for UI compatibility
         final messages = <Map<String, dynamic>>[];
-
-        if (messagesList.isNotEmpty) {
-          final latest = messagesList.first;
-
-          final resolved = _resolveLastMessage(latest);
-
-          messages.insert(0, {
-            'id': latest['id'],
-            'text': resolved,
-            'timestamp': DateTime.tryParse(latest['timestamp'] ?? ''),
-            'senderId': latest['sender_id'],
-            'isUser': latest['is_user'] ?? false,
-            'readByUser': latest['read_by_user'] ?? false,
-          });
+        if (lastMsgText.isNotEmpty) {
+           messages.add({
+             'text': lastMsgText,
+             'timestamp': DateTime.tryParse(convo['updated_at'] ?? ''),
+             'isUser': convo['last_sender_id'] == userId, // Heuristic: we might need exact boolean if crucial
+           });
         }
 
         conversations.add(
           base.copyWith(
             unreadCountForUser: unread,
-            messages: messages,
-            lastMessage: messages.isNotEmpty
-                ? messages.first['text']
-                : (base.lastMessage ?? ""),
+            messages: messages, // UI uses this list to show preview
+            lastMessage: lastMsgText, 
           ),
         );
       }

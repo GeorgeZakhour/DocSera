@@ -60,7 +60,7 @@ class _SelectMessageReasonPageState extends State<SelectMessageReasonPage> {
         _isLoading = false;
       });
     } catch (e) {
-      print("❌ Failed to fetch reasons: $e");
+      debugPrint("❌ Failed to fetch reasons: $e");
       setState(() {
         _hasError = true;
         _isLoading = false;
@@ -220,7 +220,7 @@ class _SelectMessageReasonPageState extends State<SelectMessageReasonPage> {
             ),
           ),
         );
-        print("✅ Selected reason: $label (ID: $reasonId)");
+        debugPrint("✅ Selected reason: $label (ID: $reasonId)");
       },
       child: Container(
         padding: EdgeInsets.symmetric(vertical: 15.h, horizontal: 20.w),

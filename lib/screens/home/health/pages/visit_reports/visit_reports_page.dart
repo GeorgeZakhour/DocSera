@@ -57,7 +57,7 @@ class _VisitReportsPageState extends State<VisitReportsPage>
       create: (ctx) {
         final switcherState = ctx.read<PatientSwitcherCubit>().state;
 
-        print("📘 [VisitReportsPage] Creating VisitReportsCubit with "
+        debugPrint("📘 [VisitReportsPage] Creating VisitReportsCubit with "
             "userId=${switcherState.userId}, relativeId=${switcherState.relativeId}");
 
         final cubit = VisitReportsCubit(service: VisitReportsService());
@@ -71,7 +71,7 @@ class _VisitReportsPageState extends State<VisitReportsPage>
         listenWhen: (prev, curr) =>
         prev.userId != curr.userId || prev.relativeId != curr.relativeId,
         listener: (ctx, state) {
-          print("🔁 [VisitReportsPage] PatientSwitcher changed → "
+          debugPrint("🔁 [VisitReportsPage] PatientSwitcher changed → "
               "userId=${state.userId}, relativeId=${state.relativeId}, "
               "mainUserId=${state.mainUserId}, patientName=${state.patientName}");
 
@@ -94,7 +94,7 @@ class _VisitReportsPageState extends State<VisitReportsPage>
                   );
                 }
 
-                print("📄 [VisitReportsPage] rebuilding UI with "
+                debugPrint("📄 [VisitReportsPage] rebuilding UI with "
                     "${state.reports.length} reports in state");
 
                 final years = _extractYears(state.reports);
@@ -112,7 +112,7 @@ class _VisitReportsPageState extends State<VisitReportsPage>
                   query: _search,
                 );
 
-                print("🧮 [VisitReportsPage] after filters → "
+                debugPrint("🧮 [VisitReportsPage] after filters → "
                     "year=$activeYear, month=$_selectedMonth, "
                     "search='$_search', "
                     "filteredCount=${filtered.length}");

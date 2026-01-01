@@ -45,7 +45,7 @@ class _DoctorCreatePasswordPageState extends State<DoctorCreatePasswordPage> {
         await prefs.setString('doctorId', widget.doctorId);
         await prefs.setString('doctorEmail', widget.email);
 
-        print("✅ Doctor registered & logged in. ID: ${widget.doctorId}");
+        debugPrint("✅ Doctor registered & logged in. ID: ${widget.doctorId}");
 
         // ✅ Navigate directly to Doctor Dashboard
         Navigator.pushAndRemoveUntil(
@@ -54,7 +54,7 @@ class _DoctorCreatePasswordPageState extends State<DoctorCreatePasswordPage> {
               (route) => false, // Remove all previous routes
         );
       } catch (e) {
-        print("❌ Error saving password: $e");
+        debugPrint("❌ Error saving password: $e");
       }
     }
   }

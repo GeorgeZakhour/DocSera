@@ -123,7 +123,7 @@ class _SelectPatientForMessagePageState extends State<SelectPatientForMessagePag
       }
       return age;
     } catch (e) {
-      print("⚠️ Failed to parse DOB: $dobString - $e");
+      debugPrint("⚠️ Failed to parse DOB: $dobString - $e");
       return 0;
     }
   }

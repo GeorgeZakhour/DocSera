@@ -1,4 +1,5 @@
 import 'package:bloc/bloc.dart';
+import 'package:flutter/foundation.dart';
 import 'visit_report_model.dart';
 import 'visit_reports_service.dart';
 
@@ -20,11 +21,11 @@ class VisitReportsCubit extends Cubit<VisitReportsState> {
 
   VisitReportsCubit({required this.service})
       : super(VisitReportsState.initial()) {
-    print("🟢 [VisitReportsCubit] created");
+    debugPrint("🟢 [VisitReportsCubit] created");
   }
 
   Future<void> loadReports() async {
-    print("🔍 [VisitReportsCubit.loadReports] start → "
+    debugPrint("🔍 [VisitReportsCubit.loadReports] start → "
         "userId=$userId, relativeId=$relativeId");
 
     emit(VisitReportsState(loading: true, reports: state.reports));
@@ -35,18 +36,18 @@ class VisitReportsCubit extends Cubit<VisitReportsState> {
         relativeId: relativeId,
       );
 
-      print("✅ [VisitReportsCubit.loadReports] fetched ${list.length} reports "
+      debugPrint("✅ [VisitReportsCubit.loadReports] fetched ${list.length} reports "
           "for userId=$userId, relativeId=$relativeId");
 
       emit(VisitReportsState(loading: false, reports: list));
     } catch (e) {
-      print("❌ [VisitReportsCubit.loadReports] error: $e");
+      debugPrint("❌ [VisitReportsCubit.loadReports] error: $e");
       emit(VisitReportsState(loading: false, reports: []));
     }
   }
 
   void updatePatient({required String? newUserId, required String? newRelativeId}) {
-    print("👤 [VisitReportsCubit.updatePatient] incoming → "
+    debugPrint("👤 [VisitReportsCubit.updatePatient] incoming → "
         "newUserId=$newUserId, newRelativeId=$newRelativeId");
 
     final bool isRelative = newRelativeId != null;
@@ -54,7 +55,7 @@ class VisitReportsCubit extends Cubit<VisitReportsState> {
     userId = isRelative ? null : newUserId;
     relativeId = isRelative ? newRelativeId : null;
 
-    print("👉 [VisitReportsCubit.updatePatient] normalized → "
+    debugPrint("👉 [VisitReportsCubit.updatePatient] normalized → "
         "userId=$userId, relativeId=$relativeId, isRelative=$isRelative");
 
     loadReports();

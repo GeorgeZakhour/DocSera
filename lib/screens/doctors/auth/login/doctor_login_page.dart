@@ -53,7 +53,7 @@ class _DoctorLoginPageState extends State<DoctorLoginPage> {
             (route) => false,
       );
     } catch (e) {
-      print("❌ Login Error: $e");
+      debugPrint("❌ Login Error: $e");
       setState(() {
         if (e.toString().contains("Invalid login credentials")) {
           errorMessage = 'Incorrect email or password';

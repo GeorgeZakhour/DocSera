@@ -5,7 +5,7 @@ buildscript {
         google()  // Make sure this is included
         mavenCentral()
     }
-    ext.kotlin_version = '2.1.10' // or 1.8.22, etc.
+    ext.kotlin_version = '1.9.23' // Downgraded to fix JVM target mismatch
 
     dependencies {
         // Add the Google services plugin for Firebase

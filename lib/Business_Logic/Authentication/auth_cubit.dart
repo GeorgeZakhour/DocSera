@@ -8,17 +8,19 @@ typedef RealtimeStarter = void Function(User user);
 typedef RealtimeStopper = void Function();
 
 class AuthCubit extends Cubit<AppAuthState> {
-  final SupabaseClient _supabase = Supabase.instance.client;
+  final SupabaseClient _supabase;
+  final SharedPreferences _prefs; // Make non-nullable
   StreamSubscription<AuthState>? _authSubscription;
-  SharedPreferences? _prefs;
-
-  Timer? _sessionRefreshTimer; // 👈 أضف هذا
+  Timer? _sessionRefreshTimer;
 
   /// يتم حقنها من main.dart
   RealtimeStarter? onRealtimeStart;
   RealtimeStopper? onRealtimeStop;
 
-  AuthCubit() : super(AuthInitial()) {
+  AuthCubit({SupabaseClient? supabase, required SharedPreferences prefs})
+      : _supabase = supabase ?? Supabase.instance.client,
+        _prefs = prefs,
+        super(AuthInitial()) {
     _init();
   }
 
@@ -27,7 +29,7 @@ class AuthCubit extends Cubit<AppAuthState> {
   // ---------------------------------------------------------------------------
   Future<void> _init() async {
     emit(AuthLoading());
-    _prefs = await SharedPreferences.getInstance();
+    // _prefs is already initialized via constructor
 
     _authSubscription =
         _supabase.auth.onAuthStateChange.listen(_onAuthStateChanged,
@@ -164,13 +166,13 @@ class AuthCubit extends Cubit<AppAuthState> {
   // HELPERS
   // ---------------------------------------------------------------------------
   Future<void> _persistLogin(String userId) async {
-    await _prefs?.setBool('isLoggedIn', true);
-    await _prefs?.setString('userId', userId);
+    await _prefs.setBool('isLoggedIn', true);
+    await _prefs.setString('userId', userId);
   }
 
   Future<void> _clearLogin() async {
-    await _prefs?.setBool('isLoggedIn', false);
-    await _prefs?.remove('userId');
+    await _prefs.setBool('isLoggedIn', false);
+    await _prefs.remove('userId');
   }
 
   // ---------------------------------------------------------------------------

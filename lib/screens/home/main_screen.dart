@@ -48,7 +48,7 @@ class _MainScreenState extends State<MainScreen> with AutomaticKeepAliveClientMi
   @override
   void initState() {
     super.initState();
-    print("📌 MainScreen: initState() -> Checking login status...");
+    debugPrint("📌 MainScreen: initState() -> Checking login status...");
     _bannerColorsReady = _bannersLoadedOnce; // ✅ إذا كانت محمّلة سابقًا، لا تعيد تحميلها
     context.read<MainScreenCubit>().loadMainScreen(context);
   }
@@ -207,8 +207,8 @@ class _MainScreenState extends State<MainScreen> with AutomaticKeepAliveClientMi
                 title: Text(AppLocalizations.of(context)!.bookAppointment, style: AppTextStyles.getText2(context).copyWith(fontWeight: FontWeight.w500)),
                 onTap: () {
                   Navigator.pop(context); // إغلاق الـ Bottom Sheet
-                  print("🧭 [MainScreen] doctor map = $doctor");
-                  print("🧭 [MainScreen] location candidate = ${doctor['location'] ?? doctor['clinicLocation'] ?? doctor['address']?['location']}");
+                  debugPrint("🧭 [MainScreen] doctor map = $doctor");
+                  debugPrint("🧭 [MainScreen] location candidate = ${doctor['location'] ?? doctor['clinicLocation'] ?? doctor['address']?['location']}");
 
                   Navigator.push(
                     context,
@@ -489,10 +489,10 @@ class _MainScreenState extends State<MainScreen> with AutomaticKeepAliveClientMi
                     child: BannersSection(
                       banners: bannerData,
                       onColorsLoaded: () {
-                        print("🎉 onColorsLoaded called from BannersSection");
+                        debugPrint("🎉 onColorsLoaded called from BannersSection");
                         if (!_bannerColorsReady && mounted) {
                           setState(() {
-                            print("✅ Setting _bannerColorsReady = true");
+                            debugPrint("✅ Setting _bannerColorsReady = true");
                             _bannerColorsReady = true;
                             _bannersLoadedOnce = true; // ✅ حفظ دائم بعد أول تحميل
                           });

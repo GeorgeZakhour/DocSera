@@ -40,7 +40,7 @@ class _PatientsPageState extends State<PatientsPage> {
 
     final localDoctorId = doctorId;
     if (localDoctorId == null) {
-      print("❌ Doctor ID not found.");
+      debugPrint("❌ Doctor ID not found.");
       return;
     }
 
@@ -67,9 +67,9 @@ class _PatientsPageState extends State<PatientsPage> {
         filteredPatients = patientList;
       });
 
-      print("✅ Loaded ${patients.length} patients.");
+      debugPrint("✅ Loaded ${patients.length} patients.");
     } catch (e) {
-      print("❌ Error fetching patients: $e");
+      debugPrint("❌ Error fetching patients: $e");
     }
   }
 

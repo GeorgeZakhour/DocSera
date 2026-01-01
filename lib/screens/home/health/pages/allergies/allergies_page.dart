@@ -41,7 +41,7 @@ class AllergiesPage extends StatelessWidget {
         listener: (context, state) {
           // كل ما تغيّر المريض، حدث الـ HealthCubit
           final healthCubit = context.read<HealthCubit>();
-          print(
+          debugPrint(
               "🔁 [AllergiesPage] patient changed → userId=${state.userId}, relativeId=${state.relativeId}");
           healthCubit.updatePatient(
             newUserId: state.userId,

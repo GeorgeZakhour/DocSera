@@ -61,7 +61,7 @@ class _SelectPatientPageState extends State<SelectPatientPage> {
   @override
   void initState() {
     super.initState();
-    print("📍 [SelectPatientPage] Received clinicLocation = ${widget.clinicLocation}");
+    debugPrint("📍 [SelectPatientPage] Received clinicLocation = ${widget.clinicLocation}");
 
     _loadUserInfo();
     _fetchLatestDoctorImage();

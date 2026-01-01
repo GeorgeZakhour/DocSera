@@ -37,7 +37,7 @@ import 'package:docsera/gen_l10n/app_localizations.dart';
       super.initState();
       _loadLastSelectedTab(); // ✅ Load the last selected tab from SharedPreferences
       // _checkLoginStatus();
-      context.read<AppointmentsCubit>().loadAppointments(context);
+      context.read<AppointmentsCubit>().loadAppointments(context: context);
     }
 
     @override
@@ -380,8 +380,8 @@ import 'package:docsera/gen_l10n/app_localizations.dart';
         height: needsConfirmation || isRedState ? 32 : 40,
       );
 
-      print("🖼️ AppointmentCard RAW doctor_image = ${appt['doctor_image'] ?? appt['doctorImage']}");
-      print("🖼️ Resolved avatarPath = ${imageResult.avatarPath}");
+      debugPrint("🖼️ AppointmentCard RAW doctor_image = ${appt['doctor_image'] ?? appt['doctorImage']}");
+      debugPrint("🖼️ Resolved avatarPath = ${imageResult.avatarPath}");
 
 
       final imageProvider = imageResult.imageProvider;

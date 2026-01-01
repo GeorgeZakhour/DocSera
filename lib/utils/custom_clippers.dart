@@ -104,7 +104,7 @@ class SvgPathClipper extends CustomClipper<Path> {
     Path getClip(Size size) {
       final Path originalPath = parseSvgPathData(svgPathData);
       final Rect bounds = originalPath.getBounds();
-      print('DEBUG: shape bounds = $bounds, container size = $size');
+      debugPrint('DEBUG: shape bounds = $bounds, container size = $size');
 
       final double widthScale = size.width / bounds.width;
       final double heightScale = size.height / bounds.height;

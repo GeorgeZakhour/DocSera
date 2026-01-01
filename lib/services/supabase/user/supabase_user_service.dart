@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'dart:convert';
+import 'package:flutter/foundation.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:docsera/utils/shared_prefs_service.dart';
@@ -13,7 +14,7 @@ class SupabaseUserService {
 
   /// ✅ التحقق مما إذا كان رقم الهاتف موجود مسبقًا في Supabase
   Future<bool> isPhoneNumberExists(String phoneNumber) async {
-    print("📞 Checking if phone number exists: $phoneNumber");
+    debugPrint("📞 Checking if phone number exists: $phoneNumber");
 
     final response = await _supabase
         .from('users')
@@ -22,7 +23,7 @@ class SupabaseUserService {
         .maybeSingle();
 
     final exists = response != null;
-    print("📊 Matching phone: ${exists ? "FOUND" : "NOT FOUND"}");
+    debugPrint("📊 Matching phone: ${exists ? "FOUND" : "NOT FOUND"}");
 
     return exists;
   }
@@ -53,23 +54,40 @@ class SupabaseUserService {
         }
       });
 
-      print("📤 inserting user:");
-      safeData.forEach((k, v) => print("  $k => $v"));
+      debugPrint("📤 inserting user:");
+      safeData.forEach((k, v) => debugPrint("  $k => $v"));
 
       await _supabase
           .from('users')
           .insert(safeData);
 
     } catch (e, s) {
-      print("❌ addUser failed: $e");
-      print(s);
+      debugPrint("❌ addUser failed: $e");
+      debugPrint(s.toString());
       rethrow;
     }
   }
 
 
 
+  /// ✅ تسجيل الدخول باستخدام البريد وكلمة المرور
+  Future<AuthResponse> signInWithPassword({required String email, required String password}) async {
+    return await _supabase.auth.signInWithPassword(email: email, password: password);
+  }
 
+  /// ✅ تسجيل الخروج
+  Future<void> signOut() async {
+    try {
+      await _supabase.auth.signOut();
+    } catch (e) {
+      debugPrint("❌ Sign out error: $e");
+    }
+  }
+
+  /// ✅ الحصول على المستخدم الحالي
+  User? getCurrentUser() {
+    return _supabase.auth.currentUser;
+  }
   /// ✅ جلب بيانات مستخدم حسب ID
   /// ✅ جلب بيانات المستخدم الحالي (من RPC) — لا تمرر userId للـ DB
   Future<Map<String, dynamic>?> getUserData(String userId) async {
@@ -158,10 +176,10 @@ class SupabaseUserService {
       throw Exception('Failed to update user: ${e.toString()}');
     }
   }
-}
 
 
-extension SupabaseUserServiceFavorites on SupabaseUserService {
+
+// Merged SupabaseUserServiceFavorites extension methods
   /// ✅ جلب قائمة IDs الأطباء المفضلين
   Future<List<String>> getUserFavorites(String userId) async {
     try {
@@ -176,7 +194,7 @@ extension SupabaseUserServiceFavorites on SupabaseUserService {
       }
       return [];
     } catch (e) {
-      print("❌ Error fetching favorites: $e");
+      debugPrint("❌ Error fetching favorites: $e");
       return [];
     }
   }
@@ -193,7 +211,7 @@ extension SupabaseUserServiceFavorites on SupabaseUserService {
         throw Exception('Error updating favorites: ${response.error!.message}');
       }
     } catch (e) {
-      print("❌ Error updating favorites: $e");
+      debugPrint("❌ Error updating favorites: $e");
     }
   }
 
@@ -324,7 +342,7 @@ extension SupabaseUserServiceFavorites on SupabaseUserService {
       await _sharedPrefsService.saveData('favoriteDoctors', doctors);
       return doctors;
     } catch (e) {
-      print("❌ getFavoriteDoctors failed: $e");
+      debugPrint("❌ getFavoriteDoctors failed: $e");
       return [];
     }
   }
@@ -336,9 +354,9 @@ extension SupabaseUserServiceFavorites on SupabaseUserService {
       final updatedFavorites = currentFavorites.where((id) => id != doctorId).toList();
 
       await updateUserFavorites(userId, updatedFavorites);
-      print("🗑️ Doctor $doctorId removed from favorites.");
+      debugPrint("🗑️ Doctor $doctorId removed from favorites.");
     } catch (e) {
-      print("❌ Error removing doctor from favorites: $e");
+      debugPrint("❌ Error removing doctor from favorites: $e");
       throw Exception("Failed to remove doctor from favorites");
     }
   }
@@ -360,7 +378,7 @@ extension SupabaseUserServiceFavorites on SupabaseUserService {
     try {
       return await _sharedPrefsService.loadData(key) ?? [];
     } catch (e) {
-      print("❌ Error loading cached data ($key): $e");
+      debugPrint("❌ Error loading cached data ($key): $e");
       return [];
     }
   }
@@ -369,19 +387,19 @@ extension SupabaseUserServiceFavorites on SupabaseUserService {
   Future<void> saveCachedData(String key, List<Map<String, dynamic>> data) async {
     try {
       await _sharedPrefsService.saveData(key, data);
-      print("✅ [$key] Data saved.");
+      debugPrint("✅ [$key] Data saved.");
     } catch (e) {
-      print("❌ Error saving cached data ($key): $e");
+      debugPrint("❌ Error saving cached data ($key): $e");
     }
   }
-}
+
 
 
 
 StreamSubscription<List<Map<String, dynamic>>>? _appointmentsListener;
 
 
-extension SupabaseUserServiceAppointments on SupabaseUserService {
+// Merged SupabaseUserServiceAppointments extension methods
   /// ✅ جلب مواعيد المستخدم مع تصنيفها (قادمة / سابقة)
   Future<Map<String, List<Map<String, dynamic>>>> getUserAppointments(String userId) async {
     try {
@@ -390,7 +408,7 @@ extension SupabaseUserServiceAppointments on SupabaseUserService {
       final cachedPast = await _sharedPrefsService.loadData('pastAppointments') ?? [];
 
       if (cachedUpcoming.isNotEmpty || cachedPast.isNotEmpty) {
-        print("⚡ Loaded appointments from cache");
+        debugPrint("⚡ Loaded appointments from cache");
         return {
           'upcoming': List<Map<String, dynamic>>.from(cachedUpcoming),
           'past': List<Map<String, dynamic>>.from(cachedPast),
@@ -443,7 +461,7 @@ extension SupabaseUserServiceAppointments on SupabaseUserService {
         'past': List<Map<String, dynamic>>.from(past),
       };
     } catch (e) {
-      print("❌ Error fetching appointments: $e");
+      debugPrint("❌ Error fetching appointments: $e");
       return {'upcoming': [], 'past': []};
     }
   }
@@ -484,7 +502,7 @@ extension SupabaseUserServiceAppointments on SupabaseUserService {
       _sharedPrefsService.saveData('upcomingAppointments', upcoming);
       _sharedPrefsService.saveData('pastAppointments', past);
 
-      print("🔥 Appointments updated via realtime");
+      debugPrint("🔥 Appointments updated via realtime");
 
       return [...upcoming, ...past];
     });
@@ -498,7 +516,7 @@ extension SupabaseUserServiceAppointments on SupabaseUserService {
   void listenToAppointments(String userId) {
     _appointmentsListener?.cancel();
     _appointmentsListener = listenToUserAppointments(userId).listen((_) {
-      print("📡 Appointments listener triggered.");
+      debugPrint("📡 Appointments listener triggered.");
     });
   }
 
@@ -506,23 +524,23 @@ extension SupabaseUserServiceAppointments on SupabaseUserService {
   void cancelAppointmentsListener() {
     _appointmentsListener?.cancel();
     _appointmentsListener = null;
-    print("🛑 Appointments listener canceled.");
+    debugPrint("🛑 Appointments listener canceled.");
   }
 
   /// ✅ مسح كاش المواعيد
   Future<void> clearAppointmentCache() async {
     await _sharedPrefsService.removeData('upcomingAppointments');
     await _sharedPrefsService.removeData('pastAppointments');
-    print("🧹 Appointment cache cleared.");
+    debugPrint("🧹 Appointment cache cleared.");
   }
-}
 
 
-extension SupabaseUserServiceDelete on SupabaseUserService {
+
+// Merged SupabaseUserServiceDelete extension methods
   /// ✅ حذف حساب المستخدم وكل ما يتعلق به
   Future<void> deleteUserAccount(String userId, {String? phoneNumber, String? email}) async {
     try {
-      print("🔍 Starting account deletion for userId: $userId");
+      debugPrint("🔍 Starting account deletion for userId: $userId");
 
       // 🧽 حذف الملاحظات، الوثائق، المواعيد، الأقارب من الجداول المرتبطة
       final subTables = ['appointments', 'documents', 'notes', 'relatives'];
@@ -532,9 +550,9 @@ extension SupabaseUserServiceDelete on SupabaseUserService {
             .delete()
             .eq('user_id', userId);
         if (res.error != null) {
-          print("⚠️ Error deleting from $table: ${res.error!.message}");
+          debugPrint("⚠️ Error deleting from $table: ${res.error!.message}");
         } else {
-          print("🗑️ Deleted from $table");
+          debugPrint("🗑️ Deleted from $table");
         }
       }
 
@@ -547,19 +565,19 @@ extension SupabaseUserServiceDelete on SupabaseUserService {
           .delete()
           .eq('id', userId);
       if (userRes.error != null) {
-        print("❌ Failed to delete user row: ${userRes.error!.message}");
+        debugPrint("❌ Failed to delete user row: ${userRes.error!.message}");
         throw Exception("Error deleting user data");
       }
 
       // 🧽 حذف OTP إذا كانت مخزنة في جداول منفصلة (اختياري)
       if (phoneNumber != null) {
         await _supabase.from('otp').delete().eq('id', phoneNumber);
-        print("📞 Deleted phone OTP for $phoneNumber");
+        debugPrint("📞 Deleted phone OTP for $phoneNumber");
       }
 
       if (email != null) {
         await _supabase.from('email_otp').delete().eq('id', email);
-        print("📧 Deleted email OTP for $email");
+        debugPrint("📧 Deleted email OTP for $email");
       }
 
       // 🔐 حذف حساب المصادقة
@@ -567,18 +585,18 @@ extension SupabaseUserServiceDelete on SupabaseUserService {
       if (currentUser != null && currentUser.id == userId) {
         await Supabase.instance.client.auth.signOut();
         await Supabase.instance.client.auth.admin.deleteUser(userId);
-        print("✅ Supabase Auth user deleted");
+        debugPrint("✅ Supabase Auth user deleted");
       }
 
       // 🧼 تنظيف SharedPreferences
       final prefs = await SharedPreferences.getInstance();
       await prefs.clear();
-      print("🧼 SharedPreferences cleared");
+      debugPrint("🧼 SharedPreferences cleared");
 
-      print("✅ Account deletion complete for userId: $userId");
+      debugPrint("✅ Account deletion complete for userId: $userId");
 
     } catch (e) {
-      print("❌ Error deleting user account: $e");
+      debugPrint("❌ Error deleting user account: $e");
       throw Exception("Failed to delete account");
     }
   }
@@ -591,14 +609,15 @@ extension SupabaseUserServiceDelete on SupabaseUserService {
       final listResult = await bucket.list(path: folderPath);
       for (final file in listResult) {
         await bucket.remove(['$folderPath/${file.name}']);
-        print("🗑️ Deleted file: $folderPath/${file.name}");
+        debugPrint("🗑️ Deleted file: $folderPath/${file.name}");
       }
-      print("✅ All files under $folderPath deleted.");
+      debugPrint("✅ All files under $folderPath deleted.");
     } catch (e) {
-      print("❌ Error deleting user files: $e");
+      debugPrint("❌ Error deleting user files: $e");
     }
   }
 }
+
 
 
 

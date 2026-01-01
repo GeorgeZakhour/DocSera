@@ -2,6 +2,7 @@ import 'package:bloc/bloc.dart';
 import 'package:docsera/screens/home/health/models/health_models.dart';
 import 'package:docsera/screens/home/health/services/health_records_service.dart';
 import 'package:equatable/equatable.dart';
+import 'package:flutter/foundation.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 class HealthState extends Equatable {
@@ -71,9 +72,9 @@ class HealthCubit extends Cubit<HealthState> {
   // LOAD RECORDS
   // --------------------------------------------------------------
   Future<void> loadRecords() async {
-    print("📥 HealthCubit.loadRecords() START");
-    print("   category=$category");
-    print("   userId=$userId relativeId=$relativeId");
+    debugPrint("📥 HealthCubit.loadRecords() START");
+    debugPrint("   category=$category");
+    debugPrint("   userId=$userId relativeId=$relativeId");
 
     emit(state.copyWith(isLoading: true));
 
@@ -84,11 +85,11 @@ class HealthCubit extends Cubit<HealthState> {
         category: category,
       );
 
-      print("📥 loadRecords RESULT count=${records.length}");
+      debugPrint("📥 loadRecords RESULT count=${records.length}");
 
       emit(state.copyWith(isLoading: false, records: records));
     } catch (e) {
-      print("❌ loadRecords ERROR: $e");
+      debugPrint("❌ loadRecords ERROR: $e");
       emit(state.copyWith(isLoading: false, errorMessage: e.toString()));
     }
   }
@@ -124,11 +125,11 @@ class HealthCubit extends Cubit<HealthState> {
     final String? patientIdToSend = isRelative ? null : userId;
     final String? relativeIdToSend = isRelative ? relativeId : null;
 
-    print("🟩 addRecord() sending:");
-    print("   category=$category");
-    print("   masterId=${master.id}");
-    print("   patientId=$patientIdToSend");
-    print("   relativeId=$relativeIdToSend");
+    debugPrint("🟩 addRecord() sending:");
+    debugPrint("   category=$category");
+    debugPrint("   masterId=${master.id}");
+    debugPrint("   patientId=$patientIdToSend");
+    debugPrint("   relativeId=$relativeIdToSend");
 
     try {
       await service.addRecord(
@@ -146,7 +147,7 @@ class HealthCubit extends Cubit<HealthState> {
       await loadRecords();
 
     } catch (e) {
-      print("❌ Error in addRecord: $e");
+      debugPrint("❌ Error in addRecord: $e");
       emit(state.copyWith(isLoading: false, errorMessage: e.toString()));
       return;
     }
@@ -178,24 +179,24 @@ class HealthCubit extends Cubit<HealthState> {
     required String? newUserId,
     required String? newRelativeId,
   }) {
-    print("🟦 HealthCubit.updatePatient()");
-    print("   OLD userId=$userId relativeId=$relativeId");
-    print("   NEW userId=$newUserId relativeId=$newRelativeId");
+    debugPrint("🟦 HealthCubit.updatePatient()");
+    debugPrint("   OLD userId=$userId relativeId=$relativeId");
+    debugPrint("   NEW userId=$newUserId relativeId=$newRelativeId");
 
     final changed = newUserId != userId || newRelativeId != relativeId;
 
     if (!changed) {
-      print("❌ No change detected. NOT reloading records");
+      debugPrint("❌ No change detected. NOT reloading records");
     }
 
     userId = newUserId;
     relativeId = newRelativeId;
 
     if (changed) {
-      print("🔄 Patient changed → Reloading records...");
+      debugPrint("🔄 Patient changed → Reloading records...");
       loadRecords();
     } else {
-      print("⭕ Patient DID NOT change → Skipping loadRecords()");
+      debugPrint("⭕ Patient DID NOT change → Skipping loadRecords()");
     }
   }
 

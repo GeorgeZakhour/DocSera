@@ -1,5 +1,6 @@
 import 'package:docsera/gen_l10n/app_localizations.dart';
 import 'package:docsera/app/text_styles.dart';
+import 'dart:async';
 import 'package:docsera/screens/search_advanced_page.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:docsera/utils/page_transitions.dart';
@@ -194,6 +195,11 @@ class SearchBarSection extends StatelessWidget {
 class BannerColorCache {
   static final Map<String, Color> _cache = {};
 
+  /// **🔹 Seed cache for testing**
+  static void seedCache(Map<String, Color> values) {
+    _cache.addAll(values);
+  }
+
   /// **🔹 Get color from cache or extract if not available**
   static Future<Color> getColor(String imagePath) async {
 
@@ -245,39 +251,47 @@ class _BannersSectionState extends State<BannersSection> {
 
   /// **🔹 Load banner colors from cache or extract if missing**
   Future<void> _loadBannerColors() async {
-    print("🎯 Starting to load banner colors...");
+    debugPrint("🎯 Starting to load banner colors...");
 
     int loadedCount = 0;
 
     for (var banner in widget.banners) {
       String imagePath = banner["imagePath"];
-      print("🔄 Loading color for: $imagePath");
+      debugPrint("🔄 Loading color for: $imagePath");
 
       if (BannerColorCache._cache.containsKey(imagePath)) {
         _bannerColors[imagePath] = BannerColorCache._cache[imagePath]!;
-        print("✅ Cached color found for: $imagePath");
+        debugPrint("✅ Cached color found for: $imagePath");
         loadedCount++;
       } else {
         Color color = await BannerColorCache.getColor(imagePath);
         _bannerColors[imagePath] = color;
-        print("🎨 Extracted color for: $imagePath");
+        debugPrint("🎨 Extracted color for: $imagePath");
         loadedCount++;
       }
     }
 
-    print("📦 Loaded $loadedCount / ${widget.banners.length} colors");
+    debugPrint("📦 Loaded $loadedCount / ${widget.banners.length} colors");
 
     if (loadedCount == widget.banners.length && mounted) {
-      print("🚀 All banner colors ready, triggering onColorsLoaded...");
-      Future.delayed(const Duration(milliseconds: 300), () {
+      debugPrint("🚀 All banner colors ready, triggering onColorsLoaded...");
+      _timer = Timer(const Duration(milliseconds: 300), () {
         if (mounted) {
-          print("📣 Calling onColorsLoaded...");
+          debugPrint("📣 Calling onColorsLoaded...");
           widget.onColorsLoaded();
         }
       });
 
       setState(() {}); // آخر شي لتحديث العرض
     }
+  }
+
+  Timer? _timer;
+
+  @override
+  void dispose() {
+    _timer?.cancel();
+    super.dispose();
   }
 
 
@@ -544,7 +558,7 @@ class _BannerLogoState extends State<BannerLogo> {
         setState(() => _isLoaded = true);
       }
     } catch (e) {
-      print("❌ Image preload failed: $e");
+      debugPrint("❌ Image preload failed: $e");
       if (mounted) {
         setState(() => _isValid = false);
       }
@@ -562,7 +576,7 @@ class _BannerLogoState extends State<BannerLogo> {
         });
       }
     } catch (e) {
-      print("❌ SVG Load Error: $e");
+      debugPrint("❌ SVG Load Error: $e");
       if (mounted) {
         setState(() => _isValid = false);
       }

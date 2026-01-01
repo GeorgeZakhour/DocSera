@@ -367,17 +367,17 @@ class _ConfirmationPageState extends State<ConfirmationPage> {
 //           'relative_id': widget.appointmentDetails.patientId,
 //       };
 //
-//       print("📝 [ConfirmationPage] Insert Payload:");
+//       debugPrint("📝 [ConfirmationPage] Insert Payload:");
 //       insertPayload.forEach((key, value) {
-//         print("   $key: $value");
+//         debugPrint("   $key: $value");
 //       });
 //
 // // ركز على الموقع
 //       final loc = widget.appointmentDetails.location;
 //       if (loc == null || (loc is Map && loc.isEmpty)) {
-//         print("⚠️ [ConfirmationPage] Location is EMPTY or NULL!");
+//         debugPrint("⚠️ [ConfirmationPage] Location is EMPTY or NULL!");
 //       } else {
-//         print("✅ [ConfirmationPage] Location to insert = $loc");
+//         debugPrint("✅ [ConfirmationPage] Location to insert = $loc");
 //       }
 //
 //       final inserted = await supabase
@@ -449,8 +449,8 @@ class _ConfirmationPageState extends State<ConfirmationPage> {
 //           context,
 //           fadePageRoute(AppointmentConfirmedPage(appointment: navPayload)),
 //         );
-//         print("🧭 [ConfirmationPage] Navigating to AppointmentConfirmedPage");
-//         print("   appointmentId = ${navPayload['appointmentId']}");
+//         debugPrint("🧭 [ConfirmationPage] Navigating to AppointmentConfirmedPage");
+//         debugPrint("   appointmentId = ${navPayload['appointmentId']}");
 //       }
 //     } catch (e) {
 //       final msg = e.toString().toLowerCase().contains('duplicate') ||

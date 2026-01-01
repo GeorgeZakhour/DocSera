@@ -1,4 +1,5 @@
 import 'dart:math';
+import 'package:flutter/foundation.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 class SupabaseOTPService {
@@ -18,7 +19,7 @@ class SupabaseOTPService {
         'expires_at': expiresAt.toIso8601String(),
       });
 
-      print('📱 OTP sent to phone: $phoneNumber, Code: $otp');
+      debugPrint('📱 OTP sent to phone: $phoneNumber, Code: $otp');
       return otp;
     } catch (e) {
       throw Exception('Failed to send OTP to phone: $e');

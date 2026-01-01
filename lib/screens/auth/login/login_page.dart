@@ -35,7 +35,7 @@ class LogInPage extends StatefulWidget {
 class _LogInPageState extends State<LogInPage> {
   late TextEditingController _inputController;
   final TextEditingController _passwordController = TextEditingController();
-  final SupabaseUserService _supabaseUserService = SupabaseUserService();
+  late final SupabaseUserService _supabaseUserService;
   final LocalAuthentication auth = LocalAuthentication();
   bool isPasswordVisible = false;
   bool isValid = false;
@@ -51,6 +51,7 @@ class _LogInPageState extends State<LogInPage> {
   @override
   void initState() {
     super.initState();
+    _supabaseUserService = context.read<SupabaseUserService>();
     _inputController = TextEditingController(text: widget.preFilledInput);
     isValid = widget.preFilledInput != null && widget.preFilledInput!.isNotEmpty;
     _checkBiometricReadiness();
@@ -59,7 +60,7 @@ class _LogInPageState extends State<LogInPage> {
 
   Future<void> _checkBiometricReadiness() async {
     // ⛔ Do not show if user already logged in
-    if (Supabase.instance.client.auth.currentUser != null) {
+    if (_supabaseUserService.getCurrentUser() != null) {
       setState(() => _canUseBiometric = false);
       return;
     }
@@ -154,11 +155,11 @@ class _LogInPageState extends State<LogInPage> {
 
       final formattedPhone = isPhone ? getFormattedPhoneNumber(input) : null;
 
-      print("📥 [INPUT] المستخدم أدخل: $input");
+      debugPrint("📥 [INPUT] المستخدم أدخل: $input");
       if (isPhone) {
-        print("📞 [FORMAT] تم التعرف عليه كرقم هاتف وتم تنسيقه إلى: $formattedPhone");
+        debugPrint("📞 [FORMAT] تم التعرف عليه كرقم هاتف وتم تنسيقه إلى: $formattedPhone");
       } else {
-        print("📧 [FORMAT] تم التعرف عليه كإيميل: $input");
+        debugPrint("📧 [FORMAT] تم التعرف عليه كإيميل: $input");
       }
 
       // ---------------------------------------------------------------------
@@ -179,12 +180,12 @@ class _LogInPageState extends State<LogInPage> {
         throw Exception("account_disabled");
       }
 
-      print("📨 [AUTH EMAIL] الإيميل المستخدم لتسجيل الدخول: $email");
+      debugPrint("📨 [AUTH EMAIL] الإيميل المستخدم لتسجيل الدخول: $email");
 
       // ---------------------------------------------------------------------
       // 3️⃣ Supabase Auth (password check)
       // ---------------------------------------------------------------------
-      final response = await Supabase.instance.client.auth.signInWithPassword(
+      final response = await _supabaseUserService.signInWithPassword(
         email: email,
         password: password,
       );
@@ -208,7 +209,7 @@ class _LogInPageState extends State<LogInPage> {
 
 
       final userId = supabaseUser.id;
-      print("✅ [LOGIN SUCCESS] User ID: $userId");
+      debugPrint("✅ [LOGIN SUCCESS] User ID: $userId");
 
       // ---------------------------------------------------------------------
       // 4️⃣ Persist minimal auth data (biometric-only)
@@ -218,7 +219,7 @@ class _LogInPageState extends State<LogInPage> {
       await prefs.setString('userEmail', email);
       await prefs.setString('userPassword', password); // biometric only
 
-      print("💾 [SHARED PREFS] Auth data saved");
+      debugPrint("💾 [SHARED PREFS] Auth data saved");
 
       // ---------------------------------------------------------------------
       // 5️⃣ POST-AUTH security state (RLS-safe, auth.uid())
@@ -238,20 +239,20 @@ class _LogInPageState extends State<LogInPage> {
 
       final deviceId = await getDeviceId();
 
-      print("🛡️ [2FA] Enabled: $is2FAEnabled");
-      print("🧩 [DEVICE] Current: $deviceId");
-      print("🧩 [DEVICE] Trusted: ${trustedDevices.contains(deviceId)}");
+      debugPrint("🛡️ [2FA] Enabled: $is2FAEnabled");
+      debugPrint("🧩 [DEVICE] Current: $deviceId");
+      debugPrint("🧩 [DEVICE] Trusted: ${trustedDevices.contains(deviceId)}");
 
       // ---------------------------------------------------------------------
       // 6️⃣ 2FA routing decision
       // ---------------------------------------------------------------------
       if (is2FAEnabled && !trustedDevices.contains(deviceId)) {
         if (phone == null || phone.isEmpty) {
-          print("🚨 [2FA ERROR] Phone number missing");
+          debugPrint("🚨 [2FA ERROR] Phone number missing");
           throw Exception("phone_not_available_for_2fa");
         }
 
-        print("🚨 [2FA] Redirecting to OTP login");
+        debugPrint("🚨 [2FA] Redirecting to OTP login");
 
         if (!mounted) return;
 
@@ -271,9 +272,9 @@ class _LogInPageState extends State<LogInPage> {
       // ---------------------------------------------------------------------
       // 7️⃣ Enter app normally
       // ---------------------------------------------------------------------
-      print("✅ [NAVIGATION] Entering app");
+      debugPrint("✅ [NAVIGATION] Entering app");
 
-      context.read<UserCubit>().loadUserData(context);
+      context.read<UserCubit>().loadUserData(context: context);
 
       if (!mounted) return;
 
@@ -283,7 +284,7 @@ class _LogInPageState extends State<LogInPage> {
             (_) => false,
       );
     } catch (e) {
-      print("❌ خطأ أثناء تسجيل الدخول: $e");
+      debugPrint("❌ خطأ أثناء تسجيل الدخول: $e");
 
       String message;
       final errorStr = e.toString().toLowerCase();

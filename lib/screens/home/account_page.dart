@@ -64,7 +64,7 @@ class _AccountScreenState extends State<AccountScreen> {
 
     if (authState is AuthAuthenticated) {
       // 🔹 تحميل المستخدم الأساسي
-      context.read<UserCubit>().loadUserData(context);
+      context.read<UserCubit>().loadUserData(context: context);
 
       // 🔹 تحميل كل تبويبات الحساب فورًا
       context.read<AccountProfileCubit>().loadProfile();
@@ -102,7 +102,7 @@ class _AccountScreenState extends State<AccountScreen> {
       List<BiometricType> availableBiometrics = await auth.getAvailableBiometrics();
       if (!mounted) return;
 
-      print("✅ Available Biometrics: $availableBiometrics");
+      debugPrint("✅ Available Biometrics: $availableBiometrics");
 
       String detectedType;
       IconData detectedIcon;
@@ -143,9 +143,9 @@ class _AccountScreenState extends State<AccountScreen> {
         biometricIcon = detectedIcon;
       });
 
-      print("✅ Biometric Type Set & Saved: $biometricType");
+      debugPrint("✅ Biometric Type Set & Saved: $biometricType");
     } catch (e) {
-      print("❌ Biometric detection error: $e");
+      debugPrint("❌ Biometric detection error: $e");
     }
   }
 
@@ -2262,7 +2262,7 @@ class _AuthenticatedAccountView extends StatelessWidget {
             Navigator.pop(context);
 
             context.read<UserCubit>().loadUserData(
-              context,
+              context: context,
               useCache: false,
             );
 

@@ -102,8 +102,8 @@ class _EditRelativePageState extends State<EditRelativePage> {
       throw Exception('DOB_EMPTY');
     }
 
-    print('🟡 EDIT PAGE → relativeId = ${widget.relativeId}');
-    print('🟡 EDIT PAGE → payload = ${{
+    debugPrint('🟡 EDIT PAGE → relativeId = ${widget.relativeId}');
+    debugPrint('🟡 EDIT PAGE → payload = ${{
       'first_name': firstNameController.text.trim(),
       'last_name': lastNameController.text.trim(),
       'gender': gender,

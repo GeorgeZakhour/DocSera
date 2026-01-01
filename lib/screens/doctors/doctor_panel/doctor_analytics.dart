@@ -39,21 +39,21 @@ class _DoctorAnalyticsPageState extends State<DoctorAnalyticsPage> {
 
     final localDoctorId = doctorId;
     if (localDoctorId == null) {
-      print("❌ Doctor ID not found.");
+      debugPrint("❌ Doctor ID not found.");
       return;
     }
 
     try {
-      print("🚀 Fetching patients for doctor ID: $localDoctorId");
+      debugPrint("🚀 Fetching patients for doctor ID: $localDoctorId");
       final patientResponse = await Supabase.instance.client
           .from('patients')
           .select('id')
           .eq('doctorId', localDoctorId);
 
       totalPatients = patientResponse.length;
-      print("✅ Total Patients Loaded: $totalPatients");
+      debugPrint("✅ Total Patients Loaded: $totalPatients");
 
-      print("🚀 Fetching appointments...");
+      debugPrint("🚀 Fetching appointments...");
       final appointmentResponse = await Supabase.instance.client
           .from('appointments')
           .select()
@@ -61,10 +61,10 @@ class _DoctorAnalyticsPageState extends State<DoctorAnalyticsPage> {
           .eq('booked', true);
 
       totalAppointments = appointmentResponse.length;
-      print("✅ Total Booked Appointments Loaded: $totalAppointments");
+      debugPrint("✅ Total Booked Appointments Loaded: $totalAppointments");
 
       for (var data in appointmentResponse) {
-        print("📄 Appointment Data: $data");
+        debugPrint("📄 Appointment Data: $data");
 
         bool attended = data['attended'] == true;
         if (attended) attendedAppointments++;
@@ -90,14 +90,14 @@ class _DoctorAnalyticsPageState extends State<DoctorAnalyticsPage> {
         }
       }
 
-      print("✅ Attended Appointments: $attendedAppointments");
-      print("📊 Appointments by Type: $appointmentTypes");
-      print("📊 Gender Distribution: $genderDistribution");
-      print("📊 Age Group Distribution: $ageGroups");
+      debugPrint("✅ Attended Appointments: $attendedAppointments");
+      debugPrint("📊 Appointments by Type: $appointmentTypes");
+      debugPrint("📊 Gender Distribution: $genderDistribution");
+      debugPrint("📊 Age Group Distribution: $ageGroups");
 
       setState(() {});
     } catch (e) {
-      print("❌ Error fetching analytics: $e");
+      debugPrint("❌ Error fetching analytics: $e");
     }
   }
 
@@ -183,7 +183,7 @@ class _DoctorAnalyticsPageState extends State<DoctorAnalyticsPage> {
   }
 
   Widget _buildPieChart(String title, Map<String, int> data, int? selectedIndex, Function(int?) onSelectionChange) {
-    print("📊 Rendering Pie Chart: $title -> $data");
+    debugPrint("📊 Rendering Pie Chart: $title -> $data");
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -265,7 +265,7 @@ class _DoctorAnalyticsPageState extends State<DoctorAnalyticsPage> {
   }
 
   Widget _buildBarChart(String title, Map<String, int> data) {
-    print("📊 Rendering Bar Chart: $title -> $data");
+    debugPrint("📊 Rendering Bar Chart: $title -> $data");
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [

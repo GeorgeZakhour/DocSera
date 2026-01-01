@@ -51,7 +51,7 @@ class _DoctorDashboardState extends State<DoctorDashboard> {
         _fetchAppointments();
       }
     } catch (e) {
-      print("❌ Error fetching doctor data: $e");
+      debugPrint("❌ Error fetching doctor data: $e");
     }
   }
 
@@ -71,7 +71,7 @@ class _DoctorDashboardState extends State<DoctorDashboard> {
         appointments = List<Map<String, dynamic>>.from(response);
       });
     } catch (e) {
-      print("❌ Error fetching appointments: $e");
+      debugPrint("❌ Error fetching appointments: $e");
     }
   }
 

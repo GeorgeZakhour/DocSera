@@ -589,9 +589,9 @@ class _DoctorConversationPageState extends State<DoctorConversationPage> {
                         hasResponded = true;
                       });
 
-                      print("✅ Conversation marked as responded by doctor");
+                      debugPrint("✅ Conversation marked as responded by doctor");
                     } catch (e) {
-                      print("❌ Error updating conversation: $e");
+                      debugPrint("❌ Error updating conversation: $e");
                     }
                   },
                   style: ElevatedButton.styleFrom(

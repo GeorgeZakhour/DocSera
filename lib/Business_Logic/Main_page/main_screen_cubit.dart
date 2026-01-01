@@ -28,7 +28,7 @@ class MainScreenCubit extends Cubit<MainScreenState> {
       final authState = context.read<AuthCubit>().state;
 
       // ✅ Debug print: تأكيد أن AuthCubit هو المستخدم فعلاً
-      print("🔐 AuthCubit State: $authState");
+      debugPrint("🔐 AuthCubit State: $authState");
 
       if (authState is! AuthAuthenticated) {
         emit(MainScreenLoaded(isLoggedIn: false, favoriteDoctors: const []));
@@ -36,7 +36,7 @@ class MainScreenCubit extends Cubit<MainScreenState> {
       }
 
       final userId = authState.user.id;
-      print("✅ المستخدم مسجل دخول عبر AuthCubit: $userId");
+      debugPrint("✅ المستخدم مسجل دخول عبر AuthCubit: $userId");
 
       List<Map<String, dynamic>> favoriteDoctors = [];
       String? cachedDoctors = _prefs.getString('favoriteDoctors');

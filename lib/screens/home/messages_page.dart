@@ -459,7 +459,7 @@ import 'package:docsera/utils/doctor_image_utils.dart';
           trailingText = DateFormat('dd/MM/yyyy').format(lastMessageTime);
         }
       }
-      print('TITLE: ${convo.doctorTitle} - GENDER: ${convo.doctorGender}');
+      debugPrint('TITLE: ${convo.doctorTitle} - GENDER: ${convo.doctorGender}');
 
 
       final unreadCount = convo.unreadCountForUser ?? 0;

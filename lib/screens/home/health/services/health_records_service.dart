@@ -1,4 +1,5 @@
 import 'package:docsera/screens/home/health/models/health_models.dart';
+import 'package:flutter/foundation.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 class HealthRecordsService {
@@ -29,17 +30,17 @@ class HealthRecordsService {
     required String? relativeId,
     required String category,
   }) async {
-    print("FETCH RECORDS → userId=$userId relativeId=$relativeId category=$category");
+    debugPrint("FETCH RECORDS → userId=$userId relativeId=$relativeId category=$category");
 
     if (userId == null && relativeId == null) {
-      print("❌ FETCH RECORDS aborted: both userId and relativeId are null");
+      debugPrint("❌ FETCH RECORDS aborted: both userId and relativeId are null");
       return [];
     }
 
     final filterColumn = (relativeId != null) ? 'relative_id' : 'patient_id';
     final filterValue = (relativeId != null) ? relativeId : userId;
 
-    print("➡ Using filter: $filterColumn = $filterValue");
+    debugPrint("➡ Using filter: $filterColumn = $filterValue");
 
     final response = await _client
         .from('patient_medical_records')
@@ -73,7 +74,7 @@ class HealthRecordsService {
         .filter('medical_master.category', 'eq', category)
         .order('created_at', ascending: true);
 
-    print("✅ FETCH RECORDS RESULT → ${response.length} rows");
+    debugPrint("✅ FETCH RECORDS RESULT → ${response.length} rows");
 
     return (response as List<dynamic>)
         .map((row) => HealthRecord.fromMap(row))

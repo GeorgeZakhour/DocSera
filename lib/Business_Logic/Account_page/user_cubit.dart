@@ -19,14 +19,22 @@ class UserCubit extends Cubit<UserState> {
   // ---------------------------------------------------------------------------
   // 🚀 Load User Data (cache first, then realtime)
   // ---------------------------------------------------------------------------
-  Future<void> loadUserData(BuildContext context, {bool useCache = true}) async {
-    final authState = context.read<AuthCubit>().state;
-    if (authState is! AuthAuthenticated) {
-      emit(NotLogged());
+  Future<void> loadUserData({BuildContext? context, String? explicitUserId, bool useCache = true}) async {
+    String userId;
+
+    if (explicitUserId != null) {
+      userId = explicitUserId;
+    } else if (context != null) {
+      final authState = context.read<AuthCubit>().state;
+      if (authState is! AuthAuthenticated) {
+        emit(NotLogged());
+        return;
+      }
+      userId = authState.user.id;
+    } else {
+      emit(UserError("No context or userId provided"));
       return;
     }
-
-    final userId = authState.user.id;
 
     try {
       // ----- Load Cached Data First -----
@@ -46,7 +54,7 @@ class UserCubit extends Cubit<UserState> {
       }
 
       // ----- Fetch from Supabase -----
-      final userData = await Supabase.instance.client.rpc('rpc_get_my_user');
+      final userData = await _supabaseUserService.getUserData(userId);
       if (userData == null) {
         emit(UserError("User data not found"));
         return;
@@ -76,7 +84,7 @@ class UserCubit extends Cubit<UserState> {
         value: userId,
       ),
       callback: (payload) async {
-        print("🔄 Realtime Update Received for user $userId");
+        debugPrint("🔄 Realtime Update Received for user $userId");
 
         final userData = await Supabase.instance.client.rpc('rpc_get_my_user');
         if (userData != null) {
@@ -212,7 +220,7 @@ class UserCubit extends Cubit<UserState> {
       }
 
       // Reload full profile after update
-      await loadUserData(context, useCache: false);
+      await loadUserData(context: context, useCache: false);
     } catch (e) {
       emit(UserError("Failed to update $field: $e"));
     }

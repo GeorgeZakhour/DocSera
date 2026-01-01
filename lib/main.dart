@@ -41,7 +41,7 @@ import 'dart:developer';
 import 'package:app_links/app_links.dart';
 
 
-
+import 'services/navigation/deep_link_service.dart';
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   tz.initializeTimeZones(); // 👈 مهم جداً لمرة واحدة فقط
@@ -80,68 +80,74 @@ await Socket.connect('192.168.1.1', 80, timeout: const Duration(seconds: 1))
 
 
   runApp(
-    MultiBlocProvider(
-      providers: [
-        BlocProvider<AuthCubit>(create: (_) => AuthCubit()),
-        BlocProvider<MainScreenCubit>(
-          create: (context) => MainScreenCubit(supabaseService, prefs),
-        ),
-        BlocProvider(create: (context) => AppointmentsCubit(supabaseService, prefs)),
-        BlocProvider(create: (context) => MessagesCubit()),
-        BlocProvider(create: (context) => DocumentsCubit()),
-        BlocProvider(create: (context) => UserCubit(supabaseService, prefs)),
-        BlocProvider(
-          create: (_) => AccountProfileCubit(
-            service: AccountProfileService(),
+    RepositoryProvider.value(
+      value: supabaseService,
+      child: MultiBlocProvider(
+        providers: [
+          BlocProvider<AuthCubit>(create: (_) => AuthCubit(prefs: prefs)),
+          BlocProvider<MainScreenCubit>(
+            create: (context) => MainScreenCubit(supabaseService, prefs),
+          ),
+          BlocProvider(create: (context) => AppointmentsCubit(supabaseService, prefs)),
+          BlocProvider(create: (context) => MessagesCubit()),
+          BlocProvider(create: (context) => DocumentsCubit()),
+          BlocProvider(create: (context) => UserCubit(supabaseService, prefs)),
+          BlocProvider(
+            create: (_) => AccountProfileCubit(
+              service: AccountProfileService(),
+            ),
+          ),
+
+          BlocProvider(
+            create: (_) => RelativesCubit(AccountRelativesService()),
+          ),
+
+          BlocProvider(
+            create: (_) => AccountSecurityCubit(service: AccountSecurityService()),
+          ),
+          BlocProvider(
+            create: (_) => AccountDangerCubit(service: AccountDangerService()),
+          ),
+          BlocProvider(create: (context) => DoctorScheduleCubit()),
+          BlocProvider(create: (context) => NotesCubit()),
+          BlocProvider(create: (_) => PatientSwitcherCubit()),
+
+
+        ],
+        child: BlocListener<AuthCubit, custom_auth.AppAuthState>(
+          listenWhen: (previous, current) {
+            // 🔴 امنع التنفيذ عند tokenRefreshed
+            if (previous is custom_auth.AuthAuthenticated &&
+                current is custom_auth.AuthAuthenticated) {
+              return false;
+            }
+            return true;
+          },
+          listener: (context, state) {
+            if (state is custom_auth.AuthAuthenticated) {
+              // 🔹 هذه تُستدعى مرة واحدة فقط
+              context.read<MainScreenCubit>().loadMainScreen(context);
+              context.read<AppointmentsCubit>().loadAppointments(context: context);
+              context.read<DocumentsCubit>().listenToDocuments(context: context);
+              context.read<NotesCubit>().listenToNotes(context);
+
+              final userCubit = context.read<UserCubit>();
+              userCubit.loadUserData(context: context, useCache: true);
+              userCubit.startRealtimeUserListener(state.user.id);
+
+              final userState = userCubit.state;
+              if (userState is UserLoaded) {
+                context.read<PatientSwitcherCubit>().switchToUser();
+              }
+            }
+          },
+          child: MyApp(
+            savedLocale: savedLocale,
+            supabaseClient: Supabase.instance.client, // Pass client here
           ),
         ),
 
-        BlocProvider(
-          create: (_) => RelativesCubit(AccountRelativesService()),
-        ),
-
-        BlocProvider(
-          create: (_) => AccountSecurityCubit(service: AccountSecurityService()),
-        ),
-        BlocProvider(
-          create: (_) => AccountDangerCubit(service: AccountDangerService()),
-        ),
-        BlocProvider(create: (context) => DoctorScheduleCubit()),
-        BlocProvider(create: (context) => NotesCubit()),
-        BlocProvider(create: (_) => PatientSwitcherCubit()),
-
-
-      ],
-      child: BlocListener<AuthCubit, custom_auth.AppAuthState>(
-        listenWhen: (previous, current) {
-          // 🔴 امنع التنفيذ عند tokenRefreshed
-          if (previous is custom_auth.AuthAuthenticated &&
-              current is custom_auth.AuthAuthenticated) {
-            return false;
-          }
-          return true;
-        },
-        listener: (context, state) {
-          if (state is custom_auth.AuthAuthenticated) {
-            // 🔹 هذه تُستدعى مرة واحدة فقط
-            context.read<MainScreenCubit>().loadMainScreen(context);
-            context.read<AppointmentsCubit>().loadAppointments(context);
-            context.read<DocumentsCubit>().listenToDocuments(context);
-            context.read<NotesCubit>().listenToNotes(context);
-
-            final userCubit = context.read<UserCubit>();
-            userCubit.loadUserData(context, useCache: true);
-            userCubit.startRealtimeUserListener(state.user.id);
-
-            final userState = userCubit.state;
-            if (userState is UserLoaded) {
-              context.read<PatientSwitcherCubit>().switchToUser();
-            }
-          }
-        },
-        child: MyApp(savedLocale: savedLocale),
       ),
-
     ),
   );
 }
@@ -153,8 +159,13 @@ Future<String> getSavedLocale() async {
 
 class MyApp extends StatefulWidget {
   final String savedLocale;
+  final SupabaseClient? supabaseClient; // Optional for testing
 
-  const MyApp({super.key, required this.savedLocale});
+  const MyApp({
+    super.key,
+    required this.savedLocale,
+    this.supabaseClient,
+  });
 
   static _MyAppState? of(BuildContext context) => context.findAncestorStateOfType<_MyAppState>();
 
@@ -165,109 +176,27 @@ class MyApp extends StatefulWidget {
 class _MyAppState extends State<MyApp> {
   late Locale _locale;
   final GlobalKey<NavigatorState> _navKey = GlobalKey<NavigatorState>();
-  late final AppLinks _appLinks;
-  StreamSubscription<Uri>? _linkSub;
-
+  late final DeepLinkService _deepLinkService;
 
   @override
   void initState() {
     super.initState();
     _locale = Locale(widget.savedLocale);
-    _initDeepLinks();
+    
+    // Initialize DeepLinkService only if client is provided (or use singleton as fallback)
+    final client = widget.supabaseClient ?? Supabase.instance.client;
+    _deepLinkService = DeepLinkService(client, _navKey);
+    _deepLinkService.initDeepLinks();
   }
 
   @override
   void dispose() {
-    _linkSub?.cancel();
+    _deepLinkService.dispose();
     super.dispose();
   }
 
 
-  Future<void> _initDeepLinks() async {
-    _appLinks = AppLinks();
 
-    // 🔹 1) App opened from terminated state
-    try {
-      final Uri? initialUri = await _appLinks.getInitialLink();
-      if (initialUri != null) {
-        _handleUri(initialUri);
-      }
-    } catch (e) {
-      log('❌ getInitialAppLink error: $e');
-    }
-
-    // 🔹 2) App already running
-    _linkSub = _appLinks.uriLinkStream.listen(
-          (uri) {
-        _handleUri(uri);
-      },
-      onError: (err) {
-        log('❌ uriLinkStream error: $err');
-      },
-    );
-  }
-
-  void _handleUri(Uri uri) {
-    String? doctorToken;
-
-    // docsera://doctor/<public_token>
-    if (uri.scheme == 'docsera') {
-      if (uri.host == 'doctor' && uri.pathSegments.isNotEmpty) {
-        doctorToken = uri.pathSegments.first;
-      }
-    }
-
-    // https://docsera.app/doctor/<public_token> (للمستقبل)
-    if (uri.scheme.startsWith('http')) {
-      if (uri.pathSegments.length >= 2 &&
-          uri.pathSegments.first == 'doctor') {
-        doctorToken = uri.pathSegments[1];
-      }
-    }
-
-    if (doctorToken == null || doctorToken.isEmpty) {
-      log('⚠️ Ignored deep link: $uri');
-      return;
-    }
-
-    _resolveDoctorByPublicToken(doctorToken);
-  }
-
-  Future<void> _resolveDoctorByPublicToken(String token) async {
-    try {
-      final res = await Supabase.instance.client
-          .from('doctors')
-          .select('id')
-          .eq('public_token', token)
-          .maybeSingle();
-
-      if (res == null) {
-        log('❌ Invalid doctor public_token: $token');
-        return;
-      }
-
-      final doctorId = res['id'] as String;
-
-      _navigateToDoctor(doctorId);
-    } catch (e) {
-      log('❌ Failed to resolve doctor token: $e');
-    }
-  }
-
-  void _navigateToDoctor(String doctorId) {
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      final nav = _navKey.currentState;
-      if (nav == null) return;
-
-      nav.push(
-        MaterialPageRoute(
-          builder: (_) => DoctorProfilePage(
-            doctorId: doctorId,
-          ),
-        ),
-      );
-    });
-  }
 
 
 

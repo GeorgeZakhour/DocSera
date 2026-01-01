@@ -67,7 +67,7 @@ class _DocumentsPageState extends State<DocumentsPage> with AutomaticKeepAliveCl
     super.initState();
 
     _loadInitialPreferences(); // ✅ الجديدة بدلاً من القديمة
-    context.read<DocumentsCubit>().listenToDocuments(context);
+    context.read<DocumentsCubit>().listenToDocuments(context: context);
   }
 
 
@@ -75,7 +75,7 @@ class _DocumentsPageState extends State<DocumentsPage> with AutomaticKeepAliveCl
   void didChangeDependencies() {
     super.didChangeDependencies();
     // re-listen if needed
-    context.read<DocumentsCubit>().listenToDocuments(context);
+    context.read<DocumentsCubit>().listenToDocuments(context: context);
   }
 
 
@@ -956,7 +956,7 @@ class _DocumentsPageState extends State<DocumentsPage> with AutomaticKeepAliveCl
                       );
                     },
                     onDismissed: (_) {
-                      context.read<DocumentsCubit>().deleteDocument(context, userDoc);
+                      context.read<DocumentsCubit>().deleteDocument(document: userDoc, context: context);
                     },
                     child: Column(
                       children: [
@@ -1661,7 +1661,7 @@ class _DocumentsPageState extends State<DocumentsPage> with AutomaticKeepAliveCl
                   shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10.r)),
                 ),
                 onPressed: () {
-                  context.read<NotesCubit>().deleteNote(note);
+                  context.read<NotesCubit>().deleteNote(note, context: context);
                   Navigator.pop(context);
                 },
                 child: Center(

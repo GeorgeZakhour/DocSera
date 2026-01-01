@@ -108,7 +108,7 @@ class _DoctorProfilePageState extends State<DoctorProfilePage> {
 
     _userId = Supabase.instance.client.auth.currentUser?.id;
 
-    print("🩺 DoctorProfilePage INIT - doctorId: ${widget.doctorId}");
+    debugPrint("🩺 DoctorProfilePage INIT - doctorId: ${widget.doctorId}");
     if (widget.doctor != null && widget.doctor!.isNotEmpty) {
       _doctorData = {...widget.doctor!};
     }
@@ -1904,7 +1904,7 @@ $deepLink
 
 
     String? imagePath = doctor['doctor_image'];
-    print('📷 RAW doctor_image = "$imagePath"');
+    debugPrint('📷 RAW doctor_image = "$imagePath"');
 
     final imageResult = resolveDoctorImagePathAndWidget(doctor: doctor);
     final avatarPath = imageResult.avatarPath;
@@ -1915,7 +1915,7 @@ $deepLink
     final String? website = doctor['website'];
 
     if (widget.doctorId.isEmpty) {
-      print("❌ ERROR: doctorId is unexpectedly empty inside DoctorProfilePage");
+      debugPrint("❌ ERROR: doctorId is unexpectedly empty inside DoctorProfilePage");
       return Scaffold(
         appBar: AppBar(title: const Text("Error")),
         body: const Center(child: Text("Doctor ID is missing. Cannot load profile.")),
@@ -1956,16 +1956,16 @@ $deepLink
       if (raw is String) {
         try {
           out = Map<String, dynamic>.from(jsonDecode(raw));
-          print("🌍 [DoctorProfilePage] Location raw (String) decoded = $out");
+          debugPrint("🌍 [DoctorProfilePage] Location raw (String) decoded = $out");
         } catch (_) {
-          print("❌ [DoctorProfilePage] Failed to decode location JSON: $raw");
+          debugPrint("❌ [DoctorProfilePage] Failed to decode location JSON: $raw");
           out = <String, dynamic>{};
         }
       } else if (raw is Map) {
         out = Map<String, dynamic>.from(raw);
-        print("🌍 [DoctorProfilePage] Location raw (Map) = $out");
+        debugPrint("🌍 [DoctorProfilePage] Location raw (Map) = $out");
       } else {
-        print("⚠️ [DoctorProfilePage] No location data found (raw=$raw)");
+        debugPrint("⚠️ [DoctorProfilePage] No location data found (raw=$raw)");
         out = <String, dynamic>{};
       }
 
@@ -1984,7 +1984,7 @@ $deepLink
         if (lng != null) 'lng': lng,
       };
 
-      print("✅ [DoctorProfilePage] Normalized clinicLocation = $normalized");
+      debugPrint("✅ [DoctorProfilePage] Normalized clinicLocation = $normalized");
       return normalized;
     })();
 
@@ -2235,9 +2235,9 @@ $deepLink
                       _showLoginPromptDialog();
                       return;
                     }
-                    print("➡️ [DoctorProfilePage] Navigating to SelectPatientPage with:");
-                    print("- doctorId: $doctorId");
-                    print("- clinicLocation: $clinicLocation");
+                    debugPrint("➡️ [DoctorProfilePage] Navigating to SelectPatientPage with:");
+                    debugPrint("- doctorId: $doctorId");
+                    debugPrint("- clinicLocation: $clinicLocation");
 
                     Navigator.push(
                       context,
@@ -2291,9 +2291,9 @@ $deepLink
                     _showLoginPromptDialog();
                     return;
                   } else {
-                    print("➡️ [DoctorProfilePage] Navigating to SelectPatientPage with:");
-                    print("- doctorId: $doctorId");
-                    print("- clinicLocation: $clinicLocation");
+                    debugPrint("➡️ [DoctorProfilePage] Navigating to SelectPatientPage with:");
+                    debugPrint("- doctorId: $doctorId");
+                    debugPrint("- clinicLocation: $clinicLocation");
 
                     Navigator.push(
                       context,

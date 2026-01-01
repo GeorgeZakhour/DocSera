@@ -71,15 +71,15 @@ class AppointmentCancelledPage extends StatelessWidget {
     );
     final imageProvider = imageResult.imageProvider;
 
-    print("🧭 [AppointmentCancelledPage] Data check:");
-    print("   doctorId      = $doctorId");
-    print("   doctorName    = $doctorName");
-    print("   doctorTitle   = $doctorTitle");
-    print("   doctorGender  = $doctorGender");
-    print("   specialty     = $specialty");
-    print("   clinicName    = $clinicName");
-    print("   clinicAddress = $clinicAddress");
-    print("   patientName   = $patientName");
+    debugPrint("🧭 [AppointmentCancelledPage] Data check:");
+    debugPrint("   doctorId      = $doctorId");
+    debugPrint("   doctorName    = $doctorName");
+    debugPrint("   doctorTitle   = $doctorTitle");
+    debugPrint("   doctorGender  = $doctorGender");
+    debugPrint("   specialty     = $specialty");
+    debugPrint("   clinicName    = $clinicName");
+    debugPrint("   clinicAddress = $clinicAddress");
+    debugPrint("   patientName   = $patientName");
 
     return WillPopScope(
       onWillPop: () async {

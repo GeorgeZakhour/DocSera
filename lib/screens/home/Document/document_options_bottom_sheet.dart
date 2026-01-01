@@ -222,7 +222,7 @@ void showDocumentOptionsSheet(
                     },
                     onNameUpdated: (newName) {
                       Future.delayed(const Duration(milliseconds: 50), () {
-                        context.read<DocumentsCubit>().listenToDocuments(context);
+                        context.read<DocumentsCubit>().listenToDocuments(context: context);
                       });
                     },
                   ),
@@ -241,7 +241,7 @@ void showDocumentOptionsSheet(
                     builder: (_) => DocumentDetailsPage(document: document),
                   ),
                 ).then((_) => Future.delayed(const Duration(milliseconds: 50), () {
-                  context.read<DocumentsCubit>().listenToDocuments(context);
+                  context.read<DocumentsCubit>().listenToDocuments(context: context);
                 }));
               },
             ),
@@ -264,7 +264,7 @@ void showDocumentOptionsSheet(
                   context: context,
                   document: document,
                   onConfirmDelete: () async {
-                    await context.read<DocumentsCubit>().deleteDocument(context, document);
+                    await context.read<DocumentsCubit>().deleteDocument(document: document, context: context);
                   },
                 );
               },

@@ -31,16 +31,16 @@ class SharedPrefsService {
     if (key == 'refreshFavorites' || key == 'refreshAppointments' || key == 'isLoggedIn') {
       if (data is bool) {
         await prefs.setBool(key, data);
-        print("✅ [$key] Boolean flag set to: $data");
+        debugPrint("✅ [$key] Boolean flag set to: $data");
       } else {
-        print("⚠️ [$key] Invalid boolean value provided: $data");
+        debugPrint("⚠️ [$key] Invalid boolean value provided: $data");
       }
       return;
     }
 
     String jsonData = json.encode(data);
     await prefs.setString(key, jsonData);
-    print("✅ [$key] Data saved.");
+    debugPrint("✅ [$key] Data saved.");
   }
 
   /// ✅ **تحميل البيانات المحفوظة وتحويلها إلى JSON مع التحقق من النوع**
@@ -54,7 +54,7 @@ class SharedPrefsService {
 
     String? jsonData = prefs.getString(key);
     if (jsonData == null) {
-      print("⚠️ [$key] No cached data found.");
+      debugPrint("⚠️ [$key] No cached data found.");
       return null;
     }
 
@@ -85,7 +85,7 @@ class SharedPrefsService {
       convertBackTimestamps(decodedData);
       return decodedData;
     } catch (e) {
-      print("❌ [$key] Error decoding JSON: $e");
+      debugPrint("❌ [$key] Error decoding JSON: $e");
       return null;
     }
   }
@@ -268,7 +268,7 @@ class SharedPrefsService {
             newPhoneVerified != currentPhoneVerified ||
             newEmailVerified != currentEmailVerified) {
 
-          print("🔄 Firestore listener detected real change! Updating UI...");
+          debugPrint("🔄 Firestore listener detected real change! Updating UI...");
 
           // ✅ Save updated values in SharedPreferences
           await prefs.setString('userEmail', newEmail);
@@ -277,9 +277,9 @@ class SharedPrefsService {
           await prefs.setBool('isEmailVerified', newEmailVerified);
 
           // ✅ Trigger UI Update via UserCubit
-          userCubit.loadUserData(context);
+          userCubit.loadUserData(context: context);
         } else {
-          print("🔹 Firestore listener detected NO actual changes, ignoring.");
+          debugPrint("🔹 Firestore listener detected NO actual changes, ignoring.");
         }
       }
     });

@@ -696,7 +696,7 @@ class _AppointmentDetailsPageState extends State<AppointmentDetailsPage> {
   void _showCancelAppointmentSheet(BuildContext context) async {
     final doctorId = _doctorId();
     final apptId = _appointmentId();
-    print("🧨 [Cancel] apptId=$_appointmentId  raw(id)=${_appt['id']}  raw(appointmentId)=${_appt['appointmentId']}");
+    debugPrint("🧨 [Cancel] apptId=$_appointmentId  raw(id)=${_appt['id']}  raw(appointmentId)=${_appt['appointmentId']}");
 
     if (doctorId.isEmpty || apptId.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
@@ -1232,11 +1232,11 @@ class _AppointmentDetailsPageState extends State<AppointmentDetailsPage> {
                               onTap: () {
                                 final doctorId = (appt['doctorId'] ?? appt['doctor_id'] ?? '').toString();
 
-                                print("🚀 Navigating to DoctorProfilePage with doctorId: '$doctorId'");
-                                print("💡 Full appointment object: $appt");
+                                debugPrint("🚀 Navigating to DoctorProfilePage with doctorId: '$doctorId'");
+                                debugPrint("💡 Full appointment object: $appt");
 
                                 if (doctorId.isEmpty) {
-                                  print("❌ ERROR: doctorId is missing or empty.");
+                                  debugPrint("❌ ERROR: doctorId is missing or empty.");
                                   ScaffoldMessenger.of(context).showSnackBar(
                                     SnackBar(content: Text(AppLocalizations.of(context)!.doctorIdMissingError)),
                                   );
@@ -1669,11 +1669,11 @@ class _AppointmentDetailsPageState extends State<AppointmentDetailsPage> {
                                   onTap: () {
                                     final doctorId = (appt['doctorId'] ?? appt['doctor_id'] ?? '').toString();
 
-                                    print("🚀 Navigating to DoctorProfilePage with doctorId: '$doctorId'");
-                                    print("💡 Full appointment object: $appt");
+                                    debugPrint("🚀 Navigating to DoctorProfilePage with doctorId: '$doctorId'");
+                                    debugPrint("💡 Full appointment object: $appt");
 
                                     if (doctorId.isEmpty) {
-                                      print("❌ ERROR: doctorId is missing or empty.");
+                                      debugPrint("❌ ERROR: doctorId is missing or empty.");
                                       ScaffoldMessenger.of(context).showSnackBar(
                                         SnackBar(content: Text(AppLocalizations.of(context)!.doctorIdMissingError)),
                                       );
@@ -1861,7 +1861,7 @@ class DoctorAppointmentsBottomSheet extends StatelessWidget {
 
                                       return GestureDetector(
                                         onTap: () {
-                                          print(
+                                          debugPrint(
                                               "📦 clinicAddress = ${appointmentDetails.clinicAddress} (type: ${appointmentDetails.clinicAddress.runtimeType})");
 
                                           Navigator.push(

@@ -62,7 +62,7 @@
 //       schema: 'public',
 //       table: 'messages',
 //       callback: (payload) {
-//         print("🔄 رسالة جديدة للطبيب");
+//         debugPrint("🔄 رسالة جديدة للطبيب");
 //         loadDoctorMessages();
 //       },
 //     )

@@ -60,7 +60,7 @@ class _ValidationPageState extends State<ValidationPage> {
         sentCode = await _supabaseOTPService
             .sendOTPToPhone(widget.signUpInfo.phoneNumber!);
 
-        print('Sent SMS OTP: $sentCode'); // Debug only
+        debugPrint('Sent SMS OTP: $sentCode'); // Debug only
 
         // ✅ إظهار OTP في Snackbar (Debug فقط)
         ScaffoldMessenger.of(context).showSnackBar(

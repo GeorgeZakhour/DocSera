@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'visit_report_model.dart';
 
@@ -8,18 +9,18 @@ class VisitReportsService {
     required String? userId,
     required String? relativeId,
   }) async {
-    print("🛰 [VisitReportsService.fetchReports] called with "
+    debugPrint("🛰 [VisitReportsService.fetchReports] called with "
         "userId=$userId, relativeId=$relativeId");
 
     if (userId == null && relativeId == null) {
-      print("⚠️ [VisitReportsService] both userId and relativeId are null → returning empty list");
+      debugPrint("⚠️ [VisitReportsService] both userId and relativeId are null → returning empty list");
       return [];
     }
 
     final filterField = relativeId != null ? "relative_id" : "user_id";
     final filterValue = relativeId ?? userId;
 
-    print("🔎 [VisitReportsService] applying filter: $filterField = $filterValue");
+    debugPrint("🔎 [VisitReportsService] applying filter: $filterField = $filterValue");
 
     try {
       final rows = await _client
@@ -41,10 +42,10 @@ class VisitReportsService {
           .eq(filterField, filterValue!)
           .not("report", "is", null);
 
-      print("📦 [VisitReportsService] Supabase returned ${rows.length} rows");
+      debugPrint("📦 [VisitReportsService] Supabase returned ${rows.length} rows");
 
       for (final row in (rows as List).take(10)) {
-        print("  • row id=${row["id"]} "
+        debugPrint("  • row id=${row["id"]} "
             "user_id=${row["user_id"]} "
             "relative_id=${row["relative_id"]} "
             "hasReport=${row["report"] != null}");
@@ -54,10 +55,10 @@ class VisitReportsService {
           .map((e) => VisitReport.fromMap(e as Map<String, dynamic>))
           .toList();
 
-      print("✅ [VisitReportsService] mapped ${list.length} VisitReport objects");
+      debugPrint("✅ [VisitReportsService] mapped ${list.length} VisitReport objects");
       return list;
     } catch (e) {
-      print("❌ [VisitReportsService] error: $e");
+      debugPrint("❌ [VisitReportsService] error: $e");
       return [];
     }
   }

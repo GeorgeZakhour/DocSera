@@ -553,7 +553,7 @@ class _HealthAuthenticatedViewState extends State<HealthAuthenticatedView> {
     if (category.id == "visit_reports") {
       final switcher = context.read<PatientSwitcherCubit>().state;
 
-      print("📘 [HealthPage._onCategoryTap] opening VisitReportsPage with: "
+      debugPrint("📘 [HealthPage._onCategoryTap] opening VisitReportsPage with: "
           "userId=${switcher.userId}, relativeId=${switcher.relativeId}, "
           "mainUserId=${switcher.mainUserId}, patientName=${switcher.patientName}");
 

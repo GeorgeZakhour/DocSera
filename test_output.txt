@@ -1,0 +1,28 @@
+00:00 +0: loading /Users/georgezakhour/development/DocSera/test/integration/app_flow_test.dart                                                                                                         00:01 +0: loading /Users/georgezakhour/development/DocSera/test/integration/app_flow_test.dart                                                                                                         00:02 +0: loading /Users/georgezakhour/development/DocSera/test/integration/app_flow_test.dart                                                                                                         00:02 +0: (setUpAll)                                                                                                                                                                                   00:02 +0: Integration: Login Flow                                                                                                                                                                      00:02 +0: Integration: Login Flow                                                                                                                                                                      
+🟢 [BIOMETRIC] Enabled: false
+🟢 [BIOMETRIC] Saved email: NOT FOUND
+🟢 [BIOMETRIC] Password exists: false
+📥 [INPUT] المستخدم أدخل: test@docsera.com
+📧 [FORMAT] إيميل
+📨 [AUTH EMAIL] test@docsera.com
+✅ [LOGIN SUCCESS] userId = test-user-id
+💾 [PREFS] Saved auth credentials
+🛡️ [2FA] Enabled: false
+🧩 [DEVICE] Current: unknown-platform
+🧩 [DEVICE] Trusted: false
+✅ [NAVIGATION] Entering app
+📌 MainScreen: initState() -> Checking login status...
+🔐 AuthCubit State: AuthUnauthenticated()
+🎯 Starting to load banner colors...
+🔄 Loading color for: assets/images/worker.webp
+✅ Cached color found for: assets/images/worker.webp
+🔄 Loading color for: assets/images/professional.jpg
+✅ Cached color found for: assets/images/professional.jpg
+🔄 Loading color for: assets/images/worker.webp
+✅ Cached color found for: assets/images/worker.webp
+📦 Loaded 3 / 3 colors
+🚀 All banner colors ready, triggering onColorsLoaded...
+unhandled element <style/>; Picture key: Svg loader
+DEBUG: shape bounds = Rect.fromLTRB(-4.1, -0.5, 1926.6, 1959.4), container size = Size(230.6, 230.8)
+DEBUG: shape bounds = Rect.fromLTRB(0.4, 0.7, 1526.7, 1204.9), container size = Size(230.6, 230.8)
+00:02 +1: Integration: Login Flow                                                                                                                                                                      00:02 +1: (tearDownAll)                                                                                                                                                                                00:02 +1: All tests passed!                                                                                                                                                                            

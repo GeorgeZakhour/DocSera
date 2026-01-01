@@ -67,7 +67,7 @@ class DoctorDrawer extends StatelessWidget {
 
   /// **🔹 Drawer Header (Handles Null Data)**
   Widget _buildDrawerHeader(Map<String, dynamic>? doctorData) {
-    print("🛠️ Debug: Building Drawer Header with doctorData -> $doctorData");
+    debugPrint("🛠️ Debug: Building Drawer Header with doctorData -> $doctorData");
 
     String doctorName = "Doctor";
     String specialty = "Specialty";
@@ -93,7 +93,7 @@ class DoctorDrawer extends StatelessWidget {
 
     }
 
-    print("📸 Selected Avatar: $avatarImage");
+    debugPrint("📸 Selected Avatar: $avatarImage");
 
     return DrawerHeader(
       decoration: const BoxDecoration(color: AppColors.main),

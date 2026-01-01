@@ -172,20 +172,27 @@ class AppointmentsCubit extends Cubit<AppointmentsState> {
     ));
   }
 
-  /// ✅ Load Appointments using AuthCubit instead of SharedPreferences
-  Future<void> loadAppointments(BuildContext context, {bool useCache = true}) async {
+  /// ✅ Load Appointments using AuthCubit or explicitUserId
+  Future<void> loadAppointments({BuildContext? context, String? explicitUserId, bool useCache = true}) async {
     emit(AppointmentsLoading());
 
-    final authState = context.read<AuthCubit>().state;
-    print("🔐 AuthCubit State (Appointment cubit): $authState");
-    if (authState is AuthUnauthenticated) {
+    String? userId;
+    if (explicitUserId != null) {
+      userId = explicitUserId;
+    } else if (context != null) {
+      final authState = context.read<AuthCubit>().state;
+      debugPrint("🔐 AuthCubit State (Appointment cubit): $authState");
+      if (authState is AuthAuthenticated) {
+        userId = authState.user.id;
+      }
+    }
+
+    if (userId == null) {
       emit(NotLoggedIn());
       return;
     }
 
-    final user = (authState as AuthAuthenticated).user;
-    final userId = user.id;
-    print("✅  المستخدم مسجل دخول عبر(Appointment cubit) AuthCubit: $userId");
+    debugPrint("✅  المستخدم مسجل دخول عبر(Appointment cubit): $userId");
 
     try {
       List<Map<String, dynamic>> upcoming = [];

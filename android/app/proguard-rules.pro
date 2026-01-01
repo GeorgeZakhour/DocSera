@@ -1,0 +1,2 @@
+-dontwarn com.google.firebase.messaging.**
+-dontwarn me.pushy.sdk.**

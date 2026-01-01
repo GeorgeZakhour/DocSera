@@ -595,7 +595,7 @@ class _WriteMessagePageState extends State<WriteMessagePage> {
                             }
                           }
 
-                          print("📸 doctorImageUrl before startConversation = ${widget.doctorImageUrl}");
+                          debugPrint("📸 doctorImageUrl before startConversation = ${widget.doctorImageUrl}");
 
                           final conversationId = await context.read<MessagesCubit>().startConversation(
                             patientId: patientId,

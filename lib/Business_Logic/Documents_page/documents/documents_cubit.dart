@@ -16,66 +16,43 @@ import 'package:pdfx/pdfx.dart';
 import 'package:uuid/uuid.dart';
 
 
+import 'documents_service.dart';
+
 class DocumentsCubit extends Cubit<DocumentsState> {
-  DocumentsCubit() : super(DocumentsLoading());
+  final DocumentsService _service;
+
+  DocumentsCubit({DocumentsService? service})
+      : _service = service ?? DocumentsService(),
+        super(DocumentsLoading());
 
   RealtimeChannel? _documentsRealtimeChannel;
 
   /// ✅ Start listening to document updates in real-time
-  void listenToDocuments(BuildContext context) {
-    final authState = context.read<AuthCubit>().state;
-    if (authState is! AuthAuthenticated) {
-      emit(DocumentsNotLogged());
-      return;
-    }
+  void listenToDocuments({BuildContext? context, String? explicitUserId}) {
+    String userId;
 
-    final userId = authState.user.id;
+    if (explicitUserId != null) {
+      userId = explicitUserId;
+    } else if (context != null) {
+      final authState = context.read<AuthCubit>().state;
+      if (authState is! AuthAuthenticated) {
+        emit(DocumentsNotLogged());
+        return;
+      }
+      userId = authState.user.id;
+    } else {
+        // No user ID found
+        return;
+    }
 
     _documentsRealtimeChannel?.unsubscribe();
     emit(DocumentsLoading());
 
-    _documentsRealtimeChannel = Supabase.instance.client
-        .channel('public:documents')
-        .onPostgresChanges(
-      event: PostgresChangeEvent.insert,
-      schema: 'public',
-      table: 'documents',
-      filter: PostgresChangeFilter(
-        type: PostgresChangeFilterType.eq,
-        column: 'user_id',
-        value: userId,
-      ),
-      callback: (payload) {
-        _fetchDocuments(userId);
-      },
-    )
-        .onPostgresChanges(
-      event: PostgresChangeEvent.delete,
-      schema: 'public',
-      table: 'documents',
-      filter: PostgresChangeFilter(
-        type: PostgresChangeFilterType.eq,
-        column: 'user_id',
-        value: userId,
-      ),
-      callback: (payload) {
-        _fetchDocuments(userId);
-      },
-    )
-        .onPostgresChanges(
-      event: PostgresChangeEvent.update,
-      schema: 'public',
-      table: 'documents',
-      filter: PostgresChangeFilter(
-        type: PostgresChangeFilterType.eq,
-        column: 'user_id',
-        value: userId,
-      ),
-      callback: (payload) {
-        _fetchDocuments(userId);
-      },
-    )
-        .subscribe();
+    emit(DocumentsLoading());
+
+    _documentsRealtimeChannel = _service.subscribeToDocuments(userId, () {
+      _fetchDocuments(userId);
+    });
 
     _fetchDocuments(userId); // تحميل أولي
   }
@@ -84,13 +61,7 @@ class DocumentsCubit extends Cubit<DocumentsState> {
     emit(DocumentsLoading());
 
     try {
-      final response = await Supabase.instance.client
-          .from('documents')
-          .select()
-          .eq('user_id', userId)
-          .order('uploaded_at', ascending: false);
-
-      final docs = response.map((e) => UserDocument.fromMap(e)).toList();
+      final docs = await _service.fetchDocuments(userId);
       emit(DocumentsLoaded(docs));
     } catch (e) {
       emit(DocumentsError("فشل تحميل الوثائق: $e"));
@@ -298,7 +269,7 @@ class DocumentsCubit extends Cubit<DocumentsState> {
 
       return url;
     } catch (e) {
-      print("❌ Thumbnail generation failed: $e");
+      debugPrint("❌ Thumbnail generation failed: $e");
       return null;
     }
   }
@@ -306,29 +277,31 @@ class DocumentsCubit extends Cubit<DocumentsState> {
 
 
   /// ✅ Delete document and its files
-  Future<void> deleteDocument(BuildContext context, UserDocument document) async {
+  Future<void> deleteDocument({required UserDocument document, BuildContext? context, String? explicitUserId}) async {
     try {
-      final userId = Supabase.instance.client.auth.currentUser?.id;
-      if (userId == null) throw "User not authenticated.";
-
-      // حذف من قاعدة البيانات
-      await Supabase.instance.client
-          .from('documents')
-          .delete()
-          .eq('id', document.id!)
-          .eq('user_id', userId);
-
-      // حذف من التخزين
-      for (final url in document.pages) {
-        try {
-          final path = Uri.parse(url).path.split('/storage/v1/object/public/documents/').last;
-          await Supabase.instance.client.storage.from('documents').remove([path]);
-        } catch (e) {
-          print("⚠️ Failed to delete file from storage: $e");
+      String? userId;
+      if (explicitUserId != null) {
+        userId = explicitUserId;
+      } else if (context != null) {
+         final authState = context.read<AuthCubit>().state;
+         if (authState is AuthAuthenticated) {
+             userId = authState.user.id;
         }
       }
+
+      if (userId == null) {
+          emit(DocumentsError("User not authenticated."));
+          return;
+      }
+
+      // حذف من قاعدة البيانات
+      await _service.deleteDocument(document.id!, userId);
+
+      // حذف من التخزين
+      await _service.deleteFiles(document.pages);
+
       // إعادة تحميل البيانات
-      listenToDocuments(context);
+      listenToDocuments(context: context, explicitUserId: userId);
     } catch (e) {
       emit(DocumentsError("Delete failed: $e"));
     }

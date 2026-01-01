@@ -55,10 +55,10 @@ class _DocumentPreviewPageState extends State<DocumentPreviewPage> {
         ? path.basename(Uri.parse(widget.document.pages.first).path).toLowerCase()
         : path.basename(Uri.parse(widget.document.previewUrl).path).toLowerCase();
 
-    print('🔍 fileType: ${widget.document.fileType}');
-    print('📂 filename: $filename');
-    print('📄 pages count: ${widget.document.pages.length}');
-    print('📃 is from conversation: ${widget.cameFromConversation}');
+    debugPrint('🔍 fileType: ${widget.document.fileType}');
+    debugPrint('📂 filename: $filename');
+    debugPrint('📄 pages count: ${widget.document.pages.length}');
+    debugPrint('📃 is from conversation: ${widget.cameFromConversation}');
 
     final hasMultipleImagePages = widget.document.pages.isNotEmpty &&
         widget.document.pages.every((url) =>
@@ -74,8 +74,8 @@ class _DocumentPreviewPageState extends State<DocumentPreviewPage> {
             filename.endsWith('.png') ||
             filename.endsWith('.webp'));
 
-    print('🖼 hasMultipleImagePages: $hasMultipleImagePages');
-    print('🖼 isImageMasqueradingAsPdf: $isImageMasqueradingAsPdf');
+    debugPrint('🖼 hasMultipleImagePages: $hasMultipleImagePages');
+    debugPrint('🖼 isImageMasqueradingAsPdf: $isImageMasqueradingAsPdf');
 
     isImage = widget.document.fileType == 'image' || hasMultipleImagePages || isImageMasqueradingAsPdf;
     isPdf = widget.document.fileType == 'pdf' &&
@@ -83,7 +83,7 @@ class _DocumentPreviewPageState extends State<DocumentPreviewPage> {
         !isImageMasqueradingAsPdf &&
         filename.endsWith('.pdf');
 
-    print('✅ Final type -> isImage: $isImage | isPdf: $isPdf');
+    debugPrint('✅ Final type -> isImage: $isImage | isPdf: $isPdf');
 
     if (isPdf) {
       _downloadPdfFromUrl(firstUrl, widget.document.name).then((file) {
@@ -94,14 +94,14 @@ class _DocumentPreviewPageState extends State<DocumentPreviewPage> {
           });
         }
       }).catchError((e) {
-        print('❌ Failed to download PDF: $e');
+        debugPrint('❌ Failed to download PDF: $e');
         setState(() {
           _loading = false;
           _localPdfFile = null;
         });
       });
     } else if (isImage) {
-      print('📥 Preloading images...');
+      debugPrint('📥 Preloading images...');
       _preloadImages();
     }
   }
@@ -111,7 +111,7 @@ class _DocumentPreviewPageState extends State<DocumentPreviewPage> {
 
 
   void _preloadImages() async {
-    print('_preloadImages Activated!');
+    debugPrint('_preloadImages Activated!');
     final urls = widget.document.pages;
     final List<Uint8List> loaded = [];
 
@@ -135,7 +135,7 @@ class _DocumentPreviewPageState extends State<DocumentPreviewPage> {
     try {
       final response = await http.get(Uri.parse(url));
       final contentType = response.headers['content-type'];
-      print('📦 Content-Type: $contentType');
+      debugPrint('📦 Content-Type: $contentType');
 
       if (response.statusCode == 200) {
         final dir = await getTemporaryDirectory();
@@ -143,11 +143,11 @@ class _DocumentPreviewPageState extends State<DocumentPreviewPage> {
         final safeFileName = fileName.endsWith(extension) ? fileName : '$fileName$extension';
         final file = File('${dir.path}/$safeFileName');
         await file.writeAsBytes(response.bodyBytes, flush: true);
-        print('✅ File saved at: ${file.path}');
+        debugPrint('✅ File saved at: ${file.path}');
 
         // ✅ Check actual file type
         if (contentType != null && !contentType.contains('pdf')) {
-          print('❌ Not a real PDF, switching to image mode');
+          debugPrint('❌ Not a real PDF, switching to image mode');
           setState(() {
             isPdf = false;
             isImage = true;
@@ -163,7 +163,7 @@ class _DocumentPreviewPageState extends State<DocumentPreviewPage> {
         throw Exception('Failed to load file. Status: ${response.statusCode}');
       }
     } catch (e) {
-      print('❌ Error downloading file: $e');
+      debugPrint('❌ Error downloading file: $e');
       rethrow;
     }
   }
@@ -271,8 +271,8 @@ class _DocumentPreviewPageState extends State<DocumentPreviewPage> {
           fitPolicy: FitPolicy.BOTH,
           onRender: (pages) => setState(() => _totalPages = pages ?? 0),
           onPageChanged: (page, _) => setState(() => _currentPage = page ?? 0),
-          onViewCreated: (controller) => print('✅ PDF view created'),
-          onError: (error) => print('❌ PDF view error: $error'),
+          onViewCreated: (controller) => debugPrint('✅ PDF view created'),
+          onError: (error) => debugPrint('❌ PDF view error: $error'),
         )
 
       );
