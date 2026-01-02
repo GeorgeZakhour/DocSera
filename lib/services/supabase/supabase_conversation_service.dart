@@ -1,6 +1,7 @@
 import 'dart:io';
 
 import 'package:supabase_flutter/supabase_flutter.dart';
+import 'package:docsera/utils/time_utils.dart';
 
 class ConversationService {
   final SupabaseClient _client;
@@ -70,7 +71,7 @@ class ConversationService {
       return;
     }
 
-    final now = DateTime.now().toUtc().toIso8601String();
+    final now = DocSeraTime.nowUtc().toIso8601String();
 
     // تحديث كل رسالة على حدة (آمن مع triggers)
     await Future.wait(
@@ -118,7 +119,7 @@ class ConversationService {
     required List<Map<String, dynamic>> attachments,
     bool isUser = true,
   }) async {
-    final now = DateTime.now().toUtc();
+    final now = DocSeraTime.nowUtc();
 
     // ----------------------------------------------------------
     // 1) فحص حالة المحادثة (مغلقة أو محظورة)

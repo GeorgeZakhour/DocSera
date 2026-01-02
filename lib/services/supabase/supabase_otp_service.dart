@@ -1,4 +1,5 @@
 import 'dart:math';
+import 'package:docsera/utils/time_utils.dart';
 import 'package:flutter/foundation.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
@@ -11,7 +12,7 @@ class SupabaseOTPService {
   Future<String> sendOTPToPhone(String phoneNumber) async {
     try {
       final otp = _generateOTP();
-      final expiresAt = DateTime.now().add(const Duration(minutes: 5));
+      final expiresAt = DocSeraTime.nowUtc().add(const Duration(minutes: 5));
 
       await _supabase.from('otp').upsert({
         'phone': phoneNumber,

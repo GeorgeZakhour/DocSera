@@ -1,5 +1,6 @@
 import 'package:docsera/screens/doctors/doctor_panel/doctor_drawer.dart';
 import 'package:docsera/utils/doctor_image_utils.dart';
+import 'package:docsera/utils/time_utils.dart';
 import 'package:flutter/material.dart';
 import 'package:docsera/app/const.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -166,7 +167,7 @@ class _DoctorDashboardState extends State<DoctorDashboard> {
     if (timestamp == null) return "Unknown";
     try {
       if (timestamp is String) {
-        return DateFormat("yyyy-MM-dd HH:mm").format(DateTime.parse(timestamp));
+        return DateFormat("yyyy-MM-dd HH:mm").format(DocSeraTime.tryParseToSyria(timestamp) ?? DocSeraTime.nowSyria());
       } else if (timestamp is DateTime) {
         return DateFormat("yyyy-MM-dd HH:mm").format(timestamp);
       } else {

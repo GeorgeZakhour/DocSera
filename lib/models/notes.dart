@@ -1,3 +1,4 @@
+import 'package:docsera/utils/time_utils.dart';
 class Note {
   final String id;
   final String title;
@@ -18,7 +19,7 @@ class Note {
       id: data['id'].toString(),
       title: data['title'] ?? '',
       content: data['content'] ?? [],
-      createdAt: DateTime.parse(data['created_at']),
+      createdAt: DocSeraTime.tryParseToSyria(data['created_at'].toString()) ?? DocSeraTime.nowSyria(),
       userId: data['user_id'] ?? '',
     );
   }
@@ -28,7 +29,7 @@ class Note {
       'id': id,
       'title': title,
       'content': content,
-      'created_at': createdAt.toIso8601String(),
+      'created_at': DocSeraTime.toUtc(createdAt).toIso8601String(),
       'user_id': userId,
     };
   }

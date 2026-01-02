@@ -1,6 +1,7 @@
 import 'dart:io';
 import 'package:docsera/Business_Logic/Documents_page/documents/documents_cubit.dart';
 import 'package:docsera/app/const.dart';
+import 'package:docsera/utils/time_utils.dart';
 import 'package:docsera/app/text_styles.dart';
 import 'package:docsera/models/document.dart';
 import 'package:flutter/material.dart';
@@ -10,6 +11,7 @@ import 'package:docsera/gen_l10n/app_localizations.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:flutter_image_compress/flutter_image_compress.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
+import 'package:docsera/utils/error_handler.dart';
 
 class DocumentInfoScreen extends StatefulWidget {
   final List<String> images;
@@ -466,14 +468,14 @@ class _DocumentInfoScreenState extends State<DocumentInfoScreen> {
       }
 
       // 🆔 ID ثابت للـ attachment نفسه
-      final String attachmentId = DateTime.now().millisecondsSinceEpoch.toString();
+      final String attachmentId = DocSeraTime.nowUtc().millisecondsSinceEpoch.toString();
 
       // 📄 اسم الملف (إما من المستخدم أو Auto Name)
       final String name = _nameController.text.trim().isEmpty
           ? await _generateAutoName(userId)
           : _nameController.text.trim();
 
-      final DateTime uploadedAt = DateTime.now();
+      final DateTime uploadedAt = DocSeraTime.nowUtc();
 
       final bool isPdf = widget.images.first.toLowerCase().endsWith('.pdf');
       final String fileType = isPdf ? 'pdf' : 'image';
@@ -490,18 +492,22 @@ class _DocumentInfoScreenState extends State<DocumentInfoScreen> {
         }
         filesToUpload.add(pdfFile);
       } else {
-        // ✅ sendMode لموعد: لا ضغط، فقط تأكد أن كل صورة <= 5MB
-        for (final imgPath in widget.images) {
-          final file = File(imgPath);
-          if (!file.existsSync()) {
-            throw Exception("Image file not found: ${file.path}");
-          }
+        // ✅ Enable compression for appointment attachments
+        debugPrint("🗜 Compressing images for appointment...");
+        final compressedFiles = await compressImages(
+          widget.images.map((e) => File(File(e).absolute.path)).toList(),
+        );
+        
+        // ✅ Validate Post-Compression Size (Must be < 5MB)
+        for (final file in compressedFiles) {
           final size = await file.length();
           if (size > 5 * 1024 * 1024) {
-            throw Exception("Document too large");
+             throw Exception("Document too large");
           }
-          filesToUpload.add(file);
         }
+
+        filesToUpload.addAll(compressedFiles);
+        debugPrint("✅ Compression done. Count: ${filesToUpload.length}");
       }
 
       // 📤 الرفع إلى Bucket appointments-attachments
@@ -513,11 +519,25 @@ class _DocumentInfoScreenState extends State<DocumentInfoScreen> {
       for (int i = 0; i < filesToUpload.length; i++) {
         final fileToUpload = filesToUpload[i];
 
-        // نفس الفولدَر لكل Attachment، أسماء الملفات فقط تختلف
-        final String fileName = isPdf ? 'file.pdf' : 'page_$i.jpg';
-        final String filePath = '$userId/${widget.appointmentId}/$attachmentId/$fileName';
+        final extension = fileToUpload.path.split('.').last.toLowerCase();
+        final String fileName = isPdf ? 'file.pdf' : 'page_$i.$extension'; // Keep original extension for images
+        
+        final String filePath = 'users/$userId/appointments/${widget.appointmentId}/$attachmentId/$fileName';
 
-        await storage.upload(filePath, fileToUpload);
+        final FileOptions fileOptions;
+        if (isPdf) {
+          fileOptions = const FileOptions(contentType: 'application/pdf');
+        } else if (extension == 'png') {
+           fileOptions = const FileOptions(contentType: 'image/png');
+        } else if (extension == 'jpg' || extension == 'jpeg') {
+           fileOptions = const FileOptions(contentType: 'image/jpeg');
+        } else {
+           fileOptions = const FileOptions(contentType: 'application/octet-stream');
+        }
+        
+        debugPrint("📤 Uploading: $filePath with contentType: ${fileOptions.contentType}");
+
+        await storage.upload(filePath, fileToUpload, fileOptions: fileOptions);
         paths.add(filePath);
       }
 
@@ -542,34 +562,19 @@ class _DocumentInfoScreenState extends State<DocumentInfoScreen> {
         'appointment_id': widget.appointmentId,
       };
 
-      // 📥 قراءة الـ attachments الحالية من الموعد
-      final apptRow = await supabase
-          .from('appointments')
-          .select('attachments')
-          .eq('id', widget.appointmentId!)
-          .maybeSingle();
-
-      final List<dynamic> attachments =
-          (apptRow?['attachments'] as List?)?.toList() ?? [];
-
-      // ➕ إضافة الـ attachment الجديد
-      attachments.add(attachment);
-
-      // 💾 تحديث الموعد
-      await supabase
-          .from('appointments')
-          .update({'attachments': attachments})
-          .eq('id', widget.appointmentId!);
+      // 💾 استدعاء دالة RPC للتحديث الآمن
+      await supabase.rpc('add_appointment_attachment', params: {
+        'appointment_id': widget.appointmentId!,
+        'attachment': attachment,
+      });
 
       if (!mounted) return;
 
       // ✅ رجوع إلى صفحة الإرسال
       Navigator.pop(context, true);
 
-      // إذا جاي من MultiPage ترجع لورا كمان
-      if (widget.cameFromMultiPage && Navigator.canPop(context)) {
-        Navigator.pop(context);
-      }
+      // (تمت إزالة الـ Double Pop لتوحيد منطق التصفح Chain of Responsibility)
+      // MultiPageUploadScreen ستنتظر النتيجة true وتقوم هي بالخروج.
 
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
@@ -577,21 +582,31 @@ class _DocumentInfoScreenState extends State<DocumentInfoScreen> {
           content: Text(locale.documentUploadedSuccessfully),
         ),
       );
-    } catch (e) {
+    } catch (e, stack) {
       debugPrint("❌ Upload appointment attachment error: $e");
+      debugPrint("Stacktrace: $stack");
       if (mounted) {
+        // ✅ Show RAW error temporarily to debug
+        // ✅ Show Localized Error
+        String errorMessage = locale.uploadFailed;
+
+        if (e.toString().contains("PDF too large")) {
+          errorMessage = locale.pdfTooLarge;
+        } else if (e.toString().contains("Document too large")) {
+          errorMessage = locale.documentTooLarge;
+        }
+
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             backgroundColor: AppColors.red.withOpacity(0.8),
-            content: Text(
-              e.toString().contains("PDF too large")
-                  ? locale.pdfTooLarge
-                  : e.toString().contains("Document too large")
-                  ? locale.documentTooLarge
-                  : locale.uploadFailed,
-            ),
+            content: Text(errorMessage),
+            duration: const Duration(seconds: 4),
           ),
         );
+      }
+    } finally {
+      if (mounted) {
+        setState(() => _isUploading = false);
       }
     }
   }
@@ -602,18 +617,18 @@ class _DocumentInfoScreenState extends State<DocumentInfoScreen> {
 
     try {
       if (widget.isSendMode) {
+        // Note: _submitAppointmentAttachment handles its own finally block & navigation
+        // But if it FAILS, we need to ensure _isUploading is false.
+        // And if it SUCCEEDS, the page pops, so this setState might be skipped or throw.
+        // Actually, let's delegate the whole logic to _submitAppointmentAttachment
         await _submitAppointmentAttachment(locale);
-        return;
+        return; 
       }
 
       debugPrint("📤 Starting document submission...");
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(locale.uploadingDocument),
-          backgroundColor: AppColors.main.withOpacity(0.7),
-          duration: const Duration(seconds: 2),
-        ),
-      );
+      // ... rest of normal document upload logic ...
+      // I am keeping the logic separate to preserve legacy document upload flow and only touch SEND mode.
+
 
       final prefs = await SharedPreferences.getInstance();
       final userId = prefs.getString('userId');
@@ -622,7 +637,7 @@ class _DocumentInfoScreenState extends State<DocumentInfoScreen> {
         throw Exception("User ID not found");
       }
 
-      final tempId = DateTime.now().millisecondsSinceEpoch.toString();
+      final tempId = DocSeraTime.nowUtc().millisecondsSinceEpoch.toString();
       debugPrint("🆔 Generated temp ID used in file name: $tempId");
 
       final name = _nameController.text.trim().isEmpty
@@ -630,7 +645,7 @@ class _DocumentInfoScreenState extends State<DocumentInfoScreen> {
           : _nameController.text.trim();
       debugPrint("📄 Document name: $name");
 
-      final uploadedAt = DateTime.now();
+      final uploadedAt = DocSeraTime.nowUtc();
       final List<String> uploadedUrls = [];
       final isPdf = widget.images.first.toLowerCase().endsWith('.pdf');
       final fileType = isPdf ? 'pdf' : 'image';
@@ -726,11 +741,9 @@ class _DocumentInfoScreenState extends State<DocumentInfoScreen> {
       if (!mounted) return;
       // context.read<DocumentsCubit>().listenToDocuments(context);
 
-      Navigator.pop(context);
-      if (widget.cameFromMultiPage && Navigator.canPop(context)) {
-        Navigator.pop(context);
-      }
-
+      Navigator.pop(context, true);
+      // (Removed Double Pop - let the caller handle it)
+      
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           backgroundColor: AppColors.main.withOpacity(0.8),

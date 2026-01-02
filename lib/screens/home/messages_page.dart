@@ -14,6 +14,7 @@ import 'package:docsera/utils/doctor_image_utils.dart';
   import 'package:docsera/app/const.dart';
   import 'package:docsera/screens/auth/identification_page.dart';
   import 'package:docsera/utils/page_transitions.dart';
+  import 'package:docsera/utils/time_utils.dart';
   import 'package:intl/intl.dart';
 
   import '../../models/conversation.dart';
@@ -436,7 +437,7 @@ import 'package:docsera/utils/doctor_image_utils.dart';
 
       String trailingText = '';
       if (lastMessageTime != null) {
-        final now = DateTime.now();
+        final now = DocSeraTime.nowSyria();
         final isToday = now.year == lastMessageTime.year &&
             now.month == lastMessageTime.month &&
             now.day == lastMessageTime.day;

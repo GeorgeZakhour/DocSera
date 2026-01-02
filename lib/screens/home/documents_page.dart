@@ -68,14 +68,15 @@ class _DocumentsPageState extends State<DocumentsPage> with AutomaticKeepAliveCl
 
     _loadInitialPreferences(); // ✅ الجديدة بدلاً من القديمة
     context.read<DocumentsCubit>().listenToDocuments(context: context);
+    context.read<NotesCubit>().listenToNotes(context); // ✅ Initialize Notes
   }
 
 
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
-    // re-listen if needed
-    context.read<DocumentsCubit>().listenToDocuments(context: context);
+    // ✅ Removed redundant listeners to prevent double-fetching.
+    // initState covers the initial fetch, and Cubits handle their own lifecycle.
   }
 
 

@@ -8,6 +8,7 @@ import 'package:docsera/app/const.dart';
 import 'package:intl/intl.dart';
 import 'package:docsera/gen_l10n/app_localizations.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:docsera/utils/time_utils.dart';
 
 
 class AddRelativePage extends StatefulWidget {
@@ -102,8 +103,8 @@ class _AddRelativePageState extends State<AddRelativePage> {
         'first_name': firstNameController.text.trim(),
         'last_name': lastNameController.text.trim(),
         'gender': gender,
-        'date_of_birth': DateFormat('dd.MM.yyyy')
-            .parse(dateOfBirthController.text)
+        'date_of_birth': DocSeraTime.toUtc(DateFormat('dd.MM.yyyy')
+            .parse(dateOfBirthController.text))
             .toIso8601String(),
         'email': emailController.text.trim().isEmpty
             ? null
@@ -144,7 +145,7 @@ class _AddRelativePageState extends State<AddRelativePage> {
 
   /// ✅ Date picker for date of birth
   Future<void> _pickDate() async {
-    DateTime initialDate = DateTime.now();
+    DateTime initialDate = DocSeraTime.nowSyria();
     if (dateOfBirthController.text.isNotEmpty) {
       try {
         initialDate = DateFormat('dd.MM.yyyy').parse(dateOfBirthController.text);
@@ -155,7 +156,7 @@ class _AddRelativePageState extends State<AddRelativePage> {
       context: context,
       initialDate: initialDate,
       firstDate: DateTime(1900),
-      lastDate: DateTime.now(),
+      lastDate: DocSeraTime.nowSyria(),
       builder: (context, child) {
         return Theme(
           data: ThemeData(

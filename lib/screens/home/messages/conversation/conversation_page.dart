@@ -1,4 +1,5 @@
 import 'dart:io';
+import 'package:docsera/utils/time_utils.dart';
 import 'dart:ui';
 import 'package:docsera/Business_Logic/Messages_page/conversation_cubit.dart';
 import 'package:docsera/Business_Logic/Messages_page/conversation_state.dart';
@@ -159,7 +160,7 @@ class _ConversationPageState extends State<ConversationPage> {
     final List<Map<String, dynamic>> finalAttachments = [];
 
     for (final img in sendingImages) {
-      final name = "${DateTime.now().millisecondsSinceEpoch}_${img.path.split('/').last}";
+      final name = "${DocSeraTime.nowUtc().millisecondsSinceEpoch}_${img.path.split('/').last}";
       final uploaded = await service.uploadAttachmentFile(
         conversationId: widget.conversationId,
         file: img,
@@ -170,7 +171,7 @@ class _ConversationPageState extends State<ConversationPage> {
     }
 
     if (sendingPdf != null) {
-      final name = "${DateTime.now().millisecondsSinceEpoch}_${sendingPdf.path.split('/').last}";
+      final name = "${DocSeraTime.nowUtc().millisecondsSinceEpoch}_${sendingPdf.path.split('/').last}";
       final uploaded = await service.uploadAttachmentFile(
         conversationId: widget.conversationId,
         file: sendingPdf,

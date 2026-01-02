@@ -12,6 +12,7 @@ import 'package:flutter_svg/flutter_svg.dart';
 import 'package:docsera/gen_l10n/app_localizations.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:docsera/app/text_styles.dart';
+import 'package:docsera/utils/time_utils.dart';
 
 
 class UserProfilePage extends StatefulWidget {
@@ -77,8 +78,8 @@ class _UserProfilePageState extends State<UserProfilePage> {
 
   int _calculateAge(String birthDateStr) {
     try {
-      final dob = DateTime.parse(birthDateStr);
-      final today = DateTime.now();
+      final dob = DocSeraTime.tryParseToSyria(birthDateStr) ?? DocSeraTime.nowSyria();
+      final today = DocSeraTime.nowSyria();
 
       int years = today.year - dob.year;
       if (today.month < dob.month ||

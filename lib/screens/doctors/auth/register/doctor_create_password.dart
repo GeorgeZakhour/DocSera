@@ -1,4 +1,5 @@
 import 'package:docsera/screens/doctors/doctor_panel/doctor_dashboard.dart';
+import 'package:docsera/utils/time_utils.dart';
 import 'package:docsera/utils/page_transitions.dart';
 import 'package:docsera/widgets/base_scaffold.dart';
 import 'package:flutter/material.dart';
@@ -35,7 +36,7 @@ class _DoctorCreatePasswordPageState extends State<DoctorCreatePasswordPage> {
       try {
         await Supabase.instance.client.from('doctors').update({
           "password": hashedPassword,
-          "last_updated": DateTime.now().toIso8601String(),
+          "last_updated": DocSeraTime.nowUtc().toIso8601String(),
         }).eq('id', widget.doctorId);
 
 

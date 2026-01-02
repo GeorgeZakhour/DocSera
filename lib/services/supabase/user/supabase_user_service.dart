@@ -33,10 +33,8 @@ class SupabaseUserService {
   Future<void> addUser(Map<String, dynamic> userData) async {
     try {
       // 🕐 timestamps
-      userData['created_at'] =
-          DateTime.now().toUtc().toIso8601String();
-      userData['updated_at'] =
-          DateTime.now().toUtc().toIso8601String();
+      userData['created_at'] = DocSeraTime.nowUtc().toIso8601String();
+      userData['updated_at'] = DocSeraTime.nowUtc().toIso8601String();
 
       // 🧹 تنظيف null
       final safeData = <String, dynamic>{};
@@ -162,7 +160,7 @@ class SupabaseUserService {
   /// ✅ تحديث بيانات مستخدم
   Future<void> updateUser(String userId, Map<String, dynamic> updatedData) async {
     try {
-      updatedData['updated_at'] = DateTime.now().toUtc().toIso8601String();
+      updatedData['updated_at'] = DocSeraTime.nowUtc().toIso8601String();
 
       final response = await _supabase
           .from('users')
@@ -309,7 +307,7 @@ class SupabaseUserService {
       'opening_hours': doctor['opening_hours'] ?? {},
       'languages': doctor['languages'] ?? [],
       'last_updated': doctor['last_updated'] != null
-          ? DateTime.parse(doctor['last_updated']).millisecondsSinceEpoch
+          ? (DocSeraTime.tryParseToSyria(doctor['last_updated'])?.millisecondsSinceEpoch ?? 0)
           : 0,
     };
   }
@@ -415,28 +413,41 @@ StreamSubscription<List<Map<String, dynamic>>>? _appointmentsListener;
         };
       }
 
-      final response = await _supabase
+      final nowUtc = DocSeraTime.nowUtc().toIso8601String();
+      
+      // ✅ 1. Get Upcoming Appointments (Future -> Now)
+      final upcomingResponse = await _supabase
           .from('appointments')
           .select()
           .eq('user_id', userId)
-          .order('timestamp');
+          .gte('timestamp', nowUtc) // Only future items
+          .order('timestamp', ascending: true);
 
-      final data = response;
-      final now = TimezoneUtils.toDamascus(DateTime.now().toUtc());
+      // ✅ 2. Get Past Appointments (History) - LIMITED to 5
+      final pastResponse = await _supabase
+          .from('appointments')
+          .select()
+          .eq('user_id', userId)
+          .lt('timestamp', nowUtc) // Only past items
+          .order('timestamp', ascending: false) // Newest past first
+          .limit(5); // ✅ COST SAVING: Only fetch recent history
+
+      final allData = [...upcomingResponse, ...pastResponse];
 
       List<Map<String, dynamic>> upcoming = [];
       List<Map<String, dynamic>> past = [];
+      
+      final nowSyria = DocSeraTime.nowSyria();
 
-      for (var appt in data) {
+      for (var appt in allData) {
         final status = (appt['status'] ?? '').toString();
         final isRejected = status == 'rejected';
         final isBooked = appt['booked'] == true;
 
-        // ✅ عرض فقط المواعيد المحجوزة أو المرفوضة (وليس المسودة)
         if (!isBooked && !isRejected) continue;
 
         final timestampUtc = DateTime.tryParse(appt['timestamp'] ?? '')?.toUtc();
-        final timestamp = TimezoneUtils.toDamascus(timestampUtc ?? now);
+        final timestamp = DocSeraTime.toSyria(timestampUtc ?? nowSyria);
 
         if (appt.containsKey('booking_timestamp')) {
           appt['booking_timestamp'] = appt['booking_timestamp']?.toString();
@@ -444,13 +455,13 @@ StreamSubscription<List<Map<String, dynamic>>>? _appointmentsListener;
 
         appt['timestamp'] = timestamp.toIso8601String();
 
-        // ✅ تصنيف قادم / سابق
-        if (timestamp.isAfter(now)) {
+        if (timestamp.isAfter(nowSyria)) {
           upcoming.add(appt);
         } else {
           past.add(appt);
         }
       }
+
 
 
       await _sharedPrefsService.saveData('upcomingAppointments', upcoming);
@@ -474,7 +485,7 @@ StreamSubscription<List<Map<String, dynamic>>>? _appointmentsListener;
         .eq('user_id', userId)
         .order('timestamp', ascending: true)
         .map((event) {
-      final now = TimezoneUtils.toDamascus(DateTime.now().toUtc());
+      final now = DocSeraTime.nowSyria();
       List<Map<String, dynamic>> all = [];
 
       for (final appt in event) {
@@ -487,8 +498,8 @@ StreamSubscription<List<Map<String, dynamic>>>? _appointmentsListener;
 
 
 
-        final timestampUtc = DateTime.tryParse(appt['timestamp'] ?? '')?.toUtc();
-        final timestamp = TimezoneUtils.toDamascus(timestampUtc ?? now);
+        final timestampUtc = DocSeraTime.tryParseToSyria(appt['timestamp'] ?? '')?.toUtc();
+        final timestamp = DocSeraTime.toSyria(timestampUtc ?? now);
 
         appt['timestamp'] = timestamp.toIso8601String();
         appt['booking_timestamp'] = appt['booking_timestamp']?.toString();
@@ -496,8 +507,8 @@ StreamSubscription<List<Map<String, dynamic>>>? _appointmentsListener;
         all.add(appt);
       }
 
-      final upcoming = all.where((a) => DateTime.parse(a['timestamp']).isAfter(now)).toList();
-      final past = all.where((a) => DateTime.parse(a['timestamp']).isBefore(now)).toList();
+      final upcoming = all.where((a) => DocSeraTime.tryParseToSyria(a['timestamp'])!.isAfter(now)).toList();
+      final past = all.where((a) => DocSeraTime.tryParseToSyria(a['timestamp'])!.isBefore(now)).toList();
 
       _sharedPrefsService.saveData('upcomingAppointments', upcoming);
       _sharedPrefsService.saveData('pastAppointments', past);

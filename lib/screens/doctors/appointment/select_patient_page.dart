@@ -11,6 +11,7 @@ import 'package:flutter_svg/svg.dart';
 import 'package:docsera/app/text_styles.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:docsera/gen_l10n/app_localizations.dart';
+import 'package:docsera/utils/time_utils.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 class SelectPatientPage extends StatefulWidget {
@@ -117,8 +118,8 @@ class _SelectPatientPageState extends State<SelectPatientPage> {
   int _calculateAge(String? dobString) {
     if (dobString == null || dobString.isEmpty) return 0;
     try {
-      final dob = DateTime.parse(dobString);
-      final today = DateTime.now();
+      final dob = DocSeraTime.tryParseToSyria(dobString) ?? DocSeraTime.nowSyria();
+      final today = DocSeraTime.nowSyria();
       var age = today.year - dob.year;
       if (today.month < dob.month || (today.month == dob.month && today.day < dob.day)) {
         age--;

@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'dart:io';
+import 'package:http/http.dart' as http;
 
 import 'package:docsera/Business_Logic/Account_page/danger/account_danger_cubit.dart';
 import 'package:docsera/Business_Logic/Account_page/profile/account_profile_cubit.dart';
@@ -42,15 +43,24 @@ import 'package:app_links/app_links.dart';
 
 
 import 'services/navigation/deep_link_service.dart';
+import 'services/connectivity/connectivity_service.dart'; // ✅ Import Connectivity Service
+import 'widgets/offline_banner.dart'; // ✅ Import Offline Banner
+
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   tz.initializeTimeZones(); // 👈 مهم جداً لمرة واحدة فقط
 
+  // ✅ Syria-Proof Configuration: 30s Timeout
   await Supabase.initialize(
     url: SupabaseKeys.supabaseUrl,
     anonKey: SupabaseKeys.supabaseAnonKey,
+    httpClient: _SyriaClient(), // Custom client with extended timeout
   );
 
+
+
+
+  ConnectivityService().initialize();
 
   SharedPreferences prefs = await SharedPreferences.getInstance();
   final supabaseService = SupabaseUserService();
@@ -228,6 +238,27 @@ class _MyAppState extends State<MyApp> {
               FocusManager.instance.primaryFocus?.unfocus();
             },
             child: MaterialApp(
+              builder: (context, child) {
+                // ✅ Use Builder to get context for Connectivity
+                return Stack(
+                  children: [
+                    child!,
+                    StreamBuilder<ConnectionStatus>(
+                      stream: ConnectivityService().connectionStream,
+                      initialData: ConnectionStatus.online,
+                      builder: (context, snapshot) {
+                        final isOffline = snapshot.data == ConnectionStatus.offline;
+                        return Positioned(
+                          bottom: 0,
+                          left: 0,
+                          right: 0,
+                          child: OfflineBanner(isOffline: isOffline),
+                        );
+                      },
+                    ),
+                  ],
+                );
+              },
               navigatorKey: _navKey,
               debugShowCheckedModeBanner: false,
               theme: ThemeData(
@@ -338,5 +369,18 @@ class _MyAppState extends State<MyApp> {
         );
       },
     );
+  }
+}
+
+// -----------------------------------------------------------------------------
+// 🇸🇾 Custom HTTP Client for Syria (Slow Internet Resilience)
+// -----------------------------------------------------------------------------
+class _SyriaClient extends http.BaseClient {
+  final http.Client _inner = http.Client();
+
+  @override
+  Future<http.StreamedResponse> send(http.BaseRequest request) {
+    // Force 30-second timeout on all requests
+    return _inner.send(request).timeout(const Duration(seconds: 30));
   }
 }

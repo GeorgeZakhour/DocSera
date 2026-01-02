@@ -3,6 +3,7 @@ import 'package:bloc/bloc.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
+import 'package:docsera/utils/time_utils.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 part 'doctor_schedule_state.dart';
@@ -97,13 +98,13 @@ class DoctorScheduleCubit extends Cubit<DoctorScheduleState> {
 
       for (final r in data) {
         final m = Map<String, dynamic>.from(r as Map);
-        final tsUtc = DateTime.parse(m['ts_utc'].toString()).toUtc(); // هذا الذي سنمرّره للحجز
+        final tsUtc = DocSeraTime.toUtc(DateTime.parse(m['ts_utc'].toString())); // هذا الذي سنمرّره للحجز
         final localDateStr = m['local_date'].toString();              // "YYYY-MM-DD" في UTC+3
         final label12 = m['local_time12'].toString();                 // "HH:MM AM/PM" جاهزة
         final label24 = m['local_time24'].toString();                 // "HH24:MI"
 
         // صياغة عنوان لطيف للتاريخ (بلغة الجهاز) من "YYYY-MM-DD"
-        final d = DateTime.parse(localDateStr); // تاريخ فقط
+        final d = DocSeraTime.tryParseToSyria(localDateStr) ?? DocSeraTime.nowSyria(); // تاريخ فقط
         final dateKey = DateFormat('EEEE, d MMMM', locale).format(d);
 
         (grouped[dateKey] ??= <Map<String, dynamic>>[]).add({
@@ -306,7 +307,7 @@ class DoctorScheduleCubit extends Cubit<DoctorScheduleState> {
       for (final r in (rows as List? ?? [])) {
         final tsStr = r['timestamp'];
         if (tsStr == null) continue;
-        final ts = DateTime.parse(tsStr).toUtc();
+        final ts = DocSeraTime.toUtc(DateTime.parse(tsStr));
         set.add(_epochMinute(ts));
       }
       _dlog('Loaded reserved timestamps: ${set.length}');
@@ -369,7 +370,7 @@ class DoctorScheduleCubit extends Cubit<DoctorScheduleState> {
       if (value is DateTime) {
         return DateTime(value.year, value.month, value.day);
       }
-      final dt = DateTime.parse(value.toString());
+      final dt = DocSeraTime.tryParseToSyria(value.toString()) ?? DocSeraTime.nowSyria();
       return DateTime(dt.year, dt.month, dt.day);
     } catch (e) {
       _dlog('Cannot parse date-only from value="$value": $e');

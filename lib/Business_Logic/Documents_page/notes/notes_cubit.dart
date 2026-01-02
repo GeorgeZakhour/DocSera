@@ -7,6 +7,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'notes_service.dart';
 
+import 'package:docsera/utils/error_handler.dart';
 import 'notes_state.dart';
 
 class NotesCubit extends Cubit<NotesState> {
@@ -14,111 +15,87 @@ class NotesCubit extends Cubit<NotesState> {
 
   NotesCubit({NotesService? service})
       : _service = service ?? NotesService(),
-        super(NotesLoading());
+        super(NotesInitial());
+  // ... (previous code)
 
   RealtimeChannel? _notesRealtimeChannel;
+  String? _subscribedUserId;
 
-  void listenToNotes(BuildContext? context, {String? explicitUserId}) {
+  void listenToNotes(BuildContext context) {
     String? userId;
-    if (explicitUserId != null) {
-      userId = explicitUserId;
-    } else if (context != null) {
-      final authState = context.read<AuthCubit>().state;
-      if (authState is AuthAuthenticated) {
-        userId = authState.user.id;
-      }
+    final authState = context.read<AuthCubit>().state;
+    if (authState is AuthAuthenticated) {
+      userId = authState.user.id;
     }
 
-    if (userId == null) {
-      emit(NotesNotLogged());
-      return;
+    if (userId == null) return;
+
+    if (_subscribedUserId == userId && _notesRealtimeChannel != null) return;
+
+    _notesRealtimeChannel?.unsubscribe();
+    _subscribedUserId = userId;
+
+    if (state is! NotesLoaded) {
+      emit(NotesLoading());
     }
 
-    _notesRealtimeChannel?.unsubscribe(); // ⛔️ إلغاء الاشتراك السابق إن وجد
-    emit(NotesLoading());
+    _notesRealtimeChannel = _service.subscribeToNotes(userId, () {
+      _fetchNotes(userId!);
+    });
 
-    // ✅ الاشتراك في التحديثات
-    _notesRealtimeChannel = _service.subscribeToNotes(userId, () => _fetchNotes(userId!));
-
-    _fetchNotes(userId); // ✅ تحميل أولي
+    _fetchNotes(userId);
   }
 
   void _fetchNotes(String userId) async {
+    // ...
     try {
       final notes = await _service.fetchNotes(userId);
       emit(NotesLoaded(notes));
     } catch (e) {
-      emit(NotesError("فشل تحميل الملاحظات: $e"));
+      if (state is NotesLoaded) {
+        debugPrint("Silent notes refresh failed: $e");
+      } else {
+        emit(NotesError(ErrorHandler.resolve(e, defaultMessage: "فشل تحميل الملاحظات")));
+      }
     }
   }
 
   Future<void> addNote({required String title, required List<dynamic> content, BuildContext? context, String? explicitUserId}) async {
     try {
-      String? userId;
-      if (explicitUserId != null) {
-        userId = explicitUserId;
-      } else if (context != null) {
-        final authState = context.read<AuthCubit>().state;
-        if (authState is AuthAuthenticated) {
-          userId = authState.user.id;
-        }
-      } else {
-        // Fallback for production if context is missing but typically shouldn't happen without explicitId
-        final user = Supabase.instance.client.auth.currentUser;
-        if (user != null) userId = user.id;
+      final userId = explicitUserId ?? _subscribedUserId;
+      if (userId == null || userId.isEmpty) {
+        emit(NotesError("User not authenticated"));
+        return;
       }
-
-      if (userId == null) throw "User not authenticated";
-
       await _service.addNote(title, content, userId);
     } catch (e) {
-      emit(NotesError("Add failed: $e"));
+      emit(NotesError(ErrorHandler.resolve(e, defaultMessage: "فشل إضافة الملاحظة")));
     }
   }
 
   Future<void> deleteNote(Note note, {BuildContext? context, String? explicitUserId}) async {
     try {
-      String? userId;
-      if (explicitUserId != null) {
-        userId = explicitUserId;
-      } else if (context != null) {
-        final authState = context.read<AuthCubit>().state;
-        if (authState is AuthAuthenticated) {
-          userId = authState.user.id;
-        }
-      } else {
-         final user = Supabase.instance.client.auth.currentUser;
-         if (user != null) userId = user.id;
+      final userId = explicitUserId ?? _subscribedUserId;
+      if (userId == null || userId.isEmpty) {
+        emit(NotesError("User not authenticated"));
+        return;
       }
-
-      if (userId == null) throw "User not authenticated";
-
       await _service.deleteNote(note.id!, userId);
     } catch (e) {
-      emit(NotesError("Delete failed: $e"));
+      emit(NotesError(ErrorHandler.resolve(e, defaultMessage: "فشل حذف الملاحظة")));
     }
   }
 
   Future<void> updateNote(Note updatedNote, {BuildContext? context, String? explicitUserId}) async {
     try {
-      String? userId;
-      if (explicitUserId != null) {
-        userId = explicitUserId;
-      } else if (context != null) {
-        final authState = context.read<AuthCubit>().state;
-        if (authState is AuthAuthenticated) {
-            userId = authState.user.id;
-        }
-      } else {
-         final user = Supabase.instance.client.auth.currentUser;
-         if (user != null) userId = user.id;
-      }
-
-      if (userId == null) throw "User not authenticated";
-
+       final userId = explicitUserId ?? _subscribedUserId;
+       if (userId == null || userId.isEmpty) {
+         emit(NotesError("User not authenticated"));
+         return;
+       }
       await _service.updateNote(updatedNote, userId);
     } catch (e) {
-      emit(NotesError("Update failed: $e"));
+      emit(NotesError(ErrorHandler.resolve(e, defaultMessage: "فشل تحديث الملاحظة")));
     }
   }
 

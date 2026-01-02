@@ -18,7 +18,7 @@ class WaitingForConfirmationPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final formattedDate = TimezoneUtils.formatBusinessDate(context, appointment);
-    final tsUtc = DateTime.parse(appointment['timestamp'].toString()).toUtc();
+    final tsUtc = DocSeraTime.tryParseToSyria(appointment['timestamp'].toString()) ?? DocSeraTime.nowSyria();
     final formattedTime = TimezoneUtils.format12hLocalized(context, tsUtc);
 
 

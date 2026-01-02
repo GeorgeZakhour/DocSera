@@ -1,3 +1,4 @@
+import 'package:docsera/utils/time_utils.dart';
 class Message {
   final String id;
   final String senderId;
@@ -19,7 +20,7 @@ class Message {
       id: data['id'].toString(),
       senderId: data['senderId'] ?? '',
       text: data['text'] ?? '',
-      timestamp: DateTime.parse(data['timestamp']),
+      timestamp: DocSeraTime.tryParseToSyria(data['timestamp'].toString()) ?? DocSeraTime.nowSyria(),
       isSeen: data['isSeen'] ?? false,
     );
   }
@@ -29,7 +30,7 @@ class Message {
       'id': id,
       'senderId': senderId,
       'text': text,
-      'timestamp': timestamp.toIso8601String(),
+      'timestamp': DocSeraTime.toUtc(timestamp).toIso8601String(),
       'isSeen': isSeen,
     };
   }

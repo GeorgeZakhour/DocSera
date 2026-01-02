@@ -104,6 +104,8 @@
   "pdfTooLarge": "The PDF file is too large. Please use a file smaller than 2MB.",
   "chooseAddDocumentMethod": "Choose a method",
   "createNote": "Create Note",
+  "documentDeleted": "Document deleted successfully",
+  "maxAttachmentsReached": "You have reached the maximum number of attachments (3).",
 
   "@messagesPage================================": "📩 Messages Page",
 
@@ -1078,5 +1080,7 @@
   "activate2FA": "Activate Two-Factor Authentication",
   "deactivate2FA": "Deactivate Two-Factor Authentication",
   "twoFactorDeactivateWarning": "Disabling 2FA will make your account less secure. Are you sure you want to proceed?",
-  "errorOccurred": "An error occurred. Please try again"
+  "errorOccurred": "An error occurred. Please try again",
+  "noInternetConnection": "No internet connection",
+  "internetRestored": "Internet connection restored"
 }

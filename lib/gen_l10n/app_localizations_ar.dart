@@ -305,6 +305,13 @@ class AppLocalizationsAr extends AppLocalizations {
   String get createNote => 'إنشاء ملاحظة';
 
   @override
+  String get documentDeleted => 'تم حذف المستند بنجاح';
+
+  @override
+  String get maxAttachmentsReached =>
+      'لقد وصلت إلى الحد الأقصى لعدد المرفقات (3).';
+
+  @override
   String get sendRequests => 'إرسال الطلبات';
 
   @override
@@ -2974,4 +2981,10 @@ class AppLocalizationsAr extends AppLocalizations {
   @override
   String get twoFactorDeactivateWarning =>
       'سيؤدي إلغاء التحقق بخطوتين إلى تقليل أمان حسابك. هل أنت متأكد أنك تريد المتابعة؟';
+
+  @override
+  String get noInternetConnection => 'لا يوجد اتصال بالإنترنت';
+
+  @override
+  String get internetRestored => 'تم استعادة الاتصال بالإنترنت';
 }

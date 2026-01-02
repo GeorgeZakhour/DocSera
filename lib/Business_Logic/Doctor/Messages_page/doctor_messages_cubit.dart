@@ -80,6 +80,7 @@
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import '../../../models/conversation.dart';
+import 'package:docsera/utils/time_utils.dart';
 import 'doctor_messages_state.dart';
 
 class DoctorMessagesCubit extends Cubit<DoctorMessagesState> {
@@ -122,7 +123,7 @@ class DoctorMessagesCubit extends Cubit<DoctorMessagesState> {
           final msg = latestMessages.first;
           messages.add({
             'text': msg['text'],
-            'timestamp': DateTime.tryParse(msg['timestamp'] ?? ''),
+            'timestamp': DocSeraTime.tryParseToSyria(msg['timestamp'] ?? ''),
             'senderId': msg['sender_id'],
             'readByDoctor': msg['read_by_doctor'] ?? false,
             'isUser': msg['is_user'] ?? false,

@@ -7,6 +7,7 @@ import 'package:docsera/screens/auth/login/login_page.dart';
 import 'package:docsera/screens/auth/sign_up/sign_up_phone.dart';
 import 'package:docsera/screens/doctors/appointment/select_patient_page.dart';
 import 'package:docsera/utils/doctor_image_utils.dart';
+import 'package:docsera/utils/time_utils.dart';
 import 'package:flutter/material.dart';
 import 'package:docsera/app/const.dart';
 import 'package:flutter/services.dart';
@@ -566,7 +567,55 @@ class _DoctorProfilePageState extends State<DoctorProfilePage> {
                           child: Builder(
                             builder: (context) {
                               try {
-                                final doc = quill.Document.fromJson(jsonDecode(profileDescription));
+                                final decoded = jsonDecode(profileDescription);
+                                
+                                // ✅ Check for Version 3 (Multiple Sections)
+                                if (decoded is Map && decoded['version'] == 3 && decoded['parts'] is List) {
+                                  final parts = decoded['parts'] as List;
+                                  return Column(
+                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                    children: parts.map<Widget>((part) {
+                                      final title = part['title']?.toString() ?? '';
+                                      final delta = part['delta'];
+                                      
+                                      if (delta == null) return const SizedBox.shrink();
+
+                                      final doc = quill.Document.fromJson(delta);
+                                      final controller = quill.QuillController(
+                                        document: doc,
+                                        selection: const TextSelection.collapsed(offset: 0),
+                                        readOnly: true,
+                                      );
+
+                                      return Padding(
+                                        padding: EdgeInsets.only(bottom: 20.h),
+                                        child: Column(
+                                          crossAxisAlignment: CrossAxisAlignment.start,
+                                          children: [
+                                            if (title.isNotEmpty)
+                                              Padding(
+                                                padding: EdgeInsets.only(bottom: 8.h),
+                                                child: Text(
+                                                  title,
+                                                  style: AppTextStyles.getTitle1(context).copyWith(
+                                                    fontSize: 14.sp,
+                                                    color: AppColors.mainDark,
+                                                  ),
+                                                ),
+                                              ),
+                                            quill.QuillEditor.basic(
+                                              controller: controller,
+                                              focusNode: FocusNode(skipTraversal: true, canRequestFocus: false),
+                                            ),
+                                          ],
+                                        ),
+                                      );
+                                    }).toList(),
+                                  );
+                                }
+
+                                // ✅ Legacy (Simple Delta)
+                                final doc = quill.Document.fromJson(decoded);
                                 final controller = quill.QuillController(
                                   document: doc,
                                   selection: const TextSelection.collapsed(offset: 0),
@@ -575,7 +624,7 @@ class _DoctorProfilePageState extends State<DoctorProfilePage> {
 
                                 return quill.QuillEditor.basic(
                                   controller: controller,
-                                  focusNode: FocusNode(skipTraversal: true, canRequestFocus: false), // ✅ يمنع المؤشر
+                                  focusNode: FocusNode(skipTraversal: true, canRequestFocus: false),
                                 );
                               } catch (e) {
                                 return Text(
@@ -826,7 +875,7 @@ class _DoctorProfilePageState extends State<DoctorProfilePage> {
                   borderRadius: BorderRadius.circular(16),
                   border: Border.all(color: AppColors.main, width: 1),
                   image: const DecorationImage(
-                    image: AssetImage('assets/images/map.png'),
+                    image: AssetImage('assets/images/map.webp'),
                     fit: BoxFit.cover,
                   ),
                 ),
@@ -855,6 +904,41 @@ class _DoctorProfilePageState extends State<DoctorProfilePage> {
 
 
   Widget _buildProfileSection(String? profileDescription, List<String>? specialties, String? website) {
+    if (profileDescription == null || profileDescription.isEmpty) {
+      if ((specialties == null || specialties.isEmpty) && (website == null || website.isEmpty)) {
+        return const SizedBox.shrink(); // Hide if completely empty
+      }
+    }
+
+    // 🔹 Parse Profile Description (Check for v3)
+    String plainTextSummary = '';
+    bool isV3 = false;
+
+    if (profileDescription != null && profileDescription.isNotEmpty) {
+      try {
+        final decoded = jsonDecode(profileDescription);
+         if (decoded is Map && decoded['version'] == 3 && decoded['parts'] is List) {
+           isV3 = true;
+           final parts = decoded['parts'] as List;
+           if (parts.isNotEmpty) {
+             // Try to get text from the first part for the summary
+             final firstPart = parts[0];
+             if (firstPart['delta'] != null) {
+                final doc = quill.Document.fromJson(firstPart['delta']);
+                plainTextSummary = doc.toPlainText().trim();
+             }
+           }
+         } else {
+           // Legacy (v1/v2 - single delta)
+           final doc = quill.Document.fromJson(decoded);
+           plainTextSummary = doc.toPlainText().trim();
+         }
+      } catch (e) {
+         plainTextSummary = AppLocalizations.of(context)!.notProvided;
+      }
+    }
+
+
     List<String> visibleSpecialties = [];
     String moreSpecialties = '';
 
@@ -898,7 +982,7 @@ class _DoctorProfilePageState extends State<DoctorProfilePage> {
                           ),
                         ],
                       ),
-                      if (profileDescription != null && profileDescription.isNotEmpty)
+                      if (plainTextSummary.isNotEmpty)
                         Row(
                           children: [
                             Text(
@@ -921,28 +1005,14 @@ class _DoctorProfilePageState extends State<DoctorProfilePage> {
                   ),
                   SizedBox(height: 8.h),
 
-                  if (profileDescription != null && profileDescription.isNotEmpty)
+                  if (plainTextSummary.isNotEmpty)
                     Padding(
                       padding: EdgeInsets.only(top: 4.h, right: 12.w, left: 12.w, bottom: 8.h),
-                      child: Builder(
-                        builder: (context) {
-                          try {
-                            final doc = quill.Document.fromJson(jsonDecode(profileDescription));
-                            final plainText = doc.toPlainText().trim();
-
-                            return Text(
-                              plainText,
-                              style: AppTextStyles.getText3(context),
-                              maxLines: 5, // تقريبًا 5 أسطر
-                              overflow: TextOverflow.ellipsis, // ✅ لإظهار ...
-                            );
-                          } catch (e) {
-                            return Text(
-                              AppLocalizations.of(context)!.notProvided,
-                              style: AppTextStyles.getText3(context),
-                            );
-                          }
-                        },
+                      child: Text(
+                        plainTextSummary,
+                        style: AppTextStyles.getText3(context),
+                        maxLines: 5,
+                        overflow: TextOverflow.ellipsis,
                       ),
                     ),
                 ],
@@ -955,11 +1025,37 @@ class _DoctorProfilePageState extends State<DoctorProfilePage> {
     );
   }
 
-  Widget _buildServicesSection(List<dynamic>? services) {
-    if (services == null || services.isEmpty) return const SizedBox.shrink();
+  Widget _buildServicesSection(dynamic servicesInput) {
+    if (servicesInput == null) return const SizedBox.shrink();
+
+    List<Map<String, dynamic>> servicesList = [];
+    
+    try {
+      if (servicesInput is List) {
+         servicesList = servicesInput.map((e) => Map<String, dynamic>.from(e)).toList();
+      } else if (servicesInput is String) {
+        // Try parsing JSON string
+        final decoded = jsonDecode(servicesInput);
+         if (decoded is Map) {
+          decoded.forEach((key, value) {
+             servicesList.add({'title': key.toString(), 'description': value?.toString() ?? ''});
+          });
+        } else if (decoded is List) {
+           servicesList = List<Map<String, dynamic>>.from(decoded);
+        }
+      } else if (servicesInput is Map) {
+         servicesInput.forEach((key, value) {
+           servicesList.add({'title': key.toString(), 'description': value?.toString() ?? ''});
+         });
+      }
+    } catch (e) {
+      debugPrint("❌ Error parsing services: $e");
+    }
+
+    if (servicesList.isEmpty) return const SizedBox.shrink();
 
     return GestureDetector(
-      onTap: () => _showServicesBottomSheet(services),
+      onTap: () => _showServicesBottomSheet(servicesList),
       child: Card(
         color: AppColors.background2,
         shape: RoundedRectangleBorder(
@@ -1007,7 +1103,7 @@ class _DoctorProfilePageState extends State<DoctorProfilePage> {
 
               SizedBox(height: 10.h),
 
-              ...services.take(2).map((item) {
+              ...servicesList.take(2).map((item) {
                 final title = item['title'] ?? '';
                 return Padding(
                   padding: EdgeInsets.only(bottom: 6.h),
@@ -1017,9 +1113,9 @@ class _DoctorProfilePageState extends State<DoctorProfilePage> {
                   ),
                 );
               }),
-              if (services.length > 2)
+              if (servicesList.length > 2)
                 Text(
-                  "+${services.length - 2} ${AppLocalizations.of(context)!.showMore}",
+                  "+${servicesList.length - 2} ${AppLocalizations.of(context)!.showMore}",
                   style: AppTextStyles.getText3(context).copyWith(color: AppColors.mainDark),
                 ),
             ],
@@ -1029,7 +1125,7 @@ class _DoctorProfilePageState extends State<DoctorProfilePage> {
     );
   }
 
-  void _showServicesBottomSheet(List<dynamic> services) {
+  void _showServicesBottomSheet(List<Map<String, dynamic>> services) {
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
@@ -1362,7 +1458,7 @@ class _DoctorProfilePageState extends State<DoctorProfilePage> {
     };
 
     final days = daysMap.keys.toList();
-    final currentDay = days[DateTime.now().weekday - 1];
+    final currentDay = days[DocSeraTime.nowSyria().weekday - 1];
 
     showModalBottomSheet(
       context: context,
@@ -1540,8 +1636,34 @@ class _DoctorProfilePageState extends State<DoctorProfilePage> {
     );
   }
 
-  Widget _buildFAQsSection(List<dynamic>? faqs) {
-    if (faqs == null || faqs.isEmpty) return const SizedBox.shrink();
+  Widget _buildFAQsSection(dynamic faqsInput) {
+    if (faqsInput == null) return const SizedBox.shrink();
+
+    List<Map<String, dynamic>> faqsList = [];
+
+    try {
+      if (faqsInput is List) {
+        faqsList = faqsInput.map((e) => Map<String, dynamic>.from(e)).toList();
+      } else if (faqsInput is String) {
+        // Try parsing JSON string
+        final decoded = jsonDecode(faqsInput);
+        if (decoded is Map) {
+          decoded.forEach((key, value) {
+            faqsList.add({'question': key.toString(), 'answer': value?.toString() ?? ''});
+          });
+        } else if (decoded is List) {
+          faqsList = List<Map<String, dynamic>>.from(decoded);
+        }
+      } else if (faqsInput is Map) {
+        faqsInput.forEach((key, value) {
+          faqsList.add({'question': key.toString(), 'answer': value?.toString() ?? ''});
+        });
+      }
+    } catch (e) {
+      debugPrint("❌ Error parsing FAQs: $e");
+    }
+
+    if (faqsList.isEmpty) return const SizedBox.shrink();
 
     return Card(
       color: AppColors.background2,
@@ -1566,14 +1688,14 @@ class _DoctorProfilePageState extends State<DoctorProfilePage> {
               ],
             ),
             SizedBox(height: 15.h),
-            ...List.generate(faqs.length, (index) {
-              final question = faqs[index]['question'] ?? '';
-              final answer = faqs[index]['answer'] ?? '';
+            ...List.generate(faqsList.length, (index) {
+              final question = faqsList[index]['question'] ?? '';
+              final answer = faqsList[index]['answer'] ?? '';
 
               return _ExpandableFAQTile(
                 question: question,
                 answer: answer,
-                showDivider: index < faqs.length - 1,
+                showDivider: index < faqsList.length - 1,
               );
             }),
           ],
@@ -2002,7 +2124,8 @@ $deepLink
     if (profileDescription != null || (specialties != null && specialties.isNotEmpty)) {
       visibleSections++;
     }
-    if (_doctorData?['offered_services'] != null && _doctorData!['offered_services'] is Map<String, dynamic> && (_doctorData!['offered_services'] as Map).isNotEmpty) {
+    if (_doctorData?['offered_services'] != null) {
+      // Basic check, _buildServicesSection handles empty/invalid types gracefully
       visibleSections++;
     }
     if (street != null || city != null || country != null) {
@@ -2011,7 +2134,7 @@ $deepLink
     if (_doctorData?['opening_hours'] != null || _doctorData?['languages'] != null || _doctorData?['phone_number'] != null) {
       visibleSections++;
     }
-    if (_doctorData?['faqs'] != null && _doctorData!['faqs'] is Map<String, dynamic>) {
+    if (_doctorData?['faqs'] != null) {
       visibleSections++;
     }
 
@@ -2144,18 +2267,8 @@ $deepLink
                             (specialties != null && specialties.isNotEmpty))
                           _buildProfileSection(profileDescription, specialties, website),
                         if (_doctorData?['offered_services'] != null) SizedBox(height: 10.h),
-                        if (_doctorData?['offered_services'] != null &&
-                            _doctorData!['offered_services'] is Map<String, dynamic> &&
-                            (_doctorData!['offered_services'] as Map).isNotEmpty)
-                          _buildServicesSection(
-                            (_doctorData!['offered_services'] as Map<String, dynamic>)
-                                .entries
-                                .map((entry) => {
-                              'title': entry.key,
-                              'description': entry.value?.toString() ?? '',
-                            })
-                                .toList(),
-                          ),
+                        if (_doctorData?['offered_services'] != null)
+                          _buildServicesSection(_doctorData!['offered_services']),
                         if (street != null || city != null || country != null)
                           SizedBox(height: 10.h),
                         if (street != null || city != null || country != null)
@@ -2182,16 +2295,8 @@ $deepLink
                             email: _doctorData?['email']?.toString(),
                           ),
                         if (_doctorData?['faqs'] != null) SizedBox(height: 10.h),
-                        if (_doctorData?['faqs'] != null && _doctorData!['faqs'] is Map<String, dynamic>)
-                          _buildFAQsSection(
-                            (_doctorData!['faqs'] as Map<String, dynamic>)
-                                .entries
-                                .map((entry) => {
-                              'question': entry.key,
-                              'answer': entry.value?.toString() ?? '',
-                            })
-                                .toList(),
-                          ),
+                        if (_doctorData?['faqs'] != null)
+                          _buildFAQsSection(_doctorData!['faqs']),
 
                         if (visibleSections < 4) SizedBox(height: 250.h),
 

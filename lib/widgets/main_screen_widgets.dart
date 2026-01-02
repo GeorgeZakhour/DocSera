@@ -210,7 +210,9 @@ class BannerColorCache {
     try {
 
       final PaletteGenerator paletteGenerator =
-      await PaletteGenerator.fromImageProvider(AssetImage(imagePath));
+      await PaletteGenerator.fromImageProvider(
+        ResizeImage(AssetImage(imagePath), width: 100), // ✅ MEMORY FIX: Downsample for palette
+      );
 
       Color extractedColor = paletteGenerator.dominantColor?.color ?? Colors.teal.shade50;
       Color lightenedColor = _lightenColor(extractedColor, 0.15);

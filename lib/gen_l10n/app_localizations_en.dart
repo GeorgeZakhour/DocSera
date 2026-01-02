@@ -310,6 +310,13 @@ class AppLocalizationsEn extends AppLocalizations {
   String get createNote => 'Create Note';
 
   @override
+  String get documentDeleted => 'Document deleted successfully';
+
+  @override
+  String get maxAttachmentsReached =>
+      'You have reached the maximum number of attachments (3).';
+
+  @override
   String get sendRequests => 'Send requests';
 
   @override
@@ -3014,4 +3021,10 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get twoFactorDeactivateWarning =>
       'Disabling 2FA will make your account less secure. Are you sure you want to proceed?';
+
+  @override
+  String get noInternetConnection => 'No internet connection';
+
+  @override
+  String get internetRestored => 'Internet connection restored';
 }

@@ -1,3 +1,5 @@
+import 'package:docsera/utils/time_utils.dart';
+
 class Conversation {
   final String id;
   final String patientId;
@@ -53,7 +55,7 @@ class Conversation {
       participants: List<String>.from(data['participants'] ?? []),
       lastMessage: data['last_message'] ?? '',
       lastSenderId: data['last_sender_id'] ?? '',
-      updatedAt: DateTime.tryParse(data['updated_at'] ?? '') ?? DateTime.now(),
+      updatedAt: DocSeraTime.tryParseToSyria(data['updated_at'] ?? '') ?? DocSeraTime.nowSyria(),
       doctorName: data['doctor_name'],
       doctorSpecialty: data['doctor_specialty'],
       doctorImage: data['doctor_image'],
@@ -76,7 +78,7 @@ class Conversation {
       'participants': participants,
       'last_message': lastMessage,
       'last_sender_id': lastSenderId,
-      'updated_at': updatedAt.toIso8601String(),
+      'updated_at': DocSeraTime.toUtc(updatedAt).toIso8601String(),
       'doctor_name': doctorName,
       'doctor_specialty': doctorSpecialty,
       'doctor_image': doctorImage,

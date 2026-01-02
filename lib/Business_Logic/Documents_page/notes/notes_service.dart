@@ -1,4 +1,5 @@
 import 'package:docsera/models/notes.dart';
+import 'package:docsera/utils/time_utils.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:uuid/uuid.dart';
 
@@ -20,7 +21,7 @@ class NotesService {
 
   Future<void> addNote(String title, List<dynamic> content, String userId) async {
     final noteId = const Uuid().v4();
-    final createdAt = DateTime.now();
+    final createdAt = DocSeraTime.nowUtc();
 
     final noteData = {
       'id': noteId,

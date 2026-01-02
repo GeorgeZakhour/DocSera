@@ -24,18 +24,11 @@ class AppointmentConfirmedPage extends StatelessWidget {
   void _addToCalendar(BuildContext context, {int clinicOffsetMinutes = 180}) {
     final appt = appointment;
 
-    // 1) نقرأ الـ timestamp كـ UTC
-    final tsUtc = DateTime.parse(appt['timestamp'].toString()).toUtc();
+    // 1) نقرأ الـ timestamp ونحوله لتوقيت سوريا
+    final startLocal = DocSeraTime.tryParseToSyria(appt['timestamp'].toString()) ?? DocSeraTime.nowSyria();
 
-    // 2) وقت العيادة (UTC +3)
-    final clinicWall = tsUtc.add(Duration(minutes: clinicOffsetMinutes));
-    final startLocal = DateTime(
-      clinicWall.year,
-      clinicWall.month,
-      clinicWall.day,
-      clinicWall.hour,
-      clinicWall.minute,
-    );
+    // 2) (تمت إزالة الحساب اليدوي للعيادة لأنه DocSeraTime يتكفل بذلك)
+    // لو أردت فرض توقيت العيادة كـ UTC+3 دائماً، DocSeraTime يفعل ذلك.
 
     // 3) المدة
     final duration = (appt['durationMinutes'] is int)
@@ -191,7 +184,7 @@ class AppointmentConfirmedPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final formattedDate = TimezoneUtils.formatBusinessDate(context, appointment);
-    final tsUtc = DateTime.parse(appointment['timestamp'].toString()).toUtc();
+    final tsUtc = DocSeraTime.tryParseToSyria(appointment['timestamp'].toString()) ?? DocSeraTime.nowSyria();
     final formattedTime = TimezoneUtils.format12hLocalized(context, tsUtc);
 
 

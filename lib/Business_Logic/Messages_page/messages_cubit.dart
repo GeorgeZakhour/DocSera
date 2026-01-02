@@ -7,7 +7,8 @@ import '../Authentication/auth_cubit.dart';
 import '../Authentication/auth_state.dart';
 import '../../models/conversation.dart';
 import 'dart:convert';
-
+import 'package:docsera/utils/error_handler.dart';
+import 'package:docsera/utils/time_utils.dart';
 class MessagesCubit extends Cubit<MessagesState> {
   final SupabaseClient _supabase;
 
@@ -91,7 +92,7 @@ class MessagesCubit extends Cubit<MessagesState> {
           .contains('participants', [userId]);
 
       final response =
-      await query.order('updated_at', ascending: false);
+      await query.order('updated_at', ascending: false).limit(20);
 
       final List<Conversation> conversations = [];
 
@@ -110,7 +111,7 @@ class MessagesCubit extends Cubit<MessagesState> {
         if (lastMsgText.isNotEmpty) {
            messages.add({
              'text': lastMsgText,
-             'timestamp': DateTime.tryParse(convo['updated_at'] ?? ''),
+      'timestamp': DocSeraTime.tryParseToSyria(convo['updated_at'] ?? ''),
              'isUser': convo['last_sender_id'] == userId, // Heuristic: we might need exact boolean if crucial
            });
         }
@@ -126,7 +127,7 @@ class MessagesCubit extends Cubit<MessagesState> {
 
       emit(MessagesLoaded(conversations));
     } catch (e) {
-      emit(MessagesError("فشل تحميل الرسائل: $e"));
+      emit(MessagesError(ErrorHandler.resolve(e, defaultMessage: "فشل تحميل الرسائل")));
     }
   }
 
@@ -137,11 +138,12 @@ class MessagesCubit extends Cubit<MessagesState> {
     _realtimeChannel?.unsubscribe();
 
     _realtimeChannel = _supabase
-        .channel('public:messages')
+        .channel('public:conversations:$userId') // Unique channel per user
         .onPostgresChanges(
-      event: PostgresChangeEvent.insert,
+      event: PostgresChangeEvent.all, // Listen to INSERT (new chat) and UPDATE (new msg)
       schema: 'public',
-      table: 'messages',
+      table: 'conversations',
+      // We rely on RLS to filter events, which is the secure and correct way.
       callback: (payload) {
         _fetchConversations(userId);
       },
@@ -178,7 +180,7 @@ class MessagesCubit extends Cubit<MessagesState> {
     required String selectedReason,
   }) async {
     try {
-      final now = DateTime.now().toUtc();
+      final now = DocSeraTime.nowUtc();
       final accountHolderId = _supabase.auth.currentUser?.id;
 
       if (accountHolderId == null) throw Exception("لا يوجد مستخدم.");
@@ -284,7 +286,7 @@ class MessagesCubit extends Cubit<MessagesState> {
       return convoId;
 
     } catch (e) {
-      emit(MessagesError("حدث خطأ أثناء بدء المحادثة"));
+      emit(MessagesError(ErrorHandler.resolve(e, defaultMessage: "حدث خطأ أثناء بدء المحادثة")));
       return null;
     }
   }

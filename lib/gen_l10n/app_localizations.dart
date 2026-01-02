@@ -644,6 +644,18 @@ abstract class AppLocalizations {
   /// **'Create Note'**
   String get createNote;
 
+  /// No description provided for @documentDeleted.
+  ///
+  /// In en, this message translates to:
+  /// **'Document deleted successfully'**
+  String get documentDeleted;
+
+  /// No description provided for @maxAttachmentsReached.
+  ///
+  /// In en, this message translates to:
+  /// **'You have reached the maximum number of attachments (3).'**
+  String get maxAttachmentsReached;
+
   /// No description provided for @sendRequests.
   ///
   /// In en, this message translates to:
@@ -5659,6 +5671,18 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Disabling 2FA will make your account less secure. Are you sure you want to proceed?'**
   String get twoFactorDeactivateWarning;
+
+  /// No description provided for @noInternetConnection.
+  ///
+  /// In en, this message translates to:
+  /// **'No internet connection'**
+  String get noInternetConnection;
+
+  /// No description provided for @internetRestored.
+  ///
+  /// In en, this message translates to:
+  /// **'Internet connection restored'**
+  String get internetRestored;
 }
 
 class _AppLocalizationsDelegate

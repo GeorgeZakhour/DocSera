@@ -66,7 +66,6 @@
       <root url="file://$USER_HOME$/.pub-cache/hosted/pub.dev/file_picker-9.2.3" />
       <root url="file://$USER_HOME$/.pub-cache/hosted/pub.dev/url_launcher_android-6.3.16" />
       <root url="file://$USER_HOME$/.pub-cache/hosted/pub.dev/gallery_saver_plus-3.2.8" />
-      <root url="file://$USER_HOME$/.pub-cache/hosted/pub.dev/add_2_calendar-2.2.5" />
       <root url="file://$USER_HOME$/.pub-cache/hosted/pub.dev/image_picker_ios-0.8.12+2" />
       <root url="file://$USER_HOME$/.pub-cache/hosted/pub.dev/image_picker_linux-0.2.1+2" />
       <root url="file://$USER_HOME$/.pub-cache/hosted/pub.dev/image_picker_for_web-3.0.6" />
@@ -99,6 +98,7 @@
       <root url="file://$USER_HOME$/.pub-cache/hosted/pub.dev/image_picker_windows-0.2.1+1" />
       <root url="file://$USER_HOME$/.pub-cache/hosted/pub.dev/video_player-2.10.0" />
       <root url="file://$USER_HOME$/.pub-cache/hosted/pub.dev/printing-5.14.2" />
+      <root url="file://$USER_HOME$/.pub-cache/hosted/pub.dev/add_2_calendar-3.0.1" />
     </CLASSES>
     <JAVADOC />
     <SOURCES />

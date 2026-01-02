@@ -233,7 +233,7 @@ class _ConfirmationPageState extends State<ConfirmationPage> {
         'reasonId': reasonId,
         'reason': reasonText,
         'timestamp': slotUtc.toIso8601String(),
-        'bookingTimestamp': DateTime.now().toUtc().toIso8601String(),
+        'bookingTimestamp': DocSeraTime.nowUtc().toIso8601String(),
         'appointmentId': appointmentId,
         'appointmentTimeDisplay': widget.appointmentTime,
       };
@@ -319,7 +319,7 @@ class _ConfirmationPageState extends State<ConfirmationPage> {
 //           (doctorInfo?['require_confirmation'] as bool?) ?? true;
 //
 //       // 🕒 نحفظ UTC في timestamp/booking_timestamp
-//       final bookingTimestampUtc = DateTime.now().toUtc();
+//       final bookingTimestampUtc = DocSeraTime.nowUtc();
 //       final slotUtc = widget.appointmentTimestamp.toUtc();
 //
 //       final prefs = await SharedPreferences.getInstance();
@@ -473,7 +473,7 @@ class _ConfirmationPageState extends State<ConfirmationPage> {
     final isArabic = Localizations.localeOf(context).languageCode == 'ar';
 
 
-    final damascusTs = TimezoneUtils.toDamascus(widget.appointmentTimestamp);
+    final damascusTs = DocSeraTime.toSyria(widget.appointmentTimestamp);
     final dateOnly = DateFormat(
       'EEEE, d MMMM',
       Localizations.localeOf(context).toString(),

@@ -11,6 +11,7 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:docsera/gen_l10n/app_localizations.dart';
 
 import '../../../utils/full_page_loader.dart';
+import 'package:docsera/utils/time_utils.dart';
 
 
 class EditProfilePage extends StatefulWidget {
@@ -70,7 +71,7 @@ class _EditProfilePageState extends State<EditProfilePage> {
   String _formatDate(String? isoDate) {
     if (isoDate == null) return "";
     try {
-      final date = DateTime.parse(isoDate);
+      final date = DocSeraTime.tryParseToSyria(isoDate) ?? DocSeraTime.nowSyria();
       return DateFormat('dd.MM.yyyy').format(date);
     } catch (_) {
       return "";
@@ -124,7 +125,7 @@ class _EditProfilePageState extends State<EditProfilePage> {
   String _convertToIsoDate(String formattedDate) {
     try {
       final date = DateFormat('dd.MM.yyyy').parse(formattedDate);
-      return date.toIso8601String();
+      return DocSeraTime.toUtc(date).toIso8601String();
     } catch (_) {
       return "";
     }
@@ -134,7 +135,7 @@ class _EditProfilePageState extends State<EditProfilePage> {
 
   /// ✅ Date picker for date of birth
   Future<void> _pickDate() async {
-    DateTime initialDate = DateTime.now();
+    DateTime initialDate = DocSeraTime.nowSyria();
     if (dateOfBirthController.text.isNotEmpty) {
       try {
         initialDate = DateFormat('dd.MM.yyyy').parse(dateOfBirthController.text);
@@ -145,7 +146,7 @@ class _EditProfilePageState extends State<EditProfilePage> {
       context: context,
       initialDate: initialDate,
       firstDate: DateTime(1900),
-      lastDate: DateTime.now(),
+      lastDate: DocSeraTime.nowSyria(),
       builder: (context, child) {
         return Theme(
           data: ThemeData(

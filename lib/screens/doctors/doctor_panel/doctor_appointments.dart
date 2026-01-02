@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:docsera/app/const.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:intl/intl.dart';
+import 'package:docsera/utils/time_utils.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:table_calendar/table_calendar.dart';
 
@@ -19,8 +20,8 @@ class _DoctorAppointmentsState extends State<DoctorAppointments> {
   bool _isCalendarView = true; // ✅ Toggle between weekly & list view
   bool _showFreeSlots = false; // ✅ Track "Show Free Slots" button state
   final CalendarFormat _calendarFormat = CalendarFormat.week;
-  DateTime _selectedDay = DateTime.now();
-  DateTime _focusedDay = DateTime.now();
+  DateTime _selectedDay = DocSeraTime.nowSyria();
+  DateTime _focusedDay = DocSeraTime.nowSyria();
   String? doctorId;
   Map<String, List<Map<String, dynamic>>> _appointmentsByDay = {}; // Appointments Grouped by Date
 
@@ -205,8 +206,8 @@ class _DoctorAppointmentsState extends State<DoctorAppointments> {
                     onPressed: () async {
                       DateTime? pickedDate = await showDatePicker(
                         context: context,
-                        initialDate: DateTime.now(),
-                        firstDate: DateTime.now(),
+                        initialDate: DocSeraTime.nowSyria(),
+                        firstDate: DocSeraTime.nowSyria(),
                         lastDate: DateTime(2100),
                       );
 
@@ -349,7 +350,7 @@ class _DoctorAppointmentsState extends State<DoctorAppointments> {
             'clinic': clinicName,
             'clinic_address': clinicAddress,
             'location': clinicLocation,
-            'timestamp': combinedTimestamp.toIso8601String(),
+            'timestamp': DocSeraTime.toUtc(combinedTimestamp).toIso8601String(),
             'appointment_date': formattedDate,
             'appointment_time': formattedTime,
             'booked': false,
@@ -862,7 +863,7 @@ String _formatTimestamp(dynamic timestamp) {
 
   try {
     if (timestamp is String) {
-      return DateFormat("yyyy-MM-dd HH:mm").format(DateTime.parse(timestamp));
+      return DateFormat("yyyy-MM-dd HH:mm").format(DocSeraTime.tryParseToSyria(timestamp) ?? DocSeraTime.nowSyria());
     } else if (timestamp is DateTime) {
       return DateFormat("yyyy-MM-dd HH:mm").format(timestamp);
     } else {
@@ -879,7 +880,7 @@ String _formatTimestamp(dynamic timestamp) {
 String _formatDate(dynamic date) {
   try {
     if (date is String) {
-      date = DateTime.parse(date); // ✅ Convert String to DateTime
+      date = DocSeraTime.tryParseToSyria(date); // ✅ Convert String to DateTime
     }
     return DateFormat('yyyy-MM-dd').format(date); // ✅ Standard date format
   } catch (e) {

@@ -81,7 +81,7 @@ class _DoctorAppointmentsPageState extends State<DoctorAppointmentsPage> {
 
       debugPrint('[Schedule/UI] Scheduling mode for doctor=$doctorId → $_schedulingMode');
 
-      // 2) استدعاء الكيوبِت وفق النمط
+    // 2) استدعاء الكيوبِت وفق النمط
       if (_schedulingMode == 'custom_by_reason' && reasonId?.isNotEmpty == true) {
         debugPrint('[Schedule/UI] Fetch with reason=$reasonId');
         _sched.fetchDoctorAppointments(

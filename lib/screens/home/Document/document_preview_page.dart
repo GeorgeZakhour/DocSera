@@ -18,12 +18,14 @@ class DocumentPreviewPage extends StatefulWidget {
   final UserDocument document;
   final bool cameFromConversation;
   final String? doctorName;
+  final bool showActions;
 
   const DocumentPreviewPage({
     super.key,
     required this.document,
     this.cameFromConversation = false,
     this.doctorName,
+    this.showActions = true,
   });
 
   @override
@@ -210,7 +212,7 @@ class _DocumentPreviewPageState extends State<DocumentPreviewPage> {
             icon: Icon(Icons.arrow_back_ios_new, color: Colors.white, size: 14.sp),
             onPressed: () => Navigator.pop(context),
           ),
-          actions: [
+          actions: widget.showActions ? [
             IconButton(
               icon: const Icon(Icons.more_vert, color: Colors.white),
               onPressed: () {
@@ -229,7 +231,7 @@ class _DocumentPreviewPageState extends State<DocumentPreviewPage> {
                 }
               },
             ),
-          ],
+          ] : null,
           bottom: widget.document.fileType != 'pdf' && !_imagesLoaded
               ? PreferredSize(
             preferredSize: Size.fromHeight(4.h),

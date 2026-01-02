@@ -12,6 +12,7 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 
 import '../../../utils/full_page_loader.dart';
+import 'package:docsera/utils/time_utils.dart';
 
 class MyRelativesPage extends StatefulWidget {
   const MyRelativesPage({super.key});
@@ -34,8 +35,8 @@ class _MyRelativesPageState extends State<MyRelativesPage> {
 
   int _calculateAge(String birthDateStr) {
     try {
-      final dob = DateTime.parse(birthDateStr);
-      final today = DateTime.now();
+      final dob = DocSeraTime.tryParseToSyria(birthDateStr) ?? DocSeraTime.nowSyria();
+      final today = DocSeraTime.nowSyria();
       int years = today.year - dob.year;
       if (today.month < dob.month ||
           (today.month == dob.month && today.day < dob.day)) {

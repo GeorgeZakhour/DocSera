@@ -23,6 +23,8 @@ import 'package:share_plus/share_plus.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:docsera/gen_l10n/app_localizations.dart';
+import 'package:docsera/models/document.dart'; // 👈
+import 'package:docsera/screens/home/Document/document_preview_page.dart'; // 👈
 
 import '../../../app/text_styles.dart';
 import 'appointment_cancel_confirmation.dart' show AppointmentCancelledPage;
@@ -194,14 +196,15 @@ class _AppointmentDetailsPageState extends State<AppointmentDetailsPage> {
     });
   }
 
-  void _shareAppointmentDetails() {
+  void _shareAppointmentDetails({Rect? sharePositionOrigin}) {
     final appt = widget.appointment;
     final locale = Localizations.localeOf(context).toString();
 
     final tsUtc = DateTime.parse(appt['timestamp'].toString()).toUtc();
     final tsClinic = TimezoneUtils.toDamascus(tsUtc);
 
-    final formattedDate = DateFormat('EEEE, d MMMM yyyy', locale).format(tsClinic);
+    final formattedDate =
+    DateFormat('EEEE, d MMMM yyyy', locale).format(tsClinic);
     final formattedTime = MaterialLocalizations.of(context).formatTimeOfDay(
       TimeOfDay(hour: tsClinic.hour, minute: tsClinic.minute),
       alwaysUse24HourFormat: false,
@@ -237,7 +240,11 @@ class _AppointmentDetailsPageState extends State<AppointmentDetailsPage> {
 — DocSera
 """;
 
-    Share.share(shareText, subject: "${AppLocalizations.of(context)!.appointmentWithLabel(doctorName)} ");
+    Share.share(
+      shareText,
+      subject: "${AppLocalizations.of(context)!.appointmentWithLabel(doctorName)} ",
+      sharePositionOrigin: sharePositionOrigin,
+    );
   }
 
   Map<String, dynamic> get _appt => widget.appointment;
@@ -264,7 +271,7 @@ class _AppointmentDetailsPageState extends State<AppointmentDetailsPage> {
 
   Future<(bool tooLate, bool shortNotice)> _computeRescheduleWindow() async {
     final tsUtc = DateTime.parse(widget.appointment['timestamp'].toString()).toUtc();
-    final nowUtc = DateTime.now().toUtc();
+    final nowUtc = DocSeraTime.nowUtc();
     final hours = await _fetchCancellationDeadlineHours(widget.appointment['doctor_id']);
     final tooLate = nowUtc.isAfter(tsUtc.subtract(Duration(hours: hours)));
     // تعبير “إشعار قصير” اختياري (ضعف المهلة كمثال)
@@ -278,7 +285,7 @@ class _AppointmentDetailsPageState extends State<AppointmentDetailsPage> {
     required DateTime tsUtc,
     required int deadlineHours,
   }) {
-    final nowUtc = DateTime.now().toUtc();
+    final nowUtc = DocSeraTime.nowUtc();
     final lastAllowed = tsUtc.subtract(Duration(hours: deadlineHours));
     return nowUtc.isAfter(lastAllowed);
   }
@@ -288,7 +295,7 @@ class _AppointmentDetailsPageState extends State<AppointmentDetailsPage> {
     required DateTime tsUtc,
     required int deadlineHours,
   }) {
-    final nowUtc = DateTime.now().toUtc();
+    final nowUtc = DocSeraTime.nowUtc();
     final borderline = tsUtc.subtract(Duration(hours: deadlineHours * 2));
     return nowUtc.isAfter(borderline) && !_isTooLateToCancel(tsUtc: tsUtc, deadlineHours: deadlineHours);
   }
@@ -309,7 +316,7 @@ class _AppointmentDetailsPageState extends State<AppointmentDetailsPage> {
       required DateTime apptUtc,
       required int deadlineHours,
     }) {
-      final nowUtc = DateTime.now().toUtc();
+      final nowUtc = DocSeraTime.nowUtc();
       final tooLate = nowUtc.isAfter(apptUtc.subtract(Duration(hours: deadlineHours)));
       final shortNotice = !tooLate &&
           nowUtc.isAfter(apptUtc.subtract(Duration(hours: deadlineHours * 2)));
@@ -1089,11 +1096,31 @@ class _AppointmentDetailsPageState extends State<AppointmentDetailsPage> {
               ],
             ),
           ),
-          TextButton(
-            onPressed: () {
-              _openAttachment(att);
-            },
-            child: Text(AppLocalizations.of(context)!.view, style: const TextStyle(color: AppColors.main, fontSize: 10)),
+          
+          // 👁️ زر العرض (Icon)
+          IconButton(
+            onPressed: () => _openAttachment(att),
+            icon: const Icon(Icons.visibility_outlined, 
+              color: AppColors.main, 
+              size: 20
+            ),
+            tooltip: AppLocalizations.of(context)!.view,
+            padding: EdgeInsets.zero,
+            constraints: const BoxConstraints(),
+          ),
+
+          SizedBox(width: 12.w),
+
+          // 🗑️ زر الحذف (Icon)
+          IconButton(
+            onPressed: () => _deleteAttachment(att),
+            icon: const Icon(Icons.delete_outline,
+               color: AppColors.red,
+               size: 20
+            ),
+            tooltip: AppLocalizations.of(context)!.delete,
+            padding: EdgeInsets.zero,
+            constraints: const BoxConstraints(),
           ),
         ],
       ),
@@ -1101,22 +1128,153 @@ class _AppointmentDetailsPageState extends State<AppointmentDetailsPage> {
   }
 
   Future<void> _openAttachment(Map<String, dynamic> att) async {
-    final path = att['paths'][0];
-    final bucket = att['bucket'];
+    try {
+      final bucket = att['bucket'] ?? 'appointments-attachments';
+      final paths = List<String>.from(att['paths'] ?? []);
 
-    final url = Supabase.instance.client.storage
-        .from(bucket)
-        .getPublicUrl(path);
+      if (paths.isEmpty) return;
 
-    // Navigator.push(
-    //   context,
-    //   MaterialPageRoute(
-    //     builder: (_) => AttachmentViewerPage(
-    //       url: url,
-    //       type: att['file_type'],
-    //     ),
-    //   ),
-    // );
+      // 1. تحويل الـ storage paths إلى Public URLs
+      final List<String> publicUrls = paths.map((p) {
+        return Supabase.instance.client.storage.from(bucket).getPublicUrl(p);
+      }).toList();
+
+      // 2. تحويل الـ map إلى UserDocument (عبر المحاكاة)
+      final dummyDoc = UserDocument(
+        id: att['id'] ?? '',
+        userId: widget.appointment['user_id'] ?? widget.appointment['userId'] ?? '',
+        name: att['name'] ?? 'Attachment',
+        type: 'attachment',
+        fileType: att['file_type'] == 'pdf' ? 'pdf' : 'image',
+        patientId: att['patient_id'] ?? '',
+        previewUrl: publicUrls.first,
+        pages: publicUrls,
+        uploadedAt: DateTime.tryParse(att['uploaded_at'] ?? '') ?? DateTime.now(),
+        uploadedById: att['uploaded_by_id'] ?? '',
+        cameFromConversation: false,
+      );
+
+      // 3. فتح صفحة العرض الموحدة
+      Navigator.push(
+        context,
+        MaterialPageRoute(
+          builder: (_) => DocumentPreviewPage(
+            document: dummyDoc,
+            showActions: false, // ✅ Hide menu button
+          ),
+        ),
+      );
+    } catch (e) {
+      debugPrint("❌ Error opening attachment: $e");
+      ScaffoldMessenger.of(context).showSnackBar(
+         SnackBar(content: Text(AppLocalizations.of(context)!.somethingWentWrong)),
+      );
+    }
+  }
+
+  Future<void> _deleteAttachment(Map<String, dynamic> att) async {
+    final local = AppLocalizations.of(context)!;
+    final confirm = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16.r)),
+        contentPadding: EdgeInsets.symmetric(horizontal: 24.w, vertical: 20.h),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Text(
+              local.deleteTheDocument,
+              style: AppTextStyles.getTitle2(context),
+              textAlign: TextAlign.center,
+            ),
+            SizedBox(height: 12.h),
+            Text(
+              local.areYouSureToDelete(att['name'] ?? ''),
+              style: AppTextStyles.getText2(context),
+              textAlign: TextAlign.center,
+            ),
+            SizedBox(height: 24.h),
+            ElevatedButton(
+              style: ElevatedButton.styleFrom(
+                backgroundColor: AppColors.red,
+                elevation: 0,
+                padding: EdgeInsets.symmetric(horizontal: 24.w, vertical: 12.h),
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10.r)),
+              ),
+              onPressed: () {
+                Navigator.pop(context, true);
+              },
+              child: Center(
+                child: Text(
+                  local.delete,
+                  style: AppTextStyles.getText2(context).copyWith(color: Colors.white),
+                ),
+              ),
+            ),
+            TextButton(
+              onPressed: () => Navigator.pop(context, false),
+              child: Text(
+                local.cancel,
+                style: AppTextStyles.getText2(context).copyWith(
+                  fontWeight: FontWeight.bold,
+                  color: AppColors.blackText,
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+
+    if (confirm != true) return;
+
+    try {
+      final supabase = Supabase.instance.client;
+      final bucket = att['bucket'] ?? 'appointments-attachments';
+      final paths = List<String>.from(att['paths'] ?? []);
+
+      // 1. حذف الملفات من التخزين (اختياري، يفضل للحفاظ على النظافة)
+      if (paths.isNotEmpty) {
+        await supabase.storage.from(bucket).remove(paths);
+      }
+
+      // 2. حذف المرفق من عمود الـ JSONB في قاعدة البيانات عبر RPC
+      await supabase.rpc('remove_appointment_attachment', params: {
+        'appointment_id': _appointmentId(),
+        'attachment_id_to_remove': att['id'],
+      });
+
+      // 3. تحديث الواجهة
+      if (!mounted) return;
+      
+      final updated = await supabase
+          .from("appointments")
+          .select()
+          .eq("id", _appointmentId())
+          .single();
+
+      setState(() {
+        widget.appointment.clear();
+        widget.appointment.addAll(updated);
+      });
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(local.documentDeleted),
+          backgroundColor: AppColors.red.withOpacity(0.9), // ✅ Red with opacity
+          behavior: SnackBarBehavior.floating, // Optional: makes it look better
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+        ),
+      );
+
+    } catch (e) {
+      debugPrint("❌ Remove attachment error: $e");
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text("Error: $e")),
+        );
+      }
+    }
   }
 
 
@@ -1200,11 +1358,15 @@ class _AppointmentDetailsPageState extends State<AppointmentDetailsPage> {
         style: AppTextStyles.getTitle1(context).copyWith(color: AppColors.whiteText, fontSize: 13.sp),
       ),
       actions: [
-        IconButton(
-          icon: Icon(Icons.share_outlined, color: Colors.white,size: 20.sp,),
-          onPressed: () {
-            _shareAppointmentDetails(); // ✅ Trigger the share
-          },
+        Builder(
+          builder: (ctx) => IconButton(
+            icon: Icon(Icons.share_outlined, color: Colors.white, size: 20.sp),
+            onPressed: () {
+              final box = ctx.findRenderObject() as RenderBox?;
+              final rect = box != null ? box.localToGlobal(Offset.zero) & box.size : null;
+              _shareAppointmentDetails(sharePositionOrigin: rect);
+            },
+          ),
         ),
       ],
       child: Container(
@@ -1212,6 +1374,7 @@ class _AppointmentDetailsPageState extends State<AppointmentDetailsPage> {
           color: Color.lerp(AppColors.background2, AppColors.mainDark, 0.06), // ✅ يزيد قتامة بنسبة 20%
         ),
         child: SafeArea(
+          bottom: false, // ✅ Disable bottom safe area as requested
           child: Stack(
             children:[
               Padding(
@@ -1350,71 +1513,103 @@ class _AppointmentDetailsPageState extends State<AppointmentDetailsPage> {
                       child: Column(
                         children: [
                           if (widget.isUpcoming)
-                          Card(
-                            color: AppColors.background2, // ✅ Light background like in the design
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(12.r),
-                            ),
-                            elevation: 0, // ✅ No shadow to match the UI
-                            child: InkWell(
-                              onTap: () async {
-                                final result = await Navigator.push(
-                                  context,
-                                  fadePageRoute(
-                                    SendDocumentToDoctorPage(
-                                      doctorName: doctorName, // متوفر في المتغيرات
-                                      appointmentId: _appointmentId(),   // 👈 جديد
-                                    ),
+                            // ✅ 3-Document Limit Logic
+                            Builder(
+                              builder: (context) {
+                                final count = attachments.length;
+                                final isLimitReached = count >= 3;
+                                final color = isLimitReached ? Colors.grey : AppColors.main;
+                                final textColor = isLimitReached ? Colors.grey : AppColors.main;
+
+                                return Card(
+                                  color: AppColors.background2,
+                                  shape: RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.circular(12.r),
                                   ),
-                                );
+                                  elevation: 0,
+                                  child: InkWell(
+                                    onTap: isLimitReached ? null : () async {
+                                      final result = await Navigator.push(
+                                        context,
+                                        fadePageRoute(
+                                          SendDocumentToDoctorPage(
+                                            doctorName: doctorName,
+                                            appointmentId: _appointmentId(),
+                                          ),
+                                        ),
+                                      );
 
-                                if (result == true) {
-                                  final updated = await Supabase.instance.client
-                                      .from("appointments")
-                                      .select()
-                                      .eq("id", _appointmentId())
-                                      .single();
+                                      if (result == true) {
+                                        final updated = await Supabase.instance.client
+                                            .from("appointments")
+                                            .select()
+                                            .eq("id", _appointmentId())
+                                            .single();
 
-                                  setState(() {
-                                    widget.appointment.clear();
-                                    widget.appointment.addAll(updated);
-                                  });
-                                }
-                              },
-                              borderRadius: BorderRadius.circular(12.r),
-                              child: Padding(
-                                padding: EdgeInsets.symmetric(vertical: 14.h, horizontal: 18.w),
-                                child: Row(
-                                  mainAxisAlignment: MainAxisAlignment.start,
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    Icon(Icons.file_open_outlined, color: AppColors.main, size: 16.sp),
-                                    SizedBox(width: 10.w),
-                                    Expanded(
-                                      child: Column(
-                                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                        setState(() {
+                                          widget.appointment.clear();
+                                          widget.appointment.addAll(updated);
+                                        });
+                                      }
+                                    },
+                                    borderRadius: BorderRadius.circular(12.r),
+                                    child: Padding(
+                                      padding: EdgeInsets.symmetric(vertical: 14.h, horizontal: 18.w),
+                                      child: Row(
+                                        mainAxisAlignment: MainAxisAlignment.start,
                                         crossAxisAlignment: CrossAxisAlignment.start,
                                         children: [
-                                          Text(
-                                            AppLocalizations.of(context)!.sendDocuments,
-                                            style: AppTextStyles.getText2(context).copyWith(fontSize: 11.sp, color: AppColors.main, fontWeight: FontWeight.bold),
-                                          ),
-                                          SizedBox(height: 4.h), // ✅ Adds slight spacing between lines
-                                          Text(
-                                            AppLocalizations.of(context)!.sendDocumentsSubtitle,
-                                            style: AppTextStyles.getText3(context).copyWith(fontWeight: FontWeight.w400, color: Colors.black54),
-                                            maxLines: 2,
-                                            overflow: TextOverflow.ellipsis,
-                                            softWrap: true,
+                                          Icon(Icons.file_open_outlined, color: color, size: 16.sp),
+                                          SizedBox(width: 10.w),
+                                          Expanded(
+                                            child: Column(
+                                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                              crossAxisAlignment: CrossAxisAlignment.start,
+                                              children: [
+                                                Row(
+                                                  children: [
+                                                    Text(
+                                                      AppLocalizations.of(context)!.sendDocuments,
+                                                      style: AppTextStyles.getText2(context).copyWith(
+                                                        fontSize: 11.sp, 
+                                                        color: textColor, 
+                                                        fontWeight: FontWeight.bold
+                                                      ),
+                                                    ),
+                                                    const Spacer(),
+                                                    // 🔢 Counter
+                                                    Text(
+                                                      "$count/3",
+                                                      style: AppTextStyles.getText3(context).copyWith(
+                                                        color: isLimitReached ? AppColors.red : Colors.grey,
+                                                        fontWeight: FontWeight.bold,
+                                                      ),
+                                                    ),
+                                                  ],
+                                                ),
+                                                SizedBox(height: 4.h),
+                                                Text(
+                                                  isLimitReached 
+                                                      ? AppLocalizations.of(context)!.maxAttachmentsReached
+                                                      : AppLocalizations.of(context)!.sendDocumentsSubtitle,
+                                                  style: AppTextStyles.getText3(context).copyWith(
+                                                    fontWeight: FontWeight.w400, 
+                                                    color: Colors.black54
+                                                  ),
+                                                  maxLines: 2,
+                                                  overflow: TextOverflow.ellipsis,
+                                                  softWrap: true,
+                                                ),
+                                              ],
+                                            ),
                                           ),
                                         ],
                                       ),
                                     ),
-                                  ],
-                                ),
-                              ),
+                                  ),
+                                );
+                              }
                             ),
-                          ),
 
                           // if (_selectedImageFiles.isNotEmpty) _buildPreviewAttachment(),
 
@@ -1524,26 +1719,30 @@ class _AppointmentDetailsPageState extends State<AppointmentDetailsPage> {
                                 Divider(height: 1.h,  color: Colors.grey[300]),
 
                                 // 🔹 Share Appointment Button
-                                InkWell(
-                                  onTap: () {
-                                    _shareAppointmentDetails(); // ✅ Trigger the share
-                                  },
-                                  borderRadius: BorderRadius.only(
-                                    bottomLeft: Radius.circular(12.r),
-                                    bottomRight: Radius.circular(12.r),
-                                  ),
-                                  child: Padding(
-                                    padding: EdgeInsets.symmetric(vertical: 14.h, horizontal: 16.w),
-                                    child: Row(
-                                      children: [
-                                        const Icon(Icons.share, color: AppColors.main, size: 14),
-                                        const SizedBox(width: 10),
-                                        Text(
-                                          AppLocalizations.of(context)!.shareAppointmentDetails,
-                                          style: AppTextStyles.getText2(context).copyWith(fontSize: 11.sp,color: AppColors.main, fontWeight: FontWeight.w600),
-                                        ),
-                                        const Spacer(),
-                                        Icon(Icons.arrow_forward_ios, color: Colors.grey, size: 12.sp),                                ],
+                                Builder(
+                                  builder: (ctx) => InkWell(
+                                    onTap: () {
+                                      final box = ctx.findRenderObject() as RenderBox?;
+                                      final rect = box != null ? box.localToGlobal(Offset.zero) & box.size : null;
+                                      _shareAppointmentDetails(sharePositionOrigin: rect);
+                                    },
+                                    borderRadius: BorderRadius.only(
+                                      bottomLeft: Radius.circular(12.r),
+                                      bottomRight: Radius.circular(12.r),
+                                    ),
+                                    child: Padding(
+                                      padding: EdgeInsets.symmetric(vertical: 14.h, horizontal: 16.w),
+                                      child: Row(
+                                        children: [
+                                          const Icon(Icons.share, color: AppColors.main, size: 14),
+                                          const SizedBox(width: 10),
+                                          Text(
+                                            AppLocalizations.of(context)!.shareAppointmentDetails,
+                                            style: AppTextStyles.getText2(context).copyWith(fontSize: 11.sp,color: AppColors.main, fontWeight: FontWeight.w600),
+                                          ),
+                                          const Spacer(),
+                                          Icon(Icons.arrow_forward_ios, color: Colors.grey, size: 12.sp),                                ],
+                                      ),
                                     ),
                                   ),
                                 ),

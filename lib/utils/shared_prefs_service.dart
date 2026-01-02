@@ -204,7 +204,7 @@ class SharedPrefsService {
         .listen((appointmentsData) async {
       List<Map<String, dynamic>> upcoming = [];
       List<Map<String, dynamic>> past = [];
-      DateTime now = TimezoneUtils.toDamascus(DateTime.now().toUtc());
+      DateTime now = DocSeraTime.nowSyria();
 
       for (var appointment in appointmentsData) {
         appointment = Map<String, dynamic>.from(appointment);
@@ -218,7 +218,7 @@ class SharedPrefsService {
           appointment['bookingTimestamp'] = appointment['bookingTimestamp'];
         }
 
-        DateTime appointmentDate = DateTime.parse(appointment['timestamp']);
+        DateTime appointmentDate = DocSeraTime.tryParseToSyria(appointment['timestamp'].toString()) ?? DocSeraTime.nowSyria();
         if (appointmentDate.isAfter(now)) {
           upcoming.add(appointment);
         } else {

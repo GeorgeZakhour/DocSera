@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'dart:ui';
 import 'package:docsera/app/const.dart';
+import 'package:docsera/utils/time_utils.dart';
 import 'package:docsera/app/text_styles.dart';
 import 'package:flutter/material.dart';
 import 'package:docsera/gen_l10n/app_localizations.dart';
@@ -86,7 +87,7 @@ class _DoctorConversationPageState extends State<DoctorConversationPage> {
 
   String _formatReadTime(DateTime? date, String lang) {
     if (date == null) return '';
-    final now = DateTime.now();
+    final now = DocSeraTime.nowSyria();
     final today = DateTime(now.year, now.month, now.day);
     final yesterday = today.subtract(const Duration(days: 1));
     final messageDate = DateTime(date.year, date.month, date.day);
@@ -106,7 +107,7 @@ class _DoctorConversationPageState extends State<DoctorConversationPage> {
     if (text.isEmpty) return;
 
     final supabase = Supabase.instance.client;
-    final now = DateTime.now();
+    final now = DocSeraTime.nowUtc();
 
     // ✅ Add message to messages sub-table
     await supabase.from('messages').insert({
@@ -275,21 +276,21 @@ class _DoctorConversationPageState extends State<DoctorConversationPage> {
                             itemCount: messages.length,
                             itemBuilder: (context, index) {
                               final msg = messages[index];
-                              final time = msg['timestamp'] != null ? DateTime.tryParse(msg['timestamp']) : null;
+                              final time = msg['timestamp'] != null ? DocSeraTime.tryParseToSyria(msg['timestamp']) : null;
                               final isUser = msg['is_user'] ?? false;
                               final content = msg['text'] ?? '';
                               final senderName = msg['sender_name'] ?? '';
 
                               final bool isReadByUser = !isUser && (msg['read_by_user'] == true);
                               final bool isLastRead = isReadByUser && (index == messages.length - 1);
-                              final readByUserAt = msg['read_by_user_at'] != null ? DateTime.tryParse(msg['read_by_user_at']) : null;
+                              final readByUserAt = msg['read_by_user_at'] != null ? DocSeraTime.tryParseToSyria(msg['read_by_user_at']) : null;
 
                               // ✅ منطق فاصل التاريخ
                               DateTime? currentDate = time != null ? DateTime(time.year, time.month, time.day) : null;
                               DateTime? previousDate;
                               if (index > 0) {
                                 final prev = messages[index - 1];
-                                final prevTime = prev['timestamp'] != null ? DateTime.tryParse(prev['timestamp']) : null;
+                                final prevTime = prev['timestamp'] != null ? DocSeraTime.tryParseToSyria(prev['timestamp']) : null;
                                 if (prevTime != null) {
                                   previousDate = DateTime(prevTime.year, prevTime.month, prevTime.day);
                                 }

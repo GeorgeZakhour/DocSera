@@ -4,6 +4,7 @@ import 'package:docsera/models/conversation.dart';
 import 'package:docsera/screens/doctors/doctor_panel/doctor_drawer.dart';
 import 'package:docsera/screens/doctors/doctor_panel/doctor_conversation_page.dart';
 import 'package:docsera/utils/doctor_image_utils.dart';
+import 'package:docsera/utils/time_utils.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
@@ -105,14 +106,14 @@ class DoctorMessagesPage extends StatelessWidget {
     final lang = Localizations.localeOf(context).languageCode;
     final unreadCount = convo.unreadCountForDoctor ?? 0;
     final timestamp = convo.messages.isNotEmpty
-        ? convo.messages.last['timestamp'] as DateTime
+        ? (convo.messages.last['timestamp'] as DateTime?) ?? convo.updatedAt
         : convo.updatedAt;
     final lastText = convo.lastMessage;
     final patientName = convo.patientName ?? '';
     final accountHolderName = convo.accountHolderName ?? '';
 
-    final isToday = DateTime.now().difference(timestamp).inDays == 0;
-    final isYesterday = DateTime.now().difference(timestamp).inDays == 1;
+    final isToday = DocSeraTime.nowSyria().difference(timestamp).inDays == 0;
+    final isYesterday = DocSeraTime.nowSyria().difference(timestamp).inDays == 1;
 
     String timeString;
     if (isToday) {

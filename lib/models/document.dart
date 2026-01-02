@@ -1,3 +1,4 @@
+import 'package:docsera/utils/time_utils.dart';
 class UserDocument {
   final String? id;
   final String userId;
@@ -37,7 +38,7 @@ class UserDocument {
       patientId: data['patient_id'] ?? '',
       previewUrl: data['preview_url'] ?? '',
       pages: List<String>.from(data['pages'] ?? []),
-      uploadedAt: DateTime.parse(data['uploaded_at']),
+      uploadedAt: DocSeraTime.tryParseToSyria(data['uploaded_at'].toString()) ?? DocSeraTime.nowSyria(),
       uploadedById: data['uploaded_by_id'] ?? '',
       cameFromConversation: data['came_from_conversation'] ?? false,
       conversationDoctorName: data['conversation_doctor_name'],
@@ -53,7 +54,7 @@ class UserDocument {
       'patient_id': patientId,
       'preview_url': previewUrl,
       'pages': pages,
-      'uploaded_at': uploadedAt.toIso8601String(),
+      'uploaded_at': DocSeraTime.toUtc(uploadedAt).toIso8601String(),
       'uploaded_by_id': uploadedById,
       'came_from_conversation': cameFromConversation,
       if (conversationDoctorName != null)

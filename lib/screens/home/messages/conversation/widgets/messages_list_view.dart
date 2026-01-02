@@ -68,37 +68,43 @@ class MessagesListView extends StatelessWidget {
   }
 
   String _getDayLabel(DateTime date, String lang) {
-    final now = DateTime.now();
+    // ✅ Use Syria Time for logic
+    final syriaDate = DocSeraTime.toSyria(date);
+    final now = DocSeraTime.nowSyria();
+    
     final today = DateTime(now.year, now.month, now.day);
     final yesterday = today.subtract(const Duration(days: 1));
-    final messageDate = DateTime(date.year, date.month, date.day);
+    final messageDate = DateTime(syriaDate.year, syriaDate.month, syriaDate.day);
 
     if (messageDate == today) {
       return lang == 'ar' ? 'اليوم' : 'Today';
     } else if (messageDate == yesterday) {
       return lang == 'ar' ? 'أمس' : 'Yesterday';
     } else {
-      return intl.DateFormat('d MMM', lang == 'ar' ? 'ar' : 'en').format(date);
+      return intl.DateFormat('d MMM', lang == 'ar' ? 'ar' : 'en').format(syriaDate);
     }
   }
 
   String _formatReadTime(DateTime? date, String lang) {
     if (date == null) return '';
 
-    final now = DateTime.now();
+    // ✅ Use Syria Time
+    final syriaDate = DocSeraTime.toSyria(date);
+    final now = DocSeraTime.nowSyria();
+    
     final today = DateTime(now.year, now.month, now.day);
     final yesterday = today.subtract(const Duration(days: 1));
-    final messageDate = DateTime(date.year, date.month, date.day);
+    final messageDate = DateTime(syriaDate.year, syriaDate.month, syriaDate.day);
+
+    final timeStr = intl.DateFormat('HH:mm', lang == 'ar' ? 'ar' : 'en').format(syriaDate);
 
     if (messageDate == today) {
-      return intl.DateFormat('HH:mm', lang == 'ar' ? 'ar' : 'en').format(date);
+      return timeStr;
     } else if (messageDate == yesterday) {
-      final time =
-      intl.DateFormat('HH:mm', lang == 'ar' ? 'ar' : 'en').format(date);
-      return lang == 'ar' ? 'أمس الساعة $time' : 'Yesterday at $time';
+      return lang == 'ar' ? 'أمس الساعة $timeStr' : 'Yesterday at $timeStr';
     } else {
-      return intl.DateFormat('d MMM • HH:mm', lang == 'ar' ? 'ar' : 'en')
-          .format(date);
+      final dateStr = intl.DateFormat('d MMM', lang == 'ar' ? 'ar' : 'en').format(syriaDate);
+      return '$dateStr • $timeStr';
     }
   }
 
@@ -520,7 +526,7 @@ class MessagesListView extends StatelessWidget {
                   patientId: patientName,
                   previewUrl: url,
                   pages: [url],
-                  uploadedAt: DateTime.now(),
+                  uploadedAt: DocSeraTime.nowUtc(),
                   uploadedById: '',
                   cameFromConversation: true,
                   conversationDoctorName: doctorName,
@@ -721,20 +727,23 @@ class MessagesListView extends StatelessWidget {
                                       initialIndex: i,
                                     ),
                                     child: ClipRRect(
-                                      borderRadius:
-                                      BorderRadius.circular(8.r),
-                                      child: FadeInImage(
-                                        placeholder:
-                                        MemoryImage(kTransparentImage),
-                                        image: CachedNetworkImageProvider(
-                                            imageUrl),
-                                        fadeInDuration: const Duration(
-                                            milliseconds: 100),
+                                      borderRadius: BorderRadius.circular(8.r),
+                                      child: CachedNetworkImage(
+                                        imageUrl: imageUrl,
+                                        memCacheWidth: 500, // ✅ LIMIT MEMORY: Downsample large images
+                                        maxWidthDiskCache: 1000, // Optimize disk usage
+                                        placeholder: (_, __) => Image.memory(kTransparentImage),
+                                        imageBuilder: (context, imageProvider) => Container(
+                                          decoration: BoxDecoration(
+                                            image: DecorationImage(
+                                              image: imageProvider,
+                                              fit: BoxFit.cover,
+                                            ),
+                                          ),
+                                        ),
+                                        fadeInDuration: const Duration(milliseconds: 100),
                                         fit: BoxFit.cover,
-                                        placeholderFit: BoxFit.cover,
-                                        imageErrorBuilder:
-                                            (_, __, ___) =>
-                                        const Icon(Icons.error),
+                                        errorWidget: (_, __, ___) => const Icon(Icons.error),
                                       ),
                                     ),
                                   );

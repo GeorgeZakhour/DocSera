@@ -1,4 +1,5 @@
 import 'package:docsera/screens/doctors/doctor_panel/doctor_dashboard.dart';
+import 'package:docsera/utils/time_utils.dart';
 import 'package:docsera/utils/page_transitions.dart';
 import 'package:docsera/widgets/base_scaffold.dart';
 import 'package:flutter/material.dart';
@@ -180,8 +181,8 @@ class _DoctorRegistrationPageState extends State<DoctorRegistrationPage> {
           "specialties": _specialties,
           "languages": _selectedLanguages,
           "opening_hours": _openingHours,
-          "created_at": DateTime.now().toIso8601String(),
-          "last_updated": DateTime.now().toIso8601String(),
+          "created_at": DocSeraTime.nowUtc().toIso8601String(),
+          "last_updated": DocSeraTime.nowUtc().toIso8601String(),
         });
 
         // ✅ حفظ بيانات الدخول
