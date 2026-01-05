@@ -42,7 +42,7 @@ class WaitingForConfirmationPage extends StatelessWidget {
       onWillPop: () async {
         Navigator.pushAndRemoveUntil(
           context,
-          fadePageRoute(const CustomBottomNavigationBar()),
+          fadePageRoute(CustomBottomNavigationBar()),
               (route) => false,
         );
         return false;
@@ -64,7 +64,7 @@ class WaitingForConfirmationPage extends StatelessWidget {
             onPressed: () {
               Navigator.pushAndRemoveUntil(
                 context,
-                fadePageRoute(const CustomBottomNavigationBar()),
+                fadePageRoute(CustomBottomNavigationBar()),
                     (route) => false,
               );
             },
@@ -174,7 +174,7 @@ class WaitingForConfirmationPage extends StatelessWidget {
                   onPressed: () {
                     Navigator.pushAndRemoveUntil(
                       context,
-                      fadePageRoute(const CustomBottomNavigationBar()),
+                      fadePageRoute(CustomBottomNavigationBar()),
                           (route) => false,
                     );
                   },

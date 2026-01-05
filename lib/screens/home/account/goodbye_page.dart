@@ -121,7 +121,7 @@ class _GoodbyePageState extends State<GoodbyePage> {
                     onPressed: () {
                       Navigator.pushAndRemoveUntil(
                         context,
-                        fadePageRoute(const CustomBottomNavigationBar()),
+                        fadePageRoute(CustomBottomNavigationBar()),
                             (route) => false,
                       );
                     },

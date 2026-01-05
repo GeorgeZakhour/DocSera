@@ -480,20 +480,32 @@ class _SelectPatientForMessagePageState extends State<SelectPatientForMessagePag
                 }
 
                 // ✅ غير محظور → نتابع كالمعتاد
-                final response = await Supabase.instance.client
+                // 1. تحديد المعرفات الصحيحة
+                final accountHolderId = userId!;
+                final isRelative = selectedPatientId != accountHolderId;
+                final relativeId = isRelative ? selectedPatientId : null;
+
+                // 2. بناء الاستعلام مع الفلتر الصحيح
+                var query = Supabase.instance.client
                     .from('conversations')
                     .select()
                     .eq('doctor_id', widget.doctorId)
-                    .eq('patient_id', selectedPatientId!)
-                    .eq('is_closed', false)
-                    .limit(1)
-                    .maybeSingle();
+                    .eq('patient_id', accountHolderId) // Always the account holder
+                    .eq('is_closed', false);
+
+                if (isRelative) {
+                   query = query.eq('relative_id', relativeId!);
+                } else {
+                   query = query.filter('relative_id', 'is', null);
+                }
+
+                final response = await query.limit(1).maybeSingle();
 
                 if (response != null) {
                   final docData = response;
                   final conversationId = docData['id'];
 
-                  Navigator.push(
+                  Navigator.pushReplacement(
                     context,
                     fadePageRoute(
                       BlocProvider(
@@ -532,6 +544,8 @@ class _SelectPatientForMessagePageState extends State<SelectPatientForMessagePag
                         doctorImage: widget.doctorImage,
                         doctorImageUrl: widget.doctorImageUrl,
                         doctorSpecialty: widget.specialty,
+                        doctorTitle: widget.doctorTitle,
+                        doctorGender: widget.doctorGender,
                         patientProfile: patientProfile,
                         attachedDocument: widget.attachedDocument,
                       ),

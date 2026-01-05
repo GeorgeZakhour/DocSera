@@ -193,9 +193,7 @@ class _CreatePasswordPageState extends State<CreatePasswordPage> {
   Widget _buildPasswordField() {
     return TextFormField(
       controller: _passwordController,
-        inputFormatters: [
-          FilteringTextInputFormatter.allow(RegExp(r'[a-zA-Z0-9!@#\$%^&*()_+{}\[\]:;"<>,.?\/\\|`~\-]')),
-    ],
+// inputFormatters removed to allow strong passwords with any characters
       obscureText: !_isPasswordVisible,
       textDirection: detectTextDirection(_passwordController.text),
       textAlign: getTextAlign(context),

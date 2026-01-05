@@ -19,11 +19,15 @@ import 'package:flutter_svg/flutter_svg.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:docsera/main.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
+import 'package:docsera/services/navigation/app_lifecycle.dart';
 
 class CustomBottomNavigationBar extends StatefulWidget {
   final int initialIndex;
+  
+  // ✅ Global Key to access state from NotificationService
+  static final GlobalKey<_CustomBottomNavigationBarState> globalKey = GlobalKey<_CustomBottomNavigationBarState>();
 
-  const CustomBottomNavigationBar({super.key, this.initialIndex = 0});
+  CustomBottomNavigationBar({this.initialIndex = 0}) : super(key: globalKey);
 
   @override
   _CustomBottomNavigationBarState createState() =>
@@ -45,6 +49,9 @@ class _CustomBottomNavigationBarState extends State<CustomBottomNavigationBar>
   @override
   void initState() {
     super.initState();
+    // ✅ Signal that the app structure is ready for deep links
+    AppLifecycle.isAppReady.value = true;
+
     _currentIndex = widget.initialIndex;
 
     Future.microtask(() {
@@ -78,6 +85,17 @@ class _CustomBottomNavigationBarState extends State<CustomBottomNavigationBar>
     super.dispose();
   }
 
+  // ✅ Public method to switch tabs
+  void switchTab(int index) {
+      if (index >= 0 && index < _pages.length) {
+          setState(() {
+              _currentIndex = index;
+              // Also update the Cubit/State if needed, but setState usually triggers the UI update
+          });
+      }
+  }
+
+  // --- Helpers ---
   Future<void> _logout(BuildContext context) async {
     try {
       await Supabase.instance.client.auth.signOut();
@@ -89,7 +107,7 @@ class _CustomBottomNavigationBarState extends State<CustomBottomNavigationBar>
       });
       Navigator.pushAndRemoveUntil(
         context,
-        fadePageRoute(const CustomBottomNavigationBar()),
+        fadePageRoute(CustomBottomNavigationBar()),
             (Route<dynamic> route) => false,
       );
     } catch (e) {

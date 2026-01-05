@@ -27,7 +27,7 @@ import 'package:docsera/utils/doctor_image_utils.dart';
   }
 
   class _MessagesPageState extends State<MessagesPage> {
-    bool isExpanded = false;
+    final Set<String> _expandedDoctorIds = {};
 
     @override
     void initState() {
@@ -227,31 +227,35 @@ import 'package:docsera/utils/doctor_image_utils.dart';
         groupedByDoctor[doctorId]!.add(convo);
       }
 
-      final List<Widget> children = [
-        SizedBox(height: 15.h),
-        _buildBannerCard(),
-      ];
+      final groups = groupedByDoctor.entries.toList();
+      final itemCount = groups.length + 3; // Spacer, Banner, Groups, Footer
 
-      for (var entry in groupedByDoctor.entries) {
-        final doctorId = entry.key;
-        final convos = entry.value;
-        final firstConvo = convos.first;
-
-        final isForSelf = convos.length == 1 &&
-            (firstConvo.patientName == firstConvo.accountHolderName);
-
-        if (isForSelf) {
-          children.add(_buildConversationTile(context, firstConvo, showDoctorName: true));
-        } else {
-          children.add(_buildGroupedDoctorTile(context, convos));
-        }
-      }
-
-      children.add(SizedBox(height: 80.h));
-
-      return ListView(
+      return ListView.builder(
         padding: EdgeInsets.zero,
-        children: children,
+        itemCount: itemCount,
+        itemBuilder: (context, index) {
+          if (index == 0) {
+            return SizedBox(height: 15.h);
+          } else if (index == 1) {
+            return _buildBannerCard();
+          } else if (index == itemCount - 1) {
+            return SizedBox(height: 80.h);
+          }
+
+          final groupIndex = index - 2;
+          final entry = groups[groupIndex];
+          final convos = entry.value;
+          final firstConvo = convos.first;
+
+          final isForSelf = convos.length == 1 &&
+              (firstConvo.patientName == firstConvo.accountHolderName);
+
+          if (isForSelf) {
+            return _buildConversationTile(context, firstConvo, showDoctorName: true);
+          } else {
+            return _buildGroupedDoctorTile(context, convos);
+          }
+        },
       );
     }
 
@@ -270,139 +274,146 @@ import 'package:docsera/utils/doctor_image_utils.dart';
         height: 44,
       );
 
-      return StatefulBuilder(
-        builder: (context, setState) {
-          final isRTL = Directionality.of(context).toString().contains('rtl');
-          return Container(
-            color: isExpanded ? AppColors.main.withOpacity(0.03) : Colors.transparent,
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                InkWell(
-                  onTap: () => setState(() => isExpanded = !isExpanded),
-                  child: Padding(
-                    padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 8.h),
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      final doctorId = doctor.doctorId;
+      final isExpanded = _expandedDoctorIds.contains(doctorId);
+      final isRTL = Directionality.of(context).toString().contains('rtl');
+
+      return Container(
+        color: isExpanded ? AppColors.main.withOpacity(0.03) : Colors.transparent,
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            InkWell(
+              onTap: () {
+                setState(() {
+                  if (isExpanded) {
+                    _expandedDoctorIds.remove(doctorId);
+                  } else {
+                    _expandedDoctorIds.add(doctorId!);
+                  }
+                });
+              },
+              child: Padding(
+                padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 8.h),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Row(
                       children: [
-                        Row(
+                        Stack(
                           children: [
-                            Stack(
-                              children: [
-                                CircleAvatar(
-                                  radius: 22.r,
-                                  backgroundColor: AppColors.main.withOpacity(0.1),
-                                  backgroundImage: imageResult.imageProvider,
+                            CircleAvatar(
+                              radius: 22.r,
+                              backgroundColor: AppColors.main.withOpacity(0.1),
+                              backgroundImage: imageResult.imageProvider,
 
-                                ),
-                                Positioned(
-                                  right: 0,
-                                  bottom: 0,
-                                  child: Container(
-                                    padding: EdgeInsets.all(2.w),
-                                    decoration: const BoxDecoration(
-                                      color: Colors.white,
-                                      shape: BoxShape.circle,
-                                    ),
-                                    child: Container(
-                                      width: 16.w,
-                                      height: 16.w,
-                                      decoration: BoxDecoration(
-                                        color: AppColors.mainDark.withOpacity(0.3),
-                                        shape: BoxShape.circle,
-                                      ),
-                                      alignment: Alignment.center,
-                                      child: Text(
-                                        convos.length.toString(),
-                                        style: AppTextStyles.getText3(context).copyWith(
-                                          fontSize: 8.sp,
-                                          color: Colors.black,
-                                        ),
-                                      ),
-                                    ),
-                                  ),
-                                ),
-                              ],
                             ),
-                            SizedBox(width: 12.w),
-                            Text(
-                              doctor.doctorName ?? '',
-                              style: AppTextStyles.getTitle1(context),
-                            ),
-                          ],
-                        ),
-
-                        Row(
-                          children: [
-                            if (totalUnread > 0)
-                              Padding(
-                                padding: EdgeInsets.only(left: 6.w),
+                            Positioned(
+                              right: 0,
+                              bottom: 0,
+                              child: Container(
+                                padding: EdgeInsets.all(2.w),
+                                decoration: const BoxDecoration(
+                                  color: Colors.white,
+                                  shape: BoxShape.circle,
+                                ),
                                 child: Container(
                                   width: 16.w,
                                   height: 16.w,
-                                  decoration: const BoxDecoration(
-                                    color: AppColors.main,
+                                  decoration: BoxDecoration(
+                                    color: AppColors.mainDark.withOpacity(0.3),
                                     shape: BoxShape.circle,
                                   ),
                                   alignment: Alignment.center,
                                   child: Text(
-                                    totalUnread.toString(),
+                                    convos.length.toString(),
                                     style: AppTextStyles.getText3(context).copyWith(
-                                      color: Colors.white,
                                       fontSize: 8.sp,
-                                      fontWeight: FontWeight.bold,
+                                      color: Colors.black,
                                     ),
                                   ),
                                 ),
                               ),
-                            Icon(
-                              isExpanded ? Icons.expand_less : Icons.expand_more,
-                              color: Colors.grey.shade400,
                             ),
                           ],
                         ),
+                        SizedBox(width: 12.w),
+                        Text(
+                          doctor.doctorName ?? '',
+                          style: AppTextStyles.getTitle1(context),
+                        ),
                       ],
                     ),
-                  ),
-                ),
-                if (isExpanded)
-                  ...convos.map((convo) {
-                    return Padding(
-                      padding: EdgeInsets.only(left: isRTL? 0 : 16.w , right: isRTL? 24.w  : 0,),
-                      child: Container(
-                        decoration: BoxDecoration(
-                          border: Border(
-                            left: isRTL
-                                ? BorderSide.none
-                                : BorderSide(
-                              color: convo.patientName == convo.accountHolderName
-                                  ? AppColors.main.withOpacity(0.8)
-                                  : AppColors.yellow.withOpacity(0.6),
-                              width: 4.w,
+
+                    Row(
+                      children: [
+                        if (totalUnread > 0)
+                          Padding(
+                            padding: EdgeInsets.only(left: 6.w),
+                            child: Container(
+                              width: 16.w,
+                              height: 16.w,
+                              decoration: const BoxDecoration(
+                                color: AppColors.main,
+                                shape: BoxShape.circle,
+                              ),
+                              alignment: Alignment.center,
+                              child: Text(
+                                totalUnread.toString(),
+                                style: AppTextStyles.getText3(context).copyWith(
+                                  color: Colors.white,
+                                  fontSize: 8.sp,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
                             ),
-                            right: isRTL
-                                ? BorderSide(
-                              color: convo.patientName == convo.accountHolderName
-                                  ? AppColors.main.withOpacity(0.8)
-                                  : AppColors.yellow.withOpacity(0.6),
-                              width: 4.w,
-                            )
-                                : BorderSide.none,
                           ),
+                        Icon(
+                          isExpanded ? Icons.expand_less : Icons.expand_more,
+                          color: Colors.grey.shade400,
                         ),
-
-
-                        child: _buildConversationTile(context, convo, groupCount: convos.length, showDoctorName: false),
-                      ),
-                    );
-                  }),
-
-                if (!isExpanded)
-                  Divider(color: Colors.grey.shade300, height: 1),
-              ],
+                      ],
+                    ),
+                  ],
+                ),
+              ),
             ),
-          );
-        },
+            if (isExpanded)
+              ...convos.map((convo) {
+                return Padding(
+                  padding: EdgeInsets.only(left: isRTL? 0 : 16.w , right: isRTL? 24.w  : 0,),
+                  child: Container(
+                    decoration: BoxDecoration(
+                      border: Border(
+                        left: isRTL
+                            ? BorderSide.none
+                            : BorderSide(
+                          color: convo.patientName == convo.accountHolderName
+                              ? AppColors.main.withOpacity(0.8)
+                              : AppColors.yellow.withOpacity(0.6),
+                          width: 4.w,
+                        ),
+                        right: isRTL
+                            ? BorderSide(
+                          color: convo.patientName == convo.accountHolderName
+                              ? AppColors.main.withOpacity(0.8)
+                              : AppColors.yellow.withOpacity(0.6),
+                          width: 4.w,
+                        )
+                            : BorderSide.none,
+                      ),
+                    ),
+
+
+                    child: _buildConversationTile(context, convo, groupCount: convos.length, showDoctorName: false),
+                  ),
+                );
+              }),
+
+            if (!isExpanded)
+              Divider(color: Colors.grey.shade300, height: 1),
+          ],
+        ),
       );
     }
 

@@ -1,5 +1,6 @@
 import 'dart:ui';
 
+import 'dart:io';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:docsera/app/const.dart';
 import 'package:docsera/app/text_styles.dart';
@@ -13,6 +14,9 @@ import 'package:flutter_svg/flutter_svg.dart';
 import 'package:intl/intl.dart' as intl;
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:transparent_image/transparent_image.dart';
+import 'package:docsera/screens/home/messages/conversation/widgets/audio_message_bubble.dart';
+import 'package:docsera/screens/home/messages/conversation/widgets/resolved_bubbles.dart';
+import 'package:shimmer/shimmer.dart';
 
 import '../../../../../utils/full_page_loader.dart';
 
@@ -36,6 +40,9 @@ class MessagesListView extends StatelessWidget {
   final void Function(List<String> urls, {int initialIndex, bool showAsGrid})
   onOpenImages;
 
+  /// Called when user taps retry on a failed message
+  final void Function(Map<String, dynamic> msg)? onRetry;
+
   const MessagesListView({
     super.key,
     required this.messages,
@@ -48,6 +55,7 @@ class MessagesListView extends StatelessWidget {
     required this.doctorImage,
     required this.resolveImageUrls,
     required this.onOpenImages,
+    this.onRetry,
   });
 
   bool _isArabicText(String text) {
@@ -115,22 +123,36 @@ class MessagesListView extends StatelessWidget {
 
     bool firstUserMessageFound = false;
 
-    return ListView.builder(
-      controller: scrollController,
-      padding: EdgeInsets.only(
-        left: 20.w,
-        top: 12.h,
-        right: 20.w,
-        bottom: 65.h,
-      ),
-      itemCount: messages.length + pendingCount,
-      itemBuilder: (context, index) {
-        // Pending shimmer messages
-        if (index >= messages.length) {
-          return pendingBuilder(context, index - messages.length);
+    // ✅ FIX: Align short chats to TOP, but keep Bottom Anchoring for long chats
+    // Align(topCenter) + shrinkWrap: true + reverse: true DOES this magic.
+    return Align(
+      alignment: Alignment.topCenter,
+      child: ListView.builder(
+        controller: scrollController,
+        reverse: true,
+        shrinkWrap: true, // Allow list to occupy only needed height
+        physics: const AlwaysScrollableScrollPhysics(), // Ensure scrolling always works
+        padding: EdgeInsets.only(
+          left: 20.w,
+          top: 12.h,
+          right: 20.w,
+          bottom: 110.h, // Bottom padding to clear floating input
+        ),
+        itemCount: messages.length + pendingCount,
+        itemBuilder: (context, index) {
+        // Pending shimmer messages (at the visual bottom, index 0..P-1)
+        if (index < pendingCount) {
+          // We want oldest pending at visual top of pending block (higher index)
+          // Newest pending at visual bottom (index 0).
+          // Assuming pendingBuilder expects index 0 as "First Pending".
+          // Let's pass reverse index.
+          return pendingBuilder(context, pendingCount - 1 - index);
         }
 
-        final msg = messages[index];
+        final int msgVisualIndex = index - pendingCount;
+        final int effectiveIndex = messages.length - 1 - msgVisualIndex;
+        
+        final msg = messages[effectiveIndex];
         final isUser = msg['is_user'] ?? false;
         final content = msg['text'] ?? '';
         final attachments =
@@ -142,12 +164,14 @@ class MessagesListView extends StatelessWidget {
         DateTime.tryParse(msg['readByDoctorAt'] ?? '');
         final bool isReadByDoctor = isUser && (msg['read_by_doctor'] == true);
 
+        // Last Read check (Newest message)
         final bool isLastRead =
-            isReadByDoctor && (index == messages.length - 1);
+            isReadByDoctor && (effectiveIndex == messages.length - 1);
 
         bool showSenderName = true;
-        if (index > 0) {
-          final prev = messages[index - 1];
+        // Check Previous (Older) Message
+        if (effectiveIndex > 0) {
+          final prev = messages[effectiveIndex - 1];
           final prevSender = prev['is_user'] ?? false;
           if (prevSender == isUser) {
             showSenderName = false;
@@ -224,9 +248,10 @@ class MessagesListView extends StatelessWidget {
         DateTime? currentDate =
         time != null ? DateTime(time.year, time.month, time.day) : null;
         DateTime? previousDate;
-        if (index > 0) {
+        // Check Previous (Older) Message Date
+        if (effectiveIndex > 0) {
           final previousTimestampString =
-          (messages[index - 1])['timestamp'] as String?;
+          (messages[effectiveIndex - 1])['timestamp'] as String?;
           final previousTime = previousTimestampString != null
               ? DateTime.tryParse(previousTimestampString)
               : null;
@@ -291,14 +316,18 @@ class MessagesListView extends StatelessWidget {
                           if (content.trim().isNotEmpty)
                             _buildTextBubble(
                               context: context,
-                              content: content,
-                              attachments: attachments,
+                              content: msg['text'] ?? '',
+                              attachments: (msg['attachments'] as List?)
+                                  ?.cast<Map<String, dynamic>>() ??
+                                  [],
                               isUser: isUser,
                               avatar: avatar,
                               showReason: showReason,
-                              time: time,
-                              isArabic: isArabic,
+                              time: timestamp,
+                              isArabic: _isArabicText(msg['text'] ?? ''),
                               showSenderName: showSenderName,
+                              status: msg['status'] as String?,
+                              onRetryTap: () => onRetry?.call(msg),
                             ),
                           if (attachments.isNotEmpty)
                             Padding(
@@ -310,6 +339,8 @@ class MessagesListView extends StatelessWidget {
                                 avatar: avatar2,
                                 time: time,
                                 showSenderName: showSenderName,
+                                status: msg['status'] as String?,
+                                onRetryTap: () => onRetry?.call(msg),
                               ),
                             ),
                           if (isLastRead) ...[
@@ -350,6 +381,7 @@ class MessagesListView extends StatelessWidget {
           ),
         );
       },
+      ),
     );
   }
 
@@ -363,12 +395,13 @@ class MessagesListView extends StatelessWidget {
     required DateTime? time,
     required bool isArabic,
     required bool showSenderName,
+    String? status, // ✅ New
+    VoidCallback? onRetryTap, // ✅ New
   }) {
     return ClipRect(
       child: BackdropFilter(
         filter: ImageFilter.blur(sigmaX: 1, sigmaY: 1),
-        child: IntrinsicWidth(
-          child: ConstrainedBox(
+        child: ConstrainedBox(
             constraints: BoxConstraints(
               minWidth: 0.15.sw,
               maxWidth: 0.6.sw,
@@ -421,24 +454,57 @@ class MessagesListView extends StatelessWidget {
                   if (attachments.isEmpty)
                     Align(
                       alignment: Alignment.bottomRight,
-                      child: Text(
-                        time != null
-                            ? intl.DateFormat('HH:mm').format(
-                          TimezoneUtils.toDamascus(time),
-                        )
-                            : '',
-                        style: AppTextStyles.getText3(context).copyWith(
-                          fontSize: 10.sp,
-                          color:
-                          isUser ? Colors.white70 : Colors.black54,
-                        ),
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Text(
+                            time != null
+                                ? intl.DateFormat('HH:mm').format(
+                              TimezoneUtils.toDamascus(time),
+                            )
+                                : '',
+                            style: AppTextStyles.getText3(context).copyWith(
+                              fontSize: 10.sp,
+                              color:
+                              isUser ? Colors.white70 : Colors.black54,
+                            ),
+                          ),
+                          if (isUser) ...[
+                             SizedBox(width: 4.w),
+                             if (status == 'sending')
+                               SizedBox(
+                                 width: 10.w, 
+                                 height: 10.w,
+                                 child: const CircularProgressIndicator(
+                                   strokeWidth: 1.5, 
+                                   color: Colors.white70,
+                                 ),
+                               )
+                             else if (status == 'failed')
+                               GestureDetector(
+                                 onTap: onRetryTap,
+                                 child: Icon(
+                                   Icons.error_outline, 
+                                   color: Colors.redAccent, 
+                                   size: 14.sp,
+                                 ),
+                               )
+                             else
+                               Icon(
+                                 Icons.done_all, 
+                                 // TODO: Check read status for color (Blue if read, Grey if sent)
+                                 // For now, simplify to just "Sent" indicator logic or standard checks
+                                 color: AppColors.orange, 
+                                 size: 14.sp,
+                               ),
+                          ],
+                        ],
                       ),
                     ),
                 ],
               ),
             ),
           ),
-        ),
       ),
     );
   }
@@ -450,6 +516,8 @@ class MessagesListView extends StatelessWidget {
     required Widget avatar,
     required DateTime? time,
     required bool showSenderName,
+    String? status,
+    VoidCallback? onRetryTap,
   }) {
     final images = attachments
         .where((a) => (a['type'] ?? a['file_type']) == 'image')
@@ -500,20 +568,25 @@ class MessagesListView extends StatelessWidget {
             GestureDetector(
               onTap: () async {
                 // Old style: file_url / fileUrl
-                String? url =
-                (pdf['file_url'] ?? pdf['fileUrl'])?.toString();
+                String? url = (pdf['file_url'] ?? pdf['fileUrl'])?.toString();
+                String? localPath = pdf['localPath']?.toString();
 
                 // Fallback: bucket + paths
                 if (url == null || url.trim().isEmpty) {
-                  final bucket =
-                  (pdf['bucket'] ?? 'chat.attachments').toString();
+                  final bucket = (pdf['bucket'] ?? 'chat.attachments').toString();
                   final paths = (pdf['paths'] as List?) ?? [];
-                  if (paths.isEmpty) return;
-                  // This widget doesn't know how to sign URLs, so assume direct URL
-                  url = paths.first.toString();
+                  
+                  if (localPath != null && localPath.isNotEmpty) {
+                     url = localPath;
+                  } else if (paths.isNotEmpty) {
+                    // This widget doesn't know how to sign URLs, so assume direct URL
+                    url = paths.first.toString();
+                  } else {
+                    return;
+                  }
                 }
 
-                if (url.trim().isEmpty) return;
+                if (url == null || url.trim().isEmpty) return;
 
                 final userDoc = UserDocument(
                   id: '',
@@ -586,17 +659,49 @@ class MessagesListView extends StatelessWidget {
                     : Alignment.bottomLeft,
                 child: Padding(
                   padding: EdgeInsets.only(top: 1.h),
-                  child: Text(
-                    time != null
-                        ? intl.DateFormat('HH:mm').format(
-                      TimezoneUtils.toDamascus(time),
-                    )
-                        : '',
-                    style: AppTextStyles.getText3(context).copyWith(
-                      fontSize: 10.sp,
-                      color: Colors.black54,
-                      height: 1.0,
-                    ),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Text(
+                        time != null
+                            ? intl.DateFormat('HH:mm').format(
+                          TimezoneUtils.toDamascus(time),
+                        )
+                            : '',
+                        style: AppTextStyles.getText3(context).copyWith(
+                          fontSize: 10.sp,
+                          color: Colors.black54,
+                          height: 1.0,
+                        ),
+                      ),
+                      if (isUser) ...[
+                        SizedBox(width: 4.w),
+                        if (status == 'sending')
+                          SizedBox(
+                            width: 10.w,
+                            height: 10.w,
+                            child: const CircularProgressIndicator(
+                              strokeWidth: 1.5,
+                              color: AppColors.main,
+                            ),
+                          )
+                        else if (status == 'failed')
+                          GestureDetector(
+                            onTap: onRetryTap,
+                            child: Icon(
+                              Icons.error_outline,
+                              color: Colors.redAccent,
+                              size: 14.sp,
+                            ),
+                          )
+                        else
+                          Icon(
+                            Icons.done_all,
+                            color: AppColors.orange,
+                            size: 14.sp,
+                          ),
+                      ],
+                    ],
                   ),
                 ),
               ),
@@ -605,32 +710,104 @@ class MessagesListView extends StatelessWidget {
         ),
       );
     }
+    
+    // Audio
+    final audios = attachments
+        .where((a) => (a['type'] ?? a['file_type']) == 'audio')
+        .cast<Map<String, dynamic>>()
+        .toList();
+        
+    if (audios.isNotEmpty) {
+       final audio = audios.first;
+       
+       String? url = (audio['file_url'] ?? audio['fileUrl'])?.toString();
+       String? localPath = audio['localPath']?.toString();
+       final paths = (audio['paths'] as List?) ?? [];
+       // Use localPath if available, otherwise fallback to first path
+       final path = localPath ?? (paths.isNotEmpty ? paths.first.toString() : null);
+       
+       final lang = Localizations.localeOf(context).languageCode;
+       final isAr = lang == 'ar';
+
+       return Align(
+         alignment: isUser ? Alignment.centerRight : Alignment.centerLeft,
+         child: Column(
+           // ✅ Align to End (Right) if User OR Arabic
+           crossAxisAlignment: (isUser || isAr) ? CrossAxisAlignment.start : CrossAxisAlignment.end,
+           children: [
+             if (showSenderName)
+                Padding(
+                  padding: EdgeInsets.only(bottom: 4.h),
+                  child: Text(
+                    isUser ? accountHolderName : doctorName,
+                    style: AppTextStyles.getText2(context).copyWith(
+                      fontWeight: FontWeight.bold,
+                      color: Colors.black87,
+                      fontSize: 10.sp, // ✅ Reduced from 12.sp to 10.sp
+                    ),
+                  ),
+                ),
+             ResolvedAudioBubble(
+               url: url,
+               path: path,
+               isUser: isUser,
+             ),
+             
+              Padding(
+                padding: EdgeInsets.only(top: 2.h),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Text(
+                       time != null ? intl.DateFormat('HH:mm').format(TimezoneUtils.toDamascus(time)) : '',
+                       style: AppTextStyles.getText3(context).copyWith(
+                         fontSize: 10.sp,
+                         color: Colors.black54,
+                       ),
+                    ),
+                    if (isUser) ...[
+                      SizedBox(width: 4.w),
+                      if (status == 'sending')
+                        SizedBox(
+                          width: 10.w,
+                          height: 10.w,
+                          child: const CircularProgressIndicator(
+                            strokeWidth: 1.5,
+                            color: AppColors.main,
+                          ),
+                        )
+                      else if (status == 'failed')
+                        GestureDetector(
+                          onTap: onRetryTap,
+                          child: Icon(
+                            Icons.error_outline,
+                            color: Colors.redAccent,
+                            size: 14.sp,
+                          ),
+                        )
+                      else
+                        Icon(
+                          Icons.done_all,
+                          color: AppColors.orange,
+                          size: 14.sp,
+                        ),
+                    ],
+                  ],
+                ),
+              ),
+           ],
+         ),
+       );
+    }
 
     // Images
     if (images.isNotEmpty) {
       return Align(
         alignment: isUser ? Alignment.centerLeft : Alignment.centerRight,
-        child: FutureBuilder<List<String>>(
-          future: resolveImageUrls(images),
-          builder: (context, snapshot) {
-            if (snapshot.connectionState == ConnectionState.waiting) {
-              return Padding(
-                padding: EdgeInsets.symmetric(vertical: 8.h),
-                child: SizedBox(
-                  width: 120.w,
-                  height: 120.w,
-                  child: const Center(
-                    child: FullPageLoader(),
-                  ),
-                ),
-              );
-            }
-
-            if (!snapshot.hasData || snapshot.data!.isEmpty) {
-              return const SizedBox.shrink();
-            }
-
-            final validImages = snapshot.data!;
+        child: ResolvedImagesBubble(
+          images: images,
+          resolveImageUrls: resolveImageUrls,
+          builder: (context, validImages) {
 
             return Column(
               crossAxisAlignment: isUser
@@ -728,23 +905,41 @@ class MessagesListView extends StatelessWidget {
                                     ),
                                     child: ClipRRect(
                                       borderRadius: BorderRadius.circular(8.r),
-                                      child: CachedNetworkImage(
-                                        imageUrl: imageUrl,
-                                        memCacheWidth: 500, // ✅ LIMIT MEMORY: Downsample large images
-                                        maxWidthDiskCache: 1000, // Optimize disk usage
-                                        placeholder: (_, __) => Image.memory(kTransparentImage),
-                                        imageBuilder: (context, imageProvider) => Container(
-                                          decoration: BoxDecoration(
-                                            image: DecorationImage(
-                                              image: imageProvider,
+                                      child: (imageUrl.startsWith('/') || imageUrl.startsWith('file:'))
+                                          ? Image.file(
+                                              File(imageUrl),
                                               fit: BoxFit.cover,
+                                              frameBuilder: (context, child, frame, wasSynchronouslyLoaded) {
+                                                if (wasSynchronouslyLoaded || frame != null) return child;
+                                                return Shimmer.fromColors(
+                                                  baseColor: Colors.grey.shade300,
+                                                  highlightColor: Colors.grey.shade100,
+                                                  child: Container(color: Colors.white),
+                                                );
+                                              },
+                                              errorBuilder: (_, __, ___) => const Icon(Icons.error),
+                                            )
+                                          : CachedNetworkImage(
+                                              imageUrl: imageUrl,
+                                              memCacheWidth: 500,
+                                              maxWidthDiskCache: 1000,
+                                              placeholder: (_, __) => Shimmer.fromColors(
+                                                  baseColor: Colors.grey.shade300,
+                                                  highlightColor: Colors.grey.shade100,
+                                                  child: Container(color: Colors.white),
+                                              ),
+                                              imageBuilder: (context, imageProvider) => Container(
+                                                decoration: BoxDecoration(
+                                                  image: DecorationImage(
+                                                    image: imageProvider,
+                                                    fit: BoxFit.cover,
+                                                  ),
+                                                ),
+                                              ),
+                                              fadeInDuration: const Duration(milliseconds: 100),
+                                              fit: BoxFit.cover,
+                                              errorWidget: (_, __, ___) => const Icon(Icons.error),
                                             ),
-                                          ),
-                                        ),
-                                        fadeInDuration: const Duration(milliseconds: 100),
-                                        fit: BoxFit.cover,
-                                        errorWidget: (_, __, ___) => const Icon(Icons.error),
-                                      ),
                                     ),
                                   );
                                 }
@@ -764,17 +959,49 @@ class MessagesListView extends StatelessWidget {
                         : Alignment.bottomLeft,
                     child: Padding(
                       padding: EdgeInsets.only(top: 1.h),
-                      child: Text(
-                        time != null
-                            ? intl.DateFormat('HH:mm').format(
-                          TimezoneUtils.toDamascus(time),
-                        )
-                            : '',
-                        style: AppTextStyles.getText3(context).copyWith(
-                          fontSize: 10.sp,
-                          color: Colors.black54,
-                          height: 1.0,
-                        ),
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Text(
+                            time != null
+                                ? intl.DateFormat('HH:mm').format(
+                              TimezoneUtils.toDamascus(time),
+                            )
+                                : '',
+                            style: AppTextStyles.getText3(context).copyWith(
+                              fontSize: 10.sp,
+                              color: Colors.black54,
+                              height: 1.0,
+                            ),
+                          ),
+                          if (isUser) ...[
+                            SizedBox(width: 4.w),
+                            if (status == 'sending')
+                              SizedBox(
+                                width: 10.w,
+                                height: 10.w,
+                                child: const CircularProgressIndicator(
+                                  strokeWidth: 1.5,
+                                  color: AppColors.main,
+                                ),
+                              )
+                            else if (status == 'failed')
+                              GestureDetector(
+                                onTap: onRetryTap,
+                                child: Icon(
+                                  Icons.error_outline,
+                                  color: Colors.redAccent,
+                                  size: 14.sp,
+                                ),
+                              )
+                            else
+                              Icon(
+                                Icons.done_all,
+                                color: AppColors.orange,
+                                size: 14.sp,
+                              ),
+                          ],
+                        ],
                       ),
                     ),
                   ),

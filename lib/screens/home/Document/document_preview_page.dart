@@ -88,20 +88,28 @@ class _DocumentPreviewPageState extends State<DocumentPreviewPage> {
     debugPrint('✅ Final type -> isImage: $isImage | isPdf: $isPdf');
 
     if (isPdf) {
-      _downloadPdfFromUrl(firstUrl, widget.document.name).then((file) {
-        if (mounted) {
-          setState(() {
-            _localPdfFile = file;
-            _loading = false;
-          });
-        }
-      }).catchError((e) {
-        debugPrint('❌ Failed to download PDF: $e');
+      if (!firstUrl.startsWith('http') && File(firstUrl).existsSync()) {
+        debugPrint('📂 Opening local PDF file: $firstUrl');
         setState(() {
+          _localPdfFile = File(firstUrl);
           _loading = false;
-          _localPdfFile = null;
         });
-      });
+      } else {
+        _downloadPdfFromUrl(firstUrl, widget.document.name).then((file) {
+          if (mounted) {
+            setState(() {
+              _localPdfFile = file;
+              _loading = false;
+            });
+          }
+        }).catchError((e) {
+          debugPrint('❌ Failed to download PDF: $e');
+          setState(() {
+            _loading = false;
+            _localPdfFile = null;
+          });
+        });
+      }
     } else if (isImage) {
       debugPrint('📥 Preloading images...');
       _preloadImages();
@@ -119,8 +127,13 @@ class _DocumentPreviewPageState extends State<DocumentPreviewPage> {
 
     for (int i = 0; i < urls.length; i++) {
       try {
-        final res = await http.get(Uri.parse(urls[i]));
-        loaded.add(res.statusCode == 200 ? res.bodyBytes : Uint8List(0));
+        final url = urls[i];
+        if (!url.startsWith('http') && File(url).existsSync()) {
+          loaded.add(await File(url).readAsBytes());
+        } else {
+          final res = await http.get(Uri.parse(url));
+          loaded.add(res.statusCode == 200 ? res.bodyBytes : Uint8List(0));
+        }
       } catch (_) {
         loaded.add(Uint8List(0));
       }

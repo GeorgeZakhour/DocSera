@@ -18,6 +18,8 @@ class SelectMessageReasonPage extends StatefulWidget {
   final ImageProvider doctorImage;
   final String doctorImageUrl;
   final String doctorSpecialty;
+  final String doctorTitle;
+  final String doctorGender;
   final PatientProfile patientProfile;
   final UserDocument? attachedDocument;
 
@@ -28,6 +30,8 @@ class SelectMessageReasonPage extends StatefulWidget {
     required this.doctorImage,
     required this.doctorImageUrl,
     required this.doctorSpecialty,
+    required this.doctorTitle,
+    required this.doctorGender,
     required this.patientProfile,
     this.attachedDocument,
   });
@@ -214,6 +218,8 @@ class _SelectMessageReasonPageState extends State<SelectMessageReasonPage> {
               doctorImage: widget.doctorImage,
               doctorImageUrl: widget.doctorImageUrl,
               doctorSpecialty: widget.doctorSpecialty,
+              doctorTitle: widget.doctorTitle,
+              doctorGender: widget.doctorGender,
               selectedReason: label,
               patientProfile: widget.patientProfile.copyWith(reason: label),
               attachedDocument: widget.attachedDocument,

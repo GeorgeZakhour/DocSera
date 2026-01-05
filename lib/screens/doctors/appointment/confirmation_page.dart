@@ -208,7 +208,7 @@ class AppointmentConfirmedPage extends StatelessWidget {
       onWillPop: () async {
         Navigator.pushAndRemoveUntil(
           context,
-          fadePageRoute(const CustomBottomNavigationBar()),
+          fadePageRoute(CustomBottomNavigationBar()),
               (route) => false,
         );
         return false; // منع الرجوع
@@ -230,7 +230,7 @@ class AppointmentConfirmedPage extends StatelessWidget {
             onPressed: () {
               Navigator.pushAndRemoveUntil(
                 context,
-                fadePageRoute(const CustomBottomNavigationBar()),
+                fadePageRoute(CustomBottomNavigationBar()),
                     (route) => false,
               );
             },

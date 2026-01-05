@@ -389,7 +389,7 @@ class _LoginPageState extends State<LoginPage> {
       Navigator.pushReplacement(
         context,
         MaterialPageRoute(
-          builder: (_) => const CustomBottomNavigationBar(),
+          builder: (_) => CustomBottomNavigationBar(),
         ),
       );
     } catch (e) {
@@ -669,7 +669,7 @@ class _LoginPageState extends State<LoginPage> {
                 if (!mounted) return;
                 Navigator.pushReplacement(
                   context,
-                  MaterialPageRoute(builder: (_) => const CustomBottomNavigationBar()),
+                  MaterialPageRoute(builder: (_) => CustomBottomNavigationBar()),
                 );
               },
               child: Padding(

@@ -118,6 +118,7 @@ class ConversationService {
     required String text,
     required List<Map<String, dynamic>> attachments,
     bool isUser = true,
+    String? id, // ✅ NEW: Optional ID for optimistic updates
   }) async {
     final now = DocSeraTime.nowUtc();
 
@@ -146,6 +147,7 @@ class ConversationService {
     // 2) إدخال الرسالة في جدول messages
     // ----------------------------------------------------------
     await _client.from('messages').insert({
+      if (id != null) 'id': id, // ✅ Insert with pre-generated UUID
       'conversation_id': conversationId,
       'text': text,
       'is_user': isUser,
@@ -189,20 +191,9 @@ class ConversationService {
         .eq('id', conversationId);
 
     // ----------------------------------------------------------
-    // 5) زيادة عداد الرسائل غير المقروءة للطبيب
-    //
-    // فقط إذا المرسل = المريض
+    // 5) عداد الرسائل يتم تحديثه تلقائياً بواسطة Database Trigger 
+    // (fix_unread_trigger.sql)
     // ----------------------------------------------------------
-    if (isUser) {
-      try {
-        await _client.rpc(
-          'increment_unread_for_doctor',
-          params: {'conversation_id': conversationId},
-        );
-      } catch (_) {
-        // تجاهل أي خطأ (اختياري)
-      }
-    }
   }
 
   // ---------------------------------------------------------------------------

@@ -98,14 +98,14 @@ class SharedPrefsService {
 
   /// ✅ **التحقق مما إذا كان المستخدم مسجّل الدخول**
   Future<bool> isLoggedIn() async {
-    final prefs = await _prefs();
-    return prefs.getBool('isLoggedIn') ?? false;
+    final session = Supabase.instance.client.auth.currentSession;
+    return session != null;
   }
 
   /// ✅ **جلب `userId`**
   Future<String?> getUserId() async {
-    final prefs = await _prefs();
-    return prefs.getString('userId');
+    final user = Supabase.instance.client.auth.currentUser;
+    return user?.id;
   }
 
   /// ✅ **مراقبة تغييرات الأطباء المفضلين في Firestore**

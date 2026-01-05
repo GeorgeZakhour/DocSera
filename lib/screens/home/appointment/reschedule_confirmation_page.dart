@@ -301,7 +301,7 @@ class RescheduleConfirmationPage extends StatelessWidget {
       onWillPop: () async {
         Navigator.pushAndRemoveUntil(
           context,
-          fadePageRoute(const CustomBottomNavigationBar()),
+          fadePageRoute(CustomBottomNavigationBar()),
               (route) => false,
         );
         return false;

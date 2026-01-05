@@ -1,4 +1,4 @@
-package com.techspearz.docsera
+package com.docsera.app
 
 import io.flutter.embedding.android.FlutterFragmentActivity
 

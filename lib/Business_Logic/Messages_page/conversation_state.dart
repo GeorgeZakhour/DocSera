@@ -8,6 +8,9 @@ class ConversationState extends Equatable {
   final bool isConversationClosed;
   final bool isBlocked;
 
+  /// جديد: الرسائل المعلقة (جارِ الإرسال أو فشل)
+  final List<Map<String, dynamic>> pendingMessages;
+
   /// جديد: هل رد الطبيب على الطلب ولو مرة واحدة؟
   final bool hasDoctorResponded;
 
@@ -17,6 +20,7 @@ class ConversationState extends Equatable {
   const ConversationState({
     this.isLoading = false,
     this.messages = const [],
+    this.pendingMessages = const [],
     this.errorMessage,
     this.isConversationClosed = false,
     this.isBlocked = false,
@@ -27,6 +31,7 @@ class ConversationState extends Equatable {
   ConversationState copyWith({
     bool? isLoading,
     List<Map<String, dynamic>>? messages,
+    List<Map<String, dynamic>>? pendingMessages,
     String? errorMessage,
     bool? isConversationClosed,
     bool? isBlocked,
@@ -36,6 +41,7 @@ class ConversationState extends Equatable {
     return ConversationState(
       isLoading: isLoading ?? this.isLoading,
       messages: messages ?? this.messages,
+      pendingMessages: pendingMessages ?? this.pendingMessages,
       errorMessage: errorMessage ?? this.errorMessage,
       isConversationClosed: isConversationClosed ?? this.isConversationClosed,
       isBlocked: isBlocked ?? this.isBlocked,
@@ -48,6 +54,7 @@ class ConversationState extends Equatable {
   List<Object?> get props => [
     isLoading,
     messages,
+    pendingMessages,
     errorMessage,
     isConversationClosed,
     isBlocked,

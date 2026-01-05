@@ -23,7 +23,7 @@ android {
     }
 
     defaultConfig {
-        applicationId = "com.techspearz.docsera"
+        applicationId = "com.docsera.app"
         minSdkVersion 23
         targetSdkVersion 35
         versionCode = flutter.versionCode

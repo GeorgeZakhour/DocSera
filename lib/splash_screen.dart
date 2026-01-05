@@ -161,7 +161,7 @@ class _SplashScreenState extends State<SplashScreen> with TickerProviderStateMix
 
           return FadeTransition(
             opacity: curvedAnimation,
-            child: const CustomBottomNavigationBar(),
+            child: CustomBottomNavigationBar(),
           );
         },
       ),

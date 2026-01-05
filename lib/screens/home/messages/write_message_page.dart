@@ -25,6 +25,8 @@ class WriteMessagePage extends StatefulWidget {
   final ImageProvider doctorImage;
   final String doctorImageUrl;
   final String doctorSpecialty;
+  final String doctorTitle;
+  final String doctorGender;
   final String selectedReason;
   final PatientProfile patientProfile;
   final UserDocument? attachedDocument;
@@ -35,6 +37,8 @@ class WriteMessagePage extends StatefulWidget {
     required this.doctorImage,
     required this.doctorImageUrl,
     required this.doctorSpecialty,
+    required this.doctorTitle,
+    required this.doctorGender,
     required this.selectedReason,
     required this.patientProfile,
     this.attachedDocument,
@@ -604,13 +608,15 @@ class _WriteMessagePageState extends State<WriteMessagePage> {
                             doctorName: widget.doctorName,
                             doctorSpecialty: widget.doctorSpecialty,
                             doctorImage: widget.doctorImageUrl,
+                            doctorTitle: widget.doctorTitle,
+                            doctorGender: widget.doctorGender,
                             patientName: widget.patientProfile.patientName,
                             accountHolderName: accountHolderName,
                             selectedReason: widget.selectedReason,
                           );
 
                           if (conversationId != null) {
-                            Navigator.pushReplacement(
+                            Navigator.pushAndRemoveUntil(
                               context,
                               MaterialPageRoute(
                                 builder: (_) => BlocProvider(
@@ -622,11 +628,10 @@ class _WriteMessagePageState extends State<WriteMessagePage> {
                                     accountHolderName: accountHolderName,
                                     doctorAvatar: widget.doctorImage,
                                   ),
-
                                 ),
                               ),
+                              (route) => route.isFirst,
                             );
-
                           }
 
                           setState(() => _isSending = false);

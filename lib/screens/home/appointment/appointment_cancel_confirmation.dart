@@ -85,7 +85,7 @@ class AppointmentCancelledPage extends StatelessWidget {
       onWillPop: () async {
         Navigator.pushAndRemoveUntil(
           context,
-          fadePageRoute(const CustomBottomNavigationBar()),
+          fadePageRoute(CustomBottomNavigationBar()),
               (route) => false,
         );
         return false;
@@ -105,7 +105,7 @@ class AppointmentCancelledPage extends StatelessWidget {
             onPressed: () {
               Navigator.pushAndRemoveUntil(
                 context,
-                fadePageRoute(const CustomBottomNavigationBar()),
+                fadePageRoute(CustomBottomNavigationBar()),
                     (route) => false,
               );
             },
@@ -274,7 +274,7 @@ class AppointmentCancelledPage extends StatelessWidget {
                   Navigator.pushAndRemoveUntil(
                     context,
                     fadePageRoute(
-                        const CustomBottomNavigationBar(initialIndex: 1)),
+                        CustomBottomNavigationBar(initialIndex: 1)),
                         (route) => false,
                   );
                 },

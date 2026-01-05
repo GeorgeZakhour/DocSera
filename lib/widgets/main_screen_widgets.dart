@@ -10,6 +10,8 @@ import 'package:docsera/utils/custom_clippers.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:palette_generator/palette_generator.dart';
+import 'package:docsera/models/banner_model.dart'; // ✅ Import BannerModel
+import 'package:docsera/screens/home/banners/banner_details_page.dart'; // ✅ Import BannerDetailsPage
 
 
 /// **🔹 Top Section (Now Correctly Positioned with Search Bar)**
@@ -208,35 +210,49 @@ class BannerColorCache {
     }
 
     try {
+      final ImageProvider imageProvider;
+      if (imagePath.startsWith('http')) {
+        imageProvider = NetworkImage(imagePath);
+      } else {
+        imageProvider = AssetImage(imagePath);
+      }
 
       final PaletteGenerator paletteGenerator =
       await PaletteGenerator.fromImageProvider(
-        ResizeImage(AssetImage(imagePath), width: 100), // ✅ MEMORY FIX: Downsample for palette
+        ResizeImage(imageProvider, width: 100), // ✅ MEMORY FIX: Downsample for palette
       );
 
       Color extractedColor = paletteGenerator.dominantColor?.color ?? Colors.teal.shade50;
-      Color lightenedColor = _lightenColor(extractedColor, 0.15);
+      Color adjustedColor = _adjustColor(extractedColor);
 
-      _cache[imagePath] = lightenedColor; // ✅ Save color for future use
-      return lightenedColor;
+      _cache[imagePath] = adjustedColor; // ✅ Save color for future use
+      return adjustedColor;
     } catch (e) {
       return Colors.blue.shade100;
     }
   }
 
-  /// **🔹 Lighten extracted color**
-  static Color _lightenColor(Color color, double amount) {
+  /// **🔹 Adjust extracted color: Reduce saturation & increase lightness**
+  static Color _adjustColor(Color color) {
     final hsl = HSLColor.fromColor(color);
-    return hsl.withLightness((hsl.lightness + amount).clamp(0.5, 1.0)).toColor();
+    
+    // 1. Reduce Saturation (Make it less vibrant)
+    final desaturated = hsl.withSaturation((hsl.saturation * 0.6).clamp(0.0, 1.0));
+
+    // 2. Increase Lightness (Make it much lighter/pastel)
+    // We want the lightness to be high, so we push it towards 0.95
+    final lightened = desaturated.withLightness((desaturated.lightness + (1.0 - desaturated.lightness) * 0.85).clamp(0.0, 1.0));
+
+    return lightened.toColor();
   }
 }
 
 /// 🔹 **Optimized Banners Section**
 class BannersSection extends StatefulWidget {
-  final List<Map<String, dynamic>> banners;
+  final List<BannerModel> banners;
   final VoidCallback onColorsLoaded;
 
-  const BannersSection({super.key, required this.banners, required this.onColorsLoaded,});
+  const BannersSection({super.key, required this.banners, required this.onColorsLoaded});
 
   @override
   _BannersSectionState createState() => _BannersSectionState();
@@ -257,34 +273,42 @@ class _BannersSectionState extends State<BannersSection> {
 
     int loadedCount = 0;
 
-    for (var banner in widget.banners) {
-      String imagePath = banner["imagePath"];
-      debugPrint("🔄 Loading color for: $imagePath");
-
-      if (BannerColorCache._cache.containsKey(imagePath)) {
-        _bannerColors[imagePath] = BannerColorCache._cache[imagePath]!;
-        debugPrint("✅ Cached color found for: $imagePath");
-        loadedCount++;
-      } else {
-        Color color = await BannerColorCache.getColor(imagePath);
-        _bannerColors[imagePath] = color;
-        debugPrint("🎨 Extracted color for: $imagePath");
-        loadedCount++;
-      }
-    }
-
-    debugPrint("📦 Loaded $loadedCount / ${widget.banners.length} colors");
-
-    if (loadedCount == widget.banners.length && mounted) {
-      debugPrint("🚀 All banner colors ready, triggering onColorsLoaded...");
-      _timer = Timer(const Duration(milliseconds: 300), () {
-        if (mounted) {
-          debugPrint("📣 Calling onColorsLoaded...");
-          widget.onColorsLoaded();
-        }
-      });
-
-      setState(() {}); // آخر شي لتحديث العرض
+    if (mounted) {
+       // ✅ Wait for the first frame to render before starting heavy work
+       WidgetsBinding.instance.addPostFrameCallback((_) async {
+          for (var banner in widget.banners) {
+            // Check if mounted in loop
+            if (!mounted) return;
+            
+            String imagePath = banner.imagePath;
+            debugPrint("🔄 Loading color for: $imagePath");
+      
+            if (BannerColorCache._cache.containsKey(imagePath)) {
+              setState(() {
+                  _bannerColors[imagePath] = BannerColorCache._cache[imagePath]!;
+              });
+              loadedCount++;
+            } else {
+              // ✅ Yield control to the UI thread for a moment
+              await Future.delayed(const Duration(milliseconds: 50));
+              
+              Color color = await BannerColorCache.getColor(imagePath);
+              
+              if (mounted) {
+                  setState(() {
+                    _bannerColors[imagePath] = color;
+                  });
+              }
+              debugPrint("🎨 Extracted color for: $imagePath");
+              loadedCount++;
+            }
+          }
+      
+          if (mounted && loadedCount == widget.banners.length) {
+            debugPrint("🚀 All banner colors ready, triggering onColorsLoaded...");
+            widget.onColorsLoaded();
+          }
+       });
     }
   }
 
@@ -302,6 +326,7 @@ class _BannersSectionState extends State<BannersSection> {
   @override
   Widget build(BuildContext context) {
     final double screenWidth = MediaQuery.of(context).size.width;
+    final String currentLang = Localizations.localeOf(context).languageCode;
 
     return SizedBox(
       height: screenWidth * 0.32,
@@ -309,20 +334,37 @@ class _BannersSectionState extends State<BannersSection> {
         scrollDirection: Axis.horizontal,
         itemCount: widget.banners.length,
         itemBuilder: (context, index) {
-          String imagePath = widget.banners[index]["imagePath"];
-          String? logoPath = widget.banners[index]["logoPath"]; // ✅ Get logo path
-          Color? logoContainerColor = widget.banners[index]["logoContainerColor"]; // ✅ Get logo path
+          final banner = widget.banners[index];
+          String imagePath = banner.imagePath;
+          String? logoPath = banner.logoPath;
+          Color? logoContainerColor = banner.logoContainerColor != null 
+              ? Color(int.parse(banner.logoContainerColor!.replaceFirst('#', '0xFF'))) 
+              : null;
+          Color backgroundColor = _bannerColors[imagePath] ?? Colors.teal.shade50;
 
           return Padding(
             padding: EdgeInsets.symmetric(horizontal: screenWidth * 0.02),
-            child: BannerCard(
-              title: widget.banners[index]["title"],
-              text: widget.banners[index]["text"],
-              imagePath: imagePath,
-              logoPath: logoPath, // ✅ Pass logoPath here
-              isSponsored: widget.banners[index]["isSponsored"] ?? false,
-              backgroundColor: _bannerColors[imagePath] ?? Colors.teal.shade50,
-                logoContainerColor: logoContainerColor,// ✅ Instant application
+            child: GestureDetector(
+              onTap: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => BannerDetailsPage(
+                      banner: banner,
+                      themeColor: backgroundColor,
+                    ),
+                  ),
+                );
+              },
+              child: BannerCard(
+                title: banner.getTitle(currentLang).isEmpty ? null : banner.getTitle(currentLang),
+                text: banner.getText(currentLang),
+                imagePath: imagePath,
+                logoPath: logoPath, 
+                isSponsored: banner.isSponsored,
+                backgroundColor: backgroundColor,
+                logoContainerColor: logoContainerColor,
+              ),
             ),
           );
         },
@@ -469,20 +511,35 @@ class BannerCard extends StatelessWidget {
                     bottomRight: Radius.circular(18.r),
                     bottomLeft: Radius.circular(100.r),
                   ),
-                  child: Image.asset(
-                    imagePath,
-                    width: screenWidth * 0.3,
-                    height: screenWidth * 0.4,
-                    fit: BoxFit.cover,
-                    errorBuilder: (context, error, stackTrace) {
-                      return Container(
+                  child: imagePath.startsWith('http') 
+                    ? Image.network(
+                        imagePath,
                         width: screenWidth * 0.3,
                         height: screenWidth * 0.4,
-                        color: Colors.grey.shade300,
-                        child: const Icon(Icons.image, color: Colors.grey),
-                      );
-                    },
-                  ),
+                        fit: BoxFit.cover,
+                        errorBuilder: (context, error, stackTrace) {
+                          return Container(
+                            width: screenWidth * 0.3,
+                            height: screenWidth * 0.4,
+                            color: Colors.grey.shade300,
+                            child: const Icon(Icons.image, color: Colors.grey),
+                          );
+                        },
+                      )
+                    : Image.asset(
+                        imagePath,
+                        width: screenWidth * 0.3,
+                        height: screenWidth * 0.4,
+                        fit: BoxFit.cover,
+                        errorBuilder: (context, error, stackTrace) {
+                          return Container(
+                            width: screenWidth * 0.3,
+                            height: screenWidth * 0.4,
+                            color: Colors.grey.shade300,
+                            child: const Icon(Icons.image, color: Colors.grey),
+                          );
+                        },
+                      ),
                 ),
               ),
             ],
@@ -589,22 +646,42 @@ class _BannerLogoState extends State<BannerLogo> {
   Widget build(BuildContext context) {
     if (!_isValid) return const SizedBox(); // ✅ Avoid errors if the image is invalid
 
+    // Check if it's a network URL
+    final isNetwork = widget.path.startsWith('http');
+    final isSvg = widget.path.toLowerCase().endsWith('.svg');
+
     return AnimatedOpacity(
       duration: const Duration(milliseconds: 300),
       opacity: _isLoaded ? 1.0 : 0.0,
-      child: widget.path.toLowerCase().endsWith('.svg')
-          ? SvgPicture.asset(
-        widget.path,
-        width: widget.size,
-        height: widget.size,
-        fit: BoxFit.contain,
-      )
-          : Image(
-        image: _imageProvider,
-        width: widget.size,
-        height: widget.size,
-        fit: BoxFit.contain,
-      ),
+      child: isSvg
+          ? (isNetwork 
+              ? SvgPicture.network(
+                  widget.path,
+                  width: widget.size,
+                  height: widget.size,
+                  fit: BoxFit.contain,
+                  placeholderBuilder: (_) => const SizedBox(),
+                ) 
+              : SvgPicture.asset(
+                  widget.path,
+                  width: widget.size,
+                  height: widget.size,
+                  fit: BoxFit.contain,
+                ))
+          : (isNetwork
+              ? Image.network(
+                  widget.path,
+                  width: widget.size,
+                  height: widget.size,
+                  fit: BoxFit.contain,
+                  errorBuilder: (_, __, ___) => const SizedBox(),
+                )
+              : Image(
+                  image: _imageProvider,
+                  width: widget.size,
+                  height: widget.size,
+                  fit: BoxFit.contain,
+                )),
     );
   }
 }

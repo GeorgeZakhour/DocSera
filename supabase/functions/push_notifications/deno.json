@@ -1,0 +1,7 @@
+{
+  "functions": {
+    "push_notifications": {
+      "verify_jwt": false
+    }
+  }
+}

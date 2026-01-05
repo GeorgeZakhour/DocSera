@@ -20,6 +20,9 @@ import 'package:docsera/widgets/main_screen_widgets.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
+import 'package:docsera/Business_Logic/Banners/banners_cubit.dart';
+import 'package:docsera/Business_Logic/Banners/banners_state.dart';
+import 'package:docsera/services/supabase/banners/supabase_banner_service.dart';
 import '../../models/sign_up_info.dart';
 import '../auth/sign_up/WelcomePage.dart';
 
@@ -294,8 +297,11 @@ class _MainScreenState extends State<MainScreen> with AutomaticKeepAliveClientMi
           return _buildShimmerLoading(); // ✅ `Shimmer` يظهر فقط عند فتح التطبيق لأول مرة
         }
 
-        return BlocProvider.value(
-          value: BlocProvider.of<MainScreenCubit>(context),
+        return MultiBlocProvider(
+          providers: [
+            BlocProvider.value(value: BlocProvider.of<MainScreenCubit>(context)),
+            BlocProvider(create: (context) => BannersCubit(SupabaseBannerService())..loadBanners()),
+          ],
           child: BlocBuilder<MainScreenCubit, MainScreenState>(
             builder: (context, state) {
               if (state is MainScreenLoading && _isFirstLoad) {
@@ -429,28 +435,7 @@ class _MainScreenState extends State<MainScreen> with AutomaticKeepAliveClientMi
     final ScrollController scrollController = ScrollController();
 
 
-    // ✅ Define bannerData list to pass to `BannersSection`
-    final List<Map<String, dynamic>> bannerData = [
-      {
-        "title": AppLocalizations.of(context)!.bannerTitle1,
-        "text": AppLocalizations.of(context)!.bannerText1,
-        "imagePath": "assets/images/worker.webp",
-        "logoPath": "assets/images/docsera_white.svg",
-        "isSponsored": true,
-        "logoContainerColor": AppColors.main.withOpacity(0.5), // ✅ Now the container has the correct color
-      },
-      {
-        "title": AppLocalizations.of(context)!.bannerTitle2,
-        "text": AppLocalizations.of(context)!.bannerText2,
-        "imagePath": "assets/images/professional.jpg",
-        "isSponsored": false,
-      },
-      {
-        "text": AppLocalizations.of(context)!.bannerText3,
-        "imagePath": "assets/images/worker.webp",
-        "isSponsored": true,
-      },
-    ];
+    // ✅ Removed hardcoded bannerData. Now using BannersCubit.
 
     return  Stack(
       children: [
@@ -483,22 +468,33 @@ class _MainScreenState extends State<MainScreen> with AutomaticKeepAliveClientMi
                 // ✅ Pass banners and ensure instant display
                 Transform.translate(
                   offset: Offset(0, -screenHeight * 0.055),
-                  child: AnimatedOpacity(
-                    opacity: _bannerColorsReady ? 1.0 : 0.0,
-                    duration: const Duration(milliseconds: 300),
-                    child: BannersSection(
-                      banners: bannerData,
-                      onColorsLoaded: () {
-                        debugPrint("🎉 onColorsLoaded called from BannersSection");
-                        if (!_bannerColorsReady && mounted) {
-                          setState(() {
-                            debugPrint("✅ Setting _bannerColorsReady = true");
-                            _bannerColorsReady = true;
-                            _bannersLoadedOnce = true; // ✅ حفظ دائم بعد أول تحميل
-                          });
-                        }
-                      },
-                    ),
+                  child: BlocBuilder<BannersCubit, BannersState>(
+                    builder: (context, bannerState) {
+                      if (bannerState is BannersLoaded && bannerState.banners.isNotEmpty) {
+                        return AnimatedOpacity(
+                          opacity: _bannerColorsReady ? 1.0 : 0.0,
+                          duration: const Duration(milliseconds: 300),
+                          child: BannersSection(
+                            banners: bannerState.banners,
+                            onColorsLoaded: () {
+                              debugPrint("🎉 onColorsLoaded called from BannersSection");
+                              if (!_bannerColorsReady && mounted) {
+                                setState(() {
+                                  debugPrint("✅ Setting _bannerColorsReady = true");
+                                  _bannerColorsReady = true;
+                                  _bannersLoadedOnce = true; // ✅ حفظ دائم بعد أول تحميل
+                                });
+                              }
+                            },
+                          ),
+                        );
+                      } else if (bannerState is BannersLoading) {
+                        // Keep hidden or show minimal loading if needed,
+                        // but allowing opacity transition handles visuals smoothly.
+                        return const SizedBox(); 
+                      }
+                      return const SizedBox(); // Empty if no banners or error
+                    },
                   ),
                 ),
 
@@ -508,7 +504,7 @@ class _MainScreenState extends State<MainScreen> with AutomaticKeepAliveClientMi
                 // ✅ **"My Practitioners" يظهر فقط إذا كان المستخدم مسجّل الدخول**
                 isLoggedIn && favoriteDoctors.isNotEmpty ? _buildMyPractitionersSection(isLoggedIn, favoriteDoctors) : const SizedBox(),
                 isLoggedIn && favoriteDoctors.isNotEmpty ? SizedBox(height: 20.h) : const SizedBox(),
-                _buildScrollButton(scrollController), // ✅ Button now properly below banners
+                _buildScrollButton(scrollController),  
                 SizedBox(height: 40.h),
                 const FeaturesSection(),
                 SizedBox(height: 30.h),
@@ -538,6 +534,7 @@ class _MainScreenState extends State<MainScreen> with AutomaticKeepAliveClientMi
                 ),
 
                 // ✅ Decorative Cards Section
+                SizedBox(height: 20.h),
                 DecorativeImageCard(
                   title: AppLocalizations.of(context)!.areYouAHealthProfessional,
                   description: AppLocalizations.of(context)!.improveDailyLife,
@@ -555,9 +552,10 @@ class _MainScreenState extends State<MainScreen> with AutomaticKeepAliveClientMi
                   secondShapeNumber: 5, // ✅ استخدم الشكل 7 كشكل إضافي
                   shapeColor: Colors.white.withOpacity(0.3),
                   secondShapeColor: AppColors.mainDark.withOpacity(0.8),
-                  imagePath: 'assets/images/professional.jpg',
+                  imagePath: 'assets/images/professional.jpg', // ✅ صورة مختلفة
                   showSecondShape: true,
                 ),
+
 
                 ElevatedButton(
                   onPressed: () async {

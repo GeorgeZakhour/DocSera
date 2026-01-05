@@ -17,6 +17,7 @@ import 'package:docsera/Business_Logic/Main_page/main_screen_cubit.dart';
 import 'package:docsera/Business_Logic/Messages_page/messages_cubit.dart';
 import 'package:docsera/screens/doctors/doctor_profile_page.dart';
 import 'package:docsera/services/supabase/user/account_relatives_service.dart';
+import 'package:docsera/services/notifications/notification_service.dart';
 import 'package:docsera/splash_screen.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
@@ -61,6 +62,10 @@ void main() async {
 
 
   ConnectivityService().initialize();
+  // ✅ Initialize Notifications
+  // Moved to MyApp to access NavigatorKey
+  // await NotificationService.instance.init(context: null); 
+
 
   SharedPreferences prefs = await SharedPreferences.getInstance();
   final supabaseService = SupabaseUserService();
@@ -197,6 +202,9 @@ class _MyAppState extends State<MyApp> {
     final client = widget.supabaseClient ?? Supabase.instance.client;
     _deepLinkService = DeepLinkService(client, _navKey);
     _deepLinkService.initDeepLinks();
+    
+    // ✅ Initialize Notifications with Navigator Key
+    NotificationService.instance.init(navKey: _navKey);
   }
 
   @override

@@ -172,7 +172,7 @@ class _WelcomePageState extends State<WelcomePage> {
                     onPressed: () {
                       Navigator.pushAndRemoveUntil(
                         context,
-                        fadePageRoute(const CustomBottomNavigationBar()),
+                        fadePageRoute(CustomBottomNavigationBar()),
                             (route) => false,
                       );
                     },

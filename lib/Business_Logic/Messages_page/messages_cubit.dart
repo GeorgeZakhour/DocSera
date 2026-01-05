@@ -176,6 +176,8 @@ class MessagesCubit extends Cubit<MessagesState> {
     required String doctorSpecialty,
     required String doctorImage,
     required String patientName,
+    required String doctorTitle,
+    required String doctorGender,
     required String accountHolderName,
     required String selectedReason,
   }) async {
@@ -183,7 +185,7 @@ class MessagesCubit extends Cubit<MessagesState> {
       final now = DocSeraTime.nowUtc();
       final accountHolderId = _supabase.auth.currentUser?.id;
 
-      if (accountHolderId == null) throw Exception("لا يوجد مستخدم.");
+      if (accountHolderId == null) throw Exception("لا يوجد بيانت للمستخدم الحالي.");
 
       final bool isRelative = accountHolderId != patientId;
       final String? relativeId = isRelative ? patientId : null;
@@ -191,16 +193,17 @@ class MessagesCubit extends Cubit<MessagesState> {
       // --------------------------------------------------------------
       // 1) البحث عن المحادثة سواء كانت مفتوحة أو مغلقة
       // --------------------------------------------------------------
-      final query = _supabase
+      // ✅ FIX: Use 'var' and assign the result for valid chaining
+      var query = _supabase
           .from('conversations')
           .select()
           .eq('doctor_id', doctorId)
-          .eq('patient_id', patientId);
+          .eq('patient_id', accountHolderId); // ✅ FIX: Search by Account Holder
 
-      if (isRelative) {
-        query.eq('relative_id', patientId);
+      if (relativeId != null) {
+        query = query.eq('relative_id', relativeId);
       } else {
-        query.filter('relative_id', 'is', null);
+        query = query.filter('relative_id', 'is', null); // ✅ FIX: specific syntax for NULL
       }
 
       final List existingList = await query.order('updated_at').limit(1);
@@ -248,10 +251,10 @@ class MessagesCubit extends Cubit<MessagesState> {
       // --------------------------------------------------------------
       final newConversation = {
         'doctor_id': doctorId,
-        'patient_id': patientId,
-        'relative_id': isRelative ? patientId : null,
-        'participants': isRelative
-            ? [accountHolderId, patientId, doctorId]
+        'patient_id': accountHolderId,  // ✅ FIX: Use Account Holder ID
+        'relative_id': relativeId,      // ✅ FIX: Use Relative ID
+        'participants': relativeId != null
+            ? [accountHolderId, relativeId, doctorId]
             : [accountHolderId, doctorId],
         'last_message': message,
         'last_sender_id': accountHolderId,
@@ -264,6 +267,8 @@ class MessagesCubit extends Cubit<MessagesState> {
         'selected_reason': selectedReason,
         'is_closed': false,
         'has_doctor_responded': false,
+        'doctor_title': doctorTitle,
+        'doctor_gender': doctorGender,
       };
 
       final insert = await _supabase

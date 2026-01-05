@@ -14,6 +14,7 @@ import 'package:docsera/screens/home/messages/conversation/widgets/input_bar.dar
 import 'package:docsera/screens/home/messages/conversation/widgets/attachments_preview_bar.dart';
 import 'package:docsera/screens/home/messages/conversation/widgets/image_overlay_viewer.dart';
 import 'package:docsera/screens/home/messages/conversation/widgets/messages_list_view.dart';
+import 'package:docsera/screens/home/messages/conversation/widgets/message_skeleton.dart';
 import 'package:docsera/screens/home/messages/conversation/services/chat_attachments_service.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
@@ -55,6 +56,7 @@ class _ConversationPageState extends State<ConversationPage> {
 
   final List<File> _pendingImages = [];
   File? _pendingPdf;
+  int _imagesLoadingCount = 0; // ✅ Track loading images
 
   bool _autoScroll = true;
   OverlayEntry? _imageOverlay;
@@ -107,13 +109,45 @@ class _ConversationPageState extends State<ConversationPage> {
   // ---------------------------------------------------------------------------
 
   Future<void> _pickImages() async {
-    final picked = await _picker.pickMultiImage(imageQuality: 85);
-    if (picked.isEmpty) return;
+    const int maxImages = 8;
+    if (_pendingImages.length >= maxImages) {
+       ScaffoldMessenger.of(context).showSnackBar(
+         const SnackBar(content: Text("Maximum 8 images allowed.", style: TextStyle(color: Colors.white)), backgroundColor: Colors.red),
+       );
+       return;
+    }
 
-    final files = picked.map((x) => File(x.path)).toList();
-    final compressed = await _compressor.compress(files);
+    // ✅ Use FilePicker for instant selection (no compression/copy delay)
+    final result = await FilePicker.platform.pickFiles(
+      type: FileType.image,
+      allowMultiple: true,
+    );
 
-    setState(() => _pendingImages.addAll(compressed));
+    if (result == null || result.files.isEmpty) return;
+
+    List<File> newFiles = result.files.map((f) => File(f.path!)).toList();
+
+    // Check Limit
+    if (_pendingImages.length + newFiles.length > maxImages) {
+       final allowed = maxImages - _pendingImages.length;
+       newFiles = newFiles.take(allowed).toList();
+       ScaffoldMessenger.of(context).showSnackBar(
+         const SnackBar(content: Text("Limit reached. Only 8 images allowed.", style: TextStyle(color: Colors.white)), backgroundColor: Colors.orange),
+       );
+    }
+
+    // ✅ Show shimmer immediately
+    setState(() => _imagesLoadingCount = newFiles.length);
+    
+    // Force UI render frame
+    await Future.delayed(const Duration(milliseconds: 50));
+
+    final compressed = await _compressor.compress(newFiles);
+
+    setState(() {
+      _pendingImages.addAll(compressed);
+      _imagesLoadingCount = 0;
+    });
   }
 
   Future<void> _pickPdf() async {
@@ -154,38 +188,13 @@ class _ConversationPageState extends State<ConversationPage> {
     _textController.clear();
     _clearAttachments();
 
-    final cubit = context.read<ConversationCubit>();
-    final service = cubit.service;
-
-    final List<Map<String, dynamic>> finalAttachments = [];
-
-    for (final img in sendingImages) {
-      final name = "${DocSeraTime.nowUtc().millisecondsSinceEpoch}_${img.path.split('/').last}";
-      final uploaded = await service.uploadAttachmentFile(
-        conversationId: widget.conversationId,
-        file: img,
-        type: 'image',
-        storageName: name,
-      );
-      finalAttachments.add(uploaded);
-    }
-
-    if (sendingPdf != null) {
-      final name = "${DocSeraTime.nowUtc().millisecondsSinceEpoch}_${sendingPdf.path.split('/').last}";
-      final uploaded = await service.uploadAttachmentFile(
-        conversationId: widget.conversationId,
-        file: sendingPdf,
-        type: 'pdf',
-        storageName: name,
-      );
-      finalAttachments.add(uploaded);
-    }
-
-    await cubit.sendMessage(
+    // ✅ Use Cubit's True Optimistic sending
+    await context.read<ConversationCubit>().sendMediaMessage(
       conversationId: widget.conversationId,
       senderName: widget.accountHolderName,
       text: text,
-      attachments: finalAttachments,
+      images: sendingImages,
+      pdf: sendingPdf,
     );
 
     _scrollToBottom();
@@ -353,139 +362,206 @@ class _ConversationPageState extends State<ConversationPage> {
               if (chatState.isConversationClosed)
                 ClosedBanner(doctorName: widget.doctorName),
 
+              // Chat Area (List + Input)
               Expanded(
-                child: BlocBuilder<ConversationCubit, ConversationState>(
-                  builder: (context, state) {
-                    if (state.isLoading) {
-                      return const Center(
-                        child: FullPageLoader(),
-                      );
-                    }
+                child: Stack(
+                  children: [
+                    // 1. Messages List (Behind)
+                    BlocConsumer<ConversationCubit, ConversationState>(
+                       listener: (context, state) {
+                         if (state.messages.isNotEmpty && _autoScroll) {
+                           // Use jumpTo for initial load to prevent "scrolling down" animation
+                           // if it's the very first load or drastically different,
+                           // but here we just animate or jump based on needs.
+                           // For smoothness, if users expect to see bottom immediately:
+                           WidgetsBinding.instance.addPostFrameCallback((_) {
+                              if (_scrollController.hasClients) {
+                                // Logic: If we are at the top (offset 0) and list is large, jump.
+                                // Otherwise animate. But simplistic approach:
+                                ChatScrollHelper.animateToBottom(_scrollController);
+                              }
+                           });
+                         }
+                       },
+                       builder: (context, state) {
+                         if (state.isLoading) {
+                           return ListView.builder(
+                               padding: EdgeInsets.symmetric(vertical: 20.h),
+                               itemCount: 8,
+                               itemBuilder: (context, index) {
+                                 return MessageSkeleton(isUser: index % 2 == 0);
+                               },
+                             );
+                         }
 
-                    return MessagesListView(
-                      messages: state.messages,
-                      pendingCount: 0,
-                      pendingBuilder: (_, __) => const SizedBox(),
-                      scrollController: _scrollController,
-                      doctorName: widget.doctorName,
-                      accountHolderName: widget.accountHolderName,
-                      patientName: widget.patientName,
-                      doctorImage: widget.doctorAvatar,
-                      resolveImageUrls: (images) =>
-                          _attachmentsService.resolveImageUrls(images),
-                      onOpenImages: _openImagesOverlay,
-                    );
-                  },
-                ),
-              ),
+                         // Initial Jump to Bottom on first build if needed
+                         if (state.messages.isNotEmpty ) {
+                            WidgetsBinding.instance.addPostFrameCallback((_) {
+                               if (_scrollController.hasClients && _scrollController.position.pixels == 0) {
+                                  ChatScrollHelper.jumpToBottom(_scrollController);
+                               }
+                            });
+                         }
 
-              AttachmentsPreviewBar(
-                files: _pendingPdf != null ? [_pendingPdf!] : _pendingImages,
-                type: _pendingPdf != null ? 'pdf' : 'image',
-                onClear: _clearAttachments,
-              ),
+                         // ✅ OPTIMISTIC: Merge Server Messages + Pending Messages
+                         // Server messages are stream-ordered (Oldest -> Newest).
+                         // Pending messages are appended (Newest).
+                         // Correct Order: [...Server, ...Pending]
+                         final allMessages = [...state.messages, ...state.pendingMessages];
 
-              if (!isDisabled && doctorHasReplied)
-                InputBar(
-                controller: _textController,
-                isEnabled: true,
-                onSend: _send,
-                onAddAttachment: () async {
-                  if (isDisabled) return;
+                         return MessagesListView(
+                             messages: allMessages, // ✅ Pass merged list
+                             pendingCount: 0,
+                             pendingBuilder: (_, __) => const SizedBox(),
+                             scrollController: _scrollController,
+                             doctorName: widget.doctorName,
+                             accountHolderName: widget.accountHolderName,
+                             patientName: widget.patientName,
+                             doctorImage: widget.doctorAvatar,
+                             resolveImageUrls: (images) =>
+                                 _attachmentsService.resolveImageUrls(images),
+                             onOpenImages: _openImagesOverlay,
+                             onRetry: (failedMsg) { // ✅ Handle Retry
+                               context.read<ConversationCubit>().retryMessage(failedMsg);
+                             },
+                           );
+                       },
+                     ),
 
-                  showModalBottomSheet(
-                    context: context,
-                    backgroundColor: Colors.white.withOpacity(0.0),
-                    shape: const RoundedRectangleBorder(
-                      borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+                    // 2. Bottom Elements (Floating on top)
+                     Align(
+                      alignment: Alignment.bottomCenter,
+                      child: Column(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                           // Logic: Show Input Bar ONLY if conversation is open AND doctor has replied (or logic permits)
+                           // User requested: "dont show the input bar when other bar appears"
+                           
+                           if (!isDisabled && doctorHasReplied) ...[
+                             AttachmentsPreviewBar(
+                               files: _pendingPdf != null ? [_pendingPdf!] : _pendingImages,
+                               type: _pendingPdf != null ? 'pdf' : 'image',
+                               loadingCount: _pendingPdf != null ? 0 : _imagesLoadingCount,
+                               onClear: _clearAttachments,
+                             ),
+                             InputBar(
+                               controller: _textController,
+                               isEnabled: true,
+                               hasAttachments: _pendingImages.isNotEmpty || _pendingPdf != null,
+                               onSend: _send,
+                               onSendAudio: (path) async {
+                                 final file = File(path);
+                                 if (!await file.exists()) return;
+                                 
+                                 final cubit = context.read<ConversationCubit>();
+                                 final service = cubit.service;
+                                 
+                                 final name = "${DocSeraTime.nowUtc().millisecondsSinceEpoch}_audio.m4a";
+                                 final uploaded = await service.uploadAttachmentFile(
+                                   conversationId: widget.conversationId,
+                                   file: file,
+                                   type: 'audio',
+                                   storageName: name,
+                                 );
+                                 
+                                 await cubit.sendMessage(
+                                   conversationId: widget.conversationId,
+                                   senderName: widget.accountHolderName,
+                                   text: '',
+                                   attachments: [uploaded],
+                                 );
+                                 
+                                 _scrollToBottom();
+                               },
+                               onAddAttachment: () async {
+                                 showModalBottomSheet(
+                                   context: context,
+                                   backgroundColor: Colors.white.withOpacity(0.0),
+                                   shape: const RoundedRectangleBorder(
+                                     borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+                                   ),
+                                   builder: (_) {
+                                     return ClipRRect(
+                                       borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
+                                       child: BackdropFilter(
+                                         filter: ImageFilter.blur(sigmaX: 15, sigmaY: 15),
+                                         child: Container(
+                                           height: 200.h,
+                                           padding: EdgeInsets.symmetric(horizontal: 24.w, vertical: 22.h),
+                                           decoration: BoxDecoration(
+                                             color: Colors.white.withOpacity(0.65),
+                                             borderRadius:
+                                             const BorderRadius.vertical(top: Radius.circular(20)),
+                                           ),
+                                           child: Column(
+                                             mainAxisSize: MainAxisSize.min,
+                                             children: [
+                                               Text(local.chooseAttachmentType,
+                                                   style: AppTextStyles.getTitle2(context)
+                                                       .copyWith(fontSize: 12.sp, color: AppColors.grayMain)),
+                                               SizedBox(height: 14.h),
+                                               Divider(color: Colors.grey.shade300),
+                                               SizedBox(height: 26.h),
+       
+                                               Row(
+                                                 mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                                                 children: [
+                                                   _attachmentIcon(
+                                                     icon: 'assets/icons/camera.svg',
+                                                     label: local.takePhoto,
+                                                     onTap: () async {
+                                                       Navigator.pop(context);
+                                                       final picked = await ImagePicker()
+                                                           .pickImage(source: ImageSource.camera);
+                                                       if (picked != null) {
+                                                         _pendingImages.add(File(picked.path));
+                                                         setState(() {});
+                                                       }
+                                                     },
+                                                   ),
+                                                   _attachmentIcon(
+                                                     icon: 'assets/icons/gallery.svg',
+                                                     label: local.chooseFromLibrary2,
+                                                     onTap: () async {
+                                                       Navigator.pop(context);
+                                                       await _pickImages();
+                                                     },
+                                                   ),
+                                                   _attachmentIcon(
+                                                     icon: 'assets/icons/file.svg',
+                                                     label: local.chooseFile,
+                                                     onTap: () async {
+                                                       Navigator.pop(context);
+                                                       await _pickPdf();
+                                                     },
+                                                   ),
+                                                 ],
+                                               ),
+                                             ],
+                                           ),
+                                         ),
+                                       ),
+                                     );
+                                   },
+                                 );
+                               },
+                             ),
+                           ],
+                           
+                           // Banners (Exclusive)
+                           if (!doctorHasReplied && !isDisabled)
+                             _buildBottomBanner(context, local.waitingDoctorReply),
+                             
+                           if (isDisabled)
+                             _buildBottomBanner(context, local.conversationClosed),
+                        ],
+                      ),
                     ),
-                    builder: (_) {
-                      return ClipRRect(
-                        borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
-                        child: BackdropFilter(
-                          filter: ImageFilter.blur(sigmaX: 15, sigmaY: 15),
-                          child: Container(
-                            height: 200.h,
-                            padding: EdgeInsets.symmetric(horizontal: 24.w, vertical: 22.h),
-                            decoration: BoxDecoration(
-                              color: Colors.white.withOpacity(0.65),
-                              borderRadius:
-                              const BorderRadius.vertical(top: Radius.circular(20)),
-                            ),
-                            child: Column(
-                              mainAxisSize: MainAxisSize.min,
-                              children: [
-                                Text(local.chooseAttachmentType,
-                                    style: AppTextStyles.getTitle2(context)
-                                        .copyWith(fontSize: 12.sp, color: AppColors.grayMain)),
-                                SizedBox(height: 14.h),
-                                Divider(color: Colors.grey.shade300),
-                                SizedBox(height: 26.h),
-
-                                Row(
-                                  mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                                  children: [
-                                    _attachmentIcon(
-                                      icon: 'assets/icons/camera.svg',
-                                      label: local.takePhoto,
-                                      onTap: () async {
-                                        Navigator.pop(context);
-                                        final picked = await ImagePicker()
-                                            .pickImage(source: ImageSource.camera);
-                                        if (picked != null) {
-                                          _pendingImages.add(File(picked.path));
-                                          setState(() {});
-                                        }
-                                      },
-                                    ),
-                                    _attachmentIcon(
-                                      icon: 'assets/icons/gallery.svg',
-                                      label: local.chooseFromLibrary2,
-                                      onTap: () async {
-                                        Navigator.pop(context);
-                                        await _pickImages();
-                                      },
-                                    ),
-                                    _attachmentIcon(
-                                      icon: 'assets/icons/file.svg',
-                                      label: local.chooseFile,
-                                      onTap: () async {
-                                        Navigator.pop(context);
-                                        await _pickPdf();
-                                      },
-                                    ),
-                                  ],
-                                ),
-                              ],
-                            ),
-                          ),
-                        ),
-                      );
-                    },
-                  );
-                },
+                  ],
+                ),
               ),
             ],
           ),
-          if (!doctorHasReplied && !isDisabled)
-            Positioned(
-              bottom: 0,
-              left: 0,
-              right: 0,
-              child: _buildBottomBanner(context, local.waitingDoctorReply),
-            ),
-
-
-          if (isDisabled)
-            Positioned(
-              bottom: 0,
-              left: 0,
-              right: 0,
-              child: _buildBottomBanner(context, local.conversationClosed),
-            ),
-
-
-
 
           if (_imageOverlay != null) Positioned.fill(child: Container()),
         ],

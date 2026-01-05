@@ -131,7 +131,7 @@ class _LoginOTPPageState extends State<LoginOTPPage> {
 
       Navigator.pushAndRemoveUntil(
         context,
-        fadePageRoute(const CustomBottomNavigationBar()),
+        fadePageRoute(CustomBottomNavigationBar()),
             (_) => false,
       );
     } catch (_) {

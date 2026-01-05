@@ -54,7 +54,7 @@ class DoctorDrawer extends StatelessWidget {
 
               Navigator.pushAndRemoveUntil(
                 context,
-                fadePageRoute( const CustomBottomNavigationBar()), // ✅ Navigate to home page
+                fadePageRoute( CustomBottomNavigationBar()), // ✅ Navigate to home page
                     (route) => false, // Remove all previous routes
               );
             },

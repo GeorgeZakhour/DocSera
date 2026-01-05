@@ -4,6 +4,7 @@ import 'package:app_links/app_links.dart';
 import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:docsera/screens/doctors/doctor_profile_page.dart';
+import 'package:docsera/services/navigation/app_lifecycle.dart';
 
 class DeepLinkService {
   final SupabaseClient _supabase;
@@ -86,7 +87,10 @@ class DeepLinkService {
     }
   }
 
-  void _navigateToDoctor(String doctorId) {
+  void _navigateToDoctor(String doctorId) async {
+    // ✅ Wait for Main Screen because deep link might come during SplashScreen
+    await AppLifecycle.waitForAppReady();
+
     WidgetsBinding.instance.addPostFrameCallback((_) {
       final nav = navKey.currentState;
       if (nav == null) return;
