@@ -162,14 +162,30 @@ class _EditProfilePageState extends State<EditProfilePage> {
     );
 
     if (picked != null) {
+      final now = DocSeraTime.nowSyria();
+      int age = now.year - picked.year;
+      if (now.month < picked.month || (now.month == picked.month && now.day < picked.day)) {
+        age--;
+      }
+      
+      final isUnderage = age < 16;
+      
       setState(() {
         dateOfBirthController.text = DateFormat('dd.MM.yyyy').format(picked);
+        // If underage, invalidate form but keep the date to show error
+        if (isUnderage) {
+          ScaffoldMessenger.of(context).showSnackBar(
+             SnackBar(
+              content: Text("${AppLocalizations.of(context)!.dobRequired} (16+)"),
+              backgroundColor: AppColors.red,
+            ),
+          );
+        }
         _validateForm();
       });
     }
   }
 
-  /// ✅ Validate form and address fields
   void _validateForm() {
     final isAddressEmpty =
         streetController.text.isEmpty &&
@@ -190,13 +206,27 @@ class _EditProfilePageState extends State<EditProfilePage> {
                 cityController.text.isEmpty ||
                 countryController.text.isEmpty);
 
+    bool isAgeValid = false;
+    if (dateOfBirthController.text.isNotEmpty) {
+      try {
+        final dob = DateFormat('dd.MM.yyyy').parse(dateOfBirthController.text);
+        final now = DocSeraTime.nowSyria();
+        int age = now.year - dob.year;
+        if (now.month < dob.month || (now.month == dob.month && now.day < dob.day)) {
+          age--;
+        }
+        isAgeValid = age >= 16;
+      } catch (_) {}
+    }
+
     final valid =
         firstNameController.text.isNotEmpty &&
             lastNameController.text.isNotEmpty &&
             dateOfBirthController.text.isNotEmpty &&
             gender.isNotEmpty &&
             isAddressValid &&
-            !isBuildingNrAlone;
+            !isBuildingNrAlone &&
+            isAgeValid;
 
     if (valid != isFormValid) {
       setState(() {

@@ -106,17 +106,13 @@ class SurgeriesPage extends StatelessWidget {
                   // EMPTY — NO RECORDS and NOT declared "no surgeries"
                   if (state.records.isEmpty && !state.noItemsDeclared) {
                     return HealthEmptyView(
-                      icon: Icons.local_hospital_rounded,
+                      imagePath: 'assets/images/health/surgery_3d.webp',
                       title: t.surgery_empty_title,
                       subtitle: t.surgery_empty_subtitle,
                       primaryButtonText: t.surgery_empty_add,
                       onPrimaryPressed: () {
                         final cubit = context.read<HealthCubit>();
                         _openAddBottomSheet(context, cubit);
-                      },
-                      secondaryText: t.surgery_empty_no_records,
-                      onSecondaryPressed: () {
-                        context.read<HealthCubit>().setNoItemsDeclared(true);
                       },
                     );
                   }

@@ -78,9 +78,9 @@ class _SignUpSecondPageState extends State<SignUpSecondPage> {
     );
 
     if (picked != null) {
-      final today = DateTime.now();
-      int age = today.year - picked.year;
-      if (today.month < picked.month || (today.month == picked.month && today.day < picked.day)) {
+      final now = DateTime.now();
+      int age = now.year - picked.year;
+      if (now.month < picked.month || (now.month == picked.month && now.day < picked.day)) {
         age--;
       }
 

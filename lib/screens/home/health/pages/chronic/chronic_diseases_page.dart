@@ -104,17 +104,13 @@ class ChronicDiseasePage extends StatelessWidget {
                   // EMPTY — NOT DECLARED NO CHRONIC DISEASES
                   if (state.records.isEmpty && !state.noItemsDeclared) {
                     return HealthEmptyView(
-                      icon: Icons.favorite_rounded,
+                      imagePath: 'assets/images/health/chronic_diseases_3d.webp',
                       title: t.chronic_empty_title,
                       subtitle: t.chronic_empty_subtitle,
                       primaryButtonText: t.chronic_empty_add,
                       onPrimaryPressed: () {
                         final cubit = context.read<HealthCubit>();
                         _openAddBottomSheet(context, cubit);
-                      },
-                      secondaryText: t.chronic_empty_no_records,
-                      onSecondaryPressed: () {
-                        context.read<HealthCubit>().setNoItemsDeclared(true);
                       },
                     );
                   }

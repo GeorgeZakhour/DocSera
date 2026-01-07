@@ -117,12 +117,14 @@ class ResolvedAudioBubble extends StatefulWidget {
   final String? url;
   final String? path;
   final bool isUser;
+  final int? duration; // ✅ New Parameter (seconds)
 
   const ResolvedAudioBubble({
     super.key,
     required this.url,
     required this.path,
     required this.isUser,
+    this.duration,
   });
 
   @override
@@ -139,18 +141,23 @@ class _ResolvedAudioBubbleState extends State<ResolvedAudioBubble> {
   }
 
   Future<String> _resolve() async {
+    // ✅ Priority 1: Use direct URL if available (DocSera Pro practice)
     if (widget.url != null && widget.url!.isNotEmpty) return widget.url!;
+    
     if (widget.path != null) {
-      // ✅ Check for local path (Optimistic UI)
+      // ✅ Priority 2: Check for local path (Optimistic UI)
       if (widget.path!.startsWith('/') || widget.path!.startsWith('file:')) {
         return widget.path!;
       }
 
+      // ✅ Priority 3: Resolve from storage if no public URL was provided
       try {
-        return await Supabase.instance.client.storage
+        final signedUrl = await Supabase.instance.client.storage
             .from('chat.attachments')
             .createSignedUrl(widget.path!, 60 * 60);
+        return signedUrl;
       } catch (e) {
+        debugPrint("❌ Failed to resolve storage path ${widget.path}: $e");
         return Supabase.instance.client.storage
             .from('chat.attachments')
             .getPublicUrl(widget.path!);
@@ -165,16 +172,20 @@ class _ResolvedAudioBubbleState extends State<ResolvedAudioBubble> {
       future: _future,
       builder: (context, snapshot) {
         if (!snapshot.hasData || snapshot.data!.isEmpty) {
-          return Container(
-              width: 150.w,
-              height: 40.h,
-              color: Colors.grey.shade200,
-              child: const Center(
-                  child: CircularProgressIndicator(strokeWidth: 2)));
+          // Even while loading URL, if we have duration, we can show the bubble
+          if (widget.duration != null) {
+             return AudioMessageBubble(
+               url: null, // Still loading URL
+               isUser: widget.isUser,
+               initialDuration: Duration(seconds: widget.duration!),
+             );
+          }
+          return AudioBubbleShimmer(isUser: widget.isUser);
         }
         return AudioMessageBubble(
           url: snapshot.data,
           isUser: widget.isUser,
+          initialDuration: widget.duration != null ? Duration(seconds: widget.duration!) : null,
         );
       },
     );

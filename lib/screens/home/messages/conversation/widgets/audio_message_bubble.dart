@@ -10,11 +10,13 @@ import 'package:docsera/screens/home/shimmer/shimmer_widgets.dart';
 class AudioMessageBubble extends StatefulWidget {
   final String? url;
   final bool isUser;
+  final Duration? initialDuration;
 
   const AudioMessageBubble({
     super.key,
     required this.url,
     required this.isUser,
+    this.initialDuration,
   });
 
   @override
@@ -26,11 +28,14 @@ class _AudioMessageBubbleState extends State<AudioMessageBubble> {
   bool _isPlaying = false;
   Duration _duration = Duration.zero;
   Duration _position = Duration.zero;
-  bool _isLoaded = false;
   
   @override
   void initState() {
     super.initState();
+    if (widget.initialDuration != null) {
+       _duration = widget.initialDuration!;
+    }
+
     _audioPlayer.playerStateStream.listen((state) {
       if (mounted) {
         setState(() {
@@ -40,17 +45,13 @@ class _AudioMessageBubbleState extends State<AudioMessageBubble> {
     });
     _audioPlayer.durationStream.listen((d) {
         if (mounted) {
-          setState(() {
-            _duration = d;
-            if (d.inMilliseconds > 0) _isLoaded = true;
-          });
+          setState(() => _duration = d);
         }
     });
     _audioPlayer.positionStream.listen((p) {
         if (mounted) setState(() => _position = p);
     });
     
-    // Attempt preload to get duration if possible or just rely on stream
     if (widget.url != null) {
        _audioPlayer.setSource(widget.url!);
     }
@@ -74,19 +75,14 @@ class _AudioMessageBubbleState extends State<AudioMessageBubble> {
 
   @override
   Widget build(BuildContext context) {
-    // If we assume loading when duration is zero (simplistic but works for now as player loads)
-    // Better logic: if URL is present but duration is 0, show shimmer?
-    // Note: AudioPlayerService might need initialization. 
-    // Assuming existing logic was working for playback.
-    
-    // Fallback: If not loaded yet, show Shimmer
-    // Actually, simple way: if _duration == zero, show shimmer layout?
-    // But maybe we want the bubble to appear, just the "content" shimmers.
-
     final isLoading = _duration == Duration.zero && widget.url != null;
     
+    if (isLoading) {
+      return AudioBubbleShimmer(isUser: widget.isUser);
+    }
+
     return Container(
-       padding: EdgeInsets.symmetric(horizontal: 14.w, vertical: 12.h), // Increased padding
+       padding: EdgeInsets.symmetric(horizontal: 14.w, vertical: 12.h),
        constraints: BoxConstraints(minWidth: 160.w),
        decoration: BoxDecoration(
          color: widget.isUser ? AppColors.mainDark.withOpacity(0.9) : AppColors.grayMain.withOpacity(0.25),
@@ -97,24 +93,7 @@ class _AudioMessageBubbleState extends State<AudioMessageBubble> {
             bottomRight: widget.isUser ? Radius.zero : Radius.circular(16.r),
          ),
        ),
-       child: isLoading 
-         ? Row(
-             mainAxisSize: MainAxisSize.min,
-             children: [
-               ShimmerWidget(width: 30.sp, height: 30.sp, radius: 15.sp), // Fake Play Button
-               SizedBox(width: 8.w),
-               Column(
-                 crossAxisAlignment: CrossAxisAlignment.start,
-                 mainAxisSize: MainAxisSize.min,
-                 children: [
-                   ShimmerWidget(width: 100.w, height: 4.h, radius: 2.r), // Fake Slider
-                   SizedBox(height: 6.h),
-                   ShimmerWidget(width: 40.w, height: 8.sp, radius: 2.r), // Fake Time
-                 ],
-               )
-             ],
-           )
-         : Row(
+       child: Row(
              mainAxisSize: MainAxisSize.min,
              children: [
                GestureDetector(
@@ -161,6 +140,44 @@ class _AudioMessageBubbleState extends State<AudioMessageBubble> {
                ),
              ],
            ),
+    );
+  }
+}
+
+class AudioBubbleShimmer extends StatelessWidget {
+  final bool isUser;
+  const AudioBubbleShimmer({super.key, required this.isUser});
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: EdgeInsets.symmetric(horizontal: 14.w, vertical: 12.h),
+      constraints: BoxConstraints(minWidth: 160.w),
+      decoration: BoxDecoration(
+        color: isUser ? AppColors.mainDark.withOpacity(0.9) : AppColors.grayMain.withOpacity(0.25),
+        borderRadius: BorderRadius.only(
+          topLeft: Radius.circular(16.r),
+          topRight: Radius.circular(16.r),
+          bottomLeft: isUser ? Radius.circular(16.r) : Radius.zero,
+          bottomRight: isUser ? Radius.zero : Radius.circular(16.r),
+        ),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          ShimmerWidget(width: 30.sp, height: 30.sp, radius: 15.sp), // Fake Play Button
+          SizedBox(width: 8.w),
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              ShimmerWidget(width: 100.w, height: 4.h, radius: 2.r), // Fake Slider
+              SizedBox(height: 6.h),
+              ShimmerWidget(width: 40.w, height: 8.sp, radius: 2.r), // Fake Time
+            ],
+          )
+        ],
+      ),
     );
   }
 }

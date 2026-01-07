@@ -713,91 +713,121 @@ class MessagesListView extends StatelessWidget {
     
     // Audio
     final audios = attachments
-        .where((a) => (a['type'] ?? a['file_type']) == 'audio')
+        .where((a) => (a['type'] ?? a['file_type']) == 'audio' || (a['type'] ?? a['file_type']) == 'voice')
         .cast<Map<String, dynamic>>()
         .toList();
         
     if (audios.isNotEmpty) {
-       final audio = audios.first;
+       final List<Widget> audioBubbles = [];
        
-       String? url = (audio['file_url'] ?? audio['fileUrl'])?.toString();
-       String? localPath = audio['localPath']?.toString();
-       final paths = (audio['paths'] as List?) ?? [];
-       // Use localPath if available, otherwise fallback to first path
-       final path = localPath ?? (paths.isNotEmpty ? paths.first.toString() : null);
-       
-       final lang = Localizations.localeOf(context).languageCode;
-       final isAr = lang == 'ar';
+       for (final audio in audios) {
+         String? url = (audio['file_url'] ?? audio['fileUrl'] ?? audio['publicUrl'])?.toString();
+         String? localPath = audio['localPath']?.toString();
+         final paths = (audio['paths'] as List?)?.cast<String>() ?? [];
+         
+         bool isImage(String? p) {
+           if (p == null) return false;
+           final low = p.toLowerCase();
+           return low.endsWith('.jpg') || low.endsWith('.jpeg') || 
+                  low.endsWith('.png') || low.endsWith('.webp');
+         }
 
-       return Align(
-         alignment: isUser ? Alignment.centerRight : Alignment.centerLeft,
-         child: Column(
-           // ✅ Align to End (Right) if User OR Arabic
-           crossAxisAlignment: (isUser || isAr) ? CrossAxisAlignment.start : CrossAxisAlignment.end,
-           children: [
-             if (showSenderName)
-                Padding(
-                  padding: EdgeInsets.only(bottom: 4.h),
-                  child: Text(
-                    isUser ? accountHolderName : doctorName,
-                    style: AppTextStyles.getText2(context).copyWith(
-                      fontWeight: FontWeight.bold,
-                      color: Colors.black87,
-                      fontSize: 10.sp, // ✅ Reduced from 12.sp to 10.sp
-                    ),
-                  ),
-                ),
-             ResolvedAudioBubble(
-               url: url,
+         String? remotePath;
+         if (paths.isNotEmpty) {
+           // ✅ Find the first path that is NOT an image
+           remotePath = paths.firstWhere((p) => !isImage(p), orElse: () => "");
+         }
+
+         // ✅ CRITICAL: If both URL and paths point only to images, this attachment is likely just a waveform thumbnail.
+         // Skip it to avoid rendering a broken audio bubble.
+         if (isImage(url) && (remotePath == null || remotePath.isEmpty || isImage(remotePath))) {
+            continue; 
+         }
+
+         final path = localPath ?? (remotePath != null && remotePath.isNotEmpty ? remotePath : null);
+         final int? duration = audio['duration'];
+
+         audioBubbles.add(
+           Padding(
+             padding: EdgeInsets.only(bottom: 6.h),
+             child: ResolvedAudioBubble(
+               url: (isImage(url)) ? null : url, // Protect against image URLs in the main field
                path: path,
                isUser: isUser,
+               duration: duration,
              ),
-             
-              Padding(
-                padding: EdgeInsets.only(top: 2.h),
-                child: Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Text(
-                       time != null ? intl.DateFormat('HH:mm').format(TimezoneUtils.toDamascus(time)) : '',
-                       style: AppTextStyles.getText3(context).copyWith(
-                         fontSize: 10.sp,
-                         color: Colors.black54,
-                       ),
+           )
+         );
+       }
+
+       if (audioBubbles.isNotEmpty) {
+         final lang = Localizations.localeOf(context).languageCode;
+         final isAr = lang == 'ar';
+
+         return Align(
+           alignment: isUser ? Alignment.centerRight : Alignment.centerLeft,
+           child: Column(
+             crossAxisAlignment: (isUser || isAr) ? CrossAxisAlignment.start : CrossAxisAlignment.end,
+             children: [
+               if (showSenderName)
+                  Padding(
+                    padding: EdgeInsets.only(bottom: 4.h),
+                    child: Text(
+                      isUser ? accountHolderName : doctorName,
+                      style: AppTextStyles.getText2(context).copyWith(
+                        fontWeight: FontWeight.bold,
+                        color: Colors.black87,
+                        fontSize: 10.sp,
+                      ),
                     ),
-                    if (isUser) ...[
-                      SizedBox(width: 4.w),
-                      if (status == 'sending')
-                        SizedBox(
-                          width: 10.w,
-                          height: 10.w,
-                          child: const CircularProgressIndicator(
-                            strokeWidth: 1.5,
-                            color: AppColors.main,
-                          ),
-                        )
-                      else if (status == 'failed')
-                        GestureDetector(
-                          onTap: onRetryTap,
-                          child: Icon(
-                            Icons.error_outline,
-                            color: Colors.redAccent,
-                            size: 14.sp,
-                          ),
-                        )
-                      else
-                        Icon(
-                          Icons.done_all,
-                          color: AppColors.orange,
-                          size: 14.sp,
+                  ),
+               ...audioBubbles,
+               Padding(
+                 padding: EdgeInsets.only(top: 2.h),
+                 child: Row(
+                   mainAxisSize: MainAxisSize.min,
+                   children: [
+                     Text(
+                        time != null ? intl.DateFormat('HH:mm').format(TimezoneUtils.toDamascus(time)) : '',
+                        style: AppTextStyles.getText3(context).copyWith(
+                          fontSize: 10.sp,
+                          color: Colors.black54,
                         ),
-                    ],
-                  ],
-                ),
-              ),
-           ],
-         ),
-       );
+                     ),
+                     if (isUser) ...[
+                       SizedBox(width: 4.w),
+                       if (status == 'sending')
+                         SizedBox(
+                           width: 10.w,
+                           height: 10.w,
+                           child: const CircularProgressIndicator(
+                             strokeWidth: 1.5,
+                             color: AppColors.main,
+                           ),
+                         )
+                       else if (status == 'failed')
+                         GestureDetector(
+                           onTap: onRetryTap,
+                           child: Icon(
+                             Icons.error_outline,
+                             color: Colors.redAccent,
+                             size: 14.sp,
+                           ),
+                         )
+                       else
+                         Icon(
+                           Icons.done_all,
+                           color: AppColors.orange,
+                           size: 14.sp,
+                         ),
+                     ],
+                   ],
+                 ),
+               ),
+             ],
+           ),
+         );
+       }
     }
 
     // Images

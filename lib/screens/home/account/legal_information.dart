@@ -4,9 +4,17 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:docsera/gen_l10n/app_localizations.dart';
 import 'package:docsera/app/const.dart';
 import 'package:docsera/app/text_styles.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 class LegalInformation extends StatelessWidget {
   const LegalInformation({super.key});
+
+  Future<void> _launchUrl(String url) async {
+    final Uri uri = Uri.parse(url);
+    if (!await launchUrl(uri, mode: LaunchMode.inAppWebView)) {
+      debugPrint('Could not launch $url');
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -20,32 +28,17 @@ class LegalInformation extends StatelessWidget {
           _buildTile(
             context,
             text: AppLocalizations.of(context)!.termsAndConditionsOfUse,
-            onTap: () {}, // TODO
-          ),
-          _buildTile(
-            context,
-            text: AppLocalizations.of(context)!.termsOfUseAgreement,
-            onTap: () {}, // TODO
+            onTap: () => _launchUrl('https://docsera.app/terms-of-service'),
           ),
           _buildTile(
             context,
             text: AppLocalizations.of(context)!.personalDataProtectionPolicy,
-            onTap: () {}, // TODO
-          ),
-          _buildTile(
-            context,
-            text: AppLocalizations.of(context)!.cookiePolicy,
-            onTap: () {}, // TODO
-          ),
-          _buildTile(
-            context,
-            text: AppLocalizations.of(context)!.legalNotice,
-            onTap: () {}, // TODO
+            onTap: () => _launchUrl('https://docsera.app/privacy-policy'),
           ),
           _buildTile(
             context,
             text: AppLocalizations.of(context)!.reportIllicitContent,
-            onTap: () {}, // TODO
+            onTap: () => _launchUrl('https://docsera.app/report-illicit-content'),
           ),
         ],
       ),

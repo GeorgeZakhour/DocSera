@@ -111,7 +111,7 @@ class AllergiesPage extends StatelessWidget {
                   // EMPTY — NO RECORDS AND NOT DECLARED "NO ALLERGIES"
                   if (state.records.isEmpty && !state.noItemsDeclared) {
                     return HealthEmptyView(
-                      icon: Icons.coronavirus_rounded,
+                      imagePath: 'assets/images/health/allergy_3d.webp',
                       title: t.allergies_empty_title,
                       subtitle: t.allergies_empty_subtitle,
                       primaryButtonText: t.allergies_empty_add,
@@ -119,11 +119,6 @@ class AllergiesPage extends StatelessWidget {
                       onPrimaryPressed: () {
                         final cubit = context.read<HealthCubit>();
                         _openAddAllergyBottomSheet(context, cubit);
-                      },
-
-                      secondaryText: t.allergies_empty_no_allergies,
-                      onSecondaryPressed: () {
-                        context.read<HealthCubit>().setNoItemsDeclared(true);
                       },
                     );
                   }

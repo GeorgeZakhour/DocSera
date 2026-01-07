@@ -20,12 +20,21 @@ files_to_convert = [
     'assets/images/messages_banner.png',
     'assets/images/document_banner.png',
     'assets/images/worker.png',
+    'assets/images/health/allergy_3d.png',
+    'assets/images/health/surgery_3d.png',
+    'assets/images/health/vaccination_3d.png',
+    'assets/images/health/family_history_3d.png',
+    'assets/images/health/medication_3d.png',
+    'assets/images/health/chronic_diseases_3d.png',
 ]
 
 project_root = Path.cwd()
 
+from rembg import remove
+import io
+
 def convert_to_webp():
-    print("Starting WebP conversion...")
+    print("Starting WebP conversion with VS Quality background removal (rembg)...")
     count = 0
     for file_path in files_to_convert:
         full_path = project_root / file_path
@@ -36,14 +45,22 @@ def convert_to_webp():
             
         try:
             # Open image
-            with Image.open(full_path) as img:
-                # Create new path with .webp extension
-                new_path = full_path.with_suffix('.webp')
+            with open(full_path, 'rb') as i:
+                input_data = i.read()
                 
-                # Save as WebP
-                img.save(new_path, 'WEBP', quality=85)
-                print(f"✅ Converted: {file_path} -> {new_path.name}")
-                count += 1
+            # Remove background using rembg
+            output_data = remove(input_data)
+            
+            # Convert to PIL Image
+            img_transparent = Image.open(io.BytesIO(output_data))
+                
+            # Create new path with .webp extension
+            new_path = full_path.with_suffix('.webp')
+            
+            # Save as WebP
+            img_transparent.save(new_path, 'WEBP', quality=90)
+            print(f"✅ Cleaned & Converted: {file_path} -> {new_path.name}")
+            count += 1
                 
         except Exception as e:
             print(f"❌ Error converting {file_path}: {e}")

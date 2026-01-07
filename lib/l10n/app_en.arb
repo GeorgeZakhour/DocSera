@@ -1040,6 +1040,7 @@
   "helpMessage1": "Include essential, relevant, and necessary information for the physician to process your request.",
   "helpMessage2": "If necessary (e.g., for a certificate of illness), the doctor may require you to make an appointment for an examination. In the event of an emergency, contact 112.",
   "yesterday": "Yesterday",
+  "voiceNote": "Voice Note",
   "conversationClosed": "Conversation Closed",
   "forPatient": "For patient",
   "messageForPatient": "Message request for:",

@@ -2851,6 +2851,9 @@ class AppLocalizationsAr extends AppLocalizations {
   String get yesterday => 'أمس';
 
   @override
+  String get voiceNote => 'رسالة صوتية';
+
+  @override
   String get conversationClosed => 'تم إغلاق المحادثة';
 
   @override

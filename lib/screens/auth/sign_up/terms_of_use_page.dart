@@ -5,6 +5,7 @@ import 'package:docsera/widgets/base_scaffold.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:docsera/gen_l10n/app_localizations.dart';
+import 'package:url_launcher/url_launcher.dart';
 import '../../../app/const.dart';
 import '../../../models/sign_up_info.dart';
 
@@ -20,6 +21,13 @@ class TermsOfUsePage extends StatefulWidget {
 class _TermsOfUsePageState extends State<TermsOfUsePage> {
   bool isAccepted = false;
   bool showError = false; // ⛔ لإظهار رسالة الخطأ
+
+  Future<void> _launchUrl(String url) async {
+    final Uri uri = Uri.parse(url);
+    if (!await launchUrl(uri, mode: LaunchMode.inAppWebView)) {
+      debugPrint('Could not launch $url');
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -46,7 +54,7 @@ class _TermsOfUsePageState extends State<TermsOfUsePage> {
                   Text(
                     AppLocalizations.of(context)!.termsOfUseTitle,
                     style:
-                    AppTextStyles.getTitle1(context).copyWith(fontSize: 14.sp),
+                        AppTextStyles.getTitle1(context).copyWith(fontSize: 14.sp),
                   ),
                 ],
               ),
@@ -108,7 +116,7 @@ class _TermsOfUsePageState extends State<TermsOfUsePage> {
                   style: AppTextStyles.getText3(context),
                 ),
                 GestureDetector(
-                  onTap: () {},
+                  onTap: () => _launchUrl('https://docsera.app/terms-of-service'),
                   child: Text(
                     AppLocalizations.of(context)!.dataProtectionNotice,
                     style: AppTextStyles.getText3(context).copyWith(

@@ -731,19 +731,6 @@ class _LoginPageState extends State<LoginPage> {
                 ),
               ),
             ),
-            Positioned(
-              bottom: 15,
-              left: 0,
-              right: 0,
-              child: Text(
-                "Powered by TechSpearz",
-                textAlign: TextAlign.center,
-                style: AppTextStyles.getText4(context).copyWith(
-                  color: AppColors.grayMain,
-                  fontSize: 8,
-                ),
-              ),
-            ),
           ],
         ],
       ),

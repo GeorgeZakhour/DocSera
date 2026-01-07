@@ -569,19 +569,30 @@ import 'package:docsera/utils/doctor_image_utils.dart';
                         crossAxisAlignment: CrossAxisAlignment.end,
                         children: [
                           Expanded(
-                            child: Text(
-                              isClosed
-                                  ? AppLocalizations.of(context)!.conversationClosed
-                                  : convo.lastMessage,
-                              style: AppTextStyles.getText3(context).copyWith(
-                                color: Colors.black54,
-                                fontSize: showDoctorName ? 10.sp: 9.sp,
-                                fontWeight: unreadCount > 0 ? FontWeight.bold : FontWeight.normal,
-                              ),
-                              maxLines: 2,
-                              overflow: TextOverflow.ellipsis,
-                            ),
+                            child: Builder(
+                              builder: (context) {
+                                String displayMessage = isClosed
+                                    ? AppLocalizations.of(context)!.conversationClosed
+                                    : convo.lastMessage;
 
+                                // ✅ Prettify DocSera Pro Voice Markers
+                                if (displayMessage.startsWith('###VOICE###')) {
+                                  final duration = displayMessage.replaceFirst('###VOICE###', '');
+                                  displayMessage = '🎤 ${AppLocalizations.of(context)!.voiceNote} ($duration)';
+                                }
+
+                                return Text(
+                                  displayMessage,
+                                  style: AppTextStyles.getText3(context).copyWith(
+                                    color: Colors.black54,
+                                    fontSize: showDoctorName ? 10.sp : 9.sp,
+                                    fontWeight: unreadCount > 0 ? FontWeight.bold : FontWeight.normal,
+                                  ),
+                                  maxLines: 2,
+                                  overflow: TextOverflow.ellipsis,
+                                );
+                              },
+                            ),
                           ),
                           SizedBox(width: 8.w),
 

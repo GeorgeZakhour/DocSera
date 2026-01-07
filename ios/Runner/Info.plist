@@ -35,20 +35,15 @@
 	<string>$(CURRENT_PROJECT_VERSION)</string>
 	<key>LSRequiresIPhoneOS</key>
 	<true/>
-	<key>NSBonjourServices</key>
-	<array>
-		<string>_http._tcp</string>
-	</array>
+
 	<key>NSCalendarsUsageDescription</key>
 	<string>يحتاج DocSera إلى الوصول إلى التقويم فقط في حال رغبتك بإضافة المواعيد الطبية إلى تقويمك.</string>
 	<key>NSCameraUsageDescription</key>
 	<string>يحتاج DocSera إلى الوصول إلى الكاميرا لالتقاط الصور وإرفاقها بالمستندات.</string>
 	<key>NSFaceIDUsageDescription</key>
-	<string>نستخدم Face ID لتسجيل الدخول بسرعة وأمان</string>
-	<key>NSLocalNetworkUsageDescription</key>
-	<string>نستخدم الشبكة المحلية للاتصال مع جهاز التطوير أثناء الاختبار.</string>
-	<key>NSLocationAlwaysAndWhenInUseUsageDescription</key>
-	<string>يحتاج DocSera إلى إذن الوصول إلى موقعك لتحسين الاقتراحات القريبة وإظهار موقعك على الخريطة.</string>
+	<string>نستخدم Face ID لتسجيل الدخول بسرعة وأمان دون تخزين أي بيانات بيومترية.</string>
+
+
 	<key>NSLocationWhenInUseUsageDescription</key>
 	<string>يحتاج DocSera إلى موقعك لعرض الأطباء القريبين منك وإظهار موقعك على الخريطة.</string>
 	<key>NSMicrophoneUsageDescription</key>

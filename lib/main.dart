@@ -83,14 +83,6 @@ void main() async {
     ),
   );
 
-  // ✅ يحفّز ظهور نافذة Local Network على iOS
-await Socket.connect('192.168.1.1', 80, timeout: const Duration(seconds: 1))
-    .then((socket) {
-  log('Connected to local network');
-  socket.destroy();
-}).catchError((e) {
-  log('Failed to connect — still triggers prompt');
-});
 
 
 

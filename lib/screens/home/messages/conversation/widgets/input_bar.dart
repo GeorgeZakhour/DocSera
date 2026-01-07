@@ -11,7 +11,7 @@ import 'package:permission_handler/permission_handler.dart';
 class InputBar extends StatefulWidget {
   final TextEditingController controller;
   final VoidCallback onSend;
-  final Function(String path) onSendAudio;
+  final Function(String path, Duration duration) onSendAudio;
   final VoidCallback onAddAttachment;
   final bool isEnabled;
   final bool hasAttachments;
@@ -48,6 +48,7 @@ class _InputBarState extends State<InputBar> with TickerProviderStateMixin {
   @override
   void initState() {
     super.initState();
+    _checkPermission(); // ✅ Check on init
     _focusNode = FocusNode();
     _focusNode.addListener(() {
       setState(() {});
@@ -71,6 +72,16 @@ class _InputBarState extends State<InputBar> with TickerProviderStateMixin {
     ).animate(CurvedAnimation(parent: _lockAnimController, curve: Curves.easeOut));
   }
 
+  // ✅ New Permission Check
+  bool _isPermissionDenied = false;
+
+  Future<void> _checkPermission() async {
+    final status = await Permission.microphone.status;
+    if (status.isPermanentlyDenied || status.isRestricted) {
+      if (mounted) setState(() => _isPermissionDenied = true);
+    }
+  }
+
   // ... (dispose remains same)
   @override
   void dispose() {
@@ -84,8 +95,20 @@ class _InputBarState extends State<InputBar> with TickerProviderStateMixin {
 
   Future<void> _startRecording() async {
     if (_isRecording) return;
+    
+    // ✅ Double check before starting
+    if (_isPermissionDenied) {
+       _showPermissionDialog();
+       return;
+    }
 
     final permission = await Permission.microphone.request();
+
+    if (permission.isPermanentlyDenied || permission.isRestricted) {
+       setState(() => _isPermissionDenied = true);
+       _showPermissionDialog();
+       return;
+    }
 
     // Check if button is passed (race condition prevention)
     if (!_isButtonPressed) return;
@@ -116,13 +139,24 @@ class _InputBarState extends State<InputBar> with TickerProviderStateMixin {
       _startTimer();
       _micScaleController.forward();
       _lockAnimController.forward();
-    } else {
-        if (mounted) {
-           ScaffoldMessenger.of(context).showSnackBar(
-             const SnackBar(content: Text("Microphone permission required.")),
-           );
-        }
     }
+  }
+
+  void _showPermissionDialog() {
+     showDialog(
+       context: context,
+       builder: (context) => AlertDialog(
+         title: const Text("Microphone Permission"),
+         content: const Text("Please enable microphone access in settings to send voice messages."),
+         actions: [
+           TextButton(onPressed: () => Navigator.pop(context), child: const Text("OK")),
+           TextButton(onPressed: () {
+             Navigator.pop(context);
+             openAppSettings();
+           }, child: const Text("Settings")),
+         ],
+       ),
+     );
   }
 
   Future<void> _stopRecording({bool cancel = false}) async {
@@ -147,7 +181,8 @@ class _InputBarState extends State<InputBar> with TickerProviderStateMixin {
       }
     } else {
       if (path != null) {
-         widget.onSendAudio(path);
+         // ✅ Pass Duration
+         widget.onSendAudio(path, duration);
       }
     }
 
@@ -189,7 +224,11 @@ class _InputBarState extends State<InputBar> with TickerProviderStateMixin {
     final showSendButton = widget.controller.text.trim().isNotEmpty || widget.hasAttachments;
 
     // Determine visuals for Mic
-    Color micColor = _isRecording ? AppColors.orange : AppColors.main; 
+    // ✅ Grey out if denied
+    Color micColor = _isPermissionDenied 
+        ? Colors.grey 
+        : (_isRecording ? AppColors.orange : AppColors.main);
+        
     IconData micIcon = _isRecording ? Icons.mic : Icons.mic_none;
 
     return Padding(
@@ -259,65 +298,69 @@ class _InputBarState extends State<InputBar> with TickerProviderStateMixin {
                      
                      // 2. Mic Button (Left side)
                      // Constant GestureDetector to ensure continuous gesture tracking
-                     GestureDetector(
-                          key: const ValueKey('mic_gesture_detector'),
-                          onTapDown: (_) {
-                            if (widget.isEnabled && !_isRecording) {
-                               debugPrint("👇 Mic Button Pressed");
-                               _isButtonPressed = true;
-                               _startRecording();
-                            }
-                          },
-                          onTapUp: (_) {
-                             debugPrint("👆 Mic Button Released");
-                             _isButtonPressed = false;
-                             // Stop if recording and NOT locked
-                             if (_isRecording && !_isLocked) _stopRecording();
-                          },
-                          onTapCancel: () {
-                             debugPrint("❌ Mic Button Canceled");
-                             _isButtonPressed = false;
-                             // Cancel if recording and NOT locked
-                             if (_isRecording && !_isLocked) _stopRecording(cancel: true);
-                          },
-                          onPanStart: (_) {
-                             // If pan starts immediately without tapDown (rare but possible)
-                             if (widget.isEnabled && !_isRecording) {
-                                _isButtonPressed = true;
-                                _startRecording();
-                             }
-                          },
-                          onPanUpdate: (details) {
-                              if (_isRecording && !_isLocked) {
-                                  setState(() => _dragOffset += details.delta);
-                                  // Lock Logic (Slide Up)
-                                  if (_dragOffset.dy < -40) {
-                                      _lockRecording();
-                                  }
+                     IgnorePointer(
+                       // ✅ Disable interactions if permission denied
+                       ignoring: _isPermissionDenied,
+                       child: GestureDetector(
+                            key: const ValueKey('mic_gesture_detector'),
+                            onTapDown: (_) {
+                              if (widget.isEnabled && !_isRecording) {
+                                 debugPrint("👇 Mic Button Pressed");
+                                 _isButtonPressed = true;
+                                 _startRecording();
                               }
-                          },
-                          onPanEnd: (_) {
-                              // Similar to onTapUp
-                              _isButtonPressed = false;
-                              if (_isRecording && !_isLocked) {
-                                  _stopRecording();
-                              }
-                          },
-                          behavior: HitTestBehavior.opaque,
-                          child: Padding(
-                            padding: EdgeInsets.symmetric(horizontal: 4.w),
-                            child: ScaleTransition(
-                              scale: _micScaleController,
-                              child: Container(
-                                padding: EdgeInsets.all(6.r),
-                                child: Icon(
-                                  micIcon, 
-                                  color: micColor,
-                                  size: 24.sp,
+                            },
+                            onTapUp: (_) {
+                               debugPrint("👆 Mic Button Released");
+                               _isButtonPressed = false;
+                               // Stop if recording and NOT locked
+                               if (_isRecording && !_isLocked) _stopRecording();
+                            },
+                            onTapCancel: () {
+                               debugPrint("❌ Mic Button Canceled");
+                               _isButtonPressed = false;
+                               // Cancel if recording and NOT locked
+                               if (_isRecording && !_isLocked) _stopRecording(cancel: true);
+                            },
+                            onPanStart: (_) {
+                               // If pan starts immediately without tapDown (rare but possible)
+                               if (widget.isEnabled && !_isRecording) {
+                                  _isButtonPressed = true;
+                                  _startRecording();
+                               }
+                            },
+                            onPanUpdate: (details) {
+                                if (_isRecording && !_isLocked) {
+                                    setState(() => _dragOffset += details.delta);
+                                    // Lock Logic (Slide Up)
+                                    if (_dragOffset.dy < -40) {
+                                        _lockRecording();
+                                    }
+                                }
+                            },
+                            onPanEnd: (_) {
+                                // Similar to onTapUp
+                                _isButtonPressed = false;
+                                if (_isRecording && !_isLocked) {
+                                    _stopRecording();
+                                }
+                            },
+                            behavior: HitTestBehavior.opaque,
+                            child: Padding(
+                              padding: EdgeInsets.symmetric(horizontal: 4.w),
+                              child: ScaleTransition(
+                                scale: _micScaleController,
+                                child: Container(
+                                  padding: EdgeInsets.all(6.r),
+                                  child: Icon(
+                                    micIcon, 
+                                    color: micColor,
+                                    size: 24.sp,
+                                  ),
                                 ),
                               ),
                             ),
-                          ),
+                       ),
                      ),
                      
                      SizedBox(width: 4.w),

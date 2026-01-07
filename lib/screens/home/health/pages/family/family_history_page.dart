@@ -103,17 +103,13 @@ class FamilyHistoryPage extends StatelessWidget {
                   // EMPTY — NOT DECLARED
                   if (state.records.isEmpty && !state.noItemsDeclared) {
                     return HealthEmptyView(
-                      icon: Icons.group_rounded,
+                      imagePath: 'assets/images/health/family_history_3d.webp',
                       title: t.family_empty_title,
                       subtitle: t.family_empty_subtitle,
                       primaryButtonText: t.family_empty_add,
                       onPrimaryPressed: () {
                         final cubit = context.read<HealthCubit>();
                         _openAddBottomSheet(context, cubit);
-                      },
-                      secondaryText: t.family_empty_no_records,
-                      onSecondaryPressed: () {
-                        context.read<HealthCubit>().setNoItemsDeclared(true);
                       },
                     );
                   }

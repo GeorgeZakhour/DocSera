@@ -5432,6 +5432,12 @@ abstract class AppLocalizations {
   /// **'Yesterday'**
   String get yesterday;
 
+  /// No description provided for @voiceNote.
+  ///
+  /// In en, this message translates to:
+  /// **'Voice Note'**
+  String get voiceNote;
+
   /// No description provided for @conversationClosed.
   ///
   /// In en, this message translates to:

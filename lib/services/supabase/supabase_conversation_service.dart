@@ -1,5 +1,6 @@
 import 'dart:io';
 
+import 'package:flutter/foundation.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:docsera/utils/time_utils.dart';
 
@@ -60,43 +61,20 @@ class ConversationService {
     required String conversationId,
     required List<Map<String, dynamic>> messages,
   }) async {
-    // رسائل كتبها الدكتور وغير مقروءة من المستخدم
-    final unreadMessages = messages.where((msg) {
-      final isDoctorMessage = msg['is_user'] == false;
-      final notReadYet = msg['read_by_user'] != true;
-      return isDoctorMessage && notReadYet && msg['id'] != null;
-    }).toList();
-
-    if (unreadMessages.isEmpty) {
-      return;
-    }
-
-    final now = DocSeraTime.nowUtc().toIso8601String();
-
-    // تحديث كل رسالة على حدة (آمن مع triggers)
-    await Future.wait(
-      unreadMessages.map((msg) async {
-        final id = msg['id'];
-        if (id == null) return;
-
-        await _client
-            .from('messages')
-            .update({
-          'read_by_user': true,
-          'read_by_user_at': now,
-        })
-            .eq('id', id);
-      }),
+    // Check if there are any unread messages from the doctor
+    final hasUnread = messages.any((msg) => 
+        msg['is_user'] == false && msg['read_by_user'] != true
     );
 
-    // تحديث المحادثة: تصفير عدد الرسائل غير المقروءة للمستخدم
-    await _client
-        .from('conversations')
-        .update({
-      'last_message_read_by_user': true,
-      'unread_count_for_user': 0,
-    })
-        .eq('id', conversationId);
+    if (!hasUnread) return;
+
+    try {
+      await _client.rpc('rpc_mark_messages_read', params: {
+        'conversation_uuid': conversationId,
+      });
+    } catch (e) {
+      debugPrint("❌ Error calling rpc_mark_messages_read: $e");
+    }
   }
 
   // ---------------------------------------------------------------------------
@@ -166,13 +144,30 @@ class ConversationService {
     // ----------------------------------------------------------
     // 3) توليد معاينة آخر رسالة (تظهر في MessagesPage)
     // ----------------------------------------------------------
-    final lastMessagePreview = text.isNotEmpty
-        ? text
-        : attachments.isEmpty
-        ? ''
-        : (attachments.first['type'] == 'pdf'
-        ? '📄 PDF'
-        : '🖼️ Image');
+    // ----------------------------------------------------------
+    // 3) توليد معاينة آخر رسالة (تظهر في MessagesPage)
+    // ----------------------------------------------------------
+    String lastMessagePreview = '';
+    
+    if (text.isNotEmpty) {
+      lastMessagePreview = text;
+    } else if (attachments.isNotEmpty) {
+      final type = attachments.first['type'] ?? attachments.first['file_type'];
+      if (type == 'pdf') {
+        lastMessagePreview = '📄 PDF';
+      } else if (type == 'audio' || type == 'voice') {
+        final durationSec = attachments.first['duration'];
+        if (durationSec != null) {
+          final m = (durationSec / 60).floor().toString().padLeft(2, '0');
+          final s = (durationSec % 60).toString().padLeft(2, '0');
+          lastMessagePreview = '🎤 Voice Note ($m:$s)';
+        } else {
+          lastMessagePreview = '🎤 Voice Note';
+        }
+      } else {
+        lastMessagePreview = '🖼️ Image';
+      }
+    }
 
     // ----------------------------------------------------------
     // 4) تحديث المحادثة

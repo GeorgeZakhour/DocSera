@@ -288,23 +288,6 @@ class _SplashScreenState extends State<SplashScreen> with TickerProviderStateMix
                 ),
               ),
             ),
-          Positioned(
-            bottom: 25,
-            left: 0,
-            right: 0,
-            child: AnimatedOpacity(
-              opacity: _bottomTextFadeAnimation.value,
-              duration: const Duration(milliseconds: 600),
-              child: Text(
-                "Powered by TechSpearz",
-                textAlign: TextAlign.center,
-                style: AppTextStyles.getText4(context).copyWith(
-                  color: AppColors.grayMain,
-                  fontSize: 9,
-                ),
-              ),
-            ),
-          ),
         ],
       ),
     );

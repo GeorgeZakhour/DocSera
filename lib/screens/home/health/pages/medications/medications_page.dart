@@ -104,17 +104,13 @@ class MedicationsPage extends StatelessWidget {
                   // EMPTY — NOT DECLARED
                   if (state.records.isEmpty && !state.noItemsDeclared) {
                     return HealthEmptyView(
-                      icon: Icons.medication_rounded,
+                      imagePath: 'assets/images/health/medication_3d.webp',
                       title: t.medications_empty_title,
                       subtitle: t.medications_empty_subtitle,
                       primaryButtonText: t.medications_empty_add,
                       onPrimaryPressed: () {
                         final cubit = context.read<HealthCubit>();
                         _openAddBottomSheet(context, cubit);
-                      },
-                      secondaryText: t.medications_empty_no_records,
-                      onSecondaryPressed: () {
-                        context.read<HealthCubit>().setNoItemsDeclared(true);
                       },
                     );
                   }

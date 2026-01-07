@@ -3,29 +3,39 @@ import 'package:audioplayers/audioplayers.dart';
 class AudioPlayerService {
   final AudioPlayer _audioPlayer = AudioPlayer();
 
+  AudioPlayerService();
+
   Stream<Duration> get positionStream => _audioPlayer.onPositionChanged;
   Stream<Duration> get durationStream => _audioPlayer.onDurationChanged;
   Stream<PlayerState> get playerStateStream => _audioPlayer.onPlayerStateChanged;
 
   Future<void> setSource(String url) async {
-    if (url.startsWith('http')) {
-      await _audioPlayer.setSource(UrlSource(url));
-    } else {
-      await _audioPlayer.setSource(DeviceFileSource(url));
+    if (url.isEmpty) return;
+    try {
+      if (url.startsWith('http')) {
+        await _audioPlayer.setSource(UrlSource(url));
+      } else {
+        await _audioPlayer.setSource(DeviceFileSource(url));
+      }
+    } catch (e) {
+      print("❌ AudioPlayer Error (setSource): $e");
     }
   }
 
   Future<void> play(String url) async {
-    // If source already set, just resume. But for simplicity and safety, we re-set or resume.
-    // Ideally we track state.
-    if (_audioPlayer.state == PlayerState.paused) {
-      await _audioPlayer.resume();
-    } else {
+    if (url.isEmpty) return;
+    try {
+      if (_audioPlayer.state == PlayerState.paused) {
+        await _audioPlayer.resume();
+      } else {
         if (url.startsWith('http')) {
-            await _audioPlayer.play(UrlSource(url));
+          await _audioPlayer.play(UrlSource(url));
         } else {
-            await _audioPlayer.play(DeviceFileSource(url));
+          await _audioPlayer.play(DeviceFileSource(url));
         }
+      }
+    } catch (e) {
+      print("❌ AudioPlayer Error (play): $e");
     }
   }
 

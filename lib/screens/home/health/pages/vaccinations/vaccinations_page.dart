@@ -106,7 +106,7 @@ class VaccinationPage extends StatelessWidget {
                   // EMPTY — NOT DECLARED
                   if (state.records.isEmpty && !state.noItemsDeclared) {
                     return HealthEmptyView(
-                      icon: Icons.vaccines_rounded,
+                      imagePath: 'assets/images/health/vaccination_3d.webp',
                       title: t.vaccines_empty_title,
                       subtitle: t.vaccines_empty_subtitle,
                       primaryButtonText: t.vaccines_empty_add,
@@ -114,11 +114,6 @@ class VaccinationPage extends StatelessWidget {
                       onPrimaryPressed: () {
                         final cubit = context.read<HealthCubit>();
                         _openAddBottomSheet(context, cubit);
-                      },
-
-                      secondaryText: t.vaccines_empty_no_records,
-                      onSecondaryPressed: () {
-                        context.read<HealthCubit>().setNoItemsDeclared(true);
                       },
                     );
                   }

@@ -449,7 +449,7 @@ class _ConversationPageState extends State<ConversationPage> {
                                isEnabled: true,
                                hasAttachments: _pendingImages.isNotEmpty || _pendingPdf != null,
                                onSend: _send,
-                               onSendAudio: (path) async {
+                               onSendAudio: (path, duration) async {
                                  final file = File(path);
                                  if (!await file.exists()) return;
                                  
@@ -463,6 +463,9 @@ class _ConversationPageState extends State<ConversationPage> {
                                    type: 'audio',
                                    storageName: name,
                                  );
+
+                                 // ✅ Add duration metadata (seconds)
+                                 uploaded['duration'] = duration.inSeconds;
                                  
                                  await cubit.sendMessage(
                                    conversationId: widget.conversationId,

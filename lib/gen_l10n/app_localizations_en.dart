@@ -2889,6 +2889,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get yesterday => 'Yesterday';
 
   @override
+  String get voiceNote => 'Voice Note';
+
+  @override
   String get conversationClosed => 'Conversation Closed';
 
   @override
