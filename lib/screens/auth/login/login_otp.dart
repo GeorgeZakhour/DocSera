@@ -16,9 +16,14 @@ import 'package:device_info_plus/device_info_plus.dart';
 import '../../../utils/full_page_loader.dart';
 
 class LoginOTPPage extends StatefulWidget {
-  final String phoneNumber;
+  final String? phoneNumber;
+  final String? email;
 
-  const LoginOTPPage({super.key, required this.phoneNumber});
+  const LoginOTPPage({
+    super.key,
+    this.phoneNumber,
+    this.email,
+  }) : assert(phoneNumber != null || email != null, 'Either phone or email must be provided');
 
   @override
   State<LoginOTPPage> createState() => _LoginOTPPageState();
@@ -69,12 +74,24 @@ class _LoginOTPPageState extends State<LoginOTPPage> {
     });
 
     try {
-      sentCode = await Supabase.instance.client.rpc(
-        'send_login_otp',
-        params: {
-          'p_phone': widget.phoneNumber,
-        },
-      );
+
+      if (widget.email != null) {
+        // 📧 Email Flow (Edge Function)
+        final res = await Supabase.instance.client.functions.invoke(
+          'send_email_otp',
+          body: {'email': widget.email},
+        );
+        if (res.status != 200) throw Exception('Failed to send email OTP');
+        sentCode = 'SENT_VIA_EMAIL'; // Edge function doesn't return code
+      } else {
+        // 📱 Phone Flow (Legacy RPC)
+        sentCode = await Supabase.instance.client.rpc(
+          'send_login_otp',
+          params: {
+            'p_phone': widget.phoneNumber,
+          },
+        );
+      }
       setState(() {
         isLoading = false;
       });
@@ -115,18 +132,38 @@ class _LoginOTPPageState extends State<LoginOTPPage> {
     try {
       final deviceId = await getDeviceId();
 
-      final res = await Supabase.instance.client.rpc(
-        'verify_login_otp',
-        params: {
-          'p_phone': widget.phoneNumber,
-          'p_code': _codeController.text.trim(),
-          'p_device_id': deviceId,
-        },
-      );
+      if (widget.email != null) {
+        // 📧 Email Verification
+        // 1. Verify OTP
+        await Supabase.instance.client.rpc(
+          'rpc_verify_email_otp',
+          params: {
+            'p_email': widget.email,
+            'p_code': _codeController.text.trim(),
+            'p_purpose': 'signup_email_verify', // Reusing ownership check
+          },
+        );
+        
+        // 2. Trust Device (Since this is a login verification)
+        await Supabase.instance.client.rpc(
+          'trust_current_device',
+          params: {'p_device_id': deviceId},
+        );
 
+      } else {
+        // 📱 Phone Verification
+        final res = await Supabase.instance.client.rpc(
+          'verify_login_otp',
+          params: {
+            'p_phone': widget.phoneNumber,
+            'p_code': _codeController.text.trim(),
+            'p_device_id': deviceId,
+          },
+        );
 
-      if (res != true) {
-        throw Exception('invalid_otp');
+        if (res != true) {
+          throw Exception('invalid_otp');
+        }
       }
 
       Navigator.pushAndRemoveUntil(
@@ -199,9 +236,18 @@ class _LoginOTPPageState extends State<LoginOTPPage> {
               child: Column(
                 children: [
                   SizedBox(height: 20.h),
-                  Icon(Icons.phone, color: AppColors.main, size: 40.sp),
+                  Icon(
+                    widget.email != null ? Icons.email : Icons.phone,
+                    color: AppColors.main,
+                    size: 40.sp,
+                  ),
                   SizedBox(height: 20.h),
-                  Text(local.enterSmsCode, style: AppTextStyles.getTitle2(context)),
+                  Text(
+                    widget.email != null
+                        ? local.enterEmailCode
+                        : local.enterSmsCode,
+                    style: AppTextStyles.getTitle2(context),
+                  ),
                 ],
               ),
             ),
@@ -233,7 +279,7 @@ class _LoginOTPPageState extends State<LoginOTPPage> {
 
               Text(local.otpSentTo, style: AppTextStyles.getText3(context)),
               Text(
-                _getDisplayPhoneNumber(widget.phoneNumber),
+                _getDisplayPhoneNumber(widget.email ?? widget.phoneNumber!),
                 style: AppTextStyles.getText2(context).copyWith(fontWeight: FontWeight.bold),
               ),
               SizedBox(height: 5.h),

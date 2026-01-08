@@ -76,14 +76,18 @@ class _LoginPageState extends State<LoginPage> {
 
 
   Future<void> _checkBiometricReadiness() async {
+    debugPrint("🔍 [BIOMETRIC_DEBUG_START] Starting check...");
+
     // ⛔ إذا المستخدم مسجّل دخول، لا نعرض الزر
     if (_supabaseUserService.getCurrentUser() != null) {
+      debugPrint("❌ [BIOMETRIC_DEBUG_START] User already logged in.");
       setState(() => _canUseBiometric = false);
       return;
     }
 
     // 1️⃣ هل البيومتريك مفعّل من الإعدادات؟
     final enabled = await BiometricStorage.isEnabled();
+    debugPrint("🔍 [BIOMETRIC_DEBUG_START] Is enabled in settings: $enabled");
     if (!enabled) {
       setState(() => _canUseBiometric = false);
       return;
@@ -91,6 +95,7 @@ class _LoginPageState extends State<LoginPage> {
 
     // 2️⃣ هل هناك Credentials محفوظة؟
     final creds = await BiometricStorage.getCredentials();
+    debugPrint("🔍 [BIOMETRIC_DEBUG_START] Credentials found: ${creds != null}");
     if (creds == null) {
       setState(() => _canUseBiometric = false);
       return;
@@ -98,12 +103,14 @@ class _LoginPageState extends State<LoginPage> {
 
     // 3️⃣ هل الجهاز يدعم Biometric؟
     final available = await _localAuth.getAvailableBiometrics();
+    debugPrint("🔍 [BIOMETRIC_DEBUG_START] Hardware available: $available");
     if (available.isEmpty) {
       setState(() => _canUseBiometric = false);
       return;
     }
 
     // ✅ جاهز 100%
+    debugPrint("✅ [BIOMETRIC_DEBUG_START] ALL CHECKS PASSED!");
     setState(() {
       _canUseBiometric = true;
       _isFaceID = available.contains(BiometricType.face);
@@ -355,12 +362,11 @@ class _LoginPageState extends State<LoginPage> {
       // ---------------------------------------------------------------------
       // 6️⃣ 2FA routing
       // ---------------------------------------------------------------------
-      if (is2FAEnabled && !trustedDevices.contains(deviceId)) {
-        if (phone == null || phone.isEmpty) {
-          throw Exception("phone_not_available_for_2fa");
-        }
-
-        debugPrint("🚨 [2FA] Redirecting to OTP");
+      // ---------------------------------------------------------------------
+      // 6️⃣ New Device Check (Email OTP)
+      // ---------------------------------------------------------------------
+      if (!trustedDevices.contains(deviceId)) {
+        debugPrint("🚨 [SECURITY] New device detected ($deviceId). Redirecting to Email OTP.");
 
         if (!mounted) return;
 
@@ -368,7 +374,7 @@ class _LoginPageState extends State<LoginPage> {
           context,
           MaterialPageRoute(
             builder: (_) => LoginOTPPage(
-              phoneNumber: phone,
+              email: email, // ✅ Pass email for verification
             ),
           ),
               (_) => false,
@@ -539,6 +545,7 @@ class _LoginPageState extends State<LoginPage> {
                     controller: _inputController,
                     textAlign: getTextAlign(context),
                     textDirection: detectTextDirection(_inputController.text),
+                    keyboardType: TextInputType.emailAddress, // ✅ Email friendly keyboard
                     style: TextStyle(fontSize: 12.sp),
                     decoration: InputDecoration(
                       hintText: AppLocalizations.of(context)!.emailOrPhone,

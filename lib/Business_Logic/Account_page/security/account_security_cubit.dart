@@ -61,6 +61,7 @@ class AccountSecurityCubit extends Cubit<AccountSecurityState> {
 
       final otp = await _service.requestPhoneChange(e164);
 
+      // Note: OLD flow returns OTP for phone.
       emit(AccountOtpSent(
         target: AccountSecurityTarget.phone,
         value: e164,
@@ -95,21 +96,28 @@ class AccountSecurityCubit extends Cubit<AccountSecurityState> {
     try {
       emit(const AccountSecurityLoading());
 
-      final otp = await _service.requestEmailChange(email);
+      // No OTP returned for email (Edge Function)
+      await _service.requestEmailChange(email);
 
       emit(AccountOtpSent(
         target: AccountSecurityTarget.email,
         value: email,
-        otp: otp,
+        otp: null, // No OTP for email
       ));
     } catch (e) {
       emit(const AccountSecurityError('OTP_REQUEST_FAILED'));
     }
   }
+
   Future<void> verifyEmailOtp(String email, String otp) async {
     try {
       emit(const AccountSecurityLoading());
+      // 1. Verify
       await _service.verifyEmailOtp(email, otp);
+      
+      // 2. Update user (only if verified)
+      await _service.updateEmail(email);
+      
       emit(AccountOtpVerified(target: AccountSecurityTarget.email, value: email));
     } catch (e) {
       emit(const AccountSecurityError('UNKNOWN_ERROR'));
@@ -207,6 +215,18 @@ class AccountSecurityCubit extends Cubit<AccountSecurityState> {
       final prefs = await SharedPreferences.getInstance();
       await prefs.setBool('enableFaceID', enable);
       await prefs.setString('biometricType', biometricType);
+
+      // ✅ Fix: If enabling, ensure we have credentials stored for BiometricStorage
+      if (enable) {
+        final savedEmail = prefs.getString('userEmail');
+        final savedPassword = prefs.getString('userPassword');
+        if (savedEmail != null && savedPassword != null) {
+          await BiometricStorage.saveCredentials(
+            email: savedEmail,
+            password: savedPassword,
+          );
+        }
+      }
 
       // 🔴 إذا تم التعطيل → امسح البيانات
       if (!enable) {

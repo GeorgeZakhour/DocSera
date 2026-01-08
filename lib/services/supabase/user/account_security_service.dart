@@ -1,3 +1,6 @@
+
+import 'package:docsera/services/biometrics/biometric_storage.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 class AccountSecurityService {
@@ -90,21 +93,18 @@ class AccountSecurityService {
   // Email change flow (OTP)
   // ---------------------------------------------------------------------------
 
-  /// ✅ requestEmailChange(email) → rpc_request_email_change
-  Future<String> requestEmailChange(String email) async {
+  /// ✅ requestEmailChange(email) → send_email_otp (Edge Function)
+  /// Uses the same function used in signup to ensure consistency (Mailgun + Rate Limits)
+  Future<void> requestEmailChange(String email) async {
     try {
-      final res = await _supabase.rpc(
-        'rpc_request_email_change',
-        params: {
-          'p_email': email,
-        },
+      final res = await _supabase.functions.invoke(
+        'send_email_otp',
+        body: {'email': email},
       );
 
-      if (res == null) {
-        throw Exception('OTP not returned');
+      if (res.status != 200) {
+        throw Exception('Failed to send email OTP');
       }
-
-      return res.toString();
     } catch (e) {
       throw Exception('AccountSecurityService.requestEmailChange failed: $e');
     }
@@ -113,17 +113,51 @@ class AccountSecurityService {
 
 
   /// ✅ verifyEmailOtp(email, otp) → rpc_verify_email_otp
+  /// Verifies the OTP using the same logic as signup (p_purpose = 'signup_email_verify')
   Future<void> verifyEmailOtp(String email, String otp) async {
     try {
       await _supabase.rpc(
         'rpc_verify_email_otp',
         params: {
           'p_email': email,
-          'p_otp': otp,
+          'p_code': otp,
+          'p_purpose': 'signup_email_verify',
         },
       );
     } catch (e) {
       throw Exception('AccountSecurityService.verifyEmailOtp failed: $e');
+    }
+  }
+
+  /// ✅ updateEmail(email)
+  /// Actually updates the user's email in Auth after successful verification
+  Future<void> updateEmail(String email) async {
+    try {
+      final user = _supabase.auth.currentUser;
+      if (user == null) throw Exception('Not authenticated');
+
+      final res = await _supabase.functions.invoke(
+        'update_email_admin',
+        body: {'email': email},
+      );
+
+      if (res.status != 200) {
+        throw Exception('Failed to update email via Admin Function');
+      }
+
+      // ✅ Update Biometric Storage if enabled
+      final prefs = await SharedPreferences.getInstance();
+      if (prefs.getBool('enableFaceID') == true) {
+        // We need the password to re-save credentials.
+        // Option 1: Ask user for password (too much friction)
+        // Option 2: Read old password from storage (if exists) and re-save with new email
+        final oldPassword = prefs.getString('userPassword');
+        if (oldPassword != null) {
+          await BiometricStorage.saveCredentials(email: email, password: oldPassword);
+        }
+      }
+    } catch (e) {
+      throw Exception('AccountSecurityService.updateEmail failed: $e');
     }
   }
 

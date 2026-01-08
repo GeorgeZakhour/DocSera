@@ -29,12 +29,12 @@ class AccountSecurityError extends AccountSecurityState {
 class AccountOtpSent extends AccountSecurityState {
   final AccountSecurityTarget target;
   final String value; // phone or email
-  final String otp;   // 👈 جديد
+  final String? otp;   // 👈 جديد (nullable now)
 
   const AccountOtpSent({
     required this.target,
     required this.value,
-    required this.otp,
+    this.otp,
   });
 
   @override

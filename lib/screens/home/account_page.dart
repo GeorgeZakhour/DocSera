@@ -582,8 +582,16 @@ class _AccountScreenState extends State<AccountScreen> {
                           security.verifyEmailOtp(targetValue, otp);
                         }
                       },
+
                       child: loading
-                          ? const CircularProgressIndicator()
+                          ? SizedBox(
+                              height: 20.h,
+                              width: 20.h,
+                              child: const CircularProgressIndicator(
+                                color: Colors.white,
+                                strokeWidth: 2,
+                              ),
+                            )
                           : Text(AppLocalizations.of(context)!.continueButton),
                     ),
                   ],

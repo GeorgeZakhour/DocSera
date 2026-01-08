@@ -59,14 +59,18 @@ class _LogInPageState extends State<LogInPage> {
 
 
   Future<void> _checkBiometricReadiness() async {
+    debugPrint("🔍 [BIOMETRIC_DEBUG] Starting check...");
+
     // ⛔ Do not show if user already logged in
     if (_supabaseUserService.getCurrentUser() != null) {
+      debugPrint("❌ [BIOMETRIC_DEBUG] User already logged in.");
       setState(() => _canUseBiometric = false);
       return;
     }
 
     // 1️⃣ Is biometric enabled in settings?
     final enabled = await BiometricStorage.isEnabled();
+    debugPrint("🔍 [BIOMETRIC_DEBUG] Is enabled in settings: $enabled");
     if (!enabled) {
       setState(() => _canUseBiometric = false);
       return;
@@ -74,6 +78,7 @@ class _LogInPageState extends State<LogInPage> {
 
     // 2️⃣ Are credentials saved?
     final creds = await BiometricStorage.getCredentials();
+    debugPrint("🔍 [BIOMETRIC_DEBUG] Credentials found: ${creds != null}");
     if (creds == null) {
       setState(() => _canUseBiometric = false);
       return;
@@ -81,12 +86,14 @@ class _LogInPageState extends State<LogInPage> {
 
     // 3️⃣ Does device support biometrics?
     final available = await auth.getAvailableBiometrics();
+    debugPrint("🔍 [BIOMETRIC_DEBUG] Hardware available: $available");
     if (available.isEmpty) {
       setState(() => _canUseBiometric = false);
       return;
     }
 
     // ✅ READY
+    debugPrint("✅ [BIOMETRIC_DEBUG] ALL CHECKS PASSED!");
     setState(() {
       _canUseBiometric = true;
       isFaceID = available.contains(BiometricType.face);
@@ -246,21 +253,40 @@ class _LogInPageState extends State<LogInPage> {
       // ---------------------------------------------------------------------
       // 6️⃣ 2FA routing decision
       // ---------------------------------------------------------------------
-      if (is2FAEnabled && !trustedDevices.contains(deviceId)) {
-        if (phone == null || phone.isEmpty) {
-          debugPrint("🚨 [2FA ERROR] Phone number missing");
-          throw Exception("phone_not_available_for_2fa");
-        }
-
-        debugPrint("🚨 [2FA] Redirecting to OTP login");
+      // ---------------------------------------------------------------------
+      // 6️⃣ New Device Check (Email OTP)
+      // ---------------------------------------------------------------------
+      if (!trustedDevices.contains(deviceId)) {
+        debugPrint("🚨 [SECURITY] New device detected ($deviceId). Redirecting to Email OTP.");
 
         if (!mounted) return;
+        
+        // -----------------------------------------------------------------
+        // 🛠️ DEBUG DIALOG (REMOVE LATER)
+        // -----------------------------------------------------------------
+        /*
+        await showDialog(
+          context: context,
+          builder: (context) => AlertDialog(
+            title: const Text("Debug Mode"),
+            content: Text(
+              "Current Device:\n$deviceId\n\nTrusted List:\n$trustedDevices\n\nIs Trusted: ${trustedDevices.contains(deviceId)}"
+            ),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.pop(context),
+                child: const Text("OK"),
+              ),
+            ],
+          ),
+        );
+        */
 
         Navigator.pushAndRemoveUntil(
           context,
           MaterialPageRoute(
             builder: (_) => LoginOTPPage(
-              phoneNumber: phone,
+              email: email, // ✅ Pass email for verification
             ),
           ),
               (_) => false,
@@ -387,6 +413,7 @@ class _LogInPageState extends State<LogInPage> {
               controller: _inputController,
               textDirection: detectTextDirection(_inputController.text), // ✅ ضبط الاتجاه ديناميكيًا
               textAlign: getTextAlign(context),
+              keyboardType: TextInputType.emailAddress, // ✅ Email friendly keyboard
               decoration: InputDecoration(
                 labelText: AppLocalizations.of(context)!.emailOrPhone,
                 labelStyle: AppTextStyles.getText2(context).copyWith(color: Colors.grey),
