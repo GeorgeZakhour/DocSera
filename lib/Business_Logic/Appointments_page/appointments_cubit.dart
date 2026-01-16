@@ -172,10 +172,10 @@ class AppointmentsCubit extends Cubit<AppointmentsState> {
     ));
   }
 
-  /// ✅ Load Appointments using AuthCubit or explicitUserId
-  Future<void> loadAppointments({BuildContext? context, String? explicitUserId, bool useCache = true}) async {
-    emit(AppointmentsLoading());
+  String? _loadedUserId;
 
+  /// ✅ Load Appointments using AuthCubit or explicitUserId
+  Future<void> loadAppointments({BuildContext? context, String? explicitUserId, bool useCache = true, bool forceReload = false}) async {
     String? userId;
     if (explicitUserId != null) {
       userId = explicitUserId;
@@ -192,6 +192,12 @@ class AppointmentsCubit extends Cubit<AppointmentsState> {
       return;
     }
 
+    // ✅ Secure Cache Check: Must match current User ID
+    if (!forceReload && state is AppointmentsLoaded && _loadedUserId == userId) return;
+
+    _loadedUserId = userId; // Update loaded user ID
+
+    emit(AppointmentsLoading());
     debugPrint("✅  المستخدم مسجل دخول عبر(Appointment cubit): $userId");
 
     try {
@@ -233,6 +239,7 @@ class AppointmentsCubit extends Cubit<AppointmentsState> {
 
       _listenToAppointments(userId);
     } catch (e) {
+      _loadedUserId = null; // Reset on failure
       emit(AppointmentsError("Failed to load appointments: $e"));
     }
   }

@@ -1,0 +1,1221 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="" xml:lang="">
+<head>
+  <meta charset="utf-8" />
+  <meta name="generator" content="pandoc" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+  <title>DocSera Tech Stack</title>
+  <style>
+    /* Default styles provided by pandoc.
+    ** See https://pandoc.org/MANUAL.html#variables-for-html for config info.
+    */
+    code{white-space: pre-wrap;}
+    span.smallcaps{font-variant: small-caps;}
+    div.columns{display: flex; gap: min(4vw, 1.5em);}
+    div.column{flex: auto; overflow-x: auto;}
+    div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+    /* The extra [class] is a hack that increases specificity enough to
+       override a similar rule in reveal.js */
+    ul.task-list[class]{list-style: none;}
+    ul.task-list li input[type="checkbox"] {
+      font-size: inherit;
+      width: 0.8em;
+      margin: 0 0.8em 0.2em -1.6em;
+      vertical-align: middle;
+    }
+    .display.math{display: block; text-align: center; margin: 0.5rem auto;}
+    /* CSS for syntax highlighting */
+    html { -webkit-text-size-adjust: 100%; }
+    pre > code.sourceCode { white-space: pre; position: relative; }
+    pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+    pre > code.sourceCode > span:empty { height: 1.2em; }
+    .sourceCode { overflow: visible; }
+    code.sourceCode > span { color: inherit; text-decoration: inherit; }
+    div.sourceCode { margin: 1em 0; }
+    pre.sourceCode { margin: 0; }
+    @media screen {
+    div.sourceCode { overflow: auto; }
+    }
+    @media print {
+    pre > code.sourceCode { white-space: pre-wrap; }
+    pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+    }
+    pre.numberSource code
+      { counter-reset: source-line 0; }
+    pre.numberSource code > span
+      { position: relative; left: -4em; counter-increment: source-line; }
+    pre.numberSource code > span > a:first-child::before
+      { content: counter(source-line);
+        position: relative; left: -1em; text-align: right; vertical-align: baseline;
+        border: none; display: inline-block;
+        -webkit-touch-callout: none; -webkit-user-select: none;
+        -khtml-user-select: none; -moz-user-select: none;
+        -ms-user-select: none; user-select: none;
+        padding: 0 4px; width: 4em;
+        color: #aaaaaa;
+      }
+    pre.numberSource { margin-left: 3em; border-left: 1px solid #aaaaaa;  padding-left: 4px; }
+    div.sourceCode
+      {   }
+    @media screen {
+    pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+    }
+    code span.al { color: #ff0000; font-weight: bold; } /* Alert */
+    code span.an { color: #60a0b0; font-weight: bold; font-style: italic; } /* Annotation */
+    code span.at { color: #7d9029; } /* Attribute */
+    code span.bn { color: #40a070; } /* BaseN */
+    code span.bu { color: #008000; } /* BuiltIn */
+    code span.cf { color: #007020; font-weight: bold; } /* ControlFlow */
+    code span.ch { color: #4070a0; } /* Char */
+    code span.cn { color: #880000; } /* Constant */
+    code span.co { color: #60a0b0; font-style: italic; } /* Comment */
+    code span.cv { color: #60a0b0; font-weight: bold; font-style: italic; } /* CommentVar */
+    code span.do { color: #ba2121; font-style: italic; } /* Documentation */
+    code span.dt { color: #902000; } /* DataType */
+    code span.dv { color: #40a070; } /* DecVal */
+    code span.er { color: #ff0000; font-weight: bold; } /* Error */
+    code span.ex { } /* Extension */
+    code span.fl { color: #40a070; } /* Float */
+    code span.fu { color: #06287e; } /* Function */
+    code span.im { color: #008000; font-weight: bold; } /* Import */
+    code span.in { color: #60a0b0; font-weight: bold; font-style: italic; } /* Information */
+    code span.kw { color: #007020; font-weight: bold; } /* Keyword */
+    code span.op { color: #666666; } /* Operator */
+    code span.ot { color: #007020; } /* Other */
+    code span.pp { color: #bc7a00; } /* Preprocessor */
+    code span.sc { color: #4070a0; } /* SpecialChar */
+    code span.ss { color: #bb6688; } /* SpecialString */
+    code span.st { color: #4070a0; } /* String */
+    code span.va { color: #19177c; } /* Variable */
+    code span.vs { color: #4070a0; } /* VerbatimString */
+    code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warning */
+  </style>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/github-markdown-css/github-markdown.min.css" />
+</head>
+<body>
+<header id="title-block-header">
+<h1 class="title">DocSera Tech Stack</h1>
+</header>
+<nav id="TOC" role="doc-toc">
+<ul>
+<li><a href="#docsera-technology-stack-documentation"
+id="toc-docsera-technology-stack-documentation">DocSera Technology Stack
+Documentation</a>
+<ul>
+<li><a href="#architecture-overview"
+id="toc-architecture-overview">Architecture Overview</a></li>
+<li><a href="#frontend-stack" id="toc-frontend-stack">Frontend Stack</a>
+<ul>
+<li><a href="#typography" id="toc-typography">Typography</a></li>
+</ul></li>
+<li><a href="#backend-infrastructure"
+id="toc-backend-infrastructure">Backend Infrastructure</a></li>
+<li><a href="#state-management-bloc-pattern"
+id="toc-state-management-bloc-pattern">State Management (BLoC
+Pattern)</a>
+<ul>
+<li><a href="#docsera-patient-app-cubits"
+id="toc-docsera-patient-app-cubits">DocSera Patient App Cubits</a></li>
+</ul></li>
+<li><a href="#database-schema" id="toc-database-schema">Database
+Schema</a>
+<ul>
+<li><a href="#tables-used-by-docsera-patient-app"
+id="toc-tables-used-by-docsera-patient-app">Tables Used by DocSera
+Patient App</a></li>
+<li><a href="#tables-used-by-docsera-pro-only"
+id="toc-tables-used-by-docsera-pro-only">Tables Used by DocSera Pro
+Only</a></li>
+<li><a href="#entity-relationships" id="toc-entity-relationships">Entity
+Relationships</a></li>
+</ul></li>
+<li><a href="#database-views" id="toc-database-views">Database
+Views</a></li>
+<li><a href="#rpc-functions-used-by-docsera"
+id="toc-rpc-functions-used-by-docsera">RPC Functions Used by DocSera</a>
+<ul>
+<li><a href="#patient-facing-rpcs"
+id="toc-patient-facing-rpcs">Patient-Facing RPCs</a></li>
+<li><a href="#authentication-rpcs"
+id="toc-authentication-rpcs">Authentication RPCs</a></li>
+</ul></li>
+<li><a href="#edge-functions" id="toc-edge-functions">Edge
+Functions</a></li>
+<li><a href="#database-triggers" id="toc-database-triggers">Database
+Triggers</a></li>
+<li><a href="#active-package-dependencies"
+id="toc-active-package-dependencies">Active Package Dependencies</a>
+<ul>
+<li><a href="#core-state-management" id="toc-core-state-management">Core
+&amp; State Management</a></li>
+<li><a href="#authentication-security"
+id="toc-authentication-security">Authentication &amp; Security</a></li>
+<li><a href="#ui-components" id="toc-ui-components">UI
+Components</a></li>
+<li><a href="#documents-media" id="toc-documents-media">Documents &amp;
+Media</a></li>
+<li><a href="#maps-location" id="toc-maps-location">Maps &amp;
+Location</a></li>
+<li><a href="#notifications-communication"
+id="toc-notifications-communication">Notifications &amp;
+Communication</a></li>
+<li><a href="#utilities" id="toc-utilities">Utilities</a></li>
+</ul></li>
+<li><a href="#network-resilience" id="toc-network-resilience">Network
+Resilience</a></li>
+<li><a href="#security-summary" id="toc-security-summary">Security
+Summary</a></li>
+<li><a href="#localization" id="toc-localization">Localization</a></li>
+<li><a href="#testing-infrastructure"
+id="toc-testing-infrastructure">Testing Infrastructure</a></li>
+<li><a href="#platform-support" id="toc-platform-support">Platform
+Support</a></li>
+</ul></li>
+</ul>
+</nav>
+<h1 id="docsera-technology-stack-documentation">DocSera Technology Stack
+Documentation</h1>
+<blockquote>
+<p><strong>Version:</strong> 1.0.0+13 | <strong>Last Updated:</strong>
+January 15, 2026<br />
+<strong>Platform:</strong> iOS, Android | <strong>Shared
+Backend:</strong> DocSera + DocSera Pro</p>
+</blockquote>
+<hr />
+<h2 id="architecture-overview">Architecture Overview</h2>
+<pre class="mermaid"><code>flowchart TB
+    subgraph Apps[&quot;📱 Client Applications&quot;]
+        DocSera[&quot;DocSera (Patient App)&quot;]
+        DocSeraPro[&quot;DocSera Pro (Doctor App)&quot;]
+    end
+    
+    subgraph Backend[&quot;☁️ Supabase Backend&quot;]
+        Auth[&quot;Authentication&quot;]
+        DB[&quot;PostgreSQL v15&quot;]
+        Storage[&quot;File Storage&quot;]
+        Realtime[&quot;Realtime Subscriptions&quot;]
+        EdgeFn[&quot;Edge Functions (Deno)&quot;]
+    end
+    
+    subgraph External[&quot;🔗 External Services&quot;]
+        Pushy[&quot;Pushy Push Notifications&quot;]
+        Maps[&quot;Google Maps / OpenStreetMap&quot;]
+    end
+    
+    DocSera --&gt; Backend
+    DocSeraPro --&gt; Backend
+    EdgeFn --&gt; Pushy
+    Apps --&gt; Maps</code></pre>
+<blockquote>
+<p>[!NOTE] This documentation focuses on <strong>DocSera (Patient
+App)</strong>. The Supabase backend is shared with DocSera Pro (Doctor
+App).</p>
+</blockquote>
+<hr />
+<h2 id="frontend-stack">Frontend Stack</h2>
+<table>
+<thead>
+<tr>
+<th>Technology</th>
+<th>Version</th>
+<th>Purpose</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Flutter</strong></td>
+<td>SDK ≥3.6.0 &lt;4.0.0</td>
+<td>Cross-platform UI framework</td>
+</tr>
+<tr>
+<td><strong>Dart</strong></td>
+<td>Latest stable</td>
+<td>Programming language</td>
+</tr>
+<tr>
+<td><strong>flutter_bloc</strong></td>
+<td>^9.1.0</td>
+<td>State management (Cubit pattern)</td>
+</tr>
+<tr>
+<td><strong>flutter_screenutil</strong></td>
+<td>^5.9.3</td>
+<td>Responsive UI scaling</td>
+</tr>
+</tbody>
+</table>
+<h3 id="typography">Typography</h3>
+<table>
+<thead>
+<tr>
+<th>Font</th>
+<th>Language</th>
+<th>Weights</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Montserrat</strong></td>
+<td>English</td>
+<td>300, 400, 500, 600, 700</td>
+</tr>
+<tr>
+<td><strong>Cairo</strong></td>
+<td>Arabic</td>
+<td>100, 300, 400, 500, 600, 700, 900</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="backend-infrastructure">Backend Infrastructure</h2>
+<table>
+<colgroup>
+<col style="width: 40%" />
+<col style="width: 30%" />
+<col style="width: 30%" />
+</colgroup>
+<thead>
+<tr>
+<th>Technology</th>
+<th>Details</th>
+<th>Purpose</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Supabase</strong></td>
+<td>Cloud-hosted</td>
+<td>Backend-as-a-Service</td>
+</tr>
+<tr>
+<td><strong>PostgreSQL</strong></td>
+<td>v15</td>
+<td>Primary database</td>
+</tr>
+<tr>
+<td><strong>Supabase Auth</strong></td>
+<td>Phone OTP + Email</td>
+<td>User authentication</td>
+</tr>
+<tr>
+<td><strong>Supabase Realtime</strong></td>
+<td>Built-in</td>
+<td>Live subscriptions</td>
+</tr>
+<tr>
+<td><strong>Supabase Storage</strong></td>
+<td>Buckets: <code>chat.attachments</code>, <code>doctor</code></td>
+<td>File storage</td>
+</tr>
+<tr>
+<td><strong>Edge Functions</strong></td>
+<td>Deno/TypeScript</td>
+<td>Serverless functions</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="state-management-bloc-pattern">State Management (BLoC
+Pattern)</h2>
+<h3 id="docsera-patient-app-cubits">DocSera Patient App Cubits</h3>
+<table>
+<thead>
+<tr>
+<th>Cubit</th>
+<th>Responsibility</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>AuthCubit</code></td>
+<td>Authentication, login/logout</td>
+</tr>
+<tr>
+<td><code>MainScreenCubit</code></td>
+<td>Home screen data</td>
+</tr>
+<tr>
+<td><code>AppointmentsCubit</code></td>
+<td>Appointment management</td>
+</tr>
+<tr>
+<td><code>MessagesCubit</code></td>
+<td>Conversations &amp; messaging</td>
+</tr>
+<tr>
+<td><code>DocumentsCubit</code></td>
+<td>Medical documents</td>
+</tr>
+<tr>
+<td><code>NotesCubit</code></td>
+<td>Patient notes</td>
+</tr>
+<tr>
+<td><code>UserCubit</code></td>
+<td>User profile &amp; preferences</td>
+</tr>
+<tr>
+<td><code>PatientSwitcherCubit</code></td>
+<td>Multi-patient (relatives) switching</td>
+</tr>
+<tr>
+<td><code>RelativesCubit</code></td>
+<td>Family member management</td>
+</tr>
+<tr>
+<td><code>DoctorScheduleCubit</code></td>
+<td>Doctor availability</td>
+</tr>
+<tr>
+<td><code>PopupBannerCubit</code></td>
+<td>In-app announcements</td>
+</tr>
+<tr>
+<td><code>AccountProfileCubit</code></td>
+<td>Profile settings</td>
+</tr>
+<tr>
+<td><code>AccountSecurityCubit</code></td>
+<td>Security settings</td>
+</tr>
+<tr>
+<td><code>AccountDangerCubit</code></td>
+<td>Account deactivation</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="database-schema">Database Schema</h2>
+<h3 id="tables-used-by-docsera-patient-app">Tables Used by DocSera
+Patient App</h3>
+<table>
+<thead>
+<tr>
+<th>Table</th>
+<th>Purpose</th>
+<th>RLS Status</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>users</code></td>
+<td>Patient profiles</td>
+<td>✅ Enabled</td>
+</tr>
+<tr>
+<td><code>doctors</code></td>
+<td>Doctor public profiles</td>
+<td>✅ Enabled</td>
+</tr>
+<tr>
+<td><code>appointments</code></td>
+<td>Appointment bookings</td>
+<td>✅ Enabled</td>
+</tr>
+<tr>
+<td><code>appointment_reasons</code></td>
+<td>Booking reasons</td>
+<td>✅ Enabled</td>
+</tr>
+<tr>
+<td><code>conversations</code></td>
+<td>Chat threads</td>
+<td>✅ Enabled</td>
+</tr>
+<tr>
+<td><code>messages</code></td>
+<td>Chat messages</td>
+<td>✅ Enabled</td>
+</tr>
+<tr>
+<td><code>message_reasons</code></td>
+<td>Conversation topics</td>
+<td>✅ Enabled</td>
+</tr>
+<tr>
+<td><code>documents</code></td>
+<td>Medical documents</td>
+<td>⚠️ Pending</td>
+</tr>
+<tr>
+<td><code>notes</code></td>
+<td>Patient notes</td>
+<td>⚠️ Pending</td>
+</tr>
+<tr>
+<td><code>relatives</code></td>
+<td>Family members</td>
+<td>✅ Enabled</td>
+</tr>
+<tr>
+<td><code>banners</code></td>
+<td>Home page banners</td>
+<td>✅ Enabled</td>
+</tr>
+<tr>
+<td><code>home_cards</code></td>
+<td>Home action cards</td>
+<td>⚠️ Pending</td>
+</tr>
+<tr>
+<td><code>popup_banners</code></td>
+<td>In-app popups</td>
+<td>⚠️ Pending</td>
+</tr>
+<tr>
+<td><code>user_devices</code></td>
+<td>Push notification tokens</td>
+<td>✅ Enabled</td>
+</tr>
+<tr>
+<td><code>doctor_vacations</code></td>
+<td>Doctor unavailability</td>
+<td>✅ Enabled</td>
+</tr>
+<tr>
+<td><code>points_history</code></td>
+<td>Loyalty points</td>
+<td>⚠️ Pending</td>
+</tr>
+<tr>
+<td><code>otp</code></td>
+<td>Phone OTP codes</td>
+<td>⚠️ Pending</td>
+</tr>
+</tbody>
+</table>
+<blockquote>
+<p>[!IMPORTANT] Tables marked ⚠️ <strong>Pending</strong> will have RLS
+policies added before production release.</p>
+</blockquote>
+<hr />
+<h3 id="tables-used-by-docsera-pro-only">Tables Used by DocSera Pro
+Only</h3>
+<table>
+<thead>
+<tr>
+<th>Table</th>
+<th>Purpose</th>
+<th>RLS Status</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>doctor_accounts</code></td>
+<td>Clinic accounts</td>
+<td>✅ Enabled</td>
+</tr>
+<tr>
+<td><code>doctor_members</code></td>
+<td>Team members</td>
+<td>✅ Enabled</td>
+</tr>
+<tr>
+<td><code>team_profiles</code></td>
+<td>Staff profiles</td>
+<td>✅ Enabled</td>
+</tr>
+<tr>
+<td><code>doctor_patients</code></td>
+<td>Manual patients</td>
+<td>✅ Enabled</td>
+</tr>
+<tr>
+<td><code>doctor_patient_links</code></td>
+<td>Patient relationships</td>
+<td>✅ Enabled</td>
+</tr>
+<tr>
+<td><code>doctor_account_patients</code></td>
+<td>Clinic patients</td>
+<td>✅ Enabled</td>
+</tr>
+<tr>
+<td><code>doctor_patient_blocks</code></td>
+<td>Blocked patients</td>
+<td>✅ Enabled</td>
+</tr>
+<tr>
+<td><code>accounting</code></td>
+<td>Financial records</td>
+<td>⚠️ Pending</td>
+</tr>
+<tr>
+<td><code>accounting_labels</code></td>
+<td>Expense categories</td>
+<td>✅ Enabled</td>
+</tr>
+<tr>
+<td><code>doctor_reports</code></td>
+<td>Generated reports</td>
+<td>✅ Enabled</td>
+</tr>
+<tr>
+<td><code>doctor_report_templates</code></td>
+<td>Report templates</td>
+<td>✅ Enabled (Forced)</td>
+</tr>
+<tr>
+<td><code>todo_tasks</code></td>
+<td>Doctor to-do list</td>
+<td>✅ Enabled</td>
+</tr>
+<tr>
+<td><code>reason_time_slots</code></td>
+<td>Custom availability</td>
+<td>⚠️ Pending</td>
+</tr>
+<tr>
+<td><code>medical_master</code></td>
+<td>Medical conditions catalog</td>
+<td>⚠️ Pending</td>
+</tr>
+<tr>
+<td><code>patient_medical_records</code></td>
+<td>Health records</td>
+<td>⚠️ Pending</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h3 id="entity-relationships">Entity Relationships</h3>
+<pre class="mermaid"><code>erDiagram
+    users ||--o{ appointments : &quot;books&quot;
+    users ||--o{ relatives : &quot;manages&quot;
+    users ||--o{ documents : &quot;uploads&quot;
+    users ||--o{ notes : &quot;creates&quot;
+    users ||--o{ conversations : &quot;participates&quot;
+    doctors ||--o{ appointments : &quot;receives&quot;
+    doctors ||--o{ conversations : &quot;responds&quot;
+    doctors ||--o{ doctor_vacations : &quot;schedules&quot;
+    conversations ||--o{ messages : &quot;contains&quot;
+    appointments }o--|| appointment_reasons : &quot;has_reason&quot;
+    relatives }o--|| appointments : &quot;patient_for&quot;</code></pre>
+<hr />
+<h2 id="database-views">Database Views</h2>
+<table>
+<thead>
+<tr>
+<th>View</th>
+<th>Purpose</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>v_my_membership</code></td>
+<td>Current user’s doctor membership</td>
+</tr>
+<tr>
+<td><code>v_team_members</code></td>
+<td>Team members with profiles</td>
+</tr>
+<tr>
+<td><code>v_doctor_members_safe</code></td>
+<td>Safe member listing</td>
+</tr>
+<tr>
+<td><code>v_doctor_patients_full</code></td>
+<td>Unified patient view</td>
+</tr>
+<tr>
+<td><code>v_clinic_patients_searchable</code></td>
+<td>Searchable patient list</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="rpc-functions-used-by-docsera">RPC Functions Used by
+DocSera</h2>
+<h3 id="patient-facing-rpcs">Patient-Facing RPCs</h3>
+<table>
+<thead>
+<tr>
+<th>Function</th>
+<th>Purpose</th>
+<th>Security</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>book_appointment_by_patient</code></td>
+<td>Book new appointment</td>
+<td>DEFINER</td>
+</tr>
+<tr>
+<td><code>cancel_appointment_by_patient</code></td>
+<td>Cancel appointment</td>
+<td>DEFINER</td>
+</tr>
+<tr>
+<td><code>get_available_slots</code></td>
+<td>Get doctor availability</td>
+<td>INVOKER</td>
+</tr>
+<tr>
+<td><code>add_appointment_attachment</code></td>
+<td>Add files to appointment</td>
+<td>DEFINER</td>
+</tr>
+<tr>
+<td><code>remove_appointment_attachment</code></td>
+<td>Remove appointment files</td>
+<td>DEFINER</td>
+</tr>
+<tr>
+<td><code>rpc_get_my_user</code></td>
+<td>Get current user profile</td>
+<td>DEFINER</td>
+</tr>
+<tr>
+<td><code>rpc_update_my_user</code></td>
+<td>Update user profile</td>
+<td>DEFINER</td>
+</tr>
+<tr>
+<td><code>rpc_get_my_relatives</code></td>
+<td>List family members</td>
+<td>DEFINER</td>
+</tr>
+<tr>
+<td><code>rpc_add_my_relative</code></td>
+<td>Add family member</td>
+<td>DEFINER</td>
+</tr>
+<tr>
+<td><code>rpc_update_my_relative</code></td>
+<td>Update family member</td>
+<td>DEFINER</td>
+</tr>
+<tr>
+<td><code>rpc_delete_my_relative</code></td>
+<td>Remove family member</td>
+<td>DEFINER</td>
+</tr>
+<tr>
+<td><code>rpc_get_my_favorite_doctors</code></td>
+<td>Get saved doctors</td>
+<td>DEFINER</td>
+</tr>
+<tr>
+<td><code>rpc_toggle_favorite_doctor</code></td>
+<td>Save/unsave doctor</td>
+<td>DEFINER</td>
+</tr>
+<tr>
+<td><code>rpc_get_my_security_state</code></td>
+<td>Get security settings</td>
+<td>DEFINER</td>
+</tr>
+<tr>
+<td><code>rpc_get_my_patient_context</code></td>
+<td>Get patient booking info</td>
+<td>DEFINER</td>
+</tr>
+<tr>
+<td><code>rpc_deactivate_my_account</code></td>
+<td>Deactivate account</td>
+<td>DEFINER</td>
+</tr>
+<tr>
+<td><code>rpc_mark_messages_read</code></td>
+<td>Mark messages as read</td>
+<td>DEFINER</td>
+</tr>
+<tr>
+<td><code>send_login_otp</code></td>
+<td>Request login OTP</td>
+<td>DEFINER</td>
+</tr>
+<tr>
+<td><code>verify_login_otp</code></td>
+<td>Verify OTP code</td>
+<td>DEFINER</td>
+</tr>
+</tbody>
+</table>
+<h3 id="authentication-rpcs">Authentication RPCs</h3>
+<table>
+<thead>
+<tr>
+<th>Function</th>
+<th>Purpose</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>phone_exists</code></td>
+<td>Check phone registration</td>
+</tr>
+<tr>
+<td><code>email_exists</code></td>
+<td>Check email registration</td>
+</tr>
+<tr>
+<td><code>upsert_user_email</code></td>
+<td>Register email</td>
+</tr>
+<tr>
+<td><code>update_user_email</code></td>
+<td>Change email</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="edge-functions">Edge Functions</h2>
+<table>
+<thead>
+<tr>
+<th>Function</th>
+<th>Purpose</th>
+<th>JWT Required</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>send_email_otp</code></td>
+<td>Send verification emails</td>
+<td>Yes</td>
+</tr>
+<tr>
+<td><code>push_notifications</code></td>
+<td>Dispatch push via Pushy</td>
+<td>Service Role</td>
+</tr>
+<tr>
+<td><code>update_email_admin</code></td>
+<td>Admin email updates</td>
+<td>Service Role</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="database-triggers">Database Triggers</h2>
+<table>
+<colgroup>
+<col style="width: 36%" />
+<col style="width: 28%" />
+<col style="width: 36%" />
+</colgroup>
+<thead>
+<tr>
+<th>Trigger</th>
+<th>Table</th>
+<th>Purpose</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>trg_sync_appointment_date_time</code></td>
+<td>appointments</td>
+<td>Sync date/time from timestamp</td>
+</tr>
+<tr>
+<td><code>trg_handle_new_message</code></td>
+<td>messages</td>
+<td>Update conversation metadata</td>
+</tr>
+<tr>
+<td><code>trg_award_points_after_done</code></td>
+<td>appointments</td>
+<td>Award loyalty points</td>
+</tr>
+<tr>
+<td><code>trg_sync_doctor_account_patients</code></td>
+<td>appointments</td>
+<td>Track patient relationships</td>
+</tr>
+<tr>
+<td><code>trg_create_default_message_reasons</code></td>
+<td>doctors</td>
+<td>Initialize conversation topics</td>
+</tr>
+<tr>
+<td><code>trg_assign_invoice_number</code></td>
+<td>accounting</td>
+<td>Auto-increment invoices</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="active-package-dependencies">Active Package Dependencies</h2>
+<h3 id="core-state-management">Core &amp; State Management</h3>
+<table>
+<thead>
+<tr>
+<th>Package</th>
+<th>Version</th>
+<th>Purpose</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>supabase_flutter</code></td>
+<td>^2.9.1</td>
+<td>Supabase SDK</td>
+</tr>
+<tr>
+<td><code>flutter_bloc</code></td>
+<td>^9.1.0</td>
+<td>BLoC pattern</td>
+</tr>
+<tr>
+<td><code>shared_preferences</code></td>
+<td>^2.4.0</td>
+<td>Local key-value storage</td>
+</tr>
+</tbody>
+</table>
+<h3 id="authentication-security">Authentication &amp; Security</h3>
+<table>
+<thead>
+<tr>
+<th>Package</th>
+<th>Version</th>
+<th>Purpose</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>local_auth</code></td>
+<td>^2.3.0</td>
+<td>Biometric auth (Face ID, fingerprint)</td>
+</tr>
+<tr>
+<td><code>flutter_secure_storage</code></td>
+<td>^9.2.4</td>
+<td>Encrypted storage</td>
+</tr>
+<tr>
+<td><code>crypto</code></td>
+<td>^3.0.0</td>
+<td>Cryptographic operations</td>
+</tr>
+</tbody>
+</table>
+<h3 id="ui-components">UI Components</h3>
+<table>
+<thead>
+<tr>
+<th>Package</th>
+<th>Version</th>
+<th>Purpose</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>flutter_screenutil</code></td>
+<td>^5.9.3</td>
+<td>Responsive scaling</td>
+</tr>
+<tr>
+<td><code>flutter_svg</code></td>
+<td>^2.0.17</td>
+<td>SVG rendering</td>
+</tr>
+<tr>
+<td><code>shimmer</code></td>
+<td>^3.0.0</td>
+<td>Loading animations</td>
+</tr>
+<tr>
+<td><code>cached_network_image</code></td>
+<td>^3.4.1</td>
+<td>Image caching</td>
+</tr>
+<tr>
+<td><code>table_calendar</code></td>
+<td>^3.1.3</td>
+<td>Calendar widget</td>
+</tr>
+<tr>
+<td><code>confetti</code></td>
+<td>^0.8.0</td>
+<td>Celebration animations</td>
+</tr>
+<tr>
+<td><code>qr_flutter</code></td>
+<td>^4.1.0</td>
+<td>QR code generation</td>
+</tr>
+</tbody>
+</table>
+<h3 id="documents-media">Documents &amp; Media</h3>
+<table>
+<thead>
+<tr>
+<th>Package</th>
+<th>Version</th>
+<th>Purpose</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>syncfusion_flutter_pdfviewer</code></td>
+<td>^29.1.33</td>
+<td>PDF viewing</td>
+</tr>
+<tr>
+<td><code>flutter_quill</code></td>
+<td>^11.0.0</td>
+<td>Rich text editing</td>
+</tr>
+<tr>
+<td><code>file_picker</code></td>
+<td>^9.2.1</td>
+<td>File selection</td>
+</tr>
+<tr>
+<td><code>image_picker</code></td>
+<td>^1.1.2</td>
+<td>Photo selection</td>
+</tr>
+<tr>
+<td><code>flutter_image_compress</code></td>
+<td>^2.4.0</td>
+<td>Image optimization</td>
+</tr>
+<tr>
+<td><code>record</code></td>
+<td>^6.1.2</td>
+<td>Voice recording</td>
+</tr>
+<tr>
+<td><code>audioplayers</code></td>
+<td>^6.5.1</td>
+<td>Audio playback</td>
+</tr>
+</tbody>
+</table>
+<h3 id="maps-location">Maps &amp; Location</h3>
+<table>
+<thead>
+<tr>
+<th>Package</th>
+<th>Version</th>
+<th>Purpose</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>google_maps_flutter</code></td>
+<td>^2.12.3</td>
+<td>Google Maps</td>
+</tr>
+<tr>
+<td><code>flutter_map</code></td>
+<td>^8.2.1</td>
+<td>OpenStreetMap</td>
+</tr>
+<tr>
+<td><code>geolocator</code></td>
+<td>^14.0.2</td>
+<td>User location</td>
+</tr>
+</tbody>
+</table>
+<h3 id="notifications-communication">Notifications &amp;
+Communication</h3>
+<table>
+<thead>
+<tr>
+<th>Package</th>
+<th>Version</th>
+<th>Purpose</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>pushy_flutter</code></td>
+<td>^2.0.38</td>
+<td>Push notifications</td>
+</tr>
+<tr>
+<td><code>flutter_local_notifications</code></td>
+<td>^19.4.0</td>
+<td>Local notifications</td>
+</tr>
+<tr>
+<td><code>url_launcher</code></td>
+<td>^6.3.1</td>
+<td>External URLs</td>
+</tr>
+</tbody>
+</table>
+<h3 id="utilities">Utilities</h3>
+<table>
+<thead>
+<tr>
+<th>Package</th>
+<th>Version</th>
+<th>Purpose</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>connectivity_plus</code></td>
+<td>^7.0.0</td>
+<td>Network status</td>
+</tr>
+<tr>
+<td><code>timezone</code></td>
+<td>^0.10.1</td>
+<td>Timezone handling</td>
+</tr>
+<tr>
+<td><code>app_links</code></td>
+<td>^6.4.0</td>
+<td>Deep linking</td>
+</tr>
+<tr>
+<td><code>path_provider</code></td>
+<td>^2.1.5</td>
+<td>File paths</td>
+</tr>
+<tr>
+<td><code>permission_handler</code></td>
+<td>^12.0.1</td>
+<td>OS permissions</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="network-resilience">Network Resilience</h2>
+<div class="sourceCode" id="cb3"><pre
+class="sourceCode dart"><code class="sourceCode dart"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="kw">class</span> _SyriaClient <span class="kw">extends</span> http<span class="op">.</span>BaseClient <span class="op">{</span></span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a>  <span class="co">// 30-second timeout for slow network conditions</span></span>
+<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a>  <span class="dt">Future</span><span class="op">&lt;</span>StreamedResponse<span class="op">&gt;</span> send(BaseRequest request) <span class="op">{</span></span>
+<span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a>    <span class="kw">return</span> _inner<span class="op">.</span>send(request)<span class="op">.</span>timeout(Duration(seconds<span class="op">:</span> <span class="dv">30</span>));</span>
+<span id="cb3-5"><a href="#cb3-5" aria-hidden="true" tabindex="-1"></a>  <span class="op">}</span></span>
+<span id="cb3-6"><a href="#cb3-6" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div>
+<p><strong>Features:</strong> - ✅ Extended HTTP timeouts (30 seconds) -
+✅ Offline detection banner - ✅ Connectivity status monitoring</p>
+<hr />
+<h2 id="security-summary">Security Summary</h2>
+<table>
+<thead>
+<tr>
+<th>Feature</th>
+<th>Implementation</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Biometric Auth</strong></td>
+<td>Face ID / Fingerprint via <code>local_auth</code></td>
+</tr>
+<tr>
+<td><strong>Secure Storage</strong></td>
+<td>Encrypted via <code>flutter_secure_storage</code></td>
+</tr>
+<tr>
+<td><strong>Phone OTP</strong></td>
+<td>Server-side with rate limiting</td>
+</tr>
+<tr>
+<td><strong>Email OTP</strong></td>
+<td>Edge Function + hashed codes</td>
+</tr>
+<tr>
+<td><strong>Row Level Security</strong></td>
+<td>23/38 tables protected</td>
+</tr>
+<tr>
+<td><strong>SECURITY DEFINER</strong></td>
+<td>Critical RPCs bypass RLS safely</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="localization">Localization</h2>
+<table>
+<thead>
+<tr>
+<th>Language</th>
+<th>Code</th>
+<th>Direction</th>
+<th>Font</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>English</td>
+<td><code>en</code></td>
+<td>LTR</td>
+<td>Montserrat</td>
+</tr>
+<tr>
+<td>Arabic</td>
+<td><code>ar</code></td>
+<td>RTL</td>
+<td>Cairo</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="testing-infrastructure">Testing Infrastructure</h2>
+<table>
+<thead>
+<tr>
+<th>Package</th>
+<th>Version</th>
+<th>Purpose</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>flutter_test</code></td>
+<td>SDK</td>
+<td>Widget testing</td>
+</tr>
+<tr>
+<td><code>bloc_test</code></td>
+<td>^10.0.0</td>
+<td>Cubit testing</td>
+</tr>
+<tr>
+<td><code>mocktail</code></td>
+<td>^1.0.4</td>
+<td>Mocking</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="platform-support">Platform Support</h2>
+<table>
+<thead>
+<tr>
+<th>Platform</th>
+<th>Status</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>iOS</td>
+<td>✅ Production</td>
+</tr>
+<tr>
+<td>Android</td>
+<td>✅ Production</td>
+</tr>
+<tr>
+<td>Web</td>
+<td>🔧 Supported</td>
+</tr>
+<tr>
+<td>macOS</td>
+<td>🔧 Supported</td>
+</tr>
+<tr>
+<td>Windows</td>
+<td>🔧 Supported</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<blockquote>
+<p><strong>Document Generated:</strong> January 15, 2026<br />
+<strong>Analysis:</strong> Cross-referenced with Flutter codebase and
+live Supabase schema</p>
+</blockquote>
+</body>
+</html>

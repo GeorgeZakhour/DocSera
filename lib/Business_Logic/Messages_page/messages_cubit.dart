@@ -17,9 +17,10 @@ class MessagesCubit extends Cubit<MessagesState> {
         super(MessagesLoading());
 
   RealtimeChannel? _realtimeChannel;
+  String? _loadedUserId;
 
   /// تحميل المحادثات
-  void loadMessages(BuildContext context) {
+  void loadMessages(BuildContext context, {bool forceReload = false}) {
     final authState = context.read<AuthCubit>().state;
 
     if (authState is! AuthAuthenticated) {
@@ -28,6 +29,11 @@ class MessagesCubit extends Cubit<MessagesState> {
     }
 
     final userId = authState.user.id;
+
+    // ✅ Secure Cache Check: Prevent redundant reloads unless user changed
+    if (!forceReload && state is MessagesLoaded && _loadedUserId == userId) return;
+
+    _loadedUserId = userId; // Update loaded user ID
 
     _fetchConversations(userId);
     _startRealtimeListener(userId);

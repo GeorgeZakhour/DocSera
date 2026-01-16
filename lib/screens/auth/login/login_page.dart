@@ -20,6 +20,7 @@ import 'package:local_auth/local_auth.dart'; // Face ID Auth
 import 'package:supabase_flutter/supabase_flutter.dart';
 import '../../../Business_Logic/Account_page/user_cubit.dart';
 import 'package:device_info_plus/device_info_plus.dart';
+import 'package:docsera/Business_Logic/Popups/popup_banner_cubit.dart';
 
 
 
@@ -55,6 +56,7 @@ class _LogInPageState extends State<LogInPage> {
     _inputController = TextEditingController(text: widget.preFilledInput);
     isValid = widget.preFilledInput != null && widget.preFilledInput!.isNotEmpty;
     _checkBiometricReadiness();
+    context.read<PopupBannerCubit>().checkBanners(); 
   }
 
 
@@ -282,14 +284,13 @@ class _LogInPageState extends State<LogInPage> {
         );
         */
 
-        Navigator.pushAndRemoveUntil(
+        Navigator.push(
           context,
           MaterialPageRoute(
             builder: (_) => LoginOTPPage(
               email: email, // ✅ Pass email for verification
             ),
           ),
-              (_) => false,
         );
 
         return; // ⛔ stop here
@@ -341,13 +342,10 @@ class _LogInPageState extends State<LogInPage> {
 
   Future<void> _authenticateWithFaceID() async {
     try {
-      final prefs = await SharedPreferences.getInstance();
+      // 🔐 Get credentials from Secure Storage
+      final credentials = await BiometricStorage.getCredentials();
 
-      // 🔐 Biometric credentials (EMAIL-based)
-      final email = prefs.getString('biometric_login');
-      final password = prefs.getString('userPassword');
-
-      if (email == null || password == null) {
+      if (credentials == null) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text(
@@ -357,6 +355,11 @@ class _LogInPageState extends State<LogInPage> {
         );
         return;
       }
+
+      final email = credentials['email'];
+      final password = credentials['password'];
+      
+      if (email == null || password == null) return; // Should not happen if credentials != null
 
       final authenticated = await auth.authenticate(
         localizedReason: biometricType == AppLocalizations.of(context)!.faceIdTitle

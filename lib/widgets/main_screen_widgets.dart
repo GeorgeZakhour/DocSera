@@ -761,6 +761,7 @@ class DecorativeImageCard extends StatelessWidget {
   final bool showSecondShape;
   final Color shapeColor;
   final Color? secondShapeColor;
+  final Color textColor;
 
   const DecorativeImageCard({
     super.key,
@@ -777,6 +778,7 @@ class DecorativeImageCard extends StatelessWidget {
     this.showSecondShape = false,
     required this.shapeColor,
     this.secondShapeColor,
+    this.textColor = Colors.white,
   });
 
   /// **🔹 اختيار `CustomClipper` المناسب بناءً على `shapeNumber`**
@@ -795,7 +797,7 @@ class DecorativeImageCard extends StatelessWidget {
     // 1) Retrieve the path string from the map
     final String? svgPathData = kSvgPaths[imageShapeNumber];
     // fallback if the shapeNumber isn't in the map
-    final String fallbackData = kSvgPaths[1]!; // shape #1 or whichever default
+    final String fallbackData = kSvgPaths[1]!;
 
     return Padding(
       padding: EdgeInsets.all(16.w),
@@ -816,7 +818,7 @@ class DecorativeImageCard extends StatelessWidget {
               child: Stack(
                 clipBehavior: Clip.none,
                 children: [
-                  // ✅ الشكل الأول مع لون مخصص
+                   // ✅ Shape 1
                   Positioned(
                     top: 10.h,
                     left: 40.w,
@@ -831,26 +833,41 @@ class DecorativeImageCard extends StatelessWidget {
                     ),
                   ),
 
-                  // ✅ قص الصورة باستخدام `ClipPath`
+                  // ✅ Image Clipper
                   Align(
                     alignment: Alignment.center,
                     child: ClipPath(
                       clipper: SvgPathClipper(svgPathData ?? fallbackData),
                       child: LayoutBuilder(
                         builder: (context, constraints) {
-                          double screenWidth = constraints.maxWidth;  // Get available width
-                          double imageWidth = 220.w;  // 70% of container width
-                          double imageHeight = 220.h;  // Maintain aspect ratio
-
-                          return SizedBox(
-                            width: imageWidth,
-                            height: imageHeight,
-                            child: Image.asset(
-                              imagePath,
-                              fit: BoxFit.cover,  // Ensure it fills the clipped area
-                              alignment: Alignment.center,
-                            ),
-                          );
+                          double imageWidth = 220.w;
+                          double imageHeight = 220.h;
+                          final cleanPath = imagePath.trim();
+                          
+                          if (cleanPath.startsWith('http')) {
+                             return SizedBox(
+                               width: imageWidth,
+                               height: imageHeight,
+                               child: Image.network(
+                                 cleanPath,
+                                 fit: BoxFit.cover,
+                                 alignment: Alignment.center,
+                                 errorBuilder: (context, error, stackTrace) {
+                                   return const Center(child: Icon(Icons.error));
+                                 },
+                               ),
+                             );
+                          } else {
+                             return SizedBox(
+                               width: imageWidth,
+                               height: imageHeight,
+                               child: Image.asset(
+                                 cleanPath,
+                                 fit: BoxFit.cover,
+                                 alignment: Alignment.center,
+                               ),
+                             );
+                          }
                         },
                       ),
                     ),
@@ -883,7 +900,7 @@ class DecorativeImageCard extends StatelessWidget {
               padding:  EdgeInsets.all(10.w),
               child: Text(
                 title,
-                style: AppTextStyles.getTitle3(context).copyWith(color: AppColors.whiteText),
+                style: AppTextStyles.getTitle3(context).copyWith(color: textColor),
                 textAlign: TextAlign.center,
               ),
             ),
@@ -891,7 +908,7 @@ class DecorativeImageCard extends StatelessWidget {
               padding: EdgeInsets.symmetric(horizontal: 35.w),
               child: Text(
                 description,
-                style: AppTextStyles.getText2(context).copyWith(color: Colors.white70),
+                style: AppTextStyles.getText2(context).copyWith(color: textColor.withOpacity(0.7)),
                 textAlign: TextAlign.center,
               ),
             ),
@@ -920,13 +937,176 @@ class DecorativeImageCard extends StatelessWidget {
 }
 
 
-// class Asset1Clipper extends CustomClipper<Path> {
-//   @override
-//   Path getClip(Size size) {
-//     Path path = Path();
-//
-//     // ✅ استبدل هذا بـ Path مستخرج من `Flutter Shape Maker`
-//     path.moveTo(size.width * 0.1, 0);
+
+class CompactDecorativeCard extends StatelessWidget {
+  final String title;
+  final String description;
+  final String buttonText;
+  final VoidCallback? onButtonPressed;
+  final Color backgroundColor;
+  final Color buttonColor;
+  final int shapeNumber;
+  final int imageShapeNumber;
+  final int? secondShapeNumber;
+  final String imagePath;
+  final bool showSecondShape;
+  final Color shapeColor;
+  final Color? secondShapeColor;
+  final Color textColor;
+
+  const CompactDecorativeCard({
+    super.key,
+    required this.title,
+    required this.description,
+    required this.buttonText,
+    required this.onButtonPressed,
+    required this.backgroundColor,
+    required this.buttonColor,
+    required this.shapeNumber,
+    required this.imageShapeNumber,
+    this.secondShapeNumber,
+    required this.imagePath,
+    this.showSecondShape = false,
+    required this.shapeColor,
+    this.secondShapeColor,
+    this.textColor = Colors.white,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    // 1) Retrieve the path string from the map
+    final String? svgPathData = kSvgPaths[imageShapeNumber];
+    // fallback if the shapeNumber isn't in the map
+    final String fallbackData = kSvgPaths[1]!;
+
+    return Padding(
+      padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 8.h),
+      child: Container(
+        height: 120.h, // Compact height (~55% of original)
+        decoration: BoxDecoration(
+          color: backgroundColor,
+          borderRadius: BorderRadius.circular(12.r),
+          boxShadow: const [
+            BoxShadow(color: Colors.black12, blurRadius: 4, offset: Offset(0, 2)),
+          ],
+        ),
+        child: Row(
+          children: [
+            // ✅ Left Side: Text & Button
+            Expanded(
+              flex: 3,
+              child: Padding(
+                padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 12.h),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Text(
+                      title,
+                      style: AppTextStyles.getTitle3(context).copyWith(
+                        color: textColor,
+                        fontSize: 16.sp, // Slightly smaller font
+                      ),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                    SizedBox(height: 4.h),
+                    Text(
+                      description,
+                      style: AppTextStyles.getText2(context).copyWith(
+                        color: textColor.withOpacity(0.7),
+                        fontSize: 11.sp,
+                      ),
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                    const Spacer(),
+                    SizedBox(
+                      height: 32.h,
+                      child: ElevatedButton(
+                        onPressed: onButtonPressed,
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: buttonColor,
+                          padding: EdgeInsets.symmetric(horizontal: 12.w),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(8.r),
+                          ),
+                        ),
+                        child: Text(
+                          buttonText,
+                          style: AppTextStyles.getText2(context).copyWith(
+                            color: Colors.white,
+                            fontWeight: FontWeight.w700,
+                            fontSize: 11.sp,
+                          ),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+
+            // ✅ Right Side: Image & Shapes
+            Expanded(
+              flex: 2,
+              child: Stack(
+                clipBehavior: Clip.hardEdge, // Clip content to container bounds
+                alignment: Alignment.center,
+                children: [
+                   // Background Shape
+                  PositionedDirectional(
+                    end: 40.w, // Moves shape inwards (Left in EN, Right in AR)
+                    top: 15.h, 
+                    child: SvgPicture.asset(
+                      'assets/shapes/Asset $shapeNumber.svg',
+                      width: 70.w,
+                      height: 85.h,
+                      colorFilter: ColorFilter.mode(
+                        shapeColor,
+                        BlendMode.srcIn,
+                      ),
+                    ),
+                  ),
+
+                  // Image Clipper
+                  PositionedDirectional(
+                    end: 5.w,
+                    child: SizedBox(
+                      width: 110.w,
+                      height: 110.h,
+                      child: ClipPath(
+                        clipper: SvgPathClipper(svgPathData ?? fallbackData),
+                        child: LayoutBuilder(
+                          builder: (context, constraints) {
+                            final cleanPath = imagePath.trim();
+                            if (cleanPath.startsWith('http')) {
+                               return Image.network(
+                                 cleanPath,
+                                 fit: BoxFit.cover,
+                                 errorBuilder: (context, error, stackTrace) =>
+                                     const Center(child: Icon(Icons.error, size: 20)),
+                               );
+                            } else {
+                               return Image.asset(
+                                 cleanPath,
+                                 fit: BoxFit.cover,
+                               );
+                            }
+                          },
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
 //     path.quadraticBezierTo(size.width * 0.5, size.height * 0.2, size.width, size.height * 0.1);
 //     path.lineTo(size.width, size.height);
 //     path.lineTo(0, size.height);

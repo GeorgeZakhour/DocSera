@@ -22,6 +22,7 @@ import 'package:docsera/splash_screen.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:url_launcher/url_launcher.dart';
 import 'package:docsera/gen_l10n/app_localizations.dart';
 import 'package:docsera/screens/auth/login/login_page.dart';
 import 'package:docsera/screens/auth/identification_page.dart';
@@ -39,13 +40,22 @@ import 'services/supabase/user/account_danger_service.dart';
 import 'services/supabase/user/account_profile_service.dart';
 import 'services/supabase/user/account_security_service.dart';
 import 'services/supabase/user/supabase_user_service.dart';
+import 'services/storage/secure_storage_service.dart';
 import 'dart:developer';
 import 'package:app_links/app_links.dart';
 
 
 import 'services/navigation/deep_link_service.dart';
 import 'services/connectivity/connectivity_service.dart'; // ✅ Import Connectivity Service
+import 'widgets/popups/popup_banner_dialog.dart';
+import 'services/supabase/popups/supabase_popup_service.dart';
+import 'Business_Logic/Popups/popup_banner_cubit.dart';
+import 'Business_Logic/Popups/popup_banner_state.dart';
 import 'widgets/offline_banner.dart'; // ✅ Import Offline Banner
+import 'services/supabase/repositories/auth_repository.dart';
+import 'services/supabase/repositories/user_repository.dart';
+import 'services/supabase/repositories/favorites_repository.dart';
+import 'services/supabase/repositories/appointment_repository.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -56,6 +66,9 @@ void main() async {
     url: SupabaseKeys.supabaseUrl,
     anonKey: SupabaseKeys.supabaseAnonKey,
     httpClient: _SyriaClient(), // Custom client with extended timeout
+    authOptions: const FlutterAuthClientOptions(
+      localStorage: SecureStorageService(),
+    ),
   );
 
 
@@ -68,7 +81,19 @@ void main() async {
 
 
   SharedPreferences prefs = await SharedPreferences.getInstance();
-  final supabaseService = SupabaseUserService();
+  // ✅ Initialize Repositories
+  final client = Supabase.instance.client;
+  final authRepo = AuthRepository(supabase: client);
+  final userRepo = UserRepository(supabase: client);
+  final favRepo = FavoritesRepository(supabase: client);
+  final apptRepo = AppointmentRepository(supabase: client);
+
+  final supabaseService = SupabaseUserService(
+    auth: authRepo,
+    user: userRepo,
+    favorites: favRepo,
+    appointments: apptRepo,
+  );
 
   // ✅ تحميل اللغة المحفوظة مسبقًا
   final savedLocale = await getSavedLocale();
@@ -118,6 +143,12 @@ void main() async {
           BlocProvider(create: (context) => DoctorScheduleCubit()),
           BlocProvider(create: (context) => NotesCubit()),
           BlocProvider(create: (_) => PatientSwitcherCubit()),
+          BlocProvider(
+            create: (context) => PopupBannerCubit(
+              SupabasePopupService(),
+              prefs,
+            ),
+          ),
 
 
         ],
@@ -133,11 +164,7 @@ void main() async {
           listener: (context, state) {
             if (state is custom_auth.AuthAuthenticated) {
               // 🔹 هذه تُستدعى مرة واحدة فقط
-              context.read<MainScreenCubit>().loadMainScreen(context);
-              context.read<AppointmentsCubit>().loadAppointments(context: context);
-              context.read<DocumentsCubit>().listenToDocuments(context: context);
-              context.read<NotesCubit>().listenToNotes(context);
-
+              // 🔹 Load Critical User Data Only (Lazy load the rest)
               final userCubit = context.read<UserCubit>();
               userCubit.loadUserData(context: context, useCache: true);
               userCubit.startRealtimeUserListener(state.user.id);
@@ -243,6 +270,8 @@ class _MyAppState extends State<MyApp> {
                 return Stack(
                   children: [
                     child!,
+                    
+                    // Offline Banner
                     StreamBuilder<ConnectionStatus>(
                       stream: ConnectivityService().connectionStream,
                       initialData: ConnectionStatus.online,
@@ -255,6 +284,48 @@ class _MyAppState extends State<MyApp> {
                           child: OfflineBanner(isOffline: isOffline),
                         );
                       },
+                    ),
+
+                    // Popup Banner Listener
+                    BlocListener<PopupBannerCubit, PopupBannerState>(
+                      listener: (context, state) {
+                        if (state is PopupBannerVisible) {
+                          showDialog(
+                            context: _navKey.currentContext!, // User Navigator key context
+                            barrierDismissible: state.banner.isDismissible,
+                            useRootNavigator: true, 
+                            builder: (_) => PopupBannerDialog(
+                              banner: state.banner,
+                              onDismiss: () {
+                                context.read<PopupBannerCubit>().dismissCurrentBanner();
+                                Navigator.of(_navKey.currentContext!, rootNavigator: true).pop();
+                              },
+                              onAction: () {
+                                // Handle Actions (Link / Store)
+                                final url = state.banner.actionValue;
+                                if (url != null && url.isNotEmpty) {
+                                  try {
+                                    final uri = Uri.parse(url);
+                                    // Launch external for updates/links
+                                    launchUrl(uri, mode: LaunchMode.externalApplication);
+                                  } catch (e) {
+                                    debugPrint("🔴 Could not launch URL: $url");
+                                  }
+                                }
+                                
+                                if (state.banner.type != 'maintenance' && state.banner.type != 'update') {
+                                   context.read<PopupBannerCubit>().dismissCurrentBanner();
+                                   Navigator.of(_navKey.currentContext!, rootNavigator: true).pop();
+                                }
+                                
+                                // TODO: Implement specific URL launching logic here using url_launcher
+                                // We can use the existing _launchUrl logic or the new logic
+                              },
+                            ),
+                          );
+                        }
+                      },
+                      child: const SizedBox.shrink(), // Invisible child, just for listener
                     ),
                   ],
                 );

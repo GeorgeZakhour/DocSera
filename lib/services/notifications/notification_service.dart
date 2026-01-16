@@ -128,6 +128,23 @@ class NotificationService {
     debugPrint('✅ Pushy Token saved to Supabase for user: $userId');
   }
 
+  Future<void> deleteToken() async {
+    final token = _pushyDeviceToken;
+    if (token == null) return;
+
+    try {
+      await Supabase.instance.client
+          .from('user_devices')
+          .delete()
+          .eq('token', token);
+      
+      debugPrint('🗑️ Pushy Token deleted from Supabase: $token');
+      _pushyDeviceToken = null;
+    } catch (e) {
+      debugPrint('❌ Error deleting Pushy token: $e');
+    }
+  }
+
   Future<void> showLocal({
     required String title,
     required String body,

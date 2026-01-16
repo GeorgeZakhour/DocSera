@@ -1,634 +1,100 @@
 import 'dart:async';
-import 'dart:convert';
-import 'package:flutter/foundation.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
-import 'package:shared_preferences/shared_preferences.dart';
-import 'package:docsera/utils/shared_prefs_service.dart';
-
-import '../../../utils/time_utils.dart';
+import 'package:docsera/services/supabase/repositories/auth_repository.dart';
+import 'package:docsera/services/supabase/repositories/user_repository.dart';
+import 'package:docsera/services/supabase/repositories/favorites_repository.dart';
+import 'package:docsera/services/supabase/repositories/appointment_repository.dart';
 
 class SupabaseUserService {
-  final SupabaseClient _supabase = Supabase.instance.client;
-  final SharedPrefsService _sharedPrefsService = SharedPrefsService();
-
-
-  /// ✅ التحقق مما إذا كان رقم الهاتف موجود مسبقًا في Supabase
-  Future<bool> isPhoneNumberExists(String phoneNumber) async {
-    debugPrint("📞 Checking if phone number exists: $phoneNumber");
-
-    final response = await _supabase
-        .from('users')
-        .select('id')
-        .eq('phone_number', phoneNumber)
-        .maybeSingle();
-
-    final exists = response != null;
-    debugPrint("📊 Matching phone: ${exists ? "FOUND" : "NOT FOUND"}");
-
-    return exists;
-  }
-
-/// ✅ إضافة مستخدم جديد إلى جدول Supabase (آمن ضد null)
-  /// ✅ إضافة مستخدم جديد (يعتمد على auth.uid)
-  Future<void> addUser(Map<String, dynamic> userData) async {
-    try {
-      // 🕐 timestamps
-      userData['created_at'] = DocSeraTime.nowUtc().toIso8601String();
-      userData['updated_at'] = DocSeraTime.nowUtc().toIso8601String();
-
-      // 🧹 تنظيف null
-      final safeData = <String, dynamic>{};
-      userData.forEach((key, value) {
-        if (value == null) {
-          safeData[key] =
-          (key.contains('verified') ||
-              key.contains('accepted') ||
-              key.contains('checked') ||
-              key.contains('enabled'))
-              ? false
-              : "";
-        } else {
-          safeData[key] = value;
-        }
-      });
-
-      debugPrint("📤 inserting user:");
-      safeData.forEach((k, v) => debugPrint("  $k => $v"));
-
-      await _supabase
-          .from('users')
-          .insert(safeData);
-
-    } catch (e, s) {
-      debugPrint("❌ addUser failed: $e");
-      debugPrint(s.toString());
-      rethrow;
-    }
-  }
-
-
-
-  /// ✅ تسجيل الدخول باستخدام البريد وكلمة المرور
-  Future<AuthResponse> signInWithPassword({required String email, required String password}) async {
-    return await _supabase.auth.signInWithPassword(email: email, password: password);
-  }
-
-  /// ✅ تسجيل الخروج
-  Future<void> signOut() async {
-    try {
-      await _supabase.auth.signOut();
-    } catch (e) {
-      debugPrint("❌ Sign out error: $e");
-    }
-  }
-
-  /// ✅ الحصول على المستخدم الحالي
-  User? getCurrentUser() {
-    return _supabase.auth.currentUser;
-  }
-  /// ✅ جلب بيانات مستخدم حسب ID
-  /// ✅ جلب بيانات المستخدم الحالي (من RPC) — لا تمرر userId للـ DB
-  Future<Map<String, dynamic>?> getUserData(String userId) async {
-    try {
-      // ✅ rpc_get_my_user يعتمد على auth.uid() داخل قاعدة البيانات
-      final dynamic res = await _supabase.rpc('rpc_get_my_user');
-
-      // Supabase rpc قد يرجع null أو Map أو JSON (dynamic)
-      if (res == null) return null;
-
-      if (res is Map<String, dynamic>) {
-        return res;
-      }
-      // في حال رجعت String JSON (حسب إعدادات/نسخ)
-      if (res is String) {
-        return (jsonDecode(res) as Map).cast<String, dynamic>();
-      }
-
-      // أي شكل غير متوقع
-      throw Exception('rpc_get_my_user returned unsupported type: ${res.runtimeType}');
-    } catch (e) {
-      throw Exception('Failed to fetch user data via RPC: $e');
-    }
-  }
-
-  /// ✅ البحث عن مستخدم عبر البريد أو الهاتف
-  /// ✅ Pre-login lookup (works with strict RLS) via RPC
-  /// Returns only: email, is_active, user_id
-  Future<Map<String, dynamic>> getLoginInfoByEmailOrPhone(String input) async {
-    try {
-      final identifier = input.trim();
-
-      final dynamic res = await _supabase.rpc(
-        'rpc_get_login_info',
-        params: {'p_identifier': identifier},
-      );
-
-      if (res == null) {
-        throw Exception('User not found');
-      }
-
-      // Supabase can return either Map or List depending on version/settings
-      if (res is List) {
-        if (res.isEmpty) throw Exception('User not found');
-        return Map<String, dynamic>.from(res.first as Map);
-      }
-
-      if (res is Map) {
-        return Map<String, dynamic>.from(res);
-      }
-
-      throw Exception('rpc_get_login_info returned unsupported type: ${res.runtimeType}');
-    } catch (e) {
-      throw Exception('Error retrieving login info via RPC: $e');
-    }
-  }
-
-  Future<Map<String, dynamic>> getMySecurityState() async {
-    final res = await _supabase.rpc('rpc_get_my_security_state');
-
-    if (res == null) {
-      throw Exception('Security state not found');
-    }
-
-    if (res is Map<String, dynamic>) return res;
-    if (res is String) return jsonDecode(res) as Map<String, dynamic>;
-
-    throw Exception('Invalid security state response');
-  }
-
-
-  /// ✅ تحديث بيانات مستخدم
-  Future<void> updateUser(String userId, Map<String, dynamic> updatedData) async {
-    try {
-      updatedData['updated_at'] = DocSeraTime.nowUtc().toIso8601String();
-
-      final response = await _supabase
-          .from('users')
-          .update(updatedData)
-          .eq('id', userId);
-
-      if (response.error != null) {
-        throw Exception('Update failed: ${response.error!.message}');
-      }
-    } catch (e) {
-      throw Exception('Failed to update user: ${e.toString()}');
-    }
-  }
-
-
-
-// Merged SupabaseUserServiceFavorites extension methods
-  /// ✅ جلب قائمة IDs الأطباء المفضلين
-  Future<List<String>> getUserFavorites(String userId) async {
-    try {
-      final user = await _supabase
-          .from('users')
-          .select('favorites')
-          .eq('id', userId)
-          .maybeSingle();
-
-      if (user != null && user['favorites'] != null) {
-        return List<String>.from(user['favorites']);
-      }
-      return [];
-    } catch (e) {
-      debugPrint("❌ Error fetching favorites: $e");
-      return [];
-    }
-  }
-
-  /// ✅ تحديث قائمة الأطباء المفضلين
-  Future<void> updateUserFavorites(String userId, List<String> favorites) async {
-    try {
-      final response = await _supabase
-          .from('users')
-          .update({'favorites': favorites})
-          .eq('id', userId);
-
-      if (response.error != null) {
-        throw Exception('Error updating favorites: ${response.error!.message}');
-      }
-    } catch (e) {
-      debugPrint("❌ Error updating favorites: $e");
-    }
-  }
-
-  /// ✅ التحقق من وجود مستخدم بالبريد أو الهاتف
-  Future<bool> doesUserExist({String? email, String? phoneNumber}) async {
-    try {
-      if (email != null) {
-        final emailMatch = await _supabase
-            .from('users')
-            .select('id')
-            .eq('email', email)
-            .maybeSingle();
-        if (emailMatch != null) return true;
-      }
-
-      if (phoneNumber != null) {
-        final phoneMatch = await _supabase
-            .from('users')
-            .select('id')
-            .eq('phone_number', phoneNumber)
-            .maybeSingle();
-        if (phoneMatch != null) return true;
-      }
-
-      return false;
-    } catch (e) {
-      throw Exception('Error checking for duplicates: $e');
-    }
-  }
-
-  /// ✅ جلب مستخدمين مجزئين (Paginated)
-  Future<List<Map<String, dynamic>>> getPaginatedUsers({String? lastCreatedAt, int limit = 10}) async {
-    try {
-      if (lastCreatedAt != null) {
-        final result = await _supabase
-            .from('users')
-            .select()
-            .gt('created_at', lastCreatedAt)
-            .order('created_at')
-            .limit(limit);
-        return List<Map<String, dynamic>>.from(result);
-      } else {
-        final result = await _supabase
-            .from('users')
-            .select()
-            .order('created_at')
-            .limit(limit);
-        return List<Map<String, dynamic>>.from(result);
-      }
-    } catch (e) {
-      throw Exception('Error retrieving paginated users: $e');
-    }
-  }
-
-  Map<String, dynamic> _buildDoctorInfo(
-      Map<String, dynamic> doctor,
-      String doctorId,
-      ) {
-    final gender = (doctor['gender'] ?? "male").toLowerCase();
-    final title  = (doctor['title'] ?? "").toLowerCase();
-
-    String? rawImage = doctor['doctor_image'];
-    String? imageUrl;
-
-    if (rawImage != null && rawImage.isNotEmpty) {
-      // 🔥 نفس منطق DoctorProfile
-      imageUrl = rawImage; // فقط اسم الملف
-
-    }
-
-    // fallback فقط إذا لا يوجد صورة أصلًا
-    imageUrl ??= (title == "dr.")
-        ? (gender == "female"
-        ? 'assets/images/female-doc.webp'
-        : 'assets/images/male-doc.webp')
-        : (gender == "female"
-        ? 'assets/images/female-phys.webp'
-        : 'assets/images/male-phys.webp');
-
-    return {
-      'id': doctorId,
-      'title': doctor['title'] ?? "",
-      'first_name': doctor['first_name'] ?? "",
-      'last_name': doctor['last_name'] ?? "",
-      'specialty': doctor['specialty'] ?? "",
-      'doctor_image': imageUrl,
-      'gender': gender,
-      'clinic': doctor['clinic'] ?? "",
-      'phone_number': doctor['phone_number'] ?? "",
-      'email': doctor['email'] ?? "",
-      'profile_description': doctor['profile_description'] ?? "",
-      'specialties': doctor['specialties'] ?? [],
-      'address': doctor['address'] ?? {},
-      'location': doctor['location'] ?? {},
-      'opening_hours': doctor['opening_hours'] ?? {},
-      'languages': doctor['languages'] ?? [],
-      'last_updated': doctor['last_updated'] != null
-          ? (DocSeraTime.tryParseToSyria(doctor['last_updated'])?.millisecondsSinceEpoch ?? 0)
-          : 0,
-    };
-  }
-
-
-  /// ✅ جلب بيانات الأطباء من قائمة المفضلات
-  /// Query واحد – بدون inFilter – متوافق مع UUID + RLS
-  Future<List<Map<String, dynamic>>> getFavoriteDoctors() async {
-    try {
-      final dynamic res =
-      await _supabase.rpc('rpc_get_my_favorite_doctors');
-
-      if (res == null) {
-        await _sharedPrefsService.saveData('favoriteDoctors', []);
-        return [];
-      }
-
-      final List<dynamic> list =
-      res is String ? jsonDecode(res) : res;
-
-      final doctors = list
-          .map<Map<String, dynamic>>(
-            (doctor) => _buildDoctorInfo(
-          doctor as Map<String, dynamic>,
-          doctor['id'] as String,
-        ),
-      )
-          .toList();
-
-      await _sharedPrefsService.saveData('favoriteDoctors', doctors);
-      return doctors;
-    } catch (e) {
-      debugPrint("❌ getFavoriteDoctors failed: $e");
-      return [];
-    }
-  }
-
-  /// ✅ إزالة طبيب من المفضلة
-  Future<void> removeDoctorFromFavorites(String userId, String doctorId) async {
-    try {
-      final currentFavorites = await getUserFavorites(userId);
-      final updatedFavorites = currentFavorites.where((id) => id != doctorId).toList();
-
-      await updateUserFavorites(userId, updatedFavorites);
-      debugPrint("🗑️ Doctor $doctorId removed from favorites.");
-    } catch (e) {
-      debugPrint("❌ Error removing doctor from favorites: $e");
-      throw Exception("Failed to remove doctor from favorites");
-    }
-  }
-
-
-  /// ✅ الاستماع لتحديثات قائمة الأطباء المفضلين في الوقت الحقيقي
-  /// بدون inFilter – آمن مع UUID + RLS
-  Stream<List<Map<String, dynamic>>> listenToFavoriteDoctors() async* {
-    yield await getFavoriteDoctors();
-
-    yield* Stream.periodic(const Duration(seconds: 15))
-        .asyncMap((_) => getFavoriteDoctors());
-  }
-
-
-
-  /// ✅ تحميل بيانات مخزنة بالكاش
-  Future<List<dynamic>> loadCachedData(String key) async {
-    try {
-      return await _sharedPrefsService.loadData(key) ?? [];
-    } catch (e) {
-      debugPrint("❌ Error loading cached data ($key): $e");
-      return [];
-    }
-  }
-
-  /// ✅ حفظ بيانات بالكاش
-  Future<void> saveCachedData(String key, List<Map<String, dynamic>> data) async {
-    try {
-      await _sharedPrefsService.saveData(key, data);
-      debugPrint("✅ [$key] Data saved.");
-    } catch (e) {
-      debugPrint("❌ Error saving cached data ($key): $e");
-    }
-  }
-
-
-
-
-StreamSubscription<List<Map<String, dynamic>>>? _appointmentsListener;
-
-
-// Merged SupabaseUserServiceAppointments extension methods
-  /// ✅ جلب مواعيد المستخدم مع تصنيفها (قادمة / سابقة)
-  Future<Map<String, List<Map<String, dynamic>>>> getUserAppointments(String userId) async {
-    try {
-      // ✅ جلب من الكاش أولًا
-      final cachedUpcoming = await _sharedPrefsService.loadData('upcomingAppointments') ?? [];
-      final cachedPast = await _sharedPrefsService.loadData('pastAppointments') ?? [];
-
-      if (cachedUpcoming.isNotEmpty || cachedPast.isNotEmpty) {
-        debugPrint("⚡ Loaded appointments from cache");
-        return {
-          'upcoming': List<Map<String, dynamic>>.from(cachedUpcoming),
-          'past': List<Map<String, dynamic>>.from(cachedPast),
-        };
-      }
-
-      final nowUtc = DocSeraTime.nowUtc().toIso8601String();
+  final AuthRepository auth;
+  final UserRepository user;
+  final FavoritesRepository favorites;
+  final AppointmentRepository appointments;
+
+  SupabaseUserService({
+    required this.auth,
+    required this.user,
+    required this.favorites,
+    required this.appointments,
+  });
+
+  // --- Auth & Security Delegates ---
+
+  Future<bool> isPhoneNumberExists(String phoneNumber) => 
+      auth.isPhoneNumberExists(phoneNumber);
+
+  Future<AuthResponse> signInWithPassword({required String email, required String password}) => 
+      auth.signInWithPassword(email: email, password: password);
+
+  Future<void> signOut() => auth.signOut();
+
+  User? getCurrentUser() => auth.getCurrentUser();
+
+  Future<Map<String, dynamic>> getLoginInfoByEmailOrPhone(String input) => 
+      auth.getLoginInfoByEmailOrPhone(input);
+
+  Future<Map<String, dynamic>> getMySecurityState() => 
+      auth.getMySecurityState();
+
+  Future<bool> doesUserExist({String? email, String? phoneNumber}) => 
+      auth.doesUserExist(email: email, phoneNumber: phoneNumber);
+
+  Future<void> deleteUserAccount() => auth.deleteUserAccount();
+
+  // --- User Profile Delegates ---
+
+  Future<void> addUser(Map<String, dynamic> userData) => 
+      user.addUser(userData);
+
+  Future<Map<String, dynamic>?> getUserData(String userId) => 
+      user.getUserData(userId);
+
+  Future<void> updateUser(String userId, Map<String, dynamic> updatedData) => 
+      user.updateUser(userId, updatedData);
+
+  Future<List<Map<String, dynamic>>> getPaginatedUsers({String? lastCreatedAt, int limit = 10}) => 
+      user.getPaginatedUsers(lastCreatedAt: lastCreatedAt, limit: limit);
+
+  // --- Favorites Delegates ---
+
+  Future<List<String>> getUserFavorites(String userId) => 
+      favorites.getUserFavorites(userId);
+
+  Future<void> updateUserFavorites(String userId, List<String> favs) => 
+      favorites.updateUserFavorites(userId, favs);
+
+  Future<List<Map<String, dynamic>>> getFavoriteDoctors() => 
+      favorites.getFavoriteDoctors();
+
+  Future<void> removeDoctorFromFavorites(String userId, String doctorId) => 
+      favorites.removeDoctorFromFavorites(userId, doctorId);
+
+  Stream<List<Map<String, dynamic>>> listenToFavoriteDoctors() => 
+      favorites.listenToFavoriteDoctors();
       
-      // ✅ 1. Get Upcoming Appointments (Future -> Now)
-      final upcomingResponse = await _supabase
-          .from('appointments')
-          .select()
-          .eq('user_id', userId)
-          .gte('timestamp', nowUtc) // Only future items
-          .order('timestamp', ascending: true);
+  Future<List<dynamic>> loadCachedData(String key) => 
+      favorites.loadCachedData(key); // Re-using favorites access to shared prefs helper if needed, or arguably duplicate in repos.
+      // Note: loadCachedData was generic in original. I implemented it in FavoritesRepository. 
+      // If other parts use it via SupabaseUserService, this delegation works.
 
-      // ✅ 2. Get Past Appointments (History) - LIMITED to 5
-      final pastResponse = await _supabase
-          .from('appointments')
-          .select()
-          .eq('user_id', userId)
-          .lt('timestamp', nowUtc) // Only past items
-          .order('timestamp', ascending: false) // Newest past first
-          .limit(5); // ✅ COST SAVING: Only fetch recent history
-
-      final allData = [...upcomingResponse, ...pastResponse];
-
-      List<Map<String, dynamic>> upcoming = [];
-      List<Map<String, dynamic>> past = [];
-      
-      final nowSyria = DocSeraTime.nowSyria();
-
-      for (var appt in allData) {
-        final status = (appt['status'] ?? '').toString();
-        final isRejected = status == 'rejected';
-        final isBooked = appt['booked'] == true;
-
-        if (!isBooked && !isRejected) continue;
-
-        final timestampUtc = DateTime.tryParse(appt['timestamp'] ?? '')?.toUtc();
-        final timestamp = DocSeraTime.toSyria(timestampUtc ?? nowSyria);
-
-        if (appt.containsKey('booking_timestamp')) {
-          appt['booking_timestamp'] = appt['booking_timestamp']?.toString();
-        }
-
-        appt['timestamp'] = timestamp.toIso8601String();
-
-        if (timestamp.isAfter(nowSyria)) {
-          upcoming.add(appt);
-        } else {
-          past.add(appt);
-        }
-      }
+  Future<void> saveCachedData(String key, List<Map<String, dynamic>> data) => 
+      favorites.saveCachedData(key, data);
 
 
+  // --- Appointment Delegates ---
 
-      await _sharedPrefsService.saveData('upcomingAppointments', upcoming);
-      await _sharedPrefsService.saveData('pastAppointments', past);
+  Future<Map<String, List<Map<String, dynamic>>>> getUserAppointments(String userId) => 
+      appointments.getUserAppointments(userId);
 
-      return {
-        'upcoming': List<Map<String, dynamic>>.from(upcoming),
-        'past': List<Map<String, dynamic>>.from(past),
-      };
-    } catch (e) {
-      debugPrint("❌ Error fetching appointments: $e");
-      return {'upcoming': [], 'past': []};
-    }
-  }
+  Stream<List<Map<String, dynamic>>> listenToUserAppointments(String userId) => 
+      appointments.listenToUserAppointments(userId);
 
-  /// ✅ الاستماع للمواعيد في الوقت الفعلي (يتطلب تفعيل Realtime في Supabase)
-  Stream<List<Map<String, dynamic>>> listenToUserAppointments(String userId) {
-    final stream = _supabase
-        .from('appointments')
-        .stream(primaryKey: ['id'])
-        .eq('user_id', userId)
-        .order('timestamp', ascending: true)
-        .map((event) {
-      final now = DocSeraTime.nowSyria();
-      List<Map<String, dynamic>> all = [];
+  void listenToAppointments(String userId) => 
+      appointments.listenToAppointments(userId);
 
-      for (final appt in event) {
-        final status = (appt['status'] ?? '').toString();
-        final isRejected = status == 'rejected';
-        final isBooked = appt['booked'] == true;
+  void cancelAppointmentsListener() => 
+      appointments.cancelAppointmentsListener();
 
-        // ✅ نسمح فقط بالمواعيد المحجوزة أو المرفوضة
-        if (!isBooked && !isRejected) continue;
-
-
-
-        final timestampUtc = DocSeraTime.tryParseToSyria(appt['timestamp'] ?? '')?.toUtc();
-        final timestamp = DocSeraTime.toSyria(timestampUtc ?? now);
-
-        appt['timestamp'] = timestamp.toIso8601String();
-        appt['booking_timestamp'] = appt['booking_timestamp']?.toString();
-
-        all.add(appt);
-      }
-
-      final upcoming = all.where((a) => DocSeraTime.tryParseToSyria(a['timestamp'])!.isAfter(now)).toList();
-      final past = all.where((a) => DocSeraTime.tryParseToSyria(a['timestamp'])!.isBefore(now)).toList();
-
-      _sharedPrefsService.saveData('upcomingAppointments', upcoming);
-      _sharedPrefsService.saveData('pastAppointments', past);
-
-      debugPrint("🔥 Appointments updated via realtime");
-
-      return [...upcoming, ...past];
-    });
-
-    return stream;
-  }
-
-
-
-  /// ✅ تفعيل الاستماع للمواعيد
-  void listenToAppointments(String userId) {
-    _appointmentsListener?.cancel();
-    _appointmentsListener = listenToUserAppointments(userId).listen((_) {
-      debugPrint("📡 Appointments listener triggered.");
-    });
-  }
-
-  /// ✅ إلغاء الاستماع
-  void cancelAppointmentsListener() {
-    _appointmentsListener?.cancel();
-    _appointmentsListener = null;
-    debugPrint("🛑 Appointments listener canceled.");
-  }
-
-  /// ✅ مسح كاش المواعيد
-  Future<void> clearAppointmentCache() async {
-    await _sharedPrefsService.removeData('upcomingAppointments');
-    await _sharedPrefsService.removeData('pastAppointments');
-    debugPrint("🧹 Appointment cache cleared.");
-  }
-
-
-
-// Merged SupabaseUserServiceDelete extension methods
-  /// ✅ حذف حساب المستخدم وكل ما يتعلق به
-  Future<void> deleteUserAccount(String userId, {String? phoneNumber, String? email}) async {
-    try {
-      debugPrint("🔍 Starting account deletion for userId: $userId");
-
-      // 🧽 حذف الملاحظات، الوثائق، المواعيد، الأقارب من الجداول المرتبطة
-      final subTables = ['appointments', 'documents', 'notes', 'relatives'];
-      for (final table in subTables) {
-        final res = await _supabase
-            .from(table)
-            .delete()
-            .eq('user_id', userId);
-        if (res.error != null) {
-          debugPrint("⚠️ Error deleting from $table: ${res.error!.message}");
-        } else {
-          debugPrint("🗑️ Deleted from $table");
-        }
-      }
-
-      // 🧽 حذف الملفات من Supabase Storage
-      await _deleteAllFilesUnderUser(userId);
-
-      // 🧽 حذف صف المستخدم
-      final userRes = await _supabase
-          .from('users')
-          .delete()
-          .eq('id', userId);
-      if (userRes.error != null) {
-        debugPrint("❌ Failed to delete user row: ${userRes.error!.message}");
-        throw Exception("Error deleting user data");
-      }
-
-      // 🧽 حذف OTP إذا كانت مخزنة في جداول منفصلة (اختياري)
-      if (phoneNumber != null) {
-        await _supabase.from('otp').delete().eq('id', phoneNumber);
-        debugPrint("📞 Deleted phone OTP for $phoneNumber");
-      }
-
-      if (email != null) {
-        await _supabase.from('email_otp').delete().eq('id', email);
-        debugPrint("📧 Deleted email OTP for $email");
-      }
-
-      // 🔐 حذف حساب المصادقة
-      final currentUser = Supabase.instance.client.auth.currentUser;
-      if (currentUser != null && currentUser.id == userId) {
-        await Supabase.instance.client.auth.signOut();
-        await Supabase.instance.client.auth.admin.deleteUser(userId);
-        debugPrint("✅ Supabase Auth user deleted");
-      }
-
-      // 🧼 تنظيف SharedPreferences
-      final prefs = await SharedPreferences.getInstance();
-      await prefs.clear();
-      debugPrint("🧼 SharedPreferences cleared");
-
-      debugPrint("✅ Account deletion complete for userId: $userId");
-
-    } catch (e) {
-      debugPrint("❌ Error deleting user account: $e");
-      throw Exception("Failed to delete account");
-    }
-  }
-
-  /// ✅ حذف جميع الملفات الخاصة بالمستخدم من Supabase Storage
-  Future<void> _deleteAllFilesUnderUser(String userId) async {
-    final bucket = Supabase.instance.client.storage.from('documents');
-    final folderPath = 'users/$userId';
-    try {
-      final listResult = await bucket.list(path: folderPath);
-      for (final file in listResult) {
-        await bucket.remove(['$folderPath/${file.name}']);
-        debugPrint("🗑️ Deleted file: $folderPath/${file.name}");
-      }
-      debugPrint("✅ All files under $folderPath deleted.");
-    } catch (e) {
-      debugPrint("❌ Error deleting user files: $e");
-    }
-  }
+  Future<void> clearAppointmentCache() => 
+      appointments.clearAppointmentCache();
 }
-
-
-
-

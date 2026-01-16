@@ -4,6 +4,7 @@ import 'package:docsera/app/const.dart';
 import 'package:docsera/screens/auth/sign_up/WelcomePage.dart';
 import 'package:docsera/services/supabase/user/supabase_user_service.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:docsera/widgets/base_scaffold.dart';
 import 'package:docsera/utils/page_transitions.dart';
@@ -16,9 +17,9 @@ import 'package:device_info_plus/device_info_plus.dart';
 
 class RecapPage extends StatelessWidget {
   final SignUpInfo signUpInfo;
-  final SupabaseUserService _supabaseUserService = SupabaseUserService();
 
-  RecapPage({super.key, required this.signUpInfo});
+
+  const RecapPage({super.key, required this.signUpInfo});
 
   /// ✅ Device ID موحد Android / iOS
   Future<String> _getDeviceId() async {
@@ -102,7 +103,7 @@ class RecapPage extends StatelessWidget {
         'trusted_devices': [],
       };
 
-      await _supabaseUserService.addUser(userData);
+      await context.read<SupabaseUserService>().addUser(userData);
 
       // ---------------------------------------------------------------------
       // 5️⃣ إضافة الجهاز الحالي عبر RPC (Security Definer)

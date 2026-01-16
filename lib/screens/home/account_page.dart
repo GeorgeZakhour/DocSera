@@ -1,42 +1,45 @@
 import 'dart:async';
 import 'dart:io';
 import 'package:docsera/Business_Logic/Account_page/danger/account_danger_cubit.dart';
+
 import 'package:docsera/Business_Logic/Account_page/profile/account_profile_cubit.dart';
 import 'package:docsera/Business_Logic/Account_page/profile/account_profile_state.dart';
 import 'package:docsera/Business_Logic/Account_page/security/account_security_cubit.dart';
 import 'package:docsera/Business_Logic/Account_page/security/account_security_state.dart';
 import 'package:docsera/Business_Logic/Authentication/auth_cubit.dart';
 import 'package:docsera/Business_Logic/Authentication/auth_state.dart';
-import 'package:docsera/main.dart';
 import 'package:docsera/models/sign_up_info.dart';
 import 'package:docsera/screens/auth/sign_up/sign_up_phone.dart';
 import 'package:docsera/screens/home/account/goodbye_page.dart';
 import 'package:docsera/screens/home/account/legal_information.dart';
-import 'package:docsera/screens/home/account/points_history_page.dart';
 import 'package:docsera/screens/home/shimmer/shimmer_widgets.dart';
 import 'package:docsera/utils/custom_clippers.dart';
-import 'package:docsera/utils/text_direction_utils.dart';
-import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:docsera/gen_l10n/app_localizations.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
-import 'package:docsera/app/text_styles.dart'; //
+import 'package:docsera/app/text_styles.dart';
 import 'package:docsera/screens/home/account/user_profile_page.dart';
 import 'package:docsera/screens/home/account/my_relatives.dart';
 import 'package:docsera/utils/page_transitions.dart';
 import 'package:flutter/material.dart';
 import 'package:docsera/app/const.dart';
-import 'package:flutter_svg/svg.dart';
 import 'package:local_auth/local_auth.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:docsera/utils/input_decoration.dart';
 import '../../Business_Logic/Account_page/user_cubit.dart';
 import '../../Business_Logic/Account_page/user_state.dart';
 import 'package:package_info_plus/package_info_plus.dart';
-
 import 'account/preferences.dart';
 
-
+// 🆕 NEW COMPONENTS
+import 'account/widgets/account_banner_card.dart';
+import 'account/widgets/points_card.dart';
+import 'account/widgets/account_section_title.dart';
+import 'account/widgets/account_list_tile.dart';
+import 'account/sheets/edit_contact_info_sheet.dart';
+import 'account/sheets/change_password_sheet.dart';
+import 'account/sheets/language_selection_sheet.dart';
+import 'account/sheets/security_info_sheets.dart';
+import 'account/sheets/delete_account_sheet.dart';
 
 class AccountScreen extends StatefulWidget {
   final VoidCallback onLogout;
@@ -63,10 +66,10 @@ class _AccountScreenState extends State<AccountScreen> {
     final authState = authCubit.state;
 
     if (authState is AuthAuthenticated) {
-      // 🔹 تحميل المستخدم الأساسي
+      // 🔹 Load primary user data
       context.read<UserCubit>().loadUserData(context: context);
 
-      // 🔹 تحميل كل تبويبات الحساب فورًا
+      // 🔹 Load profile tabs immediately
       context.read<AccountProfileCubit>().loadProfile();
     }
 
@@ -77,10 +80,6 @@ class _AccountScreenState extends State<AccountScreen> {
       });
     });
   }
-
-
-
-
 
   @override
   void didChangeDependencies() {
@@ -94,8 +93,6 @@ class _AccountScreenState extends State<AccountScreen> {
       _biometricChecked = true;
     }
   }
-
-
 
   Future<void> _detectBiometricType() async {
     try {
@@ -149,1328 +146,28 @@ class _AccountScreenState extends State<AccountScreen> {
     }
   }
 
-
-
-  @override
-  void dispose() {
-    super.dispose();
-  }
-
-
-  ///====================================================///
-
-
-  String _formatPhoneForDisplay(String rawPhone) {
-    if (rawPhone.startsWith('00963')) {
-      return '0${rawPhone.substring(5)}'; // يحول 0096398765432 → 098765432
-    }
-    return rawPhone;
-  }
-
-  String _formatPhoneForBackend(String input) {
-    String phone = input.trim();
-    if (phone.startsWith('09')) {
-      phone = phone.substring(1); // Remove the 0
-    } else if (phone.startsWith('9')) {
-      // Do nothing
-    } else {
-      return phone; // Invalid format, return as-is to be handled by validation
-    }
-    return "00963$phone";
-  }
-
-  bool _isValidPhoneNumber(String input) {
-    if (!input.startsWith('9') && !input.startsWith('09')) return false;
-    int requiredLength = input.startsWith('09') ? 10 : 9;
-    return input.length == requiredLength;
-  }
-
-
-  void _showEditFieldSheet(
-      BuildContext context,
-      String fieldType,
-      String currentValue, {
-        String? customTitle,
-      }) {
-    final profileState = context.read<AccountProfileCubit>().state;
-    if (profileState is! AccountProfileLoaded) return;
-
-    // ---------------------------------------------------------------------------
-    // Helpers (نفس منطقك السابق)
-    // ---------------------------------------------------------------------------
-
-    String formatPhoneForDisplay(String phone) {
-      if (phone.startsWith('00963')) return '0${phone.substring(5)}';
-      return phone;
-    }
-
-    String normalizePhoneNumber(String phone) {
-      phone = phone.trim();
-      if (phone.startsWith('00963')) return phone;
-      if (phone.startsWith('09')) return '00963${phone.substring(1)}';
-      if (phone.startsWith('9') && phone.length == 9) return '00963$phone';
-      return phone;
-    }
-
-    final emailRegex = RegExp(r'^[^@]+@[^@]+\.[^@]+$');
-
-    final originalNormalizedValue =
-    fieldType == 'phoneNumber' ? profileState.phone : profileState.email;
-
-    final formattedCurrentValue =
-    fieldType == 'phoneNumber'
-        ? formatPhoneForDisplay(profileState.phone)
-        : profileState.email;
-
-
-    final controller = TextEditingController(
-      text: formattedCurrentValue ==
-          AppLocalizations.of(context)!.notProvided
-          ? ''
-          : formattedCurrentValue,
-    );
-
-    bool isNotVerified =
-        fieldType == 'phoneNumber' && !profileState.isPhoneVerified;
-
-
-    String? errorMessage;
-    bool isChecking = false;
-
-    final title = customTitle ??
-        (fieldType == 'phoneNumber'
-            ? AppLocalizations.of(context)!.editPhoneNumber
-            : AppLocalizations.of(context)!.editEmail);
-
-    final hintText = fieldType == 'phoneNumber'
-        ? AppLocalizations.of(context)!.newPhoneNumber
-        : AppLocalizations.of(context)!.newEmailAddress;
-
-    final securityCubit = context.read<AccountSecurityCubit>();
-
-    // ---------------------------------------------------------------------------
-    // Bottom Sheet
-    // ---------------------------------------------------------------------------
-
-    showModalBottomSheet(
-      context: context,
-      backgroundColor: AppColors.background2,
-      isScrollControlled: true,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
-      ),
-      builder: (context) {
-        return Padding(
-          padding: MediaQuery.of(context).viewInsets,
-          child: StatefulBuilder(
-            builder: (context, setState) {
-              return Padding(
-                padding: EdgeInsets.all(16.w),
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    // ---------------------------------------------------------------------------
-                    // Header
-                    // ---------------------------------------------------------------------------
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        Text(title, style: AppTextStyles.getTitle1(context)),
-                        IconButton(
-                          icon: const Icon(Icons.close),
-                          onPressed: () => Navigator.pop(context),
-                        ),
-                      ],
-                    ),
-
-                    SizedBox(height: 12.h),
-
-                    // ---------------------------------------------------------------------------
-                    // Input
-                    // ---------------------------------------------------------------------------
-                    TextFormField(
-                      controller: controller,
-                      keyboardType: fieldType == 'phoneNumber'
-                          ? TextInputType.number
-                          : TextInputType.emailAddress,
-                      textDirection: detectTextDirection(controller.text),
-                      textAlign: getTextAlign(context),
-                      style: AppTextStyles.getText2(context).copyWith(fontSize: 12.sp),
-                      maxLength: fieldType == 'phoneNumber' ? 10 : 100,
-                      decoration: getInputDecoration(hintText: hintText).copyWith(
-                        counterText: "",
-                        errorText: errorMessage,
-                        prefixText:
-                        fieldType == 'phoneNumber' ? "+963 | " : null,
-                        suffixIcon: Row(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            if (fieldType == 'phoneNumber' &&
-                                controller.text.isNotEmpty &&
-                                normalizePhoneNumber(controller.text) !=
-                                    originalNormalizedValue)
-                              Padding(
-                                padding: EdgeInsets.symmetric(horizontal: 6.w),
-                                child: Container(
-                                  width: 20.w,
-                                  height: 20.w,
-                                  decoration: BoxDecoration(
-                                    color: _isValidPhoneNumber(controller.text)
-                                        ? AppColors.main.withOpacity(0.8)
-                                        : AppColors.red.withOpacity(0.8),
-                                    shape: BoxShape.circle,
-                                  ),
-                                  child: Icon(
-                                    _isValidPhoneNumber(controller.text)
-                                        ? Icons.check
-                                        : Icons.close,
-                                    color: Colors.white,
-                                    size: 14.sp,
-                                  ),
-                                ),
-                              ),
-                            if (isNotVerified)
-                              Container(
-                                padding: EdgeInsets.symmetric(
-                                    horizontal: 8.w, vertical: 6.h),
-                                margin: EdgeInsets.all(8.w),
-                                decoration: BoxDecoration(
-                                  color: AppColors.yellow.withOpacity(0.1),
-                                  borderRadius: BorderRadius.circular(12.r),
-                                ),
-                                child: Text(
-                                  AppLocalizations.of(context)!.notVerified,
-                                  style: AppTextStyles.getText3(context).copyWith(
-                                    color: AppColors.yellow,
-                                    fontSize: 8,
-                                    fontWeight: FontWeight.bold,
-                                  ),
-                                ),
-                              ),
-                          ],
-                        ),
-                      ),
-                      inputFormatters: [
-                        FilteringTextInputFormatter.deny(
-                          RegExp(r'[\u0600-\u06FF]'),
-                        ),
-                      ],
-                      onChanged: (_) => setState(() => errorMessage = null),
-                    ),
-
-                    SizedBox(height: 16.h),
-
-                    // ---------------------------------------------------------------------------
-                    // Save / Verify Button
-                    // ---------------------------------------------------------------------------
-                    ElevatedButton(
-                      onPressed: isChecking
-                          ? null
-                          : () async {
-                        final raw = controller.text.trim();
-                        final normalized =
-                        fieldType == 'phoneNumber'
-                            ? normalizePhoneNumber(raw)
-                            : raw;
-
-                        // Validation
-                        if (fieldType == 'phoneNumber' &&
-                            !_isValidPhoneNumber(raw)) {
-                          setState(() => errorMessage =
-                              AppLocalizations.of(context)!
-                                  .invalidPhoneNumber);
-                          return;
-                        }
-
-                        if (fieldType == 'email' &&
-                            !emailRegex.hasMatch(raw)) {
-                          setState(() => errorMessage =
-                              AppLocalizations.of(context)!
-                                  .invalidEmail);
-                          return;
-                        }
-
-                        if (normalized == originalNormalizedValue) {
-                          setState(() => errorMessage =
-                              AppLocalizations.of(context)!.samePhone);
-                          return;
-                        }
-
-                        setState(() => isChecking = true);
-
-                        bool available;
-                        if (fieldType == 'phoneNumber') {
-                          available = await securityCubit
-                              .checkPhoneAvailability(normalized);
-                        } else {
-                          available = await securityCubit.checkEmailAvailability(
-                            raw.trim().toLowerCase(),
-                          );
-
-                        }
-
-                        setState(() => isChecking = false);
-
-                        if (!available) {
-                          setState(() => errorMessage =
-                          fieldType == 'phoneNumber'
-                              ? AppLocalizations.of(context)!
-                              .alreadyExistsPhone
-                              : AppLocalizations.of(context)!
-                              .alreadyExistsEmail);
-                          return;
-                        }
-
-                        Navigator.pop(context);
-
-                        _showOtpSheetWithCubit(
-                          context,
-                          fieldType: fieldType,
-                          targetValue: normalized,
-                        );
-                      },
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: AppColors.main,
-                        foregroundColor: Colors.white,
-                        padding: EdgeInsets.symmetric(vertical: 14.h),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(8),
-                        ),
-                        minimumSize: Size(double.infinity, 50.h),
-                      ),
-                      child: isChecking
-                          ? SizedBox(
-                        width: 16.w,
-                        height: 16.h,
-                        child: const CircularProgressIndicator(
-                          strokeWidth: 2,
-                          valueColor:
-                          AlwaysStoppedAnimation<Color>(Colors.white),
-                        ),
-                      )
-                          : Text(
-                        (fieldType == 'phoneNumber' && isNotVerified)
-                            ? AppLocalizations.of(context)!.verify
-                            : (fieldType == 'email' &&
-                            originalNormalizedValue.isEmpty)
-                            ? AppLocalizations.of(context)!.add
-                            : AppLocalizations.of(context)!.save,
-                        style: AppTextStyles.getTitle1(context)
-                            .copyWith(color: Colors.white),
-                      ),
-                    ),
-                  ],
-                ),
-              );
-            },
-          ),
-        );
-      },
-    );
-  }
-
-  void _showOtpSheetWithCubit(
-      BuildContext context, {
-        required String fieldType,
-        required String targetValue,
-      }) {
-    final security = context.read<AccountSecurityCubit>();
-    final isPhone = fieldType == 'phoneNumber';
-
-    // 🔹 اطلب OTP (ولا تهتم بالنتيجة هنا)
-    if (isPhone) {
-      security.requestPhoneOtp(targetValue);
-    } else {
-      security.requestEmailOtp(targetValue);
-    }
-
-    final otpController = TextEditingController();
-    bool invalid = false;
-
-    showModalBottomSheet(
-      context: context,
-      backgroundColor: AppColors.background2,
-      isScrollControlled: true,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
-      ),
-      builder: (_) {
-        return BlocConsumer<AccountSecurityCubit, AccountSecurityState>(
-          listener: (context, s) async {
-            // ✅ نجاح التحقق
-            if (s is AccountOtpVerified) {
-              Navigator.pop(context);
-              await context.read<AccountProfileCubit>().loadProfile();
-              context.read<AccountSecurityCubit>().reset();
-
-
-              ScaffoldMessenger.of(context).showSnackBar(
-                SnackBar(
-                  content: Text(
-                    isPhone
-                        ? AppLocalizations.of(context)!.phoneUpdatedSuccess
-                        : AppLocalizations.of(context)!.emailUpdatedSuccess,
-                  ),
-                  backgroundColor: AppColors.main,
-                ),
-              );
-            }
-
-            // ❌ فشل OTP request أو verify
-            if (s is AccountSecurityError) {
-              if (s.message.contains('OTP')) {
-                // ابقَ في نفس الصفحة
-                invalid = true;
-                (context as Element).markNeedsBuild();
-              } else {
-                Navigator.pop(context);
-              }
-
-              ScaffoldMessenger.of(context)
-                ..hideCurrentSnackBar()
-                ..showSnackBar(
-                  SnackBar(
-                    content: Text(
-                      _mapSecurityError(context, s.message),
-                    ),
-                    backgroundColor: AppColors.red,
-                  ),
-                );
-
-            }
-
-          },
-          builder: (context, s) {
-            final loading = s is AccountSecurityLoading;
-
-            return Padding(
-              padding: EdgeInsets.only(
-                bottom: MediaQuery.of(context).viewInsets.bottom,
-              ),
-              child: Container(
-                padding: EdgeInsets.all(16.w),
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    TextFormField(
-                      controller: otpController,
-                      keyboardType: TextInputType.number,
-                      maxLength: 6,
-                      decoration: getInputDecoration(
-                        hintText:
-                        AppLocalizations.of(context)!.sixDigitCode,
-                      ).copyWith(
-                        errorText: invalid
-                            ? AppLocalizations.of(context)!.invalidOtp
-                            : null,
-                      ),
-                    ),
-                    SizedBox(height: 16.h),
-                    ElevatedButton(
-                      onPressed: loading
-                          ? null
-                          : () async {
-                        final otp = otpController.text.trim();
-                        if (otp.length != 6) {
-                          invalid = true;
-                          (context as Element).markNeedsBuild();
-                          return;
-                        }
-                        if (isPhone) {
-                          security.verifyPhoneOtp(targetValue, otp);
-                        } else {
-                          security.verifyEmailOtp(targetValue, otp);
-                        }
-                      },
-
-                      child: loading
-                          ? SizedBox(
-                              height: 20.h,
-                              width: 20.h,
-                              child: const CircularProgressIndicator(
-                                color: Colors.white,
-                                strokeWidth: 2,
-                              ),
-                            )
-                          : Text(AppLocalizations.of(context)!.continueButton),
-                    ),
-                  ],
-                ),
-              ),
-            );
-          },
-        );
-      },
-    );
-  }
-
-
-
-
-  ///====================================================///
-  void _showChangePasswordSheet(BuildContext context) {
-    final TextEditingController currentPasswordController =
-    TextEditingController();
-    final TextEditingController newPasswordController = TextEditingController();
-
-    bool isCurrentPasswordVisible = false;
-    bool isNewPasswordVisible = false;
-    bool isCurrentPasswordValid = true;
-    bool isNewPasswordValid = false;
-    bool isNewPasswordDifferent = true;
-    String newPasswordStrength = "";
-    Color newPasswordStrengthColor = Colors.transparent;
-    bool isUpdating = false;
-
-    final securityCubit = context.read<AccountSecurityCubit>();
-
-    // ---------------------------------------------------------------------------
-    // Password validation logic (نفس منطقك السابق)
-    // ---------------------------------------------------------------------------
-    void validateNewPassword(String password, Function setState) {
-      if (password.isEmpty) {
-        setState(() {
-          newPasswordStrength = "";
-          newPasswordStrengthColor = Colors.transparent;
-          isNewPasswordValid = false;
-        });
-        return;
-      }
-
-      final hasUppercase = password.contains(RegExp(r'[A-Z]'));
-      final hasLowercase = password.contains(RegExp(r'[a-z]'));
-      final hasNumber = password.contains(RegExp(r'[0-9]'));
-      final hasSymbol =
-      password.contains(RegExp(r'[!@#$%^&*(),.?":{}|<>]'));
-      final hasExcessiveRepeatedCharacters =
-      password.contains(RegExp(r'(.)\1{2,}'));
-      final isSimplePattern =
-      password.contains(RegExp(r'(abcd|qwerty|1234)'));
-
-      if (password.length < 8 || isSimplePattern) {
-        setState(() {
-          newPasswordStrength =
-              AppLocalizations.of(context)!.weakPassword;
-          newPasswordStrengthColor = AppColors.red;
-          isNewPasswordValid = false;
-        });
-      } else if (hasExcessiveRepeatedCharacters &&
-          (!hasUppercase ||
-              !hasLowercase ||
-              !hasNumber ||
-              !hasSymbol)) {
-        setState(() {
-          newPasswordStrength =
-              AppLocalizations.of(context)!.fairPassword;
-          newPasswordStrengthColor = Colors.orange;
-          isNewPasswordValid = false;
-        });
-      } else if (!hasUppercase ||
-          !hasLowercase ||
-          !hasNumber ||
-          !hasSymbol) {
-        setState(() {
-          newPasswordStrength =
-              AppLocalizations.of(context)!.fairPassword;
-          newPasswordStrengthColor = Colors.orange;
-          isNewPasswordValid = false;
-        });
-      } else if (password.length < 12) {
-        setState(() {
-          newPasswordStrength =
-              AppLocalizations.of(context)!.goodPassword;
-          newPasswordStrengthColor = Colors.green.shade300;
-          isNewPasswordValid = true;
-        });
-      } else {
-        setState(() {
-          newPasswordStrength =
-              AppLocalizations.of(context)!.strongPassword;
-          newPasswordStrengthColor = Colors.green.shade800;
-          isNewPasswordValid = true;
-        });
-      }
-    }
-
-    void checkPasswordsDifference(Function setState) {
-      setState(() {
-        isNewPasswordDifferent =
-            currentPasswordController.text.trim() !=
-                newPasswordController.text.trim();
-      });
-    }
-
-    // ---------------------------------------------------------------------------
-    // Bottom Sheet
-    // ---------------------------------------------------------------------------
-    showModalBottomSheet(
-      context: context,
-      backgroundColor: AppColors.background2,
-      isScrollControlled: true,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
-      ),
-      builder: (context) {
-        return BlocListener<AccountSecurityCubit, AccountSecurityState>(
-          listener: (context, state) {
-            if (state is AccountPasswordInvalid) {
-              setState(() {
-                isUpdating = false;
-                isCurrentPasswordValid = false;
-              });
-            }
-
-            if (state is AccountSecurityError) {
-              setState(() => isUpdating = false);
-              ScaffoldMessenger.of(context).showSnackBar(
-                SnackBar(
-                  content: Text(
-                    AppLocalizations.of(context)!.somethingWentWrong,
-                  ),
-                  backgroundColor: AppColors.red,
-                ),
-              );
-            }
-
-            if (state is AccountPasswordChanged) {
-              Navigator.pop(context);
-            }
-          },
-          child: StatefulBuilder(
-            builder: (context, setState) {
-              return Padding(
-                padding: EdgeInsets.only(
-                  bottom: MediaQuery.of(context).viewInsets.bottom,
-                ),
-                child: Container(
-                  padding: EdgeInsets.all(16.w),
-                  child: Column(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      // ---------------------------------------------------------------------------
-                      // Header
-                      // ---------------------------------------------------------------------------
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: [
-                          Text(
-                            AppLocalizations.of(context)!.changePassword,
-                            style: AppTextStyles.getTitle1(context),
-                          ),
-                          IconButton(
-                            icon: const Icon(Icons.close),
-                            onPressed: () => Navigator.pop(context),
-                          ),
-                        ],
-                      ),
-
-                      SizedBox(height: 12.h),
-
-                      // ---------------------------------------------------------------------------
-                      // Current Password
-                      // ---------------------------------------------------------------------------
-                      TextFormField(
-                        controller: currentPasswordController,
-                        obscureText: !isCurrentPasswordVisible,
-                        style: AppTextStyles.getText2(context)
-                            .copyWith(fontSize: 12.sp),
-                        textDirection: detectTextDirection(
-                            currentPasswordController.text),
-                        textAlign: getTextAlign(context),
-                        inputFormatters: [
-                          FilteringTextInputFormatter.deny(
-                            RegExp(r'[\u0600-\u06FF]'),
-                          ),
-                        ],
-                        decoration: getInputDecoration(
-                          hintText:
-                          AppLocalizations.of(context)!.currentPassword,
-                        ).copyWith(
-                          contentPadding: EdgeInsets.symmetric(
-                              vertical: 10.h, horizontal: 12.w),
-                          errorText: isCurrentPasswordValid
-                              ? null
-                              : AppLocalizations.of(context)!
-                              .incorrectCurrentPassword,
-                          suffixIcon: IconButton(
-                            icon: Icon(
-                              isCurrentPasswordVisible
-                                  ? Icons.visibility
-                                  : Icons.visibility_off,
-                              size: 16.sp,
-                            ),
-                            onPressed: () => setState(() =>
-                            isCurrentPasswordVisible =
-                            !isCurrentPasswordVisible),
-                          ),
-                        ),
-                      ),
-
-                      SizedBox(height: 12.h),
-
-                      // ---------------------------------------------------------------------------
-                      // New Password
-                      // ---------------------------------------------------------------------------
-                      TextFormField(
-                        controller: newPasswordController,
-                        obscureText: !isNewPasswordVisible,
-                        style: AppTextStyles.getText2(context)
-                            .copyWith(fontSize: 12.sp),
-                        textDirection: detectTextDirection(
-                            newPasswordController.text),
-                        textAlign: getTextAlign(context),
-                        inputFormatters: [
-                          FilteringTextInputFormatter.deny(
-                            RegExp(r'[\u0600-\u06FF]'),
-                          ),
-                        ],
-                        onChanged: (value) {
-                          validateNewPassword(value, setState);
-                          checkPasswordsDifference(setState);
-                        },
-                        decoration: getInputDecoration(
-                          hintText:
-                          AppLocalizations.of(context)!.newPassword,
-                        ).copyWith(
-                          contentPadding: EdgeInsets.symmetric(
-                              vertical: 10.h, horizontal: 12.w),
-                          errorText: isNewPasswordDifferent
-                              ? null
-                              : AppLocalizations.of(context)!
-                              .passwordMatchError,
-                          suffixIcon: IconButton(
-                            icon: Icon(
-                              isNewPasswordVisible
-                                  ? Icons.visibility
-                                  : Icons.visibility_off,
-                              size: 16.sp,
-                            ),
-                            onPressed: () => setState(() =>
-                            isNewPasswordVisible =
-                            !isNewPasswordVisible),
-                          ),
-                        ),
-                      ),
-
-                      SizedBox(height: 6.h),
-                      Text(
-                        newPasswordStrength,
-                        style: TextStyle(
-                          color: newPasswordStrengthColor,
-                          fontSize: 12,
-                        ),
-                      ),
-
-                      SizedBox(height: 16.h),
-
-                      // ---------------------------------------------------------------------------
-                      // Save Button
-                      // ---------------------------------------------------------------------------
-                      ElevatedButton(
-                        onPressed: isUpdating ||
-                            !isNewPasswordValid ||
-                            !isNewPasswordDifferent
-                            ? null
-                            : () async {
-                          setState(() => isUpdating = true);
-
-                          await securityCubit.changePassword(
-                            current: currentPasswordController.text
-                                .trim(),
-                            next: newPasswordController.text.trim(),
-                          );
-                        },
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: AppColors.main,
-                          padding:
-                          EdgeInsets.symmetric(vertical: 14.h),
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(8),
-                          ),
-                          minimumSize:
-                          Size(double.infinity, 50.h),
-                        ),
-                        child: isUpdating
-                            ? SizedBox(
-                          width: 16.w,
-                          height: 16.h,
-                          child:
-                          const CircularProgressIndicator(
-                            strokeWidth: 2,
-                            valueColor:
-                            AlwaysStoppedAnimation<Color>(
-                                Colors.white),
-                          ),
-                        )
-                            : Text(
-                          AppLocalizations.of(context)!.save,
-                          style: AppTextStyles.getTitle1(
-                              context)
-                              .copyWith(color: Colors.white),
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              );
-            },
-          ),
-        );
-      },
-    );
-  }
-
-
-  void _showLanguageSelectionSheet() {
-    showModalBottomSheet(
-      context: context,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
-      ),
-      backgroundColor: Colors.white,
-      builder: (BuildContext bottomSheetContext) {
-        return StatefulBuilder(
-          builder: (BuildContext innerContext, StateSetter setState) {
-            String currentLocale = Localizations.localeOf(innerContext).languageCode;
-            bool isArabic = currentLocale == 'ar';
-
-            return Directionality(
-              textDirection: isArabic ? TextDirection.rtl : TextDirection.ltr,
-              child: Padding(
-                padding: EdgeInsets.symmetric(vertical: 20.h, horizontal: 10.w),
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    // ✅ Title
-                    Padding(
-                      padding: EdgeInsets.symmetric(vertical: 10.h),
-                      child: Text(
-                        AppLocalizations.of(innerContext)!.chooseLanguage,
-                        style: AppTextStyles.getTitle1(context),
-                      ),
-                    ),
-                    const Divider(),
-
-                    // ✅ Arabic Option
-                    ListTile(
-                      leading: const Icon(Icons.language, color: AppColors.main),
-                      title: Text(
-                        "العربية",
-                        style: TextStyle(
-                          fontSize: 14.sp,
-                          fontWeight: FontWeight.bold,
-                          fontFamily: 'Cairo',
-                        ),
-                      ),
-                      trailing: currentLocale == 'ar'
-                          ? const Icon(Icons.check, color: AppColors.main)
-                          : null,
-                      onTap: () {
-                        if (mounted) { // ✅ Check if the widget is still mounted before calling setState
-                          setState(() {
-                            _changeLanguage("ar");
-                          });
-                        }
-                      },
-                    ),
-                    Divider(color: Colors.grey[300]),
-
-                    // ✅ English Option
-                    ListTile(
-                      leading: const Icon(Icons.language, color: AppColors.main),
-                      title: Text(
-                        "English",
-                        style: TextStyle(
-                          fontSize: 14.sp,
-                          fontWeight: FontWeight.bold,
-                          fontFamily: 'Montserrat',
-                        ),
-                      ),
-                      trailing: currentLocale == 'en'
-                          ? const Icon(Icons.check, color: AppColors.main)
-                          : null,
-                      onTap: () {
-                        if (mounted) { // ✅ Check if the widget is still mounted before calling setState
-                          setState(() {
-                            _changeLanguage("en");
-                          });
-                        }
-                      },
-                    ),
-                  ],
-                ),
-              ),
-            );
-          },
-        );
-      },
-    );
-  }
-
-  /// ✅ تغيير اللغة بناءً على اختيار المستخدم
-  void _changeLanguage(String languageCode) {
-    final myAppState = MyApp.of(context);
-    if (myAppState != null) {
-      myAppState.changeLanguage(languageCode);
-    }
-
-    setState(() {}); // ✅ Refresh UI
-    Navigator.pop(context); // ✅ Close the Bottom Sheet
-  }
-
-  void _showEncryptedDocumentsInfoSheet() {
-    showModalBottomSheet(
-      context: context,
-      backgroundColor: Colors.white,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
-      ),
-      builder: (_) {
-        return Padding(
-          padding: EdgeInsets.symmetric(horizontal: 20.w, vertical: 24.h),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Stack(
-                alignment: Alignment.center,
-                children: [
-                  Center(
-                    child: Text(
-                      AppLocalizations.of(context)!.encryptedDocuments,
-                      textAlign: TextAlign.center,
-                      style: AppTextStyles.getTitle1(context).copyWith(
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                  ),
-                  Positioned(
-                    right: 0,
-                    child: IconButton(
-                      icon: const Icon(Icons.close),
-                      onPressed: () => Navigator.pop(context),
-                    ),
-                  ),
-                ],
-              ),
-              SizedBox(height: 20.h),
-              Image.asset(
-                'assets/images/encrypted.webp',
-                height: 100.h,
-              ),
-              SizedBox(height: 20.h),
-              Container(
-                padding: EdgeInsets.symmetric(horizontal: 14.w, vertical: 6.h),
-                decoration: BoxDecoration(
-                  color: const Color(0xFFDFF6F3),
-                  borderRadius: BorderRadius.circular(30.r),
-                ),
-                child: Text(
-                  AppLocalizations.of(context)!.activated,
-                  style: TextStyle(
-                    color: const Color(0xFF00B7A0),
-                    fontWeight: FontWeight.bold,
-                    fontSize: 12.sp,
-                  ),
-                ),
-              ),
-              SizedBox(height: 16.h),
-              Text(
-                AppLocalizations.of(context)!.encryptedDocumentsFullDescription,
-                textAlign: TextAlign.center,
-                style: AppTextStyles.getText3(context),
-              ),
-              SizedBox(height: 10.h),
-            ],
-          ),
-        );
-      },
-    );
-  }
-
-  void _showTwoFactorAuthInfoSheet(bool is2FAEnabled) {
-    showModalBottomSheet(
-      context: context,
-      backgroundColor: Colors.white,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
-      ),
-      builder: (_) {
-        return Padding(
-          padding: EdgeInsets.symmetric(horizontal: 20.w, vertical: 24.h),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              // ------------------------------------------------------------------
-              // Header
-              // ------------------------------------------------------------------
-              Stack(
-                alignment: Alignment.center,
-                children: [
-                  Center(
-                    child: Text(
-                      AppLocalizations.of(context)!.twoFactorAuth,
-                      style: AppTextStyles.getTitle1(context)
-                          .copyWith(fontWeight: FontWeight.bold),
-                    ),
-                  ),
-                  Positioned(
-                    right: 0,
-                    child: IconButton(
-                      icon: const Icon(Icons.close),
-                      onPressed: () => Navigator.pop(context),
-                    ),
-                  ),
-                ],
-              ),
-
-              SizedBox(height: 20.h),
-
-              Image.asset(
-                'assets/images/two_factor.webp',
-                height: 100.h,
-              ),
-
-              SizedBox(height: 20.h),
-
-              // ------------------------------------------------------------------
-              // Status Badge
-              // ------------------------------------------------------------------
-              Container(
-                padding: EdgeInsets.symmetric(horizontal: 14.w, vertical: 6.h),
-                decoration: BoxDecoration(
-                  color: is2FAEnabled
-                      ? const Color(0xFFDFF6F3)
-                      : const Color(0xFFFFEAE6),
-                  borderRadius: BorderRadius.circular(30.r),
-                ),
-                child: Text(
-                  is2FAEnabled
-                      ? AppLocalizations.of(context)!.activated
-                      : AppLocalizations.of(context)!.notActivated,
-                  style: TextStyle(
-                    color: is2FAEnabled
-                        ? const Color(0xFF00B7A0)
-                        : const Color(0xFFFF6B6B),
-                    fontWeight: FontWeight.bold,
-                    fontSize: 12.sp,
-                  ),
-                ),
-              ),
-
-              SizedBox(height: 16.h),
-
-              // ------------------------------------------------------------------
-              // Description
-              // ------------------------------------------------------------------
-              Text(
-                AppLocalizations.of(context)!.twoFactorAuthHeadline,
-                textAlign: TextAlign.center,
-                style: AppTextStyles.getText2(context).copyWith(
-                  fontWeight: FontWeight.bold,
-                  fontSize: 12.sp,
-                ),
-              ),
-              SizedBox(height: 6.h),
-              Text(
-                AppLocalizations.of(context)!.twoFactorAuthFullDescription,
-                textAlign: TextAlign.center,
-                style: AppTextStyles.getText3(context),
-              ),
-
-              SizedBox(height: 20.h),
-
-              // ------------------------------------------------------------------
-              // Action Button (Cubit only)
-              // ------------------------------------------------------------------
-              BlocBuilder<AccountSecurityCubit, AccountSecurityState>(
-                builder: (context, state) {
-                  final isLoading = state is AccountSecurityUpdating;
-
-                  return ElevatedButton(
-                    onPressed: isLoading
-                        ? null
-                        : () async {
-                      final newValue = !is2FAEnabled;
-
-                      // ----------------------------------------------
-                      // Confirm before deactivation
-                      // ----------------------------------------------
-                      if (!newValue) {
-                        final confirm = await showDialog<bool>(
-                          context: context,
-                          builder: (_) => AlertDialog(
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(16.r),
-                            ),
-                            contentPadding: EdgeInsets.symmetric(
-                              horizontal: 24.w,
-                              vertical: 20.h,
-                            ),
-                            content: Column(
-                              mainAxisSize: MainAxisSize.min,
-                              children: [
-                                Text(
-                                  AppLocalizations.of(context)!
-                                      .deactivate2FA,
-                                  style:
-                                  AppTextStyles.getTitle2(context),
-                                  textAlign: TextAlign.center,
-                                ),
-                                SizedBox(height: 12.h),
-                                Text(
-                                  AppLocalizations.of(context)!
-                                      .twoFactorDeactivateWarning,
-                                  style:
-                                  AppTextStyles.getText2(context),
-                                  textAlign: TextAlign.center,
-                                ),
-                                SizedBox(height: 24.h),
-                                ElevatedButton(
-                                  style: ElevatedButton.styleFrom(
-                                    backgroundColor: AppColors.red,
-                                    elevation: 0,
-                                    padding: EdgeInsets.symmetric(
-                                      horizontal: 24.w,
-                                      vertical: 12.h,
-                                    ),
-                                    shape: RoundedRectangleBorder(
-                                      borderRadius:
-                                      BorderRadius.circular(10.r),
-                                    ),
-                                  ),
-                                  onPressed: () =>
-                                      Navigator.pop(context, true),
-                                  child: Text(
-                                    AppLocalizations.of(context)!
-                                        .deactivate2FA,
-                                    style: AppTextStyles.getText2(context)
-                                        .copyWith(color: Colors.white),
-                                  ),
-                                ),
-                                TextButton(
-                                  onPressed: () =>
-                                      Navigator.pop(context, false),
-                                  child: Text(
-                                    AppLocalizations.of(context)!.cancel,
-                                    style: AppTextStyles.getText2(context)
-                                        .copyWith(
-                                      fontWeight: FontWeight.bold,
-                                      color: AppColors.blackText,
-                                    ),
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
-                        );
-
-                        if (confirm != true) return;
-                      }
-
-                      // ----------------------------------------------
-                      // Cubit call ONLY
-                      // ----------------------------------------------
-                      context
-                          .read<AccountSecurityCubit>()
-                          .toggleTwoFactor(enable: newValue);
-                    },
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: AppColors.main,
-                      padding: EdgeInsets.symmetric(vertical: 14.h, horizontal: 14.h),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(12.r),
-                      ),
-                    ),
-                    child: isLoading
-                        ? SizedBox(
-                      width: 18.w,
-                      height: 18.w,
-                      child: const CircularProgressIndicator(
-                        strokeWidth: 2,
-                        valueColor:
-                        AlwaysStoppedAnimation<Color>(Colors.white),
-                      ),
-                    )
-                        : Text(
-                      is2FAEnabled
-                          ? AppLocalizations.of(context)!.deactivate2FA
-                          : AppLocalizations.of(context)!.activate2FA,
-                      style: AppTextStyles.getText2(context).copyWith(
-                        color: Colors.white,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                  );
-                },
-              ),
-            ],
-          ),
-        );
-      },
-    );
-  }
-
-  void showDeleteAccountSheet(BuildContext context) {
-    showModalBottomSheet(
-      context: context,
-      backgroundColor: Colors.white,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(20.r)),
-      ),
-      isScrollControlled: true,
-      builder: (_) {
-        return BlocBuilder<AccountDangerCubit, AccountDangerState>(
-            builder: (context, state) {
-              final isLoading = state is AccountDangerLoading;
-            return Padding(
-              padding: EdgeInsets.symmetric(horizontal: 20.w, vertical: 24.h),
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  // ------------------------------------------------------------------
-                  // Header
-                  // ------------------------------------------------------------------
-                  Stack(
-                    alignment: Alignment.center,
-                    children: [
-                      Center(
-                        child: Text(
-                          AppLocalizations.of(context)!.deleteMyAccount,
-                          style: AppTextStyles.getTitle1(context).copyWith(
-                            fontWeight: FontWeight.bold,
-                          ),
-                          textAlign: TextAlign.center,
-                        ),
-                      ),
-                      Positioned(
-                        right: 0,
-                        child: IconButton(
-                          icon: const Icon(Icons.close),
-                          onPressed: () => Navigator.pop(context),
-                        ),
-                      ),
-                    ],
-                  ),
-
-                  SizedBox(height: 20.h),
-
-                  // ------------------------------------------------------------------
-                  // Warning Text
-                  // ------------------------------------------------------------------
-                  Text(
-                    AppLocalizations.of(context)!.deleteAccountWarningText,
-                    style: AppTextStyles.getText2(context).copyWith(
-                      color: Colors.black87,
-                    ),
-                    textAlign: TextAlign.center,
-                  ),
-
-                  SizedBox(height: 16.h),
-
-                  // ------------------------------------------------------------------
-                  // Cancel
-                  // ------------------------------------------------------------------
-                  TextButton(
-                    onPressed: () => Navigator.pop(context),
-                    style: TextButton.styleFrom(padding: EdgeInsets.zero),
-                    child: Text(
-                      AppLocalizations.of(context)!.cancel,
-                      style: AppTextStyles.getText2(context).copyWith(
-                        fontWeight: FontWeight.bold,
-                        color: AppColors.blackText,
-                      ),
-                    ),
-                  ),
-
-                  // ------------------------------------------------------------------
-                  // Confirm Delete (🔥 ONLY Cubit Call)
-                  // ------------------------------------------------------------------
-                  TextButton(
-                    onPressed: () async {
-                      Navigator.pop(context); // ⬅️ أغلق الشيت فقط
-                      await context.read<AccountDangerCubit>().deleteMyAccount();
-                    },
-                    style: TextButton.styleFrom(padding: EdgeInsets.zero),
-                    child: isLoading
-                        ? const SizedBox(
-                      width: 20,
-                      height: 20,
-                      child: CircularProgressIndicator(strokeWidth: 2),
-                    )
-                        : Text(
-                      AppLocalizations.of(context)!.confirmDeleteMyAccount,
-                      style: AppTextStyles.getText2(context).copyWith(
-                        fontWeight: FontWeight.bold,
-                        color: Colors.red,
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-            );
-          }
-        );
-      },
-    );
-  }
-
-  ///====================================================///
-
-
-
-
-
-  /// **إظهار نافذة تعديل البيانات**
-  void _showEditDialog(String field, String title, String currentValue) {
-    TextEditingController controller = TextEditingController(text: currentValue);
-
-    showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: Text('Edit $title'),
-        content: TextField(
-          controller: controller,
-          decoration: InputDecoration(labelText: 'New $title'),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: const Text('Cancel'),
-          ),
-          TextButton(
-            onPressed: () {
-              String newValue = controller.text.trim();
-              // context.read<UserCubit>().updateUserData(field, newValue);
-              Navigator.pop(context);
-            },
-            child: const Text('Save', style: TextStyle(color: AppColors.main)),
-          ),
-
-        ],
-      ),
-    );
-  }
-
   String _mapSecurityError(BuildContext context, String code) {
     switch (code) {
       case 'INVALID_OTP':
         return AppLocalizations.of(context)!.invalidOtp;
-
       case 'OTP_REQUEST_FAILED':
         return AppLocalizations.of(context)!.otpRequestFailed;
-
       case 'PHONE_ALREADY_EXISTS':
         return AppLocalizations.of(context)!.alreadyExistsPhone;
-
       case 'EMAIL_ALREADY_EXISTS':
         return AppLocalizations.of(context)!.alreadyExistsEmail;
-
       case 'TWO_FACTOR_UPDATE_FAILED':
         return AppLocalizations.of(context)!.twoFactorUpdateFailed;
-
       default:
         return AppLocalizations.of(context)!.somethingWentWrong;
     }
+  }
+
+  String _formatPhoneForDisplay(String rawPhone) {
+    if (rawPhone.startsWith('00963')) {
+      return '0${rawPhone.substring(5)}'; // 0096398765432 → 098765432
+    }
+    return rawPhone;
   }
 
   @override
@@ -1498,189 +195,214 @@ class _AccountScreenState extends State<AccountScreen> {
             buildShimmer: _buildShimmerLoading,
             buildAccountContent: _buildAccountContent,
             mapSecurityError: _mapSecurityError,
+            biometricType: biometricType,
+            biometricIcon: biometricIcon,
           );
         }
-
 
         return const SizedBox.shrink();
       },
     );
   }
 
-  Widget _buildAccountBannerCard() {
-    return Padding(
-      padding: EdgeInsets.only(top: 16.h, right: 16.w, left: 16.w),
-      child: Container(
-        padding: EdgeInsets.symmetric(vertical: 25.w, horizontal: 20.w),
-        decoration: BoxDecoration(
-          color: AppColors.main.withOpacity(0.05),
-          borderRadius: BorderRadius.circular(12.r),
-        ),
-        child: Row(
-          children: [
-            Image.asset(
-              'assets/images/account_banner.webp',
-              width: 45.w,
-              height: 45.w,
-            ),
-            SizedBox(width: 18.w),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    AppLocalizations.of(context)!.accountPrivacyInfoLine1,
-                    style: AppTextStyles.getText2(context).copyWith(
-                      fontWeight: FontWeight.bold,
-                      color: AppColors.blackText,
-                    ),
-                  ),
-                  SizedBox(height: 4.h),
-                  Text(
-                    AppLocalizations.of(context)!.accountPrivacyInfoLine2,
-                    style: AppTextStyles.getText3(context).copyWith(
-                      color: AppColors.blackText,
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
   Widget _buildAccountContent(BuildContext context, UserLoaded state) {
     return Column(
       children: [
-          Expanded(
-            child: ListView(
-              children: [
-                SizedBox(height: 5.h),
-                _buildAccountBannerCard(),
-                SizedBox(height: 5.h),
-                _buildPointsCard(context, state),
-                Divider(color: Colors.grey[200], height: 2.h),
-                _buildSectionTitle(AppLocalizations.of(context)!.personalInformation),
-                Divider(color: Colors.grey[200], height: 2.h),
-                BlocBuilder<AccountProfileCubit, AccountProfileState>(
-                  builder: (context, profileState) {
-                    final subtitle = profileState is AccountProfileLoaded
-                        ? profileState.fullName
-                        : AppLocalizations.of(context)!.loading;
+        Expanded(
+          child: ListView(
+            children: [
+              SizedBox(height: 5.h),
+              const AccountBannerCard(),
+              SizedBox(height: 5.h),
+              PointsCard(userPoints: state.userPoints, userId: state.userId),
+              Divider(color: Colors.grey[200], height: 2.h),
 
-                    return _buildEditableListTile(
-                      Icons.person,
-                      AppLocalizations.of(context)!.myProfile,
-                      subtitle,
-                      'profile',
-                    );
-                  },
+              AccountSectionTitle(title: AppLocalizations.of(context)!.personalInformation),
+              Divider(color: Colors.grey[200], height: 2.h),
+
+              // My Profile
+              BlocBuilder<AccountProfileCubit, AccountProfileState>(
+                builder: (context, profileState) {
+                  final subtitle = profileState is AccountProfileLoaded
+                      ? profileState.fullName
+                      : AppLocalizations.of(context)!.loading;
+
+                  return AccountListTile(
+                    icon: Icons.person,
+                    title: AppLocalizations.of(context)!.myProfile,
+                    subtitle: subtitle,
+                    onTap: () => Navigator.push(context, fadePageRoute(const UserProfilePage())),
+                  );
+                },
+              ),
+              Divider(color: Colors.grey[200], height: 2.h),
+
+              // My Relatives
+              AccountListTile(
+                icon: Icons.people,
+                title: AppLocalizations.of(context)!.myRelatives,
+                subtitle: AppLocalizations.of(context)!.myRelativesDescription,
+                onTap: () => Navigator.push(context, fadePageRoute(const MyRelativesPage())),
+              ),
+              Divider(color: Colors.grey[200], height: 2.h),
+              const SizedBox(height: 15),
+
+              AccountSectionTitle(title: AppLocalizations.of(context)!.loginSection),
+              Divider(color: Colors.grey[200], height: 2.h),
+
+              // Phone
+              BlocBuilder<AccountProfileCubit, AccountProfileState>(
+                builder: (context, profileState) {
+                  final phone = profileState is AccountProfileLoaded ? profileState.phone : '';
+                  final isVerified = profileState is AccountProfileLoaded ? profileState.isPhoneVerified : false;
+                  final subtitle = phone.isEmpty ? AppLocalizations.of(context)!.notProvided : _formatPhoneForDisplay(phone);
+
+                  return AccountListTile(
+                    icon: Icons.phone,
+                    title: AppLocalizations.of(context)!.phone,
+                    subtitle: subtitle,
+                    isVerified: isVerified,
+                    onTap: () {
+                      if (profileState is AccountProfileLoaded) {
+                        showModalBottomSheet(
+                          context: context,
+                          backgroundColor: AppColors.background2,
+                          isScrollControlled: true,
+                          shape: const RoundedRectangleBorder(
+                            borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
+                          ),
+                          builder: (_) => EditContactInfoSheet(
+                              fieldType: 'phoneNumber',
+                              currentValue: profileState.phone
+                          ),
+                        );
+                      }
+                    },
+                  );
+                },
+              ),
+              Divider(color: Colors.grey[200], height: 2.h),
+
+              // Email
+              BlocBuilder<AccountProfileCubit, AccountProfileState>(
+                builder: (context, profileState) {
+                  final email = profileState is AccountProfileLoaded ? profileState.email : '';
+                  final isVerified = profileState is AccountProfileLoaded ? profileState.isEmailVerified : false;
+                  final subtitle = email.isEmpty ? AppLocalizations.of(context)!.notProvided : email;
+
+                  return AccountListTile(
+                    icon: Icons.email,
+                    title: AppLocalizations.of(context)!.email,
+                    subtitle: subtitle,
+                    isVerified: isVerified,
+                    onTap: () {
+                      if (profileState is AccountProfileLoaded) {
+                        showModalBottomSheet(
+                          context: context,
+                          backgroundColor: AppColors.background2,
+                          isScrollControlled: true,
+                          shape: const RoundedRectangleBorder(
+                            borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
+                          ),
+                          builder: (_) => EditContactInfoSheet(
+                            fieldType: 'email',
+                            currentValue: profileState.email,
+                            customTitle: email.isEmpty ? AppLocalizations.of(context)!.addEmailTitle : null,
+                          ),
+                        );
+                      }
+                    },
+                  );
+                },
+              ),
+
+              Divider(color: Colors.grey[200], height: 2.h),
+
+              // Change Password
+              AccountListTile(
+                icon: Icons.lock,
+                title: AppLocalizations.of(context)!.password,
+                subtitle: AppLocalizations.of(context)!.passwordHidden,
+                onTap: () => showModalBottomSheet(
+                  context: context,
+                  backgroundColor: AppColors.background2,
+                  isScrollControlled: true,
+                  shape: const RoundedRectangleBorder(
+                    borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
+                  ),
+                  builder: (_) => const ChangePasswordSheet(),
                 ),
-                Divider(color: Colors.grey[200], height: 2.h),
-                _buildEditableListTile(Icons.people, AppLocalizations.of(context)!.myRelatives, AppLocalizations.of(context)!.myRelativesDescription, 'firstName'),
-                Divider(color: Colors.grey[200], height: 2.h),
-                const SizedBox(height: 15),
-                _buildSectionTitle(AppLocalizations.of(context)!.loginSection),
-                Divider(color: Colors.grey[200], height: 2.h),
-                BlocBuilder<AccountProfileCubit, AccountProfileState>(
-                  builder: (context, profileState) {
-                    final phone = profileState is AccountProfileLoaded
-                        ? profileState.phone
-                        : '';
+              ),
+              Divider(color: Colors.grey[200], height: 2.h),
 
-                    final isVerified = profileState is AccountProfileLoaded
-                        ? profileState.isPhoneVerified
-                        : false;
+              const SizedBox(height: 15),
+              AccountSectionTitle(title: AppLocalizations.of(context)!.settings),
+              Divider(color: Colors.grey[200], height: 2.h),
 
-                    final subtitle = phone.isEmpty
-                        ? AppLocalizations.of(context)!.notProvided
-                        : _formatPhoneForDisplay(phone);
-
-                    return _buildEditableListTile(
-                      Icons.phone,
-                      AppLocalizations.of(context)!.phone,
-                      subtitle,
-                      'phoneNumber',
-                      isVerified: isVerified,
-                    );
-                  },
+              // Language
+              AccountListTile(
+                icon: Icons.language,
+                title: AppLocalizations.of(context)!.language,
+                subtitle: AppLocalizations.of(context)!.languageDescription,
+                onTap: () => showModalBottomSheet(
+                  context: context,
+                  shape: const RoundedRectangleBorder(
+                    borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+                  ),
+                  backgroundColor: Colors.white,
+                  builder: (_) => const LanguageSelectionSheet(),
                 ),
-                Divider(color: Colors.grey[200], height: 2.h),
-                BlocBuilder<AccountProfileCubit, AccountProfileState>(
-                  builder: (context, profileState) {
-                    final email = profileState is AccountProfileLoaded
-                        ? profileState.email
-                        : '';
-
-                    final isVerified = profileState is AccountProfileLoaded
-                        ? profileState.isEmailVerified
-                        : false;
-
-                    final subtitle = email.isEmpty
-                        ? AppLocalizations.of(context)!.notProvided
-                        : email;
-
-                    return _buildEditableListTile(
-                      Icons.email,
-                      AppLocalizations.of(context)!.email,
-                      subtitle,
-                      'email',
-                      isVerified: isVerified,
-                    );
-                  },
-                ),
-
-
-                Divider(color: Colors.grey[200], height: 2.h),
-                _buildEditableListTile(Icons.lock, AppLocalizations.of(context)!.password, AppLocalizations.of(context)!.passwordHidden, 'password'),
-                Divider(color: Colors.grey[200], height: 2.h),
-
-                const SizedBox(height: 15),
-                _buildSectionTitle(AppLocalizations.of(context)!.settings),
-                Divider(color: Colors.grey[200], height: 2.h),
-                _buildEditableListTile(Icons.language, AppLocalizations.of(context)!.language, AppLocalizations.of(context)!.languageDescription, 'Language', trailingWidget: Text(
+                trailingWidget: Text(
                   Localizations.localeOf(context).languageCode == 'ar' ? "العربية" : "English",
                   style: AppTextStyles.getText2(context).copyWith(fontWeight: FontWeight.w500, color: AppColors.grayMain),
-                ),),
-                Divider(color: Colors.grey[200], height: 2.h),
-                _buildEditableListTile(
-                  Icons.key,
-                  AppLocalizations.of(context)!.twoFactorAuth,
-                  state.is2FAEnabled
-                      ? AppLocalizations.of(context)!.activated
-                      : AppLocalizations.of(context)!.notActivated,
-                  '2fa',
+                ),
+              ),
+              Divider(color: Colors.grey[200], height: 2.h),
+
+              // Two Factor Auth
+              AccountListTile(
+                  icon: Icons.key,
+                  title: AppLocalizations.of(context)!.twoFactorAuth,
+                  subtitle: state.is2FAEnabled ? AppLocalizations.of(context)!.activated : AppLocalizations.of(context)!.notActivated,
+                  onTap: () => showModalBottomSheet(
+                    context: context,
+                    backgroundColor: Colors.white,
+                    shape: const RoundedRectangleBorder(
+                      borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+                    ),
+                    builder: (_) => TwoFactorAuthSheet(is2FAEnabled: state.is2FAEnabled),
+                  ),
                   trailingWidget: Container(
                     padding: EdgeInsets.symmetric(horizontal: 8.w, vertical: 4.h),
                     decoration: BoxDecoration(
-                      color: state.is2FAEnabled
-                          ? const Color(0xFFDFF6F3)
-                          : const Color(0xFFFFF4D9),
+                      color: state.is2FAEnabled ? const Color(0xFFDFF6F3) : const Color(0xFFFFF4D9),
                       borderRadius: BorderRadius.circular(12.r),
                     ),
                     child: Text(
-                      state.is2FAEnabled
-                          ? AppLocalizations.of(context)!.activated
-                          : AppLocalizations.of(context)!.notActivated,
+                      state.is2FAEnabled ? AppLocalizations.of(context)!.activated : AppLocalizations.of(context)!.notActivated,
                       style: AppTextStyles.getText3(context).copyWith(
-                        color: state.is2FAEnabled
-                            ? const Color(0xFF00B7A0)
-                            : AppColors.yellow,
+                        color: state.is2FAEnabled ? const Color(0xFF00B7A0) : AppColors.yellow,
                         fontWeight: FontWeight.w400,
                         fontSize: 8,
                       ),
                     ),
-                  ),
-                ),
+                  )
+              ),
+              Divider(color: Colors.grey[200], height: 2.h),
 
-                Divider(color: Colors.grey[200], height: 2.h),
-                _buildEditableListTile(
-                  Icons.security,
-                  AppLocalizations.of(context)!.encryptedDocuments,
-                  AppLocalizations.of(context)!.encryptedDocumentsDescription,
-                  'encrypted',
+              // Encrypted Documents
+              AccountListTile(
+                  icon: Icons.security,
+                  title: AppLocalizations.of(context)!.encryptedDocuments,
+                  subtitle: AppLocalizations.of(context)!.encryptedDocumentsDescription,
+                  onTap: () => showModalBottomSheet(
+                    context: context,
+                    backgroundColor: Colors.white,
+                    shape: const RoundedRectangleBorder(
+                      borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+                    ),
+                    builder: (_) => const EncryptedDocumentsSheet(),
+                  ),
                   trailingWidget: Container(
                     padding: EdgeInsets.symmetric(horizontal: 8.w, vertical: 4.h),
                     decoration: BoxDecoration(
@@ -1695,84 +417,157 @@ class _AccountScreenState extends State<AccountScreen> {
                         fontSize: 8,
                       ),
                     ),
-                  ),
-                ),
-                Divider(color: Colors.grey[200], height: 2.h),
-                _buildEditableListTile(
-                    biometricIcon,
-                    biometricType,
-                    biometricType == AppLocalizations.of(context)!.faceIdTitle
-                        ? AppLocalizations.of(context)!.faceIdDescription
-                        : AppLocalizations.of(context)!.fingerprintDescription,
-                    'faceId'
-                ),
+                  )
+              ),
 
-                Divider(color: Colors.grey[200], height: 2.h),
+              Divider(color: Colors.grey[200], height: 2.h),
 
-                SizedBox(height: 15.h),
-                _buildSectionTitle(AppLocalizations.of(context)!.confidentiality),
-                Divider(color: Colors.grey[200], height: 2.h),
-                _buildPrivacyItem(
-                  AppLocalizations.of(context)!.myPreferences,
-                      () {
-                        Navigator.push(context, fadePageRoute(const MyPreferencesPage()));
-                  },
-                ),
-                Divider(color: Colors.grey[200], height: 2.h),
-                _buildPrivacyItem(
-                  AppLocalizations.of(context)!.legalInformation,
-                      () {
-                        Navigator.push(context, fadePageRoute(const LegalInformation()));
-                  },
-                ),
-                Divider(color: Colors.grey[200], height: 2.h),
-                _buildPrivacyItem(
-                  AppLocalizations.of(context)!.deleteMyAccount,
-                      () => showDeleteAccountSheet(context),
-                ),
+              // Biometrics (Face ID / Fingerprint)
+              AccountListTile(
+                  icon: biometricIcon,
+                  title: biometricType,
+                  subtitle: biometricType == AppLocalizations.of(context)!.faceIdTitle
+                      ? AppLocalizations.of(context)!.faceIdDescription
+                      : AppLocalizations.of(context)!.fingerprintDescription,
+                  isFaceId: true,
+                  trailingWidget: BlocBuilder<AccountSecurityCubit, AccountSecurityState>(
+                    builder: (context, state) {
+                      final bool isEnabled = state is AccountBiometricState && state.enabled;
+                      final bool isLoading = state is AccountBiometricChecking;
 
-                Divider(color: Colors.grey[200], height: 2.h),
-
-
-
-                SizedBox(height: 25.h),
-                Center(
-                  child: ElevatedButton(
-                    onPressed: () {
-                      context.read<UserCubit>().logout(); // ✅ Triggers logout state
-                      widget.onLogout(); // ✅ Keeps external logic for logout
-                    },
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: AppColors.red,
-                      padding: EdgeInsets.symmetric(horizontal: 25.w, vertical: 12.h),
-                    ),
-                    child: Text(
-                      AppLocalizations.of(context)!.logOut,
-                      style: AppTextStyles.getText2(context).copyWith(color: AppColors.whiteText),
-                    ),
-                  ),
-                ),
-
-
-                if (appVersion.isNotEmpty)
-                  Padding(
-                    padding: EdgeInsets.only(top: 10.h, bottom: 20.h),
-                    child: Center(
-                      child: Text(
-                        appVersion,
-                        style: AppTextStyles.getText3(context).copyWith(
-                          color: Colors.grey,
-                          fontSize: 9.sp,
+                      return Transform.scale(
+                        scale: 0.8,
+                        child: Switch(
+                          value: isEnabled,
+                          onChanged: isLoading
+                              ? null
+                              : (value) {
+                                  if (context.mounted) {
+                                      context.read<AccountSecurityCubit>().toggleBiometric(enable: value);
+                                  }
+                              },
+                          activeColor: Colors.white,
+                          activeTrackColor: AppColors.main.withValues(alpha: 0.8),
+                          inactiveTrackColor: Colors.grey[400],
+                          trackOutlineColor: WidgetStateProperty.all(Colors.transparent),
+                          materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                          thumbColor: WidgetStateProperty.resolveWith<Color>((states) {
+                            if (states.contains(WidgetState.selected)) {
+                              return AppColors.main;
+                            }
+                            return Colors.grey[400]!;
+                          }),
+                          thumbIcon: WidgetStateProperty.resolveWith<Icon?>((states) {
+                            return const Icon(
+                              Icons.circle,
+                              size: 30,
+                              color: Colors.white,
+                            );
+                          }),
                         ),
+                      );
+                    },
+                  )
+              ),
+
+              Divider(color: Colors.grey[200], height: 2.h),
+
+              SizedBox(height: 15.h),
+              AccountSectionTitle(title: AppLocalizations.of(context)!.confidentiality),
+              Divider(color: Colors.grey[200], height: 2.h),
+
+              // My Preferences
+              _buildPrivacyItem(
+                AppLocalizations.of(context)!.myPreferences,
+                    () {
+                  Navigator.push(context, fadePageRoute(const MyPreferencesPage()));
+                },
+              ),
+              Divider(color: Colors.grey[200], height: 2.h),
+
+              // Legal Information
+              _buildPrivacyItem(
+                AppLocalizations.of(context)!.legalInformation,
+                    () {
+                  Navigator.push(context, fadePageRoute(const LegalInformation()));
+                },
+              ),
+              Divider(color: Colors.grey[200], height: 2.h),
+
+              // Delete Account
+              _buildPrivacyItem(
+                AppLocalizations.of(context)!.deleteMyAccount,
+                    () => showModalBottomSheet(
+                  context: context,
+                  backgroundColor: Colors.white,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.vertical(top: Radius.circular(20.r)),
+                  ),
+                  isScrollControlled: true,
+                  builder: (_) => const DeleteAccountSheet(),
+                ),
+              ),
+
+              Divider(color: Colors.grey[200], height: 2.h),
+
+              SizedBox(height: 25.h),
+              Center(
+                child: ElevatedButton(
+                  onPressed: () {
+                    context.read<UserCubit>().logout();
+                    widget.onLogout();
+                  },
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: AppColors.red,
+                    padding: EdgeInsets.symmetric(horizontal: 25.w, vertical: 12.h),
+                  ),
+                  child: Text(
+                    AppLocalizations.of(context)!.logOut,
+                    style: AppTextStyles.getText2(context).copyWith(color: AppColors.whiteText),
+                  ),
+                ),
+              ),
+
+              if (appVersion.isNotEmpty)
+                Padding(
+                  padding: EdgeInsets.only(top: 10.h, bottom: 20.h),
+                  child: Center(
+                    child: Text(
+                      appVersion,
+                      style: AppTextStyles.getText3(context).copyWith(
+                        color: Colors.grey,
+                        fontSize: 9.sp,
                       ),
                     ),
                   ),
-
-
-              ],
-            ),
+                ),
+            ],
           ),
+        ),
       ],
+    );
+  }
+
+  Widget _buildPrivacyItem(String title, VoidCallback onTap) {
+    return InkWell(
+      onTap: onTap,
+      child: Padding(
+        padding: EdgeInsets.symmetric(vertical: 12.h, horizontal: 20.w),
+        child: Row(
+          children: [
+            Expanded(
+              child: Text(
+                title,
+                style: AppTextStyles.getText2(context).copyWith(
+                  fontWeight: FontWeight.w500,
+                  color:  AppColors.blackText,
+                ),
+              ),
+            ),
+            Icon(Icons.arrow_forward_ios, size: 12.sp, color: Colors.grey),
+          ],
+        ),
+      ),
     );
   }
 
@@ -1808,7 +603,7 @@ class _AccountScreenState extends State<AccountScreen> {
               },
               icon: const Icon(Icons.login, color: AppColors.main),
               label: Text(AppLocalizations.of(context)!.login_button,
-                  style: AppTextStyles.getText2(context).copyWith(color: AppColors.main, fontWeight: FontWeight.w600)), // 🔸 Applied responsive text
+                  style: AppTextStyles.getText2(context).copyWith(color: AppColors.main, fontWeight: FontWeight.w600)),
               style: ElevatedButton.styleFrom(
                 backgroundColor: Colors.white,
                 padding: EdgeInsets.symmetric(horizontal: 35.w, vertical: 12.h),
@@ -1816,16 +611,15 @@ class _AccountScreenState extends State<AccountScreen> {
               ),
             ),
 
-            // ✅ رابط لإنشاء حساب جديد
             TextButton(
               onPressed: () {
                 Navigator.push(
                   context,
                   fadePageRoute(SignUpFirstPage(signUpInfo: SignUpInfo())),
                 );
-                },
+              },
               child: Text(AppLocalizations.of(context)!.signup_button,
-                  style: AppTextStyles.getText2(context).copyWith(color: Colors.white)), // 🔸 Applied responsive text
+                  style: AppTextStyles.getText2(context).copyWith(color: Colors.white)),
             ),
             SizedBox(height: 20.h),
           ],
@@ -1834,7 +628,7 @@ class _AccountScreenState extends State<AccountScreen> {
     );
   }
 
-  Widget _buildShimmerLoading() {
+  Widget _buildBlurEffect() {
     return SingleChildScrollView(
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -1873,29 +667,30 @@ class _AccountScreenState extends State<AccountScreen> {
     );
   }
 
+  Widget _buildShimmerLoading() {
+    return _buildBlurEffect();
+  }
 
-// ✅ عنصر منفصل لعرض ميزة من مميزات التسجيل
   Widget _buildBenefitItem(IconData icon, String text) {
     return Padding(
       padding: EdgeInsets.only(bottom: 8.h),
       child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start, // 🔸 Ensures text wraps properly
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Icon(icon, size: 18.sp, color: Colors.white),
           SizedBox(width: 10.w),
-          Flexible( // 🔸 Allows text to wrap without causing overflow
-              child: Text(
-                        text,
-                            style: AppTextStyles.getText2(context).copyWith(color: Colors.white),
-                            softWrap: true,
-                            overflow: TextOverflow.visible,),
+          Flexible(
+            child: Text(
+              text,
+              style: AppTextStyles.getText2(context).copyWith(color: Colors.white),
+              softWrap: true,
+              overflow: TextOverflow.visible,),
           )
         ],
       ),
     );
   }
 
-  /// **🔹 Builds benefits list**
   Widget _buildBenefitsList() {
     return Expanded(
       child: Center(
@@ -1905,7 +700,7 @@ class _AccountScreenState extends State<AccountScreen> {
               horizontal: Localizations.localeOf(context).languageCode == 'ar' ? 100.w : 80.w,
             ),
             child: Column(
-              mainAxisAlignment: MainAxisAlignment.center, // يضمن التمركز العمودي داخل الـScroll
+              mainAxisAlignment: MainAxisAlignment.center,
               crossAxisAlignment: CrossAxisAlignment.center,
               children: [
                 _buildBenefitItem(Icons.event_available, AppLocalizations.of(context)!.benefit_appointments),
@@ -1919,284 +714,29 @@ class _AccountScreenState extends State<AccountScreen> {
       ),
     );
   }
-
-  Widget _buildPointsCard(BuildContext context, UserLoaded state) {
-    return InkWell(
-      borderRadius: BorderRadius.circular(12.r),
-      onTap: () {
-        Navigator.push(
-          context,
-          fadePageRoute(PointsHistoryPage(userId: state.userId)),
-        );
-      },
-      child: Padding(
-        padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 12.h),
-        child: Container(
-          padding: EdgeInsets.all(18.w),
-          decoration: BoxDecoration(
-            color: AppColors.main.withOpacity(0.1),
-            borderRadius: BorderRadius.circular(14.r),
-            border: Border.all(color: AppColors.main.withOpacity(0.25), width: 1),
-          ),
-          child: Row(
-            children: [
-              Container(
-                padding: EdgeInsets.all(8.w),
-                decoration: BoxDecoration(
-                  color: AppColors.main.withOpacity(0.15),
-                  shape: BoxShape.circle,
-                ),
-                child: Icon(Icons.stars, color: AppColors.main, size: 18.sp),
-              ),
-              SizedBox(width: 14.w),
-
-              Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    AppLocalizations.of(context)!.rewardPoints,
-                    style: AppTextStyles.getTitle1(context)
-                        .copyWith(color: AppColors.mainDark),
-                  ),
-                  SizedBox(height: 4.h),
-
-                  Text(
-                    "${state.userPoints} ${AppLocalizations.of(context)!.points}",
-                    style: AppTextStyles.getText2(context)
-                        .copyWith(color: AppColors.main),
-                  ),
-                ],
-              ),
-
-              const Spacer(),
-
-              Icon(Icons.arrow_forward_ios, size: 14.sp, color: AppColors.main),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-
-
-
-  /// **🔵 عنصر عنوان لقسم معين**
-  Widget _buildSectionTitle(String title) {
-    return Padding(
-      padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 15.h),
-      child: Text(
-        title,
-      style: AppTextStyles.getTitle1(context).copyWith(
-    color: AppColors.mainDark.withOpacity(0.6), fontSize: 12),
-      ),
-    );
-  }
-
-
-  /// **🟢 عنصر عرض معلومات المستخدم مع إمكانية التعديل**
-  Widget _buildEditableListTile(
-      IconData icon,
-      String title,
-      String subtitle,
-      String field,
-      {bool? isVerified, Widget? trailingWidget}
-      ) {
-    return InkWell(
-      onTap: (field == 'faceId') ? null : () { // ✅ منع الضغط عند وجود Switch
-        final state = context.read<UserCubit>().state; // ✅ Get latest state
-        if (state is! UserLoaded) return;
-
-        if (title == AppLocalizations.of(context)!.myProfile) {
-          Navigator.push(context, fadePageRoute(const UserProfilePage()));
-        } else if (title == AppLocalizations.of(context)!.myRelatives) {
-          Navigator.push(context, fadePageRoute(const MyRelativesPage()));
-        } else if (title == AppLocalizations.of(context)!.phone) {
-          final profile = context.read<AccountProfileCubit>().state;
-          if (profile is AccountProfileLoaded) {
-            _showEditFieldSheet(context, 'phoneNumber', profile.phone);
-          }
-        } else if (title == AppLocalizations.of(context)!.email) {
-          final profile = context.read<AccountProfileCubit>().state;
-
-          if (profile is AccountProfileLoaded) {
-            final email = profile.email;
-
-            _showEditFieldSheet(
-              context,
-              'email',
-              email,
-              customTitle: email.isEmpty
-                  ? AppLocalizations.of(context)!.addEmailTitle
-                  : null,
-            );
-          }
-        } else if (title == AppLocalizations.of(context)!.password) {
-          _showChangePasswordSheet(context);
-        } else if (title == AppLocalizations.of(context)!.language) {
-          _showLanguageSelectionSheet();
-        } else if (field == 'encrypted') {
-          _showEncryptedDocumentsInfoSheet();
-        } else if (field == '2fa') {
-          _showTwoFactorAuthInfoSheet(state.is2FAEnabled);
-        } else {
-          _showEditDialog(field, title, subtitle);
-        }
-      },
-      child: Padding(
-        padding: EdgeInsets.symmetric(vertical: 8.h, horizontal: 20.w),
-        child: Row(
-          crossAxisAlignment: CrossAxisAlignment.center,
-          children: [
-            Transform.translate(
-              offset: Offset(0, -10.h),
-              child: (field == 'faceId')
-                  ? (biometricIcon == Icons.face
-                  ? SvgPicture.asset('assets/icons/face-id.svg', width: 20.w, height: 20.w, color: AppColors.main)
-                  : Icon(biometricIcon, size: 20.w, color: AppColors.main))
-                  : Icon(icon, color: AppColors.main, size: 16.sp),
-            ),
-            SizedBox(width: 12.w),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(title, style: AppTextStyles.getText2(context).copyWith(fontWeight: FontWeight.w500)),
-                  SizedBox(height: 4.h),
-                  ConstrainedBox(
-                    constraints: BoxConstraints(maxWidth: MediaQuery.of(context).size.width * 0.6),
-                    child: Text(subtitle, style: AppTextStyles.getText2(context).copyWith(color: Colors.grey)),
-                  ),
-                ],
-              ),
-            ),
-            if ((field == 'phoneNumber') || (field == 'email' && (subtitle.isNotEmpty && subtitle != AppLocalizations.of(context)!.notProvided)))
-              Container(
-                padding: EdgeInsets.symmetric(horizontal: 8.w, vertical: 4.h),
-                decoration: BoxDecoration(
-                  color: (isVerified ?? false)
-                      ? AppColors.main.withOpacity(0.1)
-                      : AppColors.yellow.withOpacity(0.1),
-                  borderRadius: BorderRadius.circular(12.r),
-                ),
-                child: Text(
-                  (isVerified ?? false)
-                      ? AppLocalizations.of(context)!.verified
-                      : AppLocalizations.of(context)!.notVerified,
-                  style: AppTextStyles.getText3(context).copyWith(
-                    color: (isVerified ?? false)
-                        ? AppColors.main
-                        : AppColors.yellow,
-                    fontWeight: FontWeight.w400,
-                    fontSize: 8,
-                  ),
-                ),
-              ),
-            if (trailingWidget != null)
-              trailingWidget
-            else if (field == 'faceId')
-              BlocBuilder<AccountSecurityCubit, AccountSecurityState>(
-                builder: (context, state) {
-                  final bool isEnabled =
-                      state is AccountBiometricState && state.enabled;
-
-                  final bool isLoading = state is AccountBiometricChecking;
-
-                  return Transform.scale(
-                    scale: 0.8,
-                    child: Switch(
-                      value: isEnabled,
-                      onChanged: isLoading
-                          ? null
-                          : (value) {
-                        context
-                            .read<AccountSecurityCubit>()
-                            .toggleBiometric(enable: value);
-                      },
-                      activeColor: Colors.white,
-                      activeTrackColor: AppColors.main.withOpacity(0.8),
-                      inactiveTrackColor: Colors.grey[400],
-                      trackOutlineColor:
-                      WidgetStateProperty.all(Colors.transparent),
-                      materialTapTargetSize:
-                      MaterialTapTargetSize.shrinkWrap,
-                      thumbColor:
-                      WidgetStateProperty.resolveWith<Color>((states) {
-                        if (states.contains(WidgetState.selected)) {
-                          return AppColors.main;
-                        }
-                        return Colors.grey[400]!;
-                      }),
-                      thumbIcon:
-                      WidgetStateProperty.resolveWith<Icon?>((states) {
-                        return const Icon(
-                          Icons.circle,
-                          size: 30,
-                          color: Colors.white,
-                        );
-                      }),
-                    ),
-                  );
-                },
-              )
-            else
-              Row(
-                children: [
-                  SizedBox(width: 8.w),
-                  Icon(Icons.arrow_forward_ios, size: 12.sp, color: Colors.grey),
-                ],
-              ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _buildPrivacyItem(String title, VoidCallback onTap) {
-    return InkWell(
-      onTap: onTap,
-      child: Padding(
-        padding: EdgeInsets.symmetric(vertical: 12.h, horizontal: 20.w),
-        child: Row(
-          children: [
-            Expanded(
-              child: Text(
-                title,
-                style: AppTextStyles.getText2(context).copyWith(
-                  fontWeight: FontWeight.w500,
-                  color:  AppColors.blackText,
-                ),
-              ),
-            ),
-            Icon(Icons.arrow_forward_ios, size: 12.sp, color: Colors.grey),
-          ],
-        ),
-      ),
-    );
-  }
-
 }
-
 
 class _AuthenticatedAccountView extends StatelessWidget {
   final VoidCallback onLogout;
-
   final Widget Function() buildShimmer;
   final Widget Function(BuildContext, UserLoaded) buildAccountContent;
   final String Function(BuildContext, String) mapSecurityError;
+  final String biometricType;
+  final IconData biometricIcon;
 
   const _AuthenticatedAccountView({
     required this.onLogout,
     required this.buildShimmer,
     required this.buildAccountContent,
     required this.mapSecurityError,
+    required this.biometricType,
+    required this.biometricIcon,
   });
-
 
   @override
   Widget build(BuildContext context) {
     return MultiBlocListener(
       listeners: [
-
         // 👤 User loaded → load account profile
         BlocListener<UserCubit, UserState>(
           listenWhen: (_, current) => current is UserLoaded,
@@ -2267,7 +807,17 @@ class _AuthenticatedAccountView extends StatelessWidget {
           listener: (context, s) {
             final state = s as AccountTwoFactorUpdated;
 
-            Navigator.pop(context);
+            // Pops are handled in sheets now, except typically we don't pop here unless we were on a waiting screen.
+            // The sheet calls Navigator.pop for itself.
+            // But if there is a lingering loading dialog or snackbar...
+            // In original code: Navigator.pop(context); // This was closing the sheet I presume?
+            // "TwoFactorAuthSheet" handles the toggle. It does NOT close automatically on success in original code, it just showed snackbar?
+            // Wait, original code for 2FA sheet had: check Toggle -> wait -> Listener hears Update -> Pop -> Load -> Snackbar.
+            // So YES I need to Pop here if the sheet is open.
+            // But how do I know if the sheet is open? Use Navigator.pop(context) blindly might pop the page if sheet isn't open.
+            // However, 2FA toggle only happens FROM the sheet. So it's safe to assume sheet is open.
+            
+            Navigator.pop(context); // Close the sheet
 
             context.read<UserCubit>().loadUserData(
               context: context,

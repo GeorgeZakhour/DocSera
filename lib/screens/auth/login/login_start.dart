@@ -168,19 +168,21 @@ class _LoginPageState extends State<LoginPage> {
     try {
       setState(() => _isAuthenticating = true);
 
-      final prefs = await SharedPreferences.getInstance();
+      // 🔐 Get credentials from Secure Storage
+      final credentials = await BiometricStorage.getCredentials();
 
-      // 🔐 Biometric credentials (EMAIL-based)
-      final email = prefs.getString('biometric_login');
-      final password = prefs.getString('userPassword');
-
-      if (email == null || password == null) {
+      if (credentials == null) {
         setState(() {
           _authFailed = true;
           _isAuthenticating = false;
         });
         return;
       }
+
+      final email = credentials['email'];
+      final password = credentials['password'];
+
+      if (email == null || password == null) return;
 
       final authenticated = await _localAuth.authenticate(
         localizedReason: AppLocalizations.of(context)!.biometricPrompt,
@@ -212,22 +214,19 @@ class _LoginPageState extends State<LoginPage> {
   }
 
   Future<void> _tryAutoBiometricLogin() async {
-    final prefs = await SharedPreferences.getInstance();
+    // 1. Check if enabled
+    final isBiometricEnabled = await BiometricStorage.isEnabled();
 
-    final isBiometricEnabled = prefs.getBool('enableFaceID') ?? false;
-
-    // 🔐 Biometric credentials (EMAIL-based)
-    final email = prefs.getString('biometric_login');
-    final password = prefs.getString('userPassword');
+    // 2. Check if credentials exist in Secure Storage
+    final credentials = await BiometricStorage.getCredentials();
 
     debugPrint("🟢 [BIOMETRIC] Enabled: $isBiometricEnabled");
-    debugPrint("🟢 [BIOMETRIC] Saved email: ${email ?? 'NOT FOUND'}");
-    debugPrint("🟢 [BIOMETRIC] Password exists: ${password != null}");
+    debugPrint("🟢 [BIOMETRIC] Credentials found: ${credentials != null}");
 
     // ⛔ لا تحاول البيومتريك إذا كان المستخدم مسجّل دخول أصلًا
     if (_supabaseUserService.getCurrentUser() != null) return;
 
-    if (!isBiometricEnabled || email == null || password == null) return;
+    if (!isBiometricEnabled || credentials == null) return;
 
     // ⏱ تأخير بسيط حتى يستقر الـ UI
     Future.delayed(
@@ -370,14 +369,13 @@ class _LoginPageState extends State<LoginPage> {
 
         if (!mounted) return;
 
-        Navigator.pushAndRemoveUntil(
+        Navigator.push(
           context,
           MaterialPageRoute(
             builder: (_) => LoginOTPPage(
               email: email, // ✅ Pass email for verification
             ),
           ),
-              (_) => false,
         );
 
         return; // ⛔ stop normal navigation

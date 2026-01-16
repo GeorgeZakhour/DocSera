@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'package:docsera/Business_Logic/Authentication/auth_cubit.dart';
+import 'package:docsera/Business_Logic/Popups/popup_banner_cubit.dart';
 import 'package:docsera/Business_Logic/Authentication/auth_state.dart';
 import 'package:docsera/Business_Logic/Main_page/main_screen_cubit.dart';
 import 'package:docsera/Business_Logic/Main_page/main_screen_state.dart';
@@ -23,6 +24,14 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:docsera/Business_Logic/Banners/banners_cubit.dart';
 import 'package:docsera/Business_Logic/Banners/banners_state.dart';
 import 'package:docsera/services/supabase/banners/supabase_banner_service.dart';
+import 'package:docsera/Business_Logic/Home_Cards/home_cards_cubit.dart';
+import 'package:docsera/Business_Logic/Home_Cards/home_cards_state.dart';
+import 'package:docsera/services/supabase/home_cards/supabase_home_card_service.dart';
+import 'package:docsera/models/home_card_model.dart';
+import 'package:docsera/models/home_card_model.dart';
+import 'package:url_launcher/url_launcher.dart'; // Add url_launcher to pubspec.yaml if not present
+import 'package:docsera/screens/misc/webview_page.dart';
+
 import '../../models/sign_up_info.dart';
 import '../auth/sign_up/WelcomePage.dart';
 
@@ -52,6 +61,7 @@ class _MainScreenState extends State<MainScreen> with AutomaticKeepAliveClientMi
   void initState() {
     super.initState();
     debugPrint("📌 MainScreen: initState() -> Checking login status...");
+    context.read<PopupBannerCubit>().checkBanners(); // ✅ Check banners when MainScreen loads
     _bannerColorsReady = _bannersLoadedOnce; // ✅ إذا كانت محمّلة سابقًا، لا تعيد تحميلها
     context.read<MainScreenCubit>().loadMainScreen(context);
   }
@@ -135,7 +145,7 @@ class _MainScreenState extends State<MainScreen> with AutomaticKeepAliveClientMi
 
 
     final imageResult = resolveDoctorImagePathAndWidget(doctor: doctor);
-    final avatarPath = imageResult.avatarPath;
+    // final avatarPath = imageResult.avatarPath; // Unused
     final doctorImageProvider = imageResult.imageProvider;
 
 
@@ -301,6 +311,7 @@ class _MainScreenState extends State<MainScreen> with AutomaticKeepAliveClientMi
           providers: [
             BlocProvider.value(value: BlocProvider.of<MainScreenCubit>(context)),
             BlocProvider(create: (context) => BannersCubit(SupabaseBannerService())..loadBanners()),
+            BlocProvider(create: (context) => HomeCardsCubit(SupabaseHomeCardService())..loadHomeCards()),
           ],
           child: BlocBuilder<MainScreenCubit, MainScreenState>(
             builder: (context, state) {
@@ -510,62 +521,73 @@ class _MainScreenState extends State<MainScreen> with AutomaticKeepAliveClientMi
                 SizedBox(height: 30.h),
 
 
-                DecorativeImageCard(
-                  title:  AppLocalizations.of(context)!.weAreHiring,
-                  description:  AppLocalizations.of(context)!.workWithUs,
-                  buttonText:  AppLocalizations.of(context)!.learnMore,
-                  onButtonPressed: () {
-                    Navigator.push(
-                      context,
-                      fadePageRoute(WelcomePage(
-                        signUpInfo: SignUpInfo(firstName: "User"), // أو أي اسم تجريبي
-                      )),
-                    );
-                  },
+                // 🔹 DYNAMIC CARDS SECTION (Previously We're Hiring / Are you a doctor)
+                BlocBuilder<HomeCardsCubit, HomeCardsState>(
+                  builder: (context, state) {
+                    if (state is HomeCardsLoaded && state.cards.isNotEmpty) {
+                       final currentLang = Localizations.localeOf(context).languageCode;
+                       return Column(
+                         children: state.cards.map((card) {
+                           Widget cardWidget;
+                           if (card.cardStyle == 'compact') {
+                             cardWidget = CompactDecorativeCard(
+                               title: card.getTitle(currentLang),
+                               description: card.getDescription(currentLang),
+                               buttonText: card.getButtonText(currentLang),
+                               onButtonPressed: () => _handleCardAction(context, card),
+                               backgroundColor: card.backgroundColor,
+                               buttonColor: card.buttonColor,
+                               shapeNumber: card.shapeNumber,
+                               imageShapeNumber: card.imageShapeNumber,
+                               secondShapeNumber: card.secondShapeNumber,
+                               shapeColor: card.shapeColor,
+                               secondShapeColor: card.secondShapeColor,
+                               imagePath: card.imagePath,
+                               showSecondShape: card.showSecondShape,
+                               textColor: card.textColor,
+                             );
+                           } else {
+                             cardWidget = DecorativeImageCard(
+                               title: card.getTitle(currentLang),
+                               description: card.getDescription(currentLang),
+                               buttonText: card.getButtonText(currentLang),
+                               onButtonPressed: () => _handleCardAction(context, card),
+                               backgroundColor: card.backgroundColor,
+                               buttonColor: card.buttonColor,
+                               shapeNumber: card.shapeNumber,
+                               imageShapeNumber: card.imageShapeNumber,
+                               secondShapeNumber: card.secondShapeNumber,
+                               shapeColor: card.shapeColor,
+                               secondShapeColor: card.secondShapeColor,
+                               imagePath: card.imagePath,
+                               showSecondShape: card.showSecondShape,
+                               textColor: card.textColor,
+                             );
+                           }
 
-                  backgroundColor: Colors.grey.shade400,
-                  buttonColor: Colors.grey.withOpacity(0.9),
-                  shapeNumber: 10,
-                  imageShapeNumber: 4,
-                  secondShapeNumber: 9,
-                  shapeColor: Colors.yellow.withOpacity(0.3),
-                  imagePath: 'assets/images/worker.webp',
-                  showSecondShape: true,
+                           return Padding(
+                             padding: EdgeInsets.only(bottom: 20.h), // Add spacing between cards
+                             child: cardWidget,
+                           );
+                         }).toList(),
+                       );
+                    }
+                    // Fallback to empty if loading or error to avoid blocking UI, 
+                    // or optionally show a loading shimmer for cards section specifically.
+                    return const SizedBox(); 
+                  },
                 ),
 
-                // ✅ Decorative Cards Section
-                SizedBox(height: 20.h),
-                DecorativeImageCard(
-                  title: AppLocalizations.of(context)!.areYouAHealthProfessional,
-                  description: AppLocalizations.of(context)!.improveDailyLife,
-                  buttonText:  AppLocalizations.of(context)!.registerAsDoctor,
-                  onButtonPressed: () {
-                    Navigator.push(
-                      context,
-                      fadePageRoute(const DoctorIdentificationPage()),
-                    );
-                  },
-                  backgroundColor: AppColors.main,
-                  buttonColor: Colors.white.withOpacity(0.4),
-                  shapeNumber: 1,
-                  imageShapeNumber: 2,
-                  secondShapeNumber: 5, // ✅ استخدم الشكل 7 كشكل إضافي
-                  shapeColor: Colors.white.withOpacity(0.3),
-                  secondShapeColor: AppColors.mainDark.withOpacity(0.8),
-                  imagePath: 'assets/images/professional.jpg', // ✅ صورة مختلفة
-                  showSecondShape: true,
-                ),
 
-
-                ElevatedButton(
-                  onPressed: () async {
-                    final prefs = await SharedPreferences.getInstance();
-                    await prefs.clear();
-                    Supabase.instance.client.auth.signOut(); // ⛔ اختياري فقط
-                    // أعد تشغيل التطبيق أو انتقل لشاشة البداية
-                  },
-                  child: const Text('🧹 Reset Session'),
-                ),
+                // ElevatedButton(
+                //   onPressed: () async {
+                //     final prefs = await SharedPreferences.getInstance();
+                //     await prefs.clear();
+                //     Supabase.instance.client.auth.signOut(); // ⛔ اختياري فقط
+                //     // أعد تشغيل التطبيق أو انتقل لشاشة البداية
+                //   },
+                //   child: const Text('🧹 Reset Session'),
+                // ),
 
 
 
@@ -577,6 +599,40 @@ class _MainScreenState extends State<MainScreen> with AutomaticKeepAliveClientMi
       ],
     );
   }
+
+  void _handleCardAction(BuildContext context, HomeCardModel card) {
+    if (card.actionType == 'internal') {
+       if (card.actionValue == 'WelcomePage') {
+          Navigator.push(
+            context,
+            fadePageRoute(WelcomePage(
+              signUpInfo: SignUpInfo(firstName: "User"),
+            )),
+          );
+       } else if (card.actionValue == 'DoctorIdentificationPage') {
+          Navigator.push(
+            context,
+            fadePageRoute(const DoctorIdentificationPage()),
+          );
+       } else {
+         // Generic Named Route Navigation
+         Navigator.pushNamed(context, card.actionValue);
+       }
+    } else if (card.actionType == 'external') {
+       if (card.actionValue.isNotEmpty) {
+         Navigator.push(
+           context,
+           MaterialPageRoute(
+             builder: (context) => WebViewPage(
+               url: card.actionValue,
+               title: card.getTitle(Localizations.localeOf(context).languageCode),
+             ),
+           ),
+         );
+       }
+    }
+  }
+
 
 
     /// **🔹 Scroll Button (Now Below Banners)**

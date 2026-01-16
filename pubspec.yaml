@@ -37,7 +37,6 @@ dependencies:
   confetti: ^0.8.0
   file_picker: ^9.2.1
   path: ^1.9.1
-  syncfusion_flutter_pdfviewer: ^29.1.33
   syncfusion_flutter_pdf: ^29.2.4
   http: ^1.3.0
   image_picker: ^1.1.2
@@ -62,7 +61,6 @@ dependencies:
   unicode: ^0.3.1
   diacritic: ^0.1.6
   latlong2: ^0.9.1
-  flutter_map: ^8.2.1
   geolocator: ^14.0.2
   pushy_flutter: ^2.0.38
   flutter_local_notifications: ^19.4.0
@@ -73,6 +71,7 @@ dependencies:
   record: ^6.1.2
   audioplayers: ^6.5.1
   uuid: ^4.5.2
+  webview_flutter: ^4.13.1
 
 dev_dependencies:
   flutter_test:
@@ -88,6 +87,7 @@ flutter:
 
   assets:
     - assets/images/
+    - assets/images/popup/
     - assets/icons/
     - assets/icons/specialties/
     - assets/shapes/

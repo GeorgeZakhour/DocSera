@@ -102,25 +102,30 @@ class SvgPathClipper extends CustomClipper<Path> {
 
     @override
     Path getClip(Size size) {
-      final Path originalPath = parseSvgPathData(svgPathData);
-      final Rect bounds = originalPath.getBounds();
-      debugPrint('DEBUG: shape bounds = $bounds, container size = $size');
+      try {
+        final Path originalPath = parseSvgPathData(svgPathData);
+        final Rect bounds = originalPath.getBounds();
+        debugPrint('DEBUG: shape bounds = $bounds, container size = $size');
 
-      final double widthScale = size.width / bounds.width;
-      final double heightScale = size.height / bounds.height;
-      final double scale = math.min(widthScale, heightScale);
+        final double widthScale = size.width / bounds.width;
+        final double heightScale = size.height / bounds.height;
+        final double scale = math.min(widthScale, heightScale);
 
-      final double scaledW = bounds.width * scale;
-      final double scaledH = bounds.height * scale;
-      final double dx = (size.width - scaledW) / 2.0;
-      final double dy = (size.height - scaledH) / 2.0;
+        final double scaledW = bounds.width * scale;
+        final double scaledH = bounds.height * scale;
+        final double dx = (size.width - scaledW) / 2.0;
+        final double dy = (size.height - scaledH) / 2.0;
 
-      final Matrix4 matrix = Matrix4.identity()
-        ..translate(-bounds.left, -bounds.top)
-        ..scale(scale, scale)
-        ..translate(dx / scale, dy / scale); // center
+        final Matrix4 matrix = Matrix4.identity()
+          ..translate(dx, dy)
+          ..scale(scale, scale)
+          ..translate(-bounds.left, -bounds.top);
 
-      return originalPath.transform(matrix.storage);
+        return originalPath.transform(matrix.storage);
+      } catch (e) {
+        debugPrint('ERROR parsing SVG path: $e');
+        return Path()..addRect(Rect.fromLTWH(0, 0, size.width, size.height)); // Fallback to full rect
+      }
     }
 
 

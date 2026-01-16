@@ -26,9 +26,10 @@ class DocumentsCubit extends Cubit<DocumentsState> {
         super(DocumentsLoading());
 
   RealtimeChannel? _documentsRealtimeChannel;
+  String? _loadedUserId;
 
   /// ✅ Start listening to document updates in real-time
-  void listenToDocuments({BuildContext? context, String? explicitUserId}) {
+  void listenToDocuments({BuildContext? context, String? explicitUserId, bool forceReload = false}) {
     String userId;
 
     if (explicitUserId != null) {
@@ -45,9 +46,11 @@ class DocumentsCubit extends Cubit<DocumentsState> {
         return;
     }
 
-    _documentsRealtimeChannel?.unsubscribe();
-    emit(DocumentsLoading());
+    if (!forceReload && state is DocumentsLoaded && _loadedUserId == userId) return; // ✅ Prevent redundant reloads
 
+    _loadedUserId = userId; // Update loaded user ID
+
+    _documentsRealtimeChannel?.unsubscribe();
     emit(DocumentsLoading());
 
     _documentsRealtimeChannel = _service.subscribeToDocuments(userId, () {
@@ -58,12 +61,13 @@ class DocumentsCubit extends Cubit<DocumentsState> {
   }
 
   void _fetchDocuments(String userId) async {
-    emit(DocumentsLoading());
+    // emit(DocumentsLoading()); // ListenToDocuments already emits loading
 
     try {
       final docs = await _service.fetchDocuments(userId);
       emit(DocumentsLoaded(docs));
     } catch (e) {
+      _loadedUserId = null; // Reset on failure
       emit(DocumentsError("فشل تحميل الوثائق: $e"));
     }
   }

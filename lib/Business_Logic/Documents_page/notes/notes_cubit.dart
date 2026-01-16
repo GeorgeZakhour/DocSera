@@ -21,7 +21,9 @@ class NotesCubit extends Cubit<NotesState> {
   RealtimeChannel? _notesRealtimeChannel;
   String? _subscribedUserId;
 
-  void listenToNotes(BuildContext context) {
+  void listenToNotes(BuildContext context, {bool forceReload = false}) {
+    if (!forceReload && state is NotesLoaded) return;
+
     String? userId;
     final authState = context.read<AuthCubit>().state;
     if (authState is AuthAuthenticated) {
@@ -30,14 +32,12 @@ class NotesCubit extends Cubit<NotesState> {
 
     if (userId == null) return;
 
-    if (_subscribedUserId == userId && _notesRealtimeChannel != null) return;
+    if (_subscribedUserId == userId && _notesRealtimeChannel != null && !forceReload) return;
 
     _notesRealtimeChannel?.unsubscribe();
     _subscribedUserId = userId;
 
-    if (state is! NotesLoaded) {
-      emit(NotesLoading());
-    }
+    emit(NotesLoading());
 
     _notesRealtimeChannel = _service.subscribeToNotes(userId, () {
       _fetchNotes(userId!);
