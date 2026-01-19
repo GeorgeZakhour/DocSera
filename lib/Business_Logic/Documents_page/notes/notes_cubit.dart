@@ -81,6 +81,7 @@ class NotesCubit extends Cubit<NotesState> {
         return;
       }
       await _service.deleteNote(note.id!, userId);
+      _fetchNotes(userId); // ✅ Force refresh after delete
     } catch (e) {
       emit(NotesError(ErrorHandler.resolve(e, defaultMessage: "فشل حذف الملاحظة")));
     }

@@ -131,6 +131,7 @@ class DocumentsCubit extends Cubit<DocumentsState> {
         };
 
         await Supabase.instance.client.from('documents').insert(docData);
+        _fetchDocuments(userId); // ✅ Force refresh after upload
         return;
       }
 
@@ -179,6 +180,7 @@ class DocumentsCubit extends Cubit<DocumentsState> {
       };
 
       await Supabase.instance.client.from('documents').insert(docData);
+      _fetchDocuments(userId); // ✅ Force refresh after upload
     } catch (e) {
       emit(DocumentsError("Upload failed: $e"));
     }
@@ -218,6 +220,7 @@ class DocumentsCubit extends Cubit<DocumentsState> {
 
       final docData = {
         'id': docId,
+        'user_id': userId, // ✅ Required for RLS
         'name': fileName.trim().isEmpty ? autoName : fileName,
         'type': 'pdf',
         'file_type': 'pdf',
@@ -229,6 +232,7 @@ class DocumentsCubit extends Cubit<DocumentsState> {
       };
 
       await Supabase.instance.client.from('documents').insert(docData);
+      _fetchDocuments(userId); // ✅ Force refresh after upload
     } catch (e) {
       emit(DocumentsError("Upload failed: $e"));
     }
@@ -305,7 +309,7 @@ class DocumentsCubit extends Cubit<DocumentsState> {
       await _service.deleteFiles(document.pages);
 
       // إعادة تحميل البيانات
-      listenToDocuments(context: context, explicitUserId: userId);
+      listenToDocuments(context: context, explicitUserId: userId, forceReload: true);
     } catch (e) {
       emit(DocumentsError("Delete failed: $e"));
     }

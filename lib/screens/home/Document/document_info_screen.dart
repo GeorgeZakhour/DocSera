@@ -739,7 +739,7 @@ class _DocumentInfoScreenState extends State<DocumentInfoScreen> {
       debugPrint("✅ Document inserted with id = $realId");
 
       if (!mounted) return;
-      // context.read<DocumentsCubit>().listenToDocuments(context);
+      context.read<DocumentsCubit>().listenToDocuments(context: context, forceReload: true); // ✅ Force refresh
 
       Navigator.pop(context, true);
       // (Removed Double Pop - let the caller handle it)
