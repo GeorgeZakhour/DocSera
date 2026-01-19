@@ -325,6 +325,8 @@ import 'package:docsera/gen_l10n/app_localizations.dart';
           return AppLocalizations.of(context)!.appointmentCancelled;
         case 'rejected':
           return AppLocalizations.of(context)!.statusRejected;
+        case 'done':
+          return AppLocalizations.of(context)!.done;
         default:
           return AppLocalizations.of(context)!.appointmentConfirmed;
       }
@@ -333,10 +335,12 @@ import 'package:docsera/gen_l10n/app_localizations.dart';
 
     /// 🔹 **Appointment Card**
     Widget _buildAppointmentCard(Map<String, dynamic> appt) {
-      final bool needsConfirmation = appt['is_confirmed'] == false && appt['booked'] == true;
-      final bool isRejected = (appt['is_confirmed'] == true && appt['booked'] == false && appt['status']?.toString() == 'rejected');
       final String status = appt['status']?.toString() ?? '';
-
+      final bool isDone = status == 'done';
+      
+      final bool needsConfirmation = !isDone && appt['is_confirmed'] == false && appt['booked'] == true;
+      final bool isRejected = (appt['is_confirmed'] == true && appt['booked'] == false && status == 'rejected');
+      
       final bool isCancelledByPatient = status == 'cancelled_by_patient';
       final bool isCancelledByDoctor = status == 'cancelled_by_doctor';
       final bool isNeverArrivedCancelled = status == 'never_arrived_cancelled';
@@ -410,7 +414,9 @@ import 'package:docsera/gen_l10n/app_localizations.dart';
                         ? AppColors.red.withOpacity(0.09)
                         : (needsConfirmation
                         ? AppColors.grayMain.withOpacity(0.12)
-                        : AppColors.main.withOpacity(0.12)),
+                        : (isDone
+                            ? AppColors.success.withOpacity(0.18) // Success green tint for done
+                            : AppColors.main.withOpacity(0.12))),
                   ),
                 ),
               ),
@@ -427,8 +433,10 @@ import 'package:docsera/gen_l10n/app_localizations.dart';
                           ? AppColors.red.withOpacity(0.4)
                           : (needsConfirmation
                           ? AppColors.grayMain.withOpacity(0.4)
-                          : AppColors.main.withOpacity(0.45)),
-                      width: 1.3,
+                          : (isDone
+                              ? AppColors.success.withOpacity(0.8) // Success green border for done
+                              : AppColors.main.withOpacity(0.45))),
+                      width: isDone ? 1.5 : 1.3,
                     ),
                   ),
                   padding: EdgeInsets.symmetric(
@@ -635,31 +643,50 @@ import 'package:docsera/gen_l10n/app_localizations.dart';
                                     ? AppColors.red.withOpacity(0.7)
                                     : (needsConfirmation
                                     ? AppColors.grayMain.withOpacity(0.7)
-                                    : AppColors.main.withOpacity(0.7)),
-                                width: 1,
+                                    : (isDone
+                                        ? AppColors.success // Success green border for done
+                                        : AppColors.main.withOpacity(0.7))),
+                                width: isDone ? 1.5 : 1,
                               ),
                               color: isRedState
                                   ? AppColors.red.withOpacity(0.06)
                                   : (needsConfirmation
                                   ? AppColors.grayMain.withOpacity(0.06)
-                                  : AppColors.main.withOpacity(0.08)),
+                                  : (isDone
+                                      ? AppColors.success.withOpacity(0.12) // Success green background for done
+                                      : AppColors.main.withOpacity(0.08))),
                             ),
-                            child: Text(
-                              isRedState
-                                  ? _getStatusLabel(context, status)
-                                  : (needsConfirmation
-                                  ? AppLocalizations.of(context)!
-                                  .waitingConfirmation
-                                  : AppLocalizations.of(context)!
-                                  .appointmentConfirmed),
-                              style: AppTextStyles.getText3(context).copyWith(
-                                color: isRedState
-                                    ? AppColors.red
-                                    : (needsConfirmation
-                                    ? AppColors.grayMain
-                                    : AppColors.mainDark),
-                                fontWeight: FontWeight.w600,
-                              ),
+                            child: Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                if (isDone) ...[
+                                  Icon(
+                                    Icons.verified_rounded,
+                                    size: 14.sp,
+                                    color: AppColors.success, // Success green icon
+                                  ),
+                                  SizedBox(width: 4.w),
+                                ],
+                                Text(
+                                  isRedState
+                                      ? _getStatusLabel(context, status)
+                                      : (needsConfirmation
+                                      ? AppLocalizations.of(context)!
+                                      .waitingConfirmation
+                                      : (isDone
+                                      ? AppLocalizations.of(context)!.done
+                                      : AppLocalizations.of(context)!
+                                      .appointmentConfirmed)),
+                                  style: AppTextStyles.getText3(context).copyWith(
+                                    color: isRedState
+                                        ? AppColors.red
+                                        : (needsConfirmation
+                                        ? AppColors.grayMain
+                                        : (isDone ? AppColors.success : AppColors.mainDark)), // Success green text for done
+                                    fontWeight: FontWeight.w700,
+                                  ),
+                                ),
+                              ],
                             ),
                           ),
                         ],

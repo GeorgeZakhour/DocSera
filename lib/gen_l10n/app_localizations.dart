@@ -2075,7 +2075,7 @@ abstract class AppLocalizations {
   /// No description provided for @done.
   ///
   /// In en, this message translates to:
-  /// **'Done'**
+  /// **'Visit Completed'**
   String get done;
 
   /// No description provided for @moreFiltersSoon.

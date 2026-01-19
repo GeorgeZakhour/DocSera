@@ -1074,7 +1074,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get filters => 'Filters';
 
   @override
-  String get done => 'Done';
+  String get done => 'Visit Completed';
 
   @override
   String get moreFiltersSoon => 'More filters coming soon';

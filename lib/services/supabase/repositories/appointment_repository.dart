@@ -19,13 +19,8 @@ class AppointmentRepository {
       final cachedUpcoming = await _sharedPrefsService.loadData('upcomingAppointments') ?? [];
       final cachedPast = await _sharedPrefsService.loadData('pastAppointments') ?? [];
 
-      if (cachedUpcoming.isNotEmpty || cachedPast.isNotEmpty) {
-        debugPrint("⚡ Loaded appointments from cache");
-        return {
-          'upcoming': List<Map<String, dynamic>>.from(cachedUpcoming),
-          'past': List<Map<String, dynamic>>.from(cachedPast),
-        };
-      }
+      // 🔹 DEPRECATED: Early return caused stale data issues.
+      // if (cachedUpcoming.isNotEmpty || cachedPast.isNotEmpty) { ... }
 
       final nowUtc = DocSeraTime.nowUtc().toIso8601String();
 

@@ -1,0 +1,1133 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DocSera - Product Features</title>
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;500;600;700&display=swap"
+        rel="stylesheet">
+    <style>
+        :root {
+            --primary: #009092;
+            --primary-dark: #007577;
+            --primary-light: #e6f5f5;
+            --text: #1a1a2e;
+            --text-light: #64748b;
+            --bg: #ffffff;
+            --border: #e2e8f0;
+            --success: #10b981;
+            --code-bg: #f1f5f9;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Montserrat', -apple-system, BlinkMacSystemFont, sans-serif;
+            color: var(--text);
+            line-height: 1.7;
+            background: var(--bg);
+            font-size: 10pt;
+            -webkit-print-color-adjust: exact !important;
+            print-color-adjust: exact !important;
+        }
+
+        @page {
+            size: A4;
+            margin: 15mm 12mm;
+        }
+
+        @media print {
+            body {
+                font-size: 9pt;
+            }
+
+            .page-break {
+                page-break-before: always;
+            }
+
+            .no-break {
+                page-break-inside: avoid;
+            }
+
+            /* Keep headings with their content */
+            h2,
+            h3,
+            h4 {
+                page-break-after: avoid;
+                break-after: avoid;
+            }
+
+            /* Prevent orphaned headings */
+            h2+p,
+            h2+div,
+            h3+p,
+            h3+div,
+            h3+ul,
+            h4+p,
+            h4+ul {
+                page-break-before: avoid;
+                break-before: avoid;
+            }
+
+            /* Keep feature sections together */
+            .feature-section {
+                page-break-inside: avoid;
+                break-inside: avoid;
+            }
+
+            /* Keep info boxes together */
+            .info-box {
+                page-break-inside: avoid;
+                break-inside: avoid;
+            }
+
+            /* Keep flow diagrams together */
+            .flow-container {
+                page-break-inside: avoid;
+                break-inside: avoid;
+            }
+
+            /* Keep category grids together */
+            .categories-grid {
+                page-break-inside: avoid;
+                break-inside: avoid;
+            }
+
+            /* Keep tech boxes together */
+            .tech-box {
+                page-break-inside: avoid;
+                break-inside: avoid;
+            }
+
+            /* Keep nav structure together */
+            .nav-structure {
+                page-break-inside: avoid;
+                break-inside: avoid;
+            }
+
+            /* Orphan and widow control */
+            p,
+            li {
+                orphans: 3;
+                widows: 3;
+            }
+
+            /* Keep footer with previous content */
+            .footer {
+                page-break-before: avoid;
+                break-before: avoid;
+            }
+        }
+
+        .container {
+            max-width: 780px;
+            margin: 0 auto;
+            padding: 30px 25px;
+        }
+
+        /* Header */
+        .header {
+            background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+            color: white;
+            padding: 35px 30px;
+            border-radius: 16px;
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        .header img {
+            height: 20px;
+            margin-bottom: 8px;
+        }
+
+        .header .subtitle {
+            font-size: 14px;
+            opacity: 0.9;
+        }
+
+        .header-meta {
+            display: flex;
+            justify-content: center;
+            gap: 12px;
+            margin-top: 18px;
+            flex-wrap: wrap;
+        }
+
+        .badge {
+            background: rgba(255, 255, 255, 0.2);
+            color: white;
+            padding: 5px 12px;
+            border-radius: 20px;
+            font-size: 10px;
+            font-weight: 600;
+        }
+
+        /* Sections */
+        h2 {
+            font-size: 16px;
+            font-weight: 700;
+            color: var(--primary-dark);
+            margin: 28px 0 14px;
+            padding: 10px 0 8px;
+            border-bottom: 2px solid var(--primary);
+        }
+
+        h3 {
+            font-size: 12px;
+            font-weight: 600;
+            color: var(--text);
+            margin: 16px 0 8px;
+            padding-left: 10px;
+            border-left: 3px solid var(--primary);
+        }
+
+        h4 {
+            font-size: 11px;
+            font-weight: 600;
+            color: var(--primary-dark);
+            margin: 12px 0 6px;
+        }
+
+        p {
+            margin-bottom: 10px;
+            font-size: 10pt;
+        }
+
+        /* Info Box */
+        .info-box {
+            background: var(--primary-light);
+            border-left: 4px solid var(--primary);
+            padding: 12px 15px;
+            border-radius: 0 8px 8px 0;
+            margin: 15px 0;
+            font-size: 9.5pt;
+        }
+
+        .info-box strong {
+            color: var(--primary-dark);
+        }
+
+        /* Feature Section */
+        .feature-section {
+            background: #f8fafc;
+            border-radius: 10px;
+            padding: 18px 20px;
+            margin: 12px 0;
+            border: 1px solid var(--border);
+        }
+
+        .feature-section-header {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 12px;
+            padding-bottom: 10px;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .feature-section-icon {
+            width: 36px;
+            height: 36px;
+            background: var(--primary);
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .feature-section-icon svg {
+            width: 20px;
+            height: 20px;
+            fill: white;
+        }
+
+        .feature-section-title {
+            font-weight: 600;
+            font-size: 11pt;
+            color: var(--primary-dark);
+        }
+
+        .feature-section-subtitle {
+            font-size: 9pt;
+            color: var(--text-light);
+        }
+
+        /* Feature List */
+        .feature-list {
+            margin: 0;
+            padding: 0;
+            list-style: none;
+        }
+
+        .feature-list li {
+            position: relative;
+            padding: 6px 0 6px 20px;
+            font-size: 9.5pt;
+            border-bottom: 1px solid #eef2f6;
+        }
+
+        .feature-list li:last-child {
+            border-bottom: none;
+        }
+
+        .feature-list li::before {
+            content: "";
+            position: absolute;
+            left: 0;
+            top: 12px;
+            width: 8px;
+            height: 8px;
+            background: var(--primary);
+            border-radius: 50%;
+        }
+
+        .feature-list li strong {
+            color: var(--text);
+        }
+
+        .feature-list li span {
+            color: var(--text-light);
+            font-size: 9pt;
+        }
+
+        /* Sub-features */
+        .sub-features {
+            margin: 5px 0 0 15px;
+            padding: 0;
+            list-style: none;
+        }
+
+        .sub-features li {
+            padding: 3px 0 3px 15px;
+            font-size: 9pt;
+            color: var(--text-light);
+            border-bottom: none;
+        }
+
+        .sub-features li::before {
+            width: 5px;
+            height: 5px;
+            top: 10px;
+            background: var(--border);
+        }
+
+        /* Navigation Structure */
+        .nav-structure {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 12px;
+            margin: 20px 0;
+            background: #f8fafc;
+            border-radius: 12px;
+            padding: 20px;
+            border: 1px solid var(--border);
+        }
+
+        .nav-row-2 {
+            grid-column: 1 / -1;
+            display: flex;
+            justify-content: center;
+            gap: 12px;
+        }
+
+        .nav-row-2 .nav-item {
+            flex: 0 0 calc(33.33% - 6px);
+        }
+
+        .nav-item {
+            text-align: center;
+            padding: 18px 10px;
+            background: white;
+            border-radius: 10px;
+            border: 1px solid var(--border);
+        }
+
+        .nav-item.active {
+            border-color: var(--primary);
+            background: var(--primary-light);
+        }
+
+        .nav-icon {
+            width: 40px;
+            height: 40px;
+            background: var(--primary-light);
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 8px;
+        }
+
+        .nav-item.active .nav-icon {
+            background: var(--primary);
+        }
+
+        .nav-icon svg {
+            width: 16px;
+            height: 16px;
+            fill: var(--primary);
+        }
+
+        .nav-item.active .nav-icon svg {
+            fill: white;
+        }
+
+        .nav-label {
+            font-size: 8.5pt;
+            font-weight: 600;
+            color: var(--text);
+        }
+
+        /* Flow Diagram */
+        .flow-container {
+            background: #f8fafc;
+            border-radius: 10px;
+            padding: 16px;
+            margin: 12px 0;
+            border: 1px solid var(--border);
+        }
+
+        .flow-title {
+            font-weight: 600;
+            font-size: 10pt;
+            color: var(--primary-dark);
+            margin-bottom: 12px;
+            text-align: center;
+        }
+
+        .flow-steps {
+            display: flex;
+            align-items: flex-start;
+            justify-content: space-between;
+            gap: 4px;
+        }
+
+        .flow-step {
+            background: white;
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            padding: 8px 6px;
+            text-align: center;
+            flex: 1;
+            min-width: 0;
+        }
+
+        .flow-step-number {
+            background: var(--primary);
+            color: white;
+            width: 18px;
+            height: 18px;
+            border-radius: 50%;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 9pt;
+            font-weight: 600;
+            margin-bottom: 4px;
+        }
+
+        .flow-step-label {
+            font-size: 8pt;
+            font-weight: 500;
+            color: var(--text);
+        }
+
+        .flow-arrow {
+            color: var(--primary);
+            font-size: 12px;
+            flex-shrink: 0;
+            align-self: center;
+            margin-top: 8px;
+        }
+
+        /* Health Categories Grid */
+        .categories-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 10px;
+            margin: 15px 0;
+        }
+
+        .category-item {
+            background: white;
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 12px 8px;
+            text-align: center;
+        }
+
+        .category-icon {
+            width: 32px;
+            height: 32px;
+            background: var(--primary-light);
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 6px;
+        }
+
+        .category-icon svg {
+            width: 18px;
+            height: 18px;
+            fill: var(--primary);
+        }
+
+        .category-label {
+            font-size: 8.5pt;
+            font-weight: 500;
+            color: var(--text);
+        }
+
+        /* Technical Box */
+        .tech-box {
+            background: var(--code-bg);
+            border-radius: 10px;
+            padding: 15px 20px;
+            margin: 15px 0;
+        }
+
+        .tech-item {
+            display: flex;
+            gap: 10px;
+            padding: 8px 0;
+            border-bottom: 1px solid var(--border);
+            font-size: 9.5pt;
+        }
+
+        .tech-item:last-child {
+            border-bottom: none;
+        }
+
+        .tech-label {
+            font-weight: 600;
+            color: var(--primary-dark);
+            min-width: 120px;
+        }
+
+        /* Footer */
+        .footer {
+            margin-top: 40px;
+            padding-top: 20px;
+            border-top: 2px solid var(--border);
+            text-align: center;
+            color: var(--text-light);
+            font-size: 9px;
+        }
+
+        /* Two Column Layout */
+        .two-col {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+
+        <!-- Header -->
+        <div class="header no-break">
+            <img src="docsera_logo.svg" alt="DocSera">
+            <div class="subtitle">Product Features</div>
+            <div class="header-meta">
+                <span class="badge">DocSera App</span>
+                <span class="badge">Patient Application</span>
+                <span class="badge">January 2026</span>
+            </div>
+        </div>
+
+        <!-- 1. Overview -->
+        <h2>1. Application Overview</h2>
+        <p>
+            DocSera is a mobile healthcare application that enables patients in Syria to discover medical practitioners,
+            book appointments, manage their health records, and communicate securely with doctors. The application
+            provides a comprehensive healthcare management experience with full support for Arabic (RTL layout) and
+            English languages.
+        </p>
+
+        <div class="info-box">
+            <strong>Platforms:</strong> iOS and Android<br>
+            <strong>Languages:</strong> Arabic (RTL) and English
+        </div>
+
+        <!-- 2. Navigation -->
+        <h2>2. Application Structure</h2>
+        <p>The application is organized into five main sections accessible via bottom navigation:</p>
+
+        <div class="nav-structure no-break">
+            <div class="nav-item">
+                <div class="nav-icon">
+                    <svg viewBox="0 0 24 24">
+                        <path d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z" />
+                    </svg>
+                </div>
+                <div class="nav-label">Home</div>
+                <div style="font-size: 7.5pt; color: var(--text-light); margin-top: 4px;">Search & Discovery</div>
+            </div>
+            <div class="nav-item">
+                <div class="nav-icon">
+                    <svg viewBox="0 0 24 24">
+                        <path
+                            d="M19 3h-1V1h-2v2H8V1H6v2H5c-1.11 0-1.99.9-1.99 2L3 19c0 1.1.89 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm0 16H5V8h14v11zM9 10H7v2h2v-2zm4 0h-2v2h2v-2zm4 0h-2v2h2v-2z" />
+                    </svg>
+                </div>
+                <div class="nav-label">Appointments</div>
+                <div style="font-size: 7.5pt; color: var(--text-light); margin-top: 4px;">Book & Manage</div>
+            </div>
+            <div class="nav-item">
+                <div class="nav-icon">
+                    <svg viewBox="0 0 24 24">
+                        <path
+                            d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z" />
+                    </svg>
+                </div>
+                <div class="nav-label">Health</div>
+                <div style="font-size: 7.5pt; color: var(--text-light); margin-top: 4px;">Medical Records</div>
+            </div>
+            <!-- Second Row: 2 items centered -->
+            <div class="nav-row-2">
+                <div class="nav-item">
+                    <div class="nav-icon">
+                        <svg viewBox="0 0 24 24">
+                            <path
+                                d="M20 2H4c-1.1 0-1.99.9-1.99 2L2 22l4-4h14c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2zm-2 12H6v-2h12v2zm0-3H6V9h12v2zm0-3H6V6h12v2z" />
+                        </svg>
+                    </div>
+                    <div class="nav-label">Messages</div>
+                    <div style="font-size: 7.5pt; color: var(--text-light); margin-top: 4px;">Doctor Chat</div>
+                </div>
+                <div class="nav-item">
+                    <div class="nav-icon">
+                        <svg viewBox="0 0 24 24">
+                            <path
+                                d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z" />
+                        </svg>
+                    </div>
+                    <div class="nav-label">Account</div>
+                    <div style="font-size: 7.5pt; color: var(--text-light); margin-top: 4px;">Profile & Settings</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 3. Doctor Discovery -->
+        <h2>3. Doctor Discovery & Search</h2>
+
+        <div class="feature-section no-break">
+            <div class="feature-section-header">
+                <div class="feature-section-icon">
+                    <svg viewBox="0 0 24 24">
+                        <path
+                            d="M15.5 14h-.79l-.28-.27C15.41 12.59 16 11.11 16 9.5 16 5.91 13.09 3 9.5 3S3 5.91 3 9.5 5.91 16 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z" />
+                    </svg>
+                </div>
+                <div>
+                    <div class="feature-section-title">Search & Filters</div>
+                    <div class="feature-section-subtitle">Advanced doctor discovery system</div>
+                </div>
+            </div>
+            <ul class="feature-list">
+                <li><strong>Text Search</strong> <span>— Search by doctor name, clinic name, or specialty. Results show
+                        matching doctors and specialty suggestions (selecting a specialty leads to location
+                        selection)</span></li>
+                <li><strong>Step-Based Search</strong> <span>— When not using direct text search: select specialty
+                        first, then choose location (city or nearby)</span>
+                    <ul class="sub-features">
+                        <li>Specialty Selection — localized medical specialty names</li>
+                        <li>City Selection — choose from predefined city list</li>
+                        <li>Nearby Option — uses device GPS to find doctors within radius</li>
+                    </ul>
+                </li>
+                <li><strong>Gender Filter</strong> <span>— Filter results by male/female practitioners</span></li>
+                <li><strong>Favorites Section</strong> <span>— Quick access to saved favorite doctors</span></li>
+                <li><strong>Map View</strong> <span>— Interactive map showing doctor locations with pins</span></li>
+            </ul>
+        </div>
+
+        <div class="feature-section no-break">
+            <div class="feature-section-header">
+                <div class="feature-section-icon">
+                    <svg viewBox="0 0 24 24">
+                        <path
+                            d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 3c1.66 0 3 1.34 3 3s-1.34 3-3 3-3-1.34-3-3 1.34-3 3-3zm0 14.2c-2.5 0-4.71-1.28-6-3.22.03-1.99 4-3.08 6-3.08 1.99 0 5.97 1.09 6 3.08-1.29 1.94-3.5 3.22-6 3.22z" />
+                    </svg>
+                </div>
+                <div>
+                    <div class="feature-section-title">Doctor Profile</div>
+                    <div class="feature-section-subtitle">Complete practitioner information display</div>
+                </div>
+            </div>
+            <ul class="feature-list">
+                <li><strong>Basic Information</strong> <span>— Name, title, specialty, gender, clinic name</span></li>
+                <li><strong>Profile Description</strong> <span>— Rich text bio with multiple sections (QuillJS
+                        format)</span></li>
+                <li><strong>Offered Services</strong> <span>— List of services with optional descriptions</span></li>
+                <li><strong>Location</strong>
+                    <ul class="sub-features">
+                        <li>Clinic name, street address, building number</li>
+                        <li>City and country</li>
+                        <li>Additional location details</li>
+                        <li>"Open in Maps" button with coordinates</li>
+                    </ul>
+                </li>
+                <li><strong>Gallery</strong> <span>— Photo gallery with full-screen viewer, zoom, swipe</span></li>
+                <li><strong>Languages Spoken</strong> <span>— Arabic, English, French, German, Turkish, etc.</span>
+                </li>
+                <li><strong>Contact Options</strong> <span>— Phone (tap to call), Email (tap to compose)</span></li>
+                <li><strong>Favorites</strong> <span>— Add/remove from favorites list</span></li>
+                <li><strong>Share</strong> <span>— Share profile via system share sheet + QR code</span></li>
+            </ul>
+        </div>
+
+        <!-- 4. Appointment Booking -->
+        <h2>4. Appointment Booking</h2>
+
+        <h3>Booking Flow</h3>
+        <p>The booking process follows a structured multi-step flow:</p>
+
+        <div class="flow-container no-break">
+            <div class="flow-steps">
+                <div class="flow-step">
+                    <div class="flow-step-number">1</div>
+                    <div class="flow-step-label">Select Patient</div>
+                </div>
+                <div class="flow-arrow">→</div>
+                <div class="flow-step">
+                    <div class="flow-step-number">2</div>
+                    <div class="flow-step-label">Visited Before?</div>
+                </div>
+                <div class="flow-arrow">→</div>
+                <div class="flow-step">
+                    <div class="flow-step-number">3</div>
+                    <div class="flow-step-label">Select Reason</div>
+                </div>
+                <div class="flow-arrow">→</div>
+                <div class="flow-step">
+                    <div class="flow-step-number">4</div>
+                    <div class="flow-step-label">Choose Slot</div>
+                </div>
+                <div class="flow-arrow">→</div>
+                <div class="flow-step">
+                    <div class="flow-step-number">5</div>
+                    <div class="flow-step-label">Confirm</div>
+                </div>
+            </div>
+        </div>
+
+        <ul class="feature-list">
+            <li><strong>Patient Selection</strong> <span>— Book for self or any registered relative</span></li>
+            <li><strong>Visit History</strong> <span>— Indicate if first visit or follow-up</span></li>
+            <li><strong>Visit Reason</strong> <span>— Select from doctor-defined consultation types</span></li>
+            <li><strong>Time Slot Selection</strong> <span>— Calendar with available slots from doctor's
+                    schedule</span></li>
+            <li><strong>Confirmation</strong> <span>— Review details before submitting</span></li>
+            <li><strong>Booking Result</strong>
+                <ul class="sub-features">
+                    <li>If doctor requires manual approval: status page indicating appointment is pending confirmation
+                    </li>
+                    <li>If doctor has auto-accept enabled: confirmation page showing appointment is booked successfully
+                    </li>
+                </ul>
+            </li>
+        </ul>
+
+        <h3>Appointment Management</h3>
+        <div class="feature-section no-break">
+            <ul class="feature-list">
+                <li><strong>Tab View</strong> <span>— Toggle between "Upcoming" and "Past" appointments</span></li>
+                <li><strong>Appointment Card</strong> <span>— Doctor info, date/time, status badge</span></li>
+                <li><strong>Status Tracking</strong> <span>— Pending, Confirmed, Completed, Cancelled, Rejected</span>
+                </li>
+                <li><strong>Appointment Details</strong> <span>— Full details page with all booking information</span>
+                </li>
+                <li><strong>Cancel Appointment</strong> <span>— Cancel with confirmation dialog. Available only within
+                        the doctor-defined time limit before the appointment; otherwise an unavailability notice is
+                        displayed</span></li>
+                <li><strong>Reschedule Request</strong> <span>— Request a new time slot. Available only within the
+                        doctor-defined time limit. If doctor requires approval, the request must be confirmed before the
+                        change takes effect</span></li>
+                <li><strong>Visit Reports</strong> <span>— View reports attached to completed appointments</span></li>
+                <li><strong>Load More</strong> <span>— Pagination for large appointment history</span></li>
+                <li><strong>Tab Persistence</strong> <span>— Remembers last selected tab (SharedPreferences)</span>
+                </li>
+            </ul>
+        </div>
+
+        <!-- 5. Health Records -->
+        <h2 class="page-break">5. Health Records</h2>
+        <p>
+            Comprehensive personal medical history management. Each record type supports full CRUD operations
+            and can be managed separately for the main user and each registered relative.
+        </p>
+
+        <h3>Health Categories</h3>
+        <div class="categories-grid no-break">
+            <div class="category-item">
+                <div class="category-icon">
+                    <svg viewBox="0 0 24 24">
+                        <path
+                            d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-2h2v2zm0-4h-2V7h2v6z" />
+                    </svg>
+                </div>
+                <div class="category-label">Allergies</div>
+            </div>
+            <div class="category-item">
+                <div class="category-icon">
+                    <svg viewBox="0 0 24 24">
+                        <path
+                            d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-7 14h-2v-4H6v-2h4V7h2v4h4v2h-4v4z" />
+                    </svg>
+                </div>
+                <div class="category-label">Chronic</div>
+            </div>
+            <div class="category-item">
+                <div class="category-icon">
+                    <svg viewBox="0 0 24 24">
+                        <path
+                            d="M6 3h12v2H6zm11 3H7c-1.1 0-2 .9-2 2v11c0 1.1.9 2 2 2h10c1.1 0 2-.9 2-2V8c0-1.1-.9-2-2-2zm-1 9h-2.5v2.5h-3V15H8v-3h2.5V9.5h3V12H16v3z" />
+                    </svg>
+                </div>
+                <div class="category-label">Medications</div>
+            </div>
+            <div class="category-item">
+                <div class="category-icon">
+                    <svg viewBox="0 0 24 24">
+                        <path
+                            d="M17.73 12.02l3.98-3.98c.39-.39.39-1.02 0-1.41l-4.34-4.34c-.39-.39-1.02-.39-1.41 0l-3.98 3.98L8 2.29C7.8 2.1 7.55 2 7.29 2c-.25 0-.51.1-.7.29L2.25 6.63c-.39.39-.39 1.02 0 1.41l3.98 3.98L2.25 16c-.39.39-.39 1.02 0 1.41l4.34 4.34c.39.39 1.02.39 1.41 0l3.98-3.98 3.98 3.98c.2.2.45.29.71.29.26 0 .51-.1.71-.29l4.34-4.34c.39-.39.39-1.02 0-1.41l-3.99-3.98z" />
+                    </svg>
+                </div>
+                <div class="category-label">Surgeries</div>
+            </div>
+            <div class="category-item">
+                <div class="category-icon">
+                    <svg viewBox="0 0 24 24">
+                        <path
+                            d="M11 5.5H9V3H7v2.5H5V5h2v2.5h2V10h2V7.5h2V5h-2zm6.95 2.07l-1.41-1.41-3.54 3.54 1.41 1.41zM5.12 13l6.36 6.36 8.49-8.49-6.36-6.36zm-.71 2.12l5.66 5.66-2.83 2.83-5.66-5.66z" />
+                    </svg>
+                </div>
+                <div class="category-label">Vaccinations</div>
+            </div>
+            <div class="category-item">
+                <div class="category-icon">
+                    <svg viewBox="0 0 24 24">
+                        <path
+                            d="M16 11c1.66 0 2.99-1.34 2.99-3S17.66 5 16 5c-1.66 0-3 1.34-3 3s1.34 3 3 3zm-8 0c1.66 0 2.99-1.34 2.99-3S9.66 5 8 5C6.34 5 5 6.34 5 8s1.34 3 3 3zm0 2c-2.33 0-7 1.17-7 3.5V19h14v-2.5c0-2.33-4.67-3.5-7-3.5zm8 0c-.29 0-.62.02-.97.05 1.16.84 1.97 1.97 1.97 3.45V19h6v-2.5c0-2.33-4.67-3.5-7-3.5z" />
+                    </svg>
+                </div>
+                <div class="category-label">Family History</div>
+            </div>
+            <div class="category-item">
+                <div class="category-icon">
+                    <svg viewBox="0 0 24 24">
+                        <path
+                            d="M14 2H6c-1.1 0-1.99.9-1.99 2L4 20c0 1.1.89 2 1.99 2H18c1.1 0 2-.9 2-2V8l-6-6zm2 16H8v-2h8v2zm0-4H8v-2h8v2zm-3-5V3.5L18.5 9H13z" />
+                    </svg>
+                </div>
+                <div class="category-label">Visit Reports</div>
+            </div>
+            <div class="category-item">
+                <div class="category-icon">
+                    <svg viewBox="0 0 24 24">
+                        <path
+                            d="M10 4H4c-1.1 0-1.99.9-1.99 2L2 18c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V8c0-1.1-.9-2-2-2h-8l-2-2z" />
+                    </svg>
+                </div>
+                <div class="category-label">Documents</div>
+            </div>
+        </div>
+
+        <h3>Common Record Features</h3>
+        <p>Each health category has specific input fields tailored to its type. Common features across categories
+            include:</p>
+        <ul class="feature-list">
+            <li><strong>Add Record</strong> <span>— Bottom sheet form with searchable master data</span></li>
+            <li><strong>Category-Specific Fields</strong> <span>— Each category has unique inputs (e.g., severity for
+                    allergies, family member relationship for family history, dosage for medications)</span></li>
+            <li><strong>Confirmed Status</strong> <span>— Mark as doctor-confirmed or self-reported</span></li>
+            <li><strong>Source Tracking</strong> <span>— Records whether added by patient or doctor</span></li>
+            <li><strong>View Details</strong> <span>— Dialog showing all record information</span></li>
+            <li><strong>Delete Record</strong> <span>— Confirmation dialog before deletion</span></li>
+            <li><strong>"No Items" Declaration</strong> <span>— Explicitly declare "No allergies" etc.</span></li>
+            <li><strong>Patient Switching</strong> <span>— Switch between self and relatives, records update
+                    automatically</span></li>
+        </ul>
+
+        <h3>Visit Reports</h3>
+        <p>Doctor-generated reports from completed appointments, accessible in a dedicated section:</p>
+        <ul class="feature-list">
+            <li><strong>Reports List</strong> <span>— All reports from completed appointments displayed with doctor info
+                    and date</span></li>
+            <li><strong>Year/Month Filters</strong> <span>— Filter reports by year and month for easy navigation</span>
+            </li>
+            <li><strong>Search</strong> <span>— Search reports by doctor name</span></li>
+            <li><strong>Report Details</strong> <span>— View full report with diagnosis, recommendations, and clinic
+                    information</span></li>
+            <li><strong>Print Report</strong> <span>— Generate and print PDF version of the report</span></li>
+            <li><strong>Share Report</strong> <span>— Share report as PDF via system share sheet</span></li>
+        </ul>
+
+        <h3>Documents & Notes</h3>
+        <p>Personal storage for medical documents, accessible only by the patient (doctors do not have access):</p>
+        <ul class="feature-list">
+            <li><strong>Document Upload</strong> <span>— Upload images and PDF files for personal reference</span></li>
+            <li><strong>Document Types</strong> <span>— Lab results, prescriptions, imaging, other</span></li>
+            <li><strong>Document Preview</strong> <span>— In-app preview with zoom</span></li>
+            <li><strong>Personal Notes</strong> <span>— Rich text notes with QuillJS editor</span></li>
+            <li><strong>Private Storage</strong> <span>— All documents and notes are for personal use only</span></li>
+        </ul>
+
+        <!-- 6. Messaging -->
+        <h2>6. Secure Messaging</h2>
+
+        <div class="feature-section no-break">
+            <div class="feature-section-header">
+                <div class="feature-section-icon">
+                    <svg viewBox="0 0 24 24">
+                        <path
+                            d="M20 2H4c-1.1 0-1.99.9-1.99 2L2 22l4-4h14c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2zm-2 12H6v-2h12v2zm0-3H6V9h12v2zm0-3H6V6h12v2z" />
+                    </svg>
+                </div>
+                <div>
+                    <div class="feature-section-title">Conversation Features</div>
+                    <div class="feature-section-subtitle">Direct patient-doctor communication</div>
+                </div>
+            </div>
+            <ul class="feature-list">
+                <li><strong>Message Request</strong> <span>— First message initiates a request; patient waits for doctor
+                        to accept and open the conversation</span></li>
+                <li><strong>Text Messages</strong> <span>— Standard text messaging with auto-scroll</span></li>
+                <li><strong>Voice Messages</strong> <span>— Record and send M4A audio with duration display</span></li>
+                <li><strong>Image Attachments</strong> <span>— Select up to 8 images, compression before upload</span>
+                </li>
+                <li><strong>PDF Attachments</strong> <span>— Share PDF documents in chat</span></li>
+                <li><strong>Real-time Delivery</strong> <span>— Messages delivered via Supabase Realtime</span></li>
+                <li><strong>Optimistic Updates</strong> <span>— Messages appear immediately, sync in background</span>
+                </li>
+                <li><strong>Retry Failed Messages</strong> <span>— Retry button for failed sends</span></li>
+                <li><strong>Image Viewer</strong> <span>— Full-screen overlay with zoom, swipe navigation</span></li>
+                <li><strong>Conversation States</strong>
+                    <ul class="sub-features">
+                        <li>"Waiting for doctor reply" banner (before first doctor response)</li>
+                        <li>"Conversation closed" banner (doctor closed the conversation; patient cannot send new
+                            messages)</li>
+                        <li>If blocked by doctor: appears as closed, and patient cannot initiate new conversations with
+                            this doctor (for self or relatives)</li>
+                    </ul>
+                </li>
+                <li><strong>Doctor Control</strong> <span>— Doctor has full control over conversation: can accept,
+                        close, or block at any time</span></li>
+                <li><strong>Relative Conversations</strong> <span>— Banner shows when messaging on behalf of
+                        relative</span></li>
+            </ul>
+        </div>
+
+        <h3>Messages List</h3>
+        <ul class="feature-list">
+            <li><strong>Grouped by Doctor</strong> <span>— Conversations grouped by practitioner</span></li>
+            <li><strong>Year Headers</strong> <span>— Organized by year for easy navigation</span></li>
+            <li><strong>Unread Indicator</strong> <span>— Visual indicator for unread messages</span></li>
+            <li><strong>Last Message Preview</strong> <span>— Shows latest message snippet</span></li>
+        </ul>
+
+        <!-- 7. Account & Security -->
+        <h2 class="page-break">7. Account & Security</h2>
+
+        <div class="two-col">
+            <div class="feature-section no-break">
+                <h4>Personal Information</h4>
+                <ul class="feature-list">
+                    <li><strong>My Profile</strong> <span>— Edit name, birthday, gender, and address (optional)</span>
+                    </li>
+                    <li><strong>My Relatives</strong> <span>— Add/edit/remove family members</span></li>
+                </ul>
+            </div>
+
+            <div class="feature-section no-break">
+                <h4>Login Credentials</h4>
+                <ul class="feature-list">
+                    <li><strong>Phone Number</strong> <span>— View/change with OTP verification</span></li>
+                    <li><strong>Email</strong> <span>— View/change with OTP verification</span></li>
+                    <li><strong>Password</strong> <span>— Change password (current + new)</span></li>
+                </ul>
+            </div>
+        </div>
+
+        <div class="feature-section no-break">
+            <h4>Security Settings</h4>
+            <ul class="feature-list">
+                <li><strong>Two-Factor Authentication</strong> <span>— Enable/disable 2FA for login</span></li>
+                <li><strong>Encrypted Documents</strong> <span>— Info about document encryption (always on)</span></li>
+                <li><strong>Biometric Login</strong> <span>— Face ID / Touch ID toggle with device detection</span>
+                </li>
+                <li><strong>Trusted Devices</strong> <span>— Email OTP required for login from new devices</span></li>
+            </ul>
+        </div>
+
+        <div class="feature-section no-break">
+            <h4>Preferences & Privacy</h4>
+            <ul class="feature-list">
+                <li><strong>Language</strong> <span>— Switch between Arabic and English</span></li>
+                <li><strong>Legal Information</strong> <span>— Terms and Conditions of Use, Personal Data Protection
+                        Policy, Report Illicit Content</span></li>
+                <li><strong>Deactivate Account</strong> <span>— Disable account with confirmation (account is
+                        deactivated, not permanently deleted)</span></li>
+                <li><strong>Logout</strong> <span>— Sign out of the application</span></li>
+            </ul>
+        </div>
+
+        <div class="feature-section no-break">
+            <h4>Additional Account Features</h4>
+            <ul class="feature-list">
+                <li><strong>Privacy Info Card</strong> <span>— Information card displaying data protection and privacy
+                        assurance</span></li>
+                <li><strong>App Version</strong> <span>— Version number displayed at bottom</span></li>
+            </ul>
+        </div>
+
+        <!-- 8. Authentication -->
+        <h2>8. Authentication</h2>
+
+        <ul class="feature-list">
+            <li><strong>Email Registration</strong> <span>— Sign up with email address and password</span></li>
+            <li><strong>Email/Password Login</strong> <span>— Primary authentication method</span></li>
+            <li><strong>Phone Input Support</strong> <span>— Users can enter phone number at login (system maps to
+                    associated email)</span></li>
+            <li><strong>Email OTP Verification</strong> <span>— OTP codes sent to email for: email verification, and
+                    two-factor authentication</span></li>
+            <li><strong>Two-Factor Authentication</strong> <span>— When enabled, OTP is sent to email after entering
+                    credentials</span></li>
+            <li><strong>Biometric Login</strong> <span>— Face ID / Touch ID after initial email/password setup</span>
+            </li>
+            <li><strong>New Device Detection</strong> <span>— Email OTP required when logging in from untrusted
+                    devices</span></li>
+            <li><strong>Terms of Use</strong> <span>— Must accept before registration</span></li>
+        </ul>
+
+        <!-- 9. Notifications -->
+        <h2>9. Push Notifications</h2>
+
+        <ul class="feature-list">
+            <li><strong>Appointment Reminders</strong> <span>— Notifications for upcoming appointments</span></li>
+            <li><strong>Status Updates</strong> <span>— When appointment is confirmed/rejected/cancelled</span></li>
+            <li><strong>New Messages</strong> <span>— Notification when doctor sends message</span></li>
+            <li><strong>Visit Reports</strong> <span>— Notification when doctor adds/updates report</span></li>
+            <li><strong>Deep Links</strong> <span>— Tap notification to navigate directly to relevant screen</span>
+            </li>
+        </ul>
+
+        <!-- 10. Technical -->
+        <h2>10. Technical Highlights</h2>
+
+        <div class="tech-box no-break">
+            <div class="tech-item">
+                <span class="tech-label">Framework</span>
+                <span>Flutter (Dart) — Single codebase for iOS and Android</span>
+            </div>
+            <div class="tech-item">
+                <span class="tech-label">State Management</span>
+                <span>BLoC/Cubit pattern throughout the application</span>
+            </div>
+            <div class="tech-item">
+                <span class="tech-label">Backend</span>
+                <span>Supabase (PostgreSQL, Auth, Realtime, Storage, Edge Functions)</span>
+            </div>
+            <div class="tech-item">
+                <span class="tech-label">Real-time</span>
+                <span>Supabase Realtime for messages and appointment updates</span>
+            </div>
+            <div class="tech-item">
+                <span class="tech-label">Security</span>
+                <span>Row-Level Security (RLS) on all patient data tables</span>
+            </div>
+            <div class="tech-item">
+                <span class="tech-label">Localization</span>
+                <span>Full RTL support with flutter_localizations</span>
+            </div>
+            <div class="tech-item">
+                <span class="tech-label">Biometrics</span>
+                <span>local_auth + flutter_secure_storage</span>
+            </div>
+            <div class="tech-item">
+                <span class="tech-label">Push Notifications</span>
+                <span>Pushy service for cross-platform notifications</span>
+            </div>
+        </div>
+
+        <!-- 11. In Progress -->
+        <h2>11. In Progress</h2>
+        <p>Features currently being completed before first production release:</p>
+
+        <div class="feature-section no-break">
+            <ul class="feature-list">
+                <li><strong>Phone + OTP Authentication</strong> <span>— Direct signup and login using phone number with
+                        OTP verification</span></li>
+                <li><strong>Phone Number Verification</strong> <span>— Full OTP verification flow for phone
+                        numbers</span></li>
+                <li><strong>Push Notifications Enhancements</strong> <span>— Expanding notification types and improving
+                        delivery reliability</span></li>
+            </ul>
+        </div>
+
+        <!-- Roadmap Divider -->
+        <div class="page-break"
+            style="margin: 20px 0 15px; padding: 12px 0; border-top: 3px solid var(--primary); border-bottom: 3px solid var(--primary); text-align: center;">
+            <h1 style="font-size: 18px; font-weight: 700; color: var(--primary-dark); margin: 0; letter-spacing: 1px;">
+                ROADMAP</h1>
+            <p style="font-size: 9pt; color: var(--text-light); margin-top: 5px;">Planned features and future
+                enhancements</p>
+            <p style="font-size: 8pt; color: var(--text-light); margin-top: 3px; font-style: italic;">Timeline estimates
+                will be added in future updates</p>
+        </div>
+
+        <!-- Near-Term Priorities -->
+        <h3>Near-Term Priorities</h3>
+        <p>Features planned for near-term release:</p>
+
+        <div class="feature-section no-break">
+            <ul class="feature-list">
+                <li><strong>Points & Rewards System</strong> <span>— Earn loyalty points through bookings and app
+                        engagement, redeemable for benefits</span></li>
+                <li><strong>Dark Mode</strong> <span>— System-wide dark theme support for comfortable viewing</span>
+                </li>
+                <li><strong>Medication Reminders</strong> <span>— Set personalized reminders for prescribed medications
+                        with dosage tracking</span></li>
+                <li><strong>Prescription History</strong> <span>— Digital record of all prescriptions received from
+                        doctor visits</span></li>
+                <li><strong>Refer a Friend</strong> <span>— Invite friends to DocSera and earn rewards through the
+                        Points system</span></li>
+                <li><strong>Favorite Doctor Availability Alerts</strong> <span>— Receive notifications when favorite
+                        doctors have new available appointment slots</span></li>
+            </ul>
+        </div>
+
+        <!-- Future Vision -->
+        <h3>Future Vision</h3>
+        <p>Long-term roadmap for expanding the DocSera experience:</p>
+
+        <div class="feature-section no-break">
+            <ul class="feature-list">
+                <li><strong>Health Metrics Tracking</strong> <span>— Log and monitor health data such as blood pressure,
+                        glucose levels, and weight over time</span></li>
+                <li><strong>Pharmacy Locator</strong> <span>— Find nearby pharmacies with directions and contact
+                        information</span></li>
+                <li><strong>Doctor Blog & Community</strong> <span>— Platform for doctors to publish health articles,
+                        with patient engagement through likes and comments</span></li>
+                <li><strong>Video Consultations</strong> <span>— Telemedicine feature enabling remote video appointments
+                        with doctors</span></li>
+            </ul>
+        </div>
+
+        <!-- Footer -->
+        <footer class="footer no-break">
+            <p>DocSera © 2026 — Product Features & Roadmap</p>
+        </footer>
+    </div>
+</body>
+
+</html>

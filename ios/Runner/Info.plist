@@ -46,6 +46,10 @@
 
 	<key>NSLocationWhenInUseUsageDescription</key>
 	<string>يحتاج DocSera إلى موقعك لعرض الأطباء القريبين منك وإظهار موقعك على الخريطة.</string>
+	<key>NSLocationAlwaysAndWhenInUseUsageDescription</key>
+	<string>يحتاج DocSera إلى موقعك لعرض الأطباء القريبين منك وإظهار موقعك على الخريطة حتى عند تشغيل التطبيق في الخلفية.</string>
+	<key>NSLocationAlwaysUsageDescription</key>
+	<string>يحتاج DocSera إلى موقعك لعرض الأطباء القريبين منك وإظهار موقعك على الخريطة حتى عند تشغيل التطبيق في الخلفية.</string>
 	<key>NSMicrophoneUsageDescription</key>
 	<string>يحتاج DocSera إلى الوصول إلى الميكروفون في حال تسجيل فيديو أو صوت.</string>
 	<key>NSPhotoLibraryAddUsageDescription</key>

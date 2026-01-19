@@ -213,9 +213,9 @@ class _AccountScreenState extends State<AccountScreen> {
             children: [
               SizedBox(height: 5.h),
               const AccountBannerCard(),
-              SizedBox(height: 5.h),
-              PointsCard(userPoints: state.userPoints, userId: state.userId),
-              Divider(color: Colors.grey[200], height: 2.h),
+              // SizedBox(height: 5.h),
+              // PointsCard(userPoints: state.userPoints, userId: state.userId),
+              // Divider(color: Colors.grey[200], height: 2.h),
 
               AccountSectionTitle(title: AppLocalizations.of(context)!.personalInformation),
               Divider(color: Colors.grey[200], height: 2.h),
@@ -477,13 +477,13 @@ class _AccountScreenState extends State<AccountScreen> {
               Divider(color: Colors.grey[200], height: 2.h),
 
               // My Preferences
-              _buildPrivacyItem(
-                AppLocalizations.of(context)!.myPreferences,
-                    () {
-                  Navigator.push(context, fadePageRoute(const MyPreferencesPage()));
-                },
-              ),
-              Divider(color: Colors.grey[200], height: 2.h),
+              // _buildPrivacyItem(
+              //   AppLocalizations.of(context)!.myPreferences,
+              //       () {
+              //     Navigator.push(context, fadePageRoute(const MyPreferencesPage()));
+              //   },
+              // ),
+              // Divider(color: Colors.grey[200], height: 2.h),
 
               // Legal Information
               _buildPrivacyItem(

@@ -49,9 +49,9 @@ class NotificationService {
       requestBadgePermission: true,
       requestSoundPermission: true,
       // سنعرض الإشعار يدويًا عبر showLocal
-      defaultPresentAlert: false,
-      defaultPresentBadge: false,
-      defaultPresentSound: false,
+      defaultPresentAlert: true,
+      defaultPresentBadge: true,
+      defaultPresentSound: true,
     );
 
     const settings = InitializationSettings(android: androidInit, iOS: iosInit);
@@ -150,28 +150,35 @@ class NotificationService {
     required String body,
     String? payload,
   }) async {
-    final android = AndroidNotificationDetails(
-      _defaultChannel.id,
-      _defaultChannel.name,
-      channelDescription: _defaultChannel.description,
-      importance: Importance.high,
-      priority: Priority.high,
-      playSound: true,
-    );
+    debugPrint("🔔 NotificationService: showLocal called for '$title'");
+    try {
+      final android = AndroidNotificationDetails(
+        _defaultChannel.id,
+        _defaultChannel.name,
+        channelDescription: _defaultChannel.description,
+        importance: Importance.max, // Max importance
+        priority: Priority.high,
+        playSound: true,
+      );
 
-    const ios = DarwinNotificationDetails(
-      presentAlert: true,
-      presentBadge: true,
-      presentSound: true,
-    );
+      const ios = DarwinNotificationDetails(
+        presentAlert: true,
+        presentBadge: true,
+        presentSound: true,
+        interruptionLevel: InterruptionLevel.active, // Force active interruption
+      );
 
-    await _fln.show(
-      DateTime.now().millisecondsSinceEpoch ~/ 1000,
-      title,
-      body,
-      NotificationDetails(android: android, iOS: ios),
-      payload: payload,
-    );
+      await _fln.show(
+        DateTime.now().millisecondsSinceEpoch ~/ 1000,
+        title,
+        body,
+        NotificationDetails(android: android, iOS: ios),
+        payload: payload,
+      );
+      debugPrint("✅ NotificationService: _fln.show completed");
+    } catch (e) {
+      debugPrint("❌ NotificationService: Error showing local notification: $e");
+    }
   }
 
   Future<void> scheduleReminder({
@@ -216,6 +223,15 @@ class NotificationService {
   }
 
   void _handleNotificationTap(String? payload) async {
+    debugPrint("👆 Notification Tapped with payload: $payload");
+    
+    // ✅ Clear all notifications from center when app is opened via notification
+    await _fln.cancelAll();
+    
+    // Clear Badge
+    if (Platform.isIOS) {
+      Pushy.clearBadge();
+    }
     if (payload == null || payload.isEmpty) return;
     
     // ✅ Wait for Main Screen to be ready (Cold Start Fix)
@@ -388,45 +404,85 @@ void notificationTapBackground(NotificationResponse resp) {
   // لا يوجد context هنا
 }
 
+// 🛑 Prevent duplicate notifications (Time-based cache)
+Map<String, int> _recentNotifications = {};
+
 @pragma('vm:entry-point')
 Future<void> backgroundNotificationListener(Map<String, dynamic> data) async {
-  debugPrint('🔔 Pushy Background Listener Received: $data');
-  // Initialize Flutter bindings
-  WidgetsFlutterBinding.ensureInitialized();
+  try {
+    debugPrint('🔔 Pushy Background Listener Received: $data');
+    WidgetsFlutterBinding.ensureInitialized();
 
-  final title = (data['title'] ?? 'DocSera') as String;
-  final body = (data['body'] ?? '') as String;
-  final payload = (data['payload'] ?? '') as String;
+    final title = (data['title'] ?? 'DocSera') as String;
+    final body = (data['body'] ?? '') as String;
+    final payload = (data['payload'] ?? '') as String;
+    
+    // 🛡️ Enhanced Deduplication (Time-Based)
+    final dedupKey = '${title}_$payload';
+    final now = DateTime.now().millisecondsSinceEpoch;
+    
+    // Check if seen in the last 5 seconds (5000 ms)
+    final lastSeen = _recentNotifications[dedupKey];
+    if (lastSeen != null && (now - lastSeen < 5000)) {
+       debugPrint("🔕 Duplicate Notification Prevented (Time Window): $dedupKey");
+       return;
+    }
+    _recentNotifications[dedupKey] = now;
+    
+    // Cleanup old keys occasionally
+    _recentNotifications.removeWhere((_, time) => now - time > 10000);
 
-  // We need to initialize local notifications plugin here because this runs in a separate isolate
-  final FlutterLocalNotificationsPlugin fln = FlutterLocalNotificationsPlugin();
 
-  const androidInit = AndroidInitializationSettings('@mipmap/ic_launcher');
-  const iosInit = DarwinInitializationSettings(
-    requestAlertPermission: false,
-    requestBadgePermission: false,
-    requestSoundPermission: false,
-  );
-  const settings = InitializationSettings(android: androidInit, iOS: iosInit);
-  await fln.initialize(settings);
+    // ✅ Main Isolate Check: If NotificationService is initialized, use it!
+    if (NotificationService.instance.navigatorKey != null) {
+      debugPrint("✅ Using NotificationService.instance (Foreground)");
+      await NotificationService.instance.showLocal(
+        title: title,
+        body: body,
+        payload: payload,
+      );
+      return;
+    }
 
-  // Show local notification
-  const androidDetails = AndroidNotificationDetails(
-    'docsera_default',
-    'General Notifications',
-    importance: Importance.high,
-    priority: Priority.high,
-  );
-  const iosDetails = DarwinNotificationDetails();
+    // -------------------------------------------------------------------------
+    // 🌑 Background Isolate Fallback
+    // -------------------------------------------------------------------------
+    debugPrint("🌑 Using Standalone FLN (Background)");
+    final FlutterLocalNotificationsPlugin fln = FlutterLocalNotificationsPlugin();
 
-  await fln.show(
-    DateTime.now().millisecondsSinceEpoch ~/ 1000,
-    title,
-    body,
-    const NotificationDetails(android: androidDetails, iOS: iosDetails),
-    payload: payload,
-  );
+    const androidInit = AndroidInitializationSettings('@mipmap/ic_launcher');
+    const iosInit = DarwinInitializationSettings(
+      requestAlertPermission: false, 
+      requestBadgePermission: false, 
+      requestSoundPermission: false,
+    );
+    const settings = InitializationSettings(android: androidInit, iOS: iosInit);
+    await fln.initialize(settings);
 
-  // Clear badge on iOS
-  Pushy.clearBadge();
+    const androidDetails = AndroidNotificationDetails(
+      'docsera_default',
+      'General Notifications',
+      importance: Importance.high,
+      priority: Priority.high,
+    );
+    const iosDetails = DarwinNotificationDetails(
+      presentAlert: true,
+      presentBadge: true,
+      presentSound: true,
+    );
+
+    await fln.show(
+      DateTime.now().millisecondsSinceEpoch ~/ 1000,
+      title,
+      body,
+      const NotificationDetails(android: androidDetails, iOS: iosDetails),
+      payload: payload,
+    );
+
+    if (Platform.isIOS) {
+       Pushy.clearBadge();
+    }
+  } catch (e) {
+    debugPrint("❌ Error in backgroundNotificationListener: $e");
+  }
 }

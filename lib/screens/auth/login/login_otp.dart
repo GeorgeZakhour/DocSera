@@ -97,14 +97,14 @@ class _LoginOTPPageState extends State<LoginOTPPage> {
       });
       _startResendTimer();
 
-      // ✅ عرض الـ OTP كـ Snackbar (للديفيلوبر فقط)
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('OTP: $sentCode'),
-          backgroundColor: AppColors.main.withOpacity(0.9),
-          duration: const Duration(seconds: 3),
-        ),
-      );
+      // ✅ عرض الـ OTP كـ Snackbar (للديفيلوبر فقط) - COMMENTED OUT FOR PRODUCTION
+      // ScaffoldMessenger.of(context).showSnackBar(
+      //   SnackBar(
+      //     content: Text('OTP: $sentCode'),
+      //     backgroundColor: AppColors.main.withOpacity(0.9),
+      //     duration: const Duration(seconds: 3),
+      //   ),
+      // );
 
     } catch (e) {
       setState(() {

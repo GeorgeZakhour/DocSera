@@ -28,6 +28,8 @@ import 'package:docsera/screens/home/Document/document_preview_page.dart'; // �
 
 import '../../../app/text_styles.dart';
 import 'appointment_cancel_confirmation.dart' show AppointmentCancelledPage;
+import 'package:docsera/screens/home/health/pages/visit_reports/visit_report_model.dart'; // 👈
+import 'package:docsera/screens/home/health/pages/visit_reports/VisitReportDetailsPage.dart'; // 👈
 
 
 class AppointmentDetailsPage extends StatefulWidget {
@@ -1457,8 +1459,78 @@ class _AppointmentDetailsPageState extends State<AppointmentDetailsPage> {
                           ),
                           Divider(color: Colors.grey[200],height: 2),
 
+                          // 🔹 Medical Report (If Exists)
+                          Builder(
+                            builder: (context) {
+                              final reportMap = (widget.appointment['report'] is Map) 
+                                  ? widget.appointment['report'] as Map 
+                                  : null;
+                                  
+                              final hasReport = reportMap != null && 
+                                  ((reportMap['diagnosis'] != null && reportMap['diagnosis'].toString().isNotEmpty) || 
+                                   (reportMap['recommendation'] != null && reportMap['recommendation'].toString().isNotEmpty));
+
+                              if (!hasReport) return const SizedBox.shrink();
+
+                              return Column(
+                                children: [
+                                  InkWell(
+                                    onTap: () {
+                                       // Construct VisitReport
+                                       final report = VisitReport(
+                                          appointmentId: widget.appointment['id'].toString(),
+                                          date: tsUtc, // using tsUtc calculated above
+                                          doctorName: doctorName,
+                                          doctorSpecialty: specialty,
+                                          clinicName: clinicName,
+                                          clinicAddress: formattedAddress,
+                                          diagnosis: reportMap?['diagnosis'],
+                                          recommendation: reportMap?['recommendation'],
+                                          doctorGender: gender,
+                                          doctorTitle: titleForImage,
+                                          doctorImagePath: doctorImage,
+                                       );
+                                       
+                                       Navigator.push(
+                                         context,
+                                         fadePageRoute(VisitReportDetailsPage(
+                                           report: report,
+                                           heroTag: 'report_${widget.appointment['id']}',
+                                         )),
+                                       );
+                                    },
+                                    child: Padding(
+                                      padding: EdgeInsets.symmetric(horizontal: 16.h, vertical: 15.h),
+                                      child: Row(
+                                        children: [
+                                          Icon(Icons.assignment_outlined, color: AppColors.main, size: 16.sp),
+                                          SizedBox(width: 15.w),
+                                          Expanded(
+                                            child: Text(
+                                              AppLocalizations.of(context)!.health_reports_title, // "Medical Reports"
+                                              style: AppTextStyles.getText2(context).copyWith(fontSize: 11.sp),
+                                            ),
+                                          ),
+                                          Icon(Icons.arrow_forward_ios, color: Colors.grey, size: 12.sp),
+                                        ],
+                                      ),
+                                    ),
+                                  ),
+                                  Divider(color: Colors.grey[200], height: 2),
+                                ],
+                              );
+                            }
+                          ),
+
                           // 🔹 Reschedule & Cancel Buttons
-                          if (widget.isUpcoming) // Show only for upcoming appointments
+                          // Show only if:
+                          // 1. It is in the "Upcoming" list (widget.isUpcoming)
+                          // 2. Status is NOT 'done'
+                          // 3. Timestamp is NOT in the past
+                          if (widget.isUpcoming && 
+                              (widget.appointment['status'] != 'done') && 
+                              DocSeraTime.toSyria(DateTime.parse(widget.appointment['timestamp'].toString()))
+                                  .isAfter(DocSeraTime.nowSyria()))
                             Padding(
                               padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 5.h),
                               child: Row(
@@ -1512,17 +1584,32 @@ class _AppointmentDetailsPageState extends State<AppointmentDetailsPage> {
                       padding: EdgeInsets.symmetric(horizontal: 8.0.w),
                       child: Column(
                         children: [
-                          if (widget.isUpcoming)
-                            // ✅ 3-Document Limit Logic
-                            Builder(
-                              builder: (context) {
-                                final count = attachments.length;
-                                final isLimitReached = count >= 3;
-                                final color = isLimitReached ? Colors.grey : AppColors.main;
-                                final textColor = isLimitReached ? Colors.grey : AppColors.main;
 
-                                return Card(
-                                  color: AppColors.background2,
+                          Builder(
+                            builder: (context) {
+                              // Logic using Syria Time
+                              final tsStr = appt['timestamp']?.toString();
+                              final status = appt['status']?.toString();
+                              final isDone = (status == 'done');
+
+                              bool isFuture = false;
+                              if (tsStr != null) {
+                                 // Timestamp is usually UTC in DB, parse safely
+                                 final tsSyria = DocSeraTime.toSyria(DateTime.parse(tsStr));
+                                 isFuture = tsSyria.isAfter(DocSeraTime.nowSyria());
+                              }
+
+                              // Combine conditions
+                              final showSendDoc = widget.isUpcoming && !isDone && isFuture;
+
+                              if (!showSendDoc) return const SizedBox.shrink();
+
+                              final count = attachments.length;
+                              final isLimitReached = count >= 3;
+                              final color = isLimitReached ? Colors.grey : AppColors.main;
+                              final textColor = isLimitReached ? Colors.grey : AppColors.main;
+
+                              return Card(
                                   shape: RoundedRectangleBorder(
                                     borderRadius: BorderRadius.circular(12.r),
                                   ),

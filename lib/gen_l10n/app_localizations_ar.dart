@@ -1062,7 +1062,7 @@ class AppLocalizationsAr extends AppLocalizations {
   String get filters => 'الفلاتر';
 
   @override
-  String get done => 'تم';
+  String get done => 'تمت الزيارة بنجاح';
 
   @override
   String get moreFiltersSoon => 'المزيد من الفلاتر قريباً';

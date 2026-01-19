@@ -15,6 +15,7 @@ class AppColors {
   static const Color orange = Color(0xFFFFB494); // Orange color
   static const Color orangeText = Color(0xFFFFA070); // Orange color
   static const Color red = Color(0xFFD32F2F); // Matching red tone
+  static const Color success = Color(0xFF2E7D32); // Pure Green for Done status
   static const Color background = Color(0xFFF7FBFB); // Lighter green background
   static const Color background3 = Color(0xFFF7FDFC); // Softer light green background
   static const Color background4 = Color(0xFFEAF7F5); // أخضر باهت متوازن، أخف من E0F2EF لكن يظهر بوضوح عن الأبيض
