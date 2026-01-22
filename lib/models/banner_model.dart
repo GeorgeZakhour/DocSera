@@ -13,6 +13,7 @@ class BannerModel {
   final String? logoContainerColor;
   final int orderIndex;
   final Map<String, dynamic>? contentSections; // Changed to Map for localization
+  final bool showTitle;
 
   BannerModel({
     required this.id,
@@ -27,6 +28,7 @@ class BannerModel {
     this.logoContainerColor,
     this.orderIndex = 0,
     this.contentSections,
+    this.showTitle = true,
   });
 
   factory BannerModel.fromJson(Map<String, dynamic> json) {
@@ -43,6 +45,7 @@ class BannerModel {
       logoContainerColor: json['logo_container_color'],
       orderIndex: json['order_index'] ?? 0,
       contentSections: json['content_sections'],
+      showTitle: json['show_title'] ?? true,
     );
   }
 

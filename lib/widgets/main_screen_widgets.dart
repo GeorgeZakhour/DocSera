@@ -364,6 +364,7 @@ class _BannersSectionState extends State<BannersSection> {
                 isSponsored: banner.isSponsored,
                 backgroundColor: backgroundColor,
                 logoContainerColor: logoContainerColor,
+                showTitle: banner.showTitle,
               ),
             ),
           );
@@ -381,6 +382,7 @@ class BannerCard extends StatelessWidget {
   final bool isSponsored;
   final Color backgroundColor;
   final Color? logoContainerColor; // ✅ New parameter for logo background
+  final bool showTitle;
 
   const BannerCard({
     super.key,
@@ -391,6 +393,7 @@ class BannerCard extends StatelessWidget {
     this.isSponsored = false,
     required this.backgroundColor,
     this.logoContainerColor,
+    this.showTitle = true,
   });
 
   @override
@@ -472,30 +475,38 @@ class BannerCard extends StatelessWidget {
                           ), // Adjusted size
                         ),
                       ),
-                    if (title != null && logoPath == null)
+                  if (title != null && showTitle)
                       Padding(
                         padding: EdgeInsets.only(
-                          top: 9.w, // ✅ Push text down to leave space for logo
+                          top: logoPath != null ? 0.w : 9.w, // ✅ Reduced top padding if logo exists
                           left: 12.w,
                           bottom: 3.w,
                           right: 12.w,
                         ),
-                        child: Text(
-                            title!,
-                            style: AppTextStyles.getTitle1(context)
+                        child: SizedBox(
+                          width: Localizations.localeOf(context).languageCode == 'ar' ? double.infinity : null,
+                          child: Text(
+                              title!,
+                              textAlign: Localizations.localeOf(context).languageCode == 'ar' ? TextAlign.right : null,
+                              style: AppTextStyles.getTitle1(context)
+                          ),
                         ),
                       ),
                     Padding(
                       padding: EdgeInsets.only(
-                        top: 6.w, // ✅ Push text down to leave space for logo
+                        top: ((title == null || !showTitle) && logoPath != null) ? 0.w : 3.w, // ✅ Adjust top padding
                         left: 12.w,
                         bottom: 9.w,
                         right: 12.w,
                       ),
-                      child: Text(
-                          text,
-                          style: AppTextStyles.getText3(context).copyWith(
-                            color: Colors.black87,)
+                      child: SizedBox(
+                        width: Localizations.localeOf(context).languageCode == 'ar' ? double.infinity : null,
+                        child: Text(
+                            text,
+                            textAlign: Localizations.localeOf(context).languageCode == 'ar' ? TextAlign.right : null,
+                            style: AppTextStyles.getText3(context).copyWith(
+                              color: Colors.black87,)
+                        ),
                       ),
                     ),
                   ],
