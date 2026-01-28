@@ -43,6 +43,9 @@ class MessagesListView extends StatelessWidget {
   /// Called when user taps retry on a failed message
   final void Function(Map<String, dynamic> msg)? onRetry;
 
+  /// Helper to resolve file URL (signed)
+  final Future<String> Function(String bucket, String path)? resolveFileUrl;
+
   const MessagesListView({
     super.key,
     required this.messages,
@@ -56,6 +59,7 @@ class MessagesListView extends StatelessWidget {
     required this.resolveImageUrls,
     required this.onOpenImages,
     this.onRetry,
+    this.resolveFileUrl,
   });
 
   bool _isArabicText(String text) {
@@ -579,8 +583,12 @@ class MessagesListView extends StatelessWidget {
                   if (localPath != null && localPath.isNotEmpty) {
                      url = localPath;
                   } else if (paths.isNotEmpty) {
-                    // This widget doesn't know how to sign URLs, so assume direct URL
-                    url = paths.first.toString();
+                    if (resolveFileUrl != null) {
+                      url = await resolveFileUrl!(bucket, paths.first.toString());
+                    } else {
+                      // Fallback if no resolver provided
+                      url = paths.first.toString();
+                    }
                   } else {
                     return;
                   }

@@ -62,6 +62,19 @@ class _WriteMessagePageState extends State<WriteMessagePage> {
   final bool _shouldAutoScroll = true;
   bool _isSending = false;
 
+  @override
+  void initState() {
+    super.initState();
+    if (widget.attachedDocument != null) {
+      _attachedDocument = widget.attachedDocument;
+      if (_attachedDocument!.type == 'pdf' || _attachedDocument!.name.toLowerCase().endsWith('.pdf')) {
+        _pendingFileType = 'pdf';
+      } else {
+        _pendingFileType = 'image';
+      }
+    }
+  }
+
 
   void _showHelpBottomSheet() {
     showModalBottomSheet(
@@ -264,7 +277,7 @@ class _WriteMessagePageState extends State<WriteMessagePage> {
   Widget _buildPreviewAttachment() {
     final local = AppLocalizations.of(context)!;
 
-    if (_selectedImageFiles.isEmpty) return const SizedBox();
+    if (_selectedImageFiles.isEmpty && _attachedDocument == null) return const SizedBox();
     final isPdf = _pendingFileType == 'pdf';
 
     Widget buildBlurredContainer(Widget child) {
@@ -287,7 +300,9 @@ class _WriteMessagePageState extends State<WriteMessagePage> {
     }
 
     if (isPdf) {
-      final fileName = _selectedImageFiles.first.path.split('/').last;
+      final fileName = _selectedImageFiles.isNotEmpty 
+          ? _selectedImageFiles.first.path.split('/').last 
+          : (_attachedDocument?.name ?? "Document.pdf");
       final shortName = fileName.length > 30 ? '${fileName.substring(0, 27)}...' : fileName;
 
       return Padding(
@@ -309,6 +324,7 @@ class _WriteMessagePageState extends State<WriteMessagePage> {
                 onPressed: () {
                   setState(() {
                     _selectedImageFiles.clear();
+                    _attachedDocument = null; // Clear attached doc
                     _pendingFileType = null;
                   });
                 },
@@ -319,7 +335,7 @@ class _WriteMessagePageState extends State<WriteMessagePage> {
       );
     }
 
-    final count = _selectedImageFiles.length;
+    final count = _selectedImageFiles.length + (_attachedDocument != null && !isPdf ? 1 : 0);
     final imageSize = 36.w;
     final spacing = 6.w;
     final label = count == 1 ? local.attachedImage : '$count ${local.attachedImages}';
@@ -354,6 +370,23 @@ class _WriteMessagePageState extends State<WriteMessagePage> {
                       ),
                     );
                   } else {
+                    // Start of handling mixed sources
+                    Widget imageWidget;
+                    bool isAttachedRemote = false;
+                    
+                    // If we have an attached document (image) and it's the first item (or handled in logic)
+                    // Simplified logic: If _attachedDocument exists (and is image), it's index 0. Local files follow.
+                    if (_attachedDocument != null && !isPdf) {
+                         if (i == 0) {
+                            imageWidget = Image.network(_attachedDocument!.previewUrl, fit: BoxFit.cover);
+                            isAttachedRemote = true;
+                         } else {
+                            imageWidget = Image.file(_selectedImageFiles[i-1], fit: BoxFit.cover);
+                         }
+                    } else {
+                         imageWidget = Image.file(_selectedImageFiles[i], fit: BoxFit.cover);
+                    }
+
                     return Container(
                       width: imageSize,
                       height: imageSize,
@@ -365,22 +398,15 @@ class _WriteMessagePageState extends State<WriteMessagePage> {
                         borderRadius: BorderRadius.circular(6.r),
                         child: GestureDetector(
                           onTap: () {
-                            final filePaths = _selectedImageFiles.map((f) => f.path).toList();
-                            _showLocalImageOverlayWithIndex(filePaths, i);
+                             // Handle full screen preview ... can be enhanced later if needed
+                             if (isAttachedRemote) return; // Simple skip for remote for now or implement full logic
+                             final filePaths = _selectedImageFiles.map((f) => f.path).toList();
+                             // Calculate correct index for local files
+                             int localIndex = _attachedDocument != null && !isPdf ? i - 1 : i;
+                             _showLocalImageOverlayWithIndex(filePaths, localIndex);
                           },
-                          child: GestureDetector(
-                            onTap: () {
-                              final filePaths = _selectedImageFiles.map((f) => f.path).toList();
-                              _showLocalImageOverlayWithIndex(filePaths, i);
-                            },
-                            child: Image.file(
-                              _selectedImageFiles[i],
-                              fit: BoxFit.cover,
-                            ),
-                          ),
-
+                          child: imageWidget,
                         ),
-
                       ),
                     );
                   }
@@ -613,6 +639,8 @@ class _WriteMessagePageState extends State<WriteMessagePage> {
                             patientName: widget.patientProfile.patientName,
                             accountHolderName: accountHolderName,
                             selectedReason: widget.selectedReason,
+                            initialFiles: _selectedImageFiles,     // ✅ Pass images/pdf
+                            initialDocument: _attachedDocument,    // ✅ Pass Doc if any
                           );
 
                           if (conversationId != null) {
@@ -627,6 +655,7 @@ class _WriteMessagePageState extends State<WriteMessagePage> {
                                     patientName: widget.patientProfile.patientName,
                                     accountHolderName: accountHolderName,
                                     doctorAvatar: widget.doctorImage,
+                                    attachedDocument: null, // ✅ Don't pass again, as it's sent!
                                   ),
                                 ),
                               ),

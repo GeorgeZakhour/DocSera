@@ -60,6 +60,55 @@ class SupabaseOTPService {
   }
 
   // ---------------------------------------------------------------------------
+  // 🔐 Forgot Password Flow
+  // ---------------------------------------------------------------------------
+
+  /// 1. Send OTP (Purpose: forgot_password)
+  Future<void> sendForgotPasswordOtp(String email) async {
+    final res = await _supabase.functions.invoke(
+      'send_email_otp',
+      body: {
+        'email': email,
+        'purpose': 'forgot_password', // ✅ New purpose
+      },
+    );
+
+    if (res.status != 200) {
+      throw Exception('Failed to send forgot password email');
+    }
+  }
+
+  /// 2. Validate OTP (Peek without consuming)
+  Future<bool> validateForgotPasswordOtp(String email, String code) async {
+    final res = await _supabase.rpc(
+      'rpc_validate_email_otp_peek',
+      params: {
+        'p_email': email,
+        'p_code': code,
+        'p_purpose': 'forgot_password',
+      },
+    );
+    return res == true;
+  }
+
+  /// 3. Reset Password (Consume OTP + Update Password)
+  Future<void> resetPassword(String email, String code, String newPassword) async {
+    final res = await _supabase.functions.invoke(
+      'reset_password_otp',
+      body: {
+        'email': email,
+        'code': code,
+        'newPassword': newPassword,
+      },
+    );
+
+    if (res.status != 200) {
+      // Parse error if possible
+      throw Exception('Failed to reset password. Code might be expired.');
+    }
+  }
+
+  // ---------------------------------------------------------------------------
   // 🔢 OTP Generator (SMS فقط)
   // ---------------------------------------------------------------------------
   String _generateOTP() {

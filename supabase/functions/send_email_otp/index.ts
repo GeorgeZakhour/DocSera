@@ -7,7 +7,7 @@ serve(async (req) => {
       return new Response("Method Not Allowed", { status: 405 });
     }
 
-    const { email } = await req.json();
+    const { email, purpose } = await req.json(); // ✅ Get purpose
 
     if (!email || typeof email !== "string") {
       return new Response(
@@ -29,7 +29,7 @@ serve(async (req) => {
     // ------------------------------------------------------------
     const { data, error } = await supabase.rpc("rpc_create_email_otp", {
       p_email: email,
-      p_purpose: "signup_email_verify",
+      p_purpose: purpose || "signup_email_verify", // ✅ Use provided purpose or default
     });
 
 if (error) {

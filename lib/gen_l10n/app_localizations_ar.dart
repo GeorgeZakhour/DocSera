@@ -1788,6 +1788,68 @@ class AppLocalizationsAr extends AppLocalizations {
       'حدث خطأ غير متوقع. يرجى المحاولة مرة أخرى لاحقًا.';
 
   @override
+  String get forgotPasswordTitle => 'نسيت كلمة المرور';
+
+  @override
+  String get forgotPasswordSubtitle =>
+      'أدخل بريدك الإلكتروني لعملية التحقق. سنرسل لك رمزًا مكونًا من 6 أرقام.';
+
+  @override
+  String get sendCode => 'إرسال الرمز';
+
+  @override
+  String get verificationCode => 'رمز التحقق';
+
+  @override
+  String verifyCodeSubtitle(Object email) {
+    return 'يرجى إدخال الرمز المرسل إلى $email';
+  }
+
+  @override
+  String get resetPasswordTitle => 'تعيين كلمة المرور';
+
+  @override
+  String get resetPasswordSubtitle => 'تعيين كلمة مرور قوية جديدة لحسابك.';
+
+  @override
+  String get newPasswordLabel => 'كلمة المرور الجديدة';
+
+  @override
+  String get confirmPasswordLabel => 'تأكيد كلمة المرور';
+
+  @override
+  String get resetPasswordBtn => 'تعيين كلمة المرور';
+
+  @override
+  String get passwordResetSuccess => 'تم تعيين كلمة المرور بنجاح!';
+
+  @override
+  String get passwordsDoNotMatch => 'كلمات المرور غير متطابقة';
+
+  @override
+  String get sendingCode => 'جارٍ إرسال الرمز...';
+
+  @override
+  String get verifying => 'جارٍ التحقق...';
+
+  @override
+  String get resetting => 'جارٍ التعيين...';
+
+  @override
+  String get emailSentTitle => 'تم إرسال البريد';
+
+  @override
+  String codeSentMessage(Object email) {
+    return 'لقد أرسلنا رمز التحقق إلى $email';
+  }
+
+  @override
+  String get success => 'نجاح';
+
+  @override
+  String get goToLogin => 'الذهاب لتسجيل الدخول';
+
+  @override
   String get health_loggedOut_title => 'ملفك الصحي في مكان واحد';
 
   @override

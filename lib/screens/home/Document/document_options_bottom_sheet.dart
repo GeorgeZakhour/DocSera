@@ -201,10 +201,12 @@ void showDocumentOptionsSheet(
               context,
               Icons.edit_outlined,
               local.rename,
-              onTap: () async {
+                onTap: () async {
                 Navigator.pop(context);
                 final prefs = await SharedPreferences.getInstance();
                 final mainUserId = prefs.getString('userId') ?? '';
+                final cubit = context.read<DocumentsCubit>();
+                
                 showModalBottomSheet(
                   context: context,
                   isScrollControlled: true,
@@ -213,18 +215,15 @@ void showDocumentOptionsSheet(
                   constraints: BoxConstraints(maxHeight: MediaQuery.of(context).size.height),
                   builder: (_) => EditDocumentNameSheet(
                     initialName: document.name,
-                    onConfirm: (newName) async {
-                      await Supabase.instance.client
-                          .from('documents')
-                          .update({'name': newName})
-                          .eq('id', document.id!)
-                          .eq('user_id', mainUserId);
+                    onConfirm: (newName) {
+                       // Trigger rename via cubit
+                       cubit.renameDocument(
+                         docId: document.id!,
+                         newName: newName,
+                         userId: mainUserId,
+                       );
                     },
-                    onNameUpdated: (newName) {
-                      Future.delayed(const Duration(milliseconds: 50), () {
-                        context.read<DocumentsCubit>().listenToDocuments(context: context);
-                      });
-                    },
+                    onNameUpdated: null, // No longer needed as Cubit handles refresh
                   ),
                 );
               },

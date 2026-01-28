@@ -1808,6 +1808,69 @@ class AppLocalizationsEn extends AppLocalizations {
       'An unexpected error occurred. Please try again later.';
 
   @override
+  String get forgotPasswordTitle => 'Forgot Password';
+
+  @override
+  String get forgotPasswordSubtitle =>
+      'Enter your email for the verification process. We will send you a 6-digit code.';
+
+  @override
+  String get sendCode => 'Send Code';
+
+  @override
+  String get verificationCode => 'Verification Code';
+
+  @override
+  String verifyCodeSubtitle(Object email) {
+    return 'Please enter the code sent to $email';
+  }
+
+  @override
+  String get resetPasswordTitle => 'Reset Password';
+
+  @override
+  String get resetPasswordSubtitle =>
+      'Set a new strong password for your account.';
+
+  @override
+  String get newPasswordLabel => 'New Password';
+
+  @override
+  String get confirmPasswordLabel => 'Confirm Password';
+
+  @override
+  String get resetPasswordBtn => 'Reset Password';
+
+  @override
+  String get passwordResetSuccess => 'Password reset successfully!';
+
+  @override
+  String get passwordsDoNotMatch => 'Passwords do not match';
+
+  @override
+  String get sendingCode => 'Sending code...';
+
+  @override
+  String get verifying => 'Verifying...';
+
+  @override
+  String get resetting => 'Resetting...';
+
+  @override
+  String get emailSentTitle => 'Email Sent';
+
+  @override
+  String codeSentMessage(Object email) {
+    return 'We have sent a verification code to $email';
+  }
+
+  @override
+  String get success => 'Success';
+
+  @override
+  String get goToLogin => 'Go to Login';
+
+  @override
   String get health_loggedOut_title => 'Your health history in one place';
 
   @override

@@ -516,6 +516,7 @@ class _SelectPatientForMessagePageState extends State<SelectPatientForMessagePag
                           patientName: docData['patient_name'] ?? selectedPatientName,
                           accountHolderName: userName,
                           doctorAvatar: widget.doctorImage,      // ImageProvider جاهز
+                          attachedDocument: widget.attachedDocument, // Pass the attached document
                         )
 
                       ),

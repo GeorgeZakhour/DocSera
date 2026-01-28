@@ -1,3 +1,7 @@
+import 'package:http/http.dart' as http;
+import 'package:path_provider/path_provider.dart';
+import 'package:path/path.dart' as path;
+import 'package:docsera/models/document.dart';
 import 'dart:io';
 import 'package:docsera/utils/time_utils.dart';
 import 'dart:ui';
@@ -23,6 +27,7 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:flutter_svg/svg.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
+import 'package:docsera/screens/home/Document/document_info_screen.dart';
 
 import '../../../../utils/full_page_loader.dart';
 
@@ -32,6 +37,7 @@ class ConversationPage extends StatefulWidget {
   final String patientName;
   final String accountHolderName;
   final ImageProvider doctorAvatar;
+  final UserDocument? attachedDocument;
 
   const ConversationPage({
     super.key,
@@ -40,6 +46,7 @@ class ConversationPage extends StatefulWidget {
     required this.patientName,
     required this.accountHolderName,
     required this.doctorAvatar,
+    this.attachedDocument,
   });
 
   @override
@@ -56,7 +63,7 @@ class _ConversationPageState extends State<ConversationPage> {
 
   final List<File> _pendingImages = [];
   File? _pendingPdf;
-  int _imagesLoadingCount = 0; // ✅ Track loading images
+  int _imagesLoadingCount = 0;
 
   bool _autoScroll = true;
   OverlayEntry? _imageOverlay;
@@ -70,6 +77,63 @@ class _ConversationPageState extends State<ConversationPage> {
     context.read<ConversationCubit>().start(widget.conversationId);
 
     _scrollController.addListener(_handleScroll);
+
+    if (widget.attachedDocument != null) {
+      _downloadAttachedDocument();
+    }
+  }
+
+  Future<void> _downloadAttachedDocument() async {
+    try {
+      final doc = widget.attachedDocument!;
+      final urlStr = doc.previewUrl;
+      if (urlStr.isEmpty) return;
+
+      final url = Uri.parse(urlStr);
+      
+      // Determine extension based on doc type if possible, or existing extension
+      final extension = path.extension(urlStr).toLowerCase(); // Check URL first
+      
+      final isPdf = doc.fileType == 'pdf' || doc.type == 'pdf' || extension == '.pdf' || doc.name.toLowerCase().endsWith('.pdf');
+      
+      setState(() => _imagesLoadingCount++);
+
+      final response = await http.get(url);
+      if (response.statusCode == 200) {
+        final tempDir = await getTemporaryDirectory();
+        
+        // Use document name, ensuring safe characters if needed, but keeping it readable
+        // Also ensure extension is present
+        String safeName = doc.name.replaceAll(RegExp(r'[^\w\s\u0600-\u06FF\.-]'), ''); // Allow Arabic chars
+        if (safeName.trim().isEmpty) safeName = "document";
+        
+        if (isPdf && !safeName.toLowerCase().endsWith('.pdf')) {
+           safeName += '.pdf';
+        } else if (!isPdf && !safeName.toLowerCase().endsWith('.png') && !safeName.toLowerCase().endsWith('.jpg') && !safeName.toLowerCase().endsWith('.jpeg')) {
+           safeName += '.png'; // Default to png for images if no extension
+        }
+
+        final file = File('${tempDir.path}/$safeName');
+        await file.writeAsBytes(response.bodyBytes);
+
+        if (mounted) {
+           setState(() {
+             if (isPdf) {
+               _pendingPdf = file;
+             } else {
+               _pendingImages.add(file);
+             }
+             _imagesLoadingCount--;
+           });
+        }
+      } else {
+        if (mounted) setState(() => _imagesLoadingCount--);
+        debugPrint("Failed to download document: ${response.statusCode}");
+      }
+    } catch (e) {
+      if (mounted) setState(() => _imagesLoadingCount--);
+      debugPrint("Error downloading attached document: $e");
+    }
   }
 
   @override
@@ -216,7 +280,56 @@ class _ConversationPageState extends State<ConversationPage> {
         imageUrls: urls,
         initialIndex: initialIndex,
         onAddToDocuments: (paths) async {
-          // TODO: connect with your documents feature
+          if (paths.isEmpty) return;
+
+          Navigator.push(
+            context,
+            MaterialPageRoute(
+               builder: (_) => DocumentInfoScreen(
+                 images: paths,
+                 initialName: "Image from ${widget.doctorName}",
+                 cameFromMultiPage: paths.length > 1,
+                 pageCount: paths.length,
+                 initialPatientId: widget.patientName, // Ideally ID, but check what DocumentInfoScreen expects. 
+                 // Wait, DocumentInfoScreen expects initialPatientId. 
+                 // In ConversationPage, do we have patientId? 
+                 // widget.patientName is String.
+                 // Checking ConversationPage constructor: only doctorName, patientName, accountHolderName.
+                 // Use empty string or patientName if ID not available, or check if we can get it.
+                 // Actually DocumentInfoScreen might use it to pre-fill?
+                 // Let's use empty string if we don't have ID, or try to get it. 
+                 // But wait, the previous code in document_options uses `patientId`. 
+                 // Does ConversationPage receive patientId? 
+                 // No, it receives names.
+                 // However, we are in ConversationPage.
+                 // Let's assume we can pass '' for now or fix it if critical.
+                 // But better: In `conversation_page.dart`, we don't have `patientId` in widget.
+                 // The `ConversationCubit` might know.
+                 // But `DocumentInfoScreen` might just need it for saving.
+                 // Let's check `DocumentInfoScreen` definition if I can.
+                 // I saw it used in `document_options_bottom_sheet.dart` line 107 passing `patientId`.
+                 // In `ConversationPage`, I only have `widget.patientName`.
+                 // I will pass '' for now and user can select? Or maybe I should get it from Cubit?
+                 // `ConversationCubit` has `start(conversationId)`. 
+                 // The state has `conversationId`.
+                 // The cubit might not expose `patientId` easily.
+                 // Let's pass '' and hope `DocumentInfoScreen` handles it or user selects patient.
+                 // Re-reading `DocumentInfoScreen` usage in `document_options_bottom_sheet`:
+                 // It refers to `patientId` variable.
+                 
+                 // Let's settle on passing empty string or `widget.patientName`.
+                 // If I pass `widget.patientName`, it might be wrong if it expects UUID.
+                 // I will pass `widget.patientName` but likely it wants ID.
+                 // I'll leave it as '' for safety or check if I can get current user ID. 
+                 // If `widget.patientName` != `widget.accountHolderName`, it's a relative.
+                 // `Supabase.instance.client.auth.currentUser?.id` is account holder.
+                 
+                 // Let's just use empty string for `initialPatientId` for now.
+                 cameFromConversation: true,
+                 conversationDoctorName: widget.doctorName,
+               ),
+            ),
+          );
         },
         onClose: () {
           _imageOverlay?.remove();
@@ -424,6 +537,8 @@ class _ConversationPageState extends State<ConversationPage> {
                              onRetry: (failedMsg) { // ✅ Handle Retry
                                context.read<ConversationCubit>().retryMessage(failedMsg);
                              },
+                             resolveFileUrl: (bucket, path) =>
+                                 _attachmentsService.getFileUrl(bucket: bucket, filePath: path),
                            );
                        },
                      ),

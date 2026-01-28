@@ -1,5 +1,10 @@
 import 'dart:io';
-import 'package:syncfusion_flutter_pdf/pdf.dart';
+import 'dart:typed_data';
+import 'package:syncfusion_flutter_pdf/pdf.dart' hide PdfDocument;
+import 'package:syncfusion_flutter_pdf/pdf.dart' as syncfusion;
+import 'package:pdfx/pdfx.dart' as pdfx;
+import 'package:http/http.dart' as http;
+import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:docsera/Business_Logic/Documents_page/notes/notes_cubit.dart';
 import 'package:docsera/Business_Logic/Documents_page/notes/notes_state.dart';
 import 'package:docsera/models/document.dart';
@@ -1110,72 +1115,10 @@ class _DocumentsPageState extends State<DocumentsPage> with AutomaticKeepAliveCl
   }
 
   Widget _buildDocumentCard(Map<String, dynamic> doc) {
-    return InkWell(
+    return DocumentGridItem(
+      doc: doc,
       onTap: () => _openDocument(doc),
-      child: Container(
-        decoration: BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.circular(16.r),
-          border: Border.all(color: Colors.grey.shade300),
-        ),
-        child: Column(
-          children: [
-            Expanded(
-              flex: 8,
-              child: ClipRRect(
-                borderRadius: BorderRadius.only(
-                    topLeft: Radius.circular(16.r),
-                    topRight: Radius.circular(16.r)),
-                child: (doc['pages'] != null && doc['pages'].isNotEmpty)
-                    ? Image.network(
-                  doc['previewUrl'],
-                  fit: BoxFit.cover,
-                  width: double.infinity,
-                  errorBuilder: (_, __, ___) => Center(
-                    child: Icon(Icons.broken_image, size: 48.sp, color: Colors.grey),
-                  ),
-                )
-
-                    : Center(
-                  child: Icon(Icons.broken_image, size: 48.sp, color: Colors.grey),
-                ),
-
-
-
-
-              ),
-            ),
-            Expanded(
-              flex: 2,
-              child: Container(
-                padding: EdgeInsets.symmetric(horizontal: 8.w),
-                decoration: BoxDecoration(
-                  color: Colors.grey[100],
-                  borderRadius: BorderRadius.only(
-                      bottomLeft: Radius.circular(16.r),
-                      bottomRight: Radius.circular(16.r)),
-                ),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Flexible(
-                      child: Text(
-                        doc['name'],
-                        style: AppTextStyles.getText2(context),
-                        overflow: TextOverflow.ellipsis,
-                      ),
-                    ),
-                    IconButton(
-                      icon: Icon(Icons.more_vert, size: 20.sp),
-                      onPressed: () => _showEditOptions(doc),
-                    ),
-                  ],
-                ),
-              ),
-            ),
-          ],
-        ),
-      ),
+      onEdit: () => _showEditOptions(doc),
     );
   }
 
@@ -1223,7 +1166,7 @@ class _DocumentsPageState extends State<DocumentsPage> with AutomaticKeepAliveCl
   Future<int> getPdfPageCount(String path) async {
     final file = File(path);
     final bytes = await file.readAsBytes();
-    final document = PdfDocument(inputBytes: bytes);
+    final document = syncfusion.PdfDocument(inputBytes: bytes);
     final count = document.pages.count;
     document.dispose(); // لتفريغ الذاكرة
     return count;
@@ -1748,3 +1691,205 @@ class _DocumentsPageState extends State<DocumentsPage> with AutomaticKeepAliveCl
 }
 
 
+
+
+
+class DocumentGridItem extends StatefulWidget {
+  final Map<String, dynamic> doc;
+  final VoidCallback onTap;
+  final VoidCallback onEdit;
+
+  const DocumentGridItem({
+    super.key,
+    required this.doc,
+    required this.onTap,
+    required this.onEdit,
+  });
+
+  @override
+  State<DocumentGridItem> createState() => _DocumentGridItemState();
+}
+
+class _DocumentGridItemState extends State<DocumentGridItem> {
+  Future<dynamic>? _previewFuture; // String (URL) or Uint8List (Bytes)
+
+  @override
+  void initState() {
+    super.initState();
+    _previewFuture = _resolvePreview();
+  }
+  
+  @override
+  void didUpdateWidget(covariant DocumentGridItem oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.doc['previewUrl'] != widget.doc['previewUrl']) {
+       _previewFuture = _resolvePreview();
+    }
+  }
+
+  Future<dynamic> _resolvePreview() async {
+    final doc = widget.doc;
+    String url = doc['previewUrl'] ?? '';
+    final type = doc['type'];
+    final name = doc['name'].toString().toLowerCase();
+    
+    // 1. Resolve URL (Sign if needed)
+    // If it's a PDF file path in Supabase storage, we might need to sign it to access it.
+    // If it's already an image URL, we also might need to sign it if it's private.
+    // We assume check based on URL structure or generic logic.
+    if (url.contains('/storage/v1/object/public/documents/')) {
+        try {
+          // Extract path and decode it (to handle Arabic chars, spaces, etc.)
+          final rawPath = url.split('/documents/').last;
+          final path = Uri.decodeComponent(rawPath);
+          
+           // Attempt to sign regardless of type to ensure access if bucket is private
+           // 1 hour expiry
+          url = await Supabase.instance.client.storage
+              .from('documents')
+              .createSignedUrl(path, 3600);
+        } catch (e) {
+         // debugPrint("Failed to sign URL: $e"); // Silenced to avoid log noise
+        }
+    }
+
+    // 2. Check if it is a formatted image URL (png/jpg) vs PDF
+    // Remove query params for extension check
+    final uri = Uri.parse(url);
+    final pathOnly = uri.path.toLowerCase();
+    
+    final isPdfUrl = pathOnly.endsWith('.pdf');
+    final isPdfDoc = type == 'pdf' || name.endsWith('.pdf');
+
+    // If it is a PDF URL, we MUST download and render it because Image.network won't work.
+    if (isPdfUrl || (isPdfDoc && !pathOnly.endsWith('.png') && !pathOnly.endsWith('.jpg') && !pathOnly.endsWith('.jpeg'))) {
+       try {
+         final response = await http.get(Uri.parse(url));
+         if (response.statusCode == 200) {
+            final document = await pdfx.PdfDocument.openData(response.bodyBytes);
+            final page = await document.getPage(1);
+            final pageImage = await page.render(
+              width: page.width,
+              height: page.height,
+              format: pdfx.PdfPageImageFormat.png,
+            );
+            await page.close();
+            await document.close();
+            
+            if (pageImage?.bytes != null) {
+              return pageImage!.bytes;
+            }
+         }
+       } catch (e) {
+         debugPrint("Error rendering PDF preview: $e");
+       }
+    }
+
+    // Default: Return URL (assuming it is a valid image URL)
+    return url;
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    // Determine fallback icon type
+    final doc = widget.doc;
+    final isPdf = doc['type'] == 'pdf' || doc['name'].toString().toLowerCase().endsWith('.pdf');
+
+    return InkWell(
+      onTap: widget.onTap,
+      child: Container(
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(16.r),
+          border: Border.all(color: Colors.grey.shade300),
+        ),
+        child: Column(
+          children: [
+            Expanded(
+              flex: 8,
+              child: ClipRRect(
+                borderRadius: BorderRadius.only(
+                    topLeft: Radius.circular(16.r),
+                    topRight: Radius.circular(16.r)),
+                child: FutureBuilder<dynamic>(
+                  future: _previewFuture,
+                  builder: (context, snapshot) {
+                      final data = snapshot.data;
+                      
+                      if (snapshot.connectionState == ConnectionState.waiting) {
+                         return Center(child: SizedBox(width: 20.w, height: 20.w,child: const CircularProgressIndicator(strokeWidth: 2)));
+                      }
+
+                      if (data is Uint8List) {
+                        // Rendered PDF bytes
+                        return Image.memory(
+                           data,
+                           fit: BoxFit.cover,
+                           width: double.infinity,
+                           errorBuilder: (_, __, ___) => _buildFallbackIcon(isPdf),
+                        );
+                      } else if (data is String && data.isNotEmpty) {
+                        // Image URL
+                         return Image.network(
+                            data,
+                            fit: BoxFit.cover,
+                            width: double.infinity,
+                            errorBuilder: (_, __, ___) => _buildFallbackIcon(isPdf),
+                         );
+                      }
+                      
+                      return _buildFallbackIcon(isPdf);
+                  }
+                ),
+              ),
+            ),
+            Expanded(
+              flex: 2,
+              child: Container(
+                padding: EdgeInsets.symmetric(horizontal: 8.w),
+                decoration: BoxDecoration(
+                  color: Colors.grey[100],
+                  borderRadius: BorderRadius.only(
+                      bottomLeft: Radius.circular(16.r),
+                      bottomRight: Radius.circular(16.r)),
+                ),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Flexible(
+                      child: Text(
+                        doc['name'],
+                        style: AppTextStyles.getText2(context),
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    ),
+                    IconButton(
+                      icon: Icon(Icons.more_vert, size: 20.sp),
+                      onPressed: widget.onEdit,
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildFallbackIcon(bool isPdf) {
+     if (isPdf) {
+       return Center(
+          child: SvgPicture.asset(
+            'assets/icons/pdf-file.svg',
+            width: 48.sp,
+            height: 48.sp,
+            color: AppColors.red,
+          ),
+       );
+     }
+     return Center(
+        child: Icon(Icons.broken_image, size: 48.sp, color: Colors.grey),
+     );
+  }
+}

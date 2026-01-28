@@ -315,6 +315,48 @@ class DocumentsCubit extends Cubit<DocumentsState> {
     }
   }
 
+  /// ✅ Rename document
+  Future<void> renameDocument({required String docId, required String newName, required String userId}) async {
+    final previousState = state;
+    List<UserDocument>? previousDocs;
+
+    // 1. Optimistic Update
+    if (previousState is DocumentsLoaded) {
+      previousDocs = previousState.documents;
+      try {
+        final index = previousDocs.indexWhere((doc) => doc.id == docId);
+        if (index != -1) {
+          final updatedDoc = previousDocs[index].copyWith(name: newName);
+          final updatedList = List<UserDocument>.from(previousDocs);
+          updatedList[index] = updatedDoc;
+          emit(DocumentsLoaded(updatedList));
+        }
+      } catch (e) {
+        debugPrint("Optimistic update failed: $e");
+      }
+    }
+
+    // 2. Perform Server Update
+    try {
+      await Supabase.instance.client
+          .from('documents')
+          .update({'name': newName})
+          .eq('id', docId)
+          .eq('user_id', userId);
+
+      // No need to re-fetch if successful, as we already updated locally.
+      // But we can do it silently if needed. For now, trust the optimistic update.
+      // _fetchDocuments(userId); 
+    } catch (e) {
+      // 3. Revert on Failure
+      if (previousState is DocumentsLoaded && previousDocs != null) {
+         emit(previousState); // Revert to old list
+      }
+      emit(DocumentsError("Rename failed: $e"));
+    }
+  }
+
+
   @override
   Future<void> close() {
     _documentsRealtimeChannel?.unsubscribe();

@@ -58,13 +58,18 @@ class _ImageOverlayViewerState extends State<ImageOverlayViewer> {
   bool _isProcessingSave = false;
 
   Future<String> _downloadAndGetLocalPath(String url) async {
-    final response = await http.get(Uri.parse(url));
+    final uri = Uri.parse(url);
+    final response = await http.get(uri);
     if (response.statusCode != 200) {
       throw Exception('Failed to download image: ${response.statusCode}');
     }
 
     final tempDir = await getTemporaryDirectory();
-    final file = File('${tempDir.path}/${path.basename(url)}');
+    final filename = uri.pathSegments.isNotEmpty ? uri.pathSegments.last : 'image.png';
+    // Ensure filename is safe and not too long (safe fallback)
+    final safeFilename = filename.length > 200 ? filename.substring(filename.length - 200) : filename;
+    
+    final file = File('${tempDir.path}/$safeFilename');
     await file.writeAsBytes(response.bodyBytes);
     return file.path;
   }
@@ -214,40 +219,24 @@ class _ImageOverlayViewerState extends State<ImageOverlayViewer> {
               child: StatefulBuilder(
                 builder: (context, setLocalState) {
                   return GestureDetector(
-                    onTap: _isProcessingAddToDocument
-                        ? null
-                        : () {
-                      setLocalState(
-                              () => _isProcessingAddToDocument = true);
-
-                      Future.delayed(
-                          const Duration(milliseconds: 50),
-                              () async {
-                            try {
-                              final url =
-                              widget.imageUrls[_currentIndex];
-                              final localPath =
-                              await _downloadAndGetLocalPath(url);
-                              await widget
-                                  .onAddToDocuments([localPath]);
-                            } finally {
-                              if (mounted) {
-                                setLocalState(() =>
-                                _isProcessingAddToDocument = false);
-                              }
-                            }
-                          });
+                    onTap: () async {
+                      final messenger = ScaffoldMessenger.of(context);
+                      widget.onClose();
+                      
+                      try {
+                        final url = widget.imageUrls[_currentIndex];
+                        final localPath = await _downloadAndGetLocalPath(url);
+                        await widget.onAddToDocuments([localPath]);
+                      } catch (e) {
+                         messenger.showSnackBar(
+                           SnackBar(
+                             content: Text(local.downloadFailed), // Or specific error
+                             backgroundColor: AppColors.red.withOpacity(0.9),
+                           ),
+                         );
+                      }
                     },
-                    child: _isProcessingAddToDocument
-                        ? SizedBox(
-                      width: 18.sp,
-                      height: 18.sp,
-                      child: const CircularProgressIndicator(
-                        color: Colors.white,
-                        strokeWidth: 2,
-                      ),
-                    )
-                        : SvgPicture.asset(
+                    child: SvgPicture.asset(
                       'assets/icons/add2document_white.svg',
                       width: 22.sp,
                       height: 22.sp,
@@ -265,60 +254,30 @@ class _ImageOverlayViewerState extends State<ImageOverlayViewer> {
               child: StatefulBuilder(
                 builder: (context, setLocalState) {
                   return GestureDetector(
-                    onTap: _isProcessingSave
-                        ? null
-                        : () {
-                      setLocalState(() => _isProcessingSave = true);
+                    onTap: () async {
+                       final messenger = ScaffoldMessenger.of(context);
+                       widget.onClose();
 
-                      Future.delayed(
-                          const Duration(milliseconds: 50),
-                              () async {
-                            try {
-                              final url =
-                              widget.imageUrls[_currentIndex];
-                              await GallerySaver.saveImage(url);
-                              if (context.mounted) {
-                                ScaffoldMessenger.of(context)
-                                    .showSnackBar(
-                                  SnackBar(
-                                    content: Text(
-                                      local.downloadCompleted,
-                                    ),
-                                    backgroundColor:
-                                    AppColors.main.withOpacity(0.9),
-                                  ),
-                                );
-                              }
-                            } catch (_) {
-                              if (context.mounted) {
-                                ScaffoldMessenger.of(context)
-                                    .showSnackBar(
-                                  SnackBar(
-                                    content:
-                                    Text(local.downloadFailed),
-                                    backgroundColor:
-                                    AppColors.red.withOpacity(0.9),
-                                  ),
-                                );
-                              }
-                            } finally {
-                              if (context.mounted) {
-                                setLocalState(
-                                        () => _isProcessingSave = false);
-                              }
-                            }
-                          });
+                       try {
+                          final url = widget.imageUrls[_currentIndex];
+                          final path = await _downloadAndGetLocalPath(url);
+                          await GallerySaver.saveImage(path);
+                          messenger.showSnackBar(
+                              SnackBar(
+                                content: Text(local.downloadCompleted),
+                                backgroundColor: AppColors.main.withOpacity(0.9),
+                              ),
+                          );
+                        } catch (_) {
+                          messenger.showSnackBar(
+                              SnackBar(
+                                content: Text(local.downloadFailed),
+                                backgroundColor: AppColors.red.withOpacity(0.9),
+                              ),
+                          );
+                        }
                     },
-                    child: _isProcessingSave
-                        ? SizedBox(
-                      width: 18.sp,
-                      height: 18.sp,
-                      child: const CircularProgressIndicator(
-                        color: Colors.white,
-                        strokeWidth: 2,
-                      ),
-                    )
-                        : Icon(
+                    child: Icon(
                       Icons.save_alt,
                       color: Colors.white,
                       size: 22.sp,
@@ -410,42 +369,27 @@ class _ImageOverlayViewerState extends State<ImageOverlayViewer> {
               child: StatefulBuilder(
                 builder: (context, setLocalState) {
                   return GestureDetector(
-                    onTap: _isProcessingAddToDocument
-                        ? null
-                        : () {
-                      setLocalState(
-                              () => _isProcessingAddToDocument = true);
+                    onTap: () async {
+                      final messenger = ScaffoldMessenger.of(context);
+                      widget.onClose();
 
-                      Future.delayed(
-                          const Duration(milliseconds: 50),
-                              () async {
-                            try {
-                              final localPaths = <String>[];
-                              for (final url in widget.imageUrls) {
-                                final p =
-                                await _downloadAndGetLocalPath(url);
-                                localPaths.add(p);
-                              }
-                              await widget.onAddToDocuments(localPaths);
-                            } finally {
-                              if (mounted) {
-                                setLocalState(
-                                        () => _isProcessingAddToDocument =
-                                    false);
-                              }
-                            }
-                          });
+                      try {
+                        final localPaths = <String>[];
+                        for (final url in widget.imageUrls) {
+                          final p = await _downloadAndGetLocalPath(url);
+                          localPaths.add(p);
+                        }
+                        await widget.onAddToDocuments(localPaths);
+                      } catch(e) {
+                         messenger.showSnackBar(
+                            SnackBar(
+                               content: Text(local.imagesDownloadFailed),
+                               backgroundColor: AppColors.red.withOpacity(0.9),
+                            ),
+                         );
+                      }
                     },
-                    child: _isProcessingAddToDocument
-                        ? SizedBox(
-                      width: 18.sp,
-                      height: 18.sp,
-                      child: const CircularProgressIndicator(
-                        color: Colors.white,
-                        strokeWidth: 2,
-                      ),
-                    )
-                        : SvgPicture.asset(
+                    child: SvgPicture.asset(
                       'assets/icons/add2document_white.svg',
                       width: 22.sp,
                       height: 22.sp,
@@ -463,59 +407,33 @@ class _ImageOverlayViewerState extends State<ImageOverlayViewer> {
               child: StatefulBuilder(
                 builder: (context, setLocalState) {
                   return GestureDetector(
-                    onTap: _isProcessingSave
-                        ? null
-                        : () async {
-                      setLocalState(() => _isProcessingSave = true);
+                    onTap: () async {
+                       final messenger = ScaffoldMessenger.of(context);
+                       widget.onClose();
 
-                      try {
+                       try {
                         for (final url in widget.imageUrls) {
-                          await GallerySaver.saveImage(url);
+                          final path = await _downloadAndGetLocalPath(url);
+                          await GallerySaver.saveImage(path);
                         }
-                        if (mounted) {
-                          ScaffoldMessenger.of(context)
-                              .showSnackBar(
+                        messenger.showSnackBar(
                             SnackBar(
                               content: Text(
                                 '${widget.imageUrls.length} ${local.imagesDownloadedSuccessfully}',
                               ),
-                              backgroundColor:
-                              AppColors.main.withOpacity(0.9),
+                              backgroundColor: AppColors.main.withOpacity(0.9),
                             ),
                           );
-                        }
                       } catch (_) {
-                        if (mounted) {
-                          ScaffoldMessenger.of(context)
-                              .showSnackBar(
+                         messenger.showSnackBar(
                             SnackBar(
-                              content:
-                              Text(local.imagesDownloadFailed),
-                              backgroundColor:
-                              AppColors.red.withOpacity(0.9),
+                               content: Text(local.imagesDownloadFailed),
+                               backgroundColor: AppColors.red.withOpacity(0.9),
                             ),
-                          );
-                        }
-                      } finally {
-                        if (mounted) {
-                          setLocalState(
-                                  () => _isProcessingSave = false);
-                          setState(
-                                  () => _showImageDownloadOptions =
-                              false);
-                        }
+                         );
                       }
                     },
-                    child: _isProcessingSave
-                        ? SizedBox(
-                      width: 18.sp,
-                      height: 18.sp,
-                      child: const CircularProgressIndicator(
-                        color: Colors.white,
-                        strokeWidth: 2,
-                      ),
-                    )
-                        : Icon(
+                    child: Icon(
                       Icons.save_alt,
                       color: Colors.white,
                       size: 22.sp,

@@ -601,6 +601,28 @@
   "verificationError": "An error occurred while verifying the number: {errorMessage}",
   "unexpectedError": "An unexpected error occurred. Please try again later.",
 
+  "@ForgotPassword================================": "Forgot Password Flow",
+  "forgotPasswordTitle": "Forgot Password",
+  "forgotPasswordSubtitle": "Enter your email for the verification process. We will send you a 6-digit code.",
+  "sendCode": "Send Code",
+  "verificationCode": "Verification Code",
+  "verifyCodeSubtitle": "Please enter the code sent to {email}",
+  "verify": "Verify",
+  "resetPasswordTitle": "Reset Password",
+  "resetPasswordSubtitle": "Set a new strong password for your account.",
+  "newPasswordLabel": "New Password",
+  "confirmPasswordLabel": "Confirm Password",
+  "resetPasswordBtn": "Reset Password",
+  "passwordResetSuccess": "Password reset successfully!",
+  "passwordsDoNotMatch": "Passwords do not match",
+  "sendingCode": "Sending code...",
+  "verifying": "Verifying...",
+  "resetting": "Resetting...",
+  "emailSentTitle": "Email Sent",
+  "codeSentMessage": "We have sent a verification code to {email}",
+  "success": "Success",
+  "goToLogin": "Go to Login",
+
 
 
   "@HealthPage================================": "Health Page",

@@ -615,6 +615,30 @@
   "verificationError": "حدث خطأ أثناء التحقق من الرقم: {errorMessage}",
   "unexpectedError": "حدث خطأ غير متوقع. يرجى المحاولة مرة أخرى لاحقًا.",
 
+  "@ForgotPassword================================": {
+    "description": "Forgot Password Flow"
+  },
+  "forgotPasswordTitle": "نسيت كلمة المرور",
+  "forgotPasswordSubtitle": "أدخل بريدك الإلكتروني لعملية التحقق. سنرسل لك رمزًا مكونًا من 6 أرقام.",
+  "sendCode": "إرسال الرمز",
+  "verificationCode": "رمز التحقق",
+  "verifyCodeSubtitle": "يرجى إدخال الرمز المرسل إلى {email}",
+  "verify": "تحقق",
+  "resetPasswordTitle": "تعيين كلمة المرور",
+  "resetPasswordSubtitle": "تعيين كلمة مرور قوية جديدة لحسابك.",
+  "newPasswordLabel": "كلمة المرور الجديدة",
+  "confirmPasswordLabel": "تأكيد كلمة المرور",
+  "resetPasswordBtn": "تعيين كلمة المرور",
+  "passwordResetSuccess": "تم تعيين كلمة المرور بنجاح!",
+  "passwordsDoNotMatch": "كلمات المرور غير متطابقة",
+  "sendingCode": "جارٍ إرسال الرمز...",
+  "verifying": "جارٍ التحقق...",
+  "resetting": "جارٍ التعيين...",
+  "emailSentTitle": "تم إرسال البريد",
+  "codeSentMessage": "لقد أرسلنا رمز التحقق إلى {email}",
+  "success": "نجاح",
+  "goToLogin": "الذهاب لتسجيل الدخول",
+
   "@HealthPage================================": "Health Page",
 
     "health_loggedOut_title": "ملفك الصحي في مكان واحد",

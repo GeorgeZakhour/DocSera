@@ -5,12 +5,14 @@ import 'package:docsera/app/const.dart';
 import 'package:docsera/app/text_styles.dart';
 import 'package:docsera/models/sign_up_info.dart';
 import 'package:docsera/screens/auth/login/login_otp.dart';
+import 'package:docsera/screens/auth/forgot_password/forgot_password_page.dart';
 import 'package:docsera/screens/auth/sign_up/sign_up_phone.dart';
 import 'package:docsera/services/biometrics/biometric_storage.dart';
 import 'package:docsera/services/supabase/user/supabase_user_service.dart';
 import 'package:docsera/utils/text_direction_utils.dart';
 import 'package:docsera/widgets/custom_bottom_navigation_bar.dart';
 import 'package:docsera/utils/custom_clippers.dart';
+import 'package:docsera/utils/page_transitions.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:flutter_svg/flutter_svg.dart';
@@ -364,7 +366,11 @@ class _LoginPageState extends State<LoginPage> {
       // ---------------------------------------------------------------------
       // 6️⃣ New Device Check (Email OTP)
       // ---------------------------------------------------------------------
-      if (!trustedDevices.contains(deviceId)) {
+      // 🚨 BYPASS FOR APPLE REVIEWER
+      // This allows the demo account to log in without OTP even on new "simulated" devices.
+      final isDemoAccount = email == 'docsera.app@gmail.com';
+
+      if (!trustedDevices.contains(deviceId) && !isDemoAccount) {
         debugPrint("🚨 [SECURITY] New device detected ($deviceId). Redirecting to Email OTP.");
 
         if (!mounted) return;
@@ -598,6 +604,35 @@ class _LoginPageState extends State<LoginPage> {
                         style: TextStyle(color: AppColors.orangeText, fontSize: 9.sp),
                       ),
                     ),
+
+                  Align(
+                    alignment: AlignmentDirectional.centerStart,
+                    child: Padding(
+                      padding: EdgeInsets.only(top: 5.h),
+                      child: TextButton(
+                        onPressed: () {
+                          Navigator.push(
+                            context,
+                            fadePageRoute(const ForgotPasswordPage()),
+                          );
+                        },
+                         style: TextButton.styleFrom(
+                            padding: EdgeInsets.zero,
+                            minimumSize: const Size(0, 0),
+                            tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                            overlayColor: Colors.transparent,
+                          ),
+                        child: Text(
+                          AppLocalizations.of(context)!.forgotPassword,
+                          style: TextStyle(
+                            color: Colors.white.withOpacity(0.8), // Using white since bg is main color/dark
+                            fontSize: 10.sp, 
+                            fontWeight: FontWeight.w500,
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
 
                   SizedBox(height: 20.h),
 

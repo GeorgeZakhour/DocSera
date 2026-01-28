@@ -2,6 +2,7 @@ import 'dart:io';
 
 import 'package:docsera/app/text_styles.dart';
 import 'package:docsera/screens/auth/login/login_otp.dart';
+import 'package:docsera/screens/auth/forgot_password/forgot_password_page.dart';
 import 'package:docsera/services/biometrics/biometric_storage.dart';
 import 'package:docsera/services/supabase/user/supabase_user_service.dart';
 import 'package:docsera/utils/text_direction_utils.dart';
@@ -482,7 +483,10 @@ class _LogInPageState extends State<LogInPage> {
                 padding: EdgeInsets.symmetric(horizontal: 10.sp),
                 child: TextButton(
                   onPressed: () {
-                    // 🚀 تنفيذ وظيفة استعادة كلمة المرور لاحقًا
+                    Navigator.push(
+                      context,
+                      fadePageRoute(const ForgotPasswordPage()),
+                    );
                   },
                   style: TextButton.styleFrom(
                     padding: EdgeInsets.zero, // ✅ إزالة أي هوامش داخل الزر
