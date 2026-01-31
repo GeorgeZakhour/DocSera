@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'package:flutter/services.dart'; // ✅ Import for HapticFeedback
 import 'dart:io';
 import 'dart:ui';
 import 'package:docsera/app/const.dart';
@@ -296,7 +297,7 @@ class _InputBarState extends State<InputBar> with TickerProviderStateMixin {
                        ),
                      ),
                      
-                     // 2. Mic Button (Left side)
+                      // 2. Mic Button (Left side)
                      // Constant GestureDetector to ensure continuous gesture tracking
                      IgnorePointer(
                        // ✅ Disable interactions if permission denied
@@ -306,12 +307,14 @@ class _InputBarState extends State<InputBar> with TickerProviderStateMixin {
                             onTapDown: (_) {
                               if (widget.isEnabled && !_isRecording) {
                                  debugPrint("👇 Mic Button Pressed");
+                                 HapticFeedback.lightImpact(); // ✅ Add vibration
                                  _isButtonPressed = true;
                                  _startRecording();
                               }
                             },
                             onTapUp: (_) {
                                debugPrint("👆 Mic Button Released");
+                               HapticFeedback.lightImpact(); // ✅ Add vibration on release too
                                _isButtonPressed = false;
                                // Stop if recording and NOT locked
                                if (_isRecording && !_isLocked) _stopRecording();
@@ -325,6 +328,7 @@ class _InputBarState extends State<InputBar> with TickerProviderStateMixin {
                             onPanStart: (_) {
                                // If pan starts immediately without tapDown (rare but possible)
                                if (widget.isEnabled && !_isRecording) {
+                                  HapticFeedback.lightImpact(); // ✅ Add vibration
                                   _isButtonPressed = true;
                                   _startRecording();
                                }
@@ -335,6 +339,7 @@ class _InputBarState extends State<InputBar> with TickerProviderStateMixin {
                                     // Lock Logic (Slide Up)
                                     if (_dragOffset.dy < -40) {
                                         _lockRecording();
+                                        HapticFeedback.mediumImpact(); // ✅ Stronger feedback on lock
                                     }
                                 }
                             },
@@ -351,19 +356,20 @@ class _InputBarState extends State<InputBar> with TickerProviderStateMixin {
                               child: ScaleTransition(
                                 scale: _micScaleController,
                                 child: Container(
-                                  padding: EdgeInsets.all(6.r),
-                                  child: Icon(
-                                    micIcon, 
-                                    color: micColor,
-                                    size: 24.sp,
-                                  ),
+                                // ✅ Increased padding for better touch target (approx 48x48)
+                                padding: EdgeInsets.all(12.r),
+                                child: Icon(
+                                  micIcon, 
+                                  color: micColor,
+                                  size: 24.sp,
                                 ),
+                              ),
                               ),
                             ),
                        ),
                      ),
                      
-                     SizedBox(width: 4.w),
+                     // SizedBox(width: 4.w), // Removed to save space after increasing touch target
       
                      // 3. Middle Area (Timer or Input)
                      Expanded(
