@@ -97,22 +97,26 @@ class DoctorScheduleCubit extends Cubit<DoctorScheduleState> {
       final grouped = <String, List<Map<String, dynamic>>>{};
 
       for (final r in data) {
-        final m = Map<String, dynamic>.from(r as Map);
-        final tsUtc = DocSeraTime.toUtc(DateTime.parse(m['ts_utc'].toString())); // هذا الذي سنمرّره للحجز
-        final localDateStr = m['local_date'].toString();              // "YYYY-MM-DD" في UTC+3
-        final label12 = m['local_time12'].toString();                 // "HH:MM AM/PM" جاهزة
-        final label24 = m['local_time24'].toString();                 // "HH24:MI"
+        try {
+          final m = Map<String, dynamic>.from(r as Map);
+          final tsUtc = DocSeraTime.toUtc(DateTime.parse(m['ts_utc'].toString())); // هذا الذي سنمرّره للحجز
+          final localDateStr = m['local_date'].toString();              // "YYYY-MM-DD" في UTC+3
+          final label12 = m['local_time12'].toString();                 // "HH:MM AM/PM" جاهزة
+          final label24 = m['local_time24'].toString();                 // "HH24:MI"
 
-        // صياغة عنوان لطيف للتاريخ (بلغة الجهاز) من "YYYY-MM-DD"
-        final d = DocSeraTime.tryParseToSyria(localDateStr) ?? DocSeraTime.nowSyria(); // تاريخ فقط
-        final dateKey = DateFormat('EEEE, d MMMM', locale).format(d);
+          // صياغة عنوان لطيف للتاريخ (بلغة الجهاز) من "YYYY-MM-DD"
+          final d = DocSeraTime.tryParseToSyria(localDateStr) ?? DocSeraTime.nowSyria(); // تاريخ فقط
+          final dateKey = DateFormat('EEEE, d MMMM', locale).format(d);
 
-        (grouped[dateKey] ??= <Map<String, dynamic>>[]).add({
-          'id': tsUtc.toIso8601String(), // نستخدم الـ ts_utc كـ id
-          'timestamp': tsUtc,            // للحجز نمرّره كما هو
-          'time': label12,               // نعرض 12 ساعة
-          'time24': label24,             // متاح إن أردت عرض 24 ساعة
-        });
+          (grouped[dateKey] ??= <Map<String, dynamic>>[]).add({
+            'id': tsUtc.toIso8601String(), // نستخدم الـ ts_utc كـ id
+            'timestamp': tsUtc,            // للحجز نمرّره كما هو
+            'time': label12,               // نعرض 12 ساعة
+            'time24': label24,             // متاح إن أردت عرض 24 ساعة
+          });
+        } catch (e) {
+          _dlog('⚠️ skipping invalid row: $r, error: $e');
+        }
       }
 
       // ترتيب المجموعات حسب أول خانة فيها

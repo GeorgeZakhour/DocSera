@@ -25,6 +25,33 @@ serve(async (req) => {
     );
 
     // ------------------------------------------------------------
+    // 0️⃣ Security Check: Verify email belongs to DocSera user
+    // ------------------------------------------------------------
+    console.log(`[Debug] Checking existence for email: ${email}`);
+
+    // Check 'users' table
+    const { data: user, error: userError } = await supabase
+      .from("users")
+      .select("id, email")
+      .ilike("email", email)
+      .maybeSingle();
+
+    if (userError) console.error("[Debug] User check error:", userError);
+    else console.log(`[Debug] User found: ${!!user ? JSON.stringify(user) : 'false'}`);
+
+    // If not found, return FAKE SUCCESS (Security: Anti-Enumeration)
+    if (!user) {
+      console.log(`[Security] OTP requested for non-existent email: ${email} -> RETURNING FAKE SUCCESS`);
+      // Return 200 OK as if sent
+      return new Response(
+        JSON.stringify({ success: true }),
+        { status: 200, headers: {'Content-Type': 'application/json'} }
+      );
+    }
+
+    console.log(`[Debug] User exists. Generating OTP...`);
+
+    // ------------------------------------------------------------
     // 1️⃣ Create OTP via RPC
     // ------------------------------------------------------------
     const { data, error } = await supabase.rpc("rpc_create_email_otp", {
@@ -107,7 +134,7 @@ if (error) {
                   color:#e6fffa;
                   opacity:0.95;
                 ">
-                  منصة الرعاية الطبية الرقمية
+                  Care you trust
                 </div>
 
               </td>
@@ -246,13 +273,22 @@ if (error) {
 
 
     // ------------------------------------------------------------
-    // 3️⃣ SMTP via TLS (mailbox.org – port 465)
+    // 3️⃣ SMTP via TLS (mailgun.org – port 465)
     // ------------------------------------------------------------
     const host = Deno.env.get("SMTP_HOST")!;
-    const port = Number(Deno.env.get("SMTP_PORT")!); // 465
-    const user = Deno.env.get("SMTP_USER")!;
-    const pass = Deno.env.get("SMTP_PASS")!;
+    const port = Number(Deno.env.get("SMTP_PORT")!); // Should be 465
+    // Use PATIENT-SPECIFIC credentials to avoid conflict with Pro app
+    const user = Deno.env.get("SMTP_USER_PATIENT")!;
+    const pass = Deno.env.get("SMTP_PASS_PATIENT")!;
     const from = Deno.env.get("SMTP_FROM")!;
+
+    if (!user || !pass) {
+        console.error("[Debug] Missing SMTP_USER_PATIENT or SMTP_PASS_PATIENT env vars");
+        return new Response(
+          JSON.stringify({ error: "SMTP Configuration Error" }),
+          { status: 500 }
+        );
+    }
 
     const conn = await Deno.connectTls({
       hostname: host,
@@ -275,15 +311,17 @@ if (error) {
     await send(`MAIL FROM:<${user}>`);
     await send(`RCPT TO:<${email}>`);
     await send("DATA");
-    await send(
-      `From: ${from}
+    
+    // Fix: Use \r\n for SMTP compatibility (Bare LF issue)
+    const emailBody = `From: ${from}
 To: ${email}
 Subject: ${subject}
 Content-Type: text/html; charset=UTF-8
 
 ${html}
-.`
-    );
+.`.replace(/\n/g, "\r\n");
+
+    await send(emailBody);
     await send("QUIT");
 
     conn.close();

@@ -187,7 +187,7 @@ class _DoctorAppointmentsPageState extends State<DoctorAppointmentsPage> {
                           ),
                         );
                       } else if (state is DoctorScheduleError) {
-                        return _buildError(l);
+                        return _buildError(l, message: state.message);
                       } else {
                         return _buildError(l);
                       }
@@ -201,32 +201,43 @@ class _DoctorAppointmentsPageState extends State<DoctorAppointmentsPage> {
     );
   }
 
-  Widget _buildError(AppLocalizations l) {
+  Widget _buildError(AppLocalizations l, {String? message}) {
     return Center(
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          Text(
-            l.errorLoadingAppointments,
-            style: AppTextStyles.getText2(context).copyWith(color: Colors.red),
-            textAlign: TextAlign.center,
-          ),
-          SizedBox(height: 12.h),
-          OutlinedButton(
-            onPressed: _refetch,
-            style: OutlinedButton.styleFrom(
-              side: const BorderSide(color: AppColors.mainDark),
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10.r)),
+      child: Padding(
+        padding: EdgeInsets.symmetric(horizontal: 20.w),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Text(
+              l.errorLoadingAppointments,
+              style: AppTextStyles.getText2(context).copyWith(color: Colors.red),
+              textAlign: TextAlign.center,
             ),
-            child: Text(
-              l.retry,
-              style: AppTextStyles.getText3(context).copyWith(
-                fontWeight: FontWeight.bold,
-                color: AppColors.mainDark,
+            if (message != null) ...[
+              SizedBox(height: 8.h),
+              Text(
+                message,
+                style: AppTextStyles.getText3(context).copyWith(color: Colors.red.shade700),
+                textAlign: TextAlign.center,
+              ),
+            ],
+            SizedBox(height: 12.h),
+            OutlinedButton(
+              onPressed: _refetch,
+              style: OutlinedButton.styleFrom(
+                side: const BorderSide(color: AppColors.mainDark),
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10.r)),
+              ),
+              child: Text(
+                l.retry,
+                style: AppTextStyles.getText3(context).copyWith(
+                  fontWeight: FontWeight.bold,
+                  color: AppColors.mainDark,
+                ),
               ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }
