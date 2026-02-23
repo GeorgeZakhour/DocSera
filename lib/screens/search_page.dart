@@ -1,4 +1,5 @@
 import 'package:docsera/models/document.dart';
+import 'package:docsera/screens/centers/center_profile_page.dart';
 import 'package:docsera/screens/doctors/doctor_profile_page.dart';
 import 'package:docsera/utils/doctor_image_utils.dart';
 import 'package:docsera/utils/page_transitions.dart';
@@ -86,10 +87,22 @@ class _SearchPageState extends State<SearchPage> {
       return;
     }
 
-    List<Map<String, dynamic>> results =
-    await _searchService.searchDoctors(query.toLowerCase());
+    final q = query.toLowerCase();
+    
+    // Fetch both in parallel
+    final results = await Future.wait([
+      _searchService.searchDoctors(q),
+      _searchService.searchCenters(q),
+    ]);
 
-    setState(() => _searchResults = results);
+    final List<Map<String, dynamic>> doctors = 
+        results[0].map((d) => {...d, 'search_type': 'doctor'}).toList();
+    final List<Map<String, dynamic>> centers = 
+        results[1].map((c) => {...c, 'search_type': 'center'}).toList();
+
+    setState(() {
+      _searchResults = [...doctors, ...centers];
+    });
   }
 
   @override
@@ -228,8 +241,11 @@ class _SearchPageState extends State<SearchPage> {
     return ListView.builder(
       itemCount: _searchResults.length,
       itemBuilder: (context, index) {
-        final doctor = _searchResults[index];
-        return _buildDoctorTile(doctor);
+        final item = _searchResults[index];
+        if (item['search_type'] == 'center') {
+          return _buildCenterTile(item);
+        }
+        return _buildDoctorTile(item);
       },
     );
   }
@@ -363,6 +379,59 @@ class _SearchPageState extends State<SearchPage> {
             ),
           ),
         );
+      },
+    );
+  }
+
+  /// **Center Search Result Tile**
+  Widget _buildCenterTile(Map<String, dynamic> center) {
+    final imageResult = resolveCenterImagePathAndWidget(center: center);
+    final imageProvider = imageResult.imageProvider;
+
+    final specialties = (center['specialties'] as List?)?.join(' • ') ?? '';
+
+    return ListTile(
+      contentPadding: const EdgeInsets.symmetric(vertical: 6, horizontal: 8),
+      leading: CircleAvatar(
+        backgroundColor: AppColors.mainDark.withOpacity(0.15),
+        radius: 22,
+        backgroundImage: imageProvider,
+      ),
+      title: Text(
+        (center['name'] ?? '').toString(),
+        style: AppTextStyles.getText2(context).copyWith(
+          fontWeight: FontWeight.bold,
+          color: AppColors.mainDark,
+        ),
+      ),
+      subtitle: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          if (specialties.isNotEmpty)
+            Text(
+              specialties,
+              style: AppTextStyles.getText3(context).copyWith(color: Colors.grey.shade700),
+            ),
+          const SizedBox(height: 3),
+          Row(
+            children: [
+              const Icon(Icons.location_on, size: 12, color: Colors.grey),
+              const SizedBox(width: 4),
+              Text(
+                center['address']?['city'] ?? '',
+                style: AppTextStyles.getText3(context).copyWith(color: Colors.grey.shade700),
+              ),
+            ],
+          ),
+        ],
+      ),
+      trailing: const Icon(Icons.arrow_forward_ios, size: 12, color: Colors.grey),
+      onTap: () {
+        if (widget.mode == "search") {
+          Navigator.push(context, fadePageRoute(
+            CenterProfilePage(centerId: center['id'], center: center),
+          ));
+        }
       },
     );
   }

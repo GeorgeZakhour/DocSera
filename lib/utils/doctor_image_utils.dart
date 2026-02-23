@@ -142,3 +142,58 @@ DoctorImageResult resolveDoctorImagePathAndWidget({
 
   return DoctorImageResult(avatarPath: avatarPath, widget: widget);
 }
+
+DoctorImageResult resolveCenterImagePathAndWidget({
+  required Map<String, dynamic> center,
+  double width = 100,
+  double height = 100,
+}) {
+  String? imagePath = center['center_image']?.toString().trim();
+
+  if (imagePath == null || imagePath.isEmpty || imagePath.toLowerCase() == 'null') {
+    imagePath = null;
+  }
+
+  String? imageUrl;
+  if (imagePath != null && imagePath.trim().isNotEmpty) {
+    if (imagePath.startsWith('http')) {
+      imageUrl = imagePath;
+    } else if (imagePath.startsWith('assets/')) {
+      imageUrl = imagePath;
+    } else {
+      imageUrl = Supabase.instance.client.storage
+          .from('center-images')
+          .getPublicUrl(imagePath);
+    }
+  }
+
+  final avatarPath = imageUrl ?? 'assets/images/logo-placeholder.png';
+
+  final widget = avatarPath.startsWith('http')
+      ? CachedNetworkImage(
+    imageUrl: avatarPath,
+    cacheManager: customCacheManager,
+    memCacheWidth: (width * 3).toInt(),
+    width: width.w,
+    height: height.h,
+    fit: BoxFit.cover,
+    placeholder: (_, __) => SizedBox(
+      width: width.w,
+      height: height.h,
+      child: const Center(
+        child: SizedBox.shrink(),
+      ),
+    ),
+    errorWidget: (_, __, ___) =>
+        Image.asset("assets/images/logo-placeholder.png",
+            width: width.w, height: height.h, fit: BoxFit.cover),
+  )
+      : Image.asset(
+    avatarPath,
+    width: width.w,
+    height: height.h,
+    fit: BoxFit.cover,
+  );
+
+  return DoctorImageResult(avatarPath: avatarPath, widget: widget);
+}

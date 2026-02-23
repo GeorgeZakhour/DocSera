@@ -35,6 +35,30 @@ class SupabaseSearchService {
     }
   }
 
+  // 🔎 Center Search (client-side filter)
+  Future<List<Map<String, dynamic>>> searchCenters(
+      String query, {
+        int limit = 100,
+      }) async {
+    if (query.trim().isEmpty) return [];
+    try {
+      final List data = await _client
+          .from('centers')
+          .select('*')
+          .limit(limit);
+
+      final q = query.toLowerCase();
+      return data.where((raw) {
+        final c = raw as Map<String, dynamic>;
+        final name = (c['name'] ?? '').toString().toLowerCase();
+        final specialties = (c['specialties'] as List?)?.join(' ').toLowerCase() ?? '';
+        return name.contains(q) || specialties.contains(q);
+      }).cast<Map<String, dynamic>>().toList();
+    } catch (e) {
+      return [];
+    }
+  }
+
   // ⭐ Get user favorites
   Future<List<Map<String, dynamic>>> getFavoriteDoctors(String userId) async {
     try {
@@ -70,6 +94,27 @@ class SupabaseSearchService {
           .from('doctors')
           .select('*')
           .ilike('specialty', '%$specialty%')
+          .eq('address->>city', cityAr)
+          .limit(limit);
+
+      return data.cast<Map<String, dynamic>>();
+    } catch (_) {
+      return [];
+    }
+  }
+
+  // 🏙️ Center Specialty + City
+  Future<List<Map<String, dynamic>>> fetchCentersBySpecialtyAndCity({
+    required String specialty,
+    required String cityAr,
+    int limit = 150,
+  }) async {
+    if (specialty.trim().isEmpty || cityAr.trim().isEmpty) return [];
+    try {
+      final List data = await _client
+          .from('centers')
+          .select('*')
+          .contains('specialties', [specialty])
           .eq('address->>city', cityAr)
           .limit(limit);
 
@@ -116,6 +161,49 @@ class SupabaseSearchService {
           : withDistance.where((d) => (d['_distanceKm'] as double) <= radiusKm).toList();
 
       // sort by distance
+      filtered.sort((a, b) =>
+          (a['_distanceKm'] as double).compareTo(b['_distanceKm'] as double));
+
+      return filtered;
+    } catch (_) {
+      return [];
+    }
+  }
+
+  // 📍 Center Specialty + Nearby
+  Future<List<Map<String, dynamic>>> fetchCentersBySpecialtyNearby({
+    required String specialty,
+    required double userLat,
+    required double userLng,
+    double? radiusKm,
+    int limit = 300,
+  }) async {
+    if (specialty.trim().isEmpty) return [];
+    try {
+      final List data = await _client
+          .from('centers')
+          .select('*')
+          .contains('specialties', [specialty])
+          .limit(limit);
+
+      const Distance dist = Distance();
+      final origin = LatLng(userLat, userLng);
+
+      final withDistance = data.map<Map<String, dynamic>>((raw) {
+        final c = raw as Map<String, dynamic>;
+        final lat = (c['location']?['lat'] ?? c['lat'])?.toDouble();
+        final lng = (c['location']?['lng'] ?? c['lng'])?.toDouble();
+        double? km;
+        if (lat != null && lng != null) {
+          km = dist.as(LengthUnit.Kilometer, origin, LatLng(lat, lng));
+        }
+        return {...c, '_distanceKm': km};
+      }).where((c) => c['_distanceKm'] != null).toList();
+
+      final filtered = radiusKm == null
+          ? withDistance
+          : withDistance.where((c) => (c['_distanceKm'] as double) <= radiusKm).toList();
+
       filtered.sort((a, b) =>
           (a['_distanceKm'] as double).compareTo(b['_distanceKm'] as double));
 

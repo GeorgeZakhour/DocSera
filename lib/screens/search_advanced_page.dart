@@ -3,6 +3,7 @@ import 'package:docsera/app/const.dart';
 import 'package:docsera/app/text_styles.dart';
 import 'package:docsera/gen_l10n/app_localizations.dart';
 import 'package:docsera/models/document.dart';
+import 'package:docsera/screens/centers/center_profile_page.dart';
 import 'package:docsera/screens/doctors/doctor_profile_page.dart';
 import 'package:docsera/screens/map_results_page.dart';
 import 'package:docsera/services/supabase/supabase_search_service.dart';
@@ -48,7 +49,7 @@ class _SearchAdvancedPageState extends State<SearchAdvancedPage> {
   static const double _sheetMax = 0.88;
 
   // ======= مفضلة المستخدم =======
-  String? _userId;
+  // String? _userId;
   List<Map<String, dynamic>> _favoriteDoctors = [];
 
   // ======= خدمة البحث =======
@@ -203,7 +204,15 @@ class _SearchAdvancedPageState extends State<SearchAdvancedPage> {
 
       setState(() => _loadingSuggestions = true);
 
-      final doctorMatches = await _searchService.searchDoctors(q.toLowerCase());
+      // Fetch doctors and centers in parallel
+      final results = await Future.wait([
+        _searchService.searchDoctors(q.toLowerCase()),
+        _searchService.searchCenters(q.toLowerCase()),
+      ]);
+
+      final doctorMatches = results[0];
+      final centerMatches = results[1];
+
       final List<_SpecialtyOption> localSpecs = _buildLocalSpecialties(AppLocalizations.of(context)!);
       final specMatches = localSpecs
           .where((s) => s.name.toLowerCase().contains(q.toLowerCase()))
@@ -213,6 +222,7 @@ class _SearchAdvancedPageState extends State<SearchAdvancedPage> {
       setState(() {
         _mixed = [
           ...doctorMatches.map(_MixedSuggestion.fromDoctor),
+          ...centerMatches.map(_MixedSuggestion.fromCenter),
           ...specMatches,
         ];
         _loadingSuggestions = false;
@@ -279,17 +289,6 @@ class _SearchAdvancedPageState extends State<SearchAdvancedPage> {
     }
   }
 
-  // ========= اختيار مدينة =========
-  void _pickCity(_CityOption c) async {
-    Navigator.pop(context);
-    setState(() {
-      _isNearbySelected = false;
-      _myLatLng = null;
-      _filters = _filters.copyWith(byNearby: false, nearbyKm: null, cityDisplay: c.display);
-      _locationCtrl.text = c.display;
-    });
-    await _fetchResults();
-  }
 
   // ========= جلب النتائج من Supabase مع دعم تخصصات متعددة =========
   Future<void> _fetchResults() async {
@@ -330,27 +329,45 @@ class _SearchAdvancedPageState extends State<SearchAdvancedPage> {
 
       // جلب النتائج لكل تخصص
       for (final spec in selectedSpecs) {
-        List<Map<String, dynamic>> list;
-
-        if (_isNearbySelected && _myLatLng != null) {
-          // البحث بالقرب مني مع تمرير المسافة المحددة من السلايدر
-          list = await _searchService.fetchBySpecialtyNearby(
+        // Parallel fetch for doctors and centers
+        final results = await Future.wait([
+          // Doctor fetch
+          _isNearbySelected && _myLatLng != null
+              ? _searchService.fetchBySpecialtyNearby(
             specialty: spec,
             userLat: _myLatLng!.latitude,
             userLng: _myLatLng!.longitude,
             radiusKm: _filters.nearbyKm ?? 5,
-          );
-        } else {
-          // البحث حسب المدينة
-          list = await _searchService.fetchBySpecialtyAndCity(
+          )
+              : _searchService.fetchBySpecialtyAndCity(
             specialty: spec,
             cityAr: selectedCity.ar,
-          );
-        }
+          ),
+          // Center fetch
+          _isNearbySelected && _myLatLng != null
+              ? _searchService.fetchCentersBySpecialtyNearby(
+            specialty: spec,
+            userLat: _myLatLng!.latitude,
+            userLng: _myLatLng!.longitude,
+            radiusKm: _filters.nearbyKm ?? 5,
+          )
+              : _searchService.fetchCentersBySpecialtyAndCity(
+            specialty: spec,
+            cityAr: selectedCity.ar,
+          ),
+        ]);
+
+        final List<Map<String, dynamic>> doctors = 
+            results[0].map((d) => {...d, 'search_type': 'doctor'}).toList();
+        final List<Map<String, dynamic>> centers = 
+            results[1].map((c) => {...c, 'search_type': 'center'}).toList();
 
         // دمج النتائج بدون تكرار
-        for (final d in list) {
+        for (final d in doctors) {
           merged[d['id']] = d;
+        }
+        for (final c in centers) {
+          merged[c['id']] = c;
         }
       }
 
@@ -360,7 +377,8 @@ class _SearchAdvancedPageState extends State<SearchAdvancedPage> {
       });
 
       _applyFilters(); // تطبيق الفلاتر الإضافية (مثل الجنس)
-    } catch (_) {
+    } catch (e) {
+      debugPrint("❌ Advanced Search Error: $e");
       setState(() {
         _isFetchingResults = false;
         _results.clear();
@@ -501,6 +519,74 @@ class _SearchAdvancedPageState extends State<SearchAdvancedPage> {
     );
   }
 
+  // ========= بطاقة مركز =========
+  Widget _centerTile(Map<String, dynamic> center) {
+    final imageResult = resolveCenterImagePathAndWidget(center: center);
+    final imageProvider = imageResult.imageProvider;
+    // final t = AppLocalizations.of(context)!;
+
+    final specialties = (center['specialties'] as List?)?.join(' • ') ?? '';
+
+    return ListTile(
+      leading: CircleAvatar(
+        backgroundColor: AppColors.mainDark.withOpacity(0.2),
+        radius: 22.sp,
+        backgroundImage: imageProvider,
+      ),
+      title: Text(
+        (center['name'] ?? "").toString(),
+        style: AppTextStyles.getText2(context).copyWith(
+          fontWeight: FontWeight.bold,
+          color: AppColors.mainDark,
+        ),
+      ),
+      subtitle: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          if (specialties.isNotEmpty)
+            Text(
+              specialties,
+              style: AppTextStyles.getText3(context).copyWith(color: Colors.grey),
+            ),
+          SizedBox(height: 4.h),
+          Row(
+            children: [
+              Icon(Icons.location_on, size: 12.sp, color: Colors.grey),
+              SizedBox(width: 4.w),
+              Text(
+                center['address']?['city'] ?? "",
+                style: AppTextStyles.getText3(context).copyWith(color: Colors.grey),
+              ),
+            ],
+          ),
+          if (center['_distanceKm'] != null)
+            Padding(
+              padding: EdgeInsets.only(top: 4.h),
+              child: Row(
+                children: [
+                  const Icon(Icons.directions_walk, size: 12, color: Colors.grey),
+                  const SizedBox(width: 4),
+                  Text(
+                    "${(center['_distanceKm'] as double).toStringAsFixed(1)} km",
+                    style: AppTextStyles.getText3(context).copyWith(color: Colors.grey),
+                  ),
+                ],
+              ),
+            ),
+        ],
+      ),
+      trailing: Icon(Icons.arrow_forward_ios, size: 12.sp, color: Colors.grey),
+      onTap: () {
+        if (widget.mode == "search") {
+          Navigator.push(
+            context,
+            fadePageRoute(CenterProfilePage(centerId: center['id'], center: center)),
+          );
+        }
+      },
+    );
+  }
+
   // ========= واجهة تخصص ضمن الاقتراحات =========
   Widget _specialtySuggestionTile(String name, String asset) {
     return ListTile(
@@ -582,6 +668,8 @@ class _SearchAdvancedPageState extends State<SearchAdvancedPage> {
         final m = _mixed[i];
         if (m.type == _MixedType.doctor) {
           return _doctorTile(m.doctor!);
+        } else if (m.type == _MixedType.center) {
+          return _centerTile(m.center!);
         } else {
           return _specialtySuggestionTile(m.specialtyName!, m.asset!);
         }
@@ -712,7 +800,10 @@ class _SearchAdvancedPageState extends State<SearchAdvancedPage> {
       child: _ResultsSheet(
         isLoading: _isFetchingResults,
         results: _filteredResults,
-        doctorItemBuilder: (d) => _doctorTile(d),
+        itemBuilder: (d) {
+          if (d['search_type'] == 'center') return _centerTile(d);
+          return _doctorTile(d);
+        },
         controller: _sheetController,
         maxChildSize: _sheetMax,
       ),
@@ -1364,21 +1455,25 @@ class _SpecialtyOption {
 }
 
 
-enum _MixedType { doctor, specialty }
+enum _MixedType { doctor, center, specialty }
 
 class _MixedSuggestion {
   final _MixedType type;
   final Map<String, dynamic>? doctor;
+  final Map<String, dynamic>? center;
   final String? specialtyName;
   final String? asset; // مسار SVG
 
-  _MixedSuggestion._(this.type, this.doctor, this.specialtyName, this.asset);
+  _MixedSuggestion._(this.type, this.doctor, this.center, this.specialtyName, this.asset);
 
   static _MixedSuggestion fromDoctor(Map<String, dynamic> d) =>
-      _MixedSuggestion._(_MixedType.doctor, d, null, null);
+      _MixedSuggestion._(_MixedType.doctor, d, null, null, null);
+
+  static _MixedSuggestion fromCenter(Map<String, dynamic> c) =>
+      _MixedSuggestion._(_MixedType.center, null, c, null, null);
 
   static _MixedSuggestion specialty(String name, String asset) =>
-      _MixedSuggestion._(_MixedType.specialty, null, name, asset);
+      _MixedSuggestion._(_MixedType.specialty, null, null, name, asset);
 }
 
 
@@ -1462,14 +1557,14 @@ class FilterOptions {
 class _ResultsSheet extends StatelessWidget {
   final bool isLoading;
   final List<Map<String, dynamic>> results;
-  final Widget Function(Map<String, dynamic>) doctorItemBuilder;
+  final Widget Function(Map<String, dynamic>) itemBuilder;
   final DraggableScrollableController controller;
   final double maxChildSize;
 
   const _ResultsSheet({
     required this.isLoading,
     required this.results,
-    required this.doctorItemBuilder,
+    required this.itemBuilder,
     required this.controller,
     this.maxChildSize = 0.88,
   });
@@ -1569,7 +1664,7 @@ class _ResultsSheet extends StatelessWidget {
                     controller: controller,
                     itemCount: results.length,
                     separatorBuilder: (_, __) => const SizedBox(height: 12),
-                    itemBuilder: (_, i) => doctorItemBuilder(results[i]),
+                    itemBuilder: (_, i) => itemBuilder(results[i]),
                   ),
                 ),
               ],

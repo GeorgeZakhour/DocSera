@@ -1188,6 +1188,21 @@ class AppLocalizationsAr extends AppLocalizations {
   String get share => 'مشاركة';
 
   @override
+  String get specialtiesDepartments => 'التخصصات والأقسام';
+
+  @override
+  String get aboutCenter => 'نبذة عن المركز';
+
+  @override
+  String get acceptedInsurance => 'التأمينات المقبولة';
+
+  @override
+  String get facilitiesAmenities => 'المرافق والتجهيزات';
+
+  @override
+  String get socialMedia => 'وسائل التواصل الاجتماعي';
+
+  @override
   String get makeAppointment => 'حجز موعد';
 
   @override

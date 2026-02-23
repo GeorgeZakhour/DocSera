@@ -2324,6 +2324,36 @@ abstract class AppLocalizations {
   /// **'Share'**
   String get share;
 
+  /// No description provided for @specialtiesDepartments.
+  ///
+  /// In en, this message translates to:
+  /// **'Specialties & Departments'**
+  String get specialtiesDepartments;
+
+  /// No description provided for @aboutCenter.
+  ///
+  /// In en, this message translates to:
+  /// **'About the Center'**
+  String get aboutCenter;
+
+  /// No description provided for @acceptedInsurance.
+  ///
+  /// In en, this message translates to:
+  /// **'Accepted Insurance'**
+  String get acceptedInsurance;
+
+  /// No description provided for @facilitiesAmenities.
+  ///
+  /// In en, this message translates to:
+  /// **'Facilities & Amenities'**
+  String get facilitiesAmenities;
+
+  /// No description provided for @socialMedia.
+  ///
+  /// In en, this message translates to:
+  /// **'Social Media'**
+  String get socialMedia;
+
   /// No description provided for @makeAppointment.
   ///
   /// In en, this message translates to:

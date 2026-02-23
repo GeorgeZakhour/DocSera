@@ -1200,6 +1200,21 @@ class AppLocalizationsEn extends AppLocalizations {
   String get share => 'Share';
 
   @override
+  String get specialtiesDepartments => 'Specialties & Departments';
+
+  @override
+  String get aboutCenter => 'About the Center';
+
+  @override
+  String get acceptedInsurance => 'Accepted Insurance';
+
+  @override
+  String get facilitiesAmenities => 'Facilities & Amenities';
+
+  @override
+  String get socialMedia => 'Social Media';
+
+  @override
   String get makeAppointment => 'Make an Appointment';
 
   @override
