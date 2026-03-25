@@ -46,30 +46,60 @@ class FavoritesRepository {
     }
   }
 
-  /// ✅ جلب بيانات الأطباء من قائمة المفضلات
+  /// ✅ جلب بيانات الأطباء والمراكز من قائمة المفضلات
   Future<List<Map<String, dynamic>>> getFavoriteDoctors() async {
     try {
-      final dynamic res = await _supabase.rpc('rpc_get_my_favorite_doctors');
+      final userId = _supabase.auth.currentUser?.id;
+      if (userId == null) return [];
 
-      if (res == null) {
+      // 1. Fetch raw favorites array from users table
+      final user = await _supabase
+          .from('users')
+          .select('favorites')
+          .eq('id', userId)
+          .maybeSingle();
+
+      List<String> favIds = [];
+      if (user != null && user['favorites'] != null) {
+        favIds = List<String>.from(user['favorites']);
+      }
+
+      if (favIds.isEmpty) {
         await _sharedPrefsService.saveData('favoriteDoctors', []);
         return [];
       }
 
-      final List<dynamic> list =
-      res is String ? jsonDecode(res) : res;
+      // 2. We don't know initially which IDs are doctors and which are centers.
+      // Easiest approach: Query both tables simultaneously using `inFilter`
+      final doctorFuture = _supabase.from('doctors').select('*').inFilter('id', favIds);
+      final centerFuture = _supabase.from('centers').select('*').inFilter('id', favIds);
 
-      final doctors = list
-          .map<Map<String, dynamic>>(
-            (doctor) => _buildDoctorInfo(
-          doctor as Map<String, dynamic>,
-          doctor['id'] as String,
-        ),
-      )
-          .toList();
+      final results = await Future.wait([doctorFuture, centerFuture]);
+      final List<dynamic> doctorsRaw = results[0] as List<dynamic>;
+      final List<dynamic> centersRaw = results[1] as List<dynamic>;
 
-      await _sharedPrefsService.saveData('favoriteDoctors', doctors);
-      return doctors;
+      // 3. Format Doctors
+      final doctors = doctorsRaw
+          .map<Map<String, dynamic>>((d) {
+        final formatted = _buildDoctorInfo(d as Map<String, dynamic>, d['id'] as String);
+        formatted['search_type'] = 'doctor'; // Inject type for UI differentiation
+        return formatted;
+      }).toList();
+
+      // 4. Format Centers
+      final centers = centersRaw
+          .map<Map<String, dynamic>>((c) {
+        final map = c as Map<String, dynamic>;
+        map['search_type'] = 'center'; // Inject type
+        return map;
+      }).toList();
+
+      // 5. Combine and save to cache
+      final combinedFavorites = [...doctors, ...centers];
+      
+      await _sharedPrefsService.saveData('favoriteDoctors', combinedFavorites);
+      return combinedFavorites;
+
     } catch (e) {
       debugPrint("❌ getFavoriteDoctors failed: $e");
       return [];

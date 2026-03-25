@@ -957,6 +957,12 @@ class AppLocalizationsEn extends AppLocalizations {
   String get searchHint => 'Name, specialty, clinic';
 
   @override
+  String get doctors => 'Doctors';
+
+  @override
+  String get centers => 'Centers';
+
+  @override
   String get favoritesTitle => 'Favorites';
 
   @override
@@ -1213,6 +1219,25 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get socialMedia => 'Social Media';
+
+  @override
+  String get medicalTeam => 'Medical Team';
+
+  @override
+  String get landlineNumbers => 'Landline Numbers';
+
+  @override
+  String get mobileNumber => 'Mobile Number';
+
+  @override
+  String get shareCenterProfile => 'Share Center Profile';
+
+  @override
+  String get scanToOpenCenterInApp =>
+      'Scan to open this center in the DocSera app';
+
+  @override
+  String get additionalDetails => 'Additional Details';
 
   @override
   String get makeAppointment => 'Make an Appointment';
@@ -1884,6 +1909,48 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get goToLogin => 'Go to Login';
+
+  @override
+  String get crossAppOptionsTitle => 'Existing Account';
+
+  @override
+  String get crossAppOptionsMessage =>
+      'This email is already registered in DocSera Pro. Would you like to use the same password or create a new one for both apps?';
+
+  @override
+  String get useExistingPassword => 'Use existing password';
+
+  @override
+  String get createNewPassword => 'Create a new password';
+
+  @override
+  String get verifyCurrentPassword => 'Please verify your current password';
+
+  @override
+  String get newPasswordWillApplyToBoth =>
+      'Note: This password change will apply to both apps.';
+
+  @override
+  String get passwordTooShort => 'Password must be at least 6 characters.';
+
+  @override
+  String get completeRegistration => 'Complete Registration';
+
+  @override
+  String get wrongPassword => 'Incorrect password.';
+
+  @override
+  String get errorUpdatingProfile =>
+      'Error updating profile. Please try again.';
+
+  @override
+  String get passwordHint => 'Password';
+
+  @override
+  String get fillAllFields => 'Please fill all fields.';
+
+  @override
+  String get back => 'Back';
 
   @override
   String get health_loggedOut_title => 'Your health history in one place';
@@ -3108,4 +3175,20 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get internetRestored => 'Internet connection restored';
+
+  @override
+  String get pricing => 'Pricing';
+
+  @override
+  String get currencySYPName => 'SYP';
+
+  @override
+  String get currencyUSDName => 'USD';
+
+  @override
+  String get existingAccountTitle => 'Existing Account';
+
+  @override
+  String get existingAccountMessage =>
+      'This email is linked to an existing DocSera Pro account. Please enter your current password to continue.';
 }

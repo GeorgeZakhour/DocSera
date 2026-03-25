@@ -30,7 +30,7 @@ class SupabaseCenterService {
 
       // 2. Extract doctor IDs (filter for owner/doctor roles)
       final doctorIds = members
-          .where((m) => m['role'] == 'owner' || m['role'] == 'doctor')
+          .where((m) => m['role'] == 'owner' || m['role'] == 'doctor' || m['role'] == 'specialist')
           .map((m) => m['doctor_id'] ?? m['user_id'])
           .where((id) => id != null)
           .toList();

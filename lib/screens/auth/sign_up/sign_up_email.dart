@@ -1,6 +1,7 @@
 import 'package:docsera/app/text_styles.dart';
 import 'package:docsera/screens/auth/login/login_page.dart';
 import 'package:docsera/screens/auth/sign_up/create_password.dart';
+import 'package:docsera/screens/auth/sign_up/cross_app_options.dart';
 import 'package:docsera/utils/page_transitions.dart';
 import 'package:docsera/utils/text_direction_utils.dart';
 import 'package:docsera/widgets/base_scaffold.dart';
@@ -29,7 +30,7 @@ class _EnterEmailPageState extends State<EnterEmailPage> {
 
   final RegExp emailRegex = RegExp(r'^[^@]+@[^@]+\.[^@]+$');
 
-  /// ✅ تحقق مما إذا كان البريد الإلكتروني مستخدمًا مسبقًا
+  /// ✅ تحقق مما إذا كان البريد الإلكتروني مستخدمًا مسبقًا في تطبيق المرضى
   Future<void> _checkForDuplicates() async {
     if (!isValid) return;
 
@@ -39,28 +40,38 @@ class _EnterEmailPageState extends State<EnterEmailPage> {
 
     try {
       final res = await Supabase.instance.client.rpc(
-        'rpc_is_email_available',
+        'check_email_context',
         params: {'p_email': email},
       );
-
-      final bool isAvailable = res == true || res == 't' || res == 1;
+      final contextStatus = res as String;
 
       setState(() => isChecking = false);
 
-      if (!isAvailable) {
+      if (contextStatus == 'in_docsera' || contextStatus == 'in_both') {
         _showDuplicateDialog();
         return;
       }
 
       // ✅ الإيميل متاح
       widget.signUpInfo.email = email;
+      widget.signUpInfo.isCrossApp = contextStatus == 'in_docsera_pro';
 
-      Navigator.push(
-        context,
-        fadePageRoute(
-          CreatePasswordPage(signUpInfo: widget.signUpInfo),
-        ),
-      );
+      if (widget.signUpInfo.isCrossApp) {
+        // We will create this page next
+        Navigator.push(
+          context,
+          fadePageRoute(
+            CrossAppOptionsPage(signUpInfo: widget.signUpInfo),
+          ),
+        );
+      } else {
+        Navigator.push(
+          context,
+          fadePageRoute(
+            CreatePasswordPage(signUpInfo: widget.signUpInfo),
+          ),
+        );
+      }
     } catch (e) {
       setState(() => isChecking = false);
 

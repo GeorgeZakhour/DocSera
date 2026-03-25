@@ -13,6 +13,9 @@ class SignUpInfo {
   bool marketingChecked = false;
   String? address;
 
+  /// هل هذا المستخدم قادم من التطبيق الآخر؟ (DocSera Pro للأطباء)
+  bool isCrossApp;
+
   SignUpInfo({
     this.email,
     this.fakeEmail,
@@ -25,5 +28,6 @@ class SignUpInfo {
     this.termsAccepted = false,
     this.marketingChecked = false,
     this.address,
+    this.isCrossApp = false,
   });
 }

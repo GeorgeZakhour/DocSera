@@ -77,6 +77,8 @@ class _SearchAdvancedPageState extends State<SearchAdvancedPage> {
   // ======= فلاتر فعّالة + نتائج بعد التصفية =======
   FilterOptions _filters = const FilterOptions(); // الافتراضي: بدون تصفية
   List<Map<String, dynamic>> _filteredResults = [];
+  List<Map<String, dynamic>> _filteredDoctors = [];
+  List<Map<String, dynamic>> _filteredCenters = [];
 
   bool get _showingResults => _locationStageActive && _filteredResults.isNotEmpty;
 
@@ -210,8 +212,10 @@ class _SearchAdvancedPageState extends State<SearchAdvancedPage> {
         _searchService.searchCenters(q.toLowerCase()),
       ]);
 
-      final doctorMatches = results[0];
-      final centerMatches = results[1];
+      final List<Map<String, dynamic>> doctorMatches = results[0] as List<Map<String, dynamic>>;
+      final List<Map<String, dynamic>> centerMatches = widget.mode == "message"
+          ? <Map<String, dynamic>>[]
+          : results[1] as List<Map<String, dynamic>>;
 
       final List<_SpecialtyOption> localSpecs = _buildLocalSpecialties(AppLocalizations.of(context)!);
       final specMatches = localSpecs
@@ -360,7 +364,9 @@ class _SearchAdvancedPageState extends State<SearchAdvancedPage> {
         final List<Map<String, dynamic>> doctors = 
             results[0].map((d) => {...d, 'search_type': 'doctor'}).toList();
         final List<Map<String, dynamic>> centers = 
-            results[1].map((c) => {...c, 'search_type': 'center'}).toList();
+            widget.mode == "message"
+                ? []
+                : results[1].map((c) => {...c, 'search_type': 'center'}).toList();
 
         // دمج النتائج بدون تكرار
         for (final d in doctors) {
@@ -414,6 +420,8 @@ class _SearchAdvancedPageState extends State<SearchAdvancedPage> {
 
     setState(() {
       _filteredResults = base;
+      _filteredDoctors = _filteredResults.where((r) => r['search_type'] == 'doctor').toList();
+      _filteredCenters = _filteredResults.where((r) => r['search_type'] == 'center').toList();
     });
   }
 
@@ -580,7 +588,7 @@ class _SearchAdvancedPageState extends State<SearchAdvancedPage> {
         if (widget.mode == "search") {
           Navigator.push(
             context,
-            fadePageRoute(CenterProfilePage(centerId: center['id'], center: center)),
+            fadePageRoute(CenterProfilePage(centerId: center['id'])),
           );
         }
       },
@@ -799,23 +807,17 @@ class _SearchAdvancedPageState extends State<SearchAdvancedPage> {
       onVerticalDragStart: (details) {},
       child: _ResultsSheet(
         isLoading: _isFetchingResults,
+        doctorResults: _filteredDoctors,
+        centerResults: _filteredCenters,
         results: _filteredResults,
-        itemBuilder: (d) {
-          if (d['search_type'] == 'center') return _centerTile(d);
-          return _doctorTile(d);
-        },
+        doctorItemBuilder: (d) => _doctorTile(d),
+        centerItemBuilder: (c) => _centerTile(c),
         controller: _sheetController,
         maxChildSize: _sheetMax,
       ),
     );
   }
 
-  String _nearbySummaryLabel(AppLocalizations t) {
-    if (_isNearbySelected && _filters.nearbyKm != null) {
-      return '${t.nearbyMe} • ${_filters.nearbyKm!.toStringAsFixed(0)} km';
-    }
-    return t.nearbyMe;
-  }
 
   Widget _buildNearbyChosenChip() {
     final t = AppLocalizations.of(context)!;
@@ -1556,15 +1558,21 @@ class FilterOptions {
 
 class _ResultsSheet extends StatelessWidget {
   final bool isLoading;
+  final List<Map<String, dynamic>> doctorResults;
+  final List<Map<String, dynamic>> centerResults;
   final List<Map<String, dynamic>> results;
-  final Widget Function(Map<String, dynamic>) itemBuilder;
+  final Widget Function(Map<String, dynamic>) doctorItemBuilder;
+  final Widget Function(Map<String, dynamic>) centerItemBuilder;
   final DraggableScrollableController controller;
   final double maxChildSize;
 
   const _ResultsSheet({
     required this.isLoading,
+    required this.doctorResults,
+    required this.centerResults,
     required this.results,
-    required this.itemBuilder,
+    required this.doctorItemBuilder,
+    required this.centerItemBuilder,
     required this.controller,
     this.maxChildSize = 0.88,
   });
@@ -1575,7 +1583,7 @@ class _ResultsSheet extends StatelessWidget {
 
     return DraggableScrollableSheet(
       initialChildSize: 0.7,
-      minChildSize: 0.7,  // 👈 لازم فرق واضح ليتشجع ينزل
+      minChildSize: 0.7,
       maxChildSize: 0.88,
       controller: controller,
       builder: (context, controller) {
@@ -1600,72 +1608,34 @@ class _ResultsSheet extends StatelessWidget {
                     ),
                   ),
                 ),
-                // Divider
-                const Padding(
-                  padding: EdgeInsets.symmetric(horizontal: 30),
-                  child: Divider(
-                    height: 1,
-                    thickness: 0.8,
-                    color: Color(0xFFD6D6D6),
-                  ),
-                ),
-                // Results + Badge
-                Padding(
-                  padding: const EdgeInsets.only(top: 8, bottom: 12, left: 16, right: 16),
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.start,
-                    children: [
-                      Text(
-                        t.results,
-                        style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                          fontSize: 11,
-                          fontWeight: FontWeight.w600,
-                          color: Colors.grey.shade600,
-                        ),
-                      ),
-                      const SizedBox(width: 6),
-                      Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 2),
-                        decoration: BoxDecoration(
-                          color: AppColors.grayMain,
-                          borderRadius: BorderRadius.circular(25),
-                        ),
-                        child: Text(
-                          results.length.toString(),
-                          style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                            color: Colors.white,
-                            fontSize: 9,
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
                 if (isLoading)
-                  const LinearProgressIndicator(
+                  LinearProgressIndicator(
                     minHeight: 2,
-                    color: AppColors.main,
+                    color: AppColors.main.withOpacity(0.3),
                     backgroundColor: Colors.transparent,
                   ),
-                // List
+                // Combined Results List
                 Expanded(
                   child: results.isEmpty && !isLoading
                       ? Center(
-                    child: Text(
-                      t.noResultsTitle,
-                      style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                        color: Colors.grey.shade500,
-                        fontSize: 14,
-                      ),
-                    ),
-                  )
+                          child: Text(
+                            t.noResultsTitle,
+                            style: AppTextStyles.getText2(context).copyWith(color: Colors.grey),
+                          ),
+                        )
                       : ListView.separated(
-                    controller: controller,
-                    itemCount: results.length,
-                    separatorBuilder: (_, __) => const SizedBox(height: 12),
-                    itemBuilder: (_, i) => itemBuilder(results[i]),
-                  ),
+                          controller: controller,
+                          padding: const EdgeInsets.symmetric(vertical: 16),
+                          itemCount: results.length,
+                          separatorBuilder: (_, __) => const SizedBox(height: 12),
+                          itemBuilder: (_, i) {
+                            final item = results[i];
+                            if (item['search_type'] == 'center') {
+                              return centerItemBuilder(item);
+                            }
+                            return doctorItemBuilder(item);
+                          },
+                        ),
                 ),
               ],
             ),
@@ -1674,6 +1644,7 @@ class _ResultsSheet extends StatelessWidget {
       },
     );
   }
+
 }
 
 // ==================== صفحة الفلاتر ====================

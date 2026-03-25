@@ -1,5 +1,6 @@
 import 'package:latlong2/latlong.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
+import 'package:flutter/foundation.dart';
 
 class SupabaseSearchService {
   final SupabaseClient _client;
@@ -35,25 +36,131 @@ class SupabaseSearchService {
     }
   }
 
-  // 🔎 Center Search (client-side filter)
+  // 🔎 Enhanced Search: Searches doctors by name AND by center names
+  Future<List<Map<String, dynamic>>> searchDoctorsExtended(String query) async {
+    if (query.trim().isEmpty) return [];
+    final q = query.toLowerCase();
+
+    try {
+      // 1. Direct search in doctors table
+      final directDocs = await searchDoctors(q);
+
+      // 2. Search for matching centers
+      final centers = await searchCenters(q);
+      if (centers.isEmpty) return directDocs;
+
+      final centerIds = centers.map((c) => c['id']).toList();
+
+      // 3. Get members of these centers
+      final List members = await _client
+          .from('center_members')
+          .select('doctor_id, user_id, role')
+          .inFilter('center_id', centerIds)
+          .eq('is_active', true);
+
+      if (members.isEmpty) return directDocs;
+
+      final relatedDoctorIds = members
+          .where((m) => m['role'] == 'owner' || m['role'] == 'doctor')
+          .map((m) => m['doctor_id'] ?? m['user_id'])
+          .where((id) => id != null)
+          .cast<String>()
+          .toSet();
+
+      // 4. Fetch these doctors if not already in directDocs
+      final existingIds = directDocs.map((d) => d['id'].toString()).toSet();
+      final missingIds = relatedDoctorIds.where((id) => !existingIds.contains(id)).toList();
+
+      if (missingIds.isEmpty) return directDocs;
+
+      final List extraDocsRaw = await _client
+          .from('doctors')
+          .select('*')
+          .inFilter('id', missingIds);
+      
+      final extraDocs = extraDocsRaw.cast<Map<String, dynamic>>();
+
+      return [...directDocs, ...extraDocs];
+    } catch (e) {
+      return await searchDoctors(q);
+    }
+  }
+
+  // 🔎 Center Search (server-side filter for better results)
   Future<List<Map<String, dynamic>>> searchCenters(
       String query, {
         int limit = 100,
       }) async {
     if (query.trim().isEmpty) return [];
+    final q = query.trim();
     try {
-      final List data = await _client
+      // 1. Search by name first as it's the most common
+      final List dataByName = await _client
           .from('centers')
           .select('*')
+          .neq('type', 'solo')
+          .ilike('name', '%$q%')
           .limit(limit);
+      
+      final List<Map<String, dynamic>> results = dataByName.cast<Map<String, dynamic>>();
+      return results;
+    } catch (e) {
+      return [];
+    }
+  }
 
-      final q = query.toLowerCase();
-      return data.where((raw) {
-        final c = raw as Map<String, dynamic>;
-        final name = (c['name'] ?? '').toString().toLowerCase();
-        final specialties = (c['specialties'] as List?)?.join(' ').toLowerCase() ?? '';
-        return name.contains(q) || specialties.contains(q);
-      }).cast<Map<String, dynamic>>().toList();
+  // 🔎 Unified Search: Returns Doctors + Centers + Doctors from matching Centers
+  Future<List<Map<String, dynamic>>> searchUnified(String query) async {
+    if (query.trim().isEmpty) return [];
+    final q = query.trim().toLowerCase();
+
+    try {
+      // 1. Search Doctors
+      final doctors = await searchDoctors(q);
+      for (var d in doctors) {
+        d['search_type'] = 'doctor';
+      }
+
+      // 2. Search Centers
+      final centers = await searchCenters(q);
+      for (var c in centers) {
+        c['search_type'] = 'center';
+      }
+
+      // 3. Get Doctors from matching Centers
+      List<Map<String, dynamic>> teamDoctors = [];
+      if (centers.isNotEmpty) {
+        final centerIds = centers.map((c) => c['id']).toList();
+
+        final List members = await _client
+            .from('center_members')
+            .select('doctor_id, role')
+            .inFilter('center_id', centerIds)
+            .eq('is_active', true);
+
+        if (members.isNotEmpty) {
+          final doctorIds = members.map((m) => m['doctor_id']).toList();
+          final existingDoctorIds = doctors.map((d) => d['id']).toSet();
+          final missingIds = doctorIds.where((id) => id != null && !existingDoctorIds.contains(id)).toList();
+
+          if (missingIds.isNotEmpty) {
+            final List extraRaw = await _client
+                .from('doctors')
+                .select('*')
+                .inFilter('id', missingIds);
+            teamDoctors = extraRaw.cast<Map<String, dynamic>>().map((d) => {...d, 'search_type': 'doctor'}).toList();
+          }
+        }
+      }
+
+      // Merge all (Centers first for visibility if name matches)
+      final all = [...centers, ...doctors, ...teamDoctors];
+
+      // Deduplicate by (type, ID) to avoid any collision risk
+      final seen = <String>{};
+      final unique = all.where((e) => seen.add('${e['search_type']}_${e['id']}')).toList();
+
+      return unique;
     } catch (e) {
       return [];
     }
@@ -114,6 +221,7 @@ class SupabaseSearchService {
       final List data = await _client
           .from('centers')
           .select('*')
+          .neq('type', 'solo')
           .contains('specialties', [specialty])
           .eq('address->>city', cityAr)
           .limit(limit);
@@ -183,6 +291,7 @@ class SupabaseSearchService {
       final List data = await _client
           .from('centers')
           .select('*')
+          .neq('type', 'solo')
           .contains('specialties', [specialty])
           .limit(limit);
 

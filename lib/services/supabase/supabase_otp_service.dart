@@ -35,6 +35,7 @@ class SupabaseOTPService {
       'send_email_otp',
       body: {
         'email': email,
+        'purpose': 'signup_email_verify',
       },
     );
 

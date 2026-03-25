@@ -315,6 +315,8 @@
 
   "searchTitle": "Search",
   "searchHint": "Name, specialty, clinic",
+  "doctors": "Doctors",
+  "centers": "Centers",
   "favoritesTitle": "Favorites",
   "noFavorites": "No Favorite Doctors",
   "noResultsTitle": "No Results Found",
@@ -407,6 +409,12 @@
   "acceptedInsurance": "Accepted Insurance",
   "facilitiesAmenities": "Facilities & Amenities",
   "socialMedia": "Social Media",
+  "medicalTeam": "Medical Team",
+  "landlineNumbers": "Landline Numbers",
+  "mobileNumber": "Mobile Number",
+  "shareCenterProfile": "Share Center Profile",
+  "scanToOpenCenterInApp": "Scan to open this center in the DocSera app",
+  "additionalDetails": "Additional Details",
 
   "@bookAppointment================================": "👨‍⚕️ Booking Pages",
 
@@ -627,8 +635,21 @@
   "codeSentMessage": "We have sent a verification code to {email}",
   "success": "Success",
   "goToLogin": "Go to Login",
-
-
+  
+  "crossAppOptionsTitle": "Existing Account",
+  "crossAppOptionsMessage": "This email is already registered in DocSera Pro. Would you like to use the same password or create a new one for both apps?",
+  "useExistingPassword": "Use existing password",
+  "createNewPassword": "Create a new password",
+  "verifyCurrentPassword": "Please verify your current password",
+  "newPasswordWillApplyToBoth": "Note: This password change will apply to both apps.",
+  "passwordTooShort": "Password must be at least 6 characters.",
+  "completeRegistration": "Complete Registration",
+  "wrongPassword": "Incorrect password.",
+  "errorUpdatingProfile": "Error updating profile. Please try again.",
+  "passwordHint": "Password",
+  "fillAllFields": "Please fill all fields.",
+  "back": "Back",
+  "continueButton": "CONTINUE",
 
   "@HealthPage================================": "Health Page",
 
@@ -1110,5 +1131,11 @@
   "twoFactorDeactivateWarning": "Disabling 2FA will make your account less secure. Are you sure you want to proceed?",
   "errorOccurred": "An error occurred. Please try again",
   "noInternetConnection": "No internet connection",
-  "internetRestored": "Internet connection restored"
+  "internetRestored": "Internet connection restored",
+  "pricing": "Pricing",
+  "currencySYPName": "SYP",
+  "currencyUSDName": "USD",
+
+  "existingAccountTitle": "Existing Account",
+  "existingAccountMessage": "This email is linked to an existing DocSera Pro account. Please enter your current password to continue."
 }

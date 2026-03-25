@@ -82,22 +82,13 @@ class MessagesCubit extends Cubit<MessagesState> {
     emit(MessagesLoading());
 
     try {
-      final isDoctor = await _supabase
-          .from('doctors')
-          .select('id')
-          .eq('id', userId)
-          .maybeSingle() !=
-          null;
-
-      final query = isDoctor
-          ? _supabase
+      // ✅ FIX: In the DocSera (Patient) app, we only care about conversations
+      // where the user is the patient (account holder), regardless of whether
+      // they happen to be a doctor in the DocSera Pro app.
+      final query = _supabase
           .from('conversations')
-          .select() // ✅ OPTIMIZED: No more nested relations
-          .eq('doctor_id', userId)
-          : _supabase
-          .from('conversations')
-          .select() // ✅ OPTIMIZED: No more nested relations
-          .or('participants.cs.{"$userId"},patient_id.eq.$userId'); // ✅ FIX: Check both participants and patient_id
+          .select()
+          .eq('patient_id', userId);
 
       final response =
       await query.order('updated_at', ascending: false).limit(20);

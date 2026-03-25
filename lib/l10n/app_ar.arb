@@ -323,6 +323,8 @@
   },
   "searchTitle": "بحث",
   "searchHint": "الاسم، التخصص، العيادة",
+  "doctors": "الأطباء",
+  "centers": "المراكز",
   "favoritesTitle": "المفضلة",
   "noFavorites": "لا يوجد أطباء مفضلون",
   "noResultsTitle": "لم يتم العثور على نتائج",
@@ -415,6 +417,12 @@
   "acceptedInsurance": "التأمينات المقبولة",
   "facilitiesAmenities": "المرافق والتجهيزات",
   "socialMedia": "وسائل التواصل الاجتماعي",
+  "medicalTeam": "الفريق الطبي",
+  "landlineNumbers": "أرقام هاتف أرضي",
+  "mobileNumber": "رقم الجوال",
+  "shareCenterProfile": "مشاركة ملف المركز",
+  "scanToOpenCenterInApp": "امسح الرمز لفتح المركز داخل تطبيق DocSera",
+  "additionalDetails": "تفاصيل إضافية",
 
   "@bookAppointment================================": {
     "description": "👨‍⚕️ صفحات الحجز"
@@ -643,6 +651,21 @@
   "codeSentMessage": "لقد أرسلنا رمز التحقق إلى {email}",
   "success": "نجاح",
   "goToLogin": "الذهاب لتسجيل الدخول",
+
+  "crossAppOptionsTitle": "حساب موجود مسبقاً",
+  "crossAppOptionsMessage": "هذا البريد الإلكتروني مسجل مسبقاً في تطبيق DocSera Pro للأطباء. هل ترغب باستخدام نفس كلمة المرور، أم تفضل إنشاء واحدة جديدة للتطبيقين معاً؟",
+  "useExistingPassword": "استخدام كلمة المرور الحالية",
+  "createNewPassword": "إنشاء كلمة مرور جديدة",
+  "verifyCurrentPassword": "يرجى تأكيد كلمة المرور الحالية",
+  "newPasswordWillApplyToBoth": "ملاحظة: سيتم تطبيق كلمة المرور الجديدة على تطبيق المرضى وتطبيق الأطباء معاً.",
+  "passwordTooShort": "يجب أن تتكون كلمة المرور من 6 أحرف على الأقل.",
+  "completeRegistration": "إتمام التسجيل",
+  "wrongPassword": "كلمة المرور غير صحيحة.",
+  "errorUpdatingProfile": "خطأ أثناء تحديث الملف الشخصي. يرجى المحاولة مرة أخرى.",
+  "passwordHint": "كلمة المرور",
+  "fillAllFields": "يرجى ملء جميع الحقول.",
+  "back": "رجوع",
+  "continueButton": "متابعة",
 
   "@HealthPage================================": "Health Page",
 
@@ -1130,5 +1153,11 @@
   "twoFactorDeactivateWarning": "سيؤدي إلغاء التحقق بخطوتين إلى تقليل أمان حسابك. هل أنت متأكد أنك تريد المتابعة؟",
   "errorOccurred": "حدث خطأ، يرجى المحاولة مرة أخرى",
   "noInternetConnection": "لا يوجد اتصال بالإنترنت",
-  "internetRestored": "تم استعادة الاتصال بالإنترنت"
+  "internetRestored": "تم استعادة الاتصال بالإنترنت",
+  "pricing": "أسعار الخدمات",
+  "currencySYPName": "ل.س",
+  "currencyUSDName": "دولار",
+
+  "existingAccountTitle": "حساب موجود",
+  "existingAccountMessage": "هذا البريد الإلكتروني مرتبط بحساب دوكسيرا برو موجود. يرجى إدخال كلمة المرور الحالية للمتابعة."
 }

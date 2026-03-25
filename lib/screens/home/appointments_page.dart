@@ -131,7 +131,7 @@ import 'package:docsera/gen_l10n/app_localizations.dart';
                 onPressed: () {
                   Navigator.push(
                     context,
-                    fadePageRoute(const SearchPage(mode: "search",)),
+                    fadePageRoute(const SearchPage(mode: "appointment",)),
                   );
                 },
                 icon: Icon(Icons.calendar_today, color: AppColors.whiteText, size: 16.sp),

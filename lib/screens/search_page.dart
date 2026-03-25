@@ -11,6 +11,8 @@ import 'package:flutter/material.dart';
 import 'package:docsera/app/const.dart';
 import 'package:docsera/services/supabase/supabase_search_service.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
+import 'package:flutter_svg/flutter_svg.dart';
+import 'package:docsera/services/supabase/repositories/favorites_repository.dart';
 
 import 'home/messages/message_select_patient.dart';
 
@@ -35,6 +37,7 @@ class _SearchPageState extends State<SearchPage> {
   List<Map<String, dynamic>> _favoriteDoctors = [];
   final FocusNode _focusNode = FocusNode();
   String? _userId; // Stores the logged-in user ID
+  bool _isSearching = false;
 
   @override
   void initState() {
@@ -58,24 +61,18 @@ class _SearchPageState extends State<SearchPage> {
     super.dispose();
   }
 
-  /// **Fetch favorite doctors from Firestore**
+  /// **Fetch favorite practitioners (Doctors & Centers)**
   Future<void> _fetchFavoriteDoctors() async {
     try {
-      final client = Supabase.instance.client;
-
-      final res = await client.rpc('rpc_get_my_favorite_doctors');
-
-      if (res == null || res is! List) {
-        setState(() => _favoriteDoctors = []);
-        return;
-      }
-
+      final repo = FavoritesRepository();
+      final favs = await repo.getFavoriteDoctors();
+      
       setState(() {
-        _favoriteDoctors = List<Map<String, dynamic>>.from(res);
+        _favoriteDoctors = favs;
       });
 
     } catch (e) {
-      debugPrint("❌ Failed to fetch favorite doctors: $e");
+      debugPrint("❌ Failed to fetch favorite practitioners: $e");
       setState(() => _favoriteDoctors = []);
     }
   }
@@ -83,25 +80,27 @@ class _SearchPageState extends State<SearchPage> {
   /// **Perform search based on user input**
   void _performSearch(String query) async {
     if (query.trim().isEmpty) {
-      setState(() => _searchResults = []);
+      setState(() {
+        _searchResults = [];
+        _isSearching = false;
+      });
       return;
     }
 
+    setState(() => _isSearching = true);
+
     final q = query.toLowerCase();
     
-    // Fetch both in parallel
-    final results = await Future.wait([
-      _searchService.searchDoctors(q),
-      _searchService.searchCenters(q),
-    ]);
-
-    final List<Map<String, dynamic>> doctors = 
-        results[0].map((d) => {...d, 'search_type': 'doctor'}).toList();
-    final List<Map<String, dynamic>> centers = 
-        results[1].map((c) => {...c, 'search_type': 'center'}).toList();
+    final rawResults = await _searchService.searchUnified(q);
+    
+    // 🛡️ Filter centers if in messaging mode
+    final results = widget.mode == "message"
+        ? rawResults.where((r) => r['search_type'] != 'center').toList()
+        : rawResults;
 
     setState(() {
-      _searchResults = [...doctors, ...centers];
+      _searchResults = results;
+      _isSearching = false;
     });
   }
 
@@ -111,65 +110,93 @@ class _SearchPageState extends State<SearchPage> {
       title: Text(
         widget.mode == "message"
               ? AppLocalizations.of(context)!.sendMessageTitle
-              : AppLocalizations.of(context)!.searchTitle,
+              : (widget.mode == "appointment" 
+                  ? AppLocalizations.of(context)!.bookAppointment 
+                  : AppLocalizations.of(context)!.searchTitle),
         style: AppTextStyles.getTitle1(context).copyWith(color: AppColors.whiteText),
 
       ),
-      child: Padding(
-        padding: EdgeInsets.all(16.w),
-        child: Column(
-          children: [
-            // 🔍 **Search Bar**
-            TextField(
-              focusNode: _focusNode,
-              controller: _searchController,
-              decoration: InputDecoration(
-                labelText: AppLocalizations.of(context)!.searchHint,
-                labelStyle: AppTextStyles.getText2(context),
-                floatingLabelStyle: AppTextStyles.getText3(context).copyWith( // 🔹 Smaller floating label
-                  fontWeight: FontWeight.bold,
-                  color: AppColors.main,  // 🔹 Ensure it stays in theme color
-                ),
-                prefixIcon: const Icon(Icons.search, color: AppColors.main),
-                suffixIcon: _searchController.text.isNotEmpty
-                    ? IconButton(
-                  icon: const Icon(Icons.clear),
-                  onPressed: () {
-                    _searchController.clear();
-                    _performSearch("");
-                  },
-                )
-                    : null,
-                contentPadding: EdgeInsets.symmetric(
-                  vertical: 10.h,  // 🔹 Reduces top & bottom padding
-                  horizontal: 12.w, // 🔹 Adjusts left & right padding
-                ),
-                border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(25.r),
-                    borderSide: const BorderSide(color: Colors.grey),
-                ),
-                focusedBorder: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(25.r),
-                  borderSide: const BorderSide(color: AppColors.main, width: 2),
-                ),
-              ),
-              onChanged: _performSearch,
+      child: Column(
+        children: [
+          // 🔄 **Loading Bar**
+          if (_isSearching)
+            LinearProgressIndicator(
+              minHeight: 2,
+              backgroundColor: Colors.transparent,
+              color: AppColors.main.withOpacity(0.3),
             ),
-            SizedBox(height: 20.h),
 
-            // 📋 **Favorites Before Typing**
-            Expanded(
-              child: _searchController.text.isEmpty
-                  ? (_favoriteDoctors.isNotEmpty ? _buildFavoritesList() : _buildNoFavorites())
-                  : (_searchResults.isEmpty ? _buildNoResults() : _buildResultsList()),
+          Padding(
+            padding: EdgeInsets.all(16.w),
+            child: Column(
+              children: [
+                // 🔍 **Search Bar**
+                TextField(
+                  focusNode: _focusNode,
+                  controller: _searchController,
+                  decoration: InputDecoration(
+                    hintText: widget.mode == "message"
+                        ? AppLocalizations.of(context)!.searchHint
+                        : AppLocalizations.of(context)!.searchHint,
+                    hintStyle: AppTextStyles.getText2(context).copyWith(color: Colors.grey),
+                    prefixIcon: const Icon(Icons.search, color: AppColors.main),
+                    suffixIcon: _searchController.text.isNotEmpty
+                        ? IconButton(
+                      icon: const Icon(Icons.clear),
+                      onPressed: () {
+                        _searchController.clear();
+                        _performSearch("");
+                      },
+                    )
+                        : null,
+                    contentPadding: EdgeInsets.symmetric(
+                      vertical: 10.h,
+                      horizontal: 12.w,
+                    ),
+                    border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(25.r),
+                        borderSide: const BorderSide(color: Colors.grey),
+                    ),
+                    focusedBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(25.r),
+                      borderSide: const BorderSide(color: AppColors.main, width: 2),
+                    ),
+                  ),
+                  onChanged: _performSearch,
+                ),
+                
+                SizedBox(height: 20.h),
+    
+                // 📋 **Content**
+                SizedBox(
+                  height: 1.sh - 220.h, // Adjusted to fill space but avoid overflow
+                  child: _searchController.text.isEmpty
+                      ? (_focusNode.hasFocus && widget.mode == "search"
+                          ? _buildSpecialtiesList()
+                          : (_favoriteDoctors.isNotEmpty ? _buildFavoritesList() : _buildNoFavorites()))
+                      : (_searchResults.isEmpty && !_isSearching ? _buildNoResults() : _buildResultsList()),
+                ),
+              ],
             ),
-          ],
-        ),
+          ),
+        ],
       ),
     );
   }
 
-  /// **No Favorites UI (Title at Start)**
+  Widget _buildResultsList() {
+    return ListView.builder(
+      itemCount: _searchResults.length,
+      itemBuilder: (context, index) {
+        final item = _searchResults[index];
+        if (item['search_type'] == 'center') {
+          return _buildCenterTile(item);
+        }
+        return _buildDoctorTile(item);
+      },
+    );
+  }
+
   Widget _buildNoFavorites() {
     return Align(
       alignment: Alignment.topLeft, // ✅ Aligns "Favorites" to the start
@@ -182,7 +209,8 @@ class _SearchPageState extends State<SearchPage> {
       ),
     );
   }
-  /// **Builds the Favorite Doctors List**
+
+  /// **Builds the Favorite Practitioners List**
   Widget _buildFavoritesList() {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -206,13 +234,63 @@ class _SearchPageState extends State<SearchPage> {
           physics: const NeverScrollableScrollPhysics(), // ✅ Prevent internal scrolling issues
           itemCount: _favoriteDoctors.length,
           itemBuilder: (context, index) {
-            final doctor = _favoriteDoctors[index];
-            return _buildDoctorTile(doctor);
+            final item = _favoriteDoctors[index];
+            if (item['search_type'] == 'center') {
+              return _buildCenterTile(item);
+            }
+            return _buildDoctorTile(item);
           },
         ),
       ],
     );
   }
+
+  Widget _buildSpecialtiesList() {
+    final t = AppLocalizations.of(context)!;
+    final specialties = [
+      {'name': t.specialtyGeneral, 'iconAsset': 'assets/icons/specialties/General-specialty.svg'},
+      {'name': t.specialtyInternal, 'iconAsset': 'assets/icons/specialties/Internal-specialty.svg'},
+      {'name': t.specialtyPediatrics, 'iconAsset': 'assets/icons/specialties/Pediatrics-specialty.svg'},
+      {'name': t.specialtyGynecology, 'iconAsset': 'assets/icons/specialties/Gynecology-specialty.svg'},
+      {'name': t.specialtyDentistry, 'iconAsset': 'assets/icons/specialties/Dentistry-specialty.svg'},
+      {'name': t.specialtyCardiology, 'iconAsset': 'assets/icons/specialties/Cardiology-specialty.svg'},
+      {'name': t.specialtyENT, 'iconAsset': 'assets/icons/specialties/ENT-specialty.svg'},
+      {'name': t.specialtyOphthalmology, 'iconAsset': 'assets/icons/specialties/Ophthalmology-specialty.svg'},
+      {'name': t.specialtyOrthopedics, 'iconAsset': 'assets/icons/specialties/Orthopedics-specialty.svg'},
+      {'name': t.specialtyDermatology, 'iconAsset': 'assets/icons/specialties/Dermatology-specialty.svg'},
+    ];
+
+    return ListView.builder(
+      itemCount: specialties.length,
+      itemBuilder: (context, index) {
+        final spec = specialties[index];
+        return ListTile(
+          leading: CircleAvatar(
+            backgroundColor: Colors.grey.withOpacity(0.08),
+            child: spec['iconAsset'] != null
+                ? SvgPicture.asset(
+                    spec['iconAsset'] as String,
+                    width: 25.w,
+                    height: 25.w,
+                    color: AppColors.main,
+                  )
+                : null,
+          ),
+          title: Text(spec['name'] as String, style: AppTextStyles.getText2(context)),
+          subtitle: Text(
+            t.searchBySpecialty,
+            style: AppTextStyles.getText3(context).copyWith(color: Colors.grey),
+          ),
+          trailing: const Icon(Icons.arrow_outward, size: 18, color: Colors.grey),
+          onTap: () {
+            _searchController.text = spec['name'] as String;
+            _performSearch(_searchController.text);
+          },
+        );
+      },
+    );
+  }
+
   /// **No Search Results UI**
   Widget _buildNoResults() {
     return Center(
@@ -233,20 +311,6 @@ class _SearchPageState extends State<SearchPage> {
           ),
         ],
       ),
-    );
-  }
-
-  /// **Builds the Search Results List**
-  Widget _buildResultsList() {
-    return ListView.builder(
-      itemCount: _searchResults.length,
-      itemBuilder: (context, index) {
-        final item = _searchResults[index];
-        if (item['search_type'] == 'center') {
-          return _buildCenterTile(item);
-        }
-        return _buildDoctorTile(item);
-      },
     );
   }
 
@@ -429,7 +493,7 @@ class _SearchPageState extends State<SearchPage> {
       onTap: () {
         if (widget.mode == "search") {
           Navigator.push(context, fadePageRoute(
-            CenterProfilePage(centerId: center['id'], center: center),
+            CenterProfilePage(centerId: center['id']),
           ));
         }
       },

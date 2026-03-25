@@ -947,6 +947,12 @@ class AppLocalizationsAr extends AppLocalizations {
   String get searchHint => 'الاسم، التخصص، العيادة';
 
   @override
+  String get doctors => 'الأطباء';
+
+  @override
+  String get centers => 'المراكز';
+
+  @override
   String get favoritesTitle => 'المفضلة';
 
   @override
@@ -1201,6 +1207,25 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get socialMedia => 'وسائل التواصل الاجتماعي';
+
+  @override
+  String get medicalTeam => 'الفريق الطبي';
+
+  @override
+  String get landlineNumbers => 'أرقام هاتف أرضي';
+
+  @override
+  String get mobileNumber => 'رقم الجوال';
+
+  @override
+  String get shareCenterProfile => 'مشاركة ملف المركز';
+
+  @override
+  String get scanToOpenCenterInApp =>
+      'امسح الرمز لفتح المركز داخل تطبيق DocSera';
+
+  @override
+  String get additionalDetails => 'تفاصيل إضافية';
 
   @override
   String get makeAppointment => 'حجز موعد';
@@ -1863,6 +1888,49 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get goToLogin => 'الذهاب لتسجيل الدخول';
+
+  @override
+  String get crossAppOptionsTitle => 'حساب موجود مسبقاً';
+
+  @override
+  String get crossAppOptionsMessage =>
+      'هذا البريد الإلكتروني مسجل مسبقاً في تطبيق DocSera Pro للأطباء. هل ترغب باستخدام نفس كلمة المرور، أم تفضل إنشاء واحدة جديدة للتطبيقين معاً؟';
+
+  @override
+  String get useExistingPassword => 'استخدام كلمة المرور الحالية';
+
+  @override
+  String get createNewPassword => 'إنشاء كلمة مرور جديدة';
+
+  @override
+  String get verifyCurrentPassword => 'يرجى تأكيد كلمة المرور الحالية';
+
+  @override
+  String get newPasswordWillApplyToBoth =>
+      'ملاحظة: سيتم تطبيق كلمة المرور الجديدة على تطبيق المرضى وتطبيق الأطباء معاً.';
+
+  @override
+  String get passwordTooShort =>
+      'يجب أن تتكون كلمة المرور من 6 أحرف على الأقل.';
+
+  @override
+  String get completeRegistration => 'إتمام التسجيل';
+
+  @override
+  String get wrongPassword => 'كلمة المرور غير صحيحة.';
+
+  @override
+  String get errorUpdatingProfile =>
+      'خطأ أثناء تحديث الملف الشخصي. يرجى المحاولة مرة أخرى.';
+
+  @override
+  String get passwordHint => 'كلمة المرور';
+
+  @override
+  String get fillAllFields => 'يرجى ملء جميع الحقول.';
+
+  @override
+  String get back => 'رجوع';
 
   @override
   String get health_loggedOut_title => 'ملفك الصحي في مكان واحد';
@@ -3067,4 +3135,20 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get internetRestored => 'تم استعادة الاتصال بالإنترنت';
+
+  @override
+  String get pricing => 'أسعار الخدمات';
+
+  @override
+  String get currencySYPName => 'ل.س';
+
+  @override
+  String get currencyUSDName => 'دولار';
+
+  @override
+  String get existingAccountTitle => 'حساب موجود';
+
+  @override
+  String get existingAccountMessage =>
+      'هذا البريد الإلكتروني مرتبط بحساب دوكسيرا برو موجود. يرجى إدخال كلمة المرور الحالية للمتابعة.';
 }

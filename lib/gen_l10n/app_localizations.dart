@@ -1844,6 +1844,18 @@ abstract class AppLocalizations {
   /// **'Name, specialty, clinic'**
   String get searchHint;
 
+  /// No description provided for @doctors.
+  ///
+  /// In en, this message translates to:
+  /// **'Doctors'**
+  String get doctors;
+
+  /// No description provided for @centers.
+  ///
+  /// In en, this message translates to:
+  /// **'Centers'**
+  String get centers;
+
   /// No description provided for @favoritesTitle.
   ///
   /// In en, this message translates to:
@@ -2353,6 +2365,42 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Social Media'**
   String get socialMedia;
+
+  /// No description provided for @medicalTeam.
+  ///
+  /// In en, this message translates to:
+  /// **'Medical Team'**
+  String get medicalTeam;
+
+  /// No description provided for @landlineNumbers.
+  ///
+  /// In en, this message translates to:
+  /// **'Landline Numbers'**
+  String get landlineNumbers;
+
+  /// No description provided for @mobileNumber.
+  ///
+  /// In en, this message translates to:
+  /// **'Mobile Number'**
+  String get mobileNumber;
+
+  /// No description provided for @shareCenterProfile.
+  ///
+  /// In en, this message translates to:
+  /// **'Share Center Profile'**
+  String get shareCenterProfile;
+
+  /// No description provided for @scanToOpenCenterInApp.
+  ///
+  /// In en, this message translates to:
+  /// **'Scan to open this center in the DocSera app'**
+  String get scanToOpenCenterInApp;
+
+  /// No description provided for @additionalDetails.
+  ///
+  /// In en, this message translates to:
+  /// **'Additional Details'**
+  String get additionalDetails;
 
   /// No description provided for @makeAppointment.
   ///
@@ -3559,6 +3607,84 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Go to Login'**
   String get goToLogin;
+
+  /// No description provided for @crossAppOptionsTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Existing Account'**
+  String get crossAppOptionsTitle;
+
+  /// No description provided for @crossAppOptionsMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'This email is already registered in DocSera Pro. Would you like to use the same password or create a new one for both apps?'**
+  String get crossAppOptionsMessage;
+
+  /// No description provided for @useExistingPassword.
+  ///
+  /// In en, this message translates to:
+  /// **'Use existing password'**
+  String get useExistingPassword;
+
+  /// No description provided for @createNewPassword.
+  ///
+  /// In en, this message translates to:
+  /// **'Create a new password'**
+  String get createNewPassword;
+
+  /// No description provided for @verifyCurrentPassword.
+  ///
+  /// In en, this message translates to:
+  /// **'Please verify your current password'**
+  String get verifyCurrentPassword;
+
+  /// No description provided for @newPasswordWillApplyToBoth.
+  ///
+  /// In en, this message translates to:
+  /// **'Note: This password change will apply to both apps.'**
+  String get newPasswordWillApplyToBoth;
+
+  /// No description provided for @passwordTooShort.
+  ///
+  /// In en, this message translates to:
+  /// **'Password must be at least 6 characters.'**
+  String get passwordTooShort;
+
+  /// No description provided for @completeRegistration.
+  ///
+  /// In en, this message translates to:
+  /// **'Complete Registration'**
+  String get completeRegistration;
+
+  /// No description provided for @wrongPassword.
+  ///
+  /// In en, this message translates to:
+  /// **'Incorrect password.'**
+  String get wrongPassword;
+
+  /// No description provided for @errorUpdatingProfile.
+  ///
+  /// In en, this message translates to:
+  /// **'Error updating profile. Please try again.'**
+  String get errorUpdatingProfile;
+
+  /// No description provided for @passwordHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Password'**
+  String get passwordHint;
+
+  /// No description provided for @fillAllFields.
+  ///
+  /// In en, this message translates to:
+  /// **'Please fill all fields.'**
+  String get fillAllFields;
+
+  /// No description provided for @back.
+  ///
+  /// In en, this message translates to:
+  /// **'Back'**
+  String get back;
 
   /// No description provided for @health_loggedOut_title.
   ///
@@ -5833,6 +5959,36 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Internet connection restored'**
   String get internetRestored;
+
+  /// No description provided for @pricing.
+  ///
+  /// In en, this message translates to:
+  /// **'Pricing'**
+  String get pricing;
+
+  /// No description provided for @currencySYPName.
+  ///
+  /// In en, this message translates to:
+  /// **'SYP'**
+  String get currencySYPName;
+
+  /// No description provided for @currencyUSDName.
+  ///
+  /// In en, this message translates to:
+  /// **'USD'**
+  String get currencyUSDName;
+
+  /// No description provided for @existingAccountTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Existing Account'**
+  String get existingAccountTitle;
+
+  /// No description provided for @existingAccountMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'This email is linked to an existing DocSera Pro account. Please enter your current password to continue.'**
+  String get existingAccountMessage;
 }
 
 class _AppLocalizationsDelegate

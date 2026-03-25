@@ -17,13 +17,12 @@ class AuthRepository {
   Future<bool> isPhoneNumberExists(String phoneNumber) async {
     debugPrint("📞 Checking if phone number exists: $phoneNumber");
 
-    final response = await _supabase
-        .from('users')
-        .select('id')
-        .eq('phone_number', phoneNumber)
-        .maybeSingle();
+    final response = await _supabase.rpc(
+      'rpc_check_phone_exists',
+      params: {'p_phone': phoneNumber},
+    );
 
-    final exists = response != null;
+    final exists = response == true;
     debugPrint("📊 Matching phone: ${exists ? "FOUND" : "NOT FOUND"}");
 
     return exists;
@@ -98,27 +97,34 @@ class AuthRepository {
   Future<bool> doesUserExist({String? email, String? phoneNumber}) async {
     try {
       if (email != null) {
-        final emailMatch = await _supabase
-            .from('users')
-            .select('id')
-            .eq('email', email)
-            .maybeSingle();
-        if (emailMatch != null) return true;
+        final emailMatch = await _supabase.rpc(
+          'check_email_context',
+          params: {'p_email': email.toLowerCase()},
+        );
+        if (emailMatch != 'none') return true;
       }
 
       if (phoneNumber != null) {
-        final phoneMatch = await _supabase
-            .from('users')
-            .select('id')
-            .eq('phone_number', phoneNumber)
-            .maybeSingle();
-        if (phoneMatch != null) return true;
+        final phoneMatch = await _supabase.rpc(
+          'rpc_check_phone_exists',
+          params: {'p_phone': phoneNumber},
+        );
+        if (phoneMatch == true) return true;
       }
 
       return false;
     } catch (e) {
       throw Exception('Error checking for duplicates: $e');
     }
+  }
+
+  /// 📡 التحقق من حالة البريد الإلكتروني (غير موجود، في التطبيق الأول، الثاني، أو كلاهما)
+  Future<String> checkEmailContext(String email) async {
+    final res = await _supabase.rpc(
+      'check_email_context',
+      params: {'p_email': email.toLowerCase()},
+    );
+    return res as String;
   }
 
   /// ✅ حذف حساب المستخدم (Soft Delete via RPC)

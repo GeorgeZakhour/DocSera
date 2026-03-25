@@ -40,7 +40,9 @@ serve(async (req) => {
     else console.log(`[Debug] User found: ${!!user ? JSON.stringify(user) : 'false'}`);
 
     // If not found, return FAKE SUCCESS (Security: Anti-Enumeration)
-    if (!user) {
+    // EXCEPTION: Allow 'signup_email_verify' purpose even if user doesn't exist yet,
+    // as this is used during the registration flow before the profile is created.
+    if (!user && purpose !== "signup_email_verify") {
       console.log(`[Security] OTP requested for non-existent email: ${email} -> RETURNING FAKE SUCCESS`);
       // Return 200 OK as if sent
       return new Response(
@@ -278,11 +280,11 @@ if (error) {
     const host = Deno.env.get("SMTP_HOST")!;
     const port = Number(Deno.env.get("SMTP_PORT")!); // Should be 465
     // Use PATIENT-SPECIFIC credentials to avoid conflict with Pro app
-    const user = Deno.env.get("SMTP_USER_PATIENT")!;
+    const smtpUser = Deno.env.get("SMTP_USER_PATIENT")!;
     const pass = Deno.env.get("SMTP_PASS_PATIENT")!;
     const from = Deno.env.get("SMTP_FROM")!;
 
-    if (!user || !pass) {
+    if (!smtpUser || !pass) {
         console.error("[Debug] Missing SMTP_USER_PATIENT or SMTP_PASS_PATIENT env vars");
         return new Response(
           JSON.stringify({ error: "SMTP Configuration Error" }),
@@ -298,22 +300,29 @@ if (error) {
     const encoder = new TextEncoder();
     const decoder = new TextDecoder();
 
+    const debugSteps: string[] = [];
+
     const send = async (cmd: string) => {
+      debugSteps.push(`Sending: ${cmd.substring(0, 15)}...`);
       await conn.write(encoder.encode(cmd + "\r\n"));
       const buf = new Uint8Array(1024);
-      await conn.read(buf);
+      const readBytes = await conn.read(buf);
+      if (readBytes) {
+        debugSteps.push(`Received: ${decoder.decode(buf.subarray(0, readBytes)).trim()}`);
+      }
     };
 
-    await send("EHLO docsera.app");
-    await send("AUTH LOGIN");
-    await send(btoa(user));
-    await send(btoa(pass));
-    await send(`MAIL FROM:<${user}>`);
-    await send(`RCPT TO:<${email}>`);
-    await send("DATA");
-    
-    // Fix: Use \r\n for SMTP compatibility (Bare LF issue)
-    const emailBody = `From: ${from}
+    try {
+      debugSteps.push("Connecting...");
+      await send("EHLO docsera.app");
+      await send("AUTH LOGIN");
+      await send(btoa(smtpUser));
+      await send(btoa(pass));
+      await send(`MAIL FROM:<${smtpUser}>`);
+      await send(`RCPT TO:<${email}>`);
+      await send("DATA");
+      
+      const emailBody = `From: ${from}
 To: ${email}
 Subject: ${subject}
 Content-Type: text/html; charset=UTF-8
@@ -321,8 +330,16 @@ Content-Type: text/html; charset=UTF-8
 ${html}
 .`.replace(/\n/g, "\r\n");
 
-    await send(emailBody);
-    await send("QUIT");
+      await send(emailBody);
+      await send("QUIT");
+    } catch (smtpError) {
+      debugSteps.push(`SMTP Error: ${smtpError instanceof Error ? smtpError.message : String(smtpError)}`);
+      conn.close();
+      return new Response(
+        JSON.stringify({ error: "SMTP transaction failed", debug: debugSteps }),
+        { status: 500 }
+      );
+    }
 
     conn.close();
 
@@ -336,7 +353,7 @@ ${html}
   } catch (e) {
     console.error("send_email_otp error:", e);
     return new Response(
-      JSON.stringify({ error: "Internal server error" }),
+      JSON.stringify({ error: "Internal server error", debug: e instanceof Error ? e.message : String(e) }),
       { status: 500 }
     );
   }

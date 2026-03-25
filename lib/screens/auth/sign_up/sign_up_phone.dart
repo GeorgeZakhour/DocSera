@@ -34,7 +34,7 @@ class _SignUpFirstPageState extends State<SignUpFirstPage> {
     return input.length == requiredLength;
   }
 
-  /// **📌 فحص التكرارات في Firestore**
+  /// **📌 فحص التكرارات في جدول users الخاص بالمرضى**
   Future<void> _checkForDuplicates() async {
     if (!isValid) return;
 
@@ -43,12 +43,14 @@ class _SignUpFirstPageState extends State<SignUpFirstPage> {
     final formattedPhone = getFormattedPhoneNumber();
 
     try {
-      final res = await Supabase.instance.client.rpc(
-        'rpc_is_phone_available',
-        params: {'e164': formattedPhone},
+      // Check the app-specific `users` table via RPC because of RLS restrictions
+      // This allows cross-app phone reuse while preventing intra-app duplication.
+      final exists = await Supabase.instance.client.rpc(
+        'rpc_check_phone_exists',
+        params: {'p_phone': formattedPhone},
       );
 
-      final bool isAvailable = res == true || res == 't' || res == 1;
+      final bool isAvailable = exists != true;
 
       if (!isAvailable) {
         setState(() => isChecking = false);

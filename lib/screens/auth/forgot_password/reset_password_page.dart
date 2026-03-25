@@ -223,7 +223,12 @@ class _ResetPasswordPageState extends State<ResetPasswordPage> {
               local.createPassword,
               style: AppTextStyles.getTitle1(context).copyWith(fontSize: 12.sp),
             ),
-            SizedBox(height: 20.h),
+            SizedBox(height: 5.h),
+            Text(
+              local.newPasswordWillApplyToBoth,
+              style: AppTextStyles.getText3(context).copyWith(color: Colors.orange),
+            ),
+            SizedBox(height: 15.h),
 
             // Password Field with Strength Indicator
             _buildPasswordField(),

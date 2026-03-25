@@ -41,6 +41,9 @@ class SupabaseUserService {
 
   Future<void> deleteUserAccount() => auth.deleteUserAccount();
 
+  Future<String> checkEmailContext(String email) => 
+      auth.checkEmailContext(email);
+
   // --- User Profile Delegates ---
 
   Future<void> addUser(Map<String, dynamic> userData) => 

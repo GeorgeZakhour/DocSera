@@ -680,6 +680,113 @@ class _DoctorProfilePageState extends State<DoctorProfilePage> {
     }
   }
 
+  Widget _buildPricingSection(List<dynamic> pricingList) {
+    if (pricingList.isEmpty) return const SizedBox.shrink();
+
+    final validItems = pricingList
+        .where((e) => e is Map)
+        .map((e) => Map<String, dynamic>.from(e))
+        .toList();
+    if (validItems.isEmpty) return const SizedBox.shrink();
+
+    final l = AppLocalizations.of(context)!;
+    return Card(
+      color: AppColors.background2,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(12.r),
+        side: BorderSide(color: Colors.grey.shade200, width: 0.8),
+      ),
+      elevation: 0,
+      child: Padding(
+        padding: EdgeInsets.all(12.r),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                Icon(Icons.attach_money_rounded, color: AppColors.mainDark, size: 16.sp),
+                SizedBox(width: 5.w),
+                Text(
+                  l.pricing,
+                  style: AppTextStyles.getTitle1(context).copyWith(fontSize: 11.sp),
+                ),
+              ],
+            ),
+            SizedBox(height: 16.h),
+            ListView.separated(
+              padding: EdgeInsets.zero,
+              shrinkWrap: true,
+              physics: const NeverScrollableScrollPhysics(),
+              itemCount: validItems.length,
+              separatorBuilder: (_, __) => Divider(
+                height: 16.h,
+                color: Colors.grey.shade300,
+              ),
+              itemBuilder: (context, index) {
+                final item = validItems[index];
+                final serviceName = (item['service'] ?? '').toString();
+                final amount = (item['amount'] ?? '').toString();
+                final currencyCode = (item['currency'] ?? '').toString();
+
+                final currencyLabel = currencyCode == 'SYP'
+                    ? l.currencySYPName
+                    : (currencyCode == 'USD' ? l.currencyUSDName : currencyCode);
+
+                return Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Expanded(
+                      child: Row(
+                        children: [
+                          Icon(Icons.check_circle_outline, color: AppColors.main, size: 16.sp),
+                          SizedBox(width: 8.w),
+                          Expanded(
+                            child: Text(
+                              serviceName,
+                              style: AppTextStyles.getText2(context).copyWith(fontWeight: FontWeight.w600),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    SizedBox(width: 12.w),
+                    Container(
+                      padding: EdgeInsets.symmetric(horizontal: 10.w, vertical: 4.h),
+                      decoration: BoxDecoration(
+                        color: AppColors.main.withOpacity(0.1),
+                        borderRadius: BorderRadius.circular(8.r),
+                      ),
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Text(
+                            amount,
+                            style: AppTextStyles.getText2(context).copyWith(
+                              fontWeight: FontWeight.bold,
+                              color: AppColors.main,
+                            ),
+                          ),
+                          SizedBox(width: 4.w),
+                          Text(
+                            currencyLabel,
+                            style: AppTextStyles.getText3(context).copyWith(
+                              fontWeight: FontWeight.w600,
+                              color: AppColors.mainDark,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                );
+              },
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
   Widget _buildGallerySection(List<dynamic> galleryUrls) {
     final String? doctorId = _doctorData?['id']?.toString();
     if (doctorId == null) return const SizedBox.shrink();
@@ -2260,6 +2367,12 @@ $deepLink
                         if (_doctorData?['gallery'] != null &&
                             (_doctorData!['gallery'] as List).isNotEmpty)
                           _buildGallerySection(_doctorData!['gallery']),
+                        if (_doctorData?['pricing'] != null &&
+                            (_doctorData!['pricing'] as List).isNotEmpty)
+                          SizedBox(height: 10.h),
+                        if (_doctorData?['pricing'] != null &&
+                            (_doctorData!['pricing'] as List).isNotEmpty)
+                          _buildPricingSection(_doctorData!['pricing'] as List),
                         if (profileDescription != null ||
                             (specialties != null && specialties.isNotEmpty))
                           SizedBox(height: 10.h),

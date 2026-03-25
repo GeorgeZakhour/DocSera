@@ -2,12 +2,14 @@
 
 buildscript {
     repositories {
+        mavenLocal()
         google()  // Make sure this is included
         mavenCentral()
     }
     ext.kotlin_version = '1.9.23' // Downgraded to fix JVM target mismatch
 
     dependencies {
+        classpath 'com.android.tools.build:gradle:8.8.0'
         // Add the Google services plugin for Firebase
         classpath 'com.google.gms:google-services:4.4.2'  // This is important!
         classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:$kotlin_version"
@@ -18,6 +20,7 @@ buildscript {
 
 allprojects {
     repositories {
+        mavenLocal()
         google()
         mavenCentral()
     }

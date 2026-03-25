@@ -46,47 +46,76 @@ class RecapPage extends StatelessWidget {
   /// ✅ التسجيل النهائي (النسخة الصحيحة 100%)
   /// ---------------------------------------------------------------------------
   Future<void> _registerUserWithSupabase(BuildContext context) async {
+    if (signUpInfo.email == null || signUpInfo.password == null) {
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(AppLocalizations.of(context)!.registrationFailed)),
+        );
+      }
+      return;
+    }
+    await _registerWithPassword(context, signUpInfo.password!);
+  }
+
+  /// Core registration logic — called with either the user's chosen password
+  /// or their existing password (cross-app case).
+  Future<void> _registerWithPassword(BuildContext context, String password) async {
     try {
-      // ---------------------------------------------------------------------
-      // 1️⃣ تحقق أساسي
-      // ---------------------------------------------------------------------
-      if (signUpInfo.email == null || signUpInfo.password == null) {
-        throw Exception('Missing email or password');
+      // -------------------------------------------------------------------
+      // 1️⃣ Cross-App Signup (handles new + existing users)
+      // -------------------------------------------------------------------
+      Map<String, dynamic> body;
+      try {
+        final res = await Supabase.instance.client.functions.invoke(
+          'cross_app_signup',
+          body: {
+            'email': signUpInfo.email!,
+            'password': password,
+            'app': 'docsera',
+          },
+        );
+        body = res.data as Map<String, dynamic>;
+      } on FunctionException catch (e) {
+        // Supabase SDK throws FunctionException on non-200 status codes
+        final details = e.details;
+        if (details is Map<String, dynamic>) {
+          final error = details['error'] as String? ?? '';
+          if (error == 'wrong_password') {
+            if (!context.mounted) return;
+            _showExistingPasswordDialog(context);
+            return;
+          }
+          if (error == 'already_registered_same_app') {
+            if (!context.mounted) return;
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(content: Text(AppLocalizations.of(context)!.registrationFailed)),
+            );
+            return;
+          }
+        }
+        rethrow;
       }
 
+      final userId = body['user_id'] as String;
+      final accessToken = body['access_token'] as String?;
+      final refreshToken = body['refresh_token'] as String?;
 
-      // ---------------------------------------------------------------------
-      // 3️⃣ Supabase Auth Sign-Up
-      // ---------------------------------------------------------------------
-      final authRes = await Supabase.instance.client.auth.signUp(
-        email: signUpInfo.email!,
-        password: signUpInfo.password!,
-      );
+      // Set the session from the Edge Function tokens
+      if (refreshToken != null) {
+        await Supabase.instance.client.auth.setSession(refreshToken);
+      }
 
       final authClient = Supabase.instance.client.auth;
-
       if (authClient.currentSession == null) {
         await authClient.refreshSession();
       }
-
       if (authClient.currentSession == null) {
         throw Exception('Auth session not established');
       }
 
-
-
-      final user =
-          authRes.user ?? Supabase.instance.client.auth.currentUser;
-
-      if (user == null || user.id.isEmpty) {
-        throw Exception('User creation failed (no auth user)');
-      }
-
-      final userId = user.id;
-
-      // ---------------------------------------------------------------------
-      // 4️⃣ إدخال صف المستخدم في جدول users
-      // ---------------------------------------------------------------------
+      // -------------------------------------------------------------------
+      // 2️⃣ إدخال صف المستخدم في جدول users
+      // -------------------------------------------------------------------
       final userData = {
         'id': userId,
         'first_name': signUpInfo.firstName ?? '',
@@ -99,27 +128,26 @@ class RecapPage extends StatelessWidget {
         'date_of_birth': signUpInfo.dateOfBirth ?? '',
         'terms_accepted': signUpInfo.termsAccepted,
         'marketing_checked': signUpInfo.marketingChecked,
-        'two_factor_auth_enabled': false, // ✅ كما طلبت
+        'two_factor_auth_enabled': false,
         'trusted_devices': [],
       };
 
+      if (!context.mounted) return;
       await context.read<SupabaseUserService>().addUser(userData);
 
-      // ---------------------------------------------------------------------
-      // 5️⃣ إضافة الجهاز الحالي عبر RPC (Security Definer)
-      // ---------------------------------------------------------------------
+      // -------------------------------------------------------------------
+      // 3️⃣ إضافة الجهاز الحالي عبر RPC (Security Definer)
+      // -------------------------------------------------------------------
       final deviceId = await _getDeviceId();
-
       await Supabase.instance.client.rpc(
         'trust_current_device',
         params: {'p_device_id': deviceId},
       );
 
-      // ---------------------------------------------------------------------
-      // 6️⃣ تخزين محلي (غير أمني – UI فقط)
-      // ---------------------------------------------------------------------
+      // -------------------------------------------------------------------
+      // 4️⃣ تخزين محلي (غير أمني – UI فقط)
+      // -------------------------------------------------------------------
       final prefs = await SharedPreferences.getInstance();
-
       await prefs.setBool('isLoggedIn', true);
       await prefs.setString('userId', userId);
       await prefs.setString(
@@ -127,14 +155,11 @@ class RecapPage extends StatelessWidget {
         '${signUpInfo.firstName ?? ''} ${signUpInfo.lastName ?? ''}'.trim(),
       );
       await prefs.setString('userEmail', signUpInfo.email!);
-      await prefs.setString(
-        'userPhone',
-        signUpInfo.phoneNumber ?? '',
-      );
+      await prefs.setString('userPhone', signUpInfo.phoneNumber ?? '');
 
-      // ---------------------------------------------------------------------
-      // 7️⃣ الانتقال لصفحة الترحيب
-      // ---------------------------------------------------------------------
+      // -------------------------------------------------------------------
+      // 5️⃣ الانتقال لصفحة الترحيب
+      // -------------------------------------------------------------------
       if (!context.mounted) return;
 
       Navigator.pushAndRemoveUntil(
@@ -145,9 +170,7 @@ class RecapPage extends StatelessWidget {
 
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text(
-            AppLocalizations.of(context)!.registrationSuccess,
-          ),
+          content: Text(AppLocalizations.of(context)!.registrationSuccess),
           backgroundColor: AppColors.main.withOpacity(0.9),
         ),
       );
@@ -159,12 +182,90 @@ class RecapPage extends StatelessWidget {
 
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text(
-            '${AppLocalizations.of(context)!.registrationFailed}: $e',
-          ),
+          content: Text('${AppLocalizations.of(context)!.registrationFailed}: $e'),
         ),
       );
     }
+  }
+
+  /// Shows a dialog when the user already has an account from DocSera Pro.
+  /// They need to enter their existing password to link the accounts.
+  void _showExistingPasswordDialog(BuildContext context) {
+    final existingPwController = TextEditingController();
+    bool obscure = true;
+
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (dialogContext) {
+        return StatefulBuilder(
+          builder: (ctx, setDialogState) {
+            return AlertDialog(
+              title: Text(
+                AppLocalizations.of(context)!.existingAccountTitle,
+                textAlign: TextAlign.center,
+                style: AppTextStyles.getTitle2(context),
+              ),
+              content: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Text(
+                    AppLocalizations.of(context)!.existingAccountMessage,
+                    textAlign: TextAlign.center,
+                    style: AppTextStyles.getText2(context).copyWith(
+                      color: Colors.grey,
+                      height: 1.5,
+                    ),
+                  ),
+                  SizedBox(height: 16.h),
+                  TextField(
+                    controller: existingPwController,
+                    obscureText: obscure,
+                    style: AppTextStyles.getText2(context),
+                    decoration: InputDecoration(
+                      labelText: AppLocalizations.of(context)!.password,
+                      labelStyle: AppTextStyles.getText2(context).copyWith(color: Colors.grey),
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(12.r),
+                      ),
+                      suffixIcon: IconButton(
+                        icon: Icon(obscure ? Icons.visibility_off : Icons.visibility),
+                        onPressed: () => setDialogState(() => obscure = !obscure),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+              actions: [
+                TextButton(
+                  onPressed: () => Navigator.pop(dialogContext),
+                  child: Text(
+                    AppLocalizations.of(context)!.cancel,
+                    style: AppTextStyles.getText2(context).copyWith(color: Colors.grey),
+                  ),
+                ),
+                ElevatedButton(
+                  onPressed: () {
+                    final existingPw = existingPwController.text.trim();
+                    if (existingPw.isEmpty) return;
+                    Navigator.pop(dialogContext);
+                    _registerWithPassword(context, existingPw);
+                  },
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: AppColors.main,
+                    foregroundColor: Colors.white,
+                  ),
+                  child: Text(
+                    AppLocalizations.of(context)!.continueButton,
+                    style: AppTextStyles.getText2(context).copyWith(color: Colors.white),
+                  ),
+                ),
+              ],
+            );
+          },
+        );
+      },
+    );
   }
 
   /// ---------------------------------------------------------------------------

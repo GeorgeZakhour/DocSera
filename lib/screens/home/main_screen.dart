@@ -11,6 +11,7 @@ import 'package:docsera/utils/doctor_image_utils.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:docsera/gen_l10n/app_localizations.dart';
+import 'package:docsera/screens/centers/center_profile_page.dart';
 import 'package:docsera/screens/doctors/appointment/select_patient_page.dart';
 import 'package:docsera/screens/doctors/auth/doctor_identification_page.dart';
 import 'package:docsera/screens/doctors/doctor_profile_page.dart';
@@ -130,11 +131,121 @@ class _MainScreenState extends State<MainScreen> with AutomaticKeepAliveClientMi
                 ),
                 itemCount: favoriteDoctors.length,
                 itemBuilder: (context, index) {
-                  return _buildDoctorCard(favoriteDoctors[index]);
+                  final item = favoriteDoctors[index];
+                  if (item['search_type'] == 'center') {
+                    return _buildCenterCard(item);
+                  }
+                  return _buildDoctorCard(item);
                 },
               ),
             ),
           ],
+        );
+      },
+    );
+  }
+
+  /// **🔹 Center Card Widget**
+  Widget _buildCenterCard(Map<String, dynamic> center) {
+    final imageResult = resolveCenterImagePathAndWidget(center: center);
+    final centerImageProvider = imageResult.imageProvider;
+
+    return GestureDetector(
+      onTap: () {
+        _showCenterOptions(center);
+      },
+      child: Container(
+        width: 100,
+        margin: EdgeInsets.only(left: 12.w, right: 14.w),
+        child: Column(
+          children: [
+            CircleAvatar(
+              radius: 30,
+              backgroundColor: AppColors.main.withOpacity(0.2),
+              backgroundImage: centerImageProvider,
+            ),
+            SizedBox(height: 6.h),
+            Text(
+              "${center['name'] ?? ''}".trim(),
+              textAlign: TextAlign.center,
+              style: AppTextStyles.getText2(context).copyWith(fontWeight: FontWeight.bold),
+              maxLines: 2,
+              overflow: TextOverflow.ellipsis,
+            ),
+            Text(
+              center['address']?['city'] ?? center['address']?['governorate'] ?? AppLocalizations.of(context)!.centers,
+              textAlign: TextAlign.center,
+              style: AppTextStyles.getText3(context).copyWith(color: Colors.black54),
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  void _showCenterOptions(Map<String, dynamic> center) {
+    final imageResult = resolveCenterImagePathAndWidget(center: center);
+    final imageProvider = imageResult.imageProvider;
+
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: AppColors.background2,
+      shape:  RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20.r)),
+      ),
+      builder: (context) {
+        return Padding(
+          padding: EdgeInsets.all(16.0.w),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              ListTile(
+                leading: CircleAvatar(
+                  backgroundColor: AppColors.main.withOpacity(0.1),
+                  backgroundImage: imageProvider,
+                ),
+
+                title: Text(
+                  "${center['name'] ?? ''}".trim(),
+                  style: AppTextStyles.getText2(context).copyWith(fontWeight: FontWeight.bold),
+                ),
+                subtitle: Text(center['address']?['city'] ?? center['address']?['governorate'] ?? AppLocalizations.of(context)!.centers, style: AppTextStyles.getText2(context) ,),
+              ),
+              const Divider(),
+              // NO APPOINTMENTS OPTION FOR CENTERS YET DIRECTLY
+              ListTile(
+                dense: true,
+                contentPadding: EdgeInsets.symmetric(horizontal: 16.w),
+                leading:  Icon(Icons.local_hospital, color: AppColors.main, size: 20.sp),
+                  title: Text( AppLocalizations.of(context)!.viewProfile, style: AppTextStyles.getText2(context).copyWith(fontWeight: FontWeight.w500)),
+                  onTap: () {
+                  Navigator.pop(context); // Close the bottom sheet
+                  Navigator.push(
+                    context,
+                    fadePageRoute(CenterProfilePage(centerId: center["id"])),
+                  );
+                  },
+              ),
+              Divider(color: Colors.grey[100], height: 1.h, thickness: 1.h),
+              ListTile(
+                dense: true,
+                contentPadding: EdgeInsets.symmetric( horizontal: 16.w), // ✅ تقليل التباعد العلوي والسفلي
+                leading:  Icon(Icons.remove_circle, color: AppColors.red, size: 20.sp),
+                title: Text(
+                  AppLocalizations.of(context)!.removeFromFavorites,
+                  style: AppTextStyles.getText2(context).copyWith(fontWeight: FontWeight.w500, color: AppColors.red)
+                ),
+                onTap: () async {
+                  context
+                      .read<MainScreenCubit>()
+                      .removeFromFavorites(context, center['id']);
+                  Navigator.pop(context);
+                },
+              ),
+            ],
+          ),
         );
       },
     );
@@ -579,15 +690,15 @@ class _MainScreenState extends State<MainScreen> with AutomaticKeepAliveClientMi
                 ),
 
 
-                // ElevatedButton(
-                //   onPressed: () async {
-                //     final prefs = await SharedPreferences.getInstance();
-                //     await prefs.clear();
-                //     Supabase.instance.client.auth.signOut(); // ⛔ اختياري فقط
-                //     // أعد تشغيل التطبيق أو انتقل لشاشة البداية
-                //   },
-                //   child: const Text('🧹 Reset Session'),
-                // ),
+                ElevatedButton(
+                  onPressed: () async {
+                    final prefs = await SharedPreferences.getInstance();
+                    await prefs.clear();
+                    Supabase.instance.client.auth.signOut(); // ⛔ اختياري فقط
+                    // أعد تشغيل التطبيق أو انتقل لشاشة البداية
+                  },
+                  child: const Text('🧹 Reset Session'),
+                ),
 
 
 
