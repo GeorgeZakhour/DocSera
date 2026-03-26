@@ -2,7 +2,7 @@ import 'package:supabase/supabase.dart';
 
 void main() async {
   final supabase = SupabaseClient(
-    'https://fxsqfgtlkitvghwjwaeq.supabase.co',
+    'https://api.docsera.app',
     'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZ4c3FmZ3Rsa2l0dmdod2p3YWVxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTA0MzEzOTIsImV4cCI6MjA2NjAwNzM5Mn0.6utWtX1-RRfYNMv-sJepAQj3sdjDEge0naGNJRpXgHc',
   );
 

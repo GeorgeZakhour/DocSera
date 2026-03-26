@@ -2,8 +2,8 @@ import 'package:flutter/material.dart';
 
 
 class SupabaseKeys {
-  static const String supabaseUrl = 'https://fxsqfgtlkitvghwjwaeq.supabase.co';
-  static const String supabaseAnonKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZ4c3FmZ3Rsa2l0dmdod2p3YWVxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTA0MzEzOTIsImV4cCI6MjA2NjAwNzM5Mn0.6utWtX1-RRfYNMv-sJepAQj3sdjDEge0naGNJRpXgHc';
+  static const String supabaseUrl = 'https://api.docsera.app';
+  static const String supabaseAnonKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJyb2xlIjoiYW5vbiIsImlzcyI6InN1cGFiYXNlIiwiaWF0IjoxNzc0Mzg4NDY0LCJleHAiOjE5MzIwNjg0NjR9.Q9lVxKdVMbZge7vOgn_Ffroc8iVrpNtkFxqUugfwkPs';
 }
 
 
