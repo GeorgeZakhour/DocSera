@@ -1610,6 +1610,7 @@ class _AppointmentDetailsPageState extends State<AppointmentDetailsPage> {
                               final textColor = isLimitReached ? Colors.grey : AppColors.main;
 
                               return Card(
+                                  color: AppColors.background2,
                                   shape: RoundedRectangleBorder(
                                     borderRadius: BorderRadius.circular(12.r),
                                   ),

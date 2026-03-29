@@ -2666,6 +2666,18 @@ abstract class AppLocalizations {
   /// **'Not specified'**
   String get notSpecified;
 
+  /// No description provided for @ownProfileBadge.
+  ///
+  /// In en, this message translates to:
+  /// **'Your own profile'**
+  String get ownProfileBadge;
+
+  /// No description provided for @ownAccountWarning.
+  ///
+  /// In en, this message translates to:
+  /// **'This is your own profile. Booking/Messaging disabled.'**
+  String get ownAccountWarning;
+
   /// No description provided for @loginFirst.
   ///
   /// In en, this message translates to:

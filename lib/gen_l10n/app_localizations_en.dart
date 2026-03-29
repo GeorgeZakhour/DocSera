@@ -1378,6 +1378,13 @@ class AppLocalizationsEn extends AppLocalizations {
   String get notSpecified => 'Not specified';
 
   @override
+  String get ownProfileBadge => 'Your own profile';
+
+  @override
+  String get ownAccountWarning =>
+      'This is your own profile. Booking/Messaging disabled.';
+
+  @override
   String get loginFirst => 'Please log in first.';
 
   @override

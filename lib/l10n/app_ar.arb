@@ -471,6 +471,8 @@
   "reasonForAppointment": "سبب الموعد",
   "retry": "إعادة المحاولة",
   "notSpecified": "غير محدد",
+  "ownProfileBadge": "حسابك الشخصي",
+  "ownAccountWarning": "هذا ملفك الشخصي. لا يمكنك حجز موعد أو إرسال رسالة لنفسك.",
   "loginFirst": "يرجى تسجيل الدخول أولًا.",
   "slotAlreadyBooked": "عذرًا، تم حجز هذا الموعد للتو. يرجى اختيار وقت آخر.",
   "errorBookingAppointment": "حدث خطأ أثناء حجز الموعد",

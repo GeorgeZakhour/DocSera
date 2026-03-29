@@ -42,6 +42,7 @@ class _SearchPageState extends State<SearchPage> {
   @override
   void initState() {
     super.initState();
+    _userId = Supabase.instance.client.auth.currentUser?.id;
     /// ✅ **إعطاء التركيز لحقل البحث فور تحميل الصفحة**
     Future.delayed(Duration.zero, () {
       _focusNode.requestFocus();
@@ -347,7 +348,10 @@ class _SearchPageState extends State<SearchPage> {
         bool isUnavailable = false;
         String unavailableReason = '';
 
-        if (!messagesEnabled) {
+        if (widget.mode == "message" && doctor['id'] == _userId) {
+          isUnavailable = true;
+          unavailableReason = local.ownProfileBadge; 
+        } else if (!messagesEnabled) {
           isUnavailable = true;
           unavailableReason = local.messagesDisabled; // 🔹 “غير متاح للرسائل”
         } else if (access == 'patients' && !isPatient) {

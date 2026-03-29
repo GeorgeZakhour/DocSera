@@ -2446,7 +2446,7 @@ $deepLink
                     ),
                   ],
                 ),
-                child: ElevatedButton.icon(
+                child: _userId == doctorId ? _buildOwnAccountBanner() : ElevatedButton.icon(
                   onPressed: () {
                     final user = Supabase.instance.client.auth.currentUser;
                     if (user == null) {
@@ -2501,7 +2501,7 @@ $deepLink
             right: 32.w,
             child: Opacity(
               opacity: bottomButtonOpacity.clamp(0.0, 1.0),
-              child: ElevatedButton.icon(
+              child: _userId == doctorId ? _buildOwnAccountBanner() : ElevatedButton.icon(
                 onPressed: () async {
                   final user = Supabase.instance.client.auth.currentUser;
 
@@ -2549,6 +2549,37 @@ $deepLink
             ),
           ),
           if (_expandedImageOverlay) _buildImageOverlay(),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildOwnAccountBanner() {
+    return Container(
+      width: double.infinity,
+      padding: EdgeInsets.symmetric(vertical: 12.h, horizontal: 16.w),
+      decoration: BoxDecoration(
+        color: const Color(0xFFFFF4F4),
+        border: Border.all(color: const Color(0xFFFFCDD2)),
+        borderRadius: BorderRadius.circular(30.r),
+      ),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Icon(Icons.info_outline, color: Colors.red.shade400, size: 18.sp),
+          SizedBox(width: 8.w),
+          Expanded(
+            child: Text(
+              AppLocalizations.of(context)!.ownAccountWarning,
+              style: AppTextStyles.getText2(context).copyWith(
+                color: Colors.red.shade500,
+                fontSize: 10.sp,
+                fontWeight: FontWeight.w600,
+              ),
+              textAlign: TextAlign.center,
+              maxLines: 2,
+            ),
+          ),
         ],
       ),
     );

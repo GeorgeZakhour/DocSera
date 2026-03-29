@@ -462,6 +462,8 @@
   "reasonForAppointment": "Reason for appointment",
   "retry": "Retry",
   "notSpecified": "Not specified",
+  "ownProfileBadge": "Your own profile",
+  "ownAccountWarning": "This is your own profile. Booking/Messaging disabled.",
   "loginFirst": "Please log in first.",
   "slotAlreadyBooked": "Sorry, this time slot has just been booked. Please choose another time.",
   "errorBookingAppointment": "Error booking appointment",

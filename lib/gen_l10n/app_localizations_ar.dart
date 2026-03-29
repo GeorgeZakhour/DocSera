@@ -1364,6 +1364,13 @@ class AppLocalizationsAr extends AppLocalizations {
   String get notSpecified => 'غير محدد';
 
   @override
+  String get ownProfileBadge => 'حسابك الشخصي';
+
+  @override
+  String get ownAccountWarning =>
+      'هذا ملفك الشخصي. لا يمكنك حجز موعد أو إرسال رسالة لنفسك.';
+
+  @override
   String get loginFirst => 'يرجى تسجيل الدخول أولًا.';
 
   @override
