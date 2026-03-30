@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:ui';
 import 'dart:io';
 import 'dart:math';
 import 'package:docsera/app/const.dart';
@@ -6,6 +7,7 @@ import 'package:docsera/app/text_styles.dart';
 import 'package:docsera/models/sign_up_info.dart';
 import 'package:docsera/screens/auth/login/login_otp.dart';
 import 'package:docsera/screens/auth/forgot_password/forgot_password_page.dart';
+import 'package:docsera/screens/auth/sign_up/account_method_choice.dart';
 import 'package:docsera/screens/auth/sign_up/sign_up_phone.dart';
 import 'package:docsera/services/biometrics/biometric_storage.dart';
 import 'package:docsera/services/supabase/user/supabase_user_service.dart';
@@ -14,6 +16,7 @@ import 'package:docsera/widgets/custom_bottom_navigation_bar.dart';
 import 'package:docsera/utils/custom_clippers.dart';
 import 'package:docsera/utils/page_transitions.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:local_auth/local_auth.dart';
@@ -56,10 +59,33 @@ class _LoginPageState extends State<LoginPage> {
   bool _logosVisible = true;
   String appVersion = '';
 
+  // ── Dual Mode State ──
+  bool _isPhoneMode = true; 
+  final TextEditingController _phoneController = TextEditingController();
+  final List<TextEditingController> _otpControllers = List.generate(6, (_) => TextEditingController());
+  final List<FocusNode> _otpFocusNodes = List.generate(6, (_) => FocusNode());
+  late final FocusNode _phoneFocus;
+  late final FocusNode _inputFocus;
+  late final FocusNode _passwordFocus;
+  bool _isInputFocused = false;
+  bool _phoneOtpSent = false;
+  bool _phoneOtpSending = false;
+
+  final RegExp _phoneRegex = RegExp(r'^09\d{8}$');
+
+  String _normalizePhoneForApi(String phone) {
+    if (phone.startsWith('09')) return '00963${phone.substring(1)}';
+    if (phone.startsWith('+963')) return '00963${phone.substring(4)}';
+    return phone;
+  }
+
   @override
   void initState() {
     super.initState();
     _supabaseUserService = context.read<SupabaseUserService>();
+    _phoneFocus = FocusNode()..addListener(_onFocusChange);
+    _inputFocus = FocusNode()..addListener(_onFocusChange);
+    _passwordFocus = FocusNode()..addListener(_onFocusChange);
     _getAppVersion();
     _generateLogos();
     _startAnimationLoop();
@@ -68,11 +94,204 @@ class _LoginPageState extends State<LoginPage> {
     _tryAutoBiometricLogin();
   }
 
+  void _onFocusChange() {
+    setState(() {
+      _isInputFocused = _phoneFocus.hasFocus || _inputFocus.hasFocus || _passwordFocus.hasFocus;
+    });
+  }
+
   @override
   void dispose() {
     _timer?.cancel();
     _inputController.dispose();
+    _passwordController.dispose();
+    _phoneController.dispose();
+    _phoneFocus.dispose();
+    _inputFocus.dispose();
+    _passwordFocus.dispose();
+    for (final c in _otpControllers) { c.dispose(); }
+    for (final f in _otpFocusNodes) { f.dispose(); }
     super.dispose();
+  }
+
+  Future<void> _sendPhoneOtp() async {
+    final phone = _phoneController.text.trim();
+    if (!_phoneRegex.hasMatch(phone)) return;
+    
+    setState(() { _phoneOtpSending = true; _authFailed = false; });
+    try {
+      final formatted = _normalizePhoneForApi(phone);
+      await _supabaseUserService.sendPhoneOtp(formatted, isLogin: true);
+      setState(() { _phoneOtpSent = true; _phoneOtpSending = false; });
+      Future.delayed(const Duration(milliseconds: 300), () {
+        if (mounted) _otpFocusNodes[0].requestFocus();
+      });
+    } catch (e) {
+      debugPrint("OTP Send error: $e");
+      setState(() {
+        _phoneOtpSending = false;
+        _authFailed = true;
+      });
+    }
+  }
+
+  Future<void> _submitPhoneOtp() async {
+    final phone = _normalizePhoneForApi(_phoneController.text.trim());
+    final code = _otpControllers.map((c) => c.text).join();
+    if (code.length != 6) return;
+    
+    setState(() { _isLoading = true; _authFailed = false; });
+    try {
+      final response = await _supabaseUserService.phoneOtpLogin(phone, code);
+      final supabaseUser = response.user;
+      if (supabaseUser == null) throw Exception("Login failed");
+
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.setBool('isLoggedIn', true);
+      await prefs.setString('userId', supabaseUser.id);
+      
+      if (!mounted) return;
+      context.read<UserCubit>().loadUserData(context: context);
+
+      Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(builder: (_) => CustomBottomNavigationBar()),
+      );
+    } catch (e) {
+      debugPrint("OTP Verify error: $e");
+      setState(() => _authFailed = true);
+      if (mounted) {
+         ScaffoldMessenger.of(context).showSnackBar(
+           SnackBar(content: Text(AppLocalizations.of(context)!.logInFailed)),
+         );
+      }
+    } finally {
+      if (mounted) setState(() => _isLoading = false);
+    }
+  }
+
+  void _onPhoneOtpFieldChanged(String value, int index) {
+    if (value.length == 1 && index < 5) {
+      _otpFocusNodes[index + 1].requestFocus();
+    } else if (value.isEmpty && index > 0) {
+      _otpFocusNodes[index - 1].requestFocus();
+    }
+    if (index == 5 && value.length == 1) {
+      _submitPhoneOtp();
+    }
+  }
+
+  Widget _buildModeToggle() {
+    return Container(
+      height: 64.h,
+      padding: EdgeInsets.all(4.w),
+      clipBehavior: Clip.antiAlias,
+      decoration: BoxDecoration(
+        color: Colors.white.withOpacity(0.1),
+        borderRadius: BorderRadius.circular(100.r),
+        border: Border.all(color: Colors.white.withOpacity(0.1), width: 0.5),
+      ),
+      child: BackdropFilter(
+        filter: ImageFilter.blur(sigmaX: 25, sigmaY: 25),
+        child: Stack(
+          children: [
+            AnimatedAlign(
+              duration: const Duration(milliseconds: 250),
+              curve: Curves.easeInOut,
+              alignment: _isPhoneMode ? AlignmentDirectional.centerStart : AlignmentDirectional.centerEnd,
+              child: Container(
+                width: MediaQuery.of(context).size.width * 0.44,
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(100.r),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black.withOpacity(0.12),
+                      blurRadius: 8,
+                      offset: const Offset(0, 4),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+            Row(
+              children: [
+                Expanded(
+                  child: GestureDetector(
+                    onTap: () => setState(() {
+                      _isPhoneMode = true;
+                      _authFailed = false;
+                    }),
+                    behavior: HitTestBehavior.opaque,
+                    child: Container(
+                      decoration: BoxDecoration(
+                        color: Colors.transparent,
+                        borderRadius: BorderRadius.circular(100.r),
+                      ),
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Icon(
+                            Icons.phone_android_rounded,
+                            size: 18.sp,
+                            color: _isPhoneMode ? AppColors.mainDark : AppColors.mainDark.withOpacity(0.4),
+                          ),
+                          SizedBox(height: 2.h),
+                          Text(
+                            AppLocalizations.of(context)!.phoneLogin,
+                            textAlign: TextAlign.center,
+                            style: TextStyle(
+                              color: _isPhoneMode ? AppColors.mainDark : AppColors.mainDark.withOpacity(0.4),
+                              fontWeight: _isPhoneMode ? FontWeight.w600 : FontWeight.w500,
+                              fontSize: 10.sp,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                ),
+                Expanded(
+                  child: GestureDetector(
+                    onTap: () => setState(() {
+                      _isPhoneMode = false;
+                      _authFailed = false;
+                    }),
+                    behavior: HitTestBehavior.opaque,
+                    child: Container(
+                      decoration: BoxDecoration(
+                        color: Colors.transparent,
+                        borderRadius: BorderRadius.circular(100.r),
+                      ),
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Icon(
+                            Icons.email_outlined,
+                            size: 18.sp,
+                            color: !_isPhoneMode ? AppColors.mainDark : AppColors.mainDark.withOpacity(0.4),
+                          ),
+                          SizedBox(height: 2.h),
+                          Text(
+                            AppLocalizations.of(context)!.emailLogin,
+                            textAlign: TextAlign.center,
+                            style: TextStyle(
+                              color: !_isPhoneMode ? AppColors.mainDark : AppColors.mainDark.withOpacity(0.4),
+                              fontWeight: !_isPhoneMode ? FontWeight.w600 : FontWeight.w500,
+                              fontSize: 10.sp,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ],
+        ),
+      ),
+    );
   }
 
 
@@ -543,122 +762,275 @@ class _LoginPageState extends State<LoginPage> {
                       fontSize: isKeyboardVisible ? 14.sp : 11.sp,
                     ),
                   ),
-                  SizedBox(height: isKeyboardVisible ? 25.h : 15.h),
-
-                  TextField(
-                    controller: _inputController,
-                    textAlign: getTextAlign(context),
-                    textDirection: detectTextDirection(_inputController.text),
-                    keyboardType: TextInputType.emailAddress, // ✅ Email friendly keyboard
-                    style: TextStyle(fontSize: 12.sp),
-                    decoration: InputDecoration(
-                      hintText: AppLocalizations.of(context)!.emailOrPhone,
-                      hintStyle: TextStyle(fontSize: 12.sp),
-                      filled: true,
-                      fillColor: Colors.white,
-                      contentPadding: EdgeInsets.symmetric(vertical: 10.h, horizontal: 12.w),
-                      border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(12.r),
-                        borderSide: BorderSide(
-                          color: _inputEmpty ? AppColors.orangeText : Colors.transparent,
-                        ),
-                      ),
+                  SizedBox(height: 8.h),
+                  Text(
+                    AppLocalizations.of(context)!.loginMethodDescription,
+                    textAlign: TextAlign.center,
+                    style: AppTextStyles.getText2(context).copyWith(
+                      color: Colors.white.withOpacity(0.85),
+                      height: 1.4,
+                      fontSize: 10.sp,
                     ),
                   ),
-                  SizedBox(height: 12.h),
+                  SizedBox(height: isKeyboardVisible ? 20.h : 15.h),
 
-                  TextField(
-                    controller: _passwordController,
-                    obscureText: !_showPassword,
-                    textAlign: getTextAlign(context),
-                    textDirection: detectTextDirection(_passwordController.text),
-                    style: TextStyle(fontSize: 12.sp),
-                    decoration: InputDecoration(
-                      hintText: AppLocalizations.of(context)!.password,
-                      hintStyle: TextStyle(fontSize: 12.sp),
-                      filled: true,
-                      fillColor: Colors.white,
-                      contentPadding: EdgeInsets.symmetric(vertical: 10.h, horizontal: 12.w),
-                      border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(12.r),
-                        borderSide: BorderSide(
-                          color: _passwordEmpty ? AppColors.orangeText : Colors.transparent,
-                        ),
-                      ),
-                      suffixIcon: IconButton(
-                        icon: Icon(
-                          _showPassword ? Icons.visibility_off : Icons.visibility,
-                          size: 18,
-                          color: Colors.grey,
-                        ),
-                        onPressed: () => setState(() => _showPassword = !_showPassword),
-                      ),
-                    ),
-                  ),
+                  _buildModeToggle(),
+                  SizedBox(height: 15.h),
 
-                  if (_authFailed)
-                    Padding(
-                      padding: EdgeInsets.only(top: 10.h),
-                      child: Text(
-                        AppLocalizations.of(context)!.logInFailed,
-                        style: TextStyle(color: AppColors.orangeText, fontSize: 9.sp),
-                      ),
-                    ),
-
-                  Align(
-                    alignment: AlignmentDirectional.centerStart,
-                    child: Padding(
-                      padding: EdgeInsets.only(top: 5.h),
-                      child: TextButton(
-                        onPressed: () {
-                          Navigator.push(
-                            context,
-                            fadePageRoute(const ForgotPasswordPage()),
-                          );
-                        },
-                         style: TextButton.styleFrom(
-                            padding: EdgeInsets.zero,
-                            minimumSize: const Size(0, 0),
-                            tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                            overlayColor: Colors.transparent,
-                          ),
-                        child: Text(
-                          AppLocalizations.of(context)!.forgotPassword,
-                          style: TextStyle(
-                            color: Colors.white.withOpacity(0.8), // Using white since bg is main color/dark
-                            fontSize: 10.sp, 
-                            fontWeight: FontWeight.w500,
-                          ),
-                        ),
-                      ),
-                    ),
-                  ),
-
-                  SizedBox(height: 20.h),
-
-                  ElevatedButton(
-                    onPressed: _isLoading
-                        ? null
-                        : () {
-                      FocusScope.of(context).unfocus(); // إغلاق الكيبورد
-                      Future.delayed(const Duration(milliseconds: 100), _loginWithCredentials);
-                    },
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: AppColors.mainDark,
-                      padding: EdgeInsets.symmetric(horizontal: 40.w, vertical: 14.h),
-                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12.r)),
-                    ),
-                    child: _isLoading
-                        ? SizedBox(
-                      height: 18.w,
-                      width: 18.w,
-                      child: const CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
-                    )
-                        : Text(
-                      AppLocalizations.of(context)!.logIn,
+                  if (_isPhoneMode) ...[
+                    TextField(
+                      controller: _phoneController,
+                      focusNode: _phoneFocus,
+                      enabled: !_phoneOtpSent,
+                      keyboardType: TextInputType.phone,
+                      textDirection: TextDirection.ltr,
+                      textAlign: TextAlign.left,
                       style: TextStyle(fontSize: 12.sp),
+                      inputFormatters: [
+                        FilteringTextInputFormatter.digitsOnly,
+                        LengthLimitingTextInputFormatter(10),
+                      ],
+                      decoration: InputDecoration(
+                        prefixIcon: const Icon(Icons.phone_android, color: Colors.grey),
+                        hintText: '09XXXXXXXX',
+                        hintStyle: TextStyle(fontSize: 12.sp),
+                        filled: true,
+                        fillColor: Colors.white,
+                        contentPadding: EdgeInsets.symmetric(vertical: 10.h, horizontal: 12.w),
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(12.r),
+                          borderSide: BorderSide(
+                            color: _inputEmpty ? AppColors.orangeText : Colors.transparent,
+                          ),
+                        ),
+                      ),
                     ),
-                  ),
+                    SizedBox(height: 12.h),
+
+                    if (!_phoneOtpSent)
+                      SizedBox(
+                        width: double.infinity,
+                        height: 45.h,
+                        child: ElevatedButton(
+                          onPressed: _phoneOtpSending ? null : _sendPhoneOtp,
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: AppColors.main,
+                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(30.r)),
+                          ),
+                          child: _phoneOtpSending
+                              ? SizedBox(
+                                  height: 20.w,
+                                  width: 20.w,
+                                  child: const CircularProgressIndicator(
+                                    color: Colors.white,
+                                    strokeWidth: 2,
+                                  ),
+                                )
+                              : Text(
+                                  AppLocalizations.of(context)!.sendOtp,
+                                  style: TextStyle(
+                                    color: Colors.white,
+                                    fontWeight: FontWeight.normal,
+                                    fontSize: 12.sp,
+                                  ),
+                                ),
+                        ),
+                      ),
+
+                    if (_phoneOtpSent) ...[
+                      Text(
+                        AppLocalizations.of(context)!.otpSentToPhone,
+                        style: TextStyle(fontSize: 11.sp, color: Colors.white),
+                        textAlign: TextAlign.center,
+                      ),
+                      SizedBox(height: 12.h),
+                      Directionality(
+                        textDirection: TextDirection.ltr,
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: List.generate(6, (i) {
+                            return Padding(
+                              padding: EdgeInsets.symmetric(horizontal: 4.w),
+                              child: SizedBox(
+                                width: 35.w,
+                                child: TextField(
+                                  controller: _otpControllers[i],
+                                  focusNode: _otpFocusNodes[i],
+                                  maxLength: 1,
+                                  keyboardType: TextInputType.number,
+                                  textAlign: TextAlign.center,
+                                  style: TextStyle(fontSize: 16.sp, fontWeight: FontWeight.bold),
+                                  decoration: InputDecoration(
+                                    counterText: '',
+                                    filled: true,
+                                    fillColor: Colors.white,
+                                    contentPadding: EdgeInsets.symmetric(vertical: 8.h),
+                                    border: OutlineInputBorder(
+                                      borderRadius: BorderRadius.circular(8.r),
+                                      borderSide: BorderSide.none,
+                                    ),
+                                  ),
+                                  onChanged: (val) => _onPhoneOtpFieldChanged(val, i),
+                                  inputFormatters: [FilteringTextInputFormatter.digitsOnly],
+                                ),
+                              ),
+                            );
+                          }),
+                        ),
+                      ),
+                      SizedBox(height: 20.h),
+                      ElevatedButton(
+                        onPressed: _isLoading
+                            ? null
+                            : () {
+                          FocusScope.of(context).unfocus();
+                          Future.delayed(const Duration(milliseconds: 100), _submitPhoneOtp);
+                        },
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: AppColors.main,
+                          padding: EdgeInsets.symmetric(horizontal: 40.w, vertical: 14.h),
+                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(30.r)),
+                          minimumSize: Size(double.infinity, 48.h),
+                        ),
+                        child: _isLoading
+                            ? SizedBox(
+                          height: 18.w,
+                          width: 18.w,
+                          child: const CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
+                        )
+                            : Text(
+                          AppLocalizations.of(context)!.logIn,
+                          style: TextStyle(fontSize: 12.sp, color: Colors.white),
+                        ),
+                      ),
+                    ],
+
+                    if (_authFailed)
+                      Padding(
+                        padding: EdgeInsets.only(top: 10.h),
+                        child: Text(
+                          AppLocalizations.of(context)!.logInFailed,
+                          style: TextStyle(color: AppColors.orangeText, fontSize: 9.sp),
+                        ),
+                      ),
+                  ] else ...[
+                    TextField(
+                      controller: _inputController,
+                      focusNode: _inputFocus,
+                      textAlign: getTextAlign(context),
+                      textDirection: detectTextDirection(_inputController.text),
+                      keyboardType: TextInputType.emailAddress,
+                      style: TextStyle(fontSize: 12.sp),
+                      decoration: InputDecoration(
+                        hintText: AppLocalizations.of(context)!.email,
+                        hintStyle: TextStyle(fontSize: 12.sp),
+                        filled: true,
+                        fillColor: Colors.white,
+                        contentPadding: EdgeInsets.symmetric(vertical: 10.h, horizontal: 12.w),
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(12.r),
+                          borderSide: BorderSide(
+                            color: _inputEmpty ? AppColors.orangeText : Colors.transparent,
+                          ),
+                        ),
+                      ),
+                    ),
+                    SizedBox(height: 12.h),
+
+                    TextField(
+                      controller: _passwordController,
+                      focusNode: _passwordFocus,
+                      obscureText: !_showPassword,
+                      textAlign: getTextAlign(context),
+                      textDirection: detectTextDirection(_passwordController.text),
+                      style: TextStyle(fontSize: 12.sp),
+                      decoration: InputDecoration(
+                        hintText: AppLocalizations.of(context)!.password,
+                        hintStyle: TextStyle(fontSize: 12.sp),
+                        filled: true,
+                        fillColor: Colors.white,
+                        contentPadding: EdgeInsets.symmetric(vertical: 10.h, horizontal: 12.w),
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(12.r),
+                          borderSide: BorderSide(
+                            color: _passwordEmpty ? AppColors.orangeText : Colors.transparent,
+                          ),
+                        ),
+                        suffixIcon: IconButton(
+                          icon: Icon(
+                            _showPassword ? Icons.visibility_off : Icons.visibility,
+                            size: 18,
+                            color: Colors.grey,
+                          ),
+                          onPressed: () => setState(() => _showPassword = !_showPassword),
+                        ),
+                      ),
+                    ),
+
+                    if (_authFailed)
+                      Padding(
+                        padding: EdgeInsets.only(top: 10.h),
+                        child: Text(
+                          AppLocalizations.of(context)!.logInFailed,
+                          style: TextStyle(color: AppColors.orangeText, fontSize: 9.sp),
+                        ),
+                      ),
+
+                    Align(
+                      alignment: AlignmentDirectional.centerStart,
+                      child: Padding(
+                        padding: EdgeInsets.only(top: 5.h),
+                        child: TextButton(
+                          onPressed: () {
+                            Navigator.push(
+                              context,
+                              fadePageRoute(const ForgotPasswordPage()),
+                            );
+                          },
+                           style: TextButton.styleFrom(
+                              padding: EdgeInsets.zero,
+                              minimumSize: const Size(0, 0),
+                              tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                              overlayColor: Colors.transparent,
+                            ),
+                          child: Text(
+                            AppLocalizations.of(context)!.forgotPassword,
+                            style: TextStyle(
+                              color: Colors.white.withOpacity(0.8),
+                              fontSize: 10.sp, 
+                              fontWeight: FontWeight.w500,
+                            ),
+                          ),
+                        ),
+                      ),
+                    ),
+                    
+                    SizedBox(height: 20.h),
+                    ElevatedButton(
+                      onPressed: _isLoading
+                          ? null
+                          : () {
+                        FocusScope.of(context).unfocus();
+                        Future.delayed(const Duration(milliseconds: 100), _loginWithCredentials);
+                      },
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: AppColors.main,
+                        padding: EdgeInsets.symmetric(horizontal: 40.w, vertical: 14.h),
+                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(30.r)),
+                        minimumSize: Size(double.infinity, 48.h),
+                      ),
+                      child: _isLoading
+                          ? SizedBox(
+                        height: 18.w,
+                        width: 18.w,
+                        child: const CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
+                      )
+                          : Text(
+                        AppLocalizations.of(context)!.logIn,
+                        style: TextStyle(fontSize: 12.sp, color: Colors.white),
+                      ),
+                    ),
+                  ],
 
                   if (_supabaseUserService.getCurrentUser() == null) ...[
                     SizedBox(height: 12.h),
@@ -668,7 +1040,7 @@ class _LoginPageState extends State<LoginPage> {
                         Navigator.push(
                           context,
                           MaterialPageRoute(
-                            builder: (_) => SignUpFirstPage(signUpInfo: SignUpInfo()),
+                            builder: (_) => const AccountMethodChoicePage(),
                           ),
                         );
                       },

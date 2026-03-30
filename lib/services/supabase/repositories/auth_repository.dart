@@ -28,6 +28,109 @@ class AuthRepository {
     return exists;
   }
 
+  // ==========================================
+  // 📱 PHONE OTP EDGE FUNCTION CALLS
+  // ==========================================
+
+  /// 📩 إرسال رمز OTP للرقم (Syriatel)
+  Future<void> sendPhoneOtp(String phone, {bool isLogin = false}) async {
+    await _supabase.functions.invoke(
+      'send_sms_otp',
+      body: {'phone': phone, 'isLogin': isLogin},
+    );
+  }
+
+  /// 🔐 التحقق من رمز OTP المدخل
+  Future<bool> verifyPhoneOtp(String phone, String code) async {
+    try {
+      final res = await _supabase.rpc(
+        'rpc_verify_phone_otp',
+        params: {
+          'p_phone': phone,
+          'p_code': code,
+        },
+      );
+      return res == true;
+    } catch (_) {
+      return false;
+    }
+  }
+
+  /// 📧 إرسال رمز OTP للبريد الإلكتروني للتحقق أثناء التسجيل
+  Future<void> sendEmailOtp(String email) async {
+    final res = await _supabase.functions.invoke(
+      'send_doctor_otp', // مشتركة بين التطبيقين
+      body: {
+        'email': email,
+        'purpose': 'signup_email_verify',
+      },
+    );
+
+    if (res.status != 200) {
+      throw Exception('Failed to send verification email');
+    }
+  }
+
+  /// ✅ التحقق من رمز OTP للبريد الإلكتروني (بدون استهلاكه)
+  Future<bool> verifyEmailOtp(String email, String code) async {
+    try {
+      final res = await _supabase.rpc(
+        'rpc_validate_doctor_otp_peek', // مشتركة
+        params: {
+          'p_email': email,
+          'p_code': code,
+          'p_purpose': 'signup_email_verify',
+        },
+      );
+      return res == true;
+    } catch (_) {
+      return false;
+    }
+  }
+
+  /// 🚪 تسجيل الدخول برقم الهاتف ورمز OTP السرياليتل
+  Future<AuthResponse> phoneOtpLogin(String phone, String code) async {
+    final response = await _supabase.functions.invoke(
+      'phone_otp_login',
+      body: {
+        'phone': phone,
+        'code': code,
+        'app': 'docsera',
+      },
+    );
+    final data = response.data;
+    if (data['error'] != null) {
+      throw Exception(data['error']);
+    }
+    return await _supabase.auth.setSession(
+      data['refresh_token'],
+    );
+  }
+
+  /// 🆕 إنشاء حساب للمريض برقم الهاتف عن طريق Edge Function
+  Future<AuthResponse> phoneOtpSignup({
+    required String phone,
+    required String code,
+  }) async {
+    final response = await _supabase.functions.invoke(
+      'phone_otp_signup',
+      body: {
+        'phone': phone,
+        'otp_code': code,
+        'app': 'docsera',
+      },
+    );
+    final data = response.data;
+    if (data['error'] != null) {
+      throw Exception(data['error']);
+    }
+    return await _supabase.auth.setSession(
+      data['refresh_token'],
+    );
+  }
+
+  // ==========================================
+
   /// ✅ تسجيل الدخول باستخدام البريد وكلمة المرور
   Future<AuthResponse> signInWithPassword({required String email, required String password}) async {
     return await _supabase.auth.signInWithPassword(email: email, password: password);

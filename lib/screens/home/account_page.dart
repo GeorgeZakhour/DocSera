@@ -9,6 +9,7 @@ import 'package:docsera/Business_Logic/Account_page/security/account_security_st
 import 'package:docsera/Business_Logic/Authentication/auth_cubit.dart';
 import 'package:docsera/Business_Logic/Authentication/auth_state.dart';
 import 'package:docsera/models/sign_up_info.dart';
+import 'package:docsera/screens/auth/sign_up/account_method_choice.dart';
 import 'package:docsera/screens/auth/sign_up/sign_up_phone.dart';
 import 'package:docsera/screens/home/account/goodbye_page.dart';
 import 'package:docsera/screens/home/account/legal_information.dart';
@@ -615,7 +616,7 @@ class _AccountScreenState extends State<AccountScreen> {
               onPressed: () {
                 Navigator.push(
                   context,
-                  fadePageRoute(SignUpFirstPage(signUpInfo: SignUpInfo())),
+                  fadePageRoute(const AccountMethodChoicePage()),
                 );
               },
               child: Text(AppLocalizations.of(context)!.signup_button,

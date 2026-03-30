@@ -1855,6 +1855,71 @@ class AppLocalizationsEn extends AppLocalizations {
       'An unexpected error occurred. Please try again later.';
 
   @override
+  String get otpVerification => 'OTP Verification';
+
+  @override
+  String get phoneOtp => 'Phone OTP';
+
+  @override
+  String get emailPassword => 'Email + Password';
+
+  @override
+  String get accountMethodTitle => 'Choose Registration Method';
+
+  @override
+  String get phoneOtpMethodDescription =>
+      'Fast and secure registration using your phone number and OTP.';
+
+  @override
+  String get emailPasswordMethodDescription =>
+      'Standard registration using your email and a password.';
+
+  @override
+  String get registrationPhoneExplainer =>
+      'Your phone number is a critical contact info and must be verified.';
+
+  @override
+  String resendCodeIn(Object seconds) {
+    return 'Resend code in ${seconds}s';
+  }
+
+  @override
+  String get sendOtp => 'Send OTP';
+
+  @override
+  String get otpSentToPhone =>
+      'A verification code has been sent to your phone.';
+
+  @override
+  String get otpSentToEmail =>
+      'A verification code has been sent to your email.';
+
+  @override
+  String get enterOtp => 'Enter OTP';
+
+  @override
+  String get chooseRegistrationMethod => 'Choose how you want to register';
+
+  @override
+  String get recommended => 'Recommended';
+
+  @override
+  String get loginMethodDescription =>
+      'Please log in using the same method you used to create your account';
+
+  @override
+  String get phoneShort => 'Phone';
+
+  @override
+  String get emailShort => 'Email';
+
+  @override
+  String get phoneLogin => 'Login with Phone';
+
+  @override
+  String get emailLogin => 'Login with Email';
+
+  @override
   String get forgotPasswordTitle => 'Forgot Password';
 
   @override

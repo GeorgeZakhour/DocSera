@@ -23,6 +23,24 @@ class SupabaseUserService {
   Future<bool> isPhoneNumberExists(String phoneNumber) => 
       auth.isPhoneNumberExists(phoneNumber);
 
+  Future<void> sendPhoneOtp(String phone, {bool isLogin = false}) =>
+      auth.sendPhoneOtp(phone, isLogin: isLogin);
+
+  Future<void> sendEmailOtp(String email) =>
+      auth.sendEmailOtp(email);
+
+  Future<bool> verifyPhoneOtp(String phone, String code) =>
+      auth.verifyPhoneOtp(phone, code);
+
+  Future<bool> verifyEmailOtp(String email, String code) =>
+      auth.verifyEmailOtp(email, code);
+
+  Future<AuthResponse> phoneOtpLogin(String phone, String code) =>
+      auth.phoneOtpLogin(phone, code);
+
+  Future<AuthResponse> phoneOtpSignup({required String phone, required String code}) =>
+      auth.phoneOtpSignup(phone: phone, code: code);
+
   Future<AuthResponse> signInWithPassword({required String email, required String password}) => 
       auth.signInWithPassword(email: email, password: password);
 

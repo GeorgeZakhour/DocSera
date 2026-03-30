@@ -1,4 +1,10 @@
+enum AuthMethod {
+  phoneOtp,
+  emailPassword,
+}
+
 class SignUpInfo {
+  AuthMethod authMethod = AuthMethod.phoneOtp;
   String? email;
   String? fakeEmail;    // ✅ الإيميل المزيف المستخدم لـ FirebaseAuth
   String? phoneNumber;
@@ -9,6 +15,7 @@ class SignUpInfo {
   String? dateOfBirth;
   String? gender;
   String? password;
+  String? otpCode; // ✅ الرمز السري المستخدم للتحقق في Path A (Phone OTP)
   bool termsAccepted = false;
   bool marketingChecked = false;
   String? address;

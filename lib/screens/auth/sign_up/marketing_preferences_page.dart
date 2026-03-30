@@ -1,5 +1,5 @@
 import 'package:docsera/app/text_styles.dart';
-import 'package:docsera/screens/auth/sign_up/validation_page.dart';
+import 'package:docsera/screens/auth/sign_up/recap_info.dart';
 import 'package:docsera/utils/page_transitions.dart';
 import 'package:docsera/widgets/base_scaffold.dart';
 import 'package:flutter/material.dart';
@@ -120,12 +120,11 @@ class _MarketingPreferencesPageState extends State<MarketingPreferencesPage> {
                 // Update marketingChecked in SignUpInfo
                 widget.signUpInfo.marketingChecked = isChecked;
 
-                // Navigate to ValidationPage
+                // Navigate to RecapPage (Validation step is already done at start)
                 Navigator.push(
                   context,
-                  fadePageRoute(ValidationPage(
-                    signUpInfo: widget.signUpInfo, // Pass updated SignUpInfo
-                    validationType: 'SMS',
+                  fadePageRoute(RecapPage(
+                    signUpInfo: widget.signUpInfo,
                   )),
                 );
               },

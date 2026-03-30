@@ -8,7 +8,10 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import '../../../app/const.dart';
+import 'package:docsera/screens/auth/sign_up/terms_of_use_page.dart';
+import 'package:docsera/screens/auth/sign_up/recap_info.dart';
 import 'package:docsera/gen_l10n/app_localizations.dart';
+import 'package:docsera/screens/auth/sign_up/create_password.dart';
 
 
 class SignUpSecondPage extends StatefulWidget {
@@ -121,10 +124,16 @@ class _SignUpSecondPageState extends State<SignUpSecondPage> {
               // User Info Display
               Row(
                 children: [
-                  Icon(Icons.account_circle, size: 40.sp, color: AppColors.main),
+                  Icon(
+                    widget.signUpInfo.authMethod == AuthMethod.phoneOtp ? Icons.phone_android : Icons.email_outlined,
+                    size: 40.sp,
+                    color: AppColors.main,
+                  ),
                   SizedBox(width: 10.w),
                   Text(
-                      _getDisplayPhoneNumber(widget.signUpInfo.phoneNumber ?? widget.signUpInfo.email ?? ''),
+                    widget.signUpInfo.authMethod == AuthMethod.phoneOtp
+                        ? _getDisplayPhoneNumber(widget.signUpInfo.phoneNumber ?? '')
+                        : (widget.signUpInfo.email ?? ''),
                     style: AppTextStyles.getTitle1(context),
                   ),
                 ],
@@ -247,10 +256,19 @@ class _SignUpSecondPageState extends State<SignUpSecondPage> {
               ElevatedButton(
                 onPressed: isFormValid
                     ? () {
-                  Navigator.push(
-                    context,
-                    fadePageRoute(EnterEmailPage(signUpInfo: widget.signUpInfo)), // ✅ دائماً ينتقل إلى صفحة البريد الإلكتروني
-                  );
+                  if (widget.signUpInfo.authMethod == AuthMethod.phoneOtp) {
+                    // Path A: Go to Terms -> Marketing -> Recap
+                    Navigator.push(
+                      context,
+                      fadePageRoute(TermsOfUsePage(signUpInfo: widget.signUpInfo)),
+                    );
+                  } else {
+                    // Path B: Go to Create Password -> Terms -> Marketing -> Recap
+                    Navigator.push(
+                      context,
+                      fadePageRoute(CreatePasswordPage(signUpInfo: widget.signUpInfo)),
+                    );
+                  }
                 }
                     : null, // ❌ تعطيل الزر إذا لم يكن الإدخال صحيحًا
                 style: ElevatedButton.styleFrom(

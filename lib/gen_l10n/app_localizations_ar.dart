@@ -1835,6 +1835,69 @@ class AppLocalizationsAr extends AppLocalizations {
       'حدث خطأ غير متوقع. يرجى المحاولة مرة أخرى لاحقًا.';
 
   @override
+  String get otpVerification => 'التحقق من الرمز';
+
+  @override
+  String get phoneOtp => 'رقم الهاتف';
+
+  @override
+  String get emailPassword => 'البريد + كلمة المرور';
+
+  @override
+  String get accountMethodTitle => 'اختر طريقة التسجيل';
+
+  @override
+  String get phoneOtpMethodDescription =>
+      'تسجيل سريع وآمن باستخدام رقم الهاتف والرمز السري.';
+
+  @override
+  String get emailPasswordMethodDescription =>
+      'تسجيل قياسي باستخدام البريد الإلكتروني وكلمة المرور.';
+
+  @override
+  String get registrationPhoneExplainer =>
+      'رقم هاتفك هو ميزة تواصل أساسية ويجب التحقق منه.';
+
+  @override
+  String resendCodeIn(Object seconds) {
+    return 'إعادة إرسال الرمز خلال $seconds ثانية';
+  }
+
+  @override
+  String get sendOtp => 'إرسال الرمز';
+
+  @override
+  String get otpSentToPhone => 'تم إرسال رمز التحقق لهاتفك.';
+
+  @override
+  String get otpSentToEmail => 'تم إرسال رمز التحقق لبريدك الإلكتروني.';
+
+  @override
+  String get enterOtp => 'أدخل رمز التحقق';
+
+  @override
+  String get chooseRegistrationMethod => 'اختر كيفية التسجيل';
+
+  @override
+  String get recommended => 'موصى به';
+
+  @override
+  String get loginMethodDescription =>
+      'يرجى تسجيل الدخول بنفس الطريقة التي استخدمتها لإنشاء حسابك';
+
+  @override
+  String get phoneShort => 'الهاتف';
+
+  @override
+  String get emailShort => 'البريد';
+
+  @override
+  String get phoneLogin => 'الدخول بواسطة الهاتف';
+
+  @override
+  String get emailLogin => 'الدخول بواسطة البريد';
+
+  @override
   String get forgotPasswordTitle => 'نسيت كلمة المرور';
 
   @override

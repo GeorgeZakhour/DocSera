@@ -46,15 +46,120 @@ class RecapPage extends StatelessWidget {
   /// ✅ التسجيل النهائي (النسخة الصحيحة 100%)
   /// ---------------------------------------------------------------------------
   Future<void> _registerUserWithSupabase(BuildContext context) async {
-    if (signUpInfo.email == null || signUpInfo.password == null) {
-      if (context.mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(AppLocalizations.of(context)!.registrationFailed)),
-        );
+    if (signUpInfo.authMethod == AuthMethod.phoneOtp) {
+      if (signUpInfo.phoneNumber == null) {
+        if (context.mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text(AppLocalizations.of(context)!.registrationFailed)),
+          );
+        }
+        return;
       }
-      return;
+      await _registerWithPhoneOtp(context);
+    } else {
+      if (signUpInfo.email == null || signUpInfo.password == null) {
+        if (context.mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text(AppLocalizations.of(context)!.registrationFailed)),
+          );
+        }
+        return;
+      }
+      await _registerWithPassword(context, signUpInfo.password!);
     }
-    await _registerWithPassword(context, signUpInfo.password!);
+  }
+
+  Future<void> _registerWithPhoneOtp(BuildContext context) async {
+    try {
+      final res = await Supabase.instance.client.functions.invoke(
+        'phone_otp_signup',
+        body: {
+          'phone': signUpInfo.phoneNumber!,
+          'otp_code': signUpInfo.otpCode!,
+          'app': 'docsera',
+        },
+      );
+
+      final body = res.data as Map<String, dynamic>;
+      final userId = body['user_id'] as String;
+      final refreshToken = body['refresh_token'] as String?;
+
+      if (refreshToken != null) {
+        await Supabase.instance.client.auth.setSession(refreshToken);
+      }
+
+      await _finalizeUserRecord(context, userId);
+    } catch (e) {
+      debugPrint('❌ Phone OTP Registration failed: $e');
+      if (!context.mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('${AppLocalizations.of(context)!.registrationFailed}: $e')),
+      );
+    }
+  }
+
+  Future<void> _finalizeUserRecord(BuildContext context, String userId) async {
+    // -------------------------------------------------------------------
+    // 2️⃣ إدخال صف المستخدم في جدول users
+    // -------------------------------------------------------------------
+    final userData = {
+      'id': userId,
+      'first_name': signUpInfo.firstName ?? '',
+      'last_name': signUpInfo.lastName ?? '',
+      'email': signUpInfo.email ?? '',
+      'phone_number': signUpInfo.phoneNumber ?? '',
+      'email_verified': signUpInfo.emailVerified,
+      'phone_verified': signUpInfo.phoneVerified,
+      'gender': signUpInfo.gender ?? '',
+      'date_of_birth': signUpInfo.dateOfBirth ?? '',
+      'terms_accepted': signUpInfo.termsAccepted,
+      'marketing_checked': signUpInfo.marketingChecked,
+      'two_factor_auth_enabled': false,
+      'trusted_devices': [],
+    };
+
+    if (!context.mounted) return;
+    await context.read<SupabaseUserService>().addUser(userData);
+
+    // -------------------------------------------------------------------
+    // 3️⃣ إضافة الجهاز الحالي عبر RPC (Security Definer)
+    // -------------------------------------------------------------------
+    final deviceId = await _getDeviceId();
+    await Supabase.instance.client.rpc(
+      'trust_current_device',
+      params: {'p_device_id': deviceId},
+    );
+
+    // -------------------------------------------------------------------
+    // 4️⃣ تخزين محلي (غير أمني – UI فقط)
+    // -------------------------------------------------------------------
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setBool('isLoggedIn', true);
+    await prefs.setString('userId', userId);
+    await prefs.setString(
+      'userName',
+      '${signUpInfo.firstName ?? ''} ${signUpInfo.lastName ?? ''}'.trim(),
+    );
+    if (signUpInfo.email != null) await prefs.setString('userEmail', signUpInfo.email!);
+    await prefs.setString('userPhone', signUpInfo.phoneNumber ?? '');
+
+    // -------------------------------------------------------------------
+    // 5️⃣ الانتقال لصفحة الترحيب
+    // -------------------------------------------------------------------
+    if (!context.mounted) return;
+
+    Navigator.pushAndRemoveUntil(
+      context,
+      fadePageRoute(WelcomePage(signUpInfo: signUpInfo)),
+          (_) => false,
+    );
+
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(AppLocalizations.of(context)!.registrationSuccess),
+        backgroundColor: AppColors.main.withOpacity(0.9),
+      ),
+    );
   }
 
   /// Core registration logic — called with either the user's chosen password
@@ -97,7 +202,6 @@ class RecapPage extends StatelessWidget {
       }
 
       final userId = body['user_id'] as String;
-      final accessToken = body['access_token'] as String?;
       final refreshToken = body['refresh_token'] as String?;
 
       // Set the session from the Edge Function tokens
@@ -113,67 +217,7 @@ class RecapPage extends StatelessWidget {
         throw Exception('Auth session not established');
       }
 
-      // -------------------------------------------------------------------
-      // 2️⃣ إدخال صف المستخدم في جدول users
-      // -------------------------------------------------------------------
-      final userData = {
-        'id': userId,
-        'first_name': signUpInfo.firstName ?? '',
-        'last_name': signUpInfo.lastName ?? '',
-        'email': signUpInfo.email ?? '',
-        'phone_number': signUpInfo.phoneNumber ?? '',
-        'email_verified': signUpInfo.emailVerified,
-        'phone_verified': signUpInfo.phoneVerified,
-        'gender': signUpInfo.gender ?? '',
-        'date_of_birth': signUpInfo.dateOfBirth ?? '',
-        'terms_accepted': signUpInfo.termsAccepted,
-        'marketing_checked': signUpInfo.marketingChecked,
-        'two_factor_auth_enabled': false,
-        'trusted_devices': [],
-      };
-
-      if (!context.mounted) return;
-      await context.read<SupabaseUserService>().addUser(userData);
-
-      // -------------------------------------------------------------------
-      // 3️⃣ إضافة الجهاز الحالي عبر RPC (Security Definer)
-      // -------------------------------------------------------------------
-      final deviceId = await _getDeviceId();
-      await Supabase.instance.client.rpc(
-        'trust_current_device',
-        params: {'p_device_id': deviceId},
-      );
-
-      // -------------------------------------------------------------------
-      // 4️⃣ تخزين محلي (غير أمني – UI فقط)
-      // -------------------------------------------------------------------
-      final prefs = await SharedPreferences.getInstance();
-      await prefs.setBool('isLoggedIn', true);
-      await prefs.setString('userId', userId);
-      await prefs.setString(
-        'userName',
-        '${signUpInfo.firstName ?? ''} ${signUpInfo.lastName ?? ''}'.trim(),
-      );
-      await prefs.setString('userEmail', signUpInfo.email!);
-      await prefs.setString('userPhone', signUpInfo.phoneNumber ?? '');
-
-      // -------------------------------------------------------------------
-      // 5️⃣ الانتقال لصفحة الترحيب
-      // -------------------------------------------------------------------
-      if (!context.mounted) return;
-
-      Navigator.pushAndRemoveUntil(
-        context,
-        fadePageRoute(WelcomePage(signUpInfo: signUpInfo)),
-            (_) => false,
-      );
-
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(AppLocalizations.of(context)!.registrationSuccess),
-          backgroundColor: AppColors.main.withOpacity(0.9),
-        ),
-      );
+      await _finalizeUserRecord(context, userId);
     } catch (e, s) {
       debugPrint('❌ Registration failed: $e');
       debugPrintStack(stackTrace: s);

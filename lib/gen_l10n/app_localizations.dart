@@ -3506,6 +3506,120 @@ abstract class AppLocalizations {
   /// **'An unexpected error occurred. Please try again later.'**
   String get unexpectedError;
 
+  /// No description provided for @otpVerification.
+  ///
+  /// In en, this message translates to:
+  /// **'OTP Verification'**
+  String get otpVerification;
+
+  /// No description provided for @phoneOtp.
+  ///
+  /// In en, this message translates to:
+  /// **'Phone OTP'**
+  String get phoneOtp;
+
+  /// No description provided for @emailPassword.
+  ///
+  /// In en, this message translates to:
+  /// **'Email + Password'**
+  String get emailPassword;
+
+  /// No description provided for @accountMethodTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Choose Registration Method'**
+  String get accountMethodTitle;
+
+  /// No description provided for @phoneOtpMethodDescription.
+  ///
+  /// In en, this message translates to:
+  /// **'Fast and secure registration using your phone number and OTP.'**
+  String get phoneOtpMethodDescription;
+
+  /// No description provided for @emailPasswordMethodDescription.
+  ///
+  /// In en, this message translates to:
+  /// **'Standard registration using your email and a password.'**
+  String get emailPasswordMethodDescription;
+
+  /// No description provided for @registrationPhoneExplainer.
+  ///
+  /// In en, this message translates to:
+  /// **'Your phone number is a critical contact info and must be verified.'**
+  String get registrationPhoneExplainer;
+
+  /// No description provided for @resendCodeIn.
+  ///
+  /// In en, this message translates to:
+  /// **'Resend code in {seconds}s'**
+  String resendCodeIn(Object seconds);
+
+  /// No description provided for @sendOtp.
+  ///
+  /// In en, this message translates to:
+  /// **'Send OTP'**
+  String get sendOtp;
+
+  /// No description provided for @otpSentToPhone.
+  ///
+  /// In en, this message translates to:
+  /// **'A verification code has been sent to your phone.'**
+  String get otpSentToPhone;
+
+  /// No description provided for @otpSentToEmail.
+  ///
+  /// In en, this message translates to:
+  /// **'A verification code has been sent to your email.'**
+  String get otpSentToEmail;
+
+  /// No description provided for @enterOtp.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter OTP'**
+  String get enterOtp;
+
+  /// No description provided for @chooseRegistrationMethod.
+  ///
+  /// In en, this message translates to:
+  /// **'Choose how you want to register'**
+  String get chooseRegistrationMethod;
+
+  /// No description provided for @recommended.
+  ///
+  /// In en, this message translates to:
+  /// **'Recommended'**
+  String get recommended;
+
+  /// No description provided for @loginMethodDescription.
+  ///
+  /// In en, this message translates to:
+  /// **'Please log in using the same method you used to create your account'**
+  String get loginMethodDescription;
+
+  /// No description provided for @phoneShort.
+  ///
+  /// In en, this message translates to:
+  /// **'Phone'**
+  String get phoneShort;
+
+  /// No description provided for @emailShort.
+  ///
+  /// In en, this message translates to:
+  /// **'Email'**
+  String get emailShort;
+
+  /// No description provided for @phoneLogin.
+  ///
+  /// In en, this message translates to:
+  /// **'Login with Phone'**
+  String get phoneLogin;
+
+  /// No description provided for @emailLogin.
+  ///
+  /// In en, this message translates to:
+  /// **'Login with Email'**
+  String get emailLogin;
+
   /// No description provided for @forgotPasswordTitle.
   ///
   /// In en, this message translates to:

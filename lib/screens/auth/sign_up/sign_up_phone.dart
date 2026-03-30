@@ -4,11 +4,15 @@ import 'package:docsera/utils/page_transitions.dart';
 import 'package:docsera/utils/text_direction_utils.dart';
 import 'package:docsera/widgets/base_scaffold.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import '../../../app/const.dart';
 import '../../../models/sign_up_info.dart';
 import 'package:docsera/gen_l10n/app_localizations.dart';
+import 'package:docsera/screens/auth/sign_up/sign_up_email.dart';
+import 'package:docsera/services/supabase/user/supabase_user_service.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 
 class SignUpFirstPage extends StatefulWidget {
   final SignUpInfo signUpInfo;
@@ -21,10 +25,27 @@ class SignUpFirstPage extends StatefulWidget {
 
 class _SignUpFirstPageState extends State<SignUpFirstPage> {
   final TextEditingController _phoneController = TextEditingController();
+  final FocusNode _phoneFocus = FocusNode();
 
   bool isValid = false;
   bool hasInput = false;
   bool isChecking = false;
+
+  // ── OTP State ──
+  bool _otpSent = false;
+  bool _otpSending = false;
+  bool _otpVerifying = false;
+  final List<TextEditingController> _otpControllers = List.generate(6, (_) => TextEditingController());
+  final List<FocusNode> _otpFocusNodes = List.generate(6, (_) => FocusNode());
+
+  @override
+  void dispose() {
+    _phoneController.dispose();
+    _phoneFocus.dispose();
+    for (var c in _otpControllers) { c.dispose(); }
+    for (var f in _otpFocusNodes) { f.dispose(); }
+    super.dispose();
+  }
 
   /// **📌 التحقق من صحة رقم الهاتف**
   bool _isValidPhoneNumber(String input) {
@@ -58,18 +79,9 @@ class _SignUpFirstPageState extends State<SignUpFirstPage> {
         return;
       }
 
-      // ✅ حفظ البيانات
-      widget.signUpInfo.phoneNumber = formattedPhone;
-      widget.signUpInfo.email = null;
-
+      // ✅ حفظ البيانات (Check availability first, then SEND OTP)
       setState(() => isChecking = false);
-
-      Navigator.push(
-        context,
-        fadePageRoute(
-          SignUpSecondPage(signUpInfo: widget.signUpInfo),
-        ),
-      );
+      _sendOtp();
     } catch (e) {
       setState(() => isChecking = false);
 
@@ -79,6 +91,77 @@ class _SignUpFirstPageState extends State<SignUpFirstPage> {
           backgroundColor: AppColors.red,
         ),
       );
+    }
+  }
+
+  Future<void> _sendOtp() async {
+    setState(() => _otpSending = true);
+    final formattedPhone = getFormattedPhoneNumber();
+    try {
+      await context.read<SupabaseUserService>().sendPhoneOtp(formattedPhone);
+      setState(() {
+        _otpSent = true;
+        _otpSending = false;
+      });
+      Future.delayed(const Duration(milliseconds: 300), () {
+        if (mounted) _otpFocusNodes[0].requestFocus();
+      });
+    } catch (e) {
+      debugPrint("OTP Send Error: $e");
+      setState(() => _otpSending = false);
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(AppLocalizations.of(context)!.unexpectedError)),
+      );
+    }
+  }
+
+  Future<void> _verifyOtp() async {
+    final code = _otpControllers.map((c) => c.text).join();
+    if (code.length != 6) return;
+
+    setState(() => _otpVerifying = true);
+    final formattedPhone = getFormattedPhoneNumber();
+    try {
+      final success = await context.read<SupabaseUserService>().verifyPhoneOtp(formattedPhone, code);
+      if (success) {
+        widget.signUpInfo.phoneNumber = formattedPhone;
+        widget.signUpInfo.otpCode = code; // ✅ Save code for the final registration step
+        // Proceed to next step
+        if (!mounted) return;
+        
+        if (widget.signUpInfo.authMethod == AuthMethod.phoneOtp) {
+          // Path A: Go to Optional Email
+          Navigator.push(
+            context,
+            fadePageRoute(EnterEmailPage(signUpInfo: widget.signUpInfo, isOptional: true)),
+          );
+        } else {
+          // Path B: Phone was mandatory after Email, now Go to Identity
+          Navigator.push(
+            context,
+            fadePageRoute(SignUpSecondPage(signUpInfo: widget.signUpInfo)),
+          );
+        }
+      } else {
+        throw Exception("Invalid code");
+      }
+    } catch (e) {
+      debugPrint("OTP Verify Error: $e");
+      setState(() => _otpVerifying = false);
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(AppLocalizations.of(context)!.invalidOtp)),
+      );
+    }
+  }
+
+  void _onOtpChanged(String value, int index) {
+    if (value.length == 1 && index < 5) {
+      _otpFocusNodes[index + 1].requestFocus();
+    } else if (value.isEmpty && index > 0) {
+      _otpFocusNodes[index - 1].requestFocus();
+    }
+    if (index == 5 && value.length == 1) {
+      _verifyOtp();
     }
   }
 
@@ -184,6 +267,7 @@ class _SignUpFirstPageState extends State<SignUpFirstPage> {
               /// **📌 حقل إدخال رقم الهاتف**
               TextFormField(
                 controller: _phoneController,
+                focusNode: _phoneFocus,
                 keyboardType: TextInputType.number,
                 textDirection: detectTextDirection(_phoneController.text),
                 textAlign: getTextAlign(context),
@@ -270,6 +354,52 @@ class _SignUpFirstPageState extends State<SignUpFirstPage> {
                 },
               ),
 
+              if (_otpSent) ...[
+                SizedBox(height: 30.h),
+                Center(child: Text(AppLocalizations.of(context)!.enterOtp, style: AppTextStyles.getTitle2(context))),
+                SizedBox(height: 15.h),
+                Directionality(
+                  textDirection: TextDirection.ltr,
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: List.generate(6, (i) {
+                      return Padding(
+                        padding: EdgeInsets.symmetric(horizontal: 4.w),
+                        child: SizedBox(
+                          width: 40.w,
+                          child: TextField(
+                            controller: _otpControllers[i],
+                            focusNode: _otpFocusNodes[i],
+                            maxLength: 1,
+                            keyboardType: TextInputType.number,
+                            textAlign: TextAlign.center,
+                            style: TextStyle(fontSize: 18.sp, fontWeight: FontWeight.bold),
+                            decoration: InputDecoration(
+                              counterText: '',
+                              filled: true,
+                              fillColor: Colors.grey.withOpacity(0.1),
+                              contentPadding: EdgeInsets.symmetric(vertical: 10.h),
+                              border: OutlineInputBorder(
+                                borderRadius: BorderRadius.circular(10.r),
+                                borderSide: BorderSide(color: AppColors.mainDark.withOpacity(0.2)),
+                              ),
+                              focusedBorder: OutlineInputBorder(
+                                borderRadius: BorderRadius.circular(10.r),
+                                borderSide: const BorderSide(color: AppColors.main, width: 2),
+                              ),
+                            ),
+                            onChanged: (val) => _onOtpChanged(val, i),
+                          ),
+                        ),
+                      );
+                    }),
+                  ),
+                ),
+                SizedBox(height: 20.h),
+                if (_otpVerifying)
+                  const Center(child: CircularProgressIndicator())
+              ],
+
 
 
               SizedBox(height: 20.h),
@@ -284,20 +414,19 @@ class _SignUpFirstPageState extends State<SignUpFirstPage> {
 
               /// **📌 زر المتابعة**
               ElevatedButton(
-                onPressed: isValid && _phoneController.text.isNotEmpty && !isChecking
-                    ? _checkForDuplicates
-                    : null,
+                onPressed: (isValid && _phoneController.text.isNotEmpty && !isChecking && !_otpSent)
+                    ? _checkForDuplicates // Step 1: Check availability and technically "Continue" to Step 2
+                    : (_otpSent && !_otpVerifying ? _verifyOtp : null),
                 style: ElevatedButton.styleFrom(
-                  backgroundColor: isValid && _phoneController.text.isNotEmpty && !isChecking
+                  backgroundColor: (isValid && _phoneController.text.isNotEmpty && !isChecking)
                       ? AppColors.main
                       : Colors.grey,
                   padding: EdgeInsets.symmetric(vertical: 5.h),
                   shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10.r)),
                 ),
-                child: isChecking
+                child: (isChecking || _otpSending || _otpVerifying)
                     ?  const SizedBox(
                   width: double.infinity,
-                  // height: 16.w,
                   child: Center(
                     child: CircularProgressIndicator(
                       strokeWidth: 2,
@@ -308,10 +437,12 @@ class _SignUpFirstPageState extends State<SignUpFirstPage> {
                     :  SizedBox(
                   width: double.infinity,
                   child: Center(
-                    child: Text(AppLocalizations.of(context)!.continueButton,
-                        style: AppTextStyles.getText2(context).copyWith(color: Colors.white, fontWeight: FontWeight.bold)),
+                    child: Text(
+                      _otpSent ? AppLocalizations.of(context)!.verify : AppLocalizations.of(context)!.continueButton,
+                      style: AppTextStyles.getText2(context).copyWith(color: Colors.white, fontWeight: FontWeight.bold)
+                    ),
                   ),
-              ),
+                ),
               ),
             ],
           ),
