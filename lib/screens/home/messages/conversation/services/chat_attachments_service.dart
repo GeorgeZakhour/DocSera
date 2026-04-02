@@ -1,9 +1,11 @@
 import 'dart:convert';
 import 'dart:io';
+import 'dart:typed_data';
 import 'package:http/http.dart' as http;
 import 'package:path/path.dart' as path;
 import 'package:path_provider/path_provider.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
+import 'package:docsera/services/encryption/message_encryption_service.dart';
 
 class ChatAttachmentsService {
   ChatAttachmentsService(this._client);
@@ -83,10 +85,38 @@ class ChatAttachmentsService {
   /// تحميل ملف إلى الجهاز (للسيف أو addToDocument)
   Future<String> downloadToLocal(String url) async {
     final resp = await http.get(Uri.parse(url));
+    var bytes = resp.bodyBytes;
+
+    // ✅ Attempt to decrypt file bytes
+    final enc = MessageEncryptionService.instance;
+    if (enc.isReady) {
+      final decrypted = enc.decryptBytes(Uint8List.fromList(bytes));
+      if (decrypted != null) {
+        bytes = decrypted;
+      }
+    }
+
     final temp = await getTemporaryDirectory();
     final name = path.basename(url);
     final file = File('${temp.path}/$name');
-    await file.writeAsBytes(resp.bodyBytes);
+    await file.writeAsBytes(bytes);
     return file.path;
+  }
+
+  /// ✅ Download and decrypt bytes in memory (for displaying encrypted media)
+  Future<Uint8List?> downloadDecryptedBytes(String url) async {
+    try {
+      final resp = await http.get(Uri.parse(url));
+      var bytes = Uint8List.fromList(resp.bodyBytes);
+
+      final enc = MessageEncryptionService.instance;
+      if (enc.isReady) {
+        final decrypted = enc.decryptBytes(bytes);
+        if (decrypted != null) return decrypted;
+      }
+      return bytes; // Return as-is if decryption fails (legacy unencrypted file)
+    } catch (_) {
+      return null;
+    }
   }
 }

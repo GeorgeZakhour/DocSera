@@ -634,6 +634,7 @@
   "emailShort": "Email",
   "phoneLogin": "Login with Phone",
   "emailLogin": "Login with Email",
+  "changeNumber": "Change Number",
 
   "@ForgotPassword================================": "Forgot Password Flow",
   "forgotPasswordTitle": "Forgot Password",

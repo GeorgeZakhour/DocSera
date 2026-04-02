@@ -11,6 +11,7 @@ import '../../models/conversation.dart';
 import 'dart:convert';
 import 'package:docsera/utils/error_handler.dart';
 import 'package:docsera/utils/time_utils.dart';
+import 'package:docsera/services/encryption/message_encryption_service.dart';
 class MessagesCubit extends Cubit<MessagesState> {
   final SupabaseClient _supabase;
 
@@ -103,7 +104,12 @@ class MessagesCubit extends Cubit<MessagesState> {
         // ------------------------------
         // ✅ OPTIMIZED: Use native columns directly
         // ------------------------------
+        // ✅ Decrypt last_message preview for display
+        final enc = MessageEncryptionService.instance;
         String lastMsgText = convo['last_message'] ?? "";
+        if (lastMsgText.isNotEmpty) {
+          lastMsgText = enc.decryptText(lastMsgText);
+        }
         
         // Construct a virtual "last message" object for UI compatibility
         final messages = <Map<String, dynamic>>[];
@@ -253,7 +259,7 @@ class MessagesCubit extends Cubit<MessagesState> {
           'participants': relativeId != null
               ? [accountHolderId, relativeId, doctorId]
               : [accountHolderId, doctorId],
-          'last_message': message,
+          'last_message': MessageEncryptionService.instance.encryptText(message),
           'last_sender_id': accountHolderId,
           'updated_at': now.toIso8601String(),
           'doctor_name': doctorName,
@@ -289,10 +295,10 @@ class MessagesCubit extends Cubit<MessagesState> {
              final fileName = "${now.millisecondsSinceEpoch}_${file.path.split('/').last}";
              final storagePath = '$convoId/$fileName';
              
-             final bytes = await file.readAsBytes();
-             await _supabase.storage.from('chat.attachments').uploadBinary(
-               storagePath,
-               bytes,
+              final bytes = await file.readAsBytes();
+              await _supabase.storage.from('chat.attachments').uploadBinary(
+                storagePath,
+                bytes,
                fileOptions: const FileOptions(upsert: true, cacheControl: '3600'),
              );
 
@@ -334,7 +340,7 @@ class MessagesCubit extends Cubit<MessagesState> {
       await _supabase.from('messages').insert({
         'conversation_id': convoId,
         'sender_name': patientName,
-        'text': message,
+        'text': MessageEncryptionService.instance.encryptText(message),
         'is_user': true,
         'timestamp': now.toIso8601String(),
         'read_by_user': true,
@@ -343,7 +349,7 @@ class MessagesCubit extends Cubit<MessagesState> {
 
       // Update Conversation Last Message
       await _supabase.from('conversations').update({
-        'last_message': lastMsgPreview,
+        'last_message': MessageEncryptionService.instance.encryptText(lastMsgPreview),
         'last_sender_id': accountHolderId,
         'updated_at': now.toIso8601String(),
       }).eq('id', convoId);

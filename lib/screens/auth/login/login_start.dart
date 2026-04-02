@@ -36,10 +36,11 @@ class LoginPage extends StatefulWidget {
   State<LoginPage> createState() => _LoginPageState();
 }
 
-class _LoginPageState extends State<LoginPage> {
+class _LoginPageState extends State<LoginPage> with SingleTickerProviderStateMixin {
   final _inputController = TextEditingController();
   final _passwordController = TextEditingController();
   final _localAuth = LocalAuthentication();
+  late final AnimationController _shakeController;
   late final SupabaseUserService _supabaseUserService;
 
   bool _isAuthenticating = false;
@@ -71,7 +72,18 @@ class _LoginPageState extends State<LoginPage> {
   bool _phoneOtpSent = false;
   bool _phoneOtpSending = false;
 
+  // ── OTP Resend Timer ──
+  Timer? _resendTimer;
+  int _resendSeconds = 60;
+  bool _canResend = false;
+
   final RegExp _phoneRegex = RegExp(r'^09\d{8}$');
+
+  String get _maskedPhone {
+    final p = _phoneController.text.trim();
+    if (p.length >= 10) return '\u202A${p.substring(0, 2)}*****${p.substring(p.length - 3)}\u202C';
+    return '\u202A$p\u202C';
+  }
 
   String _normalizePhoneForApi(String phone) {
     if (phone.startsWith('09')) return '00963${phone.substring(1)}';
@@ -82,6 +94,7 @@ class _LoginPageState extends State<LoginPage> {
   @override
   void initState() {
     super.initState();
+    _shakeController = AnimationController(vsync: this, duration: const Duration(milliseconds: 400));
     _supabaseUserService = context.read<SupabaseUserService>();
     _phoneFocus = FocusNode()..addListener(_onFocusChange);
     _inputFocus = FocusNode()..addListener(_onFocusChange);
@@ -109,6 +122,8 @@ class _LoginPageState extends State<LoginPage> {
     _phoneFocus.dispose();
     _inputFocus.dispose();
     _passwordFocus.dispose();
+    _shakeController.dispose();
+    _resendTimer?.cancel();
     for (final c in _otpControllers) { c.dispose(); }
     for (final f in _otpFocusNodes) { f.dispose(); }
     super.dispose();
@@ -123,6 +138,7 @@ class _LoginPageState extends State<LoginPage> {
       final formatted = _normalizePhoneForApi(phone);
       await _supabaseUserService.sendPhoneOtp(formatted, isLogin: true);
       setState(() { _phoneOtpSent = true; _phoneOtpSending = false; });
+      _startResendTimer();
       Future.delayed(const Duration(milliseconds: 300), () {
         if (mounted) _otpFocusNodes[0].requestFocus();
       });
@@ -133,6 +149,38 @@ class _LoginPageState extends State<LoginPage> {
         _authFailed = true;
       });
     }
+  }
+
+  void _startResendTimer() {
+    _resendTimer?.cancel();
+    setState(() { _resendSeconds = 60; _canResend = false; });
+    _resendTimer = Timer.periodic(const Duration(seconds: 1), (timer) {
+      if (_resendSeconds == 0) {
+        timer.cancel();
+        if (mounted) setState(() => _canResend = true);
+      } else {
+        if (mounted) setState(() => _resendSeconds--);
+      }
+    });
+  }
+
+  void _resendPhoneOtp() {
+    for (final c in _otpControllers) { c.clear(); }
+    _sendPhoneOtp();
+  }
+
+  void _changePhoneNumber() {
+    _resendTimer?.cancel();
+    for (final c in _otpControllers) { c.clear(); }
+    setState(() {
+      _phoneOtpSent = false;
+      _canResend = false;
+      _resendSeconds = 60;
+      _authFailed = false;
+    });
+    Future.delayed(const Duration(milliseconds: 100), () {
+      if (mounted) _phoneFocus.requestFocus();
+    });
   }
 
   Future<void> _submitPhoneOtp() async {
@@ -160,6 +208,11 @@ class _LoginPageState extends State<LoginPage> {
     } catch (e) {
       debugPrint("OTP Verify error: $e");
       setState(() => _authFailed = true);
+      _shakeController.forward(from: 0);
+      for(final c in _otpControllers) { c.clear(); }
+      Future.delayed(const Duration(milliseconds: 100), () {
+        if (mounted) _otpFocusNodes[0].requestFocus();
+      });
       if (mounted) {
          ScaffoldMessenger.of(context).showSnackBar(
            SnackBar(content: Text(AppLocalizations.of(context)!.logInFailed)),
@@ -190,6 +243,13 @@ class _LoginPageState extends State<LoginPage> {
         color: Colors.white.withOpacity(0.1),
         borderRadius: BorderRadius.circular(100.r),
         border: Border.all(color: Colors.white.withOpacity(0.1), width: 0.5),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.08),
+            blurRadius: 10,
+            offset: const Offset(0, 4),
+          ),
+        ],
       ),
       child: BackdropFilter(
         filter: ImageFilter.blur(sigmaX: 25, sigmaY: 25),
@@ -793,7 +853,7 @@ class _LoginPageState extends State<LoginPage> {
                       decoration: InputDecoration(
                         prefixIcon: const Icon(Icons.phone_android, color: Colors.grey),
                         hintText: '09XXXXXXXX',
-                        hintStyle: TextStyle(fontSize: 12.sp),
+                        hintStyle: TextStyle(fontSize: 12.sp, color: Colors.grey.withOpacity(0.5)),
                         filled: true,
                         fillColor: Colors.white,
                         contentPadding: EdgeInsets.symmetric(vertical: 10.h, horizontal: 12.w),
@@ -805,7 +865,7 @@ class _LoginPageState extends State<LoginPage> {
                         ),
                       ),
                     ),
-                    SizedBox(height: 12.h),
+                    SizedBox(height: isKeyboardVisible ? 55.h : 15.h),
 
                     if (!_phoneOtpSent)
                       SizedBox(
@@ -839,35 +899,49 @@ class _LoginPageState extends State<LoginPage> {
 
                     if (_phoneOtpSent) ...[
                       Text(
-                        AppLocalizations.of(context)!.otpSentToPhone,
-                        style: TextStyle(fontSize: 11.sp, color: Colors.white),
+                        '${AppLocalizations.of(context)!.otpSentToPhone}\n$_maskedPhone',
+                        style: TextStyle(fontSize: 11.sp, color: AppColors.mainDark, height: 1.4, fontWeight: FontWeight.bold),
                         textAlign: TextAlign.center,
                       ),
                       SizedBox(height: 12.h),
-                      Directionality(
-                        textDirection: TextDirection.ltr,
-                        child: Row(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: List.generate(6, (i) {
-                            return Padding(
-                              padding: EdgeInsets.symmetric(horizontal: 4.w),
-                              child: SizedBox(
-                                width: 35.w,
-                                child: TextField(
-                                  controller: _otpControllers[i],
-                                  focusNode: _otpFocusNodes[i],
-                                  maxLength: 1,
+                      AnimatedBuilder(
+                        animation: _shakeController,
+                        builder: (context, child) {
+                          final offset = sin(_shakeController.value * 3 * 3.14159) * 8;
+                          return Transform.translate(
+                            offset: Offset(offset, 0),
+                            child: child,
+                          );
+                        },
+                        child: Directionality(
+                          textDirection: TextDirection.ltr,
+                          child: Row(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: List.generate(6, (i) {
+                              return Padding(
+                                padding: EdgeInsets.symmetric(horizontal: 4.w),
+                                child: SizedBox(
+                                  width: 35.w,
+                                  child: TextField(
+                                    controller: _otpControllers[i],
+                                    focusNode: _otpFocusNodes[i],
+                                    autofillHints: const [AutofillHints.oneTimeCode],
+                                    maxLength: 1,
                                   keyboardType: TextInputType.number,
                                   textAlign: TextAlign.center,
                                   style: TextStyle(fontSize: 16.sp, fontWeight: FontWeight.bold),
                                   decoration: InputDecoration(
                                     counterText: '',
                                     filled: true,
-                                    fillColor: Colors.white,
+                                    fillColor: Colors.grey.withOpacity(0.08),
                                     contentPadding: EdgeInsets.symmetric(vertical: 8.h),
                                     border: OutlineInputBorder(
                                       borderRadius: BorderRadius.circular(8.r),
-                                      borderSide: BorderSide.none,
+                                      borderSide: BorderSide(color: Colors.grey.withOpacity(0.3)),
+                                    ),
+                                    focusedBorder: OutlineInputBorder(
+                                      borderRadius: BorderRadius.circular(8.r),
+                                      borderSide: const BorderSide(color: AppColors.main, width: 2),
                                     ),
                                   ),
                                   onChanged: (val) => _onPhoneOtpFieldChanged(val, i),
@@ -878,7 +952,44 @@ class _LoginPageState extends State<LoginPage> {
                           }),
                         ),
                       ),
-                      SizedBox(height: 20.h),
+                      ),
+                      SizedBox(height: 10.h),
+
+                      // ── Resend OTP + Change Number ──
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          GestureDetector(
+                            onTap: _canResend ? _resendPhoneOtp : null,
+                            child: Text(
+                              _canResend
+                                  ? AppLocalizations.of(context)!.didntReceiveCode
+                                  : '${AppLocalizations.of(context)!.didntReceiveCode} $_resendSeconds${AppLocalizations.of(context)!.seconds}',
+                              style: TextStyle(
+                                fontSize: 10.sp,
+                                color: _canResend ? AppColors.mainDark : Colors.grey,
+                                decoration: _canResend ? TextDecoration.underline : TextDecoration.none,
+                                decorationColor: AppColors.mainDark,
+                              ),
+                            ),
+                          ),
+                          Text(' | ', style: TextStyle(color: Colors.grey, fontSize: 10.sp)),
+                          GestureDetector(
+                            onTap: _changePhoneNumber,
+                            child: Text(
+                              AppLocalizations.of(context)!.changeNumber,
+                              style: TextStyle(
+                                fontSize: 10.sp,
+                                color: AppColors.mainDark,
+                                decoration: TextDecoration.underline,
+                                decorationColor: AppColors.mainDark,
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                      SizedBox(height: 12.h),
+
                       ElevatedButton(
                         onPressed: _isLoading
                             ? null
@@ -887,7 +998,7 @@ class _LoginPageState extends State<LoginPage> {
                           Future.delayed(const Duration(milliseconds: 100), _submitPhoneOtp);
                         },
                         style: ElevatedButton.styleFrom(
-                          backgroundColor: AppColors.main,
+                          backgroundColor: AppColors.mainDark,
                           padding: EdgeInsets.symmetric(horizontal: 40.w, vertical: 14.h),
                           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(30.r)),
                           minimumSize: Size(double.infinity, 48.h),
@@ -920,10 +1031,12 @@ class _LoginPageState extends State<LoginPage> {
                       textAlign: getTextAlign(context),
                       textDirection: detectTextDirection(_inputController.text),
                       keyboardType: TextInputType.emailAddress,
+                      textInputAction: TextInputAction.next,
+                      onEditingComplete: () => FocusScope.of(context).requestFocus(_passwordFocus),
                       style: TextStyle(fontSize: 12.sp),
                       decoration: InputDecoration(
                         hintText: AppLocalizations.of(context)!.email,
-                        hintStyle: TextStyle(fontSize: 12.sp),
+                        hintStyle: TextStyle(fontSize: 12.sp, color: Colors.grey.withOpacity(0.5)),
                         filled: true,
                         fillColor: Colors.white,
                         contentPadding: EdgeInsets.symmetric(vertical: 10.h, horizontal: 12.w),
@@ -946,7 +1059,7 @@ class _LoginPageState extends State<LoginPage> {
                       style: TextStyle(fontSize: 12.sp),
                       decoration: InputDecoration(
                         hintText: AppLocalizations.of(context)!.password,
-                        hintStyle: TextStyle(fontSize: 12.sp),
+                        hintStyle: TextStyle(fontSize: 12.sp, color: Colors.grey.withOpacity(0.5)),
                         filled: true,
                         fillColor: Colors.white,
                         contentPadding: EdgeInsets.symmetric(vertical: 10.h, horizontal: 12.w),

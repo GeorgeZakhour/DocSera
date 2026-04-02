@@ -56,6 +56,7 @@ import 'services/supabase/repositories/auth_repository.dart';
 import 'services/supabase/repositories/user_repository.dart';
 import 'services/supabase/repositories/favorites_repository.dart';
 import 'services/supabase/repositories/appointment_repository.dart';
+import 'services/encryption/message_encryption_service.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -165,6 +166,9 @@ void main() async {
             if (state is custom_auth.AuthAuthenticated) {
               // 🔹 هذه تُستدعى مرة واحدة فقط
               // 🔹 Load Critical User Data Only (Lazy load the rest)
+              // ✅ Initialize message encryption on login
+              MessageEncryptionService.instance.init();
+
               final userCubit = context.read<UserCubit>();
               userCubit.loadUserData(context: context, useCache: true);
               userCubit.startRealtimeUserListener(state.user.id);

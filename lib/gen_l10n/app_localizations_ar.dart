@@ -1898,6 +1898,9 @@ class AppLocalizationsAr extends AppLocalizations {
   String get emailLogin => 'الدخول بواسطة البريد';
 
   @override
+  String get changeNumber => 'تغيير الرقم';
+
+  @override
   String get forgotPasswordTitle => 'نسيت كلمة المرور';
 
   @override

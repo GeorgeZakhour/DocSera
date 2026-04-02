@@ -648,6 +648,7 @@
   "emailShort": "البريد",
   "phoneLogin": "الدخول بواسطة الهاتف",
   "emailLogin": "الدخول بواسطة البريد",
+  "changeNumber": "تغيير الرقم",
 
   "@ForgotPassword================================": {
     "description": "Forgot Password Flow"

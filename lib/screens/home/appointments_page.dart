@@ -360,10 +360,8 @@ import 'package:docsera/gen_l10n/app_localizations.dart';
       final formattedDate = TimezoneUtils.formatBusinessDate(context, appt);
       final formattedTime = TimezoneUtils.format12hLocalized(context, tsUtc);
 
-      final locale = Localizations.localeOf(context).toString();
       final formattedBookingDate = bookingTs != null
-          ? DateFormat("yyyy-MM-dd  ~  HH:mm", locale)
-          .format(TimezoneUtils.toDamascus(bookingTs))
+          ? "${DateFormat("dd/MM/yyyy").format(DocSeraTime.toSyria(bookingTs))} ~ ${DocSeraTime.format12hLocalized(context, bookingTs)}"
           : AppLocalizations.of(context)!.unknown;
 
 

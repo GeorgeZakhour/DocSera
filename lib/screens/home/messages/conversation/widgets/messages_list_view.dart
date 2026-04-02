@@ -79,8 +79,8 @@ class MessagesListView extends StatelessWidget {
     }
   }
 
-  String _getDayLabel(DateTime date, String lang) {
-    // ✅ Use Syria Time for logic
+  String _getDayLabel(DateTime date, BuildContext context) {
+    // ✅ Use Syria Time for logic and formatting
     final syriaDate = DocSeraTime.toSyria(date);
     final now = DocSeraTime.nowSyria();
     
@@ -89,35 +89,17 @@ class MessagesListView extends StatelessWidget {
     final messageDate = DateTime(syriaDate.year, syriaDate.month, syriaDate.day);
 
     if (messageDate == today) {
-      return lang == 'ar' ? 'اليوم' : 'Today';
+      return AppLocalizations.of(context)!.today;
     } else if (messageDate == yesterday) {
-      return lang == 'ar' ? 'أمس' : 'Yesterday';
+      return AppLocalizations.of(context)!.yesterday;
     } else {
-      return intl.DateFormat('d MMM', lang == 'ar' ? 'ar' : 'en').format(syriaDate);
+      return DocSeraTime.formatBusinessDate(context, syriaDate);
     }
   }
 
-  String _formatReadTime(DateTime? date, String lang) {
+  String _formatReadTime(DateTime? date, BuildContext context) {
     if (date == null) return '';
-
-    // ✅ Use Syria Time
-    final syriaDate = DocSeraTime.toSyria(date);
-    final now = DocSeraTime.nowSyria();
-    
-    final today = DateTime(now.year, now.month, now.day);
-    final yesterday = today.subtract(const Duration(days: 1));
-    final messageDate = DateTime(syriaDate.year, syriaDate.month, syriaDate.day);
-
-    final timeStr = intl.DateFormat('HH:mm', lang == 'ar' ? 'ar' : 'en').format(syriaDate);
-
-    if (messageDate == today) {
-      return timeStr;
-    } else if (messageDate == yesterday) {
-      return lang == 'ar' ? 'أمس الساعة $timeStr' : 'Yesterday at $timeStr';
-    } else {
-      final dateStr = intl.DateFormat('d MMM', lang == 'ar' ? 'ar' : 'en').format(syriaDate);
-      return '$dateStr • $timeStr';
-    }
+    return DocSeraTime.format12hLocalized(context, date);
   }
 
   @override
@@ -286,7 +268,7 @@ class MessagesListView extends StatelessWidget {
                       Padding(
                         padding: EdgeInsets.symmetric(horizontal: 8.w),
                         child: Text(
-                          _getDayLabel(time, lang),
+                          _getDayLabel(time, context),
                           style: AppTextStyles.getText3(context).copyWith(
                             fontSize: 11.sp,
                             color: Colors.black54,
@@ -364,7 +346,7 @@ class MessagesListView extends StatelessWidget {
                                   ),
                                   SizedBox(width: 4.w),
                                   Text(
-                                    '${local.read} • ${_formatReadTime(readByDoctorAt, lang)}',
+                                    '${local.read} • ${_formatReadTime(readByDoctorAt, context)}',
                                     style: AppTextStyles.getText3(context)
                                         .copyWith(
                                       fontSize: 9.sp,
@@ -463,9 +445,7 @@ class MessagesListView extends StatelessWidget {
                         children: [
                           Text(
                             time != null
-                                ? intl.DateFormat('HH:mm').format(
-                              TimezoneUtils.toDamascus(time),
-                            )
+                                ? DocSeraTime.format12hLocalized(context, time)
                                 : '',
                             style: AppTextStyles.getText3(context).copyWith(
                               fontSize: 10.sp,
@@ -671,11 +651,7 @@ class MessagesListView extends StatelessWidget {
                     mainAxisSize: MainAxisSize.min,
                     children: [
                       Text(
-                        time != null
-                            ? intl.DateFormat('HH:mm').format(
-                          TimezoneUtils.toDamascus(time),
-                        )
-                            : '',
+                        time != null ? DocSeraTime.format12hLocalized(context, time) : '',
                         style: AppTextStyles.getText3(context).copyWith(
                           fontSize: 10.sp,
                           color: Colors.black54,
@@ -796,7 +772,7 @@ class MessagesListView extends StatelessWidget {
                    mainAxisSize: MainAxisSize.min,
                    children: [
                      Text(
-                        time != null ? intl.DateFormat('HH:mm').format(TimezoneUtils.toDamascus(time)) : '',
+                        time != null ? DocSeraTime.format12hLocalized(context, time) : '',
                         style: AppTextStyles.getText3(context).copyWith(
                           fontSize: 10.sp,
                           color: Colors.black54,
@@ -1002,9 +978,7 @@ class MessagesListView extends StatelessWidget {
                         children: [
                           Text(
                             time != null
-                                ? intl.DateFormat('HH:mm').format(
-                              TimezoneUtils.toDamascus(time),
-                            )
+                                ? DocSeraTime.format12hLocalized(context, time)
                                 : '',
                             style: AppTextStyles.getText3(context).copyWith(
                               fontSize: 10.sp,

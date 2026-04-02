@@ -3,6 +3,7 @@ import 'dart:io';
 import 'package:flutter/foundation.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:docsera/utils/time_utils.dart';
+import 'package:docsera/services/encryption/message_encryption_service.dart';
 
 class ConversationService {
   final SupabaseClient _client;
@@ -27,9 +28,14 @@ class ConversationService {
         .order('timestamp', ascending: true)
         .execute()
         .map((rows) {
-      // تأكد أن النوع List<Map<String,dynamic>> ثابت
+      final enc = MessageEncryptionService.instance;
       return rows.map<Map<String, dynamic>>((row) {
-        return Map<String, dynamic>.from(row);
+        final m = Map<String, dynamic>.from(row);
+        // ✅ Decrypt message text (legacy plain text passes through)
+        if (m['text'] != null && m['text'] is String) {
+          m['text'] = enc.decryptText(m['text'] as String);
+        }
+        return m;
       }).toList();
     });
   }
@@ -43,7 +49,13 @@ class ConversationService {
         .execute()
         .map((rows) {
       if (rows.isEmpty) return {};
-      return Map<String, dynamic>.from(rows.first);
+      final m = Map<String, dynamic>.from(rows.first);
+      // ✅ Decrypt last_message preview
+      final enc = MessageEncryptionService.instance;
+      if (m['last_message'] != null && m['last_message'] is String) {
+        m['last_message'] = enc.decryptText(m['last_message'] as String);
+      }
+      return m;
     });
   }
 
@@ -124,17 +136,21 @@ class ConversationService {
     // ----------------------------------------------------------
     // 2) إدخال الرسالة في جدول messages
     // ----------------------------------------------------------
+    // ✅ Encrypt message text before storing
+    final enc = MessageEncryptionService.instance;
+    final encryptedText = enc.encryptText(text);
+
     await _client.from('messages').insert({
       if (id != null) 'id': id, // ✅ Insert with pre-generated UUID
       'conversation_id': conversationId,
-      'text': text,
+      'text': encryptedText,
       'is_user': isUser,
       'sender_name': senderName,
       'timestamp': now.toIso8601String(),
 
       // قراءة الرسائل
       'read_by_doctor': false,
-      'read_by_user': isUser,                      // المرسل يعتبر الرسالة مقروءة فوراً
+      'read_by_user': isUser,
       'read_by_doctor_at': null,
       'read_by_user_at': isUser ? now.toIso8601String() : null,
 
@@ -174,10 +190,15 @@ class ConversationService {
     //
     // ⚠️ لا نعدل has_doctor_responded — لأن هذا وظيفة DocSera Pro
     // ----------------------------------------------------------
+    // ✅ Encrypt last_message preview
+    final encryptedPreview = lastMessagePreview.isNotEmpty
+        ? enc.encryptText(lastMessagePreview)
+        : '';
+
     await _client
         .from('conversations')
         .update({
-      'last_message': lastMessagePreview,
+      'last_message': encryptedPreview,
       'last_sender_id': isUser ? 'user' : 'doctor',
       'updated_at': now.toIso8601String(),
       'last_message_read_by_user': isUser,

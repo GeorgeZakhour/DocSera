@@ -62,7 +62,50 @@ serve(async (req) => {
         const LTR = '\u200E'; 
         title = `${LTR}💬 ${senderName}`;
         
-        const rawBody = record.text;
+        // ✅ Decrypt message text if encrypted (starts with "ENC:")
+        let rawBody = record.text;
+        if (rawBody && rawBody.startsWith("ENC:")) {
+            console.log("🔒 Encrypted message detected, attempting decryption...");
+            try {
+                const { data: keyHex, error: rpcErr } = await supabase
+                    .rpc("rpc_get_encryption_key_service");
+
+                if (rpcErr || !keyHex) {
+                    console.error("❌ Key fetching failed:", rpcErr);
+                    rawBody = "رسالة جديدة"; 
+                } else {
+                    const combined = Uint8Array.from(atob(rawBody.substring(4)), c => c.charCodeAt(0));
+                    const iv = combined.slice(0, 16);
+                    const cipherBytes = combined.slice(16);
+
+                    const keyBytes = new Uint8Array(keyHex.match(/.{1,2}/g)!.map((byte: string) => parseInt(byte, 16)));
+                    const cryptoKey = await crypto.subtle.importKey(
+                        "raw", keyBytes, { name: "AES-CBC" }, false, ["decrypt"]
+                    );
+
+                    const decryptedBuffer = await crypto.subtle.decrypt(
+                        { name: "AES-CBC", iv: iv }, cryptoKey, cipherBytes
+                    );
+
+                    rawBody = new TextDecoder().decode(decryptedBuffer);
+                    
+                    // Manual padding removal (if needed)
+                    try {
+                        const padLen = rawBody.charCodeAt(rawBody.length - 1);
+                        if (padLen > 0 && padLen <= 16) {
+                            rawBody = rawBody.substring(0, rawBody.length - padLen);
+                        }
+                    } catch (e) { console.log("Padding removal skipped"); }
+                    
+                    console.log("✅ Message successfully decrypted");
+                }
+            } catch (decryptErr) {
+                console.error("⚠️ Decryption Error:", decryptErr);
+                rawBody = "رسالة جديدة (خطأ)"; // If you see this in notification, the code IS running but failing
+            }
+        }
+
+
         if (!rawBody || rawBody.trim() === "") {
             if (record.attachments && record.attachments.length > 0) {
                  const t = record.attachments[0].type;

@@ -3620,6 +3620,12 @@ abstract class AppLocalizations {
   /// **'Login with Email'**
   String get emailLogin;
 
+  /// No description provided for @changeNumber.
+  ///
+  /// In en, this message translates to:
+  /// **'Change Number'**
+  String get changeNumber;
+
   /// No description provided for @forgotPasswordTitle.
   ///
   /// In en, this message translates to:

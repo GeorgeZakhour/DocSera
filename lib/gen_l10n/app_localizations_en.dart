@@ -1920,6 +1920,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get emailLogin => 'Login with Email';
 
   @override
+  String get changeNumber => 'Change Number';
+
+  @override
   String get forgotPasswordTitle => 'Forgot Password';
 
   @override

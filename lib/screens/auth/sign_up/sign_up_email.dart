@@ -1,6 +1,5 @@
 import 'package:docsera/app/text_styles.dart';
 import 'package:docsera/screens/auth/login/login_page.dart';
-import 'package:docsera/screens/auth/sign_up/create_password.dart';
 import 'package:docsera/screens/auth/sign_up/cross_app_options.dart';
 import 'package:docsera/utils/page_transitions.dart';
 import 'package:docsera/utils/text_direction_utils.dart';
@@ -82,14 +81,23 @@ class _EnterEmailPageState extends State<EnterEmailPage> {
       final success = await context.read<SupabaseUserService>().verifyEmailOtp(email, code);
       if (success) {
         widget.signUpInfo.email = email;
+        widget.signUpInfo.emailVerified = true; // ✅ Mark email as verified
         if (!mounted) return;
 
         if (widget.signUpInfo.authMethod == AuthMethod.emailPassword) {
-          // Path B: Email Verified -> Now Mandatory Phone
-          Navigator.push(
-            context,
-            fadePageRoute(SignUpFirstPage(signUpInfo: widget.signUpInfo)),
-          );
+          if (widget.signUpInfo.isCrossApp) {
+            // Cross-App: Email exists in DocSera Pro → show password options
+            Navigator.push(
+              context,
+              fadePageRoute(CrossAppOptionsPage(signUpInfo: widget.signUpInfo)),
+            );
+          } else {
+            // Path B: Email Verified -> Now Mandatory Phone
+            Navigator.push(
+              context,
+              fadePageRoute(SignUpFirstPage(signUpInfo: widget.signUpInfo)),
+            );
+          }
         } else {
           // Path A (Optional Step): Email Verified -> Go to Identity
           Navigator.push(

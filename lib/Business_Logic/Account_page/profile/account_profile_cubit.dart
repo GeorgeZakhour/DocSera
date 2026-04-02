@@ -93,6 +93,27 @@ class AccountProfileCubit extends Cubit<AccountProfileState> {
 
       await _service.updateMyUser(payload);
 
+      // ✅ Sync name changes to conversations table
+      final newFirst = firstName ?? currentState.firstName;
+      final newLast = lastName ?? currentState.lastName;
+      final fullName = '$newFirst $newLast'.trim();
+      final userId = currentState.userId;
+
+      if (firstName != null || lastName != null) {
+        // Update patient_name where this user is the patient (direct conversations)
+        await _supabase
+            .from('conversations')
+            .update({'patient_name': fullName})
+            .eq('patient_id', userId)
+            .filter('relative_id', 'is', null);
+
+        // Update account_holder_name where this user is the account holder
+        await _supabase
+            .from('conversations')
+            .update({'account_holder_name': fullName})
+            .eq('patient_id', userId);
+      }
+
       emit(
         currentState.copyWith(
           firstName: firstName,

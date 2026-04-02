@@ -126,6 +126,7 @@ class _SignUpFirstPageState extends State<SignUpFirstPage> {
       if (success) {
         widget.signUpInfo.phoneNumber = formattedPhone;
         widget.signUpInfo.otpCode = code; // ✅ Save code for the final registration step
+        widget.signUpInfo.phoneVerified = true; // ✅ Mark phone as verified
         // Proceed to next step
         if (!mounted) return;
         

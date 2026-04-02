@@ -1,10 +1,8 @@
-import 'dart:ui';
 import 'package:docsera/app/const.dart';
 import 'package:docsera/app/text_styles.dart';
 import 'package:docsera/models/sign_up_info.dart';
 import 'package:docsera/gen_l10n/app_localizations.dart';
-import 'package:docsera/screens/auth/sign_up/create_password.dart';
-import 'package:docsera/screens/auth/sign_up/terms_of_use_page.dart';
+import 'package:docsera/screens/auth/sign_up/sign_up_phone.dart';
 import 'package:docsera/utils/page_transitions.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
@@ -134,8 +132,8 @@ class _CrossAppOptionsPageState extends State<CrossAppOptionsPage> {
 
     setState(() => _isLoading = true);
     try {
-      // Direct signup with existing password via RPC/Function
-      final res = await Supabase.instance.client.functions.invoke(
+      // Verify the existing password via cross_app_signup edge function
+      await Supabase.instance.client.functions.invoke(
         'cross_app_signup',
         body: {
           'email': widget.signUpInfo.email,
@@ -143,25 +141,21 @@ class _CrossAppOptionsPageState extends State<CrossAppOptionsPage> {
           'app': 'docsera',
         },
       );
-      
-      final body = res.data as Map<String, dynamic>;
-      final accessToken = body['access_token'] as String?;
-      final refreshToken = body['refresh_token'] as String?;
-      if (refreshToken != null) {
-        await Supabase.instance.client.auth.setSession(refreshToken);
-      }
 
-      // Proceed to the next step
+      // Sign out — session will be re-established during final registration in RecapPage
+      await Supabase.instance.client.auth.signOut();
+
+      // Proceed to the next step (Phone → Identity → Terms → Recap)
       widget.signUpInfo.password = pass;
       if (mounted) {
         Navigator.push(
           context,
-          fadePageRoute(TermsOfUsePage(signUpInfo: widget.signUpInfo)),
+          fadePageRoute(SignUpFirstPage(signUpInfo: widget.signUpInfo)),
         );
       }
     } catch (e) {
       if (e.toString().contains('wrong_password')) {
-        _showSnack(local.wrongPassword ?? 'Incorrect password.');
+        _showSnack(local.wrongPassword);
       } else {
         _showSnack(local.errorUpdatingProfile);
       }
@@ -185,7 +179,7 @@ class _CrossAppOptionsPageState extends State<CrossAppOptionsPage> {
       return;
     }
     if (!_isPasswordValid) {
-      _showSnack(_hintMessage.isNotEmpty ? _hintMessage : local.weakPassword ?? "Password is too weak");
+      _showSnack(_hintMessage.isNotEmpty ? _hintMessage : local.weakPassword);
       return;
     }
 
@@ -198,7 +192,7 @@ class _CrossAppOptionsPageState extends State<CrossAppOptionsPage> {
           password: oldPass,
         );
       } catch (e) {
-        _showSnack(local.wrongPassword ?? 'Incorrect password.');
+        _showSnack(local.wrongPassword);
         setState(() => _isLoading = false);
         return;
       }
@@ -206,9 +200,8 @@ class _CrossAppOptionsPageState extends State<CrossAppOptionsPage> {
       // 2. Change password
       await Supabase.instance.client.auth.updateUser(UserAttributes(password: newPass));
 
-      // 3. Setup patient profile via cloud function cross_app_signup to ensure consistency 
-      //    (even though they are now signed in, calling cross_app_signup handles edge cases and returns token properly).
-      final res = await Supabase.instance.client.functions.invoke(
+      // 3. Call cross_app_signup with the new password to ensure consistency
+      await Supabase.instance.client.functions.invoke(
         'cross_app_signup',
         body: {
           'email': widget.signUpInfo.email,
@@ -216,20 +209,16 @@ class _CrossAppOptionsPageState extends State<CrossAppOptionsPage> {
           'app': 'docsera',
         },
       );
-      
-      final body = res.data as Map<String, dynamic>;
-      final accessToken = body['access_token'] as String?;
-      final refreshToken = body['refresh_token'] as String?;
-      if (refreshToken != null) {
-        await Supabase.instance.client.auth.setSession(refreshToken);
-      }
+
+      // Sign out — session will be re-established during final registration in RecapPage
+      await Supabase.instance.client.auth.signOut();
 
       widget.signUpInfo.password = newPass;
 
       if (mounted) {
         Navigator.push(
           context,
-          fadePageRoute(TermsOfUsePage(signUpInfo: widget.signUpInfo)),
+          fadePageRoute(SignUpFirstPage(signUpInfo: widget.signUpInfo)),
         );
       }
     } catch (e) {
@@ -254,12 +243,12 @@ class _CrossAppOptionsPageState extends State<CrossAppOptionsPage> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(
-              local.crossAppOptionsTitle ?? "Existing Account",
+              local.crossAppOptionsTitle,
               style: AppTextStyles.getTitle1(context).copyWith(fontSize: 18.sp),
             ),
             SizedBox(height: 10.h),
             Text(
-              local.crossAppOptionsMessage ?? "This email is already registered in DocSera Pro. Would you like to use the same password or create a new one for both apps?",
+              local.crossAppOptionsMessage,
               style: AppTextStyles.getText2(context).copyWith(color: Colors.grey[700]),
             ),
             SizedBox(height: 24.h),
@@ -273,7 +262,7 @@ class _CrossAppOptionsPageState extends State<CrossAppOptionsPage> {
                   shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10.r)),
                   minimumSize: const Size(double.infinity, 50),
                 ),
-                child: Text(local.useExistingPassword ?? "Use existing password", style: AppTextStyles.getText2(context).copyWith(color: AppColors.whiteText, fontWeight: FontWeight.bold)),
+                child: Text(local.useExistingPassword, style: AppTextStyles.getText2(context).copyWith(color: AppColors.whiteText, fontWeight: FontWeight.bold)),
               ),
               SizedBox(height: 16.h),
               OutlinedButton(
@@ -284,11 +273,11 @@ class _CrossAppOptionsPageState extends State<CrossAppOptionsPage> {
                   minimumSize: const Size(double.infinity, 50),
                   side: const BorderSide(color: AppColors.main),
                 ),
-                child: Text(local.createNewPassword ?? "Create a new password", style: AppTextStyles.getText2(context).copyWith(color: AppColors.main, fontWeight: FontWeight.bold)),
+                child: Text(local.createNewPassword, style: AppTextStyles.getText2(context).copyWith(color: AppColors.main, fontWeight: FontWeight.bold)),
               ),
             ] else ...[
                Text(
-                  local.verifyCurrentPassword ?? "Please verify your current password",
+                  local.verifyCurrentPassword,
                   style: AppTextStyles.getText1(context).copyWith(fontSize: 14.sp),
                ),
                SizedBox(height: 10.h),
@@ -297,7 +286,7 @@ class _CrossAppOptionsPageState extends State<CrossAppOptionsPage> {
                   obscureText: !_isPasswordVisible,
                   style: AppTextStyles.getText2(context),
                   decoration: InputDecoration(
-                    labelText: local.passwordHint ?? "Password",
+                    labelText: local.passwordHint,
                     labelStyle: AppTextStyles.getText2(context).copyWith(color: Colors.grey),
                     border: OutlineInputBorder(borderRadius: BorderRadius.circular(25.r)),
                     enabledBorder: OutlineInputBorder(
@@ -321,7 +310,7 @@ class _CrossAppOptionsPageState extends State<CrossAppOptionsPage> {
                   SizedBox(height: 16.h),
                   Center(
                     child: Text(
-                       local.newPasswordWillApplyToBoth ?? "Note: This password change will apply to both apps.",
+                       local.newPasswordWillApplyToBoth,
                        style: AppTextStyles.getText3(context).copyWith(color: Colors.orange[800], fontWeight: FontWeight.bold),
                        textAlign: TextAlign.center,
                     ),
@@ -335,7 +324,7 @@ class _CrossAppOptionsPageState extends State<CrossAppOptionsPage> {
                        _checkPasswordStrength(value);
                      },
                      decoration: InputDecoration(
-                       labelText: local.createNewPassword ?? "New Password",
+                       labelText: local.createNewPassword,
                        labelStyle: AppTextStyles.getText2(context).copyWith(color: Colors.grey),
                        border: OutlineInputBorder(borderRadius: BorderRadius.circular(25.r)),
                        enabledBorder: OutlineInputBorder(
@@ -354,6 +343,17 @@ class _CrossAppOptionsPageState extends State<CrossAppOptionsPage> {
                   ),
                   SizedBox(height: 5.h),
                   if (_showProgressBar) ...[
+                    // ── Password Strength Progress Bar ──
+                    ClipRRect(
+                      borderRadius: BorderRadius.circular(4.r),
+                      child: LinearProgressIndicator(
+                        value: _strength,
+                        backgroundColor: Colors.grey[300],
+                        valueColor: AlwaysStoppedAnimation<Color>(_strengthColor),
+                        minHeight: 6.h,
+                      ),
+                    ),
+                    SizedBox(height: 6.h),
                     Text(
                       _strengthLabel,
                       style: AppTextStyles.getText2(context).copyWith(color: _strengthColor),

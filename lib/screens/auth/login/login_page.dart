@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:io';
 
 import 'package:docsera/app/text_styles.dart';
@@ -10,6 +11,7 @@ import 'package:crypto/crypto.dart'; // For hashing
 import 'package:docsera/app/const.dart';
 import 'package:docsera/widgets/custom_bottom_navigation_bar.dart';
 import 'dart:convert'; // For utf8 encoding
+import 'dart:math';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:docsera/widgets/base_scaffold.dart';
@@ -36,9 +38,10 @@ class LogInPage extends StatefulWidget {
   State<LogInPage> createState() => _LogInPageState();
 }
 
-class _LogInPageState extends State<LogInPage> {
+class _LogInPageState extends State<LogInPage> with SingleTickerProviderStateMixin {
   late TextEditingController _inputController;
   final TextEditingController _passwordController = TextEditingController();
+  late final AnimationController _shakeController;
   late final SupabaseUserService _supabaseUserService;
   final LocalAuthentication auth = LocalAuthentication();
   bool isPasswordVisible = false;
@@ -62,11 +65,23 @@ class _LogInPageState extends State<LogInPage> {
   bool _phoneOtpSent = false;
   bool _phoneOtpSending = false;
 
+  // ── OTP Resend Timer ──
+  Timer? _resendTimer;
+  int _resendSeconds = 60;
+  bool _canResend = false;
+
   final RegExp _phoneRegex = RegExp(r'^09\d{8}$');
+
+  String get _maskedPhone {
+    final p = _phoneController.text.trim();
+    if (p.length >= 10) return '\u202A${p.substring(0, 2)}*****${p.substring(p.length - 3)}\u202C';
+    return '\u202A$p\u202C';
+  }
 
   @override
   void initState() {
     super.initState();
+    _shakeController = AnimationController(vsync: this, duration: const Duration(milliseconds: 400));
     _supabaseUserService = context.read<SupabaseUserService>();
     _inputController = TextEditingController(text: widget.preFilledInput);
     
@@ -87,6 +102,8 @@ class _LogInPageState extends State<LogInPage> {
     _phoneFocus.dispose();
     _inputFocus.dispose();
     _passwordFocus.dispose();
+    _shakeController.dispose();
+    _resendTimer?.cancel();
     for (final c in _otpControllers) { c.dispose(); }
     for (final f in _otpFocusNodes) { f.dispose(); }
     super.dispose();
@@ -101,6 +118,7 @@ class _LogInPageState extends State<LogInPage> {
       final formatted = getFormattedPhoneNumber(phone);
       await _supabaseUserService.sendPhoneOtp(formatted, isLogin: true);
       setState(() { _phoneOtpSent = true; _phoneOtpSending = false; });
+      _startResendTimer();
       Future.delayed(const Duration(milliseconds: 300), () {
         if (mounted) _otpFocusNodes[0].requestFocus();
       });
@@ -111,6 +129,38 @@ class _LogInPageState extends State<LogInPage> {
         errorMessage = AppLocalizations.of(context)!.errorGenericLogin;
       });
     }
+  }
+
+  void _startResendTimer() {
+    _resendTimer?.cancel();
+    setState(() { _resendSeconds = 60; _canResend = false; });
+    _resendTimer = Timer.periodic(const Duration(seconds: 1), (timer) {
+      if (_resendSeconds == 0) {
+        timer.cancel();
+        if (mounted) setState(() => _canResend = true);
+      } else {
+        if (mounted) setState(() => _resendSeconds--);
+      }
+    });
+  }
+
+  void _resendPhoneOtp() {
+    for (final c in _otpControllers) { c.clear(); }
+    _sendPhoneOtp();
+  }
+
+  void _changePhoneNumber() {
+    _resendTimer?.cancel();
+    for (final c in _otpControllers) { c.clear(); }
+    setState(() {
+      _phoneOtpSent = false;
+      _canResend = false;
+      _resendSeconds = 60;
+      errorMessage = null;
+    });
+    Future.delayed(const Duration(milliseconds: 100), () {
+      if (mounted) _phoneFocus.requestFocus();
+    });
   }
 
   Future<void> _submitPhoneOtp() async {
@@ -139,6 +189,11 @@ class _LogInPageState extends State<LogInPage> {
     } catch (e) {
       debugPrint("OTP Verify error: $e");
       setState(() => errorMessage = AppLocalizations.of(context)!.logInFailed);
+      _shakeController.forward(from: 0);
+      for(final c in _otpControllers) { c.clear(); }
+      Future.delayed(const Duration(milliseconds: 100), () {
+        if (mounted) _otpFocusNodes[0].requestFocus();
+      });
     } finally {
       if (mounted) setState(() => isLoading = false);
     }
@@ -637,6 +692,7 @@ class _LogInPageState extends State<LogInPage> {
                   prefixIcon: const Icon(Icons.phone_android, color: Colors.grey),
                   labelText: AppLocalizations.of(context)!.phoneNumber,
                   hintText: '09XXXXXXXX',
+                  hintStyle: TextStyle(fontSize: 14.sp, color: Colors.grey.withOpacity(0.5)),
                   labelStyle: AppTextStyles.getText2(context).copyWith(color: Colors.grey),
                   border: OutlineInputBorder(borderRadius: BorderRadius.circular(15.r)),
                 ),
@@ -673,14 +729,24 @@ class _LogInPageState extends State<LogInPage> {
               if (_phoneOtpSent) ...[
                 Center(
                   child: Text(
-                    AppLocalizations.of(context)!.otpSentToPhone,
-                    style: TextStyle(fontSize: 12.sp, color: AppColors.mainDark),
+                    '${AppLocalizations.of(context)!.otpSentToPhone}\n$_maskedPhone',
+                    style: TextStyle(fontSize: 12.sp, color: AppColors.mainDark, fontWeight: FontWeight.bold, height: 1.4),
+                    textAlign: TextAlign.center,
                   ),
                 ),
                 SizedBox(height: 15.h),
-                Directionality(
-                  textDirection: TextDirection.ltr,
-                  child: Row(
+                AnimatedBuilder(
+                  animation: _shakeController,
+                  builder: (context, child) {
+                    final offset = sin(_shakeController.value * 3 * 3.14159) * 8;
+                    return Transform.translate(
+                      offset: Offset(offset, 0),
+                      child: child,
+                    );
+                  },
+                  child: Directionality(
+                    textDirection: TextDirection.ltr,
+                    child: Row(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: List.generate(6, (i) {
                       return Padding(
@@ -690,6 +756,7 @@ class _LogInPageState extends State<LogInPage> {
                           child: TextField(
                             controller: _otpControllers[i],
                             focusNode: _otpFocusNodes[i],
+                            autofillHints: const [AutofillHints.oneTimeCode],
                             maxLength: 1,
                             keyboardType: TextInputType.number,
                             textAlign: TextAlign.center,
@@ -716,7 +783,44 @@ class _LogInPageState extends State<LogInPage> {
                     }),
                   ),
                 ),
-                SizedBox(height: 20.h),
+                ),
+                SizedBox(height: 10.h),
+
+                // ── Resend OTP + Change Number ──
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    GestureDetector(
+                      onTap: _canResend ? _resendPhoneOtp : null,
+                      child: Text(
+                        _canResend
+                            ? AppLocalizations.of(context)!.didntReceiveCode
+                            : '${AppLocalizations.of(context)!.didntReceiveCode} $_resendSeconds${AppLocalizations.of(context)!.seconds}',
+                        style: TextStyle(
+                          fontSize: 10.sp,
+                          color: _canResend ? AppColors.mainDark : Colors.grey,
+                          decoration: _canResend ? TextDecoration.underline : TextDecoration.none,
+                          decorationColor: AppColors.mainDark,
+                        ),
+                      ),
+                    ),
+                    Text(' | ', style: TextStyle(color: Colors.grey, fontSize: 10.sp)),
+                    GestureDetector(
+                      onTap: _changePhoneNumber,
+                      child: Text(
+                        AppLocalizations.of(context)!.changeNumber,
+                        style: TextStyle(
+                          fontSize: 10.sp,
+                          color: AppColors.mainDark,
+                          decoration: TextDecoration.underline,
+                          decorationColor: AppColors.mainDark,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+                SizedBox(height: 12.h),
+
                 ElevatedButton(
                   onPressed: isLoading
                       ? null
@@ -750,11 +854,14 @@ class _LogInPageState extends State<LogInPage> {
                 textDirection: detectTextDirection(_inputController.text),
                 textAlign: getTextAlign(context),
                 keyboardType: TextInputType.emailAddress,
+                textInputAction: TextInputAction.next,
+                onEditingComplete: () => FocusScope.of(context).requestFocus(_passwordFocus),
                 decoration: InputDecoration(
                   labelText: AppLocalizations.of(context)!.email,
+                  hintText: AppLocalizations.of(context)!.email,
                   labelStyle: AppTextStyles.getText2(context).copyWith(color: Colors.grey),
                   border: OutlineInputBorder(borderRadius: BorderRadius.circular(15.r)),
-                  hintStyle: AppTextStyles.getText2(context).copyWith(color: Colors.grey),
+                  hintStyle: AppTextStyles.getText2(context).copyWith(color: Colors.grey.withOpacity(0.5)),
                 ),
                 onChanged: (value) {
                   setState(() {
@@ -774,7 +881,9 @@ class _LogInPageState extends State<LogInPage> {
                 textAlign: getTextAlign(context),
                 decoration: InputDecoration(
                   labelText: AppLocalizations.of(context)!.password,
+                  hintText: AppLocalizations.of(context)!.password,
                   labelStyle: AppTextStyles.getText2(context).copyWith(color: Colors.grey),
+                  hintStyle: AppTextStyles.getText2(context).copyWith(color: Colors.grey.withOpacity(0.5)),
                   border: OutlineInputBorder(borderRadius: BorderRadius.circular(15.r)),
                   suffixIcon: IconButton(
                     icon: Icon(

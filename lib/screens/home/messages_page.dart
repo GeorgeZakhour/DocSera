@@ -448,27 +448,19 @@ import 'package:docsera/utils/doctor_image_utils.dart';
 
       String trailingText = '';
       if (lastMessageTime != null) {
+        final syriaTime = DocSeraTime.toSyria(lastMessageTime);
         final now = DocSeraTime.nowSyria();
-        final isToday = now.year == lastMessageTime.year &&
-            now.month == lastMessageTime.month &&
-            now.day == lastMessageTime.day;
+        
+        final today = DateTime(now.year, now.month, now.day);
+        final yesterday = today.subtract(const Duration(days: 1));
+        final messageDate = DateTime(syriaTime.year, syriaTime.month, syriaTime.day);
 
-        final isYesterday = now.subtract(const Duration(days: 1)).year == lastMessageTime.year &&
-            now.subtract(const Duration(days: 1)).month == lastMessageTime.month &&
-            now.subtract(const Duration(days: 1)).day == lastMessageTime.day;
-
-        if (isToday) {
-          final lang = Localizations.localeOf(context).languageCode;
-          final timeStr = DateFormat('hh:mm a').format(lastMessageTime);
-          if (lang == 'ar') {
-            trailingText = timeStr.replaceAll('AM', 'ص').replaceAll('PM', 'م');
-          } else {
-            trailingText = timeStr;
-          }
-        } else if (isYesterday) {
+        if (messageDate == today) {
+          trailingText = DocSeraTime.format12hLocalized(context, lastMessageTime);
+        } else if (messageDate == yesterday) {
           trailingText = AppLocalizations.of(context)!.yesterday;
         } else {
-          trailingText = DateFormat('dd/MM/yyyy').format(lastMessageTime);
+          trailingText = DateFormat('dd/MM/yyyy').format(syriaTime);
         }
       }
       debugPrint('TITLE: ${convo.doctorTitle} - GENDER: ${convo.doctorGender}');
