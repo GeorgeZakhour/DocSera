@@ -1,10 +1,12 @@
 import 'dart:io';
+import 'dart:typed_data';
 import 'dart:ui';
 
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:docsera/app/const.dart';
 import 'package:docsera/app/text_styles.dart';
 import 'package:docsera/gen_l10n/app_localizations.dart';
+import 'package:docsera/screens/home/messages/conversation/widgets/decrypted_image_cache.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:gallery_saver_plus/gallery_saver.dart';
@@ -31,6 +33,9 @@ class ImageOverlayViewer extends StatefulWidget {
   /// Called when the overlay should be closed.
   final VoidCallback onClose;
 
+  /// Whether images are encrypted (Phase 2C)
+  final bool encrypted;
+
   const ImageOverlayViewer({
     super.key,
     required this.imageUrls,
@@ -38,6 +43,7 @@ class ImageOverlayViewer extends StatefulWidget {
     this.imageCache,
     required this.onAddToDocuments,
     required this.onClose,
+    this.encrypted = false,
   });
 
   @override
@@ -57,20 +63,36 @@ class _ImageOverlayViewerState extends State<ImageOverlayViewer> {
   bool _isProcessingAddToDocument = false;
   bool _isProcessingSave = false;
 
+  /// ✅ Phase 2C: Decrypted image bytes
+  List<Uint8List?>? _decryptedBytes;
+  bool _decryptLoading = false;
+
   Future<String> _downloadAndGetLocalPath(String url) async {
     final uri = Uri.parse(url);
-    final response = await http.get(uri);
-    if (response.statusCode != 200) {
-      throw Exception('Failed to download image: ${response.statusCode}');
+
+    // ✅ Phase 2C: If encrypted, use cached decrypted bytes
+    Uint8List? bytes;
+    if (widget.encrypted && _decryptedBytes != null) {
+      final idx = widget.imageUrls.indexOf(url);
+      if (idx >= 0 && idx < _decryptedBytes!.length) {
+        bytes = _decryptedBytes![idx];
+      }
+    }
+
+    if (bytes == null) {
+      final response = await http.get(uri);
+      if (response.statusCode != 200) {
+        throw Exception('Failed to download image: ${response.statusCode}');
+      }
+      bytes = response.bodyBytes;
     }
 
     final tempDir = await getTemporaryDirectory();
     final filename = uri.pathSegments.isNotEmpty ? uri.pathSegments.last : 'image.png';
-    // Ensure filename is safe and not too long (safe fallback)
     final safeFilename = filename.length > 200 ? filename.substring(filename.length - 200) : filename;
     
     final file = File('${tempDir.path}/$safeFilename');
-    await file.writeAsBytes(response.bodyBytes);
+    await file.writeAsBytes(bytes);
     return file.path;
   }
 
@@ -81,6 +103,32 @@ class _ImageOverlayViewerState extends State<ImageOverlayViewer> {
   void initState() {
     super.initState();
     _currentIndex = widget.initialIndex.clamp(0, widget.imageUrls.length - 1);
+    if (widget.encrypted) {
+      _loadDecryptedImages();
+    }
+  }
+
+  /// ✅ Phase 2C: Download + decrypt all images
+  Future<void> _loadDecryptedImages() async {
+    setState(() => _decryptLoading = true);
+    final cache = DecryptedImageCache.instance;
+    final results = <Uint8List?>[];
+
+    for (final url in widget.imageUrls) {
+      final bytes = await cache.getOrLoad(
+        cacheKey: 'viewer::$url',
+        urlResolver: () async => url,
+        encrypted: true,
+      );
+      results.add(bytes);
+    }
+
+    if (mounted) {
+      setState(() {
+        _decryptedBytes = results;
+        _decryptLoading = false;
+      });
+    }
   }
 
   @override
@@ -477,6 +525,10 @@ class _ImageOverlayViewerState extends State<ImageOverlayViewer> {
   }
 
   Widget _buildGridView() {
+    if (widget.encrypted && _decryptLoading) {
+      return const Center(child: CircularProgressIndicator(color: Colors.white));
+    }
+
     return GridView.builder(
       gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
         crossAxisCount: 3,
@@ -486,7 +538,6 @@ class _ImageOverlayViewerState extends State<ImageOverlayViewer> {
       padding: EdgeInsets.all(16.w),
       itemCount: widget.imageUrls.length,
       itemBuilder: (context, index) {
-        final url = widget.imageUrls[index];
         return GestureDetector(
           onTap: () {
             setState(() {
@@ -499,16 +550,7 @@ class _ImageOverlayViewerState extends State<ImageOverlayViewer> {
           },
           child: ClipRRect(
             borderRadius: BorderRadius.circular(12.r),
-            child: _cache.containsKey(url)
-                ? Image(image: _cache[url]!, fit: BoxFit.cover)
-                : FadeInImage(
-              placeholder: MemoryImage(kTransparentImage),
-              image: CachedNetworkImageProvider(url),
-              fadeInDuration: const Duration(milliseconds: 100),
-              fit: BoxFit.cover,
-              placeholderFit: BoxFit.cover,
-              imageErrorBuilder: (_, __, ___) => const Icon(Icons.error),
-            ),
+            child: _buildImageWidget(index),
           ),
         );
       },
@@ -516,6 +558,10 @@ class _ImageOverlayViewerState extends State<ImageOverlayViewer> {
   }
 
   Widget _buildPageView() {
+    if (widget.encrypted && _decryptLoading) {
+      return const Center(child: CircularProgressIndicator(color: Colors.white));
+    }
+
     return PageView.builder(
       controller: PageController(initialPage: _currentIndex),
       physics: _isZoomed ? const NeverScrollableScrollPhysics() : null,
@@ -529,7 +575,6 @@ class _ImageOverlayViewerState extends State<ImageOverlayViewer> {
       },
       itemCount: widget.imageUrls.length,
       itemBuilder: (_, index) {
-        final url = widget.imageUrls[index];
         return LayoutBuilder(
           builder: (context, constraints) {
             return GestureDetector(
@@ -575,23 +620,45 @@ class _ImageOverlayViewerState extends State<ImageOverlayViewer> {
                   }
                 },
                 child: Center(
-                  child: _cache.containsKey(url)
-                      ? Image(image: _cache[url]!, fit: BoxFit.cover)
-                      : FadeInImage(
-                    placeholder: MemoryImage(kTransparentImage),
-                    image: CachedNetworkImageProvider(url),
-                    fadeInDuration: const Duration(milliseconds: 100),
-                    fit: BoxFit.cover,
-                    placeholderFit: BoxFit.cover,
-                    imageErrorBuilder: (_, __, ___) =>
-                    const Icon(Icons.error),
-                  ),
+                  child: _buildImageWidget(index),
                 ),
               ),
             );
           },
         );
       },
+    );
+  }
+
+  /// ✅ Build image widget — from decrypted bytes or network
+  Widget _buildImageWidget(int index) {
+    final url = widget.imageUrls[index];
+
+    // Encrypted: display from decrypted bytes
+    if (widget.encrypted && _decryptedBytes != null && index < _decryptedBytes!.length) {
+      final bytes = _decryptedBytes![index];
+      if (bytes != null) {
+        return Image.memory(
+          bytes,
+          fit: BoxFit.cover,
+          errorBuilder: (_, __, ___) => const Icon(Icons.error, color: Colors.white54),
+        );
+      }
+      return const Icon(Icons.broken_image, color: Colors.white54);
+    }
+
+    // Legacy: use cache or CachedNetworkImage
+    if (_cache.containsKey(url)) {
+      return Image(image: _cache[url]!, fit: BoxFit.cover);
+    }
+
+    return FadeInImage(
+      placeholder: MemoryImage(kTransparentImage),
+      image: CachedNetworkImageProvider(url),
+      fadeInDuration: const Duration(milliseconds: 100),
+      fit: BoxFit.cover,
+      placeholderFit: BoxFit.cover,
+      imageErrorBuilder: (_, __, ___) => const Icon(Icons.error),
     );
   }
 }

@@ -1136,10 +1136,14 @@ class _AppointmentDetailsPageState extends State<AppointmentDetailsPage> {
 
       if (paths.isEmpty) return;
 
-      // 1. تحويل الـ storage paths إلى Public URLs
-      final List<String> publicUrls = paths.map((p) {
-        return Supabase.instance.client.storage.from(bucket).getPublicUrl(p);
-      }).toList();
+      // ✅ Phase 2B: Use signed URLs (bucket is now private)
+      final List<String> signedUrls = [];
+      for (final p in paths) {
+        final url = await Supabase.instance.client.storage
+            .from(bucket)
+            .createSignedUrl(p, 60 * 60); // 1 hour
+        signedUrls.add(url);
+      }
 
       // 2. تحويل الـ map إلى UserDocument (عبر المحاكاة)
       final dummyDoc = UserDocument(
@@ -1149,8 +1153,8 @@ class _AppointmentDetailsPageState extends State<AppointmentDetailsPage> {
         type: 'attachment',
         fileType: att['file_type'] == 'pdf' ? 'pdf' : 'image',
         patientId: att['patient_id'] ?? '',
-        previewUrl: publicUrls.first,
-        pages: publicUrls,
+        previewUrl: signedUrls.first,
+        pages: signedUrls,
         uploadedAt: DateTime.tryParse(att['uploaded_at'] ?? '') ?? DateTime.now(),
         uploadedById: att['uploaded_by_id'] ?? '',
         cameFromConversation: false,

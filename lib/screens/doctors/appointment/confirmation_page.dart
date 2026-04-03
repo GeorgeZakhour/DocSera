@@ -163,10 +163,12 @@ class AppointmentConfirmedPage extends StatelessWidget {
     final path = att['paths'][0];
     final bucket = att['bucket'];
 
-    final url = Supabase.instance.client.storage
+    // ✅ Phase 2B: Use signed URL (bucket is now private)
+    final url = await Supabase.instance.client.storage
         .from(bucket)
-        .getPublicUrl(path);
+        .createSignedUrl(path, 60 * 60); // 1 hour
 
+    // TODO: Navigate to attachment viewer when implemented
     // Navigator.push(
     //   context,
     //   MaterialPageRoute(

@@ -1,7 +1,5 @@
 import 'dart:ui';
 
-import 'dart:io';
-import 'package:cached_network_image/cached_network_image.dart';
 import 'package:docsera/app/const.dart';
 import 'package:docsera/app/text_styles.dart';
 import 'package:docsera/gen_l10n/app_localizations.dart';
@@ -13,10 +11,9 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:intl/intl.dart' as intl;
 import 'package:supabase_flutter/supabase_flutter.dart';
-import 'package:transparent_image/transparent_image.dart';
 import 'package:docsera/screens/home/messages/conversation/widgets/audio_message_bubble.dart';
 import 'package:docsera/screens/home/messages/conversation/widgets/resolved_bubbles.dart';
-import 'package:shimmer/shimmer.dart';
+import 'package:docsera/screens/home/messages/conversation/widgets/decrypted_image_cache.dart';
 
 import '../../../../../utils/full_page_loader.dart';
 
@@ -37,7 +34,7 @@ class MessagesListView extends StatelessWidget {
   resolveImageUrls;
 
   /// Called when user taps an image / grid.
-  final void Function(List<String> urls, {int initialIndex, bool showAsGrid})
+  final void Function(List<String> urls, {int initialIndex, bool showAsGrid, bool encrypted})
   onOpenImages;
 
   /// Called when user taps retry on a failed message
@@ -591,6 +588,7 @@ class MessagesListView extends StatelessWidget {
                   uploadedById: '',
                   cameFromConversation: true,
                   conversationDoctorName: doctorName,
+                  encrypted: pdf['encrypted'] == true,
                 );
 
                 Navigator.push(
@@ -818,209 +816,159 @@ class MessagesListView extends StatelessWidget {
     if (images.isNotEmpty) {
       return Align(
         alignment: isUser ? Alignment.centerLeft : Alignment.centerRight,
-        child: ResolvedImagesBubble(
-          images: images,
-          resolveImageUrls: resolveImageUrls,
-          builder: (context, validImages) {
-
-            return Column(
-              crossAxisAlignment: isUser
-                  ? CrossAxisAlignment.start
-                  : CrossAxisAlignment.end,
-              children: [
-                if (showSenderName)
-                  Padding(
-                    padding: EdgeInsets.only(
-                      bottom: 4.h,
-                      right: isUser ? 10.w : 0,
-                      left: isUser ? 0 : 10.w,
-                    ),
-                    child: Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        avatar,
-                        SizedBox(width: 6.w),
-                        Text(
-                          isUser ? accountHolderName : doctorName,
-                          style: AppTextStyles.getText2(context).copyWith(
-                            fontWeight: FontWeight.bold,
-                            color: Colors.black87,
-                            fontSize: 12.sp,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                ClipRRect(
-                  borderRadius: BorderRadius.circular(12.r),
-                  child: GestureDetector(
-                    onTap: () =>
-                        onOpenImages(validImages, initialIndex: 0),
-                    child: Container(
-                      constraints: BoxConstraints(maxWidth: 0.5.sw),
-                      decoration: BoxDecoration(
-                        borderRadius: BorderRadius.circular(12.r),
+        child: Column(
+          crossAxisAlignment: isUser
+              ? CrossAxisAlignment.start
+              : CrossAxisAlignment.end,
+          children: [
+            if (showSenderName)
+              Padding(
+                padding: EdgeInsets.only(
+                  bottom: 4.h,
+                  right: isUser ? 10.w : 0,
+                  left: isUser ? 0 : 10.w,
+                ),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    avatar,
+                    SizedBox(width: 6.w),
+                    Text(
+                      isUser ? accountHolderName : doctorName,
+                      style: AppTextStyles.getText2(context).copyWith(
+                        fontWeight: FontWeight.bold,
+                        color: Colors.black87,
+                        fontSize: 12.sp,
                       ),
-                      child: LayoutBuilder(
-                        builder: (context, constraints) {
-                          return GridView.count(
-                            padding: EdgeInsets.zero,
-                            crossAxisCount:
-                            validImages.length == 1 ? 1 : 2,
-                            shrinkWrap: true,
-                            crossAxisSpacing: 6.w,
-                            mainAxisSpacing: 6.h,
-                            physics: const ClampingScrollPhysics(),
-                            clipBehavior: Clip.none,
-                            children: List.generate(
-                              validImages.length > 4
-                                  ? 4
-                                  : validImages.length,
-                                  (i) {
-                                final imageUrl = validImages[i];
-                                if (i == 3 &&
-                                    validImages.length > 4) {
-                                  return GestureDetector(
-                                    onTap: () => onOpenImages(
-                                      validImages,
-                                      initialIndex: 3,
-                                      showAsGrid: true,
-                                    ),
-                                    child: Container(
-                                      decoration: BoxDecoration(
-                                        color: AppColors.main
-                                            .withOpacity(0.1),
-                                        borderRadius:
-                                        BorderRadius.circular(8.r),
-                                      ),
-                                      child: Center(
-                                        child: CircleAvatar(
-                                          radius: 16.r,
-                                          backgroundColor: Colors.white
-                                              .withOpacity(0.85),
-                                          child: Text(
-                                            '+${validImages.length - 3}',
-                                            style: AppTextStyles
-                                                .getText3(context)
-                                                .copyWith(
-                                              fontSize: 10.sp,
-                                              color: AppColors.main,
-                                            ),
-                                          ),
-                                        ),
-                                      ),
-                                    ),
-                                  );
-                                } else {
-                                  return GestureDetector(
-                                    onTap: () => onOpenImages(
-                                      validImages,
-                                      initialIndex: i,
-                                    ),
-                                    child: ClipRRect(
-                                      borderRadius: BorderRadius.circular(8.r),
-                                      child: (imageUrl.startsWith('/') || imageUrl.startsWith('file:'))
-                                          ? Image.file(
-                                              File(imageUrl),
-                                              fit: BoxFit.cover,
-                                              frameBuilder: (context, child, frame, wasSynchronouslyLoaded) {
-                                                if (wasSynchronouslyLoaded || frame != null) return child;
-                                                return Shimmer.fromColors(
-                                                  baseColor: Colors.grey.shade300,
-                                                  highlightColor: Colors.grey.shade100,
-                                                  child: Container(color: Colors.white),
-                                                );
-                                              },
-                                              errorBuilder: (_, __, ___) => const Icon(Icons.error),
-                                            )
-                                          : CachedNetworkImage(
-                                              imageUrl: imageUrl,
-                                              memCacheWidth: 500,
-                                              maxWidthDiskCache: 1000,
-                                              placeholder: (_, __) => Shimmer.fromColors(
-                                                  baseColor: Colors.grey.shade300,
-                                                  highlightColor: Colors.grey.shade100,
-                                                  child: Container(color: Colors.white),
-                                              ),
-                                              imageBuilder: (context, imageProvider) => Container(
-                                                decoration: BoxDecoration(
-                                                  image: DecorationImage(
-                                                    image: imageProvider,
-                                                    fit: BoxFit.cover,
-                                                  ),
-                                                ),
-                                              ),
-                                              fadeInDuration: const Duration(milliseconds: 100),
-                                              fit: BoxFit.cover,
-                                              errorWidget: (_, __, ___) => const Icon(Icons.error),
-                                            ),
-                                    ),
-                                  );
-                                }
-                              },
+                    ),
+                  ],
+                ),
+              ),
+            ClipRRect(
+              borderRadius: BorderRadius.circular(12.r),
+              child: Container(
+                constraints: BoxConstraints(maxWidth: 0.5.sw),
+                child: GridView.count(
+                  padding: EdgeInsets.zero,
+                  crossAxisCount: images.length == 1 ? 1 : 2,
+                  shrinkWrap: true,
+                  crossAxisSpacing: 6.w,
+                  mainAxisSpacing: 6.h,
+                  physics: const ClampingScrollPhysics(),
+                  clipBehavior: Clip.none,
+                  children: List.generate(
+                    images.length > 4 ? 4 : images.length,
+                    (i) {
+                      if (i == 3 && images.length > 4) {
+                        return GestureDetector(
+                          onTap: () async {
+                            // Resolve all image URLs for full-screen viewer
+                            final urls = await resolveImageUrls(images);
+                            onOpenImages(
+                              urls,
+                              initialIndex: 3,
+                              showAsGrid: true,
+                              encrypted: images.any((a) => a['encrypted'] == true),
+                            );
+                          },
+                          child: Container(
+                            decoration: BoxDecoration(
+                              color: AppColors.main.withOpacity(0.1),
+                              borderRadius: BorderRadius.circular(8.r),
                             ),
+                            child: Center(
+                              child: CircleAvatar(
+                                radius: 16.r,
+                                backgroundColor: Colors.white.withOpacity(0.85),
+                                child: Text(
+                                  '+${images.length - 3}',
+                                  style: AppTextStyles.getText3(context).copyWith(
+                                    fontSize: 10.sp,
+                                    color: AppColors.main,
+                                  ),
+                                ),
+                              ),
+                            ),
+                          ),
+                        );
+                      }
+                      return GestureDetector(
+                        onTap: () async {
+                          final urls = await resolveImageUrls(images);
+                          onOpenImages(
+                            urls,
+                            initialIndex: i,
+                            encrypted: images.any((a) => a['encrypted'] == true),
                           );
                         },
-                      ),
-                    ),
-                  ),
-                ),
-                Padding(
-                  padding: EdgeInsets.only(top: 2.h),
-                  child: Align(
-                    alignment: isUser
-                        ? Alignment.bottomRight
-                        : Alignment.bottomLeft,
-                    child: Padding(
-                      padding: EdgeInsets.only(top: 1.h),
-                      child: Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          Text(
-                            time != null
-                                ? DocSeraTime.format12hLocalized(context, time)
-                                : '',
-                            style: AppTextStyles.getText3(context).copyWith(
-                              fontSize: 10.sp,
-                              color: Colors.black54,
-                              height: 1.0,
-                            ),
+                        child: ClipRRect(
+                          borderRadius: BorderRadius.circular(8.r),
+                          // ✅ Each image is an independent cached widget
+                          child: CachedChatImage(
+                            attachment: images[i],
+                            fit: BoxFit.cover,
                           ),
-                          if (isUser) ...[
-                            SizedBox(width: 4.w),
-                            if (status == 'sending')
-                              SizedBox(
-                                width: 10.w,
-                                height: 10.w,
-                                child: const CircularProgressIndicator(
-                                  strokeWidth: 1.5,
-                                  color: AppColors.main,
-                                ),
-                              )
-                            else if (status == 'failed')
-                              GestureDetector(
-                                onTap: onRetryTap,
-                                child: Icon(
-                                  Icons.error_outline,
-                                  color: Colors.redAccent,
-                                  size: 14.sp,
-                                ),
-                              )
-                            else
-                              Icon(
-                                Icons.done_all,
-                                color: AppColors.orange,
-                                size: 14.sp,
-                              ),
-                          ],
-                        ],
-                      ),
-                    ),
+                        ),
+                      );
+                    },
                   ),
                 ),
-              ],
-            );
-          },
+              ),
+            ),
+            Padding(
+              padding: EdgeInsets.only(top: 2.h),
+              child: Align(
+                alignment: isUser
+                    ? Alignment.bottomRight
+                    : Alignment.bottomLeft,
+                child: Padding(
+                  padding: EdgeInsets.only(top: 1.h),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Text(
+                        time != null
+                            ? DocSeraTime.format12hLocalized(context, time)
+                            : '',
+                        style: AppTextStyles.getText3(context).copyWith(
+                          fontSize: 10.sp,
+                          color: Colors.black54,
+                          height: 1.0,
+                        ),
+                      ),
+                      if (isUser) ...[
+                        SizedBox(width: 4.w),
+                        if (status == 'sending')
+                          SizedBox(
+                            width: 10.w,
+                            height: 10.w,
+                            child: const CircularProgressIndicator(
+                              strokeWidth: 1.5,
+                              color: AppColors.main,
+                            ),
+                          )
+                        else if (status == 'failed')
+                          GestureDetector(
+                            onTap: onRetryTap,
+                            child: Icon(
+                              Icons.error_outline,
+                              color: Colors.redAccent,
+                              size: 14.sp,
+                            ),
+                          )
+                        else
+                          Icon(
+                            Icons.done_all,
+                            color: AppColors.orange,
+                            size: 14.sp,
+                          ),
+                      ],
+                    ],
+                  ),
+                ),
+              ),
+            ),
+          ],
         ),
       );
     }

@@ -27,8 +27,9 @@ class ConversationService {
         .eq('conversation_id', conversationId)
         .order('timestamp', ascending: true)
         .execute()
-        .map((rows) {
+        .asyncMap((rows) async {
       final enc = MessageEncryptionService.instance;
+      await enc.ensureReady(); // ✅ Defensive: ensure key is loaded
       return rows.map<Map<String, dynamic>>((row) {
         final m = Map<String, dynamic>.from(row);
         // ✅ Decrypt message text (legacy plain text passes through)
@@ -47,11 +48,12 @@ class ConversationService {
         .eq('id', conversationId)
         .limit(1)
         .execute()
-        .map((rows) {
-      if (rows.isEmpty) return {};
+        .asyncMap((rows) async {
+      if (rows.isEmpty) return <String, dynamic>{};
       final m = Map<String, dynamic>.from(rows.first);
       // ✅ Decrypt last_message preview
       final enc = MessageEncryptionService.instance;
+      await enc.ensureReady(); // ✅ Defensive: ensure key is loaded
       if (m['last_message'] != null && m['last_message'] is String) {
         m['last_message'] = enc.decryptText(m['last_message'] as String);
       }
@@ -228,7 +230,18 @@ class ConversationService {
     required String storageName,
   }) async {
     final storagePath = '$conversationId/$storageName';
-    final bytes = await file.readAsBytes();
+    var bytes = await file.readAsBytes();
+
+    // ✅ Phase 2C: Encrypt file bytes before upload
+    bool isEncrypted = false;
+    final enc = MessageEncryptionService.instance;
+    if (enc.isReady) {
+      final encrypted = enc.encryptBytes(Uint8List.fromList(bytes));
+      if (encrypted != null) {
+        bytes = encrypted;
+        isEncrypted = true;
+      }
+    }
 
     await _client.storage
         .from('chat.attachments')
@@ -242,11 +255,12 @@ class ConversationService {
     );
 
     return {
-      'type': type, // 'image' أو 'pdf'
+      'type': type,
       'bucket': 'chat.attachments',
       'paths': [storagePath],
       'fileName': storageName,
-      'fileUrl': null, // مثل الـ schema المستخدم في DocSera Pro
+      'fileUrl': null,
+      if (isEncrypted) 'encrypted': true,
     };
   }
 
@@ -264,13 +278,8 @@ class ConversationService {
     Duration duration = const Duration(days: 7),
   }) async {
     final storageRef = _client.storage.from(bucket);
-
-    try {
-      final signedUrl =
-      await storageRef.createSignedUrl(path, duration.inSeconds);
-      return signedUrl;
-    } catch (_) {
-      return storageRef.getPublicUrl(path);
-    }
+    final signedUrl =
+        await storageRef.createSignedUrl(path, duration.inSeconds);
+    return signedUrl;
   }
 }

@@ -162,12 +162,12 @@ void main() async {
             }
             return true;
           },
-          listener: (context, state) {
+          listener: (context, state) async {
             if (state is custom_auth.AuthAuthenticated) {
               // 🔹 هذه تُستدعى مرة واحدة فقط
               // 🔹 Load Critical User Data Only (Lazy load the rest)
-              // ✅ Initialize message encryption on login
-              MessageEncryptionService.instance.init();
+              // ✅ Initialize message encryption on login (MUST await before loading data)
+              await MessageEncryptionService.instance.init();
 
               final userCubit = context.read<UserCubit>();
               userCubit.loadUserData(context: context, useCache: true);

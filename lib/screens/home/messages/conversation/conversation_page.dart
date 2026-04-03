@@ -272,6 +272,7 @@ class _ConversationPageState extends State<ConversationPage> {
       List<String> urls, {
         int initialIndex = 0,
         bool showAsGrid = false,
+        bool encrypted = false,
       }) {
     _imageOverlay?.remove();
 
@@ -279,6 +280,7 @@ class _ConversationPageState extends State<ConversationPage> {
       builder: (_) => ImageOverlayViewer(
         imageUrls: urls,
         initialIndex: initialIndex,
+        encrypted: encrypted,
         onAddToDocuments: (paths) async {
           if (paths.isEmpty) return;
 

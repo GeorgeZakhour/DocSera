@@ -1,6 +1,8 @@
 import 'dart:async';
 import 'dart:io';
+import 'dart:typed_data';
 import 'package:docsera/models/document.dart';
+import 'package:docsera/services/encryption/message_encryption_service.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/widgets.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -111,60 +113,72 @@ class DocumentsCubit extends Cubit<DocumentsState> {
         final fileName = picked.files.first.name;
         final path = 'documents/$userId/${DateTime.now().millisecondsSinceEpoch}-$fileName';
 
-        final storage = Supabase.instance.client.storage;
-        await storage.from('documents').upload(path, file);
-        final url = storage.from('documents').getPublicUrl(path);
+        // ✅ Phase 2C: Encrypt file bytes before upload
+        var fileBytes = await file.readAsBytes();
+        final enc = MessageEncryptionService.instance;
+        if (enc.isReady) {
+          final encrypted = enc.encryptBytes(Uint8List.fromList(fileBytes));
+          if (encrypted != null) fileBytes = encrypted;
+        }
 
-        final previewUrl = await generatePdfThumbnail(file.path, path, userId);
+        final storage = Supabase.instance.client.storage;
+        await storage.from('documents').uploadBinary(path, fileBytes);
+
+        // ✅ Phase 2B: Store storage path (not public URL) — resolved via signed URL at display time
+        final previewPath = await generatePdfThumbnail(file.path, path, userId);
 
         final docData = {
           'id': docId,
-          'user_id': userId, // ✅ المالك الأساسي
-          'patient_id': patientId, // ✅ المريض المقصود
+          'user_id': userId,
+          'patient_id': patientId,
           'name': docName,
           'type': 'pdf',
           'file_type': 'pdf',
-          'preview_url': previewUrl ?? url,
-          'pages': [url],
+          'preview_url': previewPath ?? path,
+          'pages': [path],
           'uploaded_at': uploadedAt.toIso8601String(),
           'uploaded_by_id': userId,
+          'encrypted': true,
         };
 
         await Supabase.instance.client.from('documents').insert(docData);
-        _fetchDocuments(userId); // ✅ Force refresh after upload
+        _fetchDocuments(userId);
         return;
       }
 
       // الصور
-      final uploadedUrls = <String>[];
+      final uploadedPaths = <String>[];
+      final enc = MessageEncryptionService.instance;
       for (int i = 0; i < picked.files.length; i++) {
         final file = File(picked.files[i].path!);
         final fileName = 'page_$i.jpg';
         final path = 'documents/$userId/${DateTime.now().millisecondsSinceEpoch}-$fileName';
 
         // ✅ Compress image before upload
-        final compressedBytes = await FlutterImageCompress.compressWithFile(
+        var uploadBytes = await FlutterImageCompress.compressWithFile(
           file.absolute.path,
           minWidth: 1920,
           minHeight: 1920,
           quality: 85,
         );
 
-        final storage = Supabase.instance.client.storage;
+        uploadBytes ??= await file.readAsBytes();
 
-        if (compressedBytes != null) {
-           await storage.from('documents').uploadBinary(
-            path,
-            compressedBytes,
-            fileOptions: const FileOptions(contentType: 'image/jpeg'),
-          );
-        } else {
-          // Fallback to original if compression fails
-           await storage.from('documents').upload(path, file);
+        // ✅ Phase 2C: Encrypt image bytes before upload
+        if (enc.isReady) {
+          final encrypted = enc.encryptBytes(Uint8List.fromList(uploadBytes));
+          if (encrypted != null) uploadBytes = encrypted;
         }
 
-        final url = storage.from('documents').getPublicUrl(path);
-        uploadedUrls.add(url);
+        final storage = Supabase.instance.client.storage;
+        await storage.from('documents').uploadBinary(
+          path,
+          Uint8List.fromList(uploadBytes),
+          fileOptions: const FileOptions(contentType: 'application/octet-stream'),
+        );
+
+        // ✅ Phase 2B: Store storage path (not public URL)
+        uploadedPaths.add(path);
       }
 
       final docData = {
@@ -173,14 +187,15 @@ class DocumentsCubit extends Cubit<DocumentsState> {
         'name': docName,
         'type': 'image',
         'file_type': 'image',
-        'preview_url': uploadedUrls.first,
-        'pages': uploadedUrls,
+        'preview_url': uploadedPaths.first,
+        'pages': uploadedPaths,
         'uploaded_at': uploadedAt.toIso8601String(),
         'uploaded_by_id': userId,
+        'encrypted': true,
       };
 
       await Supabase.instance.client.from('documents').insert(docData);
-      _fetchDocuments(userId); // ✅ Force refresh after upload
+      _fetchDocuments(userId);
     } catch (e) {
       emit(DocumentsError("Upload failed: $e"));
     }
@@ -205,34 +220,38 @@ class DocumentsCubit extends Cubit<DocumentsState> {
       final fileName = basename(path);
 
       final storagePath = 'users/$userId/documents/$docId/$fileName';
-      final fileBytes = await file.readAsBytes();
+      var fileBytes = await file.readAsBytes();
 
-      final storageRes = await Supabase.instance.client.storage
+      // ✅ Phase 2C: Encrypt file bytes before upload
+      final enc = MessageEncryptionService.instance;
+      if (enc.isReady) {
+        final encrypted = enc.encryptBytes(Uint8List.fromList(fileBytes));
+        if (encrypted != null) fileBytes = encrypted;
+      }
+
+      await Supabase.instance.client.storage
           .from('documents')
           .uploadBinary(storagePath, fileBytes);
 
-      final url = Supabase.instance.client.storage
-          .from('documents')
-          .getPublicUrl(storagePath);
-
-
-      final previewUrl = await generatePdfThumbnail(path, docId, userId);
+      // ✅ Phase 2B: Store storage path (not public URL)
+      final previewPath = await generatePdfThumbnail(path, docId, userId);
 
       final docData = {
         'id': docId,
-        'user_id': userId, // ✅ Required for RLS
+        'user_id': userId,
         'name': fileName.trim().isEmpty ? autoName : fileName,
         'type': 'pdf',
         'file_type': 'pdf',
         'patient_id': userId,
-        'preview_url': previewUrl ?? url,
-        'pages': [url],
+        'preview_url': previewPath ?? storagePath,
+        'pages': [storagePath],
         'uploaded_at': uploadedAt.toIso8601String(),
         'uploaded_by_id': userId,
+        'encrypted': true,
       };
 
       await Supabase.instance.client.from('documents').insert(docData);
-      _fetchDocuments(userId); // ✅ Force refresh after upload
+      _fetchDocuments(userId);
     } catch (e) {
       emit(DocumentsError("Upload failed: $e"));
     }
@@ -260,22 +279,30 @@ class DocumentsCubit extends Cubit<DocumentsState> {
       await imageFile.writeAsBytes(bytes);
 
 
+      final previewStoragePath = 'users/$userId/$docId/preview.png';
+
+      // ✅ Phase 2C: Encrypt preview bytes
+      var previewBytes = bytes;
+      final enc = MessageEncryptionService.instance;
+      if (enc.isReady) {
+        final encrypted = enc.encryptBytes(Uint8List.fromList(previewBytes));
+        if (encrypted != null) previewBytes = encrypted;
+      }
+
       final storageResponse = await Supabase.instance.client.storage
           .from('documents')
-          .upload(
-        'users/$userId/$docId/preview.png',
-        imageFile,
+          .uploadBinary(
+        previewStoragePath,
+        Uint8List.fromList(previewBytes),
         fileOptions: const FileOptions(upsert: true),
       );
       if (storageResponse.isEmpty) throw Exception('Upload failed');
-      final url = Supabase.instance.client.storage
-          .from('documents')
-          .getPublicUrl('users/$userId/$docId/preview.png');
 
       await page.close();
       await doc.close();
 
-      return url;
+      // ✅ Phase 2B: Return storage path (not public URL)
+      return previewStoragePath;
     } catch (e) {
       debugPrint("❌ Thumbnail generation failed: $e");
       return null;

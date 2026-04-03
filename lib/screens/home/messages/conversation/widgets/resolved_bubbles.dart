@@ -158,9 +158,7 @@ class _ResolvedAudioBubbleState extends State<ResolvedAudioBubble> {
         return signedUrl;
       } catch (e) {
         debugPrint("❌ Failed to resolve storage path ${widget.path}: $e");
-        return Supabase.instance.client.storage
-            .from('chat.attachments')
-            .getPublicUrl(widget.path!);
+        return "";
       }
     }
     return "";

@@ -12,6 +12,7 @@ class UserDocument {
   final String uploadedById;
   final bool cameFromConversation;
   final String? conversationDoctorName;
+  final bool encrypted; // ✅ Phase 2C: Whether file bytes are encrypted
 
   UserDocument({
     this.id,
@@ -26,6 +27,7 @@ class UserDocument {
     required this.uploadedById,
     this.cameFromConversation = false,
     this.conversationDoctorName,
+    this.encrypted = false,
   });
 
   factory UserDocument.fromMap(Map<String, dynamic> data) {
@@ -42,7 +44,13 @@ class UserDocument {
       uploadedById: data['uploaded_by_id'] ?? '',
       cameFromConversation: data['came_from_conversation'] ?? false,
       conversationDoctorName: data['conversation_doctor_name'],
+      encrypted: data['encrypted'] == true,
     );
+  }
+
+  /// ✅ Phase 2B: Check if a page URL is a storage path (not a full URL)
+  bool isStoragePath(String page) {
+    return !page.startsWith('http://') && !page.startsWith('https://');
   }
 
   Map<String, dynamic> toMap() {
@@ -59,6 +67,7 @@ class UserDocument {
       'came_from_conversation': cameFromConversation,
       if (conversationDoctorName != null)
         'conversation_doctor_name': conversationDoctorName,
+      if (encrypted) 'encrypted': true,
     };
   }
 
@@ -66,9 +75,10 @@ class UserDocument {
     String? name,
     String? type,
     String? previewUrl,
-    List<String>? pages,
+    List<String> ? pages,
     bool? cameFromConversation,
     String? conversationDoctorName,
+    bool? encrypted,
   }) {
     return UserDocument(
       id: id,
@@ -83,6 +93,7 @@ class UserDocument {
       uploadedById: uploadedById,
       cameFromConversation: cameFromConversation ?? this.cameFromConversation,
       conversationDoctorName: conversationDoctorName ?? this.conversationDoctorName,
+      encrypted: encrypted ?? this.encrypted,
     );
   }
 }

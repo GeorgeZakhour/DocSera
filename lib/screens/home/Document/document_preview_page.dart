@@ -3,6 +3,7 @@ import 'dart:io';
 import 'dart:typed_data';
 import 'package:docsera/app/text_styles.dart';
 import 'package:docsera/models/document.dart';
+import 'package:docsera/services/encryption/message_encryption_service.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:docsera/app/const.dart';
@@ -11,6 +12,7 @@ import 'package:http/http.dart' as http;
 import 'package:path/path.dart' as path;
 import 'package:path_provider/path_provider.dart';
 import 'package:flutter_pdfview/flutter_pdfview.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 import '../../../utils/full_page_loader.dart';
 import 'document_options_bottom_sheet.dart';
 
@@ -46,13 +48,42 @@ class _DocumentPreviewPageState extends State<DocumentPreviewPage> {
   late bool isPdf;
   late bool isImage;
 
+  /// ✅ Phase 2B: Resolve a page URL/path to a signed URL if it's a storage path
+  Future<String> _resolveUrl(String urlOrPath) async {
+    if (urlOrPath.startsWith('http://') || urlOrPath.startsWith('https://')) {
+      // Legacy full URL — check if it's a public URL that needs signing
+      if (urlOrPath.contains('/storage/v1/object/public/documents/')) {
+        try {
+          final rawPath = urlOrPath.split('/documents/').last;
+          final storagePath = Uri.decodeComponent(rawPath);
+          return await Supabase.instance.client.storage
+              .from('documents')
+              .createSignedUrl(storagePath, 3600);
+        } catch (_) {
+          return urlOrPath; // Fallback to original URL
+        }
+      }
+      return urlOrPath;
+    }
+    // Storage path → create signed URL
+    try {
+      return await Supabase.instance.client.storage
+          .from('documents')
+          .createSignedUrl(urlOrPath, 3600);
+    } catch (e) {
+      debugPrint("❌ Failed to sign storage path: $e");
+      return '';
+    }
+  }
+
   @override
   void initState() {
     super.initState();
-    final firstUrl = widget.document.pages.isNotEmpty
+    final firstPage = widget.document.pages.isNotEmpty
         ? widget.document.pages.first
         : widget.document.previewUrl;
 
+    // For file type detection, use the original path/URL before resolution
     final filename = widget.document.pages.isNotEmpty
         ? path.basename(Uri.parse(widget.document.pages.first).path).toLowerCase()
         : path.basename(Uri.parse(widget.document.previewUrl).path).toLowerCase();
@@ -61,6 +92,7 @@ class _DocumentPreviewPageState extends State<DocumentPreviewPage> {
     debugPrint('📂 filename: $filename');
     debugPrint('📄 pages count: ${widget.document.pages.length}');
     debugPrint('📃 is from conversation: ${widget.cameFromConversation}');
+    debugPrint('🔒 encrypted: ${widget.document.encrypted}');
 
     final hasMultipleImagePages = widget.document.pages.isNotEmpty &&
         widget.document.pages.every((url) =>
@@ -88,14 +120,14 @@ class _DocumentPreviewPageState extends State<DocumentPreviewPage> {
     debugPrint('✅ Final type -> isImage: $isImage | isPdf: $isPdf');
 
     if (isPdf) {
-      if (!firstUrl.startsWith('http') && File(firstUrl).existsSync()) {
-        debugPrint('📂 Opening local PDF file: $firstUrl');
+      if (!firstPage.startsWith('http') && File(firstPage).existsSync()) {
+        debugPrint('📂 Opening local PDF file: $firstPage');
         setState(() {
-          _localPdfFile = File(firstUrl);
+          _localPdfFile = File(firstPage);
           _loading = false;
         });
       } else {
-        _downloadPdfFromUrl(firstUrl, widget.document.name).then((file) {
+        _downloadPdf(firstPage).then((file) {
           if (mounted) {
             setState(() {
               _localPdfFile = file;
@@ -116,62 +148,47 @@ class _DocumentPreviewPageState extends State<DocumentPreviewPage> {
     }
   }
 
+  /// ✅ Phase 2B+2C: Download PDF with signed URL + decrypt if needed
+  Future<File> _downloadPdf(String urlOrPath) async {
+    final url = await _resolveUrl(urlOrPath);
+    if (url.isEmpty) throw Exception("Could not resolve PDF URL");
 
-
-
-
-  void _preloadImages() async {
-    debugPrint('_preloadImages Activated!');
-    final urls = widget.document.pages;
-    final List<Uint8List> loaded = [];
-
-    for (int i = 0; i < urls.length; i++) {
-      try {
-        final url = urls[i];
-        if (!url.startsWith('http') && File(url).existsSync()) {
-          loaded.add(await File(url).readAsBytes());
-        } else {
-          final res = await http.get(Uri.parse(url));
-          loaded.add(res.statusCode == 200 ? res.bodyBytes : Uint8List(0));
-        }
-      } catch (_) {
-        loaded.add(Uint8List(0));
-      }
-      setState(() => _progress = (i + 1) / urls.length);
-    }
-
-    setState(() {
-      _imageBytes = loaded;
-      _imagesLoaded = true;
-    });
-  }
-
-  Future<File> _downloadPdfFromUrl(String url, String fileName) async {
     try {
       final response = await http.get(Uri.parse(url));
       final contentType = response.headers['content-type'];
       debugPrint('📦 Content-Type: $contentType');
 
       if (response.statusCode == 200) {
+        var bytes = response.bodyBytes;
+
+        // ✅ Phase 2C: Decrypt if encrypted
+        if (widget.document.encrypted) {
+          final enc = MessageEncryptionService.instance;
+          await enc.ensureReady();
+          if (enc.isReady) {
+            final decrypted = enc.decryptBytes(Uint8List.fromList(bytes));
+            if (decrypted != null) bytes = decrypted;
+          }
+        }
+
         final dir = await getTemporaryDirectory();
         final extension = path.extension(Uri.parse(url).path);
-        final safeFileName = fileName.endsWith(extension) ? fileName : '$fileName$extension';
+        final safeFileName = widget.document.name.endsWith(extension)
+            ? widget.document.name
+            : '${widget.document.name}$extension';
         final file = File('${dir.path}/$safeFileName');
-        await file.writeAsBytes(response.bodyBytes, flush: true);
+        await file.writeAsBytes(bytes, flush: true);
         debugPrint('✅ File saved at: ${file.path}');
 
-        // ✅ Check actual file type
+        // Check actual file type
         if (contentType != null && !contentType.contains('pdf')) {
           debugPrint('❌ Not a real PDF, switching to image mode');
           setState(() {
             isPdf = false;
             isImage = true;
           });
-
-          // ✅ تحميل الصورة الآن
           _preloadImages();
         }
-
 
         return file;
       } else {
@@ -183,10 +200,52 @@ class _DocumentPreviewPageState extends State<DocumentPreviewPage> {
     }
   }
 
+  /// ✅ Phase 2B+2C: Preload images with signed URL resolution + decryption
+  void _preloadImages() async {
+    debugPrint('_preloadImages Activated!');
+    final pages = widget.document.pages;
+    final List<Uint8List> loaded = [];
 
+    for (int i = 0; i < pages.length; i++) {
+      try {
+        final pageRef = pages[i];
+        if (!pageRef.startsWith('http') && File(pageRef).existsSync()) {
+          loaded.add(await File(pageRef).readAsBytes());
+        } else {
+          final url = await _resolveUrl(pageRef);
+          if (url.isEmpty) {
+            loaded.add(Uint8List(0));
+            continue;
+          }
+          final res = await http.get(Uri.parse(url));
+          if (res.statusCode == 200) {
+            var bytes = res.bodyBytes;
 
+            // ✅ Phase 2C: Decrypt if encrypted
+            if (widget.document.encrypted) {
+              final enc = MessageEncryptionService.instance;
+              await enc.ensureReady();
+              if (enc.isReady) {
+                final decrypted = enc.decryptBytes(Uint8List.fromList(bytes));
+                if (decrypted != null) bytes = decrypted;
+              }
+            }
+            loaded.add(Uint8List.fromList(bytes));
+          } else {
+            loaded.add(Uint8List(0));
+          }
+        }
+      } catch (_) {
+        loaded.add(Uint8List(0));
+      }
+      setState(() => _progress = (i + 1) / pages.length);
+    }
 
-
+    setState(() {
+      _imageBytes = loaded;
+      _imagesLoaded = true;
+    });
+  }
 
   void _handleDoubleTap() {
     final scale = _transformationController.value.getMaxScaleOnAxis();
@@ -289,7 +348,6 @@ class _DocumentPreviewPageState extends State<DocumentPreviewPage> {
           onViewCreated: (controller) => debugPrint('✅ PDF view created'),
           onError: (error) => debugPrint('❌ PDF view error: $error'),
         )
-
       );
     }
   }

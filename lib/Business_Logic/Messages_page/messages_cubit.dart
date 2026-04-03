@@ -106,6 +106,7 @@ class MessagesCubit extends Cubit<MessagesState> {
         // ------------------------------
         // ✅ Decrypt last_message preview for display
         final enc = MessageEncryptionService.instance;
+        await enc.ensureReady(); // ✅ Defensive: ensure key is loaded
         String lastMsgText = convo['last_message'] ?? "";
         if (lastMsgText.isNotEmpty) {
           lastMsgText = enc.decryptText(lastMsgText);

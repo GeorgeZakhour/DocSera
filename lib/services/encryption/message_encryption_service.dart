@@ -52,6 +52,13 @@ class MessageEncryptionService {
   /// Whether encryption is ready to use
   bool get isReady => _initialized && _key != null;
 
+  /// Defensive: ensure the key is loaded before any decrypt/encrypt call.
+  /// Safe to call multiple times — returns immediately if already initialized.
+  Future<void> ensureReady() async {
+    if (isReady) return;
+    await init();
+  }
+
   // ---------------------------------------------------------------------------
   // Text Encryption
   // ---------------------------------------------------------------------------

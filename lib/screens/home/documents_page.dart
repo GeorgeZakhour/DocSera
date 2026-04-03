@@ -5,6 +5,7 @@ import 'package:syncfusion_flutter_pdf/pdf.dart' as syncfusion;
 import 'package:pdfx/pdfx.dart' as pdfx;
 import 'package:http/http.dart' as http;
 import 'package:supabase_flutter/supabase_flutter.dart';
+import 'package:docsera/services/encryption/message_encryption_service.dart';
 import 'package:docsera/Business_Logic/Documents_page/notes/notes_cubit.dart';
 import 'package:docsera/Business_Logic/Documents_page/notes/notes_state.dart';
 import 'package:docsera/models/document.dart';
@@ -1732,41 +1733,58 @@ class _DocumentGridItemState extends State<DocumentGridItem> {
     String url = doc['previewUrl'] ?? '';
     final type = doc['type'];
     final name = doc['name'].toString().toLowerCase();
+    final UserDocument userDoc = doc['doc'];
     
-    // 1. Resolve URL (Sign if needed)
-    // If it's a PDF file path in Supabase storage, we might need to sign it to access it.
-    // If it's already an image URL, we also might need to sign it if it's private.
-    // We assume check based on URL structure or generic logic.
-    if (url.contains('/storage/v1/object/public/documents/')) {
-        try {
-          // Extract path and decode it (to handle Arabic chars, spaces, etc.)
-          final rawPath = url.split('/documents/').last;
-          final path = Uri.decodeComponent(rawPath);
-          
-           // Attempt to sign regardless of type to ensure access if bucket is private
-           // 1 hour expiry
-          url = await Supabase.instance.client.storage
-              .from('documents')
-              .createSignedUrl(path, 3600);
-        } catch (e) {
-         // debugPrint("Failed to sign URL: $e"); // Silenced to avoid log noise
-        }
+    // ✅ Phase 2B: If it's a storage path (not a full URL), resolve to signed URL
+    if (url.isNotEmpty && !url.startsWith('http://') && !url.startsWith('https://')) {
+      try {
+        url = await Supabase.instance.client.storage
+            .from('documents')
+            .createSignedUrl(url, 3600);
+      } catch (e) {
+        debugPrint("Failed to sign storage path: $e");
+        return null;
+      }
+    }
+    // Legacy: Already a full URL — sign if needed
+    else if (url.contains('/storage/v1/object/public/documents/')) {
+      try {
+        final rawPath = url.split('/documents/').last;
+        final path = Uri.decodeComponent(rawPath);
+        url = await Supabase.instance.client.storage
+            .from('documents')
+            .createSignedUrl(path, 3600);
+      } catch (e) {
+        // Keep original URL as fallback
+      }
     }
 
-    // 2. Check if it is a formatted image URL (png/jpg) vs PDF
-    // Remove query params for extension check
+    if (url.isEmpty) return null;
+
+    // Check if it is a PDF that needs rendering
     final uri = Uri.parse(url);
     final pathOnly = uri.path.toLowerCase();
     
     final isPdfUrl = pathOnly.endsWith('.pdf');
     final isPdfDoc = type == 'pdf' || name.endsWith('.pdf');
 
-    // If it is a PDF URL, we MUST download and render it because Image.network won't work.
+    // If it is a PDF URL, download and render first page
     if (isPdfUrl || (isPdfDoc && !pathOnly.endsWith('.png') && !pathOnly.endsWith('.jpg') && !pathOnly.endsWith('.jpeg'))) {
        try {
          final response = await http.get(Uri.parse(url));
          if (response.statusCode == 200) {
-            final document = await pdfx.PdfDocument.openData(response.bodyBytes);
+            var bytes = response.bodyBytes;
+
+            // ✅ Phase 2C: Decrypt if encrypted
+            if (userDoc.encrypted) {
+              final enc = MessageEncryptionService.instance;
+              if (enc.isReady) {
+                final decrypted = enc.decryptBytes(Uint8List.fromList(bytes));
+                if (decrypted != null) bytes = decrypted;
+              }
+            }
+
+            final document = await pdfx.PdfDocument.openData(bytes);
             final page = await document.getPage(1);
             final pageImage = await page.render(
               width: page.width,
@@ -1783,6 +1801,23 @@ class _DocumentGridItemState extends State<DocumentGridItem> {
        } catch (e) {
          debugPrint("Error rendering PDF preview: $e");
        }
+    }
+
+    // For encrypted images, download and decrypt in memory
+    if (userDoc.encrypted) {
+      try {
+        final response = await http.get(Uri.parse(url));
+        if (response.statusCode == 200) {
+          final enc = MessageEncryptionService.instance;
+          if (enc.isReady) {
+            final decrypted = enc.decryptBytes(Uint8List.fromList(response.bodyBytes));
+            if (decrypted != null) return decrypted;
+          }
+          return response.bodyBytes;
+        }
+      } catch (e) {
+        debugPrint("Error downloading encrypted preview: $e");
+      }
     }
 
     // Default: Return URL (assuming it is a valid image URL)

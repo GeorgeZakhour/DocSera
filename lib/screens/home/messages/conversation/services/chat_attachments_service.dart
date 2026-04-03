@@ -15,7 +15,7 @@ class ChatAttachmentsService {
   /// Cache للـ signed URLs
   final Map<String, String> _signedUrlCache = {};
 
-  /// توليد URL يدعم public و private
+  /// توليد Signed URL (all sensitive buckets are private now)
   Future<String> getFileUrl({
     required String bucket,
     required String filePath,
@@ -27,16 +27,9 @@ class ChatAttachmentsService {
     }
 
     final storage = _client.storage.from(bucket);
-
-    try {
-      final signed = await storage.createSignedUrl(filePath, 60 * 60 * 24 * 7);
-      _signedUrlCache[key] = signed;
-      return signed;
-    } catch (_) {
-      final publicUrl = storage.getPublicUrl(filePath);
-      _signedUrlCache[key] = publicUrl;
-      return publicUrl;
-    }
+    final signed = await storage.createSignedUrl(filePath, 60 * 60 * 24 * 7);
+    _signedUrlCache[key] = signed;
+    return signed;
   }
 
   Future<List<String>> resolveImageUrls(List<Map<String, dynamic>> images) async {
@@ -89,6 +82,7 @@ class ChatAttachmentsService {
 
     // ✅ Attempt to decrypt file bytes
     final enc = MessageEncryptionService.instance;
+    await enc.ensureReady();
     if (enc.isReady) {
       final decrypted = enc.decryptBytes(Uint8List.fromList(bytes));
       if (decrypted != null) {
@@ -110,6 +104,7 @@ class ChatAttachmentsService {
       var bytes = Uint8List.fromList(resp.bodyBytes);
 
       final enc = MessageEncryptionService.instance;
+      await enc.ensureReady();
       if (enc.isReady) {
         final decrypted = enc.decryptBytes(bytes);
         if (decrypted != null) return decrypted;

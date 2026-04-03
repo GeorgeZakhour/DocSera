@@ -1,9 +1,11 @@
 import 'dart:io';
+import 'dart:typed_data';
 import 'package:docsera/Business_Logic/Documents_page/documents/documents_cubit.dart';
 import 'package:docsera/app/const.dart';
 import 'package:docsera/utils/time_utils.dart';
 import 'package:docsera/app/text_styles.dart';
 import 'package:docsera/models/document.dart';
+import 'package:docsera/services/encryption/message_encryption_service.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
@@ -520,24 +522,23 @@ class _DocumentInfoScreenState extends State<DocumentInfoScreen> {
         final fileToUpload = filesToUpload[i];
 
         final extension = fileToUpload.path.split('.').last.toLowerCase();
-        final String fileName = isPdf ? 'file.pdf' : 'page_$i.$extension'; // Keep original extension for images
+        final String fileName = isPdf ? 'file.pdf' : 'page_$i.$extension';
         
         final String filePath = 'users/$userId/appointments/${widget.appointmentId}/$attachmentId/$fileName';
 
-        final FileOptions fileOptions;
-        if (isPdf) {
-          fileOptions = const FileOptions(contentType: 'application/pdf');
-        } else if (extension == 'png') {
-           fileOptions = const FileOptions(contentType: 'image/png');
-        } else if (extension == 'jpg' || extension == 'jpeg') {
-           fileOptions = const FileOptions(contentType: 'image/jpeg');
-        } else {
-           fileOptions = const FileOptions(contentType: 'application/octet-stream');
+        // ✅ Phase 2C: Encrypt file bytes before upload
+        var fileBytes = await fileToUpload.readAsBytes();
+        final enc = MessageEncryptionService.instance;
+        if (enc.isReady) {
+          final encrypted = enc.encryptBytes(Uint8List.fromList(fileBytes));
+          if (encrypted != null) fileBytes = encrypted;
         }
-        
-        debugPrint("📤 Uploading: $filePath with contentType: ${fileOptions.contentType}");
 
-        await storage.upload(filePath, fileToUpload, fileOptions: fileOptions);
+        debugPrint("📤 Uploading: $filePath (encrypted)");
+
+        await storage.uploadBinary(filePath, fileBytes,
+          fileOptions: const FileOptions(contentType: 'application/octet-stream'),
+        );
         paths.add(filePath);
       }
 
@@ -551,8 +552,8 @@ class _DocumentInfoScreenState extends State<DocumentInfoScreen> {
         'id': attachmentId,
         'name': name,
         'bucket': 'appointments-attachments',
-        'file_type': fileType,                 // "pdf" | "image"
-        'paths': paths,                        // relative storage paths
+        'file_type': fileType,
+        'paths': paths,
         'page_count': pageCount,
         'preview_path': paths.isNotEmpty ? paths.first : null,
         'patient_id': _selectedPatientId,
@@ -560,6 +561,7 @@ class _DocumentInfoScreenState extends State<DocumentInfoScreen> {
         'uploaded_at': uploadedAt.toIso8601String(),
         'source': 'appointment',
         'appointment_id': widget.appointmentId,
+        'encrypted': true,
       };
 
       // 💾 استدعاء دالة RPC للتحديث الآمن
@@ -681,14 +683,24 @@ class _DocumentInfoScreenState extends State<DocumentInfoScreen> {
 
         debugPrint("📤 Uploading file: $filePath");
 
+        // ✅ Phase 2C: Encrypt file bytes before upload
+        var fileBytes = await fileToUpload.readAsBytes();
+        final enc = MessageEncryptionService.instance;
+        if (enc.isReady) {
+          final encrypted = enc.encryptBytes(Uint8List.fromList(fileBytes));
+          if (encrypted != null) fileBytes = encrypted;
+        }
+
         await supabase.storage
             .from('documents')
-            .upload(filePath, fileToUpload);
-        final publicUrl =
-        supabase.storage.from('documents').getPublicUrl(filePath);
-        uploadedUrls.add(publicUrl);
+            .uploadBinary(filePath, fileBytes,
+              fileOptions: const FileOptions(contentType: 'application/octet-stream'),
+            );
 
-        debugPrint("✅ Uploaded $fileName - URL: $publicUrl");
+        // ✅ Phase 2B: Store storage path (not public URL)
+        uploadedUrls.add(filePath);
+
+        debugPrint("✅ Uploaded $fileName - path: $filePath");
       }
 
       String previewUrl = uploadedUrls.first;
@@ -726,6 +738,7 @@ class _DocumentInfoScreenState extends State<DocumentInfoScreen> {
         uploadedById: userId,
         cameFromConversation: widget.cameFromConversation,
         conversationDoctorName: widget.conversationDoctorName,
+        encrypted: true, // ✅ Phase 2C: Mark as encrypted
       );
 
       debugPrint("📝 Inserting document into Supabase...");
