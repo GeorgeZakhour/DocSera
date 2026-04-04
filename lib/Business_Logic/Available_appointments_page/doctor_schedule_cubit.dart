@@ -96,10 +96,35 @@ class DoctorScheduleCubit extends Cubit<DoctorScheduleState> {
       final locale = Localizations.localeOf(context).toString();
       final grouped = <String, List<Map<String, dynamic>>>{};
 
+      final now = DocSeraTime.nowSyria();
+
       for (final r in data) {
         try {
           final m = Map<String, dynamic>.from(r as Map);
           final tsUtc = DocSeraTime.toUtc(DateTime.parse(m['ts_utc'].toString())); // هذا الذي سنمرّره للحجز
+          
+          final dateStr = m['local_date'].toString();              // "YYYY-MM-DD" في UTC+3
+          final label12 = m['local_time12'].toString();                 // "HH:MM AM/PM" جاهزة
+          final label24 = m['local_time24'].toString();                 // "HH24:MI"
+
+          final dParts = dateStr.split('-');
+          final tParts = label24.split(':');
+          final yr = int.parse(dParts[0]);
+          final mo = int.parse(dParts[1]);
+          final dy = int.parse(dParts[2]);
+          final hr = int.parse(tParts[0]);
+          final mn = int.parse(tParts[1]);
+          
+          final isFuture = (yr > now.year) ||
+                           (yr == now.year && mo > now.month) ||
+                           (yr == now.year && mo == now.month && dy > now.day) ||
+                           (yr == now.year && mo == now.month && dy == now.day && 
+                              (hr > now.hour || (hr == now.hour && mn > now.minute)));
+          
+          if (!isFuture) {
+            continue; // 🚫 Skip past time slots via pure chronological math
+          }
+
           final localDateStr = m['local_date'].toString();              // "YYYY-MM-DD" في UTC+3
           final label12 = m['local_time12'].toString();                 // "HH:MM AM/PM" جاهزة
           final label24 = m['local_time24'].toString();                 // "HH24:MI"
