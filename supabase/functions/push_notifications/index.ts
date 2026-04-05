@@ -260,6 +260,69 @@ serve(async (req) => {
         payloadData = `document:${record.id}`;
     }
 
+    // ===============================================================
+    // ✅ CASE: Todo Task Assignment/Completion (INSERT/UPDATE on 'todo_tasks')
+    // ===============================================================
+    else if (table === "todo_tasks") {
+      // CASE A: Task assigned (INSERT with assigned_to, or UPDATE changing assigned_to)
+      if (type === 'INSERT' && record.assigned_to && record.created_by !== record.assigned_to) {
+        targetUserIds.push(record.assigned_to);
+
+        const { data: creator } = await supabase
+          .from("center_members")
+          .select("first_name, last_name")
+          .eq("user_id", record.created_by)
+          .limit(1)
+          .single();
+
+        const creatorName = creator ? `${creator.first_name} ${creator.last_name}` : "Someone";
+        const LTR = '\u200E';
+        title = `${LTR}📋 ${creatorName}`;
+        body = record.text || "New task";
+        payloadData = `todo_task:${record.id}`;
+      }
+      else if (type === 'UPDATE') {
+        if (record.assigned_to && record.assigned_to !== old_record?.assigned_to) {
+          targetUserIds.push(record.assigned_to);
+
+          const { data: assigner } = await supabase
+            .from("center_members")
+            .select("first_name, last_name")
+            .eq("user_id", record.created_by)
+            .limit(1)
+            .single();
+
+          const assignerName = assigner ? `${assigner.first_name} ${assigner.last_name}` : "Someone";
+          const LTR = '\u200E';
+          title = `${LTR}📋 ${assignerName}`;
+          body = record.text || "New task";
+          payloadData = `todo_task:${record.id}`;
+        }
+        else if (record.done === true && old_record?.done === false) {
+          if (record.completed_by && record.created_by && record.completed_by !== record.created_by) {
+            targetUserIds.push(record.created_by);
+
+            const { data: completer } = await supabase
+              .from("center_members")
+              .select("first_name, last_name")
+              .eq("user_id", record.completed_by)
+              .limit(1)
+              .single();
+
+            const completerName = completer ? `${completer.first_name} ${completer.last_name}` : "Someone";
+            const LTR = '\u200E';
+            title = `${LTR}✅ ${completerName}`;
+            body = record.text || "Task completed";
+            payloadData = `todo_task:${record.id}`;
+          }
+        }
+      }
+
+      if (targetUserIds.length === 0) {
+        return new Response("No notification needed for this todo_tasks event", { status: 200 });
+      }
+    }
+
     // fallback
     else {
         return new Response(`Table ${table} not handled`, { status: 200 });
