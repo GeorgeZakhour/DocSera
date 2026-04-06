@@ -6121,6 +6121,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'This email is linked to an existing DocSera Pro account. Please enter your current password to continue.'**
   String get existingAccountMessage;
+
+  /// No description provided for @blockedFromBooking.
+  ///
+  /// In en, this message translates to:
+  /// **'You are unable to book with this doctor. Please contact the clinic.'**
+  String get blockedFromBooking;
 }
 
 class _AppLocalizationsDelegate

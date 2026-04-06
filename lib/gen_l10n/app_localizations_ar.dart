@@ -3224,4 +3224,8 @@ class AppLocalizationsAr extends AppLocalizations {
   @override
   String get existingAccountMessage =>
       'هذا البريد الإلكتروني مرتبط بحساب دوكسيرا برو موجود. يرجى إدخال كلمة المرور الحالية للمتابعة.';
+
+  @override
+  String get blockedFromBooking =>
+      'لا يمكنك حجز موعد مع هذا الطبيب. يرجى التواصل مع العيادة.';
 }

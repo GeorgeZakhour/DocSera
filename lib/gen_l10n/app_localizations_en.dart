@@ -3266,4 +3266,8 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get existingAccountMessage =>
       'This email is linked to an existing DocSera Pro account. Please enter your current password to continue.';
+
+  @override
+  String get blockedFromBooking =>
+      'You are unable to book with this doctor. Please contact the clinic.';
 }

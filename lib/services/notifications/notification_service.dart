@@ -123,7 +123,8 @@ class NotificationService {
       'user_id': userId,
       'token': token,
       'platform': Platform.isIOS ? 'ios' : 'android',
-    }, onConflict: 'user_id,token');
+      'app': 'docsera',
+    }, onConflict: 'user_id,token,app');
     
     debugPrint('✅ Pushy Token saved to Supabase for user: $userId');
   }
@@ -136,8 +137,9 @@ class NotificationService {
       await Supabase.instance.client
           .from('user_devices')
           .delete()
-          .eq('token', token);
-      
+          .eq('token', token)
+          .eq('app', 'docsera');
+
       debugPrint('🗑️ Pushy Token deleted from Supabase: $token');
       _pushyDeviceToken = null;
     } catch (e) {

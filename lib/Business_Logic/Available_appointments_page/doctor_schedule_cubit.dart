@@ -62,7 +62,7 @@ class DoctorScheduleCubit extends Cubit<DoctorScheduleState> {
       // نقرأ إعدادين فقط: نمط الجدولة + مدى الرؤية
       final docRow = await supabase
           .from('doctors')
-          .select('appointment_scheduling_mode, max_visibility_days')
+          .select('appointment_scheduling_mode, max_visibility_days, min_booking_lead_minutes')
           .eq('id', doctorId)
           .maybeSingle();
 
@@ -73,6 +73,7 @@ class DoctorScheduleCubit extends Cubit<DoctorScheduleState> {
 
       final schedulingMode = (docRow['appointment_scheduling_mode'] as String?) ?? 'default';
       final maxVisibilityDays = (docRow['max_visibility_days'] as int?) ?? 30;
+      final minBookingLeadMinutes = (docRow['min_booking_lead_minutes'] as int?) ?? 30;
 
       // نحضّر باراميترات الـ RPC
       final params = <String, dynamic>{
@@ -97,12 +98,13 @@ class DoctorScheduleCubit extends Cubit<DoctorScheduleState> {
       final grouped = <String, List<Map<String, dynamic>>>{};
 
       final now = DocSeraTime.nowSyria();
+      final leadCutoff = now.add(Duration(minutes: minBookingLeadMinutes));
 
       for (final r in data) {
         try {
           final m = Map<String, dynamic>.from(r as Map);
           final tsUtc = DocSeraTime.toUtc(DateTime.parse(m['ts_utc'].toString())); // هذا الذي سنمرّره للحجز
-          
+
           final dateStr = m['local_date'].toString();              // "YYYY-MM-DD" في UTC+3
           final label12 = m['local_time12'].toString();                 // "HH:MM AM/PM" جاهزة
           final label24 = m['local_time24'].toString();                 // "HH24:MI"
@@ -114,23 +116,16 @@ class DoctorScheduleCubit extends Cubit<DoctorScheduleState> {
           final dy = int.parse(dParts[2]);
           final hr = int.parse(tParts[0]);
           final mn = int.parse(tParts[1]);
-          
-          final isFuture = (yr > now.year) ||
-                           (yr == now.year && mo > now.month) ||
-                           (yr == now.year && mo == now.month && dy > now.day) ||
-                           (yr == now.year && mo == now.month && dy == now.day && 
-                              (hr > now.hour || (hr == now.hour && mn > now.minute)));
-          
-          if (!isFuture) {
-            continue; // 🚫 Skip past time slots via pure chronological math
+
+          // Build slot local DateTime for lead-time comparison
+          final slotLocal = DateTime(yr, mo, dy, hr, mn);
+
+          if (!slotLocal.isAfter(leadCutoff)) {
+            continue; // 🚫 Skip slots within the booking lead time window
           }
 
-          final localDateStr = m['local_date'].toString();              // "YYYY-MM-DD" في UTC+3
-          final label12 = m['local_time12'].toString();                 // "HH:MM AM/PM" جاهزة
-          final label24 = m['local_time24'].toString();                 // "HH24:MI"
-
           // صياغة عنوان لطيف للتاريخ (بلغة الجهاز) من "YYYY-MM-DD"
-          final d = DocSeraTime.tryParseToSyria(localDateStr) ?? DocSeraTime.nowSyria(); // تاريخ فقط
+          final d = DocSeraTime.tryParseToSyria(dateStr) ?? DocSeraTime.nowSyria(); // تاريخ فقط
           final dateKey = DateFormat('EEEE, d MMMM', locale).format(d);
 
           (grouped[dateKey] ??= <Map<String, dynamic>>[]).add({

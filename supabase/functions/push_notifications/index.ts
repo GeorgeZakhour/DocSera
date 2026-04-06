@@ -25,6 +25,7 @@ serve(async (req) => {
     let title = "DocSera";
     let body = "";
     let payloadData = "";
+    let targetApp = "docsera"; // which app should receive: "docsera" or "docsera_pro"
     const sound = "default"; // or custom sound
 
     // ===============================================================
@@ -49,12 +50,16 @@ serve(async (req) => {
         }
 
         if (record.is_user) {
+          // Patient sent message → notify doctor on DocSera-Pro
           targetUserIds.push(conversation.doctor_id);
+          targetApp = "docsera_pro";
         } else {
+          // Doctor sent message → notify patient on DocSera
           targetUserIds.push(conversation.patient_id);
           if (conversation.relative_id) {
             targetUserIds.push(conversation.relative_id);
           }
+          targetApp = "docsera";
         }
 
         const senderName = record.sender_name || "DocSera";
@@ -264,6 +269,9 @@ serve(async (req) => {
     // ✅ CASE: Todo Task Assignment/Completion (INSERT/UPDATE on 'todo_tasks')
     // ===============================================================
     else if (table === "todo_tasks") {
+      // Todo tasks are always for DocSera-Pro users
+      targetApp = "docsera_pro";
+
       // CASE A: Task assigned (INSERT with assigned_to, or UPDATE changing assigned_to)
       if (type === 'INSERT' && record.assigned_to && record.created_by !== record.assigned_to) {
         targetUserIds.push(record.assigned_to);
@@ -338,7 +346,8 @@ serve(async (req) => {
     const { data: devices, error: devicesError } = await supabase
       .from("user_devices")
       .select("token")
-      .in("user_id", targetUserIds);
+      .in("user_id", targetUserIds)
+      .eq("app", targetApp);
 
     if (devicesError) {
       console.error("Error fetching devices:", devicesError);

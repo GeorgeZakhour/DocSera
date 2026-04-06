@@ -187,6 +187,22 @@ class _ConfirmationPageState extends State<ConfirmationPage> {
         return rawGender;
       }();
 
+      // 🚫 Check if patient is blocked from booking with this doctor
+      final blockRow = await supabase
+          .from('doctor_patient_booking_blocks')
+          .select('id')
+          .eq('doctor_id', widget.appointmentDetails.doctorId)
+          .eq('patient_id', userId)
+          .maybeSingle();
+
+      if (blockRow != null) {
+        if (!mounted) return;
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(AppLocalizations.of(context)!.blockedFromBooking)),
+        );
+        return;
+      }
+
       // 🚀 استدعاء RPC (الحجز الحقيقي)
       final appointmentId = await supabase.rpc(
         'book_appointment_by_patient',
