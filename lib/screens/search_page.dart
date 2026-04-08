@@ -9,6 +9,7 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:docsera/app/text_styles.dart'; //
 import 'package:flutter/material.dart';
 import 'package:docsera/app/const.dart';
+import 'package:docsera/services/supabase/specialties_service.dart';
 import 'package:docsera/services/supabase/supabase_search_service.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:flutter_svg/flutter_svg.dart';
@@ -38,6 +39,7 @@ class _SearchPageState extends State<SearchPage> {
   final FocusNode _focusNode = FocusNode();
   String? _userId; // Stores the logged-in user ID
   bool _isSearching = false;
+  List<Map<String, dynamic>> _specialties = [];
 
   @override
   void initState() {
@@ -53,6 +55,7 @@ class _SearchPageState extends State<SearchPage> {
     });
 
     _fetchFavoriteDoctors(); // ✅ Load favorite doctors on page load
+    _fetchSpecialties();
   }
 
   @override
@@ -75,6 +78,15 @@ class _SearchPageState extends State<SearchPage> {
     } catch (e) {
       debugPrint("❌ Failed to fetch favorite practitioners: $e");
       setState(() => _favoriteDoctors = []);
+    }
+  }
+
+  Future<void> _fetchSpecialties() async {
+    try {
+      final data = await SpecialtiesService.getAll();
+      if (mounted) setState(() => _specialties = data);
+    } catch (e) {
+      debugPrint("❌ Failed to fetch specialties: $e");
     }
   }
 
@@ -248,43 +260,38 @@ class _SearchPageState extends State<SearchPage> {
 
   Widget _buildSpecialtiesList() {
     final t = AppLocalizations.of(context)!;
-    final specialties = [
-      {'name': t.specialtyGeneral, 'iconAsset': 'assets/icons/specialties/General-specialty.svg'},
-      {'name': t.specialtyInternal, 'iconAsset': 'assets/icons/specialties/Internal-specialty.svg'},
-      {'name': t.specialtyPediatrics, 'iconAsset': 'assets/icons/specialties/Pediatrics-specialty.svg'},
-      {'name': t.specialtyGynecology, 'iconAsset': 'assets/icons/specialties/Gynecology-specialty.svg'},
-      {'name': t.specialtyDentistry, 'iconAsset': 'assets/icons/specialties/Dentistry-specialty.svg'},
-      {'name': t.specialtyCardiology, 'iconAsset': 'assets/icons/specialties/Cardiology-specialty.svg'},
-      {'name': t.specialtyENT, 'iconAsset': 'assets/icons/specialties/ENT-specialty.svg'},
-      {'name': t.specialtyOphthalmology, 'iconAsset': 'assets/icons/specialties/Ophthalmology-specialty.svg'},
-      {'name': t.specialtyOrthopedics, 'iconAsset': 'assets/icons/specialties/Orthopedics-specialty.svg'},
-      {'name': t.specialtyDermatology, 'iconAsset': 'assets/icons/specialties/Dermatology-specialty.svg'},
-    ];
+    final lang = Localizations.localeOf(context).languageCode;
+
+    if (_specialties.isEmpty) {
+      return const Center(child: CircularProgressIndicator(color: AppColors.main));
+    }
 
     return ListView.builder(
-      itemCount: specialties.length,
+      itemCount: _specialties.length,
       itemBuilder: (context, index) {
-        final spec = specialties[index];
+        final spec = _specialties[index];
+        final name = lang == 'ar' ? (spec['name_ar'] ?? '') : (spec['name_en'] ?? '');
+        final iconKey = spec['icon_key'] ?? 'General-specialty';
+        final iconAsset = 'assets/icons/specialties/$iconKey.svg';
+
         return ListTile(
           leading: CircleAvatar(
             backgroundColor: Colors.grey.withOpacity(0.08),
-            child: spec['iconAsset'] != null
-                ? SvgPicture.asset(
-                    spec['iconAsset'] as String,
-                    width: 25.w,
-                    height: 25.w,
-                    color: AppColors.main,
-                  )
-                : null,
+            child: SvgPicture.asset(
+              iconAsset,
+              width: 25.w,
+              height: 25.w,
+              colorFilter: const ColorFilter.mode(AppColors.main, BlendMode.srcIn),
+            ),
           ),
-          title: Text(spec['name'] as String, style: AppTextStyles.getText2(context)),
+          title: Text(name, style: AppTextStyles.getText2(context)),
           subtitle: Text(
             t.searchBySpecialty,
             style: AppTextStyles.getText3(context).copyWith(color: Colors.grey),
           ),
           trailing: const Icon(Icons.arrow_outward, size: 18, color: Colors.grey),
           onTap: () {
-            _searchController.text = spec['name'] as String;
+            _searchController.text = name;
             _performSearch(_searchController.text);
           },
         );
