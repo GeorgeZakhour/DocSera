@@ -371,6 +371,9 @@
   "specialty": "التخصص",
   "reset": "إعادة تعيين",
   "more": "أُخرى",
+  "allZones": "كل المناطق",
+  "zonesAndPlaces": "المنطقة / الحي الفرعي",
+  "selectZone": "اختر منطقة أو حيّاً للتصفية، أو اختر الكل",
   "openInMapsApp": "افتح في تطبيق الخرائط",
   "messagesDisabled": "غير متاح للرسائل",
   "patientsOnlyMessaging": "متاح فقط لمرضاه الحاليين",
@@ -1183,5 +1186,9 @@
   "existingAccountTitle": "حساب موجود",
   "existingAccountMessage": "هذا البريد الإلكتروني مرتبط بحساب دوكسيرا برو موجود. يرجى إدخال كلمة المرور الحالية للمتابعة.",
 
-  "blockedFromBooking": "لا يمكنك حجز موعد مع هذا الطبيب. يرجى التواصل مع العيادة."
+  "blockedFromBooking": "لا يمكنك حجز موعد مع هذا الطبيب. يرجى التواصل مع العيادة.",
+
+  "modularReport": "تقرير مفصّل",
+  "downloadPdf": "تحميل PDF",
+  "reportSharedByDoctor": "قام الطبيب {doctorName} بمشاركة تقرير طبي معك"
 }

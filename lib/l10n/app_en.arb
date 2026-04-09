@@ -363,6 +363,9 @@
   "specialty": "Specialty",
   "reset": "Reset",
   "more": "more",
+  "allZones": "All Areas",
+  "zonesAndPlaces": "Neighborhood / Place",
+  "selectZone": "Select a neighborhood to filter, or choose all",
   "openInMapsApp": "Open in Maps App",
   "messagesDisabled": "Not receiving messages",
   "patientsOnlyMessaging": "Messages only from patients",
@@ -1161,5 +1164,9 @@
   "existingAccountTitle": "Existing Account",
   "existingAccountMessage": "This email is linked to an existing DocSera Pro account. Please enter your current password to continue.",
 
-  "blockedFromBooking": "You are unable to book with this doctor. Please contact the clinic."
+  "blockedFromBooking": "You are unable to book with this doctor. Please contact the clinic.",
+
+  "modularReport": "Detailed Report",
+  "downloadPdf": "Download PDF",
+  "reportSharedByDoctor": "Dr. {doctorName} shared a medical report with you"
 }

@@ -1098,6 +1098,15 @@ class AppLocalizationsEn extends AppLocalizations {
   String get more => 'more';
 
   @override
+  String get allZones => 'All Areas';
+
+  @override
+  String get zonesAndPlaces => 'Neighborhood / Place';
+
+  @override
+  String get selectZone => 'Select a neighborhood to filter, or choose all';
+
+  @override
   String get openInMapsApp => 'Open in Maps App';
 
   @override
@@ -3270,4 +3279,15 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get blockedFromBooking =>
       'You are unable to book with this doctor. Please contact the clinic.';
+
+  @override
+  String get modularReport => 'Detailed Report';
+
+  @override
+  String get downloadPdf => 'Download PDF';
+
+  @override
+  String reportSharedByDoctor(Object doctorName) {
+    return 'Dr. $doctorName shared a medical report with you';
+  }
 }

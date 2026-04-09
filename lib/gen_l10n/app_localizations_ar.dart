@@ -1086,6 +1086,15 @@ class AppLocalizationsAr extends AppLocalizations {
   String get more => 'أُخرى';
 
   @override
+  String get allZones => 'كل المناطق';
+
+  @override
+  String get zonesAndPlaces => 'المنطقة / الحي الفرعي';
+
+  @override
+  String get selectZone => 'اختر منطقة أو حيّاً للتصفية، أو اختر الكل';
+
+  @override
   String get openInMapsApp => 'افتح في تطبيق الخرائط';
 
   @override
@@ -3228,4 +3237,15 @@ class AppLocalizationsAr extends AppLocalizations {
   @override
   String get blockedFromBooking =>
       'لا يمكنك حجز موعد مع هذا الطبيب. يرجى التواصل مع العيادة.';
+
+  @override
+  String get modularReport => 'تقرير مفصّل';
+
+  @override
+  String get downloadPdf => 'تحميل PDF';
+
+  @override
+  String reportSharedByDoctor(Object doctorName) {
+    return 'قام الطبيب $doctorName بمشاركة تقرير طبي معك';
+  }
 }

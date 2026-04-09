@@ -2120,6 +2120,24 @@ abstract class AppLocalizations {
   /// **'more'**
   String get more;
 
+  /// No description provided for @allZones.
+  ///
+  /// In en, this message translates to:
+  /// **'All Areas'**
+  String get allZones;
+
+  /// No description provided for @zonesAndPlaces.
+  ///
+  /// In en, this message translates to:
+  /// **'Neighborhood / Place'**
+  String get zonesAndPlaces;
+
+  /// No description provided for @selectZone.
+  ///
+  /// In en, this message translates to:
+  /// **'Select a neighborhood to filter, or choose all'**
+  String get selectZone;
+
   /// No description provided for @openInMapsApp.
   ///
   /// In en, this message translates to:
@@ -6127,6 +6145,24 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'You are unable to book with this doctor. Please contact the clinic.'**
   String get blockedFromBooking;
+
+  /// No description provided for @modularReport.
+  ///
+  /// In en, this message translates to:
+  /// **'Detailed Report'**
+  String get modularReport;
+
+  /// No description provided for @downloadPdf.
+  ///
+  /// In en, this message translates to:
+  /// **'Download PDF'**
+  String get downloadPdf;
+
+  /// No description provided for @reportSharedByDoctor.
+  ///
+  /// In en, this message translates to:
+  /// **'Dr. {doctorName} shared a medical report with you'**
+  String reportSharedByDoctor(Object doctorName);
 }
 
 class _AppLocalizationsDelegate
