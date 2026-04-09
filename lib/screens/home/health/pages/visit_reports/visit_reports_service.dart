@@ -1,6 +1,7 @@
 import 'package:flutter/foundation.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'visit_report_model.dart';
+import 'modular_report_model.dart';
 
 class VisitReportsService {
   final _client = Supabase.instance.client;
@@ -59,6 +60,29 @@ class VisitReportsService {
       return list;
     } catch (e) {
       debugPrint("❌ [VisitReportsService] error: $e");
+      return [];
+    }
+  }
+
+  Future<List<ModularReport>> fetchModularReports({
+    required String? userId,
+    required String? relativeId,
+  }) async {
+    if (userId == null && relativeId == null) return [];
+
+    try {
+      final response = await _client.rpc('rpc_get_my_shared_reports', params: {
+        'p_user_id': userId,
+        'p_relative_id': relativeId,
+      });
+
+      if (response == null) return [];
+      final list = response as List<dynamic>;
+      return list
+          .map((e) => ModularReport.fromJson(Map<String, dynamic>.from(e)))
+          .toList();
+    } catch (e) {
+      debugPrint('❌ [VisitReportsService.fetchModularReports] error: $e');
       return [];
     }
   }
