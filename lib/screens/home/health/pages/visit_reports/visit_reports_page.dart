@@ -10,7 +10,20 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:docsera/app/const.dart';
 import 'visit_reports_cubit.dart';
 import 'visit_report_model.dart';
+import 'modular_report_model.dart';
+import 'modular_report_detail_page.dart';
 import 'VisitReportDetailsPage.dart';
+
+class _ReportListItem {
+  final VisitReport? legacy;
+  final ModularReport? modular;
+  DateTime get date => legacy?.date ?? modular!.createdAt;
+  String get doctorName => legacy?.doctorName ?? modular?.doctorName ?? '';
+  bool get isModular => modular != null;
+
+  _ReportListItem.fromLegacy(VisitReport r) : legacy = r, modular = null;
+  _ReportListItem.fromModular(ModularReport r) : legacy = null, modular = r;
+}
 
 class VisitReportsPage extends StatefulWidget {
   const VisitReportsPage({super.key});
@@ -95,18 +108,26 @@ class _VisitReportsPageState extends State<VisitReportsPage>
                 }
 
                 debugPrint("📄 [VisitReportsPage] rebuilding UI with "
-                    "${state.reports.length} reports in state");
+                    "${state.reports.length} legacy + "
+                    "${state.modularReports.length} modular reports in state");
 
-                final years = _extractYears(state.reports);
+                // Combine legacy + modular into unified list
+                final allItems = <_ReportListItem>[
+                  ...state.reports.map((r) => _ReportListItem.fromLegacy(r)),
+                  ...state.modularReports.map((r) => _ReportListItem.fromModular(r)),
+                ];
+                allItems.sort((a, b) => b.date.compareTo(a.date));
+
+                final years = _extractYearsUnified(allItems);
                 final activeYear =
                     _selectedYear ?? (years.isNotEmpty ? years.first : null);
 
                 final months = activeYear != null
-                    ? _extractMonthsForYear(state.reports, activeYear)
+                    ? _extractMonthsForYearUnified(allItems, activeYear)
                     : <int>[];
 
-                final filtered = _applyFilters(
-                  state.reports,
+                final filtered = _applyFiltersUnified(
+                  allItems,
                   activeYear: activeYear,
                   activeMonth: _selectedMonth,
                   query: _search,
@@ -159,30 +180,32 @@ class _VisitReportsPageState extends State<VisitReportsPage>
                       SliverList(
                         delegate: SliverChildBuilderDelegate(
                               (context, index) {
-                            final r = filtered[index];
+                            final item = filtered[index];
                             return Padding(
                               padding: const EdgeInsets.symmetric(
                                   horizontal: 16, vertical: 8),
-                              child: ReportCardWidget(
-                                report: r,
-                                onTap: () {
-                                  Navigator.push(
-                                    context,
-                                    PageRouteBuilder(
-                                      transitionDuration:
-                                      const Duration(milliseconds: 250),
-                                      pageBuilder: (_, anim, __) =>
-                                          FadeTransition(
-                                            opacity: anim,
-                                            child: VisitReportDetailsPage(
-                                              report: r,
-                                              heroTag: "visit_${r.appointmentId}",
-                                            ),
+                              child: item.isModular
+                                  ? _buildModularReportCard(context, item.modular!)
+                                  : ReportCardWidget(
+                                      report: item.legacy!,
+                                      onTap: () {
+                                        Navigator.push(
+                                          context,
+                                          PageRouteBuilder(
+                                            transitionDuration:
+                                            const Duration(milliseconds: 250),
+                                            pageBuilder: (_, anim, __) =>
+                                                FadeTransition(
+                                                  opacity: anim,
+                                                  child: VisitReportDetailsPage(
+                                                    report: item.legacy!,
+                                                    heroTag: "visit_${item.legacy!.appointmentId}",
+                                                  ),
+                                                ),
                                           ),
+                                        );
+                                      },
                                     ),
-                                  );
-                                },
-                              ),
                             );
                           },
                           childCount: filtered.length,
@@ -217,8 +240,134 @@ class _VisitReportsPageState extends State<VisitReportsPage>
     }).toList();
   }
 
+  List<_ReportListItem> _applyFiltersUnified(
+      List<_ReportListItem> items, {
+        required int? activeYear,
+        required int? activeMonth,
+        required String query,
+      }) {
+    query = query.trim().toLowerCase();
+    return items.where((item) {
+      final matchesYear = activeYear == null || item.date.year == activeYear;
+      final matchesMonth = activeMonth == null || item.date.month == activeMonth;
+      final matchesSearch =
+          query.isEmpty || item.doctorName.toLowerCase().contains(query);
+      return matchesYear && matchesMonth && matchesSearch;
+    }).toList();
+  }
 
+  List<int> _extractYearsUnified(List<_ReportListItem> items) {
+    return items
+        .map((item) => item.date.year)
+        .toSet()
+        .toList()
+      ..sort((a, b) => b.compareTo(a));
+  }
 
+  List<int> _extractMonthsForYearUnified(List<_ReportListItem> items, int year) {
+    return items
+        .where((item) => item.date.year == year)
+        .map((item) => item.date.month)
+        .toSet()
+        .toList()
+      ..sort();
+  }
+
+  Widget _buildModularReportCard(BuildContext context, ModularReport report) {
+    final t = AppLocalizations.of(context)!;
+    final formattedDate =
+        "${report.createdAt.year}-${report.createdAt.month.toString().padLeft(2, '0')}-${report.createdAt.day.toString().padLeft(2, '0')}";
+
+    return GestureDetector(
+      onTap: () {
+        Navigator.push(
+          context,
+          PageRouteBuilder(
+            transitionDuration: const Duration(milliseconds: 250),
+            pageBuilder: (_, anim, __) => FadeTransition(
+              opacity: anim,
+              child: ModularReportDetailPage(report: report),
+            ),
+          ),
+        );
+      },
+      child: Container(
+        padding: const EdgeInsets.all(16),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(color: Colors.grey.shade200),
+        ),
+        child: Row(
+          children: [
+            CircleAvatar(
+              radius: 22,
+              backgroundColor: AppColors.main.withValues(alpha: 0.1),
+              backgroundImage: report.doctorImage != null
+                  ? NetworkImage(report.doctorImage!)
+                  : null,
+              child: report.doctorImage == null
+                  ? const Icon(Icons.person, color: AppColors.main, size: 22)
+                  : null,
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    report.doctorName ?? '',
+                    style: const TextStyle(
+                      fontSize: 14,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                  const SizedBox(height: 2),
+                  Text(
+                    report.doctorSpecialty ?? '',
+                    style: TextStyle(
+                      fontSize: 11,
+                      color: Colors.grey.shade600,
+                    ),
+                  ),
+                  const SizedBox(height: 4),
+                  Row(
+                    children: [
+                      Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                        decoration: BoxDecoration(
+                          color: AppColors.main.withValues(alpha: 0.1),
+                          borderRadius: BorderRadius.circular(4),
+                        ),
+                        child: Text(
+                          t.modularReport,
+                          style: const TextStyle(
+                            fontSize: 9,
+                            color: AppColors.main,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                      ),
+                      const SizedBox(width: 8),
+                      Text(
+                        formattedDate,
+                        style: TextStyle(
+                          fontSize: 10,
+                          color: Colors.grey.shade500,
+                          fontFamily: 'Montserrat',
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+            ),
+            const Icon(Icons.chevron_right, color: Colors.grey),
+          ],
+        ),
+      ),
+    );
+  }
 
   Widget _buildHeader(BuildContext context) {
     final rtl = Directionality.of(context) == TextDirection.rtl;
