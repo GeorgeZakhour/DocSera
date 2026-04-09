@@ -1,16 +1,25 @@
 import 'package:bloc/bloc.dart';
 import 'package:flutter/foundation.dart';
+import 'modular_report_model.dart';
 import 'visit_report_model.dart';
 import 'visit_reports_service.dart';
 
 class VisitReportsState {
   final bool loading;
-  final List<VisitReport> reports;
+  final List<VisitReport> legacyReports;
+  final List<ModularReport> modularReports;
 
-  VisitReportsState({required this.loading, required this.reports});
+  VisitReportsState({
+    required this.loading,
+    required this.legacyReports,
+    required this.modularReports,
+  });
 
   factory VisitReportsState.initial() =>
-      VisitReportsState(loading: false, reports: []);
+      VisitReportsState(loading: false, legacyReports: [], modularReports: []);
+
+  // Backward compat: existing code reads state.reports
+  List<VisitReport> get reports => legacyReports;
 }
 
 class VisitReportsCubit extends Cubit<VisitReportsState> {
@@ -28,21 +37,35 @@ class VisitReportsCubit extends Cubit<VisitReportsState> {
     debugPrint("🔍 [VisitReportsCubit.loadReports] start → "
         "userId=$userId, relativeId=$relativeId");
 
-    emit(VisitReportsState(loading: true, reports: state.reports));
+    emit(VisitReportsState(
+      loading: true,
+      legacyReports: state.legacyReports,
+      modularReports: state.modularReports,
+    ));
 
     try {
-      final list = await service.fetchReports(
+      final legacyFuture = service.fetchReports(
+        userId: userId,
+        relativeId: relativeId,
+      );
+      final modularFuture = service.fetchModularReports(
         userId: userId,
         relativeId: relativeId,
       );
 
-      debugPrint("✅ [VisitReportsCubit.loadReports] fetched ${list.length} reports "
-          "for userId=$userId, relativeId=$relativeId");
+      final results = await Future.wait([legacyFuture, modularFuture]);
 
-      emit(VisitReportsState(loading: false, reports: list));
+      debugPrint("✅ [VisitReportsCubit.loadReports] fetched "
+          "${(results[0] as List).length} legacy + ${(results[1] as List).length} modular");
+
+      emit(VisitReportsState(
+        loading: false,
+        legacyReports: results[0] as List<VisitReport>,
+        modularReports: results[1] as List<ModularReport>,
+      ));
     } catch (e) {
       debugPrint("❌ [VisitReportsCubit.loadReports] error: $e");
-      emit(VisitReportsState(loading: false, reports: []));
+      emit(VisitReportsState(loading: false, legacyReports: [], modularReports: []));
     }
   }
 
