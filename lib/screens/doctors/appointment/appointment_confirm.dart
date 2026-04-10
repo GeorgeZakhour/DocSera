@@ -187,13 +187,30 @@ class _ConfirmationPageState extends State<ConfirmationPage> {
         return rawGender;
       }();
 
-      // 🚫 Check if patient is blocked from booking with this doctor
-      final blockRow = await supabase
-          .from('doctor_patient_booking_blocks')
-          .select('id')
-          .eq('doctor_id', widget.appointmentDetails.doctorId)
-          .eq('patient_id', userId)
-          .maybeSingle();
+      // 🚫 Check if this specific entity is blocked (independent per user/relative)
+      final isRelative = widget.appointmentDetails.isRelative;
+      final relativeId = isRelative ? widget.appointmentDetails.patientId : null;
+
+      Map<String, dynamic>? blockRow;
+      if (isRelative && relativeId != null) {
+        // Booking for a relative: only check if THIS relative is blocked
+        blockRow = await supabase
+            .from('doctor_patient_booking_blocks')
+            .select('id')
+            .eq('doctor_id', widget.appointmentDetails.doctorId)
+            .eq('patient_id', userId)
+            .eq('relative_id', relativeId)
+            .maybeSingle();
+      } else {
+        // Booking for self: only check main account block (relative_id IS NULL)
+        blockRow = await supabase
+            .from('doctor_patient_booking_blocks')
+            .select('id')
+            .eq('doctor_id', widget.appointmentDetails.doctorId)
+            .eq('patient_id', userId)
+            .isFilter('relative_id', null)
+            .maybeSingle();
+      }
 
       if (blockRow != null) {
         if (!mounted) return;

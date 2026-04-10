@@ -8,6 +8,7 @@ import 'package:docsera/screens/doctors/doctor_profile_page.dart';
 import 'package:docsera/screens/map_results_page.dart';
 import 'package:docsera/services/supabase/supabase_search_service.dart';
 import 'package:docsera/utils/doctor_image_utils.dart';
+import 'package:docsera/utils/geography_constants.dart';
 import 'package:docsera/utils/page_transitions.dart';
 import 'package:docsera/widgets/base_scaffold.dart';
 import 'package:docsera/widgets/rotating_logo.dart';
@@ -60,6 +61,8 @@ class _SearchAdvancedPageState extends State<SearchAdvancedPage> {
 
   // ======= فلو التخصص + الموقع =======
   String? _selectedSpecialty; // التخصص الأساسي (للحقل والبحث المبدئي)
+  List<String> _cachedNeighborhoods = []; // cached from _results
+  _CityOption? _zonePendingCity; // non-null = showing zone picker for this city
   bool _locationStageActive = false;
   bool _isNearbySelected = false;
   LatLng? _myLatLng;
@@ -80,7 +83,7 @@ class _SearchAdvancedPageState extends State<SearchAdvancedPage> {
   List<Map<String, dynamic>> _filteredDoctors = [];
   List<Map<String, dynamic>> _filteredCenters = [];
 
-  bool get _showingResults => _locationStageActive && _filteredResults.isNotEmpty;
+  bool get _showingResults => _locationStageActive && _filteredResults.isNotEmpty && _zonePendingCity == null;
 
   @override
   void initState() {
@@ -93,6 +96,8 @@ class _SearchAdvancedPageState extends State<SearchAdvancedPage> {
       if (_selectedSpecialty != null) {
         setState(() {
           _selectedSpecialty = null;
+          _filters = _filters.copyWith(neighborhood: null);
+          _zonePendingCity = null;
           _locationStageActive = false;
           _locationCtrl.clear();
           _isNearbySelected = false;
@@ -254,6 +259,7 @@ class _SearchAdvancedPageState extends State<SearchAdvancedPage> {
       _isNearbySelected = false;
       _results.clear();
       _filteredResults.clear();
+      _zonePendingCity = null;
       _filters = const FilterOptions(); // تصفير الفلاتر عند بدء بحث جديد
     });
     Future.microtask(() => _suppressSearchListener = false);
@@ -380,6 +386,7 @@ class _SearchAdvancedPageState extends State<SearchAdvancedPage> {
       setState(() {
         _results = merged.values.toList();
         _isFetchingResults = false;
+        _updateNeighborhoodCache();
       });
 
       _applyFilters(); // تطبيق الفلاتر الإضافية (مثل الجنس)
@@ -407,6 +414,13 @@ class _SearchAdvancedPageState extends State<SearchAdvancedPage> {
         final isMale = g.startsWith('m') || g.contains('ذكر');
         final isFemale = g.startsWith('f') || g.contains('أنث');
         return filterMale ? isMale : isFemale;
+      }).toList();
+    }
+
+    // فلتر الحي/المنطقة
+    if (_filters.neighborhood != null) {
+      base = base.where((d) {
+        return (d['address']?['neighborhood'] ?? '') == _filters.neighborhood;
       }).toList();
     }
 
@@ -688,9 +702,10 @@ class _SearchAdvancedPageState extends State<SearchAdvancedPage> {
   void _onCityChanged(String value) {
     final q = value.trim().toLowerCase();
     setState(() {
+      _zonePendingCity = null;
       _isNearbySelected = false;
       _myLatLng = null;
-      _filters = _filters.copyWith(byNearby: false, nearbyKm: null, cityDisplay: null);
+      _filters = _filters.copyWith(byNearby: false, nearbyKm: null, cityDisplay: null, neighborhood: null);
       _cityMatches = q.isEmpty
           ? List<_CityOption>.from(_cities)
           : _cities.where((c) => c.display.toLowerCase().contains(q) || c.ar.contains(q)).toList();
@@ -701,14 +716,15 @@ class _SearchAdvancedPageState extends State<SearchAdvancedPage> {
   void _enterEditMode() {
     setState(() {
       _locationStageActive = true;
+      _zonePendingCity = null;
       _results.clear();
       _filteredResults.clear();
       _filters = const FilterOptions();
-      _locationCtrl.clear(); // مسح حقل الموقع
-      _isNearbySelected = false; // إلغاء بالقرب مني
+      _locationCtrl.clear();
+      _isNearbySelected = false;
       _cityMatches = List<_CityOption>.from(_cities);
     });
-    Future.delayed(Duration.zero, () => _locationFocus.requestFocus()); // المؤشر على الحقل
+    Future.delayed(Duration.zero, () => _locationFocus.requestFocus());
   }
 
   // ========= فتح صفحة الفلاتر =========
@@ -786,6 +802,10 @@ class _SearchAdvancedPageState extends State<SearchAdvancedPage> {
 
       // إن تغيّر الموقع أو مجموعة التخصصات => إعادة جلب من السيرفر
       if (locationChanged || specsChanged) {
+        setState(() {
+          _zonePendingCity = null;
+          _filters = _filters.copyWith(neighborhood: null);
+        });
         await _fetchResults();
       } else {
         _applyFilters(); // تغييرات محلية (جنس فقط غالبًا)
@@ -1009,6 +1029,104 @@ class _SearchAdvancedPageState extends State<SearchAdvancedPage> {
     );
   }
 
+  // ========= تحديث كاش الأحياء =========
+  void _updateNeighborhoodCache() {
+    final Set<String> zones = {};
+    for (var r in _results) {
+      final n = (r['address']?['neighborhood'] ?? '').toString().trim();
+      if (n.isNotEmpty) zones.add(n);
+    }
+    _cachedNeighborhoods = zones.toList()..sort();
+  }
+
+  // ========= اختيار الحي/المنطقة (خطوة بعد اختيار المدينة) =========
+  Widget _buildZonePicker(AppLocalizations t) {
+    final city = _zonePendingCity!;
+    final zones = _cachedNeighborhoods; // only zones that have doctors
+    final bool isDark = Theme.of(context).brightness == Brightness.dark;
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        // Header: city name + back
+        Padding(
+          padding: EdgeInsets.symmetric(horizontal: 4.w, vertical: 4.h),
+          child: Row(
+            children: [
+              InkWell(
+                borderRadius: BorderRadius.circular(20),
+                onTap: () {
+                  // Go back to results (all zones) without re-fetching
+                  setState(() => _zonePendingCity = null);
+                },
+                child: Padding(
+                  padding: EdgeInsets.all(8.w),
+                  child: Icon(Icons.arrow_back_rounded, size: 22.sp, color: AppColors.main),
+                ),
+              ),
+              SizedBox(width: 4.w),
+              Text(
+                city.display,
+                style: AppTextStyles.getTitle3(context).copyWith(
+                  color: AppColors.main,
+                  fontWeight: FontWeight.w700,
+                ),
+              ),
+            ],
+          ),
+        ),
+
+        Padding(
+          padding: EdgeInsets.only(right: 16.w, left: 16.w, bottom: 8.h),
+          child: Text(
+            t.selectZone,
+            style: AppTextStyles.getText3(context).copyWith(
+              color: isDark ? Colors.white54 : Colors.grey.shade500,
+            ),
+          ),
+        ),
+
+        // Zone list
+        Expanded(
+          child: ListView.separated(
+            padding: EdgeInsets.symmetric(horizontal: 8.w),
+            itemCount: zones.length + 1, // +1 for "All zones"
+            separatorBuilder: (_, __) => Divider(height: 1, color: isDark ? Colors.white10 : Colors.grey.shade200),
+            itemBuilder: (context, index) {
+              final bool isAll = index == 0;
+              final String zoneName = isAll ? t.allZones : zones[index - 1];
+
+              return ListTile(
+                contentPadding: EdgeInsets.symmetric(horizontal: 12.w, vertical: 2.h),
+                leading: Icon(
+                  isAll ? Icons.location_city_rounded : Icons.place_outlined,
+                  color: isAll ? AppColors.main : (isDark ? Colors.white38 : Colors.grey.shade400),
+                  size: 22.sp,
+                ),
+                title: Text(
+                  zoneName,
+                  style: AppTextStyles.getText2(context).copyWith(
+                    fontWeight: isAll ? FontWeight.w600 : FontWeight.w500,
+                    color: isAll ? AppColors.main : null,
+                  ),
+                ),
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12.r)),
+                onTap: () {
+                  // Apply filter locally — results are already loaded
+                  _filters = _filters.copyWith(
+                    neighborhood: isAll ? null : zoneName,
+                  );
+                  setState(() => _zonePendingCity = null);
+                  _applyFilters();
+                },
+              );
+            },
+          ),
+        ),
+      ],
+    );
+  }
+
   // ========= حقل الموقع =========
   Widget _buildLocationField(AppLocalizations t) {
     return TextField(
@@ -1209,9 +1327,17 @@ class _SearchAdvancedPageState extends State<SearchAdvancedPage> {
               _locationCtrl.text = c.display;
               _isNearbySelected = false;
               _myLatLng = null;
-              _filters = _filters.copyWith(byNearby: false, nearbyKm: null, cityDisplay: c.display);
-              setState(() {});
+              _filters = _filters.copyWith(byNearby: false, nearbyKm: null, cityDisplay: c.display, neighborhood: null);
+
+              // Fetch all results for this city first
               await _fetchResults();
+
+              // If city has zones and there are populated zones, show zone picker
+              if (GeographyConstants.hasZones(c.ar) && _cachedNeighborhoods.isNotEmpty) {
+                setState(() => _zonePendingCity = c);
+              } else {
+                setState(() => _zonePendingCity = null);
+              }
             },
           ),
         ),
@@ -1280,12 +1406,31 @@ class _SearchAdvancedPageState extends State<SearchAdvancedPage> {
     _initCities(context);
     final t = AppLocalizations.of(context)!;
 
-    return BaseScaffold(
-      title: Text(
-        widget.mode == "message" ? t.sendMessageTitle : t.searchTitle,
-        style: AppTextStyles.getTitle1(context).copyWith(color: AppColors.whiteText),
-      ),
-      child: Stack(
+    return PopScope(
+      canPop: !_showingResults && _zonePendingCity == null,
+      onPopInvokedWithResult: (didPop, _) {
+        if (didPop) return;
+        _goBackFromResults();
+      },
+      child: BaseScaffold(
+        title: Text(
+          widget.mode == "message" ? t.sendMessageTitle : t.searchTitle,
+          style: AppTextStyles.getTitle1(context).copyWith(color: AppColors.whiteText),
+        ),
+        showBackArrow: false,
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.arrow_forward_ios, color: AppColors.whiteText, size: 16),
+            onPressed: () {
+              if (_showingResults || _zonePendingCity != null) {
+                _goBackFromResults();
+              } else {
+                Navigator.of(context).pop();
+              }
+            },
+          ),
+        ],
+        child: Stack(
         children: [
           // خلفية
           AnimatedSwitcher(
@@ -1336,16 +1481,17 @@ class _SearchAdvancedPageState extends State<SearchAdvancedPage> {
                             setState(() => _mixed = []);
                           }
 
-                          setState(() {
-                            _selectedSpecialty = null;
-                            _locationStageActive = false;
-                            _locationCtrl.clear();
-                            _results.clear();
-                            _filteredResults.clear();
-                            _filters = const FilterOptions();
-                            _isNearbySelected = false;
-                            _myLatLng = null;
-                          });
+                            setState(() {
+                              _selectedSpecialty = null;
+                              _locationStageActive = false;
+                              _zonePendingCity = null;
+                              _locationCtrl.clear();
+                              _results.clear();
+                              _filteredResults.clear();
+                              _filters = const FilterOptions();
+                              _isNearbySelected = false;
+                              _myLatLng = null;
+                            });
                         },
                       )
                           : null,
@@ -1385,20 +1531,21 @@ class _SearchAdvancedPageState extends State<SearchAdvancedPage> {
                   child: _showingResults
                       ? const SizedBox()
                       : _locationStageActive
-                      ? (_selectedSpecialty != null && _isCityConfirmed)
-                      ? (_isFetchingResults
-                      ? const Center(child: RotatingLogoLoader(size: 50))
-                      : (_filteredResults.isEmpty
-                      ? Center(
-                    child: Text(
-                      t.noResultsTitle,
-                      style: AppTextStyles.getText2(context)
-                          .copyWith(color: Colors.grey),
-                    ),
-                  )
-                      : const SizedBox()))
-                      : _buildCitySuggestions()
-                  // ✅ هنا: إن لم نكن في مرحلة الموقع، نعرض الاقتراحات المختلطة (ومن ضمنها كل التخصصات عند التركيز الفارغ)
+                      ? _zonePendingCity != null
+                          ? _buildZonePicker(t)
+                          : (_selectedSpecialty != null && _isCityConfirmed)
+                              ? (_isFetchingResults
+                                  ? const Center(child: RotatingLogoLoader(size: 50))
+                                  : (_filteredResults.isEmpty
+                                      ? Center(
+                                          child: Text(
+                                            t.noResultsTitle,
+                                            style: AppTextStyles.getText2(context)
+                                                .copyWith(color: Colors.grey),
+                                          ),
+                                        )
+                                      : const SizedBox()))
+                              : _buildCitySuggestions()
                       : (_mixed.isNotEmpty ? _buildMixedSuggestions() : _favoritesSection()),
                 ),
               ],
@@ -1414,7 +1561,32 @@ class _SearchAdvancedPageState extends State<SearchAdvancedPage> {
             ),
         ],
       ),
+      ),
     );
+  }
+
+  void _goBackFromResults() {
+    final cityAr = _cities.firstWhere(
+      (c) => c.display == _filters.cityDisplay,
+      orElse: () => _CityOption.empty(),
+    ).ar;
+
+    if (_showingResults && GeographyConstants.hasZones(cityAr) && _cachedNeighborhoods.isNotEmpty) {
+      // Go back to zone picker
+      setState(() {
+        _zonePendingCity = _cities.firstWhere(
+          (c) => c.display == _filters.cityDisplay,
+          orElse: () => _CityOption.empty(),
+        );
+        _filters = _filters.copyWith(neighborhood: null);
+        _applyFilters();
+      });
+    } else if (_showingResults || _zonePendingCity != null) {
+      // Go back to city list
+      _enterEditMode();
+    } else {
+      Navigator.of(context).pop();
+    }
   }
 
   // ===== بناء قائمة التخصصات المحلية =====
@@ -1499,6 +1671,7 @@ class FilterOptions {
   final bool byNearby; // تفعيل "بالقرب مني"
   final double? nearbyKm; // نصف القطر بالكيلومتر
   final String? cityDisplay; // مدينة (عرض محلي)
+  final String? neighborhood; // الحي المختار
 
   const FilterOptions({
     this.male = false,
@@ -1507,13 +1680,15 @@ class FilterOptions {
     this.byNearby = false,
     this.nearbyKm,
     this.cityDisplay,
+    this.neighborhood,
   });
 
   bool get hasAny =>
-      male || female || specs.isNotEmpty || byNearby || (cityDisplay != null && cityDisplay!.isNotEmpty);
+      male || female || specs.isNotEmpty || byNearby ||
+      (cityDisplay != null && cityDisplay!.isNotEmpty) ||
+      neighborhood != null;
 
   static const _unset = Object(); // sentinel
-
 
   FilterOptions copyWith({
     bool? male,
@@ -1521,20 +1696,21 @@ class FilterOptions {
     Set<String>? specs,
     bool? byNearby,
     Object? nearbyKm = _unset,   // use Object?, not double?
-    Object? cityDisplay = _unset // use Object?, not String?
+    Object? cityDisplay = _unset, // use Object?, not String?
+    Object? neighborhood = _unset, // use Object?, not String?
   }) {
     return FilterOptions(
       male: male ?? this.male,
       female: female ?? this.female,
       specs: specs ?? this.specs,
       byNearby: byNearby ?? this.byNearby,
-      nearbyKm: identical(nearbyKm, _unset) ? this.nearbyKm : nearbyKm as double?,        // can become null
-      cityDisplay: identical(cityDisplay, _unset) ? this.cityDisplay : cityDisplay as String?, // can become null
+      nearbyKm: identical(nearbyKm, _unset) ? this.nearbyKm : nearbyKm as double?,
+      cityDisplay: identical(cityDisplay, _unset) ? this.cityDisplay : cityDisplay as String?,
+      neighborhood: identical(neighborhood, _unset) ? this.neighborhood : neighborhood as String?,
     );
   }
 
-
-  // ملخص للفلاتر (غير مستخدم في الشريط حاليًا)
+  // ملخص للفلاتر
   String summaryLabel(BuildContext context) {
     final t = AppLocalizations.of(context)!;
     final parts = <String>[];
@@ -1549,6 +1725,7 @@ class FilterOptions {
 
     if (byNearby && nearbyKm != null) parts.add('${t.nearbyMe} ≤ ${nearbyKm!.toStringAsFixed(0)} km');
     if (!byNearby && cityDisplay != null && cityDisplay!.isNotEmpty) parts.add(cityDisplay!);
+    if (neighborhood != null) parts.add(neighborhood!);
 
     return parts.isEmpty ? t.noFilters : parts.join(' • ');
   }

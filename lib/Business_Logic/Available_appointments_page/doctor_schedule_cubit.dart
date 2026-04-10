@@ -117,8 +117,8 @@ class DoctorScheduleCubit extends Cubit<DoctorScheduleState> {
           final hr = int.parse(tParts[0]);
           final mn = int.parse(tParts[1]);
 
-          // Build slot local DateTime for lead-time comparison
-          final slotLocal = DateTime(yr, mo, dy, hr, mn);
+          // Build slot as Syria TZDateTime for accurate lead-time comparison
+          final slotLocal = DocSeraTime.syriaDateTime(yr, mo, dy, hr, mn);
 
           if (!slotLocal.isAfter(leadCutoff)) {
             continue; // 🚫 Skip slots within the booking lead time window

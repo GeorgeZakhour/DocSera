@@ -295,10 +295,110 @@ class _SelectPatientPageState extends State<SelectPatientPage> {
 
             GestureDetector(
               onTap: selectedPatientId != null
-                  ? () {
+                  ? () async {
                 debugPrint(
                     "Selected Patient: $selectedPatientName, Gender: $selectedPatientGender, Age: $selectedPatientAge");
 
+                // 🚫 Check if this patient/relative is blocked before proceeding
+                final isRelative = selectedPatientId != userId;
+                final supabase = Supabase.instance.client;
+
+                try {
+                  Map<String, dynamic>? blockRow;
+                  if (isRelative) {
+                    blockRow = await supabase
+                        .from('doctor_patient_booking_blocks')
+                        .select('id')
+                        .eq('doctor_id', widget.doctorId)
+                        .eq('patient_id', userId!)
+                        .eq('relative_id', selectedPatientId!)
+                        .maybeSingle();
+                  } else {
+                    blockRow = await supabase
+                        .from('doctor_patient_booking_blocks')
+                        .select('id')
+                        .eq('doctor_id', widget.doctorId)
+                        .eq('patient_id', userId!)
+                        .isFilter('relative_id', null)
+                        .maybeSingle();
+                  }
+
+                  if (blockRow != null) {
+                    if (!mounted) return;
+                    showDialog(
+                      context: context,
+                      builder: (ctx) {
+                        final isDark = Theme.of(ctx).brightness == Brightness.dark;
+                        return Dialog(
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(24.r),
+                          ),
+                          backgroundColor: isDark ? const Color(0xFF1E1E2C) : Colors.white,
+                          child: Padding(
+                            padding: EdgeInsets.symmetric(horizontal: 28.w, vertical: 32.h),
+                            child: Column(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                Container(
+                                  width: 72.w,
+                                  height: 72.w,
+                                  decoration: BoxDecoration(
+                                    color: Colors.red.withValues(alpha: 0.08),
+                                    shape: BoxShape.circle,
+                                  ),
+                                  child: Icon(
+                                    Icons.block_rounded,
+                                    color: Colors.red[400],
+                                    size: 38.sp,
+                                  ),
+                                ),
+                                SizedBox(height: 20.h),
+                                Text(
+                                  AppLocalizations.of(context)!.blockedFromBooking,
+                                  textAlign: TextAlign.center,
+                                  style: TextStyle(
+                                    fontSize: 15.sp,
+                                    fontWeight: FontWeight.w500,
+                                    color: isDark ? Colors.white70 : Colors.black87,
+                                    height: 1.5,
+                                  ),
+                                ),
+                                SizedBox(height: 28.h),
+                                SizedBox(
+                                  width: double.infinity,
+                                  height: 48.h,
+                                  child: ElevatedButton(
+                                    onPressed: () => Navigator.pop(ctx),
+                                    style: ElevatedButton.styleFrom(
+                                      backgroundColor: AppColors.main,
+                                      foregroundColor: Colors.white,
+                                      shape: RoundedRectangleBorder(
+                                        borderRadius: BorderRadius.circular(14.r),
+                                      ),
+                                      elevation: 0,
+                                    ),
+                                    child: Text(
+                                      AppLocalizations.of(context)!.ok,
+                                      style: TextStyle(
+                                        fontSize: 15.sp,
+                                        fontWeight: FontWeight.w600,
+                                      ),
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        );
+                      },
+                    );
+                    return;
+                  }
+                } catch (_) {
+                  // If check fails, allow booking to proceed
+                }
+
+                if (!mounted) return;
                 Navigator.push(
                   context,
                   fadePageRoute(
@@ -322,7 +422,7 @@ class _SelectPatientPageState extends State<SelectPatientPage> {
                         specialty: widget.specialty,
                         image: latestDoctorImage ?? widget.image,
                         patientId: selectedPatientId!,
-                        isRelative: selectedPatientId != userId,
+                        isRelative: isRelative,
                         patientName: selectedPatientName,
                         patientGender: selectedPatientGender,
                         patientAge: selectedPatientAge,

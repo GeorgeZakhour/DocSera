@@ -23,6 +23,11 @@ class DocSeraTime {
     return tz.TZDateTime.now(_damascus);
   }
 
+  /// ✅ Builds a TZDateTime in Syria timezone from date/time components
+  static tz.TZDateTime syriaDateTime(int year, int month, int day, [int hour = 0, int minute = 0]) {
+    return tz.TZDateTime(_damascus, year, month, day, hour, minute);
+  }
+
   /// ✅ Returns the current time in UTC
   /// Use this for DATABASE: "created_at", "timestamp", "sending to API"
   static DateTime nowUtc() {
