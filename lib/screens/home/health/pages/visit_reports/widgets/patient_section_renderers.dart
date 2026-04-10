@@ -40,8 +40,13 @@ class PatientSectionRenderers {
       case 'chief_complaint':
       case 'additional_notes':
       case 'custom_text':
-      case 'referral':
         return _plainText(section.value.toString());
+
+      case 'referral':
+        return _referral(section.value);
+
+      case 'custom_table':
+        return _customTable(section.value);
 
       case 'clinical_examination':
       case 'treatment_instructions':
@@ -77,52 +82,92 @@ class PatientSectionRenderers {
         return _attachments(section.value);
 
       default:
-        if (section.value is String) return _plainText(section.value.toString());
+        if (section.value is String) {
+          return _plainText(section.value.toString());
+        }
         return null;
     }
   }
 
+  // =====================================================
+  // Content renderers — compact medical-report style
+  // =====================================================
+
   static Widget _plainText(String text) {
-    return Text(text, style: TextStyle(fontSize: 13.sp, height: 1.5));
+    return Text(
+      text,
+      style: TextStyle(fontSize: 12.sp, height: 1.5, color: AppColors.mainDark),
+    );
   }
 
   static Widget _bulletList(dynamic value) {
-    final items = (value is List) ? value.map((e) => e.toString()).toList() : [value.toString()];
+    final items = (value is List)
+        ? value.map((e) => e.toString()).toList()
+        : [value.toString()];
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
-      children: items.map((item) => Padding(
-        padding: EdgeInsets.only(bottom: 4.h),
-        child: Row(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Container(
-              width: 5.w, height: 5.w,
-              margin: EdgeInsets.only(top: 7.h, left: 6.w),
-              decoration: BoxDecoration(color: AppColors.main, shape: BoxShape.circle),
-            ),
-            SizedBox(width: 4.w),
-            Expanded(child: Text(item, style: TextStyle(fontSize: 13.sp, height: 1.4))),
-          ],
-        ),
-      )).toList(),
+      children: items
+          .map((item) => Padding(
+                padding: EdgeInsets.only(bottom: 3.h),
+                child: Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Container(
+                      width: 4.w,
+                      height: 4.w,
+                      margin: EdgeInsets.only(top: 6.h, left: 4.w, right: 4.w),
+                      decoration: BoxDecoration(
+                        color: AppColors.main.withOpacity(0.7),
+                        shape: BoxShape.circle,
+                      ),
+                    ),
+                    Expanded(
+                      child: Text(item,
+                          style: TextStyle(
+                              fontSize: 12.sp,
+                              height: 1.4,
+                              color: AppColors.mainDark)),
+                    ),
+                  ],
+                ),
+              ))
+          .toList(),
     );
   }
 
   static Widget _numberedList(dynamic value) {
-    final items = (value is List) ? value.map((e) => e.toString()).toList() : [value.toString()];
+    final items = (value is List)
+        ? value.map((e) => e.toString()).toList()
+        : [value.toString()];
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
-      children: items.asMap().entries.map((entry) => Padding(
-        padding: EdgeInsets.only(bottom: 4.h),
-        child: Row(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text('${entry.key + 1}. ', style: TextStyle(
-              fontSize: 13.sp, fontWeight: FontWeight.w600, color: AppColors.main)),
-            Expanded(child: Text(entry.value, style: TextStyle(fontSize: 13.sp))),
-          ],
-        ),
-      )).toList(),
+      children: items.asMap().entries.map((entry) {
+        return Padding(
+          padding: EdgeInsets.only(bottom: 3.h),
+          child: Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              SizedBox(
+                width: 18.w,
+                child: Text(
+                  '${entry.key + 1}.',
+                  style: TextStyle(
+                    fontSize: 11.sp,
+                    fontWeight: FontWeight.w600,
+                    color: AppColors.main,
+                    fontFamily: 'Montserrat',
+                  ),
+                ),
+              ),
+              Expanded(
+                child: Text(entry.value,
+                    style: TextStyle(
+                        fontSize: 12.sp, color: AppColors.mainDark)),
+              ),
+            ],
+          ),
+        );
+      }).toList(),
     );
   }
 
@@ -133,17 +178,25 @@ class PatientSectionRenderers {
       return Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(text, style: TextStyle(fontSize: 13.sp)),
+          Text(text,
+              style: TextStyle(fontSize: 12.sp, color: AppColors.mainDark)),
           if (icd.isNotEmpty) ...[
-            SizedBox(height: 4.h),
+            SizedBox(height: 6.h),
             Container(
-              padding: EdgeInsets.symmetric(horizontal: 8.w, vertical: 2.h),
+              padding: EdgeInsets.symmetric(horizontal: 8.w, vertical: 3.h),
               decoration: BoxDecoration(
-                color: AppColors.main.withValues(alpha: 0.1),
-                borderRadius: BorderRadius.circular(4.r),
+                color: AppColors.main.withValues(alpha: 0.08),
+                borderRadius: BorderRadius.circular(6.r),
               ),
-              child: Text(icd, style: TextStyle(
-                fontSize: 11.sp, color: AppColors.main, fontFamily: 'Montserrat')),
+              child: Text(
+                icd,
+                style: TextStyle(
+                  fontSize: 10.sp,
+                  color: AppColors.main,
+                  fontFamily: 'Montserrat',
+                  fontWeight: FontWeight.w500,
+                ),
+              ),
             ),
           ],
         ],
@@ -163,22 +216,50 @@ class PatientSectionRenderers {
           final duration = item['duration']?.toString() ?? '';
           final notes = item['notes']?.toString() ?? '';
           return Container(
+            width: double.infinity,
             margin: EdgeInsets.only(bottom: 6.h),
-            padding: EdgeInsets.all(10.w),
+            padding: EdgeInsets.symmetric(horizontal: 10.w, vertical: 8.h),
             decoration: BoxDecoration(
-              border: Border.all(color: Colors.grey.shade200),
-              borderRadius: BorderRadius.circular(8.r),
+              color: AppColors.main.withOpacity(0.04),
+              border: Border.all(color: AppColors.main.withOpacity(0.12)),
+              borderRadius: BorderRadius.circular(10.r),
             ),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text('$name ${dosage.isNotEmpty ? dosage : ""}', style: TextStyle(
-                  fontSize: 13.sp, fontWeight: FontWeight.w600)),
+                Text(
+                  dosage.isNotEmpty ? '$name  $dosage' : name,
+                  style: TextStyle(
+                    fontSize: 12.sp,
+                    fontWeight: FontWeight.w600,
+                    color: AppColors.mainDark,
+                  ),
+                ),
                 if (frequency.isNotEmpty || duration.isNotEmpty)
-                  Text([frequency, duration].where((e) => e.isNotEmpty).join(' · '),
-                    style: TextStyle(fontSize: 11.sp, color: Colors.grey.shade600)),
+                  Padding(
+                    padding: EdgeInsets.only(top: 2.h),
+                    child: Text(
+                      [frequency, duration]
+                          .where((e) => e.isNotEmpty)
+                          .join(' · '),
+                      style: TextStyle(
+                        fontSize: 10.5.sp,
+                        color: AppColors.textSubColor,
+                      ),
+                    ),
+                  ),
                 if (notes.isNotEmpty)
-                  Text(notes, style: TextStyle(fontSize: 11.sp, color: Colors.grey.shade600)),
+                  Padding(
+                    padding: EdgeInsets.only(top: 2.h),
+                    child: Text(
+                      notes,
+                      style: TextStyle(
+                        fontSize: 10.5.sp,
+                        color: AppColors.textSubColor,
+                        fontStyle: FontStyle.italic,
+                      ),
+                    ),
+                  ),
               ],
             ),
           );
@@ -194,23 +275,31 @@ class PatientSectionRenderers {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: items.map((item) {
         if (item is Map) {
-          final name = item['exam_name']?.toString() ?? item['name']?.toString() ?? '';
+          final name =
+              item['exam_name']?.toString() ?? item['name']?.toString() ?? '';
           final notes = item['notes']?.toString() ?? '';
           return Padding(
-            padding: EdgeInsets.only(bottom: 4.h),
+            padding: EdgeInsets.only(bottom: 3.h),
             child: Row(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Container(
-                  width: 5.w, height: 5.w,
-                  margin: EdgeInsets.only(top: 7.h, left: 6.w),
-                  decoration: BoxDecoration(color: AppColors.main, shape: BoxShape.circle),
+                  width: 4.w,
+                  height: 4.w,
+                  margin:
+                      EdgeInsets.only(top: 6.h, left: 4.w, right: 4.w),
+                  decoration: BoxDecoration(
+                    color: AppColors.main.withOpacity(0.7),
+                    shape: BoxShape.circle,
+                  ),
                 ),
-                SizedBox(width: 4.w),
-                Expanded(child: Text(
-                  notes.isNotEmpty ? '$name ($notes)' : name,
-                  style: TextStyle(fontSize: 13.sp),
-                )),
+                Expanded(
+                  child: Text(
+                    notes.isNotEmpty ? '$name ($notes)' : name,
+                    style: TextStyle(
+                        fontSize: 12.sp, color: AppColors.mainDark),
+                  ),
+                ),
               ],
             ),
           );
@@ -230,10 +319,29 @@ class PatientSectionRenderers {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           if (dateDisplay.isNotEmpty)
-            Text('الموعد: $dateDisplay', style: TextStyle(
-              fontSize: 13.sp, fontWeight: FontWeight.w600)),
+            Row(
+              children: [
+                Icon(Icons.event_rounded,
+                    size: 13.sp, color: AppColors.main.withOpacity(0.7)),
+                SizedBox(width: 4.w),
+                Text(
+                  dateDisplay,
+                  style: TextStyle(
+                    fontSize: 12.sp,
+                    fontWeight: FontWeight.w600,
+                    color: AppColors.mainDark,
+                    fontFamily: 'Montserrat',
+                  ),
+                ),
+              ],
+            ),
           if (notes.isNotEmpty)
-            Text(notes, style: TextStyle(fontSize: 12.sp, color: Colors.grey.shade600)),
+            Padding(
+              padding: EdgeInsets.only(top: 4.h),
+              child: Text(notes,
+                  style: TextStyle(
+                      fontSize: 11.sp, color: AppColors.textSubColor)),
+            ),
         ],
       );
     }
@@ -254,9 +362,18 @@ class PatientSectionRenderers {
             child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                Text(name, style: TextStyle(fontSize: 12.sp, color: Colors.grey.shade700)),
-                Text('$val $unit', style: TextStyle(
-                  fontSize: 12.sp, fontWeight: FontWeight.w600, fontFamily: 'Montserrat')),
+                Text(name,
+                    style: TextStyle(
+                        fontSize: 11.sp, color: AppColors.textSubColor)),
+                Text(
+                  '$val $unit',
+                  style: TextStyle(
+                    fontSize: 11.sp,
+                    fontWeight: FontWeight.w600,
+                    fontFamily: 'Montserrat',
+                    color: AppColors.mainDark,
+                  ),
+                ),
               ],
             ),
           );
@@ -274,9 +391,38 @@ class PatientSectionRenderers {
       return Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text('$name: $score', style: TextStyle(fontSize: 14.sp, fontWeight: FontWeight.w600)),
+          Row(
+            children: [
+              Text(name,
+                  style: TextStyle(
+                      fontSize: 12.sp, color: AppColors.mainDark)),
+              SizedBox(width: 6.w),
+              Container(
+                padding:
+                    EdgeInsets.symmetric(horizontal: 8.w, vertical: 2.h),
+                decoration: BoxDecoration(
+                  color: AppColors.main.withOpacity(0.1),
+                  borderRadius: BorderRadius.circular(6.r),
+                ),
+                child: Text(
+                  score,
+                  style: TextStyle(
+                    fontSize: 12.sp,
+                    fontWeight: FontWeight.w700,
+                    color: AppColors.main,
+                    fontFamily: 'Montserrat',
+                  ),
+                ),
+              ),
+            ],
+          ),
           if (interpretation.isNotEmpty)
-            Text(interpretation, style: TextStyle(fontSize: 12.sp, color: Colors.grey.shade600)),
+            Padding(
+              padding: EdgeInsets.only(top: 4.h),
+              child: Text(interpretation,
+                  style: TextStyle(
+                      fontSize: 11.sp, color: AppColors.textSubColor)),
+            ),
         ],
       );
     }
@@ -290,18 +436,25 @@ class PatientSectionRenderers {
       children: items.map((item) {
         if (item is Map) {
           final label = item['label']?.toString() ?? '';
-          final checked = item['checked'] == true || item['status'] == 'checked';
+          final checked =
+              item['checked'] == true || item['status'] == 'checked';
           return Padding(
-            padding: EdgeInsets.only(bottom: 4.h),
+            padding: EdgeInsets.only(bottom: 3.h),
             child: Row(
               children: [
                 Icon(
-                  checked ? Icons.check_box : Icons.check_box_outline_blank,
-                  size: 18.sp,
-                  color: checked ? AppColors.main : Colors.grey,
+                  checked
+                      ? Icons.check_circle_rounded
+                      : Icons.radio_button_unchecked_rounded,
+                  size: 16.sp,
+                  color: checked ? AppColors.main : Colors.grey.shade400,
                 ),
                 SizedBox(width: 6.w),
-                Text(label, style: TextStyle(fontSize: 13.sp)),
+                Expanded(
+                  child: Text(label,
+                      style: TextStyle(
+                          fontSize: 12.sp, color: AppColors.mainDark)),
+                ),
               ],
             ),
           );
@@ -311,19 +464,148 @@ class PatientSectionRenderers {
     );
   }
 
+  static Widget _referral(dynamic value) {
+    if (value is! Map) return _plainText(value?.toString() ?? '');
+    final map = Map<String, dynamic>.from(value);
+    final specialty = map['specialty_label']?.toString() ?? '';
+    final doctor = map['doctor_name']?.toString() ?? '';
+    final reason = map['reason']?.toString() ?? '';
+    final urgency = map['urgency']?.toString() ?? 'routine';
+
+    Color urgencyColor;
+    String urgencyLabel;
+    switch (urgency) {
+      case 'emergency':
+        urgencyColor = const Color(0xFFE53935);
+        urgencyLabel = 'طارئ';
+        break;
+      case 'urgent':
+        urgencyColor = const Color(0xFFFB8C00);
+        urgencyLabel = 'عاجل';
+        break;
+      case 'routine':
+      default:
+        urgencyColor = const Color(0xFF5C6BC0);
+        urgencyLabel = 'روتيني';
+        break;
+    }
+
+    Widget row(String label, String val) {
+      if (val.trim().isEmpty) return const SizedBox.shrink();
+      return Padding(
+        padding: EdgeInsets.only(bottom: 3.h),
+        child: RichText(
+          text: TextSpan(
+            style: TextStyle(
+                fontSize: 12.sp, height: 1.5, color: AppColors.mainDark),
+            children: [
+              TextSpan(
+                  text: '$label: ',
+                  style: const TextStyle(fontWeight: FontWeight.w700)),
+              TextSpan(text: val),
+            ],
+          ),
+        ),
+      );
+    }
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        row('التخصص', specialty),
+        row('الطبيب', doctor),
+        row('السبب', reason),
+        SizedBox(height: 4.h),
+        Container(
+          padding: EdgeInsets.symmetric(horizontal: 10.w, vertical: 3.h),
+          decoration: BoxDecoration(
+            color: urgencyColor.withOpacity(0.1),
+            borderRadius: BorderRadius.circular(10.r),
+            border: Border.all(color: urgencyColor.withOpacity(0.5)),
+          ),
+          child: Text(
+            urgencyLabel,
+            style: TextStyle(
+                fontSize: 11.sp,
+                fontWeight: FontWeight.w700,
+                color: urgencyColor),
+          ),
+        ),
+      ],
+    );
+  }
+
+  static Widget _customTable(dynamic value) {
+    if (value is! Map) return _plainText(value?.toString() ?? '');
+    final map = Map<String, dynamic>.from(value);
+    final columns = ((map['columns'] ?? map['headers']) as List?)
+            ?.map((e) => e?.toString() ?? '')
+            .toList() ??
+        const <String>[];
+    final rawRows = (map['rows'] as List?)
+            ?.whereType<List>()
+            .map<List<String>>(
+                (r) => r.map((e) => e?.toString() ?? '').toList())
+            .toList() ??
+        const <List<String>>[];
+    if (columns.isEmpty || rawRows.isEmpty) {
+      return const SizedBox.shrink();
+    }
+    return ClipRRect(
+      borderRadius: BorderRadius.circular(8.r),
+      child: SingleChildScrollView(
+        scrollDirection: Axis.horizontal,
+        child: DataTable(
+          headingRowHeight: 36,
+          dataRowMinHeight: 32,
+          dataRowMaxHeight: 40,
+          horizontalMargin: 12,
+          columnSpacing: 18,
+          headingRowColor:
+              WidgetStateProperty.all(AppColors.main.withOpacity(0.08)),
+          headingTextStyle: TextStyle(
+            fontSize: 11.sp,
+            fontWeight: FontWeight.w700,
+            color: AppColors.mainDark,
+          ),
+          dataTextStyle: TextStyle(
+            fontSize: 11.sp,
+            color: AppColors.mainDark,
+          ),
+          columns: [
+            for (final c in columns) DataColumn(label: Text(c)),
+          ],
+          rows: [
+            for (final r in rawRows)
+              DataRow(cells: [
+                for (int i = 0; i < columns.length; i++)
+                  DataCell(Text(i < r.length ? r[i] : '')),
+              ]),
+          ],
+        ),
+      ),
+    );
+  }
+
   static Widget _attachments(dynamic value) {
     final items = (value is List) ? value : [];
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: items.map((item) {
-        final name = (item is Map) ? (item['name']?.toString() ?? 'مرفق') : item.toString();
+        final name =
+            (item is Map) ? (item['name']?.toString() ?? 'مرفق') : item.toString();
         return Padding(
-          padding: EdgeInsets.only(bottom: 4.h),
+          padding: EdgeInsets.only(bottom: 3.h),
           child: Row(
             children: [
-              Icon(Icons.attach_file, size: 16.sp, color: Colors.grey),
+              Icon(Icons.attach_file_rounded,
+                  size: 14.sp, color: AppColors.main.withOpacity(0.6)),
               SizedBox(width: 4.w),
-              Text(name, style: TextStyle(fontSize: 13.sp)),
+              Expanded(
+                child: Text(name,
+                    style: TextStyle(
+                        fontSize: 12.sp, color: AppColors.mainDark)),
+              ),
             ],
           ),
         );

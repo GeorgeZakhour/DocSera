@@ -53,6 +53,15 @@ class ModularReport {
   final String? doctorImage;
   final String? doctorGender;
   final String? doctorTitle;
+  final List<dynamic>? doctorPhones;
+  final String? doctorMobile;
+  final String? doctorEmail;
+  final String? doctorWebsite;
+
+  // Patient info
+  final String? patientGender;
+  final String? patientDob;
+  final String? patientPhone;
 
   ModularReport({
     required this.id,
@@ -70,6 +79,13 @@ class ModularReport {
     this.doctorImage,
     this.doctorGender,
     this.doctorTitle,
+    this.doctorPhones,
+    this.doctorMobile,
+    this.doctorEmail,
+    this.doctorWebsite,
+    this.patientGender,
+    this.patientDob,
+    this.patientPhone,
   });
 
   factory ModularReport.fromJson(Map<String, dynamic> json) {
@@ -104,6 +120,13 @@ class ModularReport {
       doctorImage: json['doctor_image'],
       doctorGender: json['doctor_gender'],
       doctorTitle: json['doctor_title'],
+      doctorPhones: json['doctor_phone'] is List ? json['doctor_phone'] : null,
+      doctorMobile: json['doctor_mobile']?.toString(),
+      doctorEmail: json['doctor_email']?.toString(),
+      doctorWebsite: json['doctor_website']?.toString(),
+      patientGender: json['patient_gender'],
+      patientDob: json['patient_dob'],
+      patientPhone: json['patient_phone'],
     );
   }
 }

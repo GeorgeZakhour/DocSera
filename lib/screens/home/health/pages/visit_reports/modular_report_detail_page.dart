@@ -1,10 +1,16 @@
+import 'dart:ui';
+
 import 'package:docsera/app/const.dart';
 import 'package:docsera/app/text_styles.dart';
 import 'package:docsera/gen_l10n/app_localizations.dart';
 import 'package:docsera/screens/home/health/pages/visit_reports/modular_report_model.dart';
+import 'package:docsera/screens/home/health/pages/visit_reports/pdf/modular_report_pdf_generator.dart';
 import 'package:docsera/screens/home/health/pages/visit_reports/widgets/patient_section_renderers.dart';
+import 'package:docsera/utils/doctor_image_utils.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:pdf/pdf.dart';
+import 'package:printing/printing.dart';
 
 class ModularReportDetailPage extends StatelessWidget {
   final ModularReport report;
@@ -33,10 +39,15 @@ class ModularReportDetailPage extends StatelessWidget {
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
                     _buildDoctorHeader(context, formattedDate),
-                    SizedBox(height: 16.h),
-                    ...report.sections.map((section) =>
-                        PatientSectionRenderers.render(section)),
-                    SizedBox(height: 20.h),
+                    if (report.patientName != null &&
+                        report.patientName!.trim().isNotEmpty) ...[
+                      SizedBox(height: 10.h),
+                      _buildReportMeta(context),
+                    ],
+                    SizedBox(height: 14.h),
+                    ...report.sections.map(
+                        (section) => PatientSectionRenderers.render(section)),
+                    SizedBox(height: 40.h),
                   ],
                 ),
               ),
@@ -47,90 +58,198 @@ class ModularReportDetailPage extends StatelessWidget {
     );
   }
 
+  // =====================================================
+  // TOP BAR (Back + Title + Print + Share)
+  // =====================================================
+
   Widget _buildTopBar(BuildContext context, AppLocalizations t) {
-    return Container(
+    final isRtl = Directionality.of(context) == TextDirection.rtl;
+
+    return Padding(
       padding: EdgeInsets.symmetric(horizontal: 12.w, vertical: 8.h),
-      decoration: BoxDecoration(
-        color: AppColors.background3,
-        border: Border(bottom: BorderSide(color: Colors.grey.shade200)),
-      ),
       child: Row(
         children: [
-          IconButton(
-            icon: const Icon(Icons.arrow_back_ios_new_rounded),
-            onPressed: () => Navigator.pop(context),
-          ),
-          Expanded(
-            child: Text(
-              t.health_report_details_title,
-              textAlign: TextAlign.center,
-              style: AppTextStyles.getTitle3(),
+          InkWell(
+            onTap: () => Navigator.pop(context),
+            borderRadius: BorderRadius.circular(30.r),
+            child: Padding(
+              padding: EdgeInsets.all(6.w),
+              child: Icon(
+                isRtl
+                    ? Icons.arrow_back_ios_new_rounded
+                    : Icons.arrow_back_ios_rounded,
+                size: 16.sp,
+                color: AppColors.mainDark,
+              ),
             ),
           ),
-          // PDF download button placeholder
+          SizedBox(width: 8.w),
+          Text(
+            t.health_report_details_title,
+            style: AppTextStyles.getText1(context).copyWith(
+              fontSize: 15.sp,
+              fontWeight: FontWeight.w600,
+              color: AppColors.mainDark,
+            ),
+          ),
+          const Spacer(),
+
+          // Print
           IconButton(
-            icon: const Icon(Icons.picture_as_pdf_outlined),
-            color: AppColors.main,
-            onPressed: () {
-              // PDF download to be implemented when patient-side PDF service is added
-            },
+            visualDensity: VisualDensity.compact,
+            padding: EdgeInsets.zero,
+            tooltip: t.health_report_exportPdf,
+            icon: Icon(
+              Icons.print_rounded,
+              size: 18.sp,
+              color: AppColors.mainDark,
+            ),
+            onPressed: () => _printPdf(context),
+          ),
+
+          // Share
+          IconButton(
+            visualDensity: VisualDensity.compact,
+            padding: EdgeInsets.zero,
+            tooltip: t.health_report_sharePdf,
+            icon: Icon(
+              Icons.share_rounded,
+              size: 18.sp,
+              color: AppColors.mainDark,
+            ),
+            onPressed: () => _sharePdf(context),
           ),
         ],
       ),
     );
   }
 
-  Widget _buildDoctorHeader(BuildContext context, String date) {
-    return Container(
-      padding: EdgeInsets.all(16.w),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(16.r),
-        border: Border.all(color: Colors.grey.shade200),
+  Future<void> _printPdf(BuildContext context) async {
+    final bytes = await ModularReportPdfGenerator.generatePdf(report: report);
+    await Printing.layoutPdf(
+      onLayout: (PdfPageFormat format) async => bytes,
+    );
+  }
+
+  Future<void> _sharePdf(BuildContext context) async {
+    final bytes = await ModularReportPdfGenerator.generatePdf(report: report);
+    final patientName = report.patientName ?? 'report';
+    await Printing.sharePdf(
+      bytes: bytes,
+      filename: 'DocSera_Report_$patientName.pdf',
+    );
+  }
+
+  // =====================================================
+  // DOCTOR HEADER (glassmorphism card)
+  // =====================================================
+
+  Widget _buildDoctorHeader(BuildContext context, String dateText) {
+    final imageResult = resolveDoctorImagePathAndWidget(
+      doctor: {
+        'doctor_image': report.doctorImage,
+        'gender': report.doctorGender ?? 'unknown',
+        'title': report.doctorTitle ?? '',
+      },
+      width: 35,
+      height: 35,
+    );
+
+    return ClipRRect(
+      borderRadius: BorderRadius.circular(22.r),
+      child: BackdropFilter(
+        filter: ImageFilter.blur(sigmaX: 18, sigmaY: 18),
+        child: Container(
+          padding: EdgeInsets.all(14.w),
+          decoration: BoxDecoration(
+            color: Colors.white.withOpacity(0.55),
+            border: Border.all(color: AppColors.main.withOpacity(0.22)),
+            borderRadius: BorderRadius.circular(22.r),
+          ),
+          child: Row(
+            children: [
+              CircleAvatar(
+                radius: 24.r,
+                backgroundImage: imageResult.imageProvider,
+                backgroundColor: AppColors.main.withOpacity(0.1),
+              ),
+              SizedBox(width: 12.w),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      report.doctorName ?? '',
+                      style: AppTextStyles.getText1(context).copyWith(
+                        fontSize: 14.sp,
+                        fontWeight: FontWeight.w700,
+                        color: AppColors.mainDark,
+                      ),
+                    ),
+                    if (report.doctorSpecialty != null)
+                      Text(
+                        report.doctorSpecialty!,
+                        style: AppTextStyles.getText3(context).copyWith(
+                          fontSize: 11.sp,
+                          color: AppColors.textSubColor,
+                        ),
+                      ),
+                    SizedBox(height: 4.h),
+                    Row(
+                      children: [
+                        Icon(
+                          Icons.calendar_today_rounded,
+                          size: 11.sp,
+                          color: AppColors.mainDark.withOpacity(0.7),
+                        ),
+                        SizedBox(width: 5.w),
+                        Text(
+                          dateText,
+                          style: AppTextStyles.getText3(context).copyWith(
+                            fontSize: 10.5.sp,
+                            color: AppColors.mainDark,
+                            fontFamily: 'Montserrat',
+                          ),
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+        ),
       ),
+    );
+  }
+
+  // =====================================================
+  // REPORT META (patient name + report ID)
+  // =====================================================
+
+  Widget _buildReportMeta(BuildContext context) {
+    return Padding(
+      padding: EdgeInsets.symmetric(horizontal: 4.w),
       child: Row(
         children: [
-          // Doctor avatar
-          CircleAvatar(
-            radius: 24.r,
-            backgroundColor: AppColors.main.withValues(alpha: 0.1),
-            backgroundImage: report.doctorImage != null
-                ? NetworkImage(report.doctorImage!)
-                : null,
-            child: report.doctorImage == null
-                ? Icon(Icons.person, color: AppColors.main, size: 24.sp)
-                : null,
+          Icon(Icons.person_outline_rounded,
+              size: 13.sp, color: Colors.grey.shade500),
+          SizedBox(width: 4.w),
+          Text(
+            report.patientName!,
+            style: AppTextStyles.getText3(context).copyWith(
+              fontSize: 11.sp,
+              color: Colors.grey.shade600,
+            ),
           ),
-          SizedBox(width: 12.w),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  report.doctorName ?? '',
-                  style: TextStyle(
-                    fontSize: 15.sp,
-                    fontWeight: FontWeight.w700,
-                  ),
-                ),
-                if (report.doctorSpecialty != null)
-                  Text(
-                    report.doctorSpecialty!,
-                    style: TextStyle(
-                      fontSize: 12.sp,
-                      color: Colors.grey.shade600,
-                    ),
-                  ),
-                SizedBox(height: 4.h),
-                Text(
-                  date,
-                  style: TextStyle(
-                    fontSize: 11.sp,
-                    color: Colors.grey.shade500,
-                    fontFamily: 'Montserrat',
-                  ),
-                ),
-              ],
+          const Spacer(),
+          Text(
+            '#${report.id.length >= 8 ? report.id.substring(0, 8) : report.id}',
+            style: TextStyle(
+              fontSize: 9.sp,
+              color: Colors.grey.shade400,
+              fontFamily: 'Montserrat',
+              letterSpacing: 0.5,
             ),
           ),
         ],
