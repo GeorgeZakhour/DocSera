@@ -1,3 +1,4 @@
+import 'dart:ui';
 import 'package:docsera/Business_Logic/Health_page/patient_switcher_cubit.dart';
 import 'package:docsera/gen_l10n/app_localizations.dart';
 import 'package:docsera/screens/home/health/pages/visit_reports/visit_reports_service.dart';
@@ -5,6 +6,7 @@ import 'package:docsera/screens/home/health/pages/visit_reports/widgets/month_fi
 import 'package:docsera/screens/home/health/pages/visit_reports/widgets/search_bar_widget.dart';
 import 'package:docsera/screens/home/health/pages/visit_reports/widgets/report_card_widget.dart';
 import 'package:docsera/utils/full_page_loader.dart';
+import 'package:docsera/utils/doctor_image_utils.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:docsera/app/const.dart';
@@ -275,8 +277,19 @@ class _VisitReportsPageState extends State<VisitReportsPage>
 
   Widget _buildModularReportCard(BuildContext context, ModularReport report) {
     final t = AppLocalizations.of(context)!;
+    final isRtl = Directionality.of(context) == TextDirection.rtl;
     final formattedDate =
-        "${report.createdAt.year}-${report.createdAt.month.toString().padLeft(2, '0')}-${report.createdAt.day.toString().padLeft(2, '0')}";
+        "${report.createdAt.day.toString().padLeft(2, '0')}/${report.createdAt.month.toString().padLeft(2, '0')}/${report.createdAt.year}";
+
+    final imageResult = resolveDoctorImagePathAndWidget(
+      doctor: {
+        "doctor_image": report.doctorImage,
+        "gender": report.doctorGender ?? "unknown",
+        "title": report.doctorTitle ?? "",
+      },
+      width: 30,
+      height: 30,
+    );
 
     return GestureDetector(
       onTap: () {
@@ -291,79 +304,110 @@ class _VisitReportsPageState extends State<VisitReportsPage>
           ),
         );
       },
-      child: Container(
-        padding: const EdgeInsets.all(16),
-        decoration: BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.circular(16),
-          border: Border.all(color: Colors.grey.shade200),
-        ),
-        child: Row(
-          children: [
-            CircleAvatar(
-              radius: 22,
-              backgroundColor: AppColors.main.withValues(alpha: 0.1),
-              backgroundImage: report.doctorImage != null
-                  ? NetworkImage(report.doctorImage!)
-                  : null,
-              child: report.doctorImage == null
-                  ? const Icon(Icons.person, color: AppColors.main, size: 22)
-                  : null,
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(20),
+        child: BackdropFilter(
+          filter: ImageFilter.blur(sigmaX: 12, sigmaY: 12),
+          child: Container(
+            decoration: BoxDecoration(
+              color: Colors.white.withOpacity(0.55),
+              borderRadius: BorderRadius.circular(20),
+              border: Border.all(color: AppColors.main.withOpacity(0.22)),
             ),
-            const SizedBox(width: 12),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    report.doctorName ?? '',
-                    style: const TextStyle(
-                      fontSize: 14,
-                      fontWeight: FontWeight.w600,
-                    ),
+            child: Stack(
+              children: [
+                // TEXT AREA
+                Padding(
+                  padding: EdgeInsets.fromLTRB(
+                    isRtl ? 16 : 68,
+                    18,
+                    isRtl ? 68 : 16,
+                    14,
                   ),
-                  const SizedBox(height: 2),
-                  Text(
-                    report.doctorSpecialty ?? '',
-                    style: TextStyle(
-                      fontSize: 11,
-                      color: Colors.grey.shade600,
-                    ),
-                  ),
-                  const SizedBox(height: 4),
-                  Row(
+                  child: Row(
+                    crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-                        decoration: BoxDecoration(
-                          color: AppColors.main.withValues(alpha: 0.1),
-                          borderRadius: BorderRadius.circular(4),
-                        ),
-                        child: Text(
-                          t.modularReport,
-                          style: const TextStyle(
-                            fontSize: 9,
-                            color: AppColors.main,
-                            fontWeight: FontWeight.w600,
-                          ),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              report.doctorName ?? '',
+                              style: const TextStyle(
+                                fontSize: 14,
+                                fontWeight: FontWeight.w700,
+                                color: AppColors.mainDark,
+                              ),
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                            if (report.doctorSpecialty != null &&
+                                report.doctorSpecialty!.trim().isNotEmpty)
+                              Padding(
+                                padding: const EdgeInsets.only(top: 2),
+                                child: Text(
+                                  report.doctorSpecialty!,
+                                  style: TextStyle(
+                                    fontSize: 11,
+                                    color: AppColors.mainDark.withOpacity(0.6),
+                                  ),
+                                ),
+                              ),
+                            const SizedBox(height: 10),
+                            Row(
+                              children: [
+                                Container(
+                                  padding: const EdgeInsets.symmetric(
+                                      horizontal: 6, vertical: 2),
+                                  decoration: BoxDecoration(
+                                    color: AppColors.main.withValues(alpha: 0.1),
+                                    borderRadius: BorderRadius.circular(4),
+                                  ),
+                                  child: Text(
+                                    t.modularReport,
+                                    style: const TextStyle(
+                                      fontSize: 9,
+                                      color: AppColors.main,
+                                      fontWeight: FontWeight.w600,
+                                    ),
+                                  ),
+                                ),
+                                const SizedBox(width: 8),
+                                Text(
+                                  formattedDate,
+                                  style: TextStyle(
+                                    fontSize: 10,
+                                    color: Colors.grey.shade500,
+                                    fontFamily: 'Montserrat',
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ],
                         ),
                       ),
-                      const SizedBox(width: 8),
-                      Text(
-                        formattedDate,
-                        style: TextStyle(
-                          fontSize: 10,
-                          color: Colors.grey.shade500,
-                          fontFamily: 'Montserrat',
-                        ),
+                      Icon(
+                        Icons.arrow_forward_ios_rounded,
+                        size: 14,
+                        color: AppColors.mainDark.withOpacity(0.35),
                       ),
                     ],
                   ),
-                ],
-              ),
+                ),
+                // AVATAR
+                Positioned(
+                  top: 10,
+                  right: isRtl ? 14 : null,
+                  left: isRtl ? null : 14,
+                  child: CircleAvatar(
+                    radius: 20,
+                    backgroundColor: AppColors.main.withOpacity(0.1),
+                    backgroundImage: imageResult.imageProvider,
+                  ),
+                ),
+              ],
             ),
-            const Icon(Icons.chevron_right, color: Colors.grey),
-          ],
+          ),
         ),
       ),
     );

@@ -70,13 +70,13 @@ class PatientSectionRenderers {
 
       case 'vitals':
       case 'measurements':
-        return _vitalsTable(section.value);
+        return _vitalsTable(section);
 
       case 'scoring':
-        return _scoring(section.value);
+        return _scoring(section);
 
       case 'checklist':
-        return _checklist(section.value);
+        return _checklist(section);
 
       case 'attachments':
         return _attachments(section.value);
@@ -348,72 +348,130 @@ class PatientSectionRenderers {
     return _plainText(value.toString());
   }
 
-  static Widget _vitalsTable(dynamic value) {
-    final items = (value is List) ? value : [];
-    if (items.isEmpty) return const SizedBox.shrink();
-    return Column(
-      children: items.map((item) {
+  static Widget _vitalsTable(ModularReportSection section) {
+    final value = section.value;
+    final config = section.config;
+
+    // Build a unified list of {name, value, unit} entries from
+    // either data shape:
+    //
+    //  Shape A (DocSera-Pro):
+    //    value : { 'Systolic BP': '120', 'Heart Rate': '80' }
+    //    config: { 'fields': [ {'name':'Systolic BP','unit':'mmHg'}, ... ] }
+    //
+    //  Shape B (generic):
+    //    value : [ {'name':'X', 'value':'Y', 'unit':'Z'}, ... ]
+
+    final entries = <Map<String, String>>[];
+
+    if (value is Map) {
+      // Shape A — merge fields from config to get units
+      final fields = <String, Map<String, dynamic>>{};
+      if (config != null && config['fields'] is List) {
+        for (final f in (config['fields'] as List)) {
+          if (f is Map) {
+            final name = f['name']?.toString() ?? '';
+            if (name.isNotEmpty) {
+              fields[name] = Map<String, dynamic>.from(f);
+            }
+          }
+        }
+      }
+      for (final e in value.entries) {
+        final name = e.key.toString();
+        final val = e.value?.toString().trim() ?? '';
+        if (val.isEmpty || val == 'null') continue;
+        final unit = fields[name]?['unit']?.toString() ?? '';
+        entries.add({'name': name, 'value': val, 'unit': unit});
+      }
+    } else if (value is List) {
+      // Shape B — list of maps
+      for (final item in value) {
         if (item is Map) {
           final name = item['name']?.toString() ?? '';
           final val = item['value']?.toString() ?? '';
           final unit = item['unit']?.toString() ?? '';
-          return Padding(
-            padding: EdgeInsets.only(bottom: 4.h),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Text(name,
-                    style: TextStyle(
-                        fontSize: 11.sp, color: AppColors.textSubColor)),
-                Text(
-                  '$val $unit',
-                  style: TextStyle(
-                    fontSize: 11.sp,
-                    fontWeight: FontWeight.w600,
-                    fontFamily: 'Montserrat',
-                    color: AppColors.mainDark,
-                  ),
-                ),
-              ],
-            ),
-          );
+          if (val.isNotEmpty) {
+            entries.add({'name': name, 'value': val, 'unit': unit});
+          }
         }
-        return const SizedBox.shrink();
+      }
+    }
+
+    if (entries.isEmpty) return const SizedBox.shrink();
+
+    return Column(
+      children: entries.map((e) {
+        final unit = e['unit'] ?? '';
+        final displayValue = unit.isNotEmpty
+            ? '${e['value']} $unit'
+            : e['value'] ?? '';
+        return Padding(
+          padding: EdgeInsets.only(bottom: 4.h),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Text(e['name'] ?? '',
+                  style: TextStyle(
+                      fontSize: 11.sp, color: AppColors.textSubColor)),
+              Text(
+                displayValue,
+                style: TextStyle(
+                  fontSize: 11.sp,
+                  fontWeight: FontWeight.w600,
+                  fontFamily: 'Montserrat',
+                  color: AppColors.mainDark,
+                ),
+              ),
+            ],
+          ),
+        );
       }).toList(),
     );
   }
 
-  static Widget _scoring(dynamic value) {
+  static Widget _scoring(ModularReportSection section) {
+    final value = section.value;
     if (value is Map) {
+      // DocSera-Pro shape: { 'answers': {q0: 1, q1: 2}, 'total_score': 5 }
+      final totalScore = value['total_score'];
+      final answers = value['answers'];
       final name = value['name']?.toString() ?? '';
-      final score = value['score']?.toString() ?? '';
+      final score = totalScore?.toString() ?? value['score']?.toString() ?? '';
       final interpretation = value['interpretation']?.toString() ?? '';
+
       return Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
+          // Score badge
           Row(
             children: [
-              Text(name,
-                  style: TextStyle(
-                      fontSize: 12.sp, color: AppColors.mainDark)),
-              SizedBox(width: 6.w),
-              Container(
-                padding:
-                    EdgeInsets.symmetric(horizontal: 8.w, vertical: 2.h),
-                decoration: BoxDecoration(
-                  color: AppColors.main.withOpacity(0.1),
-                  borderRadius: BorderRadius.circular(6.r),
+              if (name.isNotEmpty)
+                Flexible(
+                  child: Text(name,
+                      style: TextStyle(
+                          fontSize: 12.sp, color: AppColors.mainDark)),
                 ),
-                child: Text(
-                  score,
-                  style: TextStyle(
-                    fontSize: 12.sp,
-                    fontWeight: FontWeight.w700,
-                    color: AppColors.main,
-                    fontFamily: 'Montserrat',
+              if (score.isNotEmpty) ...[
+                SizedBox(width: 6.w),
+                Container(
+                  padding:
+                      EdgeInsets.symmetric(horizontal: 8.w, vertical: 2.h),
+                  decoration: BoxDecoration(
+                    color: AppColors.main.withOpacity(0.1),
+                    borderRadius: BorderRadius.circular(6.r),
+                  ),
+                  child: Text(
+                    score,
+                    style: TextStyle(
+                      fontSize: 12.sp,
+                      fontWeight: FontWeight.w700,
+                      color: AppColors.main,
+                      fontFamily: 'Montserrat',
+                    ),
                   ),
                 ),
-              ),
+              ],
             ],
           ),
           if (interpretation.isNotEmpty)
@@ -423,43 +481,103 @@ class PatientSectionRenderers {
                   style: TextStyle(
                       fontSize: 11.sp, color: AppColors.textSubColor)),
             ),
+          // Show individual answers if available
+          if (answers is Map && answers.isNotEmpty) ...[
+            SizedBox(height: 8.h),
+            ...answers.entries.map((e) {
+              return Padding(
+                padding: EdgeInsets.only(bottom: 3.h),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Text(e.key.toString(),
+                        style: TextStyle(
+                            fontSize: 11.sp, color: AppColors.textSubColor)),
+                    Text(
+                      e.value.toString(),
+                      style: TextStyle(
+                        fontSize: 11.sp,
+                        fontWeight: FontWeight.w600,
+                        fontFamily: 'Montserrat',
+                        color: AppColors.mainDark,
+                      ),
+                    ),
+                  ],
+                ),
+              );
+            }),
+          ],
         ],
       );
     }
     return _plainText(value.toString());
   }
 
-  static Widget _checklist(dynamic value) {
-    final items = (value is List) ? value : [];
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: items.map((item) {
+  static Widget _checklist(ModularReportSection section) {
+    final value = section.value;
+
+    // DocSera-Pro shape:  { 'Reflexes': 'Normal', 'Pupils': 'Abnormal' }
+    // Generic shape:      [ {'label': 'X', 'checked': true}, ... ]
+
+    final entries = <MapEntry<String, String>>[];
+
+    if (value is Map) {
+      for (final e in value.entries) {
+        final key = e.key.toString();
+        final val = e.value?.toString() ?? '';
+        if (val.isNotEmpty && val != 'null') {
+          entries.add(MapEntry(key, val));
+        }
+      }
+    } else if (value is List) {
+      for (final item in value) {
         if (item is Map) {
           final label = item['label']?.toString() ?? '';
           final checked =
               item['checked'] == true || item['status'] == 'checked';
-          return Padding(
-            padding: EdgeInsets.only(bottom: 3.h),
-            child: Row(
-              children: [
-                Icon(
-                  checked
-                      ? Icons.check_circle_rounded
-                      : Icons.radio_button_unchecked_rounded,
-                  size: 16.sp,
-                  color: checked ? AppColors.main : Colors.grey.shade400,
-                ),
-                SizedBox(width: 6.w),
-                Expanded(
-                  child: Text(label,
-                      style: TextStyle(
-                          fontSize: 12.sp, color: AppColors.mainDark)),
-                ),
-              ],
-            ),
-          );
+          entries.add(MapEntry(label, checked ? '✓' : '✗'));
         }
-        return _plainText(item.toString());
+      }
+    }
+
+    if (entries.isEmpty) return const SizedBox.shrink();
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: entries.map((e) {
+        final isPositive = e.value.toLowerCase() == 'normal' ||
+            e.value == '✓' ||
+            e.value.toLowerCase() == 'yes';
+        return Padding(
+          padding: EdgeInsets.only(bottom: 3.h),
+          child: Row(
+            children: [
+              Icon(
+                isPositive
+                    ? Icons.check_circle_rounded
+                    : Icons.radio_button_unchecked_rounded,
+                size: 16.sp,
+                color: isPositive ? AppColors.main : Colors.grey.shade400,
+              ),
+              SizedBox(width: 6.w),
+              Expanded(
+                child: RichText(
+                  text: TextSpan(
+                    style: TextStyle(
+                        fontSize: 12.sp, color: AppColors.mainDark),
+                    children: [
+                      TextSpan(
+                        text: e.key,
+                        style: const TextStyle(fontWeight: FontWeight.w600),
+                      ),
+                      TextSpan(text: '  ${e.value}'),
+                    ],
+                  ),
+                ),
+              ),
+            ],
+          ),
+        );
       }).toList(),
     );
   }
