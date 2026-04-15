@@ -46,7 +46,7 @@ class ModularReportDetailPage extends StatelessWidget {
                     ],
                     SizedBox(height: 14.h),
                     ...report.sections.map(
-                        (section) => PatientSectionRenderers.render(section)),
+                        (section) => PatientSectionRenderers.render(section, context)),
                     SizedBox(height: 40.h),
                   ],
                 ),

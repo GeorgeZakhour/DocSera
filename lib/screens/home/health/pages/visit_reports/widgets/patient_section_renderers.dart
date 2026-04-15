@@ -1,7 +1,10 @@
 import 'package:docsera/app/const.dart';
+import 'package:docsera/models/document.dart';
+import 'package:docsera/screens/home/Document/document_preview_page.dart';
 import 'package:docsera/screens/home/health/pages/visit_reports/modular_report_model.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 import 'patient_section_card.dart';
 
 class PatientSectionRenderers {
@@ -28,14 +31,14 @@ class PatientSectionRenderers {
     'attachments': 'المرفقات',
   };
 
-  static Widget render(ModularReportSection section) {
+  static Widget render(ModularReportSection section, BuildContext context) {
     final label = section.label ?? _sectionLabels[section.type] ?? section.type;
-    final content = _renderContent(section);
+    final content = _renderContent(section, context);
     if (content == null) return const SizedBox.shrink();
     return PatientSectionCard(title: label, child: content);
   }
 
-  static Widget? _renderContent(ModularReportSection section) {
+  static Widget? _renderContent(ModularReportSection section, BuildContext context) {
     switch (section.type) {
       case 'chief_complaint':
       case 'additional_notes':
@@ -79,7 +82,7 @@ class PatientSectionRenderers {
         return _checklist(section);
 
       case 'attachments':
-        return _attachments(section.value);
+        return _attachments(section.value, context);
 
       default:
         if (section.value is String) {
@@ -705,29 +708,93 @@ class PatientSectionRenderers {
     );
   }
 
-  static Widget _attachments(dynamic value) {
+  static Widget _attachments(dynamic value, BuildContext context) {
     final items = (value is List) ? value : [];
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: items.map((item) {
-        final name =
-            (item is Map) ? (item['name']?.toString() ?? 'مرفق') : item.toString();
-        return Padding(
-          padding: EdgeInsets.only(bottom: 3.h),
-          child: Row(
-            children: [
-              Icon(Icons.attach_file_rounded,
-                  size: 14.sp, color: AppColors.main.withOpacity(0.6)),
-              SizedBox(width: 4.w),
-              Expanded(
-                child: Text(name,
-                    style: TextStyle(
-                        fontSize: 12.sp, color: AppColors.mainDark)),
-              ),
-            ],
+        final map = (item is Map)
+            ? Map<String, dynamic>.from(item)
+            : <String, dynamic>{};
+        final name = map['name']?.toString() ?? 'مرفق';
+        final url = map['url']?.toString() ?? '';
+        final type = map['type']?.toString() ?? '';
+        final encrypted = map['encrypted'] == true;
+
+        return GestureDetector(
+          onTap: url.isNotEmpty
+              ? () => _openReportAttachment(
+                    context,
+                    url: url,
+                    name: name,
+                    type: type,
+                    encrypted: encrypted,
+                  )
+              : null,
+          child: Padding(
+            padding: EdgeInsets.only(bottom: 3.h),
+            child: Row(
+              children: [
+                Icon(Icons.attach_file_rounded,
+                    size: 14.sp, color: AppColors.main.withOpacity(0.6)),
+                SizedBox(width: 4.w),
+                Expanded(
+                  child: Text(name,
+                      style: TextStyle(
+                          fontSize: 12.sp, color: AppColors.mainDark)),
+                ),
+                if (url.isNotEmpty)
+                  Icon(Icons.open_in_new_rounded,
+                      size: 12.sp, color: AppColors.main.withOpacity(0.4)),
+              ],
+            ),
           ),
         );
       }).toList(),
     );
+  }
+
+  static Future<void> _openReportAttachment(
+    BuildContext context, {
+    required String url,
+    required String name,
+    required String type,
+    required bool encrypted,
+  }) async {
+    try {
+      final signedUrl = await Supabase.instance.client.storage
+          .from('chat.attachments')
+          .createSignedUrl(url, 60 * 60);
+
+      final doc = UserDocument(
+        id: '',
+        userId: '',
+        name: name,
+        type: 'attachment',
+        fileType: type == 'pdf' ? 'pdf' : 'image',
+        patientId: '',
+        previewUrl: signedUrl,
+        pages: [signedUrl],
+        uploadedAt: DateTime.now(),
+        uploadedById: '',
+        encrypted: encrypted,
+      );
+
+      if (!context.mounted) return;
+      Navigator.push(
+        context,
+        MaterialPageRoute(
+          builder: (_) => DocumentPreviewPage(
+            document: doc,
+            showActions: false,
+          ),
+        ),
+      );
+    } catch (e) {
+      if (!context.mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('حدث خطأ أثناء فتح المرفق')),
+      );
+    }
   }
 }
