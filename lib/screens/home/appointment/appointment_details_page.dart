@@ -1158,6 +1158,7 @@ class _AppointmentDetailsPageState extends State<AppointmentDetailsPage> {
         uploadedAt: DateTime.tryParse(att['uploaded_at'] ?? '') ?? DateTime.now(),
         uploadedById: att['uploaded_by_id'] ?? '',
         cameFromConversation: false,
+        encrypted: att['encrypted'] == true,
       );
 
       // 3. فتح صفحة العرض الموحدة
