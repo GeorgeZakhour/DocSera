@@ -13,12 +13,15 @@ class UserDocument {
   final bool cameFromConversation;
   final String? conversationDoctorName;
   final bool encrypted; // ✅ Phase 2C: Whether file bytes are encrypted
+  final String source; // 'patient', 'doctor_added', 'report'
+  final String? sourceDoctorId;
+  final String? sourceDoctorName;
 
   UserDocument({
     this.id,
     required this.userId,
     required this.name,
-    required this.type, 
+    required this.type,
     required this.fileType,
     required this.patientId,
     required this.previewUrl,
@@ -28,6 +31,9 @@ class UserDocument {
     this.cameFromConversation = false,
     this.conversationDoctorName,
     this.encrypted = false,
+    this.source = 'patient',
+    this.sourceDoctorId,
+    this.sourceDoctorName,
   });
 
   factory UserDocument.fromMap(Map<String, dynamic> data) {
@@ -45,6 +51,9 @@ class UserDocument {
       cameFromConversation: data['came_from_conversation'] ?? false,
       conversationDoctorName: data['conversation_doctor_name'],
       encrypted: data['encrypted'] == true,
+      source: data['source']?.toString() ?? 'patient',
+      sourceDoctorId: data['source_doctor_id']?.toString(),
+      sourceDoctorName: data['source_doctor_name']?.toString(),
     );
   }
 
@@ -68,6 +77,8 @@ class UserDocument {
       if (conversationDoctorName != null)
         'conversation_doctor_name': conversationDoctorName,
       if (encrypted) 'encrypted': true,
+      'source': source,
+      if (sourceDoctorId != null) 'source_doctor_id': sourceDoctorId,
     };
   }
 
@@ -75,14 +86,17 @@ class UserDocument {
     String? name,
     String? type,
     String? previewUrl,
-    List<String> ? pages,
+    List<String>? pages,
     bool? cameFromConversation,
     String? conversationDoctorName,
     bool? encrypted,
+    String? source,
+    String? sourceDoctorId,
+    String? sourceDoctorName,
   }) {
     return UserDocument(
       id: id,
-      userId: userId ?? userId,
+      userId: userId,
       name: name ?? this.name,
       type: type ?? this.type,
       fileType: fileType,
@@ -94,6 +108,9 @@ class UserDocument {
       cameFromConversation: cameFromConversation ?? this.cameFromConversation,
       conversationDoctorName: conversationDoctorName ?? this.conversationDoctorName,
       encrypted: encrypted ?? this.encrypted,
+      source: source ?? this.source,
+      sourceDoctorId: sourceDoctorId ?? this.sourceDoctorId,
+      sourceDoctorName: sourceDoctorName ?? this.sourceDoctorName,
     );
   }
 }
