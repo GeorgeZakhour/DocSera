@@ -197,6 +197,7 @@ void showDocumentOptionsSheet(
                 );
               },
             ),
+            if (document.source == 'patient')
             _buildOption(
               context,
               Icons.edit_outlined,
@@ -206,7 +207,7 @@ void showDocumentOptionsSheet(
                 final prefs = await SharedPreferences.getInstance();
                 final mainUserId = prefs.getString('userId') ?? '';
                 final cubit = context.read<DocumentsCubit>();
-                
+
                 showModalBottomSheet(
                   context: context,
                   isScrollControlled: true,
@@ -253,6 +254,7 @@ void showDocumentOptionsSheet(
                 await _downloadDocumentAsPDF(context, document);
               },
             ),
+            if (document.source == 'patient')
             _buildOption(
               context,
               Icons.delete,

@@ -648,7 +648,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get addAndManage => 'Add and manage';
 
   @override
-  String get allDocuments => 'all documents';
+  String get allDocuments => 'All';
 
   @override
   String get updateIdentity => 'Update identity and';
@@ -3201,7 +3201,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get documentAccessInfo =>
-      'Only you can access and manage documents stored here.';
+      'Documents you upload here are visible to doctors who have you as a patient. You can manage and delete your own uploads. Files added by doctors appear here as read-only.';
 
   @override
   String get notesAccessInfo =>
@@ -3284,10 +3284,132 @@ class AppLocalizationsEn extends AppLocalizations {
   String get modularReport => 'Detailed Report';
 
   @override
+  String get prescriptionReport => 'Prescription';
+
+  @override
   String get downloadPdf => 'Download PDF';
 
   @override
   String reportSharedByDoctor(Object doctorName) {
     return 'Dr. $doctorName shared a medical report with you';
+  }
+
+  @override
+  String get section_chief_complaint => 'Chief Complaint';
+
+  @override
+  String get section_clinical_examination => 'Clinical Examination';
+
+  @override
+  String get section_diagnosis => 'Diagnosis';
+
+  @override
+  String get section_prescriptions => 'Prescriptions';
+
+  @override
+  String get section_treatment_instructions => 'Treatment Instructions';
+
+  @override
+  String get section_treatment_procedures => 'Treatment Procedures';
+
+  @override
+  String get section_in_clinic_treatments => 'In-Clinic Treatments';
+
+  @override
+  String get section_requested_exams => 'Requested Exams';
+
+  @override
+  String get section_follow_up => 'Follow-Up';
+
+  @override
+  String get section_referral => 'Referral';
+
+  @override
+  String get section_additional_notes => 'Additional Notes';
+
+  @override
+  String get section_custom_text => 'Custom Section';
+
+  @override
+  String get section_vitals => 'Vital Signs';
+
+  @override
+  String get section_measurements => 'Measurements';
+
+  @override
+  String get section_scoring => 'Clinical Score';
+
+  @override
+  String get section_checklist => 'Checklist';
+
+  @override
+  String get section_body_map => 'Body Map';
+
+  @override
+  String get section_image_comparison => 'Image Comparison';
+
+  @override
+  String get section_custom_table => 'Custom Table';
+
+  @override
+  String get section_attachments => 'Attachments';
+
+  @override
+  String get vital_systolic_bp => 'Systolic BP';
+
+  @override
+  String get vital_diastolic_bp => 'Diastolic BP';
+
+  @override
+  String get vital_heart_rate => 'Heart Rate';
+
+  @override
+  String get vital_temperature => 'Temperature';
+
+  @override
+  String get vital_spo2 => 'SpO2';
+
+  @override
+  String get vital_resp_rate => 'Resp. Rate';
+
+  @override
+  String get vital_weight => 'Weight';
+
+  @override
+  String get vital_height => 'Height';
+
+  @override
+  String get vital_blood_sugar => 'Blood Sugar';
+
+  @override
+  String get vital_blood_pressure => 'Blood Pressure';
+
+  @override
+  String get vital_pulse => 'Pulse';
+
+  @override
+  String get vital_respiratory_rate => 'Respiratory Rate';
+
+  @override
+  String get vital_oxygen_saturation => 'Oxygen Saturation';
+
+  @override
+  String get vital_bmi => 'BMI';
+
+  @override
+  String get vital_glucose => 'Glucose';
+
+  @override
+  String get myUploads => 'My Uploads';
+
+  @override
+  String get doctorAdded => 'Dr. Added';
+
+  @override
+  String get reportAttachments => 'Reports';
+
+  @override
+  String addedByDoctor(String doctorName) {
+    return 'Added by $doctorName';
   }
 }

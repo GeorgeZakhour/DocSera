@@ -642,7 +642,7 @@ class AppLocalizationsAr extends AppLocalizations {
   String get addAndManage => 'إضافة وإدارة';
 
   @override
-  String get allDocuments => 'جميع المستندات';
+  String get allDocuments => 'الكل';
 
   @override
   String get updateIdentity => 'تحديث الهوية و';
@@ -3160,7 +3160,7 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get documentAccessInfo =>
-      'فقط أنت تملك صلاحية الوصول إلى هذه المستندات وإدارتها.';
+      'المستندات التي ترفعها هنا مرئية للأطباء الذين لديك كمريض. يمكنك إدارة وحذف ملفاتك. الملفات المضافة من الأطباء تظهر هنا للقراءة فقط.';
 
   @override
   String get notesAccessInfo =>
@@ -3242,10 +3242,132 @@ class AppLocalizationsAr extends AppLocalizations {
   String get modularReport => 'تقرير مفصّل';
 
   @override
+  String get prescriptionReport => 'وصفة طبية';
+
+  @override
   String get downloadPdf => 'تحميل PDF';
 
   @override
   String reportSharedByDoctor(Object doctorName) {
     return 'قام الطبيب $doctorName بمشاركة تقرير طبي معك';
+  }
+
+  @override
+  String get section_chief_complaint => 'الشكوى الرئيسية';
+
+  @override
+  String get section_clinical_examination => 'الفحص السريري';
+
+  @override
+  String get section_diagnosis => 'التشخيص';
+
+  @override
+  String get section_prescriptions => 'الوصفات الطبية';
+
+  @override
+  String get section_treatment_instructions => 'تعليمات العلاج';
+
+  @override
+  String get section_treatment_procedures => 'الإجراءات العلاجية';
+
+  @override
+  String get section_in_clinic_treatments => 'العلاجات في العيادة';
+
+  @override
+  String get section_requested_exams => 'الفحوصات المطلوبة';
+
+  @override
+  String get section_follow_up => 'المتابعة';
+
+  @override
+  String get section_referral => 'الإحالة';
+
+  @override
+  String get section_additional_notes => 'ملاحظات إضافية';
+
+  @override
+  String get section_custom_text => 'قسم مخصص';
+
+  @override
+  String get section_vitals => 'العلامات الحيوية';
+
+  @override
+  String get section_measurements => 'القياسات';
+
+  @override
+  String get section_scoring => 'المقياس السريري';
+
+  @override
+  String get section_checklist => 'قائمة الفحص';
+
+  @override
+  String get section_body_map => 'خريطة الجسم';
+
+  @override
+  String get section_image_comparison => 'مقارنة الصور';
+
+  @override
+  String get section_custom_table => 'جدول مخصص';
+
+  @override
+  String get section_attachments => 'المرفقات';
+
+  @override
+  String get vital_systolic_bp => 'الضغط الانقباضي';
+
+  @override
+  String get vital_diastolic_bp => 'الضغط الانبساطي';
+
+  @override
+  String get vital_heart_rate => 'معدل ضربات القلب';
+
+  @override
+  String get vital_temperature => 'درجة الحرارة';
+
+  @override
+  String get vital_spo2 => 'تشبع الأكسجين';
+
+  @override
+  String get vital_resp_rate => 'معدل التنفس';
+
+  @override
+  String get vital_weight => 'الوزن';
+
+  @override
+  String get vital_height => 'الطول';
+
+  @override
+  String get vital_blood_sugar => 'سكر الدم';
+
+  @override
+  String get vital_blood_pressure => 'ضغط الدم';
+
+  @override
+  String get vital_pulse => 'النبض';
+
+  @override
+  String get vital_respiratory_rate => 'معدل التنفس';
+
+  @override
+  String get vital_oxygen_saturation => 'تشبع الأكسجين';
+
+  @override
+  String get vital_bmi => 'مؤشر كتلة الجسم';
+
+  @override
+  String get vital_glucose => 'الغلوكوز';
+
+  @override
+  String get myUploads => 'ملفاتي';
+
+  @override
+  String get doctorAdded => 'أضافها طبيب';
+
+  @override
+  String get reportAttachments => 'التقارير';
+
+  @override
+  String addedByDoctor(String doctorName) {
+    return 'أضافه $doctorName';
   }
 }

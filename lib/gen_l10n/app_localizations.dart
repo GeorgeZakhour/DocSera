@@ -1283,7 +1283,7 @@ abstract class AppLocalizations {
   /// No description provided for @allDocuments.
   ///
   /// In en, this message translates to:
-  /// **'all documents'**
+  /// **'All'**
   String get allDocuments;
 
   /// No description provided for @updateIdentity.
@@ -6005,7 +6005,7 @@ abstract class AppLocalizations {
   /// No description provided for @documentAccessInfo.
   ///
   /// In en, this message translates to:
-  /// **'Only you can access and manage documents stored here.'**
+  /// **'Documents you upload here are visible to doctors who have you as a patient. You can manage and delete your own uploads. Files added by doctors appear here as read-only.'**
   String get documentAccessInfo;
 
   /// No description provided for @notesAccessInfo.
@@ -6152,6 +6152,12 @@ abstract class AppLocalizations {
   /// **'Detailed Report'**
   String get modularReport;
 
+  /// No description provided for @prescriptionReport.
+  ///
+  /// In en, this message translates to:
+  /// **'Prescription'**
+  String get prescriptionReport;
+
   /// No description provided for @downloadPdf.
   ///
   /// In en, this message translates to:
@@ -6163,6 +6169,240 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Dr. {doctorName} shared a medical report with you'**
   String reportSharedByDoctor(Object doctorName);
+
+  /// No description provided for @section_chief_complaint.
+  ///
+  /// In en, this message translates to:
+  /// **'Chief Complaint'**
+  String get section_chief_complaint;
+
+  /// No description provided for @section_clinical_examination.
+  ///
+  /// In en, this message translates to:
+  /// **'Clinical Examination'**
+  String get section_clinical_examination;
+
+  /// No description provided for @section_diagnosis.
+  ///
+  /// In en, this message translates to:
+  /// **'Diagnosis'**
+  String get section_diagnosis;
+
+  /// No description provided for @section_prescriptions.
+  ///
+  /// In en, this message translates to:
+  /// **'Prescriptions'**
+  String get section_prescriptions;
+
+  /// No description provided for @section_treatment_instructions.
+  ///
+  /// In en, this message translates to:
+  /// **'Treatment Instructions'**
+  String get section_treatment_instructions;
+
+  /// No description provided for @section_treatment_procedures.
+  ///
+  /// In en, this message translates to:
+  /// **'Treatment Procedures'**
+  String get section_treatment_procedures;
+
+  /// No description provided for @section_in_clinic_treatments.
+  ///
+  /// In en, this message translates to:
+  /// **'In-Clinic Treatments'**
+  String get section_in_clinic_treatments;
+
+  /// No description provided for @section_requested_exams.
+  ///
+  /// In en, this message translates to:
+  /// **'Requested Exams'**
+  String get section_requested_exams;
+
+  /// No description provided for @section_follow_up.
+  ///
+  /// In en, this message translates to:
+  /// **'Follow-Up'**
+  String get section_follow_up;
+
+  /// No description provided for @section_referral.
+  ///
+  /// In en, this message translates to:
+  /// **'Referral'**
+  String get section_referral;
+
+  /// No description provided for @section_additional_notes.
+  ///
+  /// In en, this message translates to:
+  /// **'Additional Notes'**
+  String get section_additional_notes;
+
+  /// No description provided for @section_custom_text.
+  ///
+  /// In en, this message translates to:
+  /// **'Custom Section'**
+  String get section_custom_text;
+
+  /// No description provided for @section_vitals.
+  ///
+  /// In en, this message translates to:
+  /// **'Vital Signs'**
+  String get section_vitals;
+
+  /// No description provided for @section_measurements.
+  ///
+  /// In en, this message translates to:
+  /// **'Measurements'**
+  String get section_measurements;
+
+  /// No description provided for @section_scoring.
+  ///
+  /// In en, this message translates to:
+  /// **'Clinical Score'**
+  String get section_scoring;
+
+  /// No description provided for @section_checklist.
+  ///
+  /// In en, this message translates to:
+  /// **'Checklist'**
+  String get section_checklist;
+
+  /// No description provided for @section_body_map.
+  ///
+  /// In en, this message translates to:
+  /// **'Body Map'**
+  String get section_body_map;
+
+  /// No description provided for @section_image_comparison.
+  ///
+  /// In en, this message translates to:
+  /// **'Image Comparison'**
+  String get section_image_comparison;
+
+  /// No description provided for @section_custom_table.
+  ///
+  /// In en, this message translates to:
+  /// **'Custom Table'**
+  String get section_custom_table;
+
+  /// No description provided for @section_attachments.
+  ///
+  /// In en, this message translates to:
+  /// **'Attachments'**
+  String get section_attachments;
+
+  /// No description provided for @vital_systolic_bp.
+  ///
+  /// In en, this message translates to:
+  /// **'Systolic BP'**
+  String get vital_systolic_bp;
+
+  /// No description provided for @vital_diastolic_bp.
+  ///
+  /// In en, this message translates to:
+  /// **'Diastolic BP'**
+  String get vital_diastolic_bp;
+
+  /// No description provided for @vital_heart_rate.
+  ///
+  /// In en, this message translates to:
+  /// **'Heart Rate'**
+  String get vital_heart_rate;
+
+  /// No description provided for @vital_temperature.
+  ///
+  /// In en, this message translates to:
+  /// **'Temperature'**
+  String get vital_temperature;
+
+  /// No description provided for @vital_spo2.
+  ///
+  /// In en, this message translates to:
+  /// **'SpO2'**
+  String get vital_spo2;
+
+  /// No description provided for @vital_resp_rate.
+  ///
+  /// In en, this message translates to:
+  /// **'Resp. Rate'**
+  String get vital_resp_rate;
+
+  /// No description provided for @vital_weight.
+  ///
+  /// In en, this message translates to:
+  /// **'Weight'**
+  String get vital_weight;
+
+  /// No description provided for @vital_height.
+  ///
+  /// In en, this message translates to:
+  /// **'Height'**
+  String get vital_height;
+
+  /// No description provided for @vital_blood_sugar.
+  ///
+  /// In en, this message translates to:
+  /// **'Blood Sugar'**
+  String get vital_blood_sugar;
+
+  /// No description provided for @vital_blood_pressure.
+  ///
+  /// In en, this message translates to:
+  /// **'Blood Pressure'**
+  String get vital_blood_pressure;
+
+  /// No description provided for @vital_pulse.
+  ///
+  /// In en, this message translates to:
+  /// **'Pulse'**
+  String get vital_pulse;
+
+  /// No description provided for @vital_respiratory_rate.
+  ///
+  /// In en, this message translates to:
+  /// **'Respiratory Rate'**
+  String get vital_respiratory_rate;
+
+  /// No description provided for @vital_oxygen_saturation.
+  ///
+  /// In en, this message translates to:
+  /// **'Oxygen Saturation'**
+  String get vital_oxygen_saturation;
+
+  /// No description provided for @vital_bmi.
+  ///
+  /// In en, this message translates to:
+  /// **'BMI'**
+  String get vital_bmi;
+
+  /// No description provided for @vital_glucose.
+  ///
+  /// In en, this message translates to:
+  /// **'Glucose'**
+  String get vital_glucose;
+
+  /// No description provided for @myUploads.
+  ///
+  /// In en, this message translates to:
+  /// **'My Uploads'**
+  String get myUploads;
+
+  /// No description provided for @doctorAdded.
+  ///
+  /// In en, this message translates to:
+  /// **'Dr. Added'**
+  String get doctorAdded;
+
+  /// No description provided for @reportAttachments.
+  ///
+  /// In en, this message translates to:
+  /// **'Reports'**
+  String get reportAttachments;
+
+  /// No description provided for @addedByDoctor.
+  ///
+  /// In en, this message translates to:
+  /// **'Added by {doctorName}'**
+  String addedByDoctor(String doctorName);
 }
 
 class _AppLocalizationsDelegate

@@ -1138,7 +1138,7 @@
   "imagesDownloadFailed": "Failed to download images",
   "ofText": "of",
   "importedFromConversationWith": "Imported from the conversation with {name} on {date}",
-  "documentAccessInfo": "Only you can access and manage documents stored here.",
+  "documentAccessInfo": "Documents you upload here are visible to doctors who have you as a patient. You can manage and delete your own uploads. Files added by doctors appear here as read-only.",
   "notesAccessInfo": "Only you can access and manage your notes securely.",
   "messageAccessInfo": "You can message your doctor directly here. All your conversations are securely stored and easily accessible.",
   "accountPrivacyInfoLine1": "Your personal data stays personal.",
@@ -1167,6 +1167,7 @@
   "blockedFromBooking": "You are unable to book with this doctor. Please contact the clinic.",
 
   "modularReport": "Detailed Report",
+  "prescriptionReport": "Prescription",
   "downloadPdf": "Download PDF",
   "reportSharedByDoctor": "Dr. {doctorName} shared a medical report with you",
 
@@ -1205,5 +1206,18 @@
   "vital_respiratory_rate": "Respiratory Rate",
   "vital_oxygen_saturation": "Oxygen Saturation",
   "vital_bmi": "BMI",
-  "vital_glucose": "Glucose"
+  "vital_glucose": "Glucose",
+
+  "myUploads": "My Uploads",
+  "doctorAdded": "Dr. Added",
+  "reportAttachments": "Reports",
+  "allDocuments": "All",
+  "addedByDoctor": "Added by {doctorName}",
+  "@addedByDoctor": {
+    "placeholders": {
+      "doctorName": {
+        "type": "String"
+      }
+    }
+  }
 }

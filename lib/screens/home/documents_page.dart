@@ -65,6 +65,7 @@ class _DocumentsPageState extends State<DocumentsPage> with AutomaticKeepAliveCl
   static const String _viewModeKey = 'documentViewMode'; // 0 = grid, 1 = list
   static const String _notesViewModeKey = 'notesViewMode'; // 0 = grid, 1 = list
   bool _isFabExpanded = false;
+  String _docFilter = 'all'; // 'all', 'patient', 'doctor_added', 'report'
 
 
 
@@ -804,6 +805,7 @@ class _DocumentsPageState extends State<DocumentsPage> with AutomaticKeepAliveCl
   }
 
   Widget _buildGridView(List<Map<String, dynamic>> displayDocs) {
+    final filteredDocs = _filterDocuments(displayDocs);
     return CustomScrollView(
       physics: const BouncingScrollPhysics(),
       slivers: [
@@ -815,16 +817,24 @@ class _DocumentsPageState extends State<DocumentsPage> with AutomaticKeepAliveCl
           ),
         ),
 
+        // ✅ Filter chips
+        SliverToBoxAdapter(
+          child: Padding(
+            padding: EdgeInsets.only(bottom: 12.h),
+            child: _buildDocFilterChips(),
+          ),
+        ),
+
         // ✅ الشبكة الحقيقية
         SliverPadding(
           padding: EdgeInsets.only(left: 16.w, right: 16.w,bottom: 70.h),
           sliver: SliverGrid(
             delegate: SliverChildBuilderDelegate(
                   (context, index) {
-                final doc = displayDocs[index];
+                final doc = filteredDocs[index];
                 return _buildDocumentCard(doc);
               },
-              childCount: displayDocs.length,
+              childCount: filteredDocs.length,
             ),
             gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
               crossAxisCount: 2,
@@ -839,7 +849,8 @@ class _DocumentsPageState extends State<DocumentsPage> with AutomaticKeepAliveCl
   }
 
   Widget _buildListView(List<Map<String, dynamic>> displayDocs) {
-    final groupedDocs = _groupDocumentsByYear(displayDocs);
+    final filteredDocs = _filterDocuments(displayDocs);
+    final groupedDocs = _groupDocumentsByYear(filteredDocs);
     final isRTL = Directionality.of(context) == TextDirection.RTL;
 
     return CustomScrollView(
@@ -850,6 +861,14 @@ class _DocumentsPageState extends State<DocumentsPage> with AutomaticKeepAliveCl
           child: Padding(
             padding: EdgeInsets.fromLTRB(16.w, 16.h, 16.w, 12.h),
             child: _buildDocumentsBannerCard(),
+          ),
+        ),
+
+        // ✅ Filter chips
+        SliverToBoxAdapter(
+          child: Padding(
+            padding: EdgeInsets.only(bottom: 12.h),
+            child: _buildDocFilterChips(),
           ),
         ),
 
@@ -894,9 +913,10 @@ class _DocumentsPageState extends State<DocumentsPage> with AutomaticKeepAliveCl
                   final appLocale = AppLocalizations.of(context)!;
                   final String subtitle = _documentTypeMap[userDoc.type]?.call(appLocale) ?? userDoc.type;
 
+                  final isOwnUpload = userDoc.source == 'patient';
                   return Dismissible(
                     key: ValueKey(userDoc.id),
-                    direction: DismissDirection.endToStart,
+                    direction: isOwnUpload ? DismissDirection.endToStart : DismissDirection.none,
                     background: Container(
                       alignment: Alignment.centerRight,
                       child: FractionallySizedBox(
@@ -908,6 +928,7 @@ class _DocumentsPageState extends State<DocumentsPage> with AutomaticKeepAliveCl
                       ),
                     ),
                     confirmDismiss: (_) async {
+                      if (!isOwnUpload) return false;
                       return await showDialog(
                         context: context,
                         builder: (context) {
@@ -1008,6 +1029,16 @@ class _DocumentsPageState extends State<DocumentsPage> with AutomaticKeepAliveCl
                                         subtitle,
                                         style: AppTextStyles.getText3(context).copyWith(color: Colors.grey),
                                       ),
+                                      if (userDoc.source == 'doctor_added' && userDoc.sourceDoctorName != null)
+                                        Text(
+                                          AppLocalizations.of(context)!.addedByDoctor(userDoc.sourceDoctorName!),
+                                          style: TextStyle(
+                                            fontSize: 9.sp,
+                                            color: const Color(0xFF2196F3),
+                                            fontWeight: FontWeight.w500,
+                                          ),
+                                          overflow: TextOverflow.ellipsis,
+                                        ),
                                     ],
                                   ),
                                 ),
@@ -1062,6 +1093,71 @@ class _DocumentsPageState extends State<DocumentsPage> with AutomaticKeepAliveCl
         ),
       ),
     );
+  }
+
+  Widget _buildDocFilterChips() {
+    final local = AppLocalizations.of(context)!;
+    final filters = <String, String>{
+      'all': local.allDocuments,
+      'patient': local.myUploads,
+      'doctor_added': local.doctorAdded,
+      'report': local.reportAttachments,
+    };
+
+    return SingleChildScrollView(
+      scrollDirection: Axis.horizontal,
+      padding: EdgeInsets.symmetric(horizontal: 16.w),
+      child: Row(
+        children: filters.entries.map((entry) {
+          final isActive = _docFilter == entry.key;
+          const sourceColors = {
+            'patient': Color(0xFF009092),
+            'doctor_added': Color(0xFF2196F3),
+            'report': Color(0xFF9C27B0),
+          };
+          final color = sourceColors[entry.key];
+
+          return Padding(
+            padding: EdgeInsets.only(right: 6.w),
+            child: GestureDetector(
+              onTap: () => setState(() => _docFilter = entry.key),
+              child: Container(
+                padding: EdgeInsets.symmetric(horizontal: 14.w, vertical: 5.h),
+                decoration: BoxDecoration(
+                  borderRadius: BorderRadius.circular(20.r),
+                  color: isActive
+                      ? (color?.withOpacity(0.15) ?? AppColors.main.withOpacity(0.1))
+                      : (color?.withOpacity(0.06) ?? Colors.grey.withOpacity(0.08)),
+                  border: Border.all(
+                    color: isActive
+                        ? (color ?? AppColors.main)
+                        : (color?.withOpacity(0.12) ?? Colors.grey.withOpacity(0.1)),
+                  ),
+                ),
+                child: Text(
+                  entry.value,
+                  style: TextStyle(
+                    fontSize: 11.sp,
+                    fontWeight: isActive ? FontWeight.w600 : FontWeight.w500,
+                    color: isActive
+                        ? (color ?? AppColors.main)
+                        : (color?.withOpacity(0.7) ?? Colors.grey),
+                  ),
+                ),
+              ),
+            ),
+          );
+        }).toList(),
+      ),
+    );
+  }
+
+  List<Map<String, dynamic>> _filterDocuments(List<Map<String, dynamic>> docs) {
+    if (_docFilter == 'all') return docs;
+    return docs.where((d) {
+      final doc = d['doc'] as UserDocument;
+      return doc.source == _docFilter;
+    }).toList();
   }
 
   Widget _buildNotesBannerCard() {
@@ -1824,11 +1920,41 @@ class _DocumentGridItemState extends State<DocumentGridItem> {
     return url;
   }
 
+  Widget _buildSourceBadge(String source) {
+    const sourceConfig = {
+      'patient': (Color(0xFF009092), 'PATIENT'),
+      'doctor_added': (Color(0xFF2196F3), 'DR.'),
+      'report': (Color(0xFF9C27B0), 'REPORT'),
+    };
+    final config = sourceConfig[source];
+    if (config == null) return const SizedBox.shrink();
+    final color = config.$1;
+    final label = config.$2;
+
+    return Container(
+      padding: EdgeInsets.symmetric(horizontal: 5.w, vertical: 1.5.h),
+      decoration: BoxDecoration(
+        color: color.withOpacity(0.9),
+        borderRadius: BorderRadius.circular(3.r),
+      ),
+      child: Text(
+        label,
+        style: TextStyle(
+          fontSize: 7.sp,
+          fontWeight: FontWeight.w700,
+          color: Colors.white,
+        ),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     // Determine fallback icon type
     final doc = widget.doc;
     final isPdf = doc['type'] == 'pdf' || doc['name'].toString().toLowerCase().endsWith('.pdf');
+    final UserDocument userDoc = doc['doc'];
+    final isRTL = Directionality.of(context) == TextDirection.RTL;
 
     return InkWell(
       onTap: widget.onTap,
@@ -1842,40 +1968,55 @@ class _DocumentGridItemState extends State<DocumentGridItem> {
           children: [
             Expanded(
               flex: 8,
-              child: ClipRRect(
-                borderRadius: BorderRadius.only(
-                    topLeft: Radius.circular(16.r),
-                    topRight: Radius.circular(16.r)),
-                child: FutureBuilder<dynamic>(
-                  future: _previewFuture,
-                  builder: (context, snapshot) {
-                      final data = snapshot.data;
-                      
-                      if (snapshot.connectionState == ConnectionState.waiting) {
-                         return Center(child: SizedBox(width: 20.w, height: 20.w,child: const CircularProgressIndicator(strokeWidth: 2)));
-                      }
+              child: Stack(
+                children: [
+                  ClipRRect(
+                    borderRadius: BorderRadius.only(
+                        topLeft: Radius.circular(16.r),
+                        topRight: Radius.circular(16.r)),
+                    child: SizedBox(
+                      width: double.infinity,
+                      height: double.infinity,
+                      child: FutureBuilder<dynamic>(
+                        future: _previewFuture,
+                        builder: (context, snapshot) {
+                            final data = snapshot.data;
 
-                      if (data is Uint8List) {
-                        // Rendered PDF bytes
-                        return Image.memory(
-                           data,
-                           fit: BoxFit.cover,
-                           width: double.infinity,
-                           errorBuilder: (_, __, ___) => _buildFallbackIcon(isPdf),
-                        );
-                      } else if (data is String && data.isNotEmpty) {
-                        // Image URL
-                         return Image.network(
-                            data,
-                            fit: BoxFit.cover,
-                            width: double.infinity,
-                            errorBuilder: (_, __, ___) => _buildFallbackIcon(isPdf),
-                         );
-                      }
-                      
-                      return _buildFallbackIcon(isPdf);
-                  }
-                ),
+                            if (snapshot.connectionState == ConnectionState.waiting) {
+                               return Center(child: SizedBox(width: 20.w, height: 20.w,child: const CircularProgressIndicator(strokeWidth: 2)));
+                            }
+
+                            if (data is Uint8List) {
+                              // Rendered PDF bytes
+                              return Image.memory(
+                                 data,
+                                 fit: BoxFit.cover,
+                                 width: double.infinity,
+                                 errorBuilder: (_, __, ___) => _buildFallbackIcon(isPdf),
+                              );
+                            } else if (data is String && data.isNotEmpty) {
+                              // Image URL
+                               return Image.network(
+                                  data,
+                                  fit: BoxFit.cover,
+                                  width: double.infinity,
+                                  errorBuilder: (_, __, ___) => _buildFallbackIcon(isPdf),
+                               );
+                            }
+
+                            return _buildFallbackIcon(isPdf);
+                        }
+                      ),
+                    ),
+                  ),
+                  // Source badge at top-right (or top-left for RTL)
+                  Positioned(
+                    top: 6.h,
+                    right: isRTL ? null : 6.w,
+                    left: isRTL ? 6.w : null,
+                    child: _buildSourceBadge(userDoc.source),
+                  ),
+                ],
               ),
             ),
             Expanded(
@@ -1892,10 +2033,26 @@ class _DocumentGridItemState extends State<DocumentGridItem> {
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
                     Flexible(
-                      child: Text(
-                        doc['name'],
-                        style: AppTextStyles.getText2(context),
-                        overflow: TextOverflow.ellipsis,
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            doc['name'],
+                            style: AppTextStyles.getText2(context),
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                          if (userDoc.source == 'doctor_added' && userDoc.sourceDoctorName != null)
+                            Text(
+                              AppLocalizations.of(context)!.addedByDoctor(userDoc.sourceDoctorName!),
+                              style: TextStyle(
+                                fontSize: 8.sp,
+                                color: const Color(0xFF2196F3),
+                                fontWeight: FontWeight.w500,
+                              ),
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                        ],
                       ),
                     ),
                     IconButton(

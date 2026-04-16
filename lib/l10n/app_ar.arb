@@ -1160,7 +1160,7 @@
   "imagesDownloadFailed": "فشل تحميل الصور",
   "ofText": "من",
   "importedFromConversationWith": "تم الاستيراد من المحادثة مع {name} بتاريخ {date}",
-  "documentAccessInfo": "فقط أنت تملك صلاحية الوصول إلى هذه المستندات وإدارتها.",
+  "documentAccessInfo": "المستندات التي ترفعها هنا مرئية للأطباء الذين لديك كمريض. يمكنك إدارة وحذف ملفاتك. الملفات المضافة من الأطباء تظهر هنا للقراءة فقط.",
   "notesAccessInfo": "يمكنك أنت فقط الوصول إلى ملاحظاتك وإدارتها بأمان.",
   "messageAccessInfo": "يمكنك مراسلة طبيبك مباشرة من هنا. يتم حفظ جميع محادثاتك بأمان ويمكنك الوصول إليها بسهولة.",
   "accountPrivacyInfoLine1": "بياناتك الشخصية تبقى خاصة.",
@@ -1189,6 +1189,7 @@
   "blockedFromBooking": "لا يمكنك حجز موعد مع هذا الطبيب. يرجى التواصل مع العيادة.",
 
   "modularReport": "تقرير مفصّل",
+  "prescriptionReport": "وصفة طبية",
   "downloadPdf": "تحميل PDF",
   "reportSharedByDoctor": "قام الطبيب {doctorName} بمشاركة تقرير طبي معك",
 
@@ -1227,5 +1228,18 @@
   "vital_respiratory_rate": "معدل التنفس",
   "vital_oxygen_saturation": "تشبع الأكسجين",
   "vital_bmi": "مؤشر كتلة الجسم",
-  "vital_glucose": "الغلوكوز"
+  "vital_glucose": "الغلوكوز",
+
+  "myUploads": "ملفاتي",
+  "doctorAdded": "أضافها طبيب",
+  "reportAttachments": "التقارير",
+  "allDocuments": "الكل",
+  "addedByDoctor": "أضافه {doctorName}",
+  "@addedByDoctor": {
+    "placeholders": {
+      "doctorName": {
+        "type": "String"
+      }
+    }
+  }
 }
