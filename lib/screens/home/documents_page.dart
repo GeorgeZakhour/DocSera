@@ -1,6 +1,5 @@
 import 'dart:io';
 import 'dart:typed_data';
-import 'package:syncfusion_flutter_pdf/pdf.dart' hide PdfDocument;
 import 'package:syncfusion_flutter_pdf/pdf.dart' as syncfusion;
 import 'package:pdfx/pdfx.dart' as pdfx;
 import 'package:http/http.dart' as http;
