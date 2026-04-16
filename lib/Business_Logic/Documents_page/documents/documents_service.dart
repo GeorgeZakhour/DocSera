@@ -8,10 +8,28 @@ class DocumentsService {
       : _client = client ?? Supabase.instance.client;
 
   Future<List<UserDocument>> fetchDocuments(String userId) async {
+    // Fetch relative IDs owned by this user so we can also include documents
+    // where patient_id = relative.id (user_id is NULL for relatives).
+    final relativesResponse = await _client
+        .from('relatives')
+        .select('id')
+        .eq('user_id', userId);
+
+    final relativeIds = (relativesResponse as List)
+        .map((r) => r['id']?.toString() ?? '')
+        .where((id) => id.isNotEmpty)
+        .toList();
+
+    // Build OR filter: always include own documents; add relative branch
+    // only when there are relatives to avoid an empty IN clause.
+    final orFilter = relativeIds.isEmpty
+        ? 'user_id.eq.$userId'
+        : 'user_id.eq.$userId,patient_id.in.(${relativeIds.join(",")})';
+
     final response = await _client
         .from('documents')
         .select('*, source_doctor:doctors!documents_source_doctor_id_fkey(first_name, last_name, title)')
-        .eq('user_id', userId)
+        .or(orFilter)
         .order('uploaded_at', ascending: false);
 
     return (response as List).map((e) {
