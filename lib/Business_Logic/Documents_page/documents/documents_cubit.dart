@@ -138,6 +138,7 @@ class DocumentsCubit extends Cubit<DocumentsState> {
           'pages': [path],
           'uploaded_at': uploadedAt.toIso8601String(),
           'uploaded_by_id': userId,
+          'source': 'patient',
           'encrypted': true,
         };
 
@@ -191,6 +192,7 @@ class DocumentsCubit extends Cubit<DocumentsState> {
         'pages': uploadedPaths,
         'uploaded_at': uploadedAt.toIso8601String(),
         'uploaded_by_id': userId,
+        'source': 'patient',
         'encrypted': true,
       };
 
@@ -247,6 +249,7 @@ class DocumentsCubit extends Cubit<DocumentsState> {
         'pages': [storagePath],
         'uploaded_at': uploadedAt.toIso8601String(),
         'uploaded_by_id': userId,
+        'source': 'patient',
         'encrypted': true,
       };
 

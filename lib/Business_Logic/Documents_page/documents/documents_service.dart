@@ -10,11 +10,23 @@ class DocumentsService {
   Future<List<UserDocument>> fetchDocuments(String userId) async {
     final response = await _client
         .from('documents')
-        .select()
+        .select('*, source_doctor:doctors!documents_source_doctor_id_fkey(first_name, last_name, title)')
         .eq('user_id', userId)
         .order('uploaded_at', ascending: false);
 
-    return (response as List).map((e) => UserDocument.fromMap(e)).toList();
+    return (response as List).map((e) {
+      final map = Map<String, dynamic>.from(e);
+      // Flatten joined doctor name
+      final doctorData = map['source_doctor'];
+      if (doctorData is Map) {
+        final title = doctorData['title'] ?? '';
+        final first = doctorData['first_name'] ?? '';
+        final last = doctorData['last_name'] ?? '';
+        map['source_doctor_name'] = '$title $first $last'.trim();
+      }
+      map.remove('source_doctor');
+      return UserDocument.fromMap(map);
+    }).toList();
   }
 
   Future<void> deleteDocument(String documentId, String userId) async {
