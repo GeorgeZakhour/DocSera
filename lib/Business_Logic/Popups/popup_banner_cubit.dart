@@ -13,9 +13,9 @@ class PopupBannerCubit extends Cubit<PopupBannerState> {
   List<PopupBannerModel> _allBanners = [];
   int _currentIndex = 0;
 
-  Future<void> checkBanners() async {
+  Future<void> checkBanners({String? appVersion}) async {
     final dismissedIds = _prefs.getStringList('dismissed_banners') ?? [];
-    final banners = await _service.getActiveBanners();
+    final banners = await _service.getActiveBanners(appVersion: appVersion);
 
     _allBanners = banners.where((b) {
       if (!b.showOnce) return true; // Always show if showOnce is false

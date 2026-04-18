@@ -10,10 +10,15 @@ class PopupBannerModel {
   final String? imageUrl;
   final String? actionType;
   final String? actionValue;
-  final String type; // 'maintenance', 'update', 'info'
+  final String type; // 'maintenance', 'update', 'info', 'policy', 'feature'
   final bool isDismissible;
   final bool showOnce;
   final int priority;
+  final String targetApp;
+  final DateTime? startsAt;
+  final DateTime? endsAt;
+  final String? minAppVersion;
+  final String? maxAppVersion;
 
   PopupBannerModel({
     required this.id,
@@ -27,6 +32,11 @@ class PopupBannerModel {
     this.isDismissible = true,
     this.showOnce = true,
     this.priority = 0,
+    this.targetApp = 'all',
+    this.startsAt,
+    this.endsAt,
+    this.minAppVersion,
+    this.maxAppVersion,
   });
 
   factory PopupBannerModel.fromJson(Map<String, dynamic> json) {
@@ -42,6 +52,11 @@ class PopupBannerModel {
       isDismissible: json['is_dismissible'] ?? true,
       showOnce: json['show_once'] ?? true,
       priority: json['priority'] ?? 0,
+      targetApp: json['target_app'] ?? 'all',
+      startsAt: json['starts_at'] != null ? DateTime.tryParse(json['starts_at']) : null,
+      endsAt: json['ends_at'] != null ? DateTime.tryParse(json['ends_at']) : null,
+      minAppVersion: json['min_app_version'],
+      maxAppVersion: json['max_app_version'],
     );
   }
 

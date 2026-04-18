@@ -26,6 +26,7 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 import '../../../Business_Logic/Account_page/user_cubit.dart';
 import 'package:device_info_plus/device_info_plus.dart';
 import 'package:docsera/Business_Logic/Popups/popup_banner_cubit.dart';
+import 'package:package_info_plus/package_info_plus.dart';
 
 
 
@@ -91,7 +92,11 @@ class _LogInPageState extends State<LogInPage> with SingleTickerProviderStateMix
 
     isValid = widget.preFilledInput != null && widget.preFilledInput!.isNotEmpty;
     _checkBiometricReadiness();
-    context.read<PopupBannerCubit>().checkBanners(); 
+    PackageInfo.fromPlatform().then((info) {
+      if (mounted) {
+        context.read<PopupBannerCubit>().checkBanners(appVersion: info.version);
+      }
+    });
   }
 
   @override

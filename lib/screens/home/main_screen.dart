@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'package:docsera/Business_Logic/Authentication/auth_cubit.dart';
 import 'package:docsera/Business_Logic/Popups/popup_banner_cubit.dart';
+import 'package:package_info_plus/package_info_plus.dart';
 import 'package:docsera/Business_Logic/Authentication/auth_state.dart';
 import 'package:docsera/Business_Logic/Main_page/main_screen_cubit.dart';
 import 'package:docsera/Business_Logic/Main_page/main_screen_state.dart';
@@ -62,7 +63,12 @@ class _MainScreenState extends State<MainScreen> with AutomaticKeepAliveClientMi
   void initState() {
     super.initState();
     debugPrint("📌 MainScreen: initState() -> Checking login status...");
-    context.read<PopupBannerCubit>().checkBanners(); // ✅ Check banners when MainScreen loads
+    // ✅ Check banners when MainScreen loads
+    PackageInfo.fromPlatform().then((info) {
+      if (mounted) {
+        context.read<PopupBannerCubit>().checkBanners(appVersion: info.version);
+      }
+    });
     _bannerColorsReady = _bannersLoadedOnce; // ✅ إذا كانت محمّلة سابقًا، لا تعيد تحميلها
     context.read<MainScreenCubit>().loadMainScreen(context);
   }
