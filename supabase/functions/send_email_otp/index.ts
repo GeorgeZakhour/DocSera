@@ -119,7 +119,7 @@ if (error) {
 
                 <!-- App Logo -->
                 <img
-                  src="https://fxsqfgtlkitvghwjwaeq.supabase.co/storage/v1/object/public/app.files/logo/docsera_white.png"
+                  src="https://api.docsera.app/storage/v1/object/public/app.files/logo/docsera_white.png"
                   alt="Docsera"
                   width="140"
                   style="

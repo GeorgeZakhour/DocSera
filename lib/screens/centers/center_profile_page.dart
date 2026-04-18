@@ -24,7 +24,9 @@ import 'package:docsera/screens/map_results_page.dart';
 
 class CenterProfilePage extends StatefulWidget {
   final String centerId;
-  const CenterProfilePage({super.key, required this.centerId});
+  final bool fromProfile;
+  final String? fromDoctorId;
+  const CenterProfilePage({super.key, required this.centerId, this.fromProfile = false, this.fromDoctorId});
 
   @override
   State<CenterProfilePage> createState() => _CenterProfilePageState();
@@ -697,8 +699,18 @@ class _CenterProfilePageState extends State<CenterProfilePage> {
     return GestureDetector(
       onTap: () {
         if (doctorId.isNotEmpty) {
-          Navigator.push(
-              context, fadePageRoute(DoctorProfilePage(doctorId: doctorId)));
+          if (widget.fromDoctorId == doctorId) {
+            // Same doctor we came from — just go back
+            Navigator.pop(context);
+          } else if (widget.fromProfile) {
+            // Different doctor, but already deep — replace to prevent loop
+            Navigator.pushReplacement(
+                context, fadePageRoute(DoctorProfilePage(doctorId: doctorId, fromProfile: true)));
+          } else {
+            // First hop — push normally so back works
+            Navigator.push(
+                context, fadePageRoute(DoctorProfilePage(doctorId: doctorId, fromProfile: true)));
+          }
         }
       },
       child: Container(

@@ -30,6 +30,8 @@ class BaseScaffold extends StatelessWidget {
       backgroundColor: color,
       appBar: AppBar(
         toolbarHeight: height,
+        automaticallyImplyLeading: showBackArrow,
+        iconTheme: const IconThemeData(color: AppColors.whiteText),
         leading: showBackArrow
             ? IconButton(
           icon: const Icon(

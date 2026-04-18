@@ -1,5 +1,8 @@
+import 'package:docsera/Business_Logic/Documents_page/documents/documents_cubit.dart';
 import 'package:docsera/screens/home/Document/edit_document_name_sheet.dart';
+import 'package:docsera/utils/time_utils.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:docsera/app/const.dart';
 import 'package:docsera/app/text_styles.dart';
@@ -8,7 +11,6 @@ import 'package:intl/intl.dart';
 import 'package:docsera/gen_l10n/app_localizations.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
-
 
 class DocumentDetailsPage extends StatefulWidget {
   final UserDocument document;
@@ -21,42 +23,58 @@ class DocumentDetailsPage extends StatefulWidget {
 
 class _DocumentDetailsPageState extends State<DocumentDetailsPage> {
   late String documentName;
-  final Map<String, String Function(AppLocalizations)> _documentTypeMap = {
-    'نتائج': (locale) => locale.results,
-    'تصوير شعاعي': (locale) => locale.medicalImaging,
-    'تقرير': (locale) => locale.report,
-    'إحالة طبية': (locale) => locale.referralLetter,
-    'خطة علاج': (locale) => locale.treatmentPlan,
-    'إثبات هوية': (locale) => locale.identityProof,
-    'إثبات تأمين صحي': (locale) => locale.insuranceProof,
-    'أخرى': (locale) => locale.other,
-  };
 
   @override
   void initState() {
     super.initState();
-    documentName = widget.document.name; // نسخة قابلة للتعديل
+    documentName = widget.document.name;
   }
 
-  Future<Map<String, dynamic>?> _fetchUploaderInfo(String userId) async {
-    if (userId.isEmpty) return null;
-
-    final response = await Supabase.instance.client
-        .from('users')
-        .select('first_name, last_name')
-        .eq('id', userId)
-        .maybeSingle();
-
-    return response;
+  String _resolveFileFormat(AppLocalizations locale) {
+    final ft = widget.document.fileType.toLowerCase();
+    if (ft.contains('pdf')) return locale.formatPdf;
+    if (ft.contains('image') || ft.contains('jpg') || ft.contains('jpeg') || ft.contains('png') || ft.contains('webp')) {
+      return locale.formatImage;
+    }
+    if (ft.isNotEmpty) return ft.toUpperCase();
+    return locale.formatUnknown;
   }
 
+  String _resolveSource(AppLocalizations locale) {
+    switch (widget.document.source) {
+      case 'patient':
+        return locale.sourceUploadedByYou;
+      case 'doctor_added':
+        final name = widget.document.sourceDoctorName;
+        if (name != null && name.isNotEmpty) {
+          return locale.sourceAddedByDoctor(name);
+        }
+        return locale.sourceBadgeDoctor;
+      default:
+        return widget.document.source;
+    }
+  }
+
+  Color _sourceColor() {
+    switch (widget.document.source) {
+      case 'patient':
+        return AppColors.main;
+      case 'doctor_added':
+        return const Color(0xFF2196F3);
+      default:
+        return Colors.grey;
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
     final locale = AppLocalizations.of(context)!;
-    final formattedDate = DateFormat('d MMMM yyyy', Localizations.localeOf(context).languageCode)
-        .format(widget.document.uploadedAt);
-    final localizedType = _documentTypeMap[widget.document.type]?.call(locale) ?? widget.document.type;
+    final langCode = Localizations.localeOf(context).languageCode;
+    final damascusTime = DocSeraTime.toSyria(widget.document.uploadedAt);
+    final formattedDate = DateFormat('d MMMM yyyy', langCode).format(damascusTime);
+    final formattedTime = DateFormat('HH:mm', langCode).format(damascusTime);
+    final pageCount = widget.document.pages.length;
+    final sourceColor = _sourceColor();
 
     return Scaffold(
       appBar: AppBar(
@@ -71,267 +89,334 @@ class _DocumentDetailsPageState extends State<DocumentDetailsPage> {
             onPressed: () => Navigator.pop(
               context,
               widget.document.copyWith(name: documentName),
-            )
-            ,
+            ),
           )
         ],
       ),
       backgroundColor: AppColors.background2,
-      body: Padding(
+      body: SingleChildScrollView(
         padding: EdgeInsets.symmetric(horizontal: 24.w, vertical: 16.h),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            _buildRow(context, locale.nameOfTheDocument, documentName, canEdit: true),
-            _buildRow(context, locale.typeOfTheDocument, localizedType),
-            _buildRow(context, locale.createdAt, formattedDate),
-            FutureBuilder<Map<String, dynamic>?>(
-              future: _fetchUploaderInfo(widget.document.uploadedById),
-              builder: (context, snapshot) {
-                final currentUserId = Supabase.instance.client.auth.currentUser?.id;
-
-                if (snapshot.connectionState == ConnectionState.waiting) {
-                  return _buildRow(context, locale.createdBy, '...');
-                } else if (snapshot.hasData && snapshot.data != null) {
-                  final data = snapshot.data!;
-                  final isCurrentUser = widget.document.uploadedById == currentUserId;
-                  final fullName = "${data['first_name'] ?? ''} ${data['last_name'] ?? ''}".trim();
-
-                  return _buildRowRich(
-                    context,
-                    locale.createdBy,
-                    fullName,
-                    isCurrentUser ? "(${locale.you})" : null,
-                  );
-                } else {
-                  return _buildRow(context, locale.createdBy, locale.unknown);
-                }
-              },
-            ),
-
-
-            _buildPatientRow(context, locale.patientConcerned, widget.document),
-            SizedBox(height: 12.h),
-            Row(
-              children: [
-                Icon(Icons.lock, size: 16.sp, color: AppColors.main),
-                SizedBox(width: 8.w),
-                Text(
-                  locale.encryptedDocument,
-                  style: AppTextStyles.getText2(context).copyWith(color: AppColors.main),
-                ),
-              ],
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-
-  Widget _buildRowRich(BuildContext context, String title, String mainText, [String? lightSuffix]) {
-    final isArabic = Directionality.of(context) == TextDirection.RTL;
-    return Column(
-      children: [
-        SizedBox(height: 10.h),
-        Row(
-          crossAxisAlignment: CrossAxisAlignment.center,
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          children: [
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
+            // ── Source badge ──
+            Container(
+              padding: EdgeInsets.symmetric(horizontal: 12.w, vertical: 6.h),
+              decoration: BoxDecoration(
+                color: sourceColor.withValues(alpha: 0.08),
+                borderRadius: BorderRadius.circular(20),
+                border: Border.all(color: sourceColor.withValues(alpha: 0.25)),
+              ),
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
                 children: [
-                  Text(title, style: AppTextStyles.getText3(context)),
-                  SizedBox(height: 6.h),
-                  RichText(
-                    text: TextSpan(
-                      style: AppTextStyles.getText2(context).copyWith(
-                        color: AppColors.blackText,
-                        fontWeight: FontWeight.bold,
-                      ),
-                      children: [
-                        TextSpan(text: mainText),
-                        if (lightSuffix != null)
-                          TextSpan(
-                            text: isArabic ? ' $lightSuffix' : ' $lightSuffix',
-                            style: AppTextStyles.getText3(context).copyWith(
-                              color: AppColors.blackText,
-                              fontWeight: FontWeight.normal,
-                            ),
-                          ),
-                      ],
+                  Icon(
+                    widget.document.source == 'patient' ? Icons.cloud_upload_rounded : Icons.person_rounded,
+                    size: 14.sp,
+                    color: sourceColor,
+                  ),
+                  SizedBox(width: 6.w),
+                  Text(
+                    _resolveSource(locale),
+                    style: AppTextStyles.getText3(context).copyWith(
+                      color: sourceColor,
+                      fontWeight: FontWeight.w600,
                     ),
                   ),
                 ],
               ),
             ),
+            SizedBox(height: 16.h),
+
+            // ── Name (editable for own files) ──
+            _buildRow(
+              context,
+              Icons.label_rounded,
+              locale.nameOfTheDocument,
+              documentName,
+              canEdit: widget.document.source == 'patient',
+            ),
+
+            // ── File format ──
+            _buildRow(context, Icons.description_rounded, locale.detailFileFormat, _resolveFileFormat(locale)),
+
+            // ── Date ──
+            _buildRow(context, Icons.calendar_today_rounded, locale.createdAt, formattedDate),
+
+            // ── Time ──
+            _buildRow(context, Icons.access_time_rounded, locale.time, formattedTime),
+
+            // ── Source ──
+            _buildRow(context, Icons.source_rounded, locale.detailSource, _resolveSource(locale)),
+
+            // ── Patient concerned ──
+            _buildPatientRow(context, locale.patientConcerned, widget.document),
+
+            // ── Number of pages ──
+            if (pageCount > 0)
+              _buildRow(context, Icons.pages_rounded, locale.detailNumberOfPages, locale.detailPageCount(pageCount)),
+
+            // ── Visibility ──
+            _buildRow(context, Icons.visibility_rounded, locale.detailVisibility, locale.visibleToDoctors),
+
+            // ── Encryption ──
+            _buildIconValueRow(
+              context,
+              widget.document.encrypted ? Icons.lock_rounded : Icons.lock_open_rounded,
+              locale.detailEncryption,
+              widget.document.encrypted ? locale.encryptedYes : locale.encryptedNo,
+              valueColor: widget.document.encrypted ? AppColors.main : Colors.orange,
+            ),
           ],
         ),
-        Divider(height: 18.h, color: Colors.grey[300]),
-      ],
+      ),
     );
   }
 
-  Widget _buildRow(BuildContext context, String title, String value, {bool canEdit = false}) {
+  Widget _buildRow(
+    BuildContext context,
+    IconData icon,
+    String title,
+    String value, {
+    bool canEdit = false,
+  }) {
     return Column(
       children: [
         SizedBox(height: 10.h),
         Row(
           crossAxisAlignment: CrossAxisAlignment.center,
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
+            Container(
+              width: 30.w,
+              height: 30.w,
+              decoration: BoxDecoration(
+                color: AppColors.main.withValues(alpha: 0.08),
+                borderRadius: BorderRadius.circular(8),
+              ),
+              child: Icon(icon, size: 16.sp, color: AppColors.main),
+            ),
+            SizedBox(width: 12.w),
             Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(title, style: AppTextStyles.getText3(context)),
-                  SizedBox(height: 6.h),
-                  Text(value, style: AppTextStyles.getText2(context).copyWith(fontWeight: FontWeight.bold)),
+                  Text(title, style: AppTextStyles.getText3(context).copyWith(color: Colors.grey)),
+                  SizedBox(height: 3.h),
+                  Text(
+                    value,
+                    style: AppTextStyles.getText2(context).copyWith(fontWeight: FontWeight.w600),
+                  ),
                 ],
               ),
             ),
             if (canEdit)
               GestureDetector(
-                onTap: () async {
-                  final prefs = await SharedPreferences.getInstance();
-                  final mainUserId = prefs.getString('userId') ?? '';
-
-                  showModalBottomSheet(
-                    context: context,
-                    isScrollControlled: true,
-                    backgroundColor: Colors.white,
-                    shape: const RoundedRectangleBorder(
-                      borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+                onTap: _onEditName,
+                child: Container(
+                  padding: EdgeInsets.symmetric(horizontal: 10.w, vertical: 4.h),
+                  decoration: BoxDecoration(
+                    color: AppColors.main.withValues(alpha: 0.08),
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: Text(
+                    AppLocalizations.of(context)!.edit,
+                    style: AppTextStyles.getText3(context).copyWith(
+                      color: AppColors.main,
+                      fontWeight: FontWeight.bold,
                     ),
-                    builder: (_) => EditDocumentNameSheet(
-                      initialName: documentName,
-                      onConfirm: (newName) async {
-                        await Supabase.instance.client
-                            .from('documents')
-                            .update({'name': newName})
-                            .eq('id', widget.document.id!)
-                            .eq('uploaded_by_id', mainUserId); // تأكيد أن المستخدم هو المالك
-
-                        setState(() {
-                          documentName = newName;
-                        });
-                      },
-                      onNameUpdated: (newName) {
-                        setState(() {
-                          documentName = newName;
-                        });
-                      },
-                    ),
-                  );
-                },
-                child: Text(
-                  AppLocalizations.of(context)!.edit,
-                  style: AppTextStyles.getText3(context).copyWith(
-                    color: AppColors.main,
-                    fontWeight: FontWeight.bold,
                   ),
                 ),
               ),
-
-
-
-
           ],
         ),
-        Divider(height: 18.h, color: Colors.grey[300]),
+        Divider(height: 18.h, color: Colors.grey[200]),
+      ],
+    );
+  }
+
+  Widget _buildIconValueRow(
+    BuildContext context,
+    IconData icon,
+    String title,
+    String value, {
+    Color? valueColor,
+  }) {
+    return Column(
+      children: [
+        SizedBox(height: 10.h),
+        Row(
+          crossAxisAlignment: CrossAxisAlignment.center,
+          children: [
+            Container(
+              width: 30.w,
+              height: 30.w,
+              decoration: BoxDecoration(
+                color: (valueColor ?? AppColors.main).withValues(alpha: 0.08),
+                borderRadius: BorderRadius.circular(8),
+              ),
+              child: Icon(icon, size: 16.sp, color: valueColor ?? AppColors.main),
+            ),
+            SizedBox(width: 12.w),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(title, style: AppTextStyles.getText3(context).copyWith(color: Colors.grey)),
+                  SizedBox(height: 3.h),
+                  Text(
+                    value,
+                    style: AppTextStyles.getText2(context).copyWith(
+                      fontWeight: FontWeight.w600,
+                      color: valueColor,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
+        Divider(height: 18.h, color: Colors.grey[200]),
       ],
     );
   }
 
   Widget _buildPatientRow(BuildContext context, String title, UserDocument doc) {
     return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         SizedBox(height: 10.h),
-        Text(title, style: AppTextStyles.getText3(context)),
-        SizedBox(height: 6.h),
-        FutureBuilder(
-          future: Supabase.instance.client
-              .from('users')
-              .select('first_name, last_name')
-              .eq('id', doc.patientId)
-              .maybeSingle(),
-          builder: (context, snapshot) {
-            if (snapshot.connectionState == ConnectionState.waiting) {
-              return _buildPatientRowUI('...', '');
-            } else if (snapshot.hasData && snapshot.data != null) {
-              final data = snapshot.data as Map<String, dynamic>;
-              final firstName = data['first_name'] ?? '';
-              final lastName = data['last_name'] ?? '';
-              final fullName = "$firstName $lastName".trim();
-              final avatarText = _getAvatarText(firstName, lastName);
-
-              return _buildPatientRowUI(fullName, avatarText);
-            } else {
-              // ابحث في relatives إذا لم يكن موجودًا في users
-              return FutureBuilder(
-                future: Supabase.instance.client
-                    .from('relatives')
-                    .select('first_name, last_name')
-                    .eq('id', doc.patientId)
-                    .maybeSingle(),
-                builder: (context, relativeSnapshot) {
-                  if (relativeSnapshot.connectionState == ConnectionState.waiting) {
-                    return _buildPatientRowUI('...', '');
-                  } else if (relativeSnapshot.hasData && relativeSnapshot.data != null) {
-                    final data = relativeSnapshot.data as Map<String, dynamic>;
-                    final firstName = data['first_name'] ?? '';
-                    final lastName = data['last_name'] ?? '';
-                    final fullName = "$firstName $lastName".trim();
-                    final avatarText = _getAvatarText(firstName, lastName);
-
-                    return _buildPatientRowUI(fullName, avatarText);
-                  } else {
-                    return _buildPatientRowUI(AppLocalizations.of(context)!.unknown, '?');
-                  }
-                },
-              );
-            }
-          },
+        Row(
+          crossAxisAlignment: CrossAxisAlignment.center,
+          children: [
+            Container(
+              width: 30.w,
+              height: 30.w,
+              decoration: BoxDecoration(
+                color: AppColors.main.withValues(alpha: 0.08),
+                borderRadius: BorderRadius.circular(8),
+              ),
+              child: Icon(Icons.person_outline_rounded, size: 16.sp, color: AppColors.main),
+            ),
+            SizedBox(width: 12.w),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(title, style: AppTextStyles.getText3(context).copyWith(color: Colors.grey)),
+                  SizedBox(height: 3.h),
+                  FutureBuilder(
+                    future: Supabase.instance.client
+                        .from('users')
+                        .select('first_name, last_name')
+                        .eq('id', doc.patientId)
+                        .maybeSingle(),
+                    builder: (context, snapshot) {
+                      if (snapshot.connectionState == ConnectionState.waiting) {
+                        return Text('...', style: AppTextStyles.getText2(context).copyWith(fontWeight: FontWeight.w600));
+                      } else if (snapshot.hasData && snapshot.data != null) {
+                        final data = snapshot.data as Map<String, dynamic>;
+                        final name = "${data['first_name'] ?? ''} ${data['last_name'] ?? ''}".trim();
+                        // Found in users table — it's a main user, not a relative
+                        return _buildPatientChip(name, data['first_name'] ?? '', data['last_name'] ?? '', isRelative: false);
+                      } else {
+                        return FutureBuilder(
+                          future: Supabase.instance.client
+                              .from('relatives')
+                              .select('first_name, last_name')
+                              .eq('id', doc.patientId)
+                              .maybeSingle(),
+                          builder: (context, relSnap) {
+                            if (relSnap.connectionState == ConnectionState.waiting) {
+                              return Text('...', style: AppTextStyles.getText2(context).copyWith(fontWeight: FontWeight.w600));
+                            } else if (relSnap.hasData && relSnap.data != null) {
+                              final data = relSnap.data as Map<String, dynamic>;
+                              final name = "${data['first_name'] ?? ''} ${data['last_name'] ?? ''}".trim();
+                              // Found in relatives table — yellow avatar
+                              return _buildPatientChip(name, data['first_name'] ?? '', data['last_name'] ?? '', isRelative: true);
+                            }
+                            return Text(
+                              AppLocalizations.of(context)!.unknown,
+                              style: AppTextStyles.getText2(context).copyWith(fontWeight: FontWeight.w600),
+                            );
+                          },
+                        );
+                      }
+                    },
+                  ),
+                ],
+              ),
+            ),
+          ],
         ),
-        Divider(height: 18.h, color: Colors.grey[300]),
+        Divider(height: 18.h, color: Colors.grey[200]),
       ],
     );
   }
 
-
-  Widget _buildPatientRowUI(String name, String avatarText) {
+  Widget _buildPatientChip(String fullName, String firstName, String lastName, {bool isRelative = false}) {
+    final avatar = _getAvatarText(firstName, lastName);
+    final avatarColor = isRelative ? const Color(0xFFF5A623) : AppColors.main;
     return Row(
       children: [
         CircleAvatar(
-          radius: 14.r,
-          backgroundColor: AppColors.main,
+          radius: 12.r,
+          backgroundColor: avatarColor,
           child: Text(
-            avatarText,
-            style: AppTextStyles.getText3(context).copyWith(color: Colors.white),
+            avatar,
+            style: TextStyle(fontSize: 10.sp, color: Colors.white, fontWeight: FontWeight.w600),
           ),
         ),
         SizedBox(width: 8.w),
         Text(
-          name,
-          style: AppTextStyles.getText2(context).copyWith(fontWeight: FontWeight.bold),
+          fullName,
+          style: AppTextStyles.getText2(context).copyWith(fontWeight: FontWeight.w600),
         ),
       ],
+    );
+  }
+
+  void _onEditName() async {
+    final cubit = context.read<DocumentsCubit>();
+    final prefs = await SharedPreferences.getInstance();
+    final mainUserId = prefs.getString('userId') ?? '';
+
+    if (!mounted) return;
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.white,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      builder: (_) => EditDocumentNameSheet(
+        initialName: documentName,
+        onConfirm: (newName) {
+          cubit.renameDocument(
+            docId: widget.document.id!,
+            newName: newName,
+            userId: mainUserId,
+          );
+          setState(() {
+            documentName = newName;
+          });
+        },
+        onNameUpdated: (newName) {
+          setState(() {
+            documentName = newName;
+          });
+        },
+      ),
     );
   }
 
   String _getAvatarText(String firstName, String lastName) {
     final isArabic = RegExp(r'[\u0600-\u06FF]').hasMatch(firstName);
     if (isArabic) {
-      return normalizeArabicInitial(firstName).toUpperCase();
-    } else {
-      return "${firstName.isNotEmpty ? firstName[0] : ''}${lastName.isNotEmpty ? lastName[0] : ''}".toUpperCase();
+      return _normalizeArabicInitial(firstName).toUpperCase();
     }
+    return "${firstName.isNotEmpty ? firstName[0] : ''}${lastName.isNotEmpty ? lastName[0] : ''}".toUpperCase();
   }
 
-
-  String normalizeArabicInitial(String input) {
+  String _normalizeArabicInitial(String input) {
     if (input.isEmpty) return '';
     String firstChar = input[0];
     return firstChar == 'ه' ? 'هـ' : firstChar;

@@ -21,7 +21,25 @@ class NotesCubit extends Cubit<NotesState> {
   RealtimeChannel? _notesRealtimeChannel;
   String? _subscribedUserId;
 
-  void listenToNotes(BuildContext context, {bool forceReload = false}) {
+  /// Phase 2 (Patient File Hub): honor the Health-page patient switcher.
+  /// Notes are private to the main user in the current schema (the `notes`
+  /// table has no `relative_id` column), so when a relative is selected we
+  /// emit an empty list instead of re-subscribing.  This keeps the Notes
+  /// tab behavior visually consistent with the Documents tab.
+  void listenToNotes(
+    BuildContext context, {
+    bool forceReload = false,
+    String? relativeId,
+  }) {
+    // Relative context: notes are user-scoped only — emit empty and bail.
+    if (relativeId != null) {
+      _notesRealtimeChannel?.unsubscribe();
+      _notesRealtimeChannel = null;
+      _subscribedUserId = null;
+      emit(NotesLoaded(const []));
+      return;
+    }
+
     if (!forceReload && state is NotesLoaded) return;
 
     String? userId;

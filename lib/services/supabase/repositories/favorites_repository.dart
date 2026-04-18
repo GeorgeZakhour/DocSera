@@ -168,6 +168,8 @@ class FavoritesRepository {
       'location': doctor['location'] ?? {},
       'opening_hours': doctor['opening_hours'] ?? {},
       'languages': doctor['languages'] ?? [],
+      'messages_enabled': doctor['messages_enabled'] ?? false,
+      'messages_access': doctor['messages_access'] ?? 'public',
       'last_updated': doctor['last_updated'] != null
           ? (DocSeraTime.tryParseToSyria(doctor['last_updated'])?.millisecondsSinceEpoch ?? 0)
           : 0,

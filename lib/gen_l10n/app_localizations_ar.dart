@@ -3160,7 +3160,7 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get documentAccessInfo =>
-      'المستندات التي ترفعها هنا مرئية للأطباء الذين لديك كمريض. يمكنك إدارة وحذف ملفاتك. الملفات المضافة من الأطباء تظهر هنا للقراءة فقط.';
+      'المستندات التي ترفعها هنا مرئية للأطباء الذين أنت مسجّل لديهم كمريض. يمكنك إدارة وحذف ملفاتك. الملفات المضافة من الأطباء تظهر هنا للقراءة فقط.';
 
   @override
   String get notesAccessInfo =>
@@ -3370,4 +3370,74 @@ class AppLocalizationsAr extends AppLocalizations {
   String addedByDoctor(String doctorName) {
     return 'أضافه $doctorName';
   }
+
+  @override
+  String get sourceBadgePatient => 'أنت';
+
+  @override
+  String get sourceBadgeDoctor => 'طبيب';
+
+  @override
+  String get sourceBadgeReport => 'تقرير';
+
+  @override
+  String get detailFileFormat => 'صيغة الملف';
+
+  @override
+  String get detailSource => 'المصدر';
+
+  @override
+  String get detailNumberOfPages => 'عدد الصفحات';
+
+  @override
+  String get detailVisibility => 'الرؤية';
+
+  @override
+  String get detailEncryption => 'التشفير';
+
+  @override
+  String detailPageCount(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'صفحات',
+      one: 'صفحة',
+    );
+    return '$count $_temp0';
+  }
+
+  @override
+  String get sourceUploadedByYou => 'رفعته أنت';
+
+  @override
+  String sourceAddedByDoctor(String name) {
+    return 'أضافه $name';
+  }
+
+  @override
+  String get visibleToDoctors => 'مرئي لأطبائك';
+
+  @override
+  String get encryptedYes => 'مشفّر';
+
+  @override
+  String get encryptedNo => 'غير مشفّر';
+
+  @override
+  String get formatPdf => 'مستند PDF';
+
+  @override
+  String get formatImage => 'صورة';
+
+  @override
+  String get formatUnknown => 'ملف';
+
+  @override
+  String get worksAt => 'يعمل في';
+
+  @override
+  String get viewCenter => 'عرض المركز';
+
+  @override
+  String get centerPhone => 'المركز';
 }

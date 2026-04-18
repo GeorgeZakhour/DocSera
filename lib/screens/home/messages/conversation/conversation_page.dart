@@ -439,10 +439,7 @@ class _ConversationPageState extends State<ConversationPage> {
             CircleAvatar(
               radius: 16,
               backgroundColor: Colors.white.withOpacity(0.25),
-              child: ClipRRect(
-                borderRadius: BorderRadius.circular(50),
-                child: Image(image: widget.doctorAvatar, width: 32, height: 32),
-              ),
+              backgroundImage: widget.doctorAvatar,
             ),
 
             const SizedBox(width: 10),

@@ -100,7 +100,7 @@ class ModularReport {
         .where((s) => s.hasContent)
         .toList();
 
-    if (shareMode == 'patient_friendly' && visibleKeys != null) {
+    if ((shareMode == 'patient_friendly' || shareMode == 'prescription') && visibleKeys != null) {
       parsedSections = parsedSections.where((s) => visibleKeys.contains(s.key)).toList();
     }
 

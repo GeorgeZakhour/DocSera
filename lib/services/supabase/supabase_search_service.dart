@@ -25,9 +25,11 @@ class SupabaseSearchService {
         final fullName =
         '${(d['first_name'] ?? '')} ${(d['last_name'] ?? '')}'.toLowerCase();
         final specialty = (d['specialty'] ?? '').toLowerCase();
+        final specialtyKey = (d['specialty_key'] ?? '').toLowerCase();
         final clinic = (d['clinic'] ?? '').toLowerCase();
         return fullName.contains(q) ||
             specialty.contains(q) ||
+            specialtyKey.contains(q) ||
             clinic.contains(q);
       }).cast<Map<String, dynamic>>().toList();
     } catch (e) {
@@ -191,16 +193,16 @@ class SupabaseSearchService {
 
   // 🏙️ Specialty + City (server-side filter)
   Future<List<Map<String, dynamic>>> fetchBySpecialtyAndCity({
-    required String specialty,
+    required String specialtyKey,
     required String cityAr, // value stored in DB (Arabic as per your schema)
     int limit = 200,
   }) async {
-    if (specialty.trim().isEmpty || cityAr.trim().isEmpty) return [];
+    if (specialtyKey.trim().isEmpty || cityAr.trim().isEmpty) return [];
     try {
       final List data = await _client
           .from('doctors')
           .select('*')
-          .ilike('specialty', '%$specialty%')
+          .eq('specialty_key', specialtyKey)
           .eq('address->>city', cityAr)
           .limit(limit);
 
@@ -211,19 +213,49 @@ class SupabaseSearchService {
   }
 
   // 🏙️ Center Specialty + City
+  // Finds centers that have member doctors with the matching specialty.
   Future<List<Map<String, dynamic>>> fetchCentersBySpecialtyAndCity({
-    required String specialty,
+    required String specialtyKey,
     required String cityAr,
     int limit = 150,
   }) async {
-    if (specialty.trim().isEmpty || cityAr.trim().isEmpty) return [];
+    if (specialtyKey.trim().isEmpty || cityAr.trim().isEmpty) return [];
     try {
+      // 1. Find doctors with this specialty in this city
+      final List doctors = await _client
+          .from('doctors')
+          .select('id')
+          .eq('specialty_key', specialtyKey)
+          .eq('address->>city', cityAr)
+          .limit(500);
+
+      if (doctors.isEmpty) return [];
+
+      final doctorIds = doctors.map((d) => d['id']).toList();
+
+      // 2. Find which centers these doctors belong to
+      final List members = await _client
+          .from('center_members')
+          .select('center_id')
+          .inFilter('doctor_id', doctorIds)
+          .eq('is_active', true);
+
+      if (members.isEmpty) return [];
+
+      final centerIds = members
+          .map((m) => m['center_id'])
+          .where((id) => id != null)
+          .toSet()
+          .toList();
+
+      if (centerIds.isEmpty) return [];
+
+      // 3. Fetch those centers (exclude solo practices)
       final List data = await _client
           .from('centers')
           .select('*')
+          .inFilter('id', centerIds)
           .neq('type', 'solo')
-          .contains('specialties', [specialty])
-          .eq('address->>city', cityAr)
           .limit(limit);
 
       return data.cast<Map<String, dynamic>>();
@@ -234,18 +266,18 @@ class SupabaseSearchService {
 
   // 📍 Specialty + Nearby (client-side distance + optional radius)
   Future<List<Map<String, dynamic>>> fetchBySpecialtyNearby({
-    required String specialty,
+    required String specialtyKey,
     required double userLat,
     required double userLng,
     double? radiusKm, // if provided, filter within this radius
     int limit = 400,   // get a wider set, then sort/filter on client
   }) async {
-    if (specialty.trim().isEmpty) return [];
+    if (specialtyKey.trim().isEmpty) return [];
     try {
       final List data = await _client
           .from('doctors')
           .select('*')
-          .ilike('specialty', '%$specialty%')
+          .eq('specialty_key', specialtyKey)
           .limit(limit);
 
       const Distance dist = Distance();
@@ -279,20 +311,50 @@ class SupabaseSearchService {
   }
 
   // 📍 Center Specialty + Nearby
+  // Finds centers that have member doctors with the matching specialty.
   Future<List<Map<String, dynamic>>> fetchCentersBySpecialtyNearby({
-    required String specialty,
+    required String specialtyKey,
     required double userLat,
     required double userLng,
     double? radiusKm,
     int limit = 300,
   }) async {
-    if (specialty.trim().isEmpty) return [];
+    if (specialtyKey.trim().isEmpty) return [];
     try {
+      // 1. Find doctors with this specialty
+      final List doctors = await _client
+          .from('doctors')
+          .select('id')
+          .eq('specialty_key', specialtyKey)
+          .limit(500);
+
+      if (doctors.isEmpty) return [];
+
+      final doctorIds = doctors.map((d) => d['id']).toList();
+
+      // 2. Find which centers these doctors belong to
+      final List members = await _client
+          .from('center_members')
+          .select('center_id')
+          .inFilter('doctor_id', doctorIds)
+          .eq('is_active', true);
+
+      if (members.isEmpty) return [];
+
+      final centerIds = members
+          .map((m) => m['center_id'])
+          .where((id) => id != null)
+          .toSet()
+          .toList();
+
+      if (centerIds.isEmpty) return [];
+
+      // 3. Fetch those centers (exclude solo practices)
       final List data = await _client
           .from('centers')
           .select('*')
+          .inFilter('id', centerIds)
           .neq('type', 'solo')
-          .contains('specialties', [specialty])
           .limit(limit);
 
       const Distance dist = Distance();

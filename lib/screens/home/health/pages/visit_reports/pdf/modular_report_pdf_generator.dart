@@ -7,7 +7,7 @@ import 'package:pdf/pdf.dart';
 import 'package:pdf/widgets.dart' as pw;
 
 /// Generates a patient-facing PDF for modular reports.
-/// Mirrors the DocSera-Pro "Refined Elegant" design language:
+/// Mirrors the DocSera-Pro PDF design exactly:
 /// Cairo (Arabic) + Montserrat (medical values), full RTL,
 /// double teal rule, teal pip section headers, gray patient box.
 class ModularReportPdfGenerator {
@@ -16,12 +16,12 @@ class ModularReportPdfGenerator {
   static const _text = PdfColor.fromInt(0xFF263238);
   static const _subText = PdfColor.fromInt(0xFF78909C);
 
-
   /// Reshape Arabic text for correct PDF rendering
   static String _t(String text) => reshapeArabic(text);
 
   static Future<Uint8List> generatePdf({
     required ModularReport report,
+    PdfPageFormat pageFormat = PdfPageFormat.a4,
   }) async {
     // ── Fonts ──
     final cairoRegData =
@@ -60,6 +60,9 @@ class ModularReportPdfGenerator {
     final patientGender = _formatGender(report.patientGender);
     final patientAge = _calculateAge(report.patientDob);
 
+    final isCompact = pageFormat == PdfPageFormat.a5;
+    final margin = isCompact ? 15.0 : 20.0;
+
     final pdfTheme = pw.ThemeData.withFont(
       base: cairoRegular,
       bold: cairoBold,
@@ -70,10 +73,10 @@ class ModularReportPdfGenerator {
 
     pdf.addPage(
       pw.MultiPage(
-        pageFormat: PdfPageFormat.a4,
+        pageFormat: pageFormat,
         theme: pdfTheme,
         textDirection: pw.TextDirection.rtl,
-        margin: const pw.EdgeInsets.all(20),
+        margin: pw.EdgeInsets.all(margin),
         header: (ctx) => _buildHeader(
           logoSvg: logoSvg,
           doctorName: doctorName,
@@ -86,6 +89,7 @@ class ModularReportPdfGenerator {
           cairoBold: cairoBold,
           cairoRegular: cairoRegular,
           montserratRegular: montserratRegular,
+          compact: isCompact,
         ),
         footer: (ctx) => _buildFooter(
           doctorName: doctorName,
@@ -150,6 +154,7 @@ class ModularReportPdfGenerator {
     required pw.Font cairoBold,
     required pw.Font cairoRegular,
     required pw.Font montserratRegular,
+    bool compact = false,
   }) {
     // Build contact lines: line 1 = phone + mobile, line 2 = email + website
     final line1Parts = <String>[
@@ -172,23 +177,24 @@ class ModularReportPdfGenerator {
         children: [
           pw.SizedBox(width: 1),
           if (logoSvg != null)
-            pw.SizedBox(height: 10, child: logoSvg),
+            pw.SizedBox(height: compact ? 8 : 10, child: logoSvg),
         ],
       ),
-      pw.SizedBox(height: 6),
+      pw.SizedBox(height: compact ? 4 : 6),
       pw.Center(
         child: pw.Column(children: [
           pw.Text(_t(doctorName),
               style: pw.TextStyle(
-                  font: cairoBold, fontFallback: [cairoRegular], fontSize: 15, color: _text)),
+                  font: cairoBold, fontFallback: [cairoRegular],
+                  fontSize: compact ? 13 : 15, color: _text)),
           if (specialty.isNotEmpty)
             pw.Text(_t(specialty),
                 style: pw.TextStyle(
-                    font: cairoRegular, fontSize: 9, color: _subText)),
+                    font: cairoRegular, fontSize: compact ? 8 : 9, color: _subText)),
           if (clinic.isNotEmpty)
             pw.Text(_t(clinic),
                 style: pw.TextStyle(
-                    font: cairoRegular, fontSize: 8.5, color: _subText)),
+                    font: cairoRegular, fontSize: compact ? 7.5 : 8.5, color: _subText)),
           if (contactLine1.isNotEmpty)
             pw.Text(contactLine1,
                 textDirection: pw.TextDirection.ltr, style: ltrStyle),
@@ -197,7 +203,7 @@ class ModularReportPdfGenerator {
                 textDirection: pw.TextDirection.ltr, style: ltrStyle),
         ]),
       ),
-      pw.SizedBox(height: 6),
+      pw.SizedBox(height: compact ? 4 : 6),
       pw.Container(height: 2, color: _primary),
       pw.SizedBox(height: 2),
       pw.Container(height: 0.5, color: _primary),
@@ -327,7 +333,7 @@ class ModularReportPdfGenerator {
   // SECTION WRAPPER
   // ══════════════════════════════════════════════════════
 
-  static const _sectionLabels = {
+  static const _knownLabels = <String, String>{
     'chief_complaint': 'الشكوى الرئيسية',
     'clinical_examination': 'الفحص السريري',
     'diagnosis': 'التشخيص',
@@ -356,7 +362,8 @@ class ModularReportPdfGenerator {
     required pw.Font cairoBold,
     required pw.Font cairoRegular,
   }) {
-    final label = section.label ?? _sectionLabels[section.type] ?? section.type;
+    final knownLabel = _knownLabels[section.type];
+    final label = knownLabel ?? (section.label?.isNotEmpty == true ? section.label! : section.type);
     final header = pw.Padding(
       padding: const pw.EdgeInsets.only(bottom: 6),
       child: pw.Row(children: [
@@ -401,9 +408,6 @@ class ModularReportPdfGenerator {
       case 'custom_text':
         return _plainText(section.value.toString(), cairoRegular);
 
-      case 'referral':
-        return _referral(section.value, cairoBold, cairoRegular);
-
       case 'clinical_examination':
       case 'treatment_instructions':
         return _bulletList(section.value, cairoRegular);
@@ -424,17 +428,20 @@ class ModularReportPdfGenerator {
       case 'follow_up':
         return _followUp(section.value, cairoBold, cairoRegular);
 
+      case 'referral':
+        return _referral(section.value, cairoBold, cairoRegular);
+
       case 'vitals':
-        return _vitals(section.value, cairoBold, cairoRegular);
+        return _vitals(section, cairoBold, cairoRegular);
 
       case 'measurements':
-        return _measurements(section.value, cairoBold, cairoRegular, montserratRegular);
+        return _measurements(section, cairoBold, cairoRegular);
 
       case 'scoring':
-        return _scoring(section.value, cairoBold, cairoRegular);
+        return _scoring(section.value, section.config, cairoBold, cairoRegular);
 
       case 'checklist':
-        return _checklist(section.value, cairoRegular);
+        return _checklist(section, cairoRegular, cairoBold);
 
       case 'custom_table':
         return _customTable(section.value, cairoBold, cairoRegular);
@@ -485,10 +492,15 @@ class ModularReportPdfGenerator {
     );
   }
 
-  // ── Numbered list ──
+  // ── Numbered list (treatment procedures) ──
 
   static pw.Widget _numberedList(
       dynamic value, pw.Font cairoRegular, pw.Font cairoBold) {
+    // New structured format: { "items": [...] }
+    if (value is Map && value['items'] is List) {
+      return _structuredProcedures(value['items'] as List, cairoBold, cairoRegular);
+    }
+    // Legacy format: List<String>
     final items = (value is List)
         ? value.map((e) => e.toString()).toList()
         : [value.toString()];
@@ -501,14 +513,67 @@ class ModularReportPdfGenerator {
           child: pw.Row(
             crossAxisAlignment: pw.CrossAxisAlignment.start,
             children: [
-              pw.Text('$num. ',
+              pw.SizedBox(
+                width: 16,
+                child: pw.Text('.${_t(num)}', textDirection: pw.TextDirection.rtl,
                   style: pw.TextStyle(
-                      font: cairoBold, fontFallback: [cairoRegular], fontSize: 10, color: _primary)),
-              pw.Expanded(
-                child: pw.Text(_t(entry.value),
-                    style: pw.TextStyle(
-                        font: cairoRegular, fontSize: 10, color: _text)),
+                    font: cairoBold, fontFallback: [cairoRegular],
+                    fontSize: 10, color: _primary)),
               ),
+              pw.SizedBox(width: 2),
+              pw.Expanded(child: pw.Text(_t(entry.value), style: pw.TextStyle(
+                font: cairoRegular, fontSize: 10, color: _text))),
+            ],
+          ),
+        );
+      }).toList(),
+    );
+  }
+
+  // ── Structured procedures (dental + manual) ──
+
+  static pw.Widget _structuredProcedures(
+      List items, pw.Font cairoBold, pw.Font cairoRegular) {
+    return pw.Column(
+      crossAxisAlignment: pw.CrossAxisAlignment.start,
+      children: items.asMap().entries.map((entry) {
+        final item = entry.value;
+        if (item is! Map) return pw.SizedBox();
+        final map = Map<String, dynamic>.from(item);
+        final isDental = map['source'] == 'dental';
+        final num = _toArabicNumerals('${entry.key + 1}');
+        final title = isDental
+            ? '${map['procedure_type'] ?? ''} - ${_t('سن')} ${map['tooth_id'] ?? ''}'
+            : _t((map['text'] ?? '').toString());
+        final notes = (map['notes'] ?? '').toString();
+
+        return pw.Padding(
+          padding: const pw.EdgeInsets.only(bottom: 4),
+          child: pw.Column(
+            crossAxisAlignment: pw.CrossAxisAlignment.start,
+            children: [
+              pw.Row(
+                crossAxisAlignment: pw.CrossAxisAlignment.start,
+                children: [
+                  pw.SizedBox(
+                    width: 16,
+                    child: pw.Text('.${_t(num)}', textDirection: pw.TextDirection.rtl,
+                      style: pw.TextStyle(
+                        font: cairoBold, fontFallback: [cairoRegular],
+                        fontSize: 10, color: _primary)),
+                  ),
+                  pw.SizedBox(width: 2),
+                  pw.Expanded(child: pw.Text(_t(title), style: pw.TextStyle(
+                    font: cairoBold, fontFallback: [cairoRegular], fontSize: 10, color: _text))),
+                ],
+              ),
+              if (notes.isNotEmpty)
+                pw.Padding(
+                  padding: const pw.EdgeInsets.only(right: 20, top: 1),
+                  child: pw.Text(_t(notes), style: pw.TextStyle(
+                    font: cairoRegular, fontSize: 9, color: PdfColors.grey600,
+                    fontStyle: pw.FontStyle.italic)),
+                ),
             ],
           ),
         );
@@ -582,9 +647,9 @@ class ModularReportPdfGenerator {
             width: double.infinity,
             margin: const pw.EdgeInsets.only(bottom: 6),
             padding: const pw.EdgeInsets.symmetric(horizontal: 10, vertical: 8),
-            decoration: pw.BoxDecoration(
+            decoration: const pw.BoxDecoration(
               color: _lightTeal,
-              borderRadius: const pw.BorderRadius.all(pw.Radius.circular(5)),
+              borderRadius: pw.BorderRadius.all(pw.Radius.circular(5)),
             ),
             child: pw.Column(
               crossAxisAlignment: pw.CrossAxisAlignment.start,
@@ -593,9 +658,13 @@ class ModularReportPdfGenerator {
                 pw.Row(
                   crossAxisAlignment: pw.CrossAxisAlignment.start,
                   children: [
-                    pw.Text('$num. ',
-                        style: pw.TextStyle(
-                            font: cairoBold, fontFallback: [cairoRegular], fontSize: 10, color: _primary)),
+                    pw.SizedBox(
+                      width: 16,
+                      child: pw.Text('.${_t(num)}', textDirection: pw.TextDirection.rtl,
+                          style: pw.TextStyle(
+                              font: cairoBold, fontFallback: [cairoRegular], fontSize: 10, color: _primary)),
+                    ),
+                    pw.SizedBox(width: 2),
                     pw.Expanded(
                       child: pw.Text(_t(name),
                           style: pw.TextStyle(
@@ -607,23 +676,19 @@ class ModularReportPdfGenerator {
                   pw.SizedBox(height: 3),
                   pw.Row(
                     children: details.asMap().entries.map((d) {
-                      return pw.Padding(
-                        padding: pw.EdgeInsets.only(left: d.key > 0 ? 0 : 0),
-                        child: pw.Row(children: [
-                          if (d.key > 0)
-                            pw.Padding(
-                              padding: const pw.EdgeInsets.symmetric(horizontal: 6),
-                              child: pw.Text('·',
-                                  style: pw.TextStyle(
-                                      fontSize: 10, color: _subText)),
-                            ),
-                          pw.Text(_t(d.value),
-                              style: pw.TextStyle(
-                                  font: cairoRegular,
-                                  fontSize: 8.5,
-                                  color: _subText)),
-                        ]),
-                      );
+                      return pw.Row(children: [
+                        if (d.key > 0)
+                          pw.Padding(
+                            padding: const pw.EdgeInsets.symmetric(horizontal: 6),
+                            child: pw.Text('·',
+                                style: const pw.TextStyle(fontSize: 10, color: _subText)),
+                          ),
+                        pw.Text(_t(d.value),
+                            style: pw.TextStyle(
+                                font: cairoRegular,
+                                fontSize: 8.5,
+                                color: _subText)),
+                      ]);
                     }).toList(),
                   ),
                 ],
@@ -672,8 +737,76 @@ class ModularReportPdfGenerator {
       dynamic value, pw.Font cairoBold, pw.Font cairoRegular) {
     if (value is Map) {
       final date = value['date']?.toString() ?? '';
+      final time = value['time']?.toString() ?? '';
       final period = value['period']?.toString() ?? '';
       final notes = value['notes']?.toString() ?? '';
+      final isBooked = value['booked'] == true;
+
+      if (isBooked && date.isNotEmpty) {
+        // Format time from 24h to 12h Arabic
+        String timeDisplay = time;
+        if (time.isNotEmpty) {
+          final parts = time.split(':');
+          if (parts.length >= 2) {
+            var h = int.tryParse(parts[0]) ?? 0;
+            final m = parts[1];
+            final amPm = h >= 12 ? 'م' : 'ص';
+            if (h == 0) {
+              h = 12;
+            } else if (h > 12) {
+              h -= 12;
+            }
+            timeDisplay = '$h:$m $amPm';
+          }
+        }
+
+        final bookedText = timeDisplay.isNotEmpty
+            ? 'تم حجز موعد مراجعة بتاريخ $date الساعة $timeDisplay'
+            : 'تم حجز موعد مراجعة بتاريخ $date';
+
+        return pw.Column(
+          crossAxisAlignment: pw.CrossAxisAlignment.start,
+          children: [
+            pw.Row(
+              children: [
+                pw.Container(
+                  width: 14, height: 14,
+                  decoration: const pw.BoxDecoration(
+                    shape: pw.BoxShape.circle,
+                    color: _primary,
+                  ),
+                  child: pw.CustomPaint(
+                    size: const PdfPoint(14, 14),
+                    painter: (PdfGraphics canvas, PdfPoint size) {
+                      canvas
+                        ..setStrokeColor(PdfColors.white)
+                        ..setLineWidth(1.5)
+                        ..moveTo(3.5, 7)
+                        ..lineTo(5.8, 4.5)
+                        ..lineTo(10.5, 9.5)
+                        ..strokePath();
+                    },
+                  ),
+                ),
+                pw.SizedBox(width: 6),
+                pw.Expanded(
+                  child: pw.Text(_t(bookedText), style: pw.TextStyle(
+                    font: cairoBold, fontFallback: [cairoRegular],
+                    fontSize: 10, color: _text)),
+                ),
+              ],
+            ),
+            if (notes.isNotEmpty)
+              pw.Padding(
+                padding: const pw.EdgeInsets.only(top: 2, right: 20),
+                child: pw.Text(_t(notes), style: pw.TextStyle(
+                  font: cairoRegular, fontSize: 9, color: _subText)),
+              ),
+          ],
+        );
+      }
+
+      // Non-booked: show date/period + notes
       final dateDisplay = date.isNotEmpty ? date : period;
       return pw.Column(
         crossAxisAlignment: pw.CrossAxisAlignment.start,
@@ -692,37 +825,137 @@ class ModularReportPdfGenerator {
     return _plainText(value.toString(), cairoRegular);
   }
 
-  // ── Vitals ──
+  // ── Referral ──
 
-  static const _vitalNamesAr = {
+  static pw.Widget _referral(
+      dynamic value, pw.Font cairoBold, pw.Font cairoRegular) {
+    if (value is! Map) {
+      return _plainText(value?.toString() ?? '', cairoRegular);
+    }
+    final map = Map<String, dynamic>.from(value);
+    final specialty = map['specialty_label']?.toString() ?? '';
+    final doctor = map['doctor_name']?.toString() ?? '';
+    final reason = map['reason']?.toString() ?? '';
+    final urgency = map['urgency']?.toString() ?? 'routine';
+
+    final urgencyLabelAr = switch (urgency) {
+      'urgent' => 'عاجل',
+      'emergency' => 'طارئ',
+      _ => 'اعتيادي',
+    };
+    final urgencyColor = switch (urgency) {
+      'urgent' => const PdfColor.fromInt(0xFFFB8C00),
+      'emergency' => const PdfColor.fromInt(0xFFE53935),
+      _ => const PdfColor.fromInt(0xFF5C6BC0),
+    };
+
+    pw.Widget row(String label, String val) {
+      return pw.Padding(
+        padding: const pw.EdgeInsets.only(bottom: 3),
+        child: pw.RichText(
+          text: pw.TextSpan(children: [
+            pw.TextSpan(
+              text: _t('$label: '),
+              style: pw.TextStyle(
+                font: cairoBold,
+                fontFallback: [cairoRegular],
+                fontSize: 10,
+                color: _text,
+              ),
+            ),
+            pw.TextSpan(
+              text: _t(val),
+              style: pw.TextStyle(
+                font: cairoRegular,
+                fontSize: 10,
+                color: _text,
+              ),
+            ),
+          ]),
+        ),
+      );
+    }
+
+    return pw.Column(
+      crossAxisAlignment: pw.CrossAxisAlignment.start,
+      children: [
+        if (specialty.isNotEmpty) row('الإحالة إلى', specialty),
+        if (doctor.isNotEmpty) row('اسم الطبيب', doctor),
+        if (reason.isNotEmpty) row('السبب', reason),
+        pw.SizedBox(height: 4),
+        pw.Container(
+          padding:
+              const pw.EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+          decoration: pw.BoxDecoration(
+            color: PdfColor(
+              urgencyColor.red,
+              urgencyColor.green,
+              urgencyColor.blue,
+              0.1,
+            ),
+            borderRadius:
+                const pw.BorderRadius.all(pw.Radius.circular(10)),
+            border: pw.Border.all(color: urgencyColor, width: 0.7),
+          ),
+          child: pw.Text(
+            _t('درجة الاستعجال: $urgencyLabelAr'),
+            style: pw.TextStyle(
+              font: cairoBold,
+              fontFallback: [cairoRegular],
+              fontSize: 9,
+              color: urgencyColor,
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+
+  // ── Vitals & Measurements shared infrastructure ──
+
+  static const _fieldNamesAr = <String, String>{
+    // Vitals
     'blood pressure': 'ضغط الدم',
     'bp systolic': 'الضغط الانقباضي',
     'bp diastolic': 'الضغط الانبساطي',
     'systolic': 'الانقباضي',
     'diastolic': 'الانبساطي',
+    'systolic bp': 'الضغط الانقباضي',
+    'diastolic bp': 'الضغط الانبساطي',
     'heart rate': 'معدل ضربات القلب',
     'pulse': 'النبض',
     'temperature': 'درجة الحرارة',
     'respiratory rate': 'معدل التنفس',
+    'resp. rate': 'معدل التنفس',
     'oxygen saturation': 'تشبع الأكسجين',
     'spo2': 'تشبع الأكسجين',
+    'blood sugar': 'سكر الدم',
+    'glucose': 'الغلوكوز',
+    // Measurements
     'weight': 'الوزن',
     'height': 'الطول',
     'bmi': 'مؤشر كتلة الجسم',
-    'blood sugar': 'سكر الدم',
-    'glucose': 'الغلوكوز',
+    'waist': 'محيط الخصر',
+    'head circumference': 'محيط الرأس',
+    'abdominal circumference': 'محيط البطن',
+    'hip circumference': 'محيط الحوض',
+    'mid-arm circumference': 'محيط منتصف الذراع',
+    'chest circumference': 'محيط الصدر',
   };
 
-  static const _vitalUnits = {
+  static const _defaultUnits = <String, String>{
     'bp systolic': 'mmHg',
     'bp diastolic': 'mmHg',
     'blood pressure': 'mmHg',
     'systolic': 'mmHg',
     'diastolic': 'mmHg',
+    'systolic bp': 'mmHg',
+    'diastolic bp': 'mmHg',
     'heart rate': 'bpm',
     'pulse': 'bpm',
     'temperature': '°C',
     'respiratory rate': '/min',
+    'resp. rate': '/min',
     'oxygen saturation': '%',
     'spo2': '%',
     'weight': 'kg',
@@ -732,18 +965,93 @@ class ModularReportPdfGenerator {
     'glucose': 'mg/dL',
   };
 
-  static String _translateVital(String name) {
-    return _vitalNamesAr[name.toLowerCase()] ?? name;
+  static String _translateField(String name) {
+    return _fieldNamesAr[name.toLowerCase()] ?? name;
   }
 
-  static String _vitalUnit(String name, String existingUnit) {
+  static String _fieldUnit(String name, String existingUnit) {
     if (existingUnit.isNotEmpty) return existingUnit;
-    return _vitalUnits[name.toLowerCase()] ?? '';
+    return _defaultUnits[name.toLowerCase()] ?? '';
   }
+
+  /// Builds entries from the new config-based format:
+  ///   config.fields = [ {'name': ..., 'unit': ...}, ... ]
+  ///   value = { fieldName: fieldValue, ... }
+  static List<Map<String, String>>? _configBasedEntries(ModularReportSection s) {
+    final fields = s.config?['fields'];
+    if (fields is! List || s.value is! Map) return null;
+    final values = s.value as Map;
+    final entries = <Map<String, String>>[];
+    for (final field in fields) {
+      if (field is! Map) continue;
+      final name = field['name']?.toString() ?? '';
+      final unit = field['unit']?.toString() ?? '';
+      final val = values[name]?.toString().trim() ?? '';
+      if (val.isEmpty || val == '0') continue;
+      entries.add({'name': name, 'unit': unit, 'value': val});
+    }
+    return entries.isEmpty ? null : entries;
+  }
+
+  /// Renders a table of name–value entries (shared by vitals & measurements).
+  static pw.Widget _renderFieldTable(
+      List<Map<String, String>> entries, pw.Font cairoBold, pw.Font cairoRegular) {
+    return pw.Table(
+      columnWidths: {
+        0: const pw.FlexColumnWidth(3),
+        1: const pw.FlexColumnWidth(2),
+      },
+      children: entries.asMap().entries.map((entry) {
+        final i = entry.key;
+        final e = entry.value;
+        final arName = _translateField(e['name']!);
+        final unit = _fieldUnit(e['name']!, e['unit'] ?? '');
+        final displayValue =
+            unit.isNotEmpty ? '${e['value']!} $unit' : e['value']!;
+        final bg = i.isEven
+            ? _lightTeal
+            : const PdfColor.fromInt(0xFFFFFFFF);
+
+        return pw.TableRow(
+          decoration: pw.BoxDecoration(color: bg),
+          children: [
+            pw.Padding(
+              padding: const pw.EdgeInsets.symmetric(
+                  horizontal: 8, vertical: 4),
+              child: pw.Text(_t(arName),
+                  style: pw.TextStyle(
+                      font: cairoRegular,
+                      fontSize: 9,
+                      color: _text)),
+            ),
+            pw.Padding(
+              padding: const pw.EdgeInsets.symmetric(
+                  horizontal: 8, vertical: 4),
+              child: pw.Text(displayValue,
+                  textDirection: pw.TextDirection.ltr,
+                  style: pw.TextStyle(
+                      font: cairoBold,
+                      fontFallback: [cairoRegular],
+                      fontSize: 10,
+                      color: _primary)),
+            ),
+          ],
+        );
+      }).toList(),
+    );
+  }
+
+  // ── Vitals ──
 
   static pw.Widget _vitals(
-      dynamic value, pw.Font cairoBold, pw.Font cairoRegular) {
+      ModularReportSection s, pw.Font cairoBold, pw.Font cairoRegular) {
+    // New config-based format
+    final configEntries = _configBasedEntries(s);
+    if (configEntries != null) return _renderFieldTable(configEntries, cairoBold, cairoRegular);
+
+    // Legacy: value is a flat Map {name: value} or List
     final entries = <Map<String, String>>[];
+    final value = s.value;
 
     if (value is Map) {
       for (final e in value.entries) {
@@ -766,79 +1074,60 @@ class ModularReportPdfGenerator {
     }
 
     if (entries.isEmpty) return pw.SizedBox();
-
-    // Clean table rows with alternating backgrounds
-    return pw.Table(
-      columnWidths: {
-        0: const pw.FlexColumnWidth(3),
-        1: const pw.FlexColumnWidth(2),
-      },
-      children: entries.asMap().entries.map((entry) {
-        final i = entry.key;
-        final e = entry.value;
-        final arName = _translateVital(e['name']!);
-        final unit = _vitalUnit(e['name']!, e['unit']!);
-        final displayValue = unit.isNotEmpty
-            ? '${e['value']!} $unit'
-            : e['value']!;
-        final bg = i.isEven ? _lightTeal : const PdfColor.fromInt(0xFFFFFFFF);
-
-        return pw.TableRow(
-          decoration: pw.BoxDecoration(color: bg),
-          children: [
-            pw.Padding(
-              padding: const pw.EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-              child: pw.Text(_t(arName),
-                  style: pw.TextStyle(
-                      font: cairoRegular, fontSize: 9, color: _text)),
-            ),
-            pw.Padding(
-              padding: const pw.EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-              child: pw.Text(displayValue,
-                  textDirection: pw.TextDirection.ltr,
-                  style: pw.TextStyle(
-                      font: cairoBold, fontFallback: [cairoRegular], fontSize: 10, color: _primary)),
-            ),
-          ],
-        );
-      }).toList(),
-    );
+    return _renderFieldTable(entries, cairoBold, cairoRegular);
   }
 
   // ── Measurements ──
 
   static pw.Widget _measurements(
-    dynamic value,
-    pw.Font cairoBold,
-    pw.Font cairoRegular,
-    pw.Font montserratRegular,
-  ) {
-    if (value is Map) {
-      return pw.Column(
-        crossAxisAlignment: pw.CrossAxisAlignment.start,
-        children: value.entries.map((e) {
-          return pw.Padding(
-            padding: const pw.EdgeInsets.only(bottom: 2),
-            child: pw.Row(children: [
-              pw.Text('${_t(e.key.toString())}: ',
-                  style: pw.TextStyle(
-                      font: cairoBold, fontFallback: [cairoRegular], fontSize: 9, color: _subText)),
-              pw.Text(e.value.toString(),
-                  style: pw.TextStyle(
-                      font: montserratRegular, fontSize: 9, color: _text)),
-            ]),
-          );
-        }).toList(),
-      );
+      ModularReportSection s, pw.Font cairoBold, pw.Font cairoRegular) {
+    // New config-based format
+    final configEntries = _configBasedEntries(s);
+    if (configEntries != null) return _renderFieldTable(configEntries, cairoBold, cairoRegular);
+
+    // Legacy: value is a flat Map {name: value}
+    if (s.value is Map) {
+      final entries = <Map<String, String>>[];
+      for (final e in (s.value as Map).entries) {
+        final v = e.value?.toString().trim() ?? '';
+        if (v.isNotEmpty && v != '0' && v != 'null') {
+          entries.add({'name': e.key.toString(), 'value': v, 'unit': ''});
+        }
+      }
+      if (entries.isNotEmpty) return _renderFieldTable(entries, cairoBold, cairoRegular);
     }
-    return _vitals(value, cairoBold, cairoRegular);
+
+    return _vitals(s, cairoBold, cairoRegular);
   }
 
   // ── Scoring ──
 
   static pw.Widget _scoring(
-      dynamic value, pw.Font cairoBold, pw.Font cairoRegular) {
+      dynamic value, Map<String, dynamic>? config, pw.Font cairoBold, pw.Font cairoRegular) {
     if (value is Map) {
+      final totalScore = (value['total_score'] as num?)?.toInt();
+      final toolKey = config?['tool']?.toString() ?? '';
+
+      // New format with total_score
+      if (totalScore != null) {
+        if (toolKey == 'custom') {
+          final customName = value['custom_name']?.toString() ?? '';
+          final maxScore = (value['max_score'] as num?)?.toInt() ?? 0;
+          final label = customName.isNotEmpty ? customName : '—';
+          final scoreText = maxScore > 0 ? '$totalScore / $maxScore' : '$totalScore';
+          return pw.Text(_t('$label: $scoreText'), style: pw.TextStyle(
+            font: cairoBold, fontFallback: [cairoRegular], fontSize: 11, color: _text));
+        }
+
+        // Preset tool
+        final toolName = value['name']?.toString() ?? toolKey;
+        final maxScore = (value['max_score'] as num?)?.toInt() ?? 0;
+        final scoreText = maxScore > 0 ? '$totalScore / $maxScore' : '$totalScore';
+        return pw.Text(_t('$toolName: $scoreText'), style: pw.TextStyle(
+          font: cairoBold, fontFallback: [cairoRegular], fontSize: 11, color: _text));
+      }
+
+      // Legacy format
       final name = value['name']?.toString() ?? '';
       final score = value['score']?.toString() ?? '';
       final interpretation = value['interpretation']?.toString() ?? '';
@@ -860,8 +1149,63 @@ class ModularReportPdfGenerator {
 
   // ── Checklist ──
 
-  static pw.Widget _checklist(dynamic value, pw.Font cairoRegular) {
-    final items = (value is List) ? value : [];
+  static pw.Widget _checklist(
+      ModularReportSection s, pw.Font cairoRegular, pw.Font cairoBold) {
+    // Arabic lookup for known checklist item names
+    const nameAr = <String, String>{
+      'Reflexes': 'المنعكسات',
+      'Pupils': 'الحدقتان',
+      'Heart Sounds': 'أصوات القلب',
+      'Lung Sounds': 'أصوات الرئة',
+      'Abdomen': 'البطن',
+      'Skin': 'الجلد',
+      'Throat': 'الحلق',
+      'Ears': 'الأذنان',
+      'Lymph Nodes': 'العقد اللمفاوية',
+      'Gait': 'المشية',
+      'Coordination': 'التنسيق الحركي',
+      'Cranial Nerves': 'الأعصاب القحفية',
+    };
+    const statusAr = <String, String>{
+      'Normal': 'طبيعي',
+      'Abnormal': 'غير طبيعي',
+    };
+
+    // New format: config.items + value map
+    final configItems = s.config?['items'];
+    if (configItems is List && s.value is Map) {
+      final values = s.value as Map;
+      final rows = <pw.Widget>[];
+      for (final item in configItems) {
+        if (item is! Map) continue;
+        final nameEn = item['name']?.toString() ?? '';
+        final status = values[nameEn]?.toString() ?? '';
+        if (status.isEmpty) continue;
+        final displayName = nameAr[nameEn] ?? nameEn;
+        final displayStatus = statusAr[status] ?? status;
+        final isAbnormal = status == 'Abnormal';
+        rows.add(pw.Padding(
+          padding: const pw.EdgeInsets.only(bottom: 2),
+          child: pw.Row(
+            children: [
+              pw.Text(_t('$displayName: '), style: pw.TextStyle(
+                font: cairoBold, fontFallback: [cairoRegular],
+                fontSize: 9, color: _text)),
+              pw.Text(_t(displayStatus), style: pw.TextStyle(
+                font: cairoRegular, fontSize: 9,
+                color: isAbnormal ? PdfColors.red : _primary)),
+            ],
+          ),
+        ));
+      }
+      return pw.Column(
+        crossAxisAlignment: pw.CrossAxisAlignment.start,
+        children: rows,
+      );
+    }
+
+    // Legacy format: value is List
+    final items = (s.value is List) ? (s.value as List) : [];
     return pw.Column(
       crossAxisAlignment: pw.CrossAxisAlignment.start,
       children: items.map((item) {
@@ -904,87 +1248,6 @@ class ModularReportPdfGenerator {
 
   // ── Custom table ──
 
-  // ── Referral ──
-
-  static pw.Widget _referral(
-      dynamic value, pw.Font cairoBold, pw.Font cairoRegular) {
-    if (value is! Map) {
-      return _plainText(value?.toString() ?? '', cairoRegular);
-    }
-    final map = Map<String, dynamic>.from(value);
-    final specialty = map['specialty_label']?.toString() ?? '';
-    final doctor = map['doctor_name']?.toString() ?? '';
-    final reason = map['reason']?.toString() ?? '';
-    final urgency = map['urgency']?.toString() ?? 'routine';
-
-    PdfColor urgencyColor;
-    String urgencyLabel;
-    switch (urgency) {
-      case 'emergency':
-        urgencyColor = const PdfColor.fromInt(0xFFE53935);
-        urgencyLabel = 'طارئ';
-        break;
-      case 'urgent':
-        urgencyColor = const PdfColor.fromInt(0xFFFB8C00);
-        urgencyLabel = 'عاجل';
-        break;
-      case 'routine':
-      default:
-        urgencyColor = const PdfColor.fromInt(0xFF5C6BC0);
-        urgencyLabel = 'روتيني';
-        break;
-    }
-
-    pw.Widget row(String label, String val) {
-      if (val.trim().isEmpty) return pw.SizedBox();
-      return pw.Padding(
-        padding: const pw.EdgeInsets.only(bottom: 3),
-        child: pw.Row(
-          crossAxisAlignment: pw.CrossAxisAlignment.start,
-          children: [
-            pw.Text('${_t(label)}: ',
-                style: pw.TextStyle(
-                    font: cairoBold,
-                    fontFallback: [cairoRegular],
-                    fontSize: 10,
-                    color: _subText)),
-            pw.Expanded(
-              child: pw.Text(_t(val),
-                  style: pw.TextStyle(
-                      font: cairoRegular, fontSize: 10, color: _text)),
-            ),
-          ],
-        ),
-      );
-    }
-
-    return pw.Column(
-      crossAxisAlignment: pw.CrossAxisAlignment.start,
-      children: [
-        row('التخصص', specialty),
-        row('الطبيب', doctor),
-        row('السبب', reason),
-        pw.SizedBox(height: 2),
-        pw.Container(
-          padding:
-              const pw.EdgeInsets.symmetric(horizontal: 8, vertical: 3),
-          decoration: pw.BoxDecoration(
-            color: PdfColor(urgencyColor.red, urgencyColor.green,
-                urgencyColor.blue, 0.1),
-            borderRadius: pw.BorderRadius.circular(4),
-            border: pw.Border.all(color: urgencyColor, width: 0.6),
-          ),
-          child: pw.Text(_t(urgencyLabel),
-              style: pw.TextStyle(
-                  font: cairoBold,
-                  fontFallback: [cairoRegular],
-                  fontSize: 9,
-                  color: urgencyColor)),
-        ),
-      ],
-    );
-  }
-
   static pw.Widget _customTable(
       dynamic value, pw.Font cairoBold, pw.Font cairoRegular) {
     if (value is Map) {
@@ -1024,13 +1287,39 @@ class ModularReportPdfGenerator {
 
   static pw.Widget _attachments(dynamic value, pw.Font cairoRegular) {
     final items = (value is List) ? value : [];
+    if (items.isEmpty) return pw.SizedBox.shrink();
     return pw.Column(
       crossAxisAlignment: pw.CrossAxisAlignment.start,
       children: items.map((item) {
         final name = (item is Map)
             ? (item['name']?.toString() ?? 'مرفق')
             : item.toString();
-        return _bulletItem(name, cairoRegular);
+        final type = (item is Map) ? (item['type']?.toString() ?? '').toLowerCase() : '';
+        final isPdf = type == 'pdf';
+        final dotColor = isPdf ? const PdfColor.fromInt(0xFFEF5350) : _primary;
+
+        return pw.Padding(
+          padding: const pw.EdgeInsets.only(bottom: 2),
+          child: pw.Row(
+            crossAxisAlignment: pw.CrossAxisAlignment.start,
+            children: [
+              pw.Container(
+                width: 5, height: 5,
+                margin: const pw.EdgeInsets.only(top: 4),
+                decoration: pw.BoxDecoration(
+                  shape: pw.BoxShape.circle,
+                  color: dotColor,
+                ),
+              ),
+              pw.SizedBox(width: 6),
+              pw.Expanded(
+                child: pw.Text(_t(name), style: pw.TextStyle(
+                  font: cairoRegular, fontSize: 9, color: _subText,
+                )),
+              ),
+            ],
+          ),
+        );
       }).toList(),
     );
   }

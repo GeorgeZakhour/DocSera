@@ -3412,4 +3412,74 @@ class AppLocalizationsEn extends AppLocalizations {
   String addedByDoctor(String doctorName) {
     return 'Added by $doctorName';
   }
+
+  @override
+  String get sourceBadgePatient => 'You';
+
+  @override
+  String get sourceBadgeDoctor => 'Doctor';
+
+  @override
+  String get sourceBadgeReport => 'Report';
+
+  @override
+  String get detailFileFormat => 'File format';
+
+  @override
+  String get detailSource => 'Source';
+
+  @override
+  String get detailNumberOfPages => 'Number of pages';
+
+  @override
+  String get detailVisibility => 'Visibility';
+
+  @override
+  String get detailEncryption => 'Encryption';
+
+  @override
+  String detailPageCount(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'pages',
+      one: 'page',
+    );
+    return '$count $_temp0';
+  }
+
+  @override
+  String get sourceUploadedByYou => 'Uploaded by you';
+
+  @override
+  String sourceAddedByDoctor(String name) {
+    return 'Added by $name';
+  }
+
+  @override
+  String get visibleToDoctors => 'Visible to your doctors';
+
+  @override
+  String get encryptedYes => 'Encrypted';
+
+  @override
+  String get encryptedNo => 'Not encrypted';
+
+  @override
+  String get formatPdf => 'PDF Document';
+
+  @override
+  String get formatImage => 'Image';
+
+  @override
+  String get formatUnknown => 'File';
+
+  @override
+  String get worksAt => 'Works at';
+
+  @override
+  String get viewCenter => 'View Center';
+
+  @override
+  String get centerPhone => 'Center';
 }

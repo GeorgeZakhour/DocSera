@@ -138,6 +138,11 @@ class _DocumentInfoScreenState extends State<DocumentInfoScreen> {
       if (!mounted) return;
       setState(() {
         _patients = patients;
+        // Default to the initially selected patient (from health page switcher)
+        if (widget.initialPatientId != null &&
+            patients.any((p) => p['id'] == widget.initialPatientId)) {
+          _selectedPatientId = widget.initialPatientId;
+        }
       });
     } catch (e) {
       debugPrint('❌ Failed to load patients via RPC: $e');

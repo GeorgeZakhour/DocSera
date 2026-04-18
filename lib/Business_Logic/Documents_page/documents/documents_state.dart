@@ -16,8 +16,12 @@ class DocumentsNotLogged extends DocumentsState {}
 /// ✅ **Documents loaded successfully**
 class DocumentsLoaded extends DocumentsState {
   final List<UserDocument> documents;
+  final int _stamp;
 
-  DocumentsLoaded(this.documents);
+  DocumentsLoaded(this.documents) : _stamp = DateTime.now().microsecondsSinceEpoch;
+
+  @override
+  List<Object?> get props => [_stamp];
 }
 
 /// ⚠️ **Error loading Documents**

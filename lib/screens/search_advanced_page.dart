@@ -6,6 +6,7 @@ import 'package:docsera/models/document.dart';
 import 'package:docsera/screens/centers/center_profile_page.dart';
 import 'package:docsera/screens/doctors/doctor_profile_page.dart';
 import 'package:docsera/screens/map_results_page.dart';
+import 'package:docsera/services/supabase/specialties_service.dart';
 import 'package:docsera/services/supabase/supabase_search_service.dart';
 import 'package:docsera/utils/doctor_image_utils.dart';
 import 'package:docsera/utils/geography_constants.dart';
@@ -59,8 +60,12 @@ class _SearchAdvancedPageState extends State<SearchAdvancedPage> {
   // ======= اقتراحات =======
   List<_MixedSuggestion> _mixed = [];
 
+  // ======= Specialties from DB =======
+  List<_SpecialtyOption>? _dbSpecialties;
+
   // ======= فلو التخصص + الموقع =======
   String? _selectedSpecialty; // التخصص الأساسي (للحقل والبحث المبدئي)
+  String? _selectedSpecialtyKey; // specialty key for DB queries
   List<String> _cachedNeighborhoods = []; // cached from _results
   _CityOption? _zonePendingCity; // non-null = showing zone picker for this city
   bool _locationStageActive = false;
@@ -88,6 +93,7 @@ class _SearchAdvancedPageState extends State<SearchAdvancedPage> {
   @override
   void initState() {
     super.initState();
+    _loadSpecialtiesFromDb();
 
     // عند الكتابة في حقل البحث:
     _searchCtrl.addListener(() {
@@ -225,14 +231,14 @@ class _SearchAdvancedPageState extends State<SearchAdvancedPage> {
       final List<_SpecialtyOption> localSpecs = _buildLocalSpecialties(AppLocalizations.of(context)!);
       final specMatches = localSpecs
           .where((s) => s.name.toLowerCase().contains(q.toLowerCase()))
-          .map((s) => _MixedSuggestion.specialty(s.name, s.asset))
+          .map((s) => _MixedSuggestion.specialty(s.name, s.asset, s.key))
           .toList();
 
       setState(() {
         _mixed = [
+          ...specMatches,
           ...doctorMatches.map(_MixedSuggestion.fromDoctor),
           ...centerMatches.map(_MixedSuggestion.fromCenter),
-          ...specMatches,
         ];
         _loadingSuggestions = false;
       });
@@ -242,15 +248,16 @@ class _SearchAdvancedPageState extends State<SearchAdvancedPage> {
   // يبني قائمة كل التخصصات كاقتراحات جاهزة
   List<_MixedSuggestion> _allSpecialtiesAsMixed(AppLocalizations t) {
     return _buildLocalSpecialties(t)
-        .map((s) => _MixedSuggestion.specialty(s.name, s.asset))
+        .map((s) => _MixedSuggestion.specialty(s.name, s.asset, s.key))
         .toList();
   }
 
 
   // ========= اختيار تخصص من الاقتراحات =========
-  void _selectSpecialty(String specialty) {
+  void _selectSpecialty(String specialty, String specialtyKey) {
     setState(() {
       _selectedSpecialty = specialty;
+      _selectedSpecialtyKey = specialtyKey;
       _suppressSearchListener = true;
       _searchCtrl.text = specialty;
       _locationStageActive = true;
@@ -264,6 +271,15 @@ class _SearchAdvancedPageState extends State<SearchAdvancedPage> {
     });
     Future.microtask(() => _suppressSearchListener = false);
     Future.delayed(Duration.zero, () => _locationFocus.requestFocus());
+  }
+
+  // ========= lookup specialty key from display name =========
+  String _specNameToKey(String displayName) {
+    final allSpecs = _buildLocalSpecialties(AppLocalizations.of(context)!);
+    for (final s in allSpecs) {
+      if (s.name == displayName) return s.key;
+    }
+    return displayName; // fallback
   }
 
   // ========= بالقرب مني =========
@@ -302,11 +318,11 @@ class _SearchAdvancedPageState extends State<SearchAdvancedPage> {
 
   // ========= جلب النتائج من Supabase مع دعم تخصصات متعددة =========
   Future<void> _fetchResults() async {
-    // تحديد التخصصات المطلوبة
-    final Set<String> selectedSpecs = _filters.specs.isNotEmpty
-        ? _filters.specs
-        : (_selectedSpecialty != null && _selectedSpecialty!.isNotEmpty)
-        ? {_selectedSpecialty!}
+    // تحديد التخصصات المطلوبة (as specialty keys for DB queries)
+    final Set<String> selectedSpecKeys = _filters.specs.isNotEmpty
+        ? _filters.specs.map(_specNameToKey).toSet()
+        : (_selectedSpecialtyKey != null && _selectedSpecialtyKey!.isNotEmpty)
+        ? {_selectedSpecialtyKey!}
         : <String>{};
 
     // إلغاء البحث إذا لم يتم اختيار تخصص أو مدينة/بالقرب مني (ومسافة)
@@ -314,7 +330,7 @@ class _SearchAdvancedPageState extends State<SearchAdvancedPage> {
         ? (_myLatLng != null && _filters.nearbyKm != null)
         : _locationCtrl.text.trim().isNotEmpty;
 
-    if (selectedSpecs.isEmpty || !hasLocationReady) {
+    if (selectedSpecKeys.isEmpty || !hasLocationReady) {
       setState(() {
         _results.clear();
         _filteredResults.clear();
@@ -338,31 +354,31 @@ class _SearchAdvancedPageState extends State<SearchAdvancedPage> {
       );
 
       // جلب النتائج لكل تخصص
-      for (final spec in selectedSpecs) {
+      for (final specKey in selectedSpecKeys) {
         // Parallel fetch for doctors and centers
         final results = await Future.wait([
           // Doctor fetch
           _isNearbySelected && _myLatLng != null
               ? _searchService.fetchBySpecialtyNearby(
-            specialty: spec,
+            specialtyKey: specKey,
             userLat: _myLatLng!.latitude,
             userLng: _myLatLng!.longitude,
             radiusKm: _filters.nearbyKm ?? 5,
           )
               : _searchService.fetchBySpecialtyAndCity(
-            specialty: spec,
+            specialtyKey: specKey,
             cityAr: selectedCity.ar,
           ),
           // Center fetch
           _isNearbySelected && _myLatLng != null
               ? _searchService.fetchCentersBySpecialtyNearby(
-            specialty: spec,
+            specialtyKey: specKey,
             userLat: _myLatLng!.latitude,
             userLng: _myLatLng!.longitude,
             radiusKm: _filters.nearbyKm ?? 5,
           )
               : _searchService.fetchCentersBySpecialtyAndCity(
-            specialty: spec,
+            specialtyKey: specKey,
             cityAr: selectedCity.ar,
           ),
         ]);
@@ -426,9 +442,10 @@ class _SearchAdvancedPageState extends State<SearchAdvancedPage> {
 
     // (اختياري) فلتر التخصصات محليًا كطبقة أمان
     if (_filters.specs.isNotEmpty) {
+      final specKeys = _filters.specs.map(_specNameToKey).toSet();
       base = base.where((d) {
-        final s = (d['specialty'] ?? '').toString().toLowerCase();
-        return _filters.specs.any((f) => s.contains(f.toLowerCase()));
+        final dk = (d['specialty_key'] ?? '').toString();
+        return specKeys.contains(dk);
       }).toList();
     }
 
@@ -610,7 +627,7 @@ class _SearchAdvancedPageState extends State<SearchAdvancedPage> {
   }
 
   // ========= واجهة تخصص ضمن الاقتراحات =========
-  Widget _specialtySuggestionTile(String name, String asset) {
+  Widget _specialtySuggestionTile(String name, String asset, String key) {
     return ListTile(
       leading: CircleAvatar(
         backgroundColor: Colors.grey.withOpacity(0.08),
@@ -618,7 +635,7 @@ class _SearchAdvancedPageState extends State<SearchAdvancedPage> {
           asset,
           width: 25.w,
           height: 25.w,
-          color: AppColors.main,
+          colorFilter: const ColorFilter.mode(AppColors.main, BlendMode.srcIn),
         ),
       ),
       title: Text(name, style: AppTextStyles.getText2(context)),
@@ -627,7 +644,7 @@ class _SearchAdvancedPageState extends State<SearchAdvancedPage> {
         style: AppTextStyles.getText3(context).copyWith(color: Colors.grey),
       ),
       trailing: const Icon(Icons.arrow_outward, size: 18, color: Colors.grey),
-      onTap: () => _selectSpecialty(name),
+      onTap: () => _selectSpecialty(name, key),
     );
   }
 
@@ -693,7 +710,7 @@ class _SearchAdvancedPageState extends State<SearchAdvancedPage> {
         } else if (m.type == _MixedType.center) {
           return _centerTile(m.center!);
         } else {
-          return _specialtySuggestionTile(m.specialtyName!, m.asset!);
+          return _specialtySuggestionTile(m.specialtyName!, m.asset!, m.specialtyKey!);
         }
       },
     );
@@ -788,6 +805,7 @@ class _SearchAdvancedPageState extends State<SearchAdvancedPage> {
       setState(() {
         _filters = result;
         _selectedSpecialty = newPrimary ?? _selectedSpecialty;
+        _selectedSpecialtyKey = _specNameToKey(_selectedSpecialty ?? '');
 
         if (newNearby && _myLatLng != null) {
           _isNearbySelected = true;
@@ -1299,6 +1317,7 @@ class _SearchAdvancedPageState extends State<SearchAdvancedPage> {
     }
 
     return ListView(
+      padding: EdgeInsets.zero,
       children: [
         ListTile(
           leading: SvgPicture.asset(
@@ -1589,31 +1608,62 @@ class _SearchAdvancedPageState extends State<SearchAdvancedPage> {
     }
   }
 
-  // ===== بناء قائمة التخصصات المحلية =====
-// ===== بناء قائمة التخصصات المحلية (محدِّث) =====
+  // ===== تحميل التخصصات من قاعدة البيانات =====
+  Future<void> _loadSpecialtiesFromDb() async {
+    try {
+      final all = await SpecialtiesService.getAll();
+      if (!mounted) return;
+      final lang = Localizations.localeOf(context).languageCode;
+      final list = all.map((s) {
+        final name = lang == 'ar'
+            ? (s['name_ar'] ?? s['name_en'] ?? '')
+            : (s['name_en'] ?? s['name_ar'] ?? '');
+        final iconKey = s['icon_key'] ?? 'General-specialty';
+        const availableIcons = <String>{
+          'Internal-specialty', 'Pediatrics-specialty', 'Gynecology-specialty',
+          'Cardiology-specialty', 'ENT-specialty', 'Ophthalmology-specialty',
+          'Orthopedics-specialty', 'Dermatology-specialty', 'Psychology-specialty',
+          'Neurology-specialty', 'Nutrition-specialty', 'Endocrinology-specialty',
+          'Urology-specialty', 'GeneralSurgery-specialty', 'Dentistry-specialty',
+          'Cancer-specialty', 'Emergency-specialty', 'Gastro-specialty',
+          'General-specialty', 'Physio-specialty', 'Plastic-specialty',
+        };
+        final assetPath = availableIcons.contains(iconKey)
+            ? 'assets/icons/specialties/$iconKey.svg'
+            : 'assets/icons/specialties/General-specialty.svg';
+        return _SpecialtyOption(name.toString(), assetPath, (s['key'] ?? '').toString());
+      }).toList();
+      if (mounted) setState(() => _dbSpecialties = list);
+    } catch (_) {
+      // Fall back to hardcoded list
+    }
+  }
+
   List<_SpecialtyOption> _buildLocalSpecialties(AppLocalizations t) {
+    // Use DB-loaded specialties when available
+    if (_dbSpecialties != null) return _dbSpecialties!;
     return [
-      _SpecialtyOption(t.specialtyGeneral,         'assets/icons/specialties/General-specialty.svg'),
-      _SpecialtyOption(t.specialtyInternal,        'assets/icons/specialties/Internal-specialty.svg'),
-      _SpecialtyOption(t.specialtyPediatrics,      'assets/icons/specialties/Pediatrics-specialty.svg'),
-      _SpecialtyOption(t.specialtyGynecology,      'assets/icons/specialties/Gynecology-specialty.svg'),
-      _SpecialtyOption(t.specialtyDentistry,       'assets/icons/specialties/Dentistry-specialty.svg'),
-      _SpecialtyOption(t.specialtyCardiology,      'assets/icons/specialties/Cardiology-specialty.svg'),
-      _SpecialtyOption(t.specialtyENT,             'assets/icons/specialties/ENT-specialty.svg'),
-      _SpecialtyOption(t.specialtyOphthalmology,   'assets/icons/specialties/Ophthalmology-specialty.svg'),
-      _SpecialtyOption(t.specialtyOrthopedics,     'assets/icons/specialties/Orthopedics-specialty.svg'),
-      _SpecialtyOption(t.specialtyDermatology,     'assets/icons/specialties/Dermatology-specialty.svg'),
-      _SpecialtyOption(t.specialtyPsychology,      'assets/icons/specialties/Psychology-specialty.svg'),
-      _SpecialtyOption(t.specialtyNeurology,       'assets/icons/specialties/Neurology-specialty.svg'),
-      _SpecialtyOption(t.specialtyNutrition,       'assets/icons/specialties/Nutrition-specialty.svg'),
-      _SpecialtyOption(t.specialtyEndocrinology,   'assets/icons/specialties/Endocrinology-specialty.svg'),
-      _SpecialtyOption(t.specialtyUrology,         'assets/icons/specialties/Urology-specialty.svg'),
-      _SpecialtyOption(t.specialtyGeneralSurgery,  'assets/icons/specialties/GeneralSurgery-specialty.svg'),
-      _SpecialtyOption(t.specialtyGastro,          'assets/icons/specialties/Gastro-specialty.svg'),
-      _SpecialtyOption(t.specialtyPlastic,         'assets/icons/specialties/Plastic-specialty.svg'),
-      _SpecialtyOption(t.specialtyCancer,          'assets/icons/specialties/Cancer-specialty.svg'),
-      _SpecialtyOption(t.specialtyEmergency,       'assets/icons/specialties/Emergency-specialty.svg'),
-      _SpecialtyOption(t.specialtyPhysio,          'assets/icons/specialties/Physio-specialty.svg'),
+      _SpecialtyOption(t.specialtyGeneral,         'assets/icons/specialties/General-specialty.svg',        'general'),
+      _SpecialtyOption(t.specialtyInternal,        'assets/icons/specialties/Internal-specialty.svg',       'internal'),
+      _SpecialtyOption(t.specialtyPediatrics,      'assets/icons/specialties/Pediatrics-specialty.svg',     'pediatrics'),
+      _SpecialtyOption(t.specialtyGynecology,      'assets/icons/specialties/Gynecology-specialty.svg',     'gynecology'),
+      _SpecialtyOption(t.specialtyDentistry,       'assets/icons/specialties/Dentistry-specialty.svg',      'dentistry'),
+      _SpecialtyOption(t.specialtyCardiology,      'assets/icons/specialties/Cardiology-specialty.svg',     'cardiology'),
+      _SpecialtyOption(t.specialtyENT,             'assets/icons/specialties/ENT-specialty.svg',            'ent'),
+      _SpecialtyOption(t.specialtyOphthalmology,   'assets/icons/specialties/Ophthalmology-specialty.svg',  'ophthalmology'),
+      _SpecialtyOption(t.specialtyOrthopedics,     'assets/icons/specialties/Orthopedics-specialty.svg',    'orthopedics'),
+      _SpecialtyOption(t.specialtyDermatology,     'assets/icons/specialties/Dermatology-specialty.svg',    'dermatology'),
+      _SpecialtyOption(t.specialtyPsychology,      'assets/icons/specialties/Psychology-specialty.svg',     'psychology'),
+      _SpecialtyOption(t.specialtyNeurology,       'assets/icons/specialties/Neurology-specialty.svg',      'neurology'),
+      _SpecialtyOption(t.specialtyNutrition,       'assets/icons/specialties/Nutrition-specialty.svg',      'nutrition'),
+      _SpecialtyOption(t.specialtyEndocrinology,   'assets/icons/specialties/Endocrinology-specialty.svg',  'endocrinology'),
+      _SpecialtyOption(t.specialtyUrology,         'assets/icons/specialties/Urology-specialty.svg',        'urology'),
+      _SpecialtyOption(t.specialtyGeneralSurgery,  'assets/icons/specialties/GeneralSurgery-specialty.svg', 'general_surgery'),
+      _SpecialtyOption(t.specialtyGastro,          'assets/icons/specialties/Gastro-specialty.svg',         'gastroenterology'),
+      _SpecialtyOption(t.specialtyPlastic,         'assets/icons/specialties/Plastic-specialty.svg',        'plastic_surgery'),
+      _SpecialtyOption(t.specialtyCancer,          'assets/icons/specialties/Cancer-specialty.svg',         'oncology'),
+      _SpecialtyOption(t.specialtyEmergency,       'assets/icons/specialties/Emergency-specialty.svg',      'emergency'),
+      _SpecialtyOption(t.specialtyPhysio,          'assets/icons/specialties/Physio-specialty.svg',         'physiotherapy'),
     ];
   }
 
@@ -1625,7 +1675,8 @@ class _SearchAdvancedPageState extends State<SearchAdvancedPage> {
 class _SpecialtyOption {
   final String name;
   final String asset; // مسار الـ SVG
-  _SpecialtyOption(this.name, this.asset);
+  final String key;   // specialty key matching doctors.specialty_key
+  _SpecialtyOption(this.name, this.asset, this.key);
 }
 
 
@@ -1637,17 +1688,18 @@ class _MixedSuggestion {
   final Map<String, dynamic>? center;
   final String? specialtyName;
   final String? asset; // مسار SVG
+  final String? specialtyKey; // specialty key for DB queries
 
-  _MixedSuggestion._(this.type, this.doctor, this.center, this.specialtyName, this.asset);
+  _MixedSuggestion._(this.type, this.doctor, this.center, this.specialtyName, this.asset, this.specialtyKey);
 
   static _MixedSuggestion fromDoctor(Map<String, dynamic> d) =>
-      _MixedSuggestion._(_MixedType.doctor, d, null, null, null);
+      _MixedSuggestion._(_MixedType.doctor, d, null, null, null, null);
 
   static _MixedSuggestion fromCenter(Map<String, dynamic> c) =>
-      _MixedSuggestion._(_MixedType.center, null, c, null, null);
+      _MixedSuggestion._(_MixedType.center, null, c, null, null, null);
 
-  static _MixedSuggestion specialty(String name, String asset) =>
-      _MixedSuggestion._(_MixedType.specialty, null, null, name, asset);
+  static _MixedSuggestion specialty(String name, String asset, String key) =>
+      _MixedSuggestion._(_MixedType.specialty, null, null, name, asset, key);
 }
 
 

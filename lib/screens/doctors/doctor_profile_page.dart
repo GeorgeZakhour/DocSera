@@ -5,6 +5,7 @@ import 'package:cached_network_image/cached_network_image.dart';
 import 'package:docsera/models/sign_up_info.dart';
 import 'package:docsera/screens/auth/login/login_page.dart';
 import 'package:docsera/screens/auth/sign_up/sign_up_phone.dart';
+import 'package:docsera/screens/centers/center_profile_page.dart';
 import 'package:docsera/screens/doctors/appointment/select_patient_page.dart';
 import 'package:docsera/utils/doctor_image_utils.dart';
 import 'package:docsera/utils/time_utils.dart';
@@ -28,11 +29,13 @@ import '../../utils/full_page_loader.dart';
 class DoctorProfilePage extends StatefulWidget {
   final String doctorId; // ✅ Make non-nullable
   final Map<String, dynamic>? doctor;
+  final bool fromProfile;
 
   const DoctorProfilePage({
     super.key,
     required this.doctorId,
     this.doctor,
+    this.fromProfile = false,
   });
 
   @override
@@ -45,6 +48,8 @@ class _DoctorProfilePageState extends State<DoctorProfilePage> {
   final ScrollController _scrollController = ScrollController();
   Map<String, dynamic>? _doctorData;
   String? _userId;
+
+  List<Map<String, dynamic>> _centerMemberships = [];
 
   bool _expandedImageOverlay = false;
   List<String> _expandedImageUrls = [];
@@ -115,6 +120,7 @@ class _DoctorProfilePageState extends State<DoctorProfilePage> {
     }
     _loadFavoriteStatus();
     _loadDoctorProfile();
+    _loadCenterMemberships();
 
     WidgetsBinding.instance.addPostFrameCallback((_) {
       setState(() {
@@ -150,6 +156,21 @@ class _DoctorProfilePageState extends State<DoctorProfilePage> {
         _doctorData = response;
       });
     }
+  }
+
+  Future<void> _loadCenterMemberships() async {
+    final doctorId = widget.doctorId.trim();
+    if (doctorId.isEmpty) return;
+    try {
+      final result = await Supabase.instance.client
+          .rpc('get_doctor_centers', params: {'p_doctor_id': doctorId});
+
+      final List<Map<String, dynamic>> centers =
+          (result as List).cast<Map<String, dynamic>>();
+      if (mounted && centers.isNotEmpty) {
+        setState(() => _centerMemberships = centers);
+      }
+    } catch (_) {}
   }
 
   void _onScroll() {
@@ -1316,20 +1337,20 @@ class _DoctorProfilePageState extends State<DoctorProfilePage> {
   }
 
   /// 🔹 Card for Contact Info + Opening Hours + Languages
-  Widget _buildInfoSection(
-      String? phoneNumber,
-      Map<String, dynamic> openingHours,
-      List<dynamic> languages,
-      {String? email}
-      ) {
+  String _getCenterImageUrl(String? path) {
+    if (path == null || path.isEmpty) return '';
+    if (path.startsWith('http')) return path;
+    try {
+      return Supabase.instance.client.storage
+          .from('center-images')
+          .getPublicUrl(path);
+    } catch (_) {
+      return '';
+    }
+  }
+
+  Widget _buildWorksAtSection(List<Map<String, dynamic>> centers) {
     final l = AppLocalizations.of(context)!;
-    final List<String> languageLabels =
-    languages.map((code) => languageLabelFromCode(l, code.toString())).toList();
-
-    final String formattedPhone = phoneNumber != null ? _displayPhone(phoneNumber) : '';
-    final String displayedPhone = formattedPhone.isNotEmpty ? formattedPhone : l.notProvided;
-    final String displayedEmail = (email ?? '').isNotEmpty ? email! : l.notProvided;
-
     return Card(
       color: AppColors.background2,
       shape: RoundedRectangleBorder(
@@ -1337,35 +1358,87 @@ class _DoctorProfilePageState extends State<DoctorProfilePage> {
         side: BorderSide(color: Colors.grey.shade200, width: 0.8),
       ),
       elevation: 0,
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          /// 🔹 Contact Information
-          GestureDetector(
-            onTap: () => _showContactDetails(phoneNumber, email: email),
-            behavior: HitTestBehavior.opaque,
-            child: Padding(
-              padding: EdgeInsets.fromLTRB(12.w, 12.w, 12.w, 0),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Row(
-                    children: [
-                      Icon(Icons.phone, color: AppColors.mainDark, size: 16.sp),
-                      SizedBox(width: 5.w),
-                      Text(
-                        l.contactInformation,
-                        style: AppTextStyles.getTitle1(context).copyWith(fontSize: 11.sp),
+      child: Padding(
+        padding: EdgeInsets.all(12.w),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                Icon(Icons.business, color: AppColors.mainDark, size: 16.sp),
+                SizedBox(width: 5.w),
+                Text(
+                  l.worksAt,
+                  style: AppTextStyles.getTitle1(context).copyWith(fontSize: 11.sp),
+                ),
+              ],
+            ),
+            SizedBox(height: 8.h),
+            ...centers.map((center) {
+              final name = center['name'] ?? '';
+              final imagePath = (center['center_image'] ?? '').toString();
+              final imageUrl = _getCenterImageUrl(imagePath);
+              final addr = center['address'] as Map<String, dynamic>?;
+              final city = addr?['city'] ?? '';
+              return InkWell(
+                borderRadius: BorderRadius.circular(10.r),
+                onTap: () {
+                  if (widget.fromProfile) {
+                    Navigator.pushReplacement(
+                      context,
+                      MaterialPageRoute(
+                        builder: (_) => CenterProfilePage(
+                          centerId: center['id'],
+                          fromProfile: true,
+                          fromDoctorId: widget.doctorId,
+                        ),
                       ),
-                    ],
-                  ),
-                  Row(
+                    );
+                  } else {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (_) => CenterProfilePage(
+                          centerId: center['id'],
+                          fromProfile: true,
+                          fromDoctorId: widget.doctorId,
+                        ),
+                      ),
+                    );
+                  }
+                },
+                child: Padding(
+                  padding: EdgeInsets.symmetric(vertical: 6.h),
+                  child: Row(
                     children: [
-                      Text(
-                        l.viewMore,
-                        style: AppTextStyles.getText3(context).copyWith(
-                          color: AppColors.main,
-                          fontWeight: FontWeight.bold,
+                      CircleAvatar(
+                        radius: 20.r,
+                        backgroundColor: AppColors.main.withValues(alpha: 0.1),
+                        backgroundImage: imageUrl.isNotEmpty
+                            ? CachedNetworkImageProvider(imageUrl)
+                            : null,
+                        child: imageUrl.isEmpty
+                            ? Icon(Icons.business, color: AppColors.main, size: 20.sp)
+                            : null,
+                      ),
+                      SizedBox(width: 10.w),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              name,
+                              style: AppTextStyles.getTitle1(context).copyWith(fontSize: 12.sp),
+                            ),
+                            if (city.isNotEmpty)
+                              Text(
+                                city,
+                                style: AppTextStyles.getText3(context).copyWith(
+                                  color: Colors.grey,
+                                  fontSize: 10.sp,
+                                ),
+                              ),
+                          ],
                         ),
                       ),
                       Icon(
@@ -1377,107 +1450,185 @@ class _DoctorProfilePageState extends State<DoctorProfilePage> {
                       ),
                     ],
                   ),
-                ],
-              ),
-            ),
-          ),
+                ),
+              );
+            }),
+          ],
+        ),
+      ),
+    );
+  }
 
-          Padding(
-            padding: EdgeInsets.symmetric(vertical: 5.h),
-            child: Divider(color: Colors.grey[200], thickness: 1),
-          ),
+  /// Public contact fields (set by doctor in DocSera Pro's contact section).
+  /// Falls back to auth fields only if public ones are empty.
+  String? get _publicPhone {
+    final pub = (_doctorData?['contact_mobile'] ?? '').toString().trim();
+    return pub.isNotEmpty ? pub : null;
+  }
 
-          /// 🔹 Opening Hours
-          GestureDetector(
-            onTap: () => _showOpeningHoursDetails(openingHours),
-            behavior: HitTestBehavior.opaque,
-            child: Padding(
-              padding: EdgeInsets.fromLTRB(12.w, 0, 12.w, 0),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+  String? get _publicEmail {
+    final pub = (_doctorData?['contact_email'] ?? '').toString().trim();
+    return pub.isNotEmpty ? pub : null;
+  }
+
+  String? get _publicWebsite {
+    final w = (_doctorData?['contact_website'] ?? '').toString().trim();
+    return w.isNotEmpty ? w : null;
+  }
+
+  List<String> get _publicLandlines {
+    final phones = _doctorData?['contact_phones'];
+    if (phones is! List || phones.isEmpty) return [];
+    final result = <String>[];
+    for (final p in phones) {
+      if (p is Map) {
+        final cc = (p['city_code'] ?? '').toString().trim();
+        final num = (p['number'] ?? '').toString().trim();
+        if (num.isNotEmpty) {
+          result.add(cc.isNotEmpty ? '\u200E($cc) $num' : num);
+        }
+      }
+    }
+    return result;
+  }
+
+  bool get _hasAnyContactInfo =>
+      (_publicPhone ?? '').isNotEmpty ||
+      (_publicEmail ?? '').isNotEmpty ||
+      _publicLandlines.isNotEmpty ||
+      _publicWebsite != null ||
+      _centerPhoneNumber != null;
+
+  /// Returns the first non-empty phone number from the doctor's centers.
+  /// Prefers mobile_number → phone_number → first landline from phones array.
+  String? get _centerPhoneNumber {
+    for (final c in _centerMemberships) {
+      final mobile = (c['mobile_number'] ?? '').toString().trim();
+      if (mobile.isNotEmpty) return mobile;
+      final phone = (c['phone_number'] ?? '').toString().trim();
+      if (phone.isNotEmpty) return phone;
+      // Fallback to first landline from phones array
+      final phones = c['phones'];
+      if (phones is List && phones.isNotEmpty) {
+        final first = phones[0];
+        if (first is Map) {
+          final cc = (first['city_code'] ?? '').toString().trim();
+          final num = (first['number'] ?? '').toString().trim();
+          if (num.isNotEmpty) return cc.isNotEmpty ? '\u200E($cc) $num' : num;
+        }
+      }
+    }
+    return null;
+  }
+
+  Widget _buildInfoSection(
+      String? phoneNumber,
+      Map<String, dynamic> openingHours,
+      List<dynamic> languages,
+      {String? email, String? centerPhone,
+       List<String> landlines = const [], String? website}
+      ) {
+    final l = AppLocalizations.of(context)!;
+
+    final hasContact = _hasAnyContactInfo;
+    final hasHours = openingHours.isNotEmpty;
+    final hasLanguages = languages.isNotEmpty;
+
+    final visibleCount = [hasContact, hasHours, hasLanguages].where((v) => v).length;
+    if (visibleCount == 0) return const SizedBox.shrink();
+
+    // Scale vertical spacing based on how many sections are visible
+    final double rowVerticalPadding = visibleCount == 1 ? 6.h : 4.h;
+    final double cardVerticalPadding = visibleCount == 1 ? 14.w : 12.w;
+
+    Widget buildRow(IconData icon, String label, VoidCallback onTap) {
+      return GestureDetector(
+        onTap: onTap,
+        behavior: HitTestBehavior.opaque,
+        child: Padding(
+          padding: EdgeInsets.symmetric(horizontal: 12.w, vertical: rowVerticalPadding),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Row(
                 children: [
-                  Row(
-                    children: [
-                      Icon(Icons.access_time, color: AppColors.mainDark, size: 16.sp),
-                      SizedBox(width: 5.w),
-                      Text(
-                        l.openingHours,
-                        style: AppTextStyles.getTitle1(context).copyWith(fontSize: 11.sp),
-                      ),
-                    ],
-                  ),
-                  Row(
-                    children: [
-                      Text(
-                        l.viewMore,
-                        style: AppTextStyles.getText3(context)
-                            .copyWith(color: AppColors.main, fontWeight: FontWeight.bold),
-                      ),
-                      Icon(
-                        Localizations.localeOf(context).languageCode == 'ar'
-                            ? Icons.keyboard_arrow_left
-                            : Icons.keyboard_arrow_right,
-                        color: AppColors.main,
-                        size: 18.sp,
-                      ),
-                    ],
+                  Icon(icon, color: AppColors.mainDark, size: 16.sp),
+                  SizedBox(width: 5.w),
+                  Text(
+                    label,
+                    style: AppTextStyles.getTitle1(context).copyWith(fontSize: 11.sp),
                   ),
                 ],
               ),
-            ),
-          ),
-
-          Padding(
-            padding: EdgeInsets.symmetric(vertical: 5.h),
-            child: Divider(color: Colors.grey[200], thickness: 1),
-          ),
-
-          /// 🔹 Languages
-          GestureDetector(
-            onTap: () => _showLanguagesDetails(languages),
-            behavior: HitTestBehavior.opaque,
-            child: Padding(
-              padding: EdgeInsets.fromLTRB(12.w, 0, 12.w, 12),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              Row(
                 children: [
-                  Row(
-                    children: [
-                      Icon(Icons.language, color: AppColors.mainDark, size: 16.sp),
-                      SizedBox(width: 5.w),
-                      Text(
-                        l.languagesSpoken,
-                        style: AppTextStyles.getTitle1(context).copyWith(fontSize: 11.sp),
-                      ),
-                    ],
+                  Text(
+                    l.viewMore,
+                    style: AppTextStyles.getText3(context).copyWith(
+                      color: AppColors.main,
+                      fontWeight: FontWeight.bold,
+                    ),
                   ),
-                  Row(
-                    children: [
-                      Text(
-                        l.viewMore,
-                        style: AppTextStyles.getText3(context)
-                            .copyWith(color: AppColors.main, fontWeight: FontWeight.bold),
-                      ),
-                      Icon(
-                        Localizations.localeOf(context).languageCode == 'ar'
-                            ? Icons.keyboard_arrow_left
-                            : Icons.keyboard_arrow_right,
-                        color: AppColors.main,
-                        size: 18.sp,
-                      ),
-                    ],
+                  Icon(
+                    Localizations.localeOf(context).languageCode == 'ar'
+                        ? Icons.keyboard_arrow_left
+                        : Icons.keyboard_arrow_right,
+                    color: AppColors.main,
+                    size: 18.sp,
                   ),
                 ],
               ),
-            ),
+            ],
           ),
-        ],
+        ),
+      );
+    }
+
+    final rows = <Widget>[];
+    if (hasContact) {
+      rows.add(buildRow(Icons.phone, l.contactInformation,
+          () => _showContactDetails(phoneNumber, email: email, centerPhone: centerPhone, landlines: landlines, website: website)));
+    }
+    if (hasHours) {
+      rows.add(buildRow(Icons.access_time, l.openingHours,
+          () => _showOpeningHoursDetails(openingHours)));
+    }
+    if (hasLanguages) {
+      rows.add(buildRow(Icons.language, l.languagesSpoken,
+          () => _showLanguagesDetails(languages)));
+    }
+
+    // Interleave dividers between rows
+    final children = <Widget>[];
+    for (int i = 0; i < rows.length; i++) {
+      children.add(rows[i]);
+      if (i < rows.length - 1) {
+        children.add(Divider(color: Colors.grey[200], thickness: 1));
+      }
+    }
+
+    return Card(
+      color: AppColors.background2,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(12.r),
+        side: BorderSide(color: Colors.grey.shade200, width: 0.8),
+      ),
+      elevation: 0,
+      child: Padding(
+        padding: EdgeInsets.symmetric(vertical: cardVerticalPadding),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: children,
+        ),
       ),
     );
   }
 
 
-  void _showContactDetails(String? phoneNumber, {String? email}) {
+  void _showContactDetails(String? phoneNumber, {
+    String? email, String? centerPhone,
+    List<String> landlines = const [], String? website,
+  }) {
     final l = AppLocalizations.of(context)!;
 
     String formatPhone(String raw) {
@@ -1486,8 +1637,16 @@ class _DoctorProfilePageState extends State<DoctorProfilePage> {
       return raw;
     }
 
-    final formattedPhone = phoneNumber != null ? formatPhone(phoneNumber) : null;
+    final formattedPhone = phoneNumber != null && phoneNumber.isNotEmpty
+        ? formatPhone(phoneNumber)
+        : null;
+    final formattedCenterPhone = centerPhone != null && centerPhone.isNotEmpty
+        ? formatPhone(centerPhone)
+        : null;
     final formattedEmail = (email ?? '').trim();
+
+    final hasDirectPhone = formattedPhone != null && formattedPhone.isNotEmpty;
+    final hasCenterPhone = formattedCenterPhone != null && formattedCenterPhone.isNotEmpty;
 
     showModalBottomSheet(
       context: context,
@@ -1508,12 +1667,13 @@ class _DoctorProfilePageState extends State<DoctorProfilePage> {
               ),
               SizedBox(height: 25.h),
 
-              if (formattedPhone != null && formattedPhone.isNotEmpty)
+              // Doctor's mobile
+              if (hasDirectPhone)
                 GestureDetector(
                   onTap: () => _makePhoneCall(formattedPhone),
                   child: Row(
                     children: [
-                      Icon(Icons.call, color: AppColors.main, size: 16.sp),
+                      Icon(Icons.smartphone, color: AppColors.main, size: 16.sp),
                       SizedBox(width: 10.w),
                       Text(
                         formattedPhone,
@@ -1523,9 +1683,52 @@ class _DoctorProfilePageState extends State<DoctorProfilePage> {
                   ),
                 ),
 
-              if (formattedPhone != null && formattedPhone.isNotEmpty)
+              if (hasDirectPhone)
                 SizedBox(height: 16.h),
 
+              // Landline numbers
+              ...landlines.map((line) => Padding(
+                padding: EdgeInsets.only(bottom: 16.h),
+                child: GestureDetector(
+                  onTap: () => _makePhoneCall(line),
+                  child: Row(
+                    children: [
+                      Icon(Icons.phone_outlined, color: AppColors.main, size: 16.sp),
+                      SizedBox(width: 10.w),
+                      Text(
+                        line,
+                        style: AppTextStyles.getTitle1(context).copyWith(color: AppColors.main),
+                      ),
+                    ],
+                  ),
+                ),
+              )),
+
+              // Center phone
+              if (hasCenterPhone && (!hasDirectPhone || formattedCenterPhone != formattedPhone))
+                GestureDetector(
+                  onTap: () => _makePhoneCall(formattedCenterPhone),
+                  child: Row(
+                    children: [
+                      Icon(Icons.business, color: AppColors.main, size: 16.sp),
+                      SizedBox(width: 10.w),
+                      Text(
+                        formattedCenterPhone,
+                        style: AppTextStyles.getTitle1(context).copyWith(color: AppColors.main),
+                      ),
+                      SizedBox(width: 6.w),
+                      Text(
+                        '(${l.centerPhone})',
+                        style: AppTextStyles.getText3(context).copyWith(color: Colors.grey),
+                      ),
+                    ],
+                  ),
+                ),
+
+              if (hasCenterPhone && (!hasDirectPhone || formattedCenterPhone != formattedPhone))
+                SizedBox(height: 16.h),
+
+              // Email
               if (formattedEmail.isNotEmpty)
                 GestureDetector(
                   onTap: () => _sendEmail(formattedEmail),
@@ -1535,6 +1738,29 @@ class _DoctorProfilePageState extends State<DoctorProfilePage> {
                       SizedBox(width: 10.w),
                       Text(
                         formattedEmail,
+                        style: AppTextStyles.getTitle1(context).copyWith(color: AppColors.main),
+                      ),
+                    ],
+                  ),
+                ),
+
+              if (formattedEmail.isNotEmpty)
+                SizedBox(height: 16.h),
+
+              // Website
+              if (website != null && website.isNotEmpty)
+                GestureDetector(
+                  onTap: () async {
+                    final url = website.startsWith('http') ? website : 'https://$website';
+                    final uri = Uri.parse(url);
+                    if (await canLaunchUrl(uri)) await launchUrl(uri);
+                  },
+                  child: Row(
+                    children: [
+                      Icon(Icons.language, color: AppColors.main, size: 16.sp),
+                      SizedBox(width: 10.w),
+                      Text(
+                        website,
                         style: AppTextStyles.getTitle1(context).copyWith(color: AppColors.main),
                       ),
                     ],
@@ -2238,7 +2464,7 @@ $deepLink
     if (street != null || city != null || country != null) {
       visibleSections++;
     }
-    if (_doctorData?['opening_hours'] != null || _doctorData?['languages'] != null || _doctorData?['phone_number'] != null) {
+    if (_doctorData?['opening_hours'] != null || _doctorData?['languages'] != null || _hasAnyContactInfo) {
       visibleSections++;
     }
     if (_doctorData?['faqs'] != null) {
@@ -2382,6 +2608,10 @@ $deepLink
                         if (_doctorData?['offered_services'] != null) SizedBox(height: 10.h),
                         if (_doctorData?['offered_services'] != null)
                           _buildServicesSection(_doctorData!['offered_services']),
+                        if (_centerMemberships.isNotEmpty)
+                          SizedBox(height: 10.h),
+                        if (_centerMemberships.isNotEmpty)
+                          _buildWorksAtSection(_centerMemberships),
                         if (street != null || city != null || country != null)
                           SizedBox(height: 10.h),
                         if (street != null || city != null || country != null)
@@ -2396,16 +2626,19 @@ $deepLink
                           ),
                         if (_doctorData?['opening_hours'] != null ||
                             _doctorData?['languages'] != null ||
-                            _doctorData?['phone_number'] != null)
+                            _hasAnyContactInfo)
                           SizedBox(height: 10.h),
                         if (_doctorData?['opening_hours'] != null ||
                             _doctorData?['languages'] != null ||
-                            _doctorData?['phone_number'] != null)
+                            _hasAnyContactInfo)
                           _buildInfoSection(
-                            _doctorData?['phone_number']?.toString(),
+                            _publicPhone,
                             _doctorData?['opening_hours'] ?? {},
                             _doctorData?['languages'] ?? [],
-                            email: _doctorData?['email']?.toString(),
+                            email: _publicEmail,
+                            centerPhone: _centerPhoneNumber,
+                            landlines: _publicLandlines,
+                            website: _publicWebsite,
                           ),
                         if (_doctorData?['faqs'] != null) SizedBox(height: 10.h),
                         if (_doctorData?['faqs'] != null)

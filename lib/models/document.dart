@@ -16,6 +16,11 @@ class UserDocument {
   final String source; // 'patient', 'doctor_added', 'report'
   final String? sourceDoctorId;
   final String? sourceDoctorName;
+  /// Storage bucket the file lives in.  Defaults to 'documents' (the patient
+  /// vault bucket).  Report attachments synthesised from `reports.sections`
+  /// live in `chat.attachments` and must set this explicitly so the preview
+  /// resolver can sign URLs from the right bucket.
+  final String bucket;
 
   UserDocument({
     this.id,
@@ -34,6 +39,7 @@ class UserDocument {
     this.source = 'patient',
     this.sourceDoctorId,
     this.sourceDoctorName,
+    this.bucket = 'documents',
   });
 
   factory UserDocument.fromMap(Map<String, dynamic> data) {
@@ -54,6 +60,7 @@ class UserDocument {
       source: data['source']?.toString() ?? 'patient',
       sourceDoctorId: data['source_doctor_id']?.toString(),
       sourceDoctorName: data['source_doctor_name']?.toString(),
+      bucket: data['bucket']?.toString() ?? 'documents',
     );
   }
 

@@ -1219,5 +1219,36 @@
         "type": "String"
       }
     }
-  }
+  },
+  "sourceBadgePatient": "You",
+  "sourceBadgeDoctor": "Doctor",
+  "sourceBadgeReport": "Report",
+
+  "detailFileFormat": "File format",
+  "detailSource": "Source",
+  "detailNumberOfPages": "Number of pages",
+  "detailVisibility": "Visibility",
+  "detailEncryption": "Encryption",
+  "detailPageCount": "{count} {count, plural, =1{page} other{pages}}",
+  "@detailPageCount": {
+    "placeholders": {
+      "count": { "type": "int" }
+    }
+  },
+  "sourceUploadedByYou": "Uploaded by you",
+  "sourceAddedByDoctor": "Added by {name}",
+  "@sourceAddedByDoctor": {
+    "placeholders": {
+      "name": { "type": "String" }
+    }
+  },
+  "visibleToDoctors": "Visible to your doctors",
+  "encryptedYes": "Encrypted",
+  "encryptedNo": "Not encrypted",
+  "formatPdf": "PDF Document",
+  "formatImage": "Image",
+  "formatUnknown": "File",
+  "worksAt": "Works at",
+  "viewCenter": "View Center",
+  "centerPhone": "Center"
 }

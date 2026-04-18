@@ -124,15 +124,25 @@ class ModularReportDetailPage extends StatelessWidget {
     );
   }
 
+  // Always use A4 for patient app — iOS/Android don't offer A5 as a print option,
+  // and prescription reports already contain only the prescription section.
+  PdfPageFormat get _pageFormat => PdfPageFormat.a4;
+
   Future<void> _printPdf(BuildContext context) async {
-    final bytes = await ModularReportPdfGenerator.generatePdf(report: report);
+    final bytes = await ModularReportPdfGenerator.generatePdf(
+      report: report,
+      pageFormat: _pageFormat,
+    );
     await Printing.layoutPdf(
       onLayout: (PdfPageFormat format) async => bytes,
     );
   }
 
   Future<void> _sharePdf(BuildContext context) async {
-    final bytes = await ModularReportPdfGenerator.generatePdf(report: report);
+    final bytes = await ModularReportPdfGenerator.generatePdf(
+      report: report,
+      pageFormat: _pageFormat,
+    );
     final patientName = report.patientName ?? 'report';
     await Printing.sharePdf(
       bytes: bytes,

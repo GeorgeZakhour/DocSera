@@ -130,10 +130,43 @@ serve(async (req) => {
     // ===============================================================
     else if (table === "appointments") {
         console.log("🗓️ Processing Appointment Event");
-        if (type !== 'UPDATE') {
-             console.log(`Skipping: Type is ${type}, expected UPDATE`);
-             return new Response("Skipped non-update appointment", { status: 200 });
+
+        const doctorName = record.doctor_name || "الطبيب";
+        const LTR = '\u200E';
+
+        // ── INSERT: New appointment booked (manual or follow-up) ──
+        if (type === 'INSERT') {
+            console.log("📅 Condition: New Appointment Booked");
+
+            // Only notify if patient is a DocSera user
+            if (!record.user_id) {
+                console.log("⚠️ No user_id — manual patient without DocSera account, skipping.");
+                return new Response("No DocSera user to notify", { status: 200 });
+            }
+
+            const appointmentDate = record.appointment_date || "";
+            const rawTime = record.appointment_time || ""; // "17:00:00"
+
+            // Convert 24h → 12h Arabic (e.g. "17:00:00" → "5:00 م")
+            let displayTime = rawTime;
+            if (rawTime) {
+                const parts = rawTime.split(":");
+                let h = parseInt(parts[0], 10);
+                const m = parts[1] || "00";
+                const period = h >= 12 ? "م" : "ص";
+                if (h === 0) h = 12;
+                else if (h > 12) h -= 12;
+                displayTime = `${h}:${m} ${period}`;
+            }
+
+            targetUserIds.push(record.user_id);
+            title = `${LTR}📅 موعد جديد`;
+            body = `${LTR}تم حجز موعد لك مع ${doctorName} بتاريخ ${appointmentDate} الساعة ${displayTime}.`;
+            payloadData = `appointment:${record.id}`;
         }
+
+        // ── UPDATE: Status changes, reschedules, reports ──
+        else if (type === 'UPDATE') {
 
         const oldStatus = old_record ? old_record.status : null;
         const newStatus = record.status;
@@ -141,18 +174,12 @@ serve(async (req) => {
         const newTime = record.timestamp;
         const oldReport = old_record ? old_record.report : null;
         const newReport = record.report;
-        
+
         console.log(`Status Change: ${oldStatus} -> ${newStatus}`);
         console.log(`Time Change: ${oldTime} -> ${newTime}`);
 
-        const doctorName = record.doctor_name || "الطبيب";
-        
         const isConfirmedBool = record.is_confirmed;
         const oldConfirmedBool = old_record ? old_record.is_confirmed : null;
-
-        // Force Left-Alignment using Unicode Left-to-Right Mark (U+200E)
-        // This hints to the system that the paragraph is LTR (align left) without reversing Arabic letters.
-        const LTR = '\u200E'; 
 
         // 1. Rejected (Pending -> Rejected) OR (Pending -> Cancelled)
         if ( 
@@ -239,10 +266,16 @@ serve(async (req) => {
         } else {
              console.error("❌ No user_id in appointment record!");
         }
-        
+
         // Default to appointment payload if not set (by report logic)
         if (payloadData === "") {
              payloadData = `appointment:${record.id}`;
+        }
+
+        } // end UPDATE
+        else {
+            console.log(`Skipping appointment event type: ${type}`);
+            return new Response(`Skipped ${type} appointment`, { status: 200 });
         }
     }
     

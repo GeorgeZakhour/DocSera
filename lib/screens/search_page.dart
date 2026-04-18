@@ -41,6 +41,18 @@ class _SearchPageState extends State<SearchPage> {
   bool _isSearching = false;
   List<Map<String, dynamic>> _specialties = [];
 
+  /// Set of icon_key values that have actual SVG files bundled in assets.
+  static const _availableSvgIcons = <String>{
+    'Internal-specialty', 'Pediatrics-specialty', 'Gynecology-specialty',
+    'Cardiology-specialty', 'ENT-specialty', 'Ophthalmology-specialty',
+    'Orthopedics-specialty', 'Dermatology-specialty', 'Psychology-specialty',
+    'Neurology-specialty', 'Nutrition-specialty', 'Endocrinology-specialty',
+    'Urology-specialty', 'GeneralSurgery-specialty', 'Dentistry-specialty',
+    'Cancer-specialty', 'Emergency-specialty', 'Gastro-specialty',
+    'General-specialty', 'Physio-specialty', 'Plastic-specialty',
+  };
+  static const _fallbackSvgIcon = 'assets/icons/specialties/General-specialty.svg';
+
   @override
   void initState() {
     super.initState();
@@ -272,7 +284,9 @@ class _SearchPageState extends State<SearchPage> {
         final spec = _specialties[index];
         final name = lang == 'ar' ? (spec['name_ar'] ?? '') : (spec['name_en'] ?? '');
         final iconKey = spec['icon_key'] ?? 'General-specialty';
-        final iconAsset = 'assets/icons/specialties/$iconKey.svg';
+        final iconAsset = _availableSvgIcons.contains(iconKey)
+            ? 'assets/icons/specialties/$iconKey.svg'
+            : _fallbackSvgIcon;
 
         return ListTile(
           leading: CircleAvatar(
@@ -351,19 +365,21 @@ class _SearchPageState extends State<SearchPage> {
       builder: (context, snapshot) {
         final bool isPatient = snapshot.data ?? false;
 
-        // 🧩 تحقق من التوفر
+        // 🧩 تحقق من التوفر (فقط في وضع الرسائل)
         bool isUnavailable = false;
         String unavailableReason = '';
 
-        if (widget.mode == "message" && doctor['id'] == _userId) {
-          isUnavailable = true;
-          unavailableReason = local.ownProfileBadge; 
-        } else if (!messagesEnabled) {
-          isUnavailable = true;
-          unavailableReason = local.messagesDisabled; // 🔹 “غير متاح للرسائل”
-        } else if (access == 'patients' && !isPatient) {
-          isUnavailable = true;
-          unavailableReason = local.patientsOnlyMessaging; // 🔹 “متاح فقط لمرضاه”
+        if (widget.mode == "message") {
+          if (doctor['id'] == _userId) {
+            isUnavailable = true;
+            unavailableReason = local.ownProfileBadge;
+          } else if (!messagesEnabled) {
+            isUnavailable = true;
+            unavailableReason = local.messagesDisabled; // 🔹 "غير متاح للرسائل"
+          } else if (access == 'patients' && !isPatient) {
+            isUnavailable = true;
+            unavailableReason = local.patientsOnlyMessaging; // 🔹 "متاح فقط لمرضاه"
+          }
         }
 
         final tileOpacity = isUnavailable ? 0.6 : 1.0;

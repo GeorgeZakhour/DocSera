@@ -202,11 +202,12 @@ void showDocumentOptionsSheet(
               Icons.edit_outlined,
               local.rename,
                 onTap: () async {
+                final cubit = context.read<DocumentsCubit>();
                 Navigator.pop(context);
                 final prefs = await SharedPreferences.getInstance();
                 final mainUserId = prefs.getString('userId') ?? '';
-                final cubit = context.read<DocumentsCubit>();
 
+                if (!context.mounted) return;
                 showModalBottomSheet(
                   context: context,
                   isScrollControlled: true,
@@ -216,14 +217,13 @@ void showDocumentOptionsSheet(
                   builder: (_) => EditDocumentNameSheet(
                     initialName: document.name,
                     onConfirm: (newName) {
-                       // Trigger rename via cubit
                        cubit.renameDocument(
                          docId: document.id!,
                          newName: newName,
                          userId: mainUserId,
                        );
                     },
-                    onNameUpdated: null, // No longer needed as Cubit handles refresh
+                    onNameUpdated: null,
                   ),
                 );
               },

@@ -360,14 +360,20 @@ class _VisitReportsPageState extends State<VisitReportsPage>
                                   padding: const EdgeInsets.symmetric(
                                       horizontal: 6, vertical: 2),
                                   decoration: BoxDecoration(
-                                    color: AppColors.main.withValues(alpha: 0.1),
+                                    color: report.shareMode == 'prescription'
+                                        ? const Color(0xFF4CAF50).withValues(alpha: 0.1)
+                                        : AppColors.main.withValues(alpha: 0.1),
                                     borderRadius: BorderRadius.circular(4),
                                   ),
                                   child: Text(
-                                    t.modularReport,
-                                    style: const TextStyle(
+                                    report.shareMode == 'prescription'
+                                        ? t.prescriptionReport
+                                        : t.modularReport,
+                                    style: TextStyle(
                                       fontSize: 9,
-                                      color: AppColors.main,
+                                      color: report.shareMode == 'prescription'
+                                          ? const Color(0xFF4CAF50)
+                                          : AppColors.main,
                                       fontWeight: FontWeight.w600,
                                     ),
                                   ),

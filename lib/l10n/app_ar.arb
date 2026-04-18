@@ -1160,7 +1160,7 @@
   "imagesDownloadFailed": "فشل تحميل الصور",
   "ofText": "من",
   "importedFromConversationWith": "تم الاستيراد من المحادثة مع {name} بتاريخ {date}",
-  "documentAccessInfo": "المستندات التي ترفعها هنا مرئية للأطباء الذين لديك كمريض. يمكنك إدارة وحذف ملفاتك. الملفات المضافة من الأطباء تظهر هنا للقراءة فقط.",
+  "documentAccessInfo": "المستندات التي ترفعها هنا مرئية للأطباء الذين أنت مسجّل لديهم كمريض. يمكنك إدارة وحذف ملفاتك. الملفات المضافة من الأطباء تظهر هنا للقراءة فقط.",
   "notesAccessInfo": "يمكنك أنت فقط الوصول إلى ملاحظاتك وإدارتها بأمان.",
   "messageAccessInfo": "يمكنك مراسلة طبيبك مباشرة من هنا. يتم حفظ جميع محادثاتك بأمان ويمكنك الوصول إليها بسهولة.",
   "accountPrivacyInfoLine1": "بياناتك الشخصية تبقى خاصة.",
@@ -1241,5 +1241,36 @@
         "type": "String"
       }
     }
-  }
+  },
+  "sourceBadgePatient": "أنت",
+  "sourceBadgeDoctor": "طبيب",
+  "sourceBadgeReport": "تقرير",
+
+  "detailFileFormat": "صيغة الملف",
+  "detailSource": "المصدر",
+  "detailNumberOfPages": "عدد الصفحات",
+  "detailVisibility": "الرؤية",
+  "detailEncryption": "التشفير",
+  "detailPageCount": "{count} {count, plural, =1{صفحة} other{صفحات}}",
+  "@detailPageCount": {
+    "placeholders": {
+      "count": { "type": "int" }
+    }
+  },
+  "sourceUploadedByYou": "رفعته أنت",
+  "sourceAddedByDoctor": "أضافه {name}",
+  "@sourceAddedByDoctor": {
+    "placeholders": {
+      "name": { "type": "String" }
+    }
+  },
+  "visibleToDoctors": "مرئي لأطبائك",
+  "encryptedYes": "مشفّر",
+  "encryptedNo": "غير مشفّر",
+  "formatPdf": "مستند PDF",
+  "formatImage": "صورة",
+  "formatUnknown": "ملف",
+  "worksAt": "يعمل في",
+  "viewCenter": "عرض المركز",
+  "centerPhone": "المركز"
 }

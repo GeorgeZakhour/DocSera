@@ -7,6 +7,7 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:docsera/services/encryption/message_encryption_service.dart';
 import 'package:docsera/Business_Logic/Documents_page/notes/notes_cubit.dart';
 import 'package:docsera/Business_Logic/Documents_page/notes/notes_state.dart';
+import 'package:docsera/Business_Logic/Health_page/patient_switcher_cubit.dart';
 import 'package:docsera/models/document.dart';
 import 'package:docsera/models/notes.dart';
 import 'package:docsera/screens/home/Document/document_options_bottom_sheet.dart';
@@ -26,6 +27,7 @@ import 'package:docsera/app/const.dart';
 import 'package:docsera/screens/auth/identification_page.dart';
 import 'package:docsera/utils/page_transitions.dart';
 import 'package:docsera/screens/home/shimmer/shimmer_widgets.dart';
+import 'package:shimmer/shimmer.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:intl/intl.dart';
@@ -64,7 +66,7 @@ class _DocumentsPageState extends State<DocumentsPage> with AutomaticKeepAliveCl
   static const String _viewModeKey = 'documentViewMode'; // 0 = grid, 1 = list
   static const String _notesViewModeKey = 'notesViewMode'; // 0 = grid, 1 = list
   bool _isFabExpanded = false;
-  String _docFilter = 'all'; // 'all', 'patient', 'doctor_added', 'report'
+  String _docFilter = 'all'; // 'all', 'patient', 'doctor_added'
 
 
 
@@ -73,8 +75,18 @@ class _DocumentsPageState extends State<DocumentsPage> with AutomaticKeepAliveCl
     super.initState();
 
     _loadInitialPreferences(); // ✅ الجديدة بدلاً من القديمة
-    context.read<DocumentsCubit>().listenToDocuments(context: context);
-    context.read<NotesCubit>().listenToNotes(context); // ✅ Initialize Notes
+    // Phase 2 (Patient File Hub): honor the current Patient Switcher
+    // selection so Documents load for the chosen user OR relative from
+    // the first frame.
+    final switcher = context.read<PatientSwitcherCubit>().state;
+    context.read<DocumentsCubit>().listenToDocuments(
+          context: context,
+          relativeId: switcher.relativeId,
+        );
+    context.read<NotesCubit>().listenToNotes(
+      context,
+      relativeId: switcher.relativeId,
+    ); // ✅ Initialize Notes
   }
 
 
@@ -268,7 +280,28 @@ class _DocumentsPageState extends State<DocumentsPage> with AutomaticKeepAliveCl
     final hasNotes = notesState is NotesLoaded && notesState.notes.isNotEmpty;
     final t = AppLocalizations.of(context)!;
 
-    return Scaffold(
+    return BlocListener<PatientSwitcherCubit, PatientSwitcherState>(
+      // Phase 2 (Patient File Hub): Documents are now per-patient (main user
+      // OR a specific relative), so reload whenever the Health-page switcher
+      // picks a different subject.
+      listenWhen: (prev, curr) =>
+          prev.userId != curr.userId || prev.relativeId != curr.relativeId,
+      listener: (context, switcherState) {
+        context.read<DocumentsCubit>().listenToDocuments(
+              context: context,
+              relativeId: switcherState.relativeId,
+              forceReload: true,
+            );
+        // Notes: schema is user-scoped, but we still route through the switcher
+        // so the Notes tab visually mirrors the Documents tab — when a relative
+        // is selected the NotesCubit emits an empty list.
+        context.read<NotesCubit>().listenToNotes(
+              context,
+              relativeId: switcherState.relativeId,
+              forceReload: true,
+            );
+      },
+      child: Scaffold(
       backgroundColor: AppColors.background,
       appBar: AppBar(
         backgroundColor: AppColors.main,
@@ -471,6 +504,7 @@ class _DocumentsPageState extends State<DocumentsPage> with AutomaticKeepAliveCl
           );
         },
       ),
+    ),
     );
   }
 
@@ -781,12 +815,7 @@ class _DocumentsPageState extends State<DocumentsPage> with AutomaticKeepAliveCl
         .toList();
 
     if (displayDocs.isEmpty) {
-      return _buildEmptyState(
-        AppLocalizations.of(context)!.manageDocuments,
-        AppLocalizations.of(context)!.manageDocumentsDescription,
-        "assets/images/documents.png",
-        AppLocalizations.of(context)!.addDocument,
-      );
+      return _buildDocumentsEmptyState();
     }
 
     return Padding(
@@ -1100,7 +1129,6 @@ class _DocumentsPageState extends State<DocumentsPage> with AutomaticKeepAliveCl
       'all': local.allDocuments,
       'patient': local.myUploads,
       'doctor_added': local.doctorAdded,
-      'report': local.reportAttachments,
     };
 
     return SingleChildScrollView(
@@ -1112,7 +1140,6 @@ class _DocumentsPageState extends State<DocumentsPage> with AutomaticKeepAliveCl
           const sourceColors = {
             'patient': Color(0xFF009092),
             'doctor_added': Color(0xFF2196F3),
-            'report': Color(0xFF9C27B0),
           };
           final color = sourceColors[entry.key];
 
@@ -1251,10 +1278,15 @@ class _DocumentsPageState extends State<DocumentsPage> with AutomaticKeepAliveCl
   }
 
   void _goToMultiImageUploadFlow(String firstImagePath) {
+    final switcher = context.read<PatientSwitcherCubit>().state;
+    final currentPatientId = switcher.relativeId ?? switcher.userId;
     Navigator.push(
       context,
       MaterialPageRoute(
-        builder: (_) => MultiPageUploadScreen(images: [firstImagePath]),
+        builder: (_) => MultiPageUploadScreen(
+          images: [firstImagePath],
+          initialPatientId: currentPatientId,
+        ),
       ),
     );
   }
@@ -1271,6 +1303,8 @@ class _DocumentsPageState extends State<DocumentsPage> with AutomaticKeepAliveCl
   void _handlePdfPicked(String pdfPath) async {
     final fileName = path.basenameWithoutExtension(pdfPath);
     final pageCount = await getPdfPageCount(pdfPath);
+    final switcher = context.read<PatientSwitcherCubit>().state;
+    final currentPatientId = switcher.relativeId ?? switcher.userId;
 
     Navigator.push(
       context,
@@ -1278,7 +1312,8 @@ class _DocumentsPageState extends State<DocumentsPage> with AutomaticKeepAliveCl
         builder: (_) => DocumentInfoScreen(
           images: [pdfPath],
           initialName: fileName,
-          pageCount: pageCount, // تأكد من إضافته في الشاشة واستقبال القيمة
+          pageCount: pageCount,
+          initialPatientId: currentPatientId,
         ),
       ),
     );
@@ -1726,6 +1761,79 @@ class _DocumentsPageState extends State<DocumentsPage> with AutomaticKeepAliveCl
   }
 
 
+  /// Empty state for the Documents tab (doctor-accessible hub).
+  /// Unlike the generic empty state, this one foregrounds the doctor-hub
+  /// banner so new patients see the visibility rules before uploading.
+  Widget _buildDocumentsEmptyState() {
+    final local = AppLocalizations.of(context)!;
+    return SingleChildScrollView(
+      physics: const BouncingScrollPhysics(),
+      padding: EdgeInsets.fromLTRB(16.w, 16.h, 16.w, 40.h),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          // Doctor-hub banner — shown FIRST so patients learn the page's
+          // purpose before being prompted to upload.
+          _buildDocumentsBannerCard(),
+          SizedBox(height: 32.h),
+
+          // Illustration
+          Center(
+            child: Image.asset(
+              'assets/images/documents.png',
+              width: 140.w,
+              height: 140.h,
+            ),
+          ),
+          SizedBox(height: 20.h),
+
+          // Title
+          Text(
+            local.manageDocuments,
+            textAlign: TextAlign.center,
+            style: AppTextStyles.getTitle2(context)
+                .copyWith(color: AppColors.blackText),
+          ),
+          SizedBox(height: 8.h),
+
+          // Description
+          Padding(
+            padding: EdgeInsets.symmetric(horizontal: 16.w),
+            child: Text(
+              local.manageDocumentsDescription,
+              textAlign: TextAlign.center,
+              style: AppTextStyles.getText2(context)
+                  .copyWith(color: Colors.black54),
+            ),
+          ),
+          SizedBox(height: 24.h),
+
+          // CTA
+          Center(
+            child: ElevatedButton.icon(
+              onPressed: _pickAndUploadFile,
+              icon: Icon(Icons.add, color: Colors.white, size: 18.sp),
+              label: Text(
+                local.addDocument,
+                style: AppTextStyles.getText1(context)
+                    .copyWith(color: AppColors.whiteText),
+              ),
+              style: ElevatedButton.styleFrom(
+                elevation: 0,
+                backgroundColor: AppColors.main,
+                padding:
+                    EdgeInsets.symmetric(horizontal: 28.w, vertical: 12.h),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(30.r),
+                ),
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
   /// ✅ **Empty State for Tabs**
   Widget _buildEmptyState(String title, String description, String imagePath, String buttonText) {
     return Center(
@@ -1831,13 +1939,16 @@ class _DocumentGridItemState extends State<DocumentGridItem> {
     final UserDocument userDoc = doc['doc'];
     
     // ✅ Phase 2B: If it's a storage path (not a full URL), resolve to signed URL
+    // Phase 2 (Patient File Hub): use the document's own `bucket` so report
+    // attachments (chat.attachments) resolve correctly alongside patient
+    // uploads (documents).
     if (url.isNotEmpty && !url.startsWith('http://') && !url.startsWith('https://')) {
       try {
         url = await Supabase.instance.client.storage
-            .from('documents')
+            .from(userDoc.bucket)
             .createSignedUrl(url, 3600);
       } catch (e) {
-        debugPrint("Failed to sign storage path: $e");
+        debugPrint("Failed to sign storage path (bucket=${userDoc.bucket}): $e");
         return null;
       }
     }
@@ -1920,29 +2031,47 @@ class _DocumentGridItemState extends State<DocumentGridItem> {
   }
 
   Widget _buildSourceBadge(String source) {
-    const sourceConfig = {
-      'patient': (Color(0xFF009092), 'PATIENT'),
-      'doctor_added': (Color(0xFF2196F3), 'DR.'),
-      'report': (Color(0xFF9C27B0), 'REPORT'),
+    final local = AppLocalizations.of(context)!;
+    // Per-source (color, icon, localized label) config.
+    final sourceConfig = <String, (Color, IconData, String)>{
+      'patient': (const Color(0xFF009092), Icons.person_rounded, local.sourceBadgePatient),
+      'doctor_added': (const Color(0xFF2196F3), Icons.medical_services_rounded, local.sourceBadgeDoctor),
     };
     final config = sourceConfig[source];
     if (config == null) return const SizedBox.shrink();
     final color = config.$1;
-    final label = config.$2;
+    final icon = config.$2;
+    final label = config.$3;
 
     return Container(
-      padding: EdgeInsets.symmetric(horizontal: 5.w, vertical: 1.5.h),
+      padding: EdgeInsets.symmetric(horizontal: 7.w, vertical: 3.h),
       decoration: BoxDecoration(
-        color: color.withOpacity(0.9),
-        borderRadius: BorderRadius.circular(3.r),
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(999.r),
+        border: Border.all(color: color.withOpacity(0.45), width: 0.8),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.08),
+            blurRadius: 4,
+            offset: const Offset(0, 1),
+          ),
+        ],
       ),
-      child: Text(
-        label,
-        style: TextStyle(
-          fontSize: 7.sp,
-          fontWeight: FontWeight.w700,
-          color: Colors.white,
-        ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(icon, size: 10.sp, color: color),
+          SizedBox(width: 3.w),
+          Text(
+            label,
+            style: TextStyle(
+              fontSize: 9.sp,
+              fontWeight: FontWeight.w600,
+              color: color,
+              height: 1.1,
+            ),
+          ),
+        ],
       ),
     );
   }
@@ -1982,7 +2111,19 @@ class _DocumentGridItemState extends State<DocumentGridItem> {
                             final data = snapshot.data;
 
                             if (snapshot.connectionState == ConnectionState.waiting) {
-                               return Center(child: SizedBox(width: 20.w, height: 20.w,child: const CircularProgressIndicator(strokeWidth: 2)));
+                               // Shape-matching shimmer fills the preview area while
+                               // we resolve / sign / decrypt.  The outer ClipRRect
+                               // already clips to the card's top-corner radius, so
+                               // the shimmer naturally mirrors the tile geometry.
+                               return Shimmer.fromColors(
+                                 baseColor: Colors.grey.shade200,
+                                 highlightColor: Colors.grey.shade100,
+                                 child: Container(
+                                   width: double.infinity,
+                                   height: double.infinity,
+                                   color: Colors.grey.shade300,
+                                 ),
+                               );
                             }
 
                             if (data is Uint8List) {
@@ -2018,48 +2159,53 @@ class _DocumentGridItemState extends State<DocumentGridItem> {
                 ],
               ),
             ),
-            Expanded(
-              flex: 2,
-              child: Container(
-                padding: EdgeInsets.symmetric(horizontal: 8.w),
-                decoration: BoxDecoration(
-                  color: Colors.grey[100],
-                  borderRadius: BorderRadius.only(
-                      bottomLeft: Radius.circular(16.r),
-                      bottomRight: Radius.circular(16.r)),
-                ),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Flexible(
-                      child: Column(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            doc['name'],
-                            style: AppTextStyles.getText2(context),
-                            overflow: TextOverflow.ellipsis,
+            Container(
+              padding: EdgeInsets.symmetric(horizontal: 10.w, vertical: 8.h),
+              decoration: BoxDecoration(
+                color: Colors.grey[50],
+                borderRadius: BorderRadius.only(
+                    bottomLeft: Radius.circular(16.r),
+                    bottomRight: Radius.circular(16.r)),
+                border: Border(top: BorderSide(color: Colors.grey.shade200, width: 0.5)),
+              ),
+              child: Row(
+                children: [
+                  Expanded(
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          doc['name'],
+                          style: AppTextStyles.getText2(context).copyWith(
+                            fontWeight: FontWeight.w600,
+                            fontSize: 11.sp,
                           ),
-                          if (userDoc.source == 'doctor_added' && userDoc.sourceDoctorName != null)
-                            Text(
-                              AppLocalizations.of(context)!.addedByDoctor(userDoc.sourceDoctorName!),
-                              style: TextStyle(
-                                fontSize: 8.sp,
-                                color: const Color(0xFF2196F3),
-                                fontWeight: FontWeight.w500,
-                              ),
-                              overflow: TextOverflow.ellipsis,
+                          overflow: TextOverflow.ellipsis,
+                          maxLines: 1,
+                        ),
+                        if (userDoc.source == 'doctor_added' && userDoc.sourceDoctorName != null) ...[
+                          SizedBox(height: 2.h),
+                          Text(
+                            AppLocalizations.of(context)!.addedByDoctor(userDoc.sourceDoctorName!),
+                            style: TextStyle(
+                              fontSize: 8.5.sp,
+                              color: const Color(0xFF2196F3),
+                              fontWeight: FontWeight.w500,
                             ),
+                            overflow: TextOverflow.ellipsis,
+                            maxLines: 1,
+                          ),
                         ],
-                      ),
+                      ],
                     ),
-                    IconButton(
-                      icon: Icon(Icons.more_vert, size: 20.sp),
-                      onPressed: widget.onEdit,
-                    ),
-                  ],
-                ),
+                  ),
+                  SizedBox(width: 4.w),
+                  GestureDetector(
+                    onTap: widget.onEdit,
+                    child: Icon(Icons.more_vert_rounded, size: 18.sp, color: Colors.grey[500]),
+                  ),
+                ],
               ),
             ),
           ],

@@ -29,10 +29,21 @@ class DocumentsCubit extends Cubit<DocumentsState> {
 
   RealtimeChannel? _documentsRealtimeChannel;
   String? _loadedUserId;
+  String? _loadedRelativeId;
 
-  /// ✅ Start listening to document updates in real-time
-  void listenToDocuments({BuildContext? context, String? explicitUserId, bool forceReload = false}) {
-    String userId;
+  /// ✅ Start listening to document updates in real-time.
+  ///
+  /// Phase 2 per-patient: pass [relativeId] to view a relative's documents.
+  /// When [relativeId] is set, [explicitUserId] is ignored for the query
+  /// (we filter on `patient_id == relativeId`).  The main user id is still
+  /// needed as context (auth) but not as the filter.
+  void listenToDocuments({
+    BuildContext? context,
+    String? explicitUserId,
+    String? relativeId,
+    bool forceReload = false,
+  }) {
+    String? userId;
 
     if (explicitUserId != null) {
       userId = explicitUserId;
@@ -43,33 +54,40 @@ class DocumentsCubit extends Cubit<DocumentsState> {
         return;
       }
       userId = authState.user.id;
-    } else {
-        // No user ID found
-        return;
     }
 
-    if (!forceReload && state is DocumentsLoaded && _loadedUserId == userId) return; // ✅ Prevent redundant reloads
+    if (userId == null && relativeId == null) {
+      // No context to fetch against.
+      return;
+    }
 
-    _loadedUserId = userId; // Update loaded user ID
+    final sameContext = _loadedUserId == userId && _loadedRelativeId == relativeId;
+    if (!forceReload && state is DocumentsLoaded && sameContext) {
+      return; // ✅ Prevent redundant reloads
+    }
+
+    _loadedUserId = userId;
+    _loadedRelativeId = relativeId;
 
     _documentsRealtimeChannel?.unsubscribe();
     emit(DocumentsLoading());
 
-    _documentsRealtimeChannel = _service.subscribeToDocuments(userId, () {
-      _fetchDocuments(userId);
-    });
+    _documentsRealtimeChannel = _service.subscribeToDocuments(
+      userId: relativeId == null ? userId : null,
+      relativeId: relativeId,
+      onChange: () => _fetchDocuments(userId: userId, relativeId: relativeId),
+    );
 
-    _fetchDocuments(userId); // تحميل أولي
+    _fetchDocuments(userId: userId, relativeId: relativeId);
   }
 
-  void _fetchDocuments(String userId) async {
-    // emit(DocumentsLoading()); // ListenToDocuments already emits loading
-
+  void _fetchDocuments({String? userId, String? relativeId}) async {
     try {
-      final docs = await _service.fetchDocuments(userId);
+      final docs = await _service.fetchDocuments(userId: userId, relativeId: relativeId);
       emit(DocumentsLoaded(docs));
     } catch (e) {
-      _loadedUserId = null; // Reset on failure
+      _loadedUserId = null;
+      _loadedRelativeId = null;
       emit(DocumentsError("فشل تحميل الوثائق: $e"));
     }
   }
@@ -143,7 +161,7 @@ class DocumentsCubit extends Cubit<DocumentsState> {
         };
 
         await Supabase.instance.client.from('documents').insert(docData);
-        _fetchDocuments(userId);
+        _fetchDocuments(userId: _loadedUserId, relativeId: _loadedRelativeId);
         return;
       }
 
@@ -197,7 +215,7 @@ class DocumentsCubit extends Cubit<DocumentsState> {
       };
 
       await Supabase.instance.client.from('documents').insert(docData);
-      _fetchDocuments(userId);
+      _fetchDocuments(userId: _loadedUserId, relativeId: _loadedRelativeId);
     } catch (e) {
       emit(DocumentsError("Upload failed: $e"));
     }
@@ -254,7 +272,7 @@ class DocumentsCubit extends Cubit<DocumentsState> {
       };
 
       await Supabase.instance.client.from('documents').insert(docData);
-      _fetchDocuments(userId);
+      _fetchDocuments(userId: _loadedUserId, relativeId: _loadedRelativeId);
     } catch (e) {
       emit(DocumentsError("Upload failed: $e"));
     }
@@ -338,8 +356,13 @@ class DocumentsCubit extends Cubit<DocumentsState> {
       // حذف من التخزين
       await _service.deleteFiles(document.pages);
 
-      // إعادة تحميل البيانات
-      listenToDocuments(context: context, explicitUserId: userId, forceReload: true);
+      // إعادة تحميل البيانات — preserve current relative context
+      listenToDocuments(
+        context: context,
+        explicitUserId: userId,
+        relativeId: _loadedRelativeId,
+        forceReload: true,
+      );
     } catch (e) {
       emit(DocumentsError("Delete failed: $e"));
     }
@@ -347,6 +370,7 @@ class DocumentsCubit extends Cubit<DocumentsState> {
 
   /// ✅ Rename document
   Future<void> renameDocument({required String docId, required String newName, required String userId}) async {
+    debugPrint('📝 renameDocument called: docId=$docId, newName=$newName');
     final previousState = state;
     List<UserDocument>? previousDocs;
 
@@ -355,15 +379,19 @@ class DocumentsCubit extends Cubit<DocumentsState> {
       previousDocs = previousState.documents;
       try {
         final index = previousDocs.indexWhere((doc) => doc.id == docId);
+        debugPrint('📝 Found doc at index=$index');
         if (index != -1) {
           final updatedDoc = previousDocs[index].copyWith(name: newName);
           final updatedList = List<UserDocument>.from(previousDocs);
           updatedList[index] = updatedDoc;
           emit(DocumentsLoaded(updatedList));
+          debugPrint('📝 Optimistic emit done, new name=${updatedList[index].name}');
         }
       } catch (e) {
         debugPrint("Optimistic update failed: $e");
       }
+    } else {
+      debugPrint('📝 State is NOT DocumentsLoaded: ${state.runtimeType}');
     }
 
     // 2. Perform Server Update
@@ -371,16 +399,16 @@ class DocumentsCubit extends Cubit<DocumentsState> {
       await Supabase.instance.client
           .from('documents')
           .update({'name': newName})
-          .eq('id', docId)
-          .eq('user_id', userId);
+          .eq('id', docId);
+      debugPrint('📝 Server update done');
 
-      // No need to re-fetch if successful, as we already updated locally.
-      // But we can do it silently if needed. For now, trust the optimistic update.
-      // _fetchDocuments(userId); 
+      // Re-fetch to ensure local state matches server
+      _fetchDocuments(userId: _loadedUserId, relativeId: _loadedRelativeId);
     } catch (e) {
+      debugPrint('📝 Server update FAILED: $e');
       // 3. Revert on Failure
       if (previousState is DocumentsLoaded && previousDocs != null) {
-         emit(previousState); // Revert to old list
+         emit(previousState);
       }
       emit(DocumentsError("Rename failed: $e"));
     }

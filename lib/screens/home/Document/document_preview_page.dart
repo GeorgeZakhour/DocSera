@@ -49,7 +49,11 @@ class _DocumentPreviewPageState extends State<DocumentPreviewPage> {
   late bool isImage;
 
   /// ✅ Phase 2B: Resolve a page URL/path to a signed URL if it's a storage path
+  /// Phase 2 (Patient File Hub): uses the document's own `bucket` so report
+  /// attachments (chat.attachments) resolve correctly alongside patient
+  /// uploads (documents).
   Future<String> _resolveUrl(String urlOrPath) async {
+    final bucket = widget.document.bucket;
     if (urlOrPath.startsWith('http://') || urlOrPath.startsWith('https://')) {
       // Legacy full URL — check if it's a public URL that needs signing
       if (urlOrPath.contains('/storage/v1/object/public/documents/')) {
@@ -65,13 +69,13 @@ class _DocumentPreviewPageState extends State<DocumentPreviewPage> {
       }
       return urlOrPath;
     }
-    // Storage path → create signed URL
+    // Storage path → create signed URL in the document's bucket
     try {
       return await Supabase.instance.client.storage
-          .from('documents')
+          .from(bucket)
           .createSignedUrl(urlOrPath, 3600);
     } catch (e) {
-      debugPrint("❌ Failed to sign storage path: $e");
+      debugPrint("❌ Failed to sign storage path (bucket=$bucket): $e");
       return '';
     }
   }
@@ -180,9 +184,13 @@ class _DocumentPreviewPageState extends State<DocumentPreviewPage> {
         await file.writeAsBytes(bytes, flush: true);
         debugPrint('✅ File saved at: ${file.path}');
 
-        // Check actual file type
-        if (contentType != null && !contentType.contains('pdf')) {
-          debugPrint('❌ Not a real PDF, switching to image mode');
+        // Check actual file content (not Content-Type, which is unreliable
+        // for encrypted uploads that arrive as application/octet-stream).
+        final isPdfBytes = bytes.length >= 4 &&
+            bytes[0] == 0x25 && bytes[1] == 0x50 &&
+            bytes[2] == 0x44 && bytes[3] == 0x46; // %PDF
+        if (!isPdfBytes) {
+          debugPrint('❌ Not a real PDF (magic bytes check), switching to image mode');
           setState(() {
             isPdf = false;
             isImage = true;

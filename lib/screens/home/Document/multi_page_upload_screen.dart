@@ -13,8 +13,9 @@ class MultiPageUploadScreen extends StatefulWidget {
   final List<String> images;
   final bool isSendMode;
   final String? appointmentId;
+  final String? initialPatientId;
 
-  const MultiPageUploadScreen({super.key, required this.images, this.isSendMode = false, this.appointmentId});
+  const MultiPageUploadScreen({super.key, required this.images, this.isSendMode = false, this.appointmentId, this.initialPatientId});
 
   @override
   State<MultiPageUploadScreen> createState() => _MultiPageUploadScreenState();
@@ -333,6 +334,7 @@ class _MultiPageUploadScreenState extends State<MultiPageUploadScreen> {
                               cameFromMultiPage: true,
                               isSendMode: widget.isSendMode,
                               appointmentId: widget.appointmentId,
+                              initialPatientId: widget.initialPatientId,
                             ),
                           ),
                         );

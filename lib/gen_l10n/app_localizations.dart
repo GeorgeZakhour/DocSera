@@ -6403,6 +6403,126 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Added by {doctorName}'**
   String addedByDoctor(String doctorName);
+
+  /// No description provided for @sourceBadgePatient.
+  ///
+  /// In en, this message translates to:
+  /// **'You'**
+  String get sourceBadgePatient;
+
+  /// No description provided for @sourceBadgeDoctor.
+  ///
+  /// In en, this message translates to:
+  /// **'Doctor'**
+  String get sourceBadgeDoctor;
+
+  /// No description provided for @sourceBadgeReport.
+  ///
+  /// In en, this message translates to:
+  /// **'Report'**
+  String get sourceBadgeReport;
+
+  /// No description provided for @detailFileFormat.
+  ///
+  /// In en, this message translates to:
+  /// **'File format'**
+  String get detailFileFormat;
+
+  /// No description provided for @detailSource.
+  ///
+  /// In en, this message translates to:
+  /// **'Source'**
+  String get detailSource;
+
+  /// No description provided for @detailNumberOfPages.
+  ///
+  /// In en, this message translates to:
+  /// **'Number of pages'**
+  String get detailNumberOfPages;
+
+  /// No description provided for @detailVisibility.
+  ///
+  /// In en, this message translates to:
+  /// **'Visibility'**
+  String get detailVisibility;
+
+  /// No description provided for @detailEncryption.
+  ///
+  /// In en, this message translates to:
+  /// **'Encryption'**
+  String get detailEncryption;
+
+  /// No description provided for @detailPageCount.
+  ///
+  /// In en, this message translates to:
+  /// **'{count} {count, plural, =1{page} other{pages}}'**
+  String detailPageCount(int count);
+
+  /// No description provided for @sourceUploadedByYou.
+  ///
+  /// In en, this message translates to:
+  /// **'Uploaded by you'**
+  String get sourceUploadedByYou;
+
+  /// No description provided for @sourceAddedByDoctor.
+  ///
+  /// In en, this message translates to:
+  /// **'Added by {name}'**
+  String sourceAddedByDoctor(String name);
+
+  /// No description provided for @visibleToDoctors.
+  ///
+  /// In en, this message translates to:
+  /// **'Visible to your doctors'**
+  String get visibleToDoctors;
+
+  /// No description provided for @encryptedYes.
+  ///
+  /// In en, this message translates to:
+  /// **'Encrypted'**
+  String get encryptedYes;
+
+  /// No description provided for @encryptedNo.
+  ///
+  /// In en, this message translates to:
+  /// **'Not encrypted'**
+  String get encryptedNo;
+
+  /// No description provided for @formatPdf.
+  ///
+  /// In en, this message translates to:
+  /// **'PDF Document'**
+  String get formatPdf;
+
+  /// No description provided for @formatImage.
+  ///
+  /// In en, this message translates to:
+  /// **'Image'**
+  String get formatImage;
+
+  /// No description provided for @formatUnknown.
+  ///
+  /// In en, this message translates to:
+  /// **'File'**
+  String get formatUnknown;
+
+  /// No description provided for @worksAt.
+  ///
+  /// In en, this message translates to:
+  /// **'Works at'**
+  String get worksAt;
+
+  /// No description provided for @viewCenter.
+  ///
+  /// In en, this message translates to:
+  /// **'View Center'**
+  String get viewCenter;
+
+  /// No description provided for @centerPhone.
+  ///
+  /// In en, this message translates to:
+  /// **'Center'**
+  String get centerPhone;
 }
 
 class _AppLocalizationsDelegate
