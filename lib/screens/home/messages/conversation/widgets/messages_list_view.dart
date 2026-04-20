@@ -43,6 +43,10 @@ class MessagesListView extends StatelessWidget {
   /// Helper to resolve file URL (signed)
   final Future<String> Function(String bucket, String path)? resolveFileUrl;
 
+  /// ✅ Task 16: Expiring media items for this conversation (from StorageQuotaService).
+  /// Each entry: { 'id': String, 'message_id': String, 'expires_at': String, 'media_type': String }
+  final List<Map<String, dynamic>> expiringMedia;
+
   const MessagesListView({
     super.key,
     required this.messages,
@@ -57,10 +61,35 @@ class MessagesListView extends StatelessWidget {
     required this.onOpenImages,
     this.onRetry,
     this.resolveFileUrl,
+    this.expiringMedia = const [],
   });
 
   bool _isArabicText(String text) {
     return RegExp(r'[\u0600-\u06FF]').hasMatch(text);
+  }
+
+  // ✅ Task 16: Look up expiry info for a message by its ID.
+  // Returns the expiry DateTime if found, null otherwise.
+  DateTime? _expiryForMessage(String? messageId) {
+    if (messageId == null || expiringMedia.isEmpty) return null;
+    for (final item in expiringMedia) {
+      if (item['message_id']?.toString() == messageId) {
+        final expiresAt = item['expires_at']?.toString();
+        if (expiresAt != null) return DateTime.tryParse(expiresAt);
+      }
+    }
+    return null;
+  }
+
+  // Returns true if the given messageId has an entry in expiringMedia.
+  bool _isExpired(String? messageId) {
+    if (messageId == null || expiringMedia.isEmpty) return false;
+    for (final item in expiringMedia) {
+      if (item['message_id']?.toString() == messageId) {
+        return item['expired'] == true;
+      }
+    }
+    return false;
   }
 
   String _getInitials(String name) {
@@ -324,6 +353,7 @@ class MessagesListView extends StatelessWidget {
                                 showSenderName: showSenderName,
                                 status: msg['status'] as String?,
                                 onRetryTap: () => onRetry?.call(msg),
+                                messageId: msg['id']?.toString(),
                               ),
                             ),
                           if (isLastRead) ...[
@@ -490,6 +520,74 @@ class MessagesListView extends StatelessWidget {
     );
   }
 
+  // ✅ Task 16: Build a small expiry label shown below an attachment bubble.
+  Widget _buildExpiryLabel(BuildContext context, DateTime expiryDate) {
+    final local = AppLocalizations.of(context)!;
+    final now = DocSeraTime.nowSyria();
+    final diff = expiryDate.difference(now);
+    final daysLeft = diff.inDays;
+
+    final bool isUrgent = daysLeft <= 7;
+    final Color labelColor = isUrgent ? Colors.red.shade600 : Colors.orange.shade700;
+
+    final String text = daysLeft <= 0
+        ? local.fileExpired
+        : daysLeft <= 14
+            ? local.expiresInDays(daysLeft)
+            : local.expiresOn(DocSeraTime.formatBusinessDate(context, expiryDate));
+
+    return Padding(
+      padding: EdgeInsets.only(top: 3.h),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(Icons.timer_outlined, color: labelColor, size: 11.sp),
+          SizedBox(width: 3.w),
+          Text(
+            text,
+            style: AppTextStyles.getText3(context).copyWith(
+              fontSize: 9.sp,
+              color: labelColor,
+              fontWeight: FontWeight.w600,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  // ✅ Task 16: Build a gray placeholder shown when a file has expired.
+  Widget _buildExpiredPlaceholder(BuildContext context, {required String fileType}) {
+    final local = AppLocalizations.of(context)!;
+    return Container(
+      constraints: BoxConstraints(minWidth: 0.3.sw, maxWidth: 0.6.sw),
+      padding: EdgeInsets.symmetric(horizontal: 12.w, vertical: 16.h),
+      decoration: BoxDecoration(
+        color: Colors.grey.shade200,
+        borderRadius: BorderRadius.circular(8.r),
+        border: Border.all(color: Colors.grey.shade300),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(
+            fileType == 'pdf' ? Icons.picture_as_pdf : Icons.image_not_supported,
+            color: Colors.grey.shade400,
+            size: 22.sp,
+          ),
+          SizedBox(width: 8.w),
+          Text(
+            local.fileExpired,
+            style: AppTextStyles.getText3(context).copyWith(
+              color: Colors.grey.shade500,
+              fontSize: 11.sp,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
   Widget _buildAttachmentBubble({
     required BuildContext context,
     required List<Map<String, dynamic>> attachments,
@@ -499,6 +597,7 @@ class MessagesListView extends StatelessWidget {
     required bool showSenderName,
     String? status,
     VoidCallback? onRetryTap,
+    String? messageId,
   }) {
     final images = attachments
         .where((a) => (a['type'] ?? a['file_type']) == 'image')
@@ -516,6 +615,10 @@ class MessagesListView extends StatelessWidget {
     // PDF only
     if (images.isEmpty && pdfs.isNotEmpty) {
       final pdf = pdfs.first;
+
+      // ✅ Task 16: Determine expiry for this message.
+      final expiryDate = _expiryForMessage(messageId);
+      final isExpiredFile = _isExpired(messageId);
 
       return Align(
         alignment: isUser ? Alignment.centerLeft : Alignment.centerRight,
@@ -546,97 +649,108 @@ class MessagesListView extends StatelessWidget {
                   ],
                 ),
               ),
-            GestureDetector(
-              onTap: () async {
-                // Old style: file_url / fileUrl
-                String? url = (pdf['file_url'] ?? pdf['fileUrl'])?.toString();
-                String? localPath = pdf['localPath']?.toString();
+            // ✅ Task 16: Show expired placeholder instead of tappable bubble.
+            if (isExpiredFile)
+              _buildExpiredPlaceholder(context, fileType: 'pdf')
+            else
+              GestureDetector(
+                onTap: () async {
+                  // Old style: file_url / fileUrl
+                  String? url = (pdf['file_url'] ?? pdf['fileUrl'])?.toString();
+                  String? localPath = pdf['localPath']?.toString();
 
-                // Fallback: bucket + paths
-                if (url == null || url.trim().isEmpty) {
-                  final bucket = (pdf['bucket'] ?? 'chat.attachments').toString();
-                  final paths = (pdf['paths'] as List?) ?? [];
-                  
-                  if (localPath != null && localPath.isNotEmpty) {
-                     url = localPath;
-                  } else if (paths.isNotEmpty) {
-                    if (resolveFileUrl != null) {
-                      url = await resolveFileUrl!(bucket, paths.first.toString());
+                  // Fallback: bucket + paths
+                  if (url == null || url.trim().isEmpty) {
+                    final bucket = (pdf['bucket'] ?? 'chat.attachments').toString();
+                    final paths = (pdf['paths'] as List?) ?? [];
+
+                    if (localPath != null && localPath.isNotEmpty) {
+                       url = localPath;
+                    } else if (paths.isNotEmpty) {
+                      if (resolveFileUrl != null) {
+                        url = await resolveFileUrl!(bucket, paths.first.toString());
+                      } else {
+                        // Fallback if no resolver provided
+                        url = paths.first.toString();
+                      }
                     } else {
-                      // Fallback if no resolver provided
-                      url = paths.first.toString();
+                      return;
                     }
-                  } else {
-                    return;
                   }
-                }
 
-                if (url == null || url.trim().isEmpty) return;
+                  if (url == null || url.trim().isEmpty) return;
 
-                final userDoc = UserDocument(
-                  id: '',
-                  userId: currentUserId,
-                  name: pdf['file_name'] ??
-                      pdf['fileName'] ??
-                      'PDF File',
-                  type: '',
-                  fileType: 'pdf',
-                  patientId: patientName,
-                  previewUrl: url,
-                  pages: [url],
-                  uploadedAt: DocSeraTime.nowUtc(),
-                  uploadedById: '',
-                  cameFromConversation: true,
-                  conversationDoctorName: doctorName,
-                  encrypted: pdf['encrypted'] == true,
-                );
+                  final userDoc = UserDocument(
+                    id: '',
+                    userId: currentUserId,
+                    name: pdf['file_name'] ??
+                        pdf['fileName'] ??
+                        'PDF File',
+                    type: '',
+                    fileType: 'pdf',
+                    patientId: patientName,
+                    previewUrl: url,
+                    pages: [url],
+                    uploadedAt: DocSeraTime.nowUtc(),
+                    uploadedById: '',
+                    cameFromConversation: true,
+                    conversationDoctorName: doctorName,
+                    encrypted: pdf['encrypted'] == true,
+                  );
 
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (_) => DocumentPreviewPage(
-                      document: userDoc,
-                      cameFromConversation: true,
-                      doctorName: doctorName,
-                    ),
-                  ),
-                );
-              },
-              child: Container(
-                constraints:
-                BoxConstraints(minWidth: 0.3.sw, maxWidth: 0.6.sw),
-                padding: EdgeInsets.symmetric(
-                  horizontal: 12.w,
-                  vertical: 20.h,
-                ),
-                decoration: BoxDecoration(
-                  color: Colors.white,
-                  borderRadius: BorderRadius.circular(8.r),
-                  border: Border.all(
-                    color: AppColors.main.withOpacity(0.4),
-                  ),
-                ),
-                child: Row(
-                  children: [
-                    SvgPicture.asset(
-                      'assets/icons/pdf-file.svg',
-                      width: 20.w,
-                      height: 20.w,
-                    ),
-                    SizedBox(width: 8.w),
-                    Expanded(
-                      child: Text(
-                        pdfs.first['file_name'] ??
-                            pdfs.first['fileName'] ??
-                            'PDF File',
-                        style: AppTextStyles.getText2(context),
-                        overflow: TextOverflow.ellipsis,
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (_) => DocumentPreviewPage(
+                        document: userDoc,
+                        cameFromConversation: true,
+                        doctorName: doctorName,
+                        chatMediaId: pdf['id']?.toString(),
                       ),
                     ),
-                  ],
+                  );
+                },
+                child: Container(
+                  constraints:
+                  BoxConstraints(minWidth: 0.3.sw, maxWidth: 0.6.sw),
+                  padding: EdgeInsets.symmetric(
+                    horizontal: 12.w,
+                    vertical: 20.h,
+                  ),
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.circular(8.r),
+                    border: Border.all(
+                      color: AppColors.main.withOpacity(0.4),
+                    ),
+                  ),
+                  child: Row(
+                    children: [
+                      SvgPicture.asset(
+                        'assets/icons/pdf-file.svg',
+                        width: 20.w,
+                        height: 20.w,
+                      ),
+                      SizedBox(width: 8.w),
+                      Expanded(
+                        child: Text(
+                          pdfs.first['file_name'] ??
+                              pdfs.first['fileName'] ??
+                              'PDF File',
+                          style: AppTextStyles.getText2(context),
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                      ),
+                    ],
+                  ),
                 ),
               ),
-            ),
+            // ✅ Task 16: Expiry label below PDF bubble.
+            if (!isExpiredFile && expiryDate != null)
+              Align(
+                alignment: isUser ? Alignment.centerRight : Alignment.centerLeft,
+                child: _buildExpiryLabel(context, expiryDate),
+              ),
             Padding(
               padding: EdgeInsets.only(top: 2.h),
               child: Align(
@@ -814,6 +928,10 @@ class MessagesListView extends StatelessWidget {
 
     // Images
     if (images.isNotEmpty) {
+      // ✅ Task 16: Determine expiry for this message.
+      final imageExpiryDate = _expiryForMessage(messageId);
+      final isExpiredImage = _isExpired(messageId);
+
       return Align(
         alignment: isUser ? Alignment.centerLeft : Alignment.centerRight,
         child: Column(
@@ -844,6 +962,10 @@ class MessagesListView extends StatelessWidget {
                   ],
                 ),
               ),
+            // ✅ Task 16: Show expired placeholder instead of image grid.
+            if (isExpiredImage)
+              _buildExpiredPlaceholder(context, fileType: 'image')
+            else
             ClipRRect(
               borderRadius: BorderRadius.circular(12.r),
               child: Container(
@@ -915,6 +1037,12 @@ class MessagesListView extends StatelessWidget {
                 ),
               ),
             ),
+            // ✅ Task 16: Expiry label below image grid.
+            if (!isExpiredImage && imageExpiryDate != null)
+              Align(
+                alignment: isUser ? Alignment.centerRight : Alignment.centerLeft,
+                child: _buildExpiryLabel(context, imageExpiryDate),
+              ),
             Padding(
               padding: EdgeInsets.only(top: 2.h),
               child: Align(

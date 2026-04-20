@@ -20,6 +20,8 @@ import 'package:docsera/screens/home/messages/conversation/widgets/image_overlay
 import 'package:docsera/screens/home/messages/conversation/widgets/messages_list_view.dart';
 import 'package:docsera/screens/home/messages/conversation/widgets/message_skeleton.dart';
 import 'package:docsera/screens/home/messages/conversation/services/chat_attachments_service.dart';
+import 'package:docsera/services/supabase/storage_quota_service.dart';
+import 'package:docsera/widgets/chat_expiry_banner.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -68,6 +70,10 @@ class _ConversationPageState extends State<ConversationPage> {
   bool _autoScroll = true;
   OverlayEntry? _imageOverlay;
 
+  // ✅ Task 16: Expiry banner state.
+  List<Map<String, dynamic>> _expiringMedia = [];
+  bool _expiryBannerDismissed = false;
+
   @override
   void initState() {
     super.initState();
@@ -81,6 +87,61 @@ class _ConversationPageState extends State<ConversationPage> {
     if (widget.attachedDocument != null) {
       _downloadAttachedDocument();
     }
+
+    // ✅ Task 16: Load expiring media for this conversation.
+    _loadExpiringMedia();
+  }
+
+  Future<void> _loadExpiringMedia() async {
+    try {
+      final items = await StorageQuotaService()
+          .getExpiringMediaForConversation(widget.conversationId);
+      if (mounted && items.isNotEmpty) {
+        setState(() => _expiringMedia = items);
+      }
+    } catch (_) {
+      // Non-critical — ignore silently.
+    }
+  }
+
+  // ✅ Task 16: Find the index of the first expiring message in the list
+  // and scroll to it.
+  void _scrollToFirstExpiringMessage(List<Map<String, dynamic>> messages) {
+    if (_expiringMedia.isEmpty || messages.isEmpty) return;
+
+    final expiringMessageIds =
+        _expiringMedia.map((m) => m['message_id']?.toString()).toSet();
+
+    // messages list is newest-last (ordered by effectiveIndex).
+    // We want the oldest (first in visual order) expiring message.
+    // MessagesListView uses reverse: true, so index 0 = newest visual.
+    // The messages list itself is ordered oldest→newest by effectiveIndex.
+    // Find the OLDEST expiring message (lowest index in messages list).
+    int? targetEffectiveIndex;
+    for (int i = 0; i < messages.length; i++) {
+      final id = messages[i]['id']?.toString();
+      if (id != null && expiringMessageIds.contains(id)) {
+        targetEffectiveIndex = i;
+        break; // Oldest first
+      }
+    }
+
+    if (targetEffectiveIndex == null) return;
+
+    // In reverse ListView: visual index = messages.length - 1 - effectiveIndex
+    // But ScrollController doesn't support scrolling to an index directly.
+    // We approximate by scrolling near the top (oldest messages).
+    // For a proper index-based scroll, we'd need a GlobalKey per item.
+    // As a practical approximation: scroll to top so the user can see it.
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (_scrollController.hasClients) {
+        _scrollController.animateTo(
+          _scrollController.position.maxScrollExtent,
+          duration: const Duration(milliseconds: 600),
+          curve: Curves.easeOut,
+        );
+      }
+    });
   }
 
   Future<void> _downloadAttachedDocument() async {
@@ -370,6 +431,26 @@ class _ConversationPageState extends State<ConversationPage> {
     );
   }
 
+  // ✅ Task 16: Build the expiry banner widget.
+  Widget _buildExpiryBanner(ConversationState chatState) {
+    DateTime? earliest;
+    for (final item in _expiringMedia) {
+      final dt = DateTime.tryParse(item['expires_at']?.toString() ?? '');
+      if (dt != null && (earliest == null || dt.isBefore(earliest))) {
+        earliest = dt;
+      }
+    }
+    if (earliest == null) return const SizedBox.shrink();
+    return ChatExpiryBanner(
+      earliestExpiry: earliest,
+      fileCount: _expiringMedia.length,
+      onTap: () => _scrollToFirstExpiringMessage(
+        [...chatState.messages, ...chatState.pendingMessages],
+      ),
+      onDismiss: () => setState(() => _expiryBannerDismissed = true),
+    );
+  }
+
   Widget _buildBottomBanner(BuildContext context, String text) {
     return Padding(
       padding: EdgeInsets.only(
@@ -474,6 +555,10 @@ class _ConversationPageState extends State<ConversationPage> {
               if (chatState.isConversationClosed)
                 ClosedBanner(doctorName: widget.doctorName),
 
+              // ✅ Task 16: Show expiry banner if there are expiring media items.
+              if (_expiringMedia.isNotEmpty && !_expiryBannerDismissed)
+                _buildExpiryBanner(chatState),
+
               // Chat Area (List + Input)
               Expanded(
                 child: Stack(
@@ -538,6 +623,8 @@ class _ConversationPageState extends State<ConversationPage> {
                              },
                              resolveFileUrl: (bucket, path) =>
                                  _attachmentsService.getFileUrl(bucket: bucket, filePath: path),
+                             // ✅ Task 16: Pass expiring media for labels/placeholders.
+                             expiringMedia: _expiringMedia,
                            );
                        },
                      ),
