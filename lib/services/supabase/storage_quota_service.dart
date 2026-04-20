@@ -68,19 +68,21 @@ class StorageQuotaService {
   /// Pass `fileSize = 0` to retrieve current usage without testing a file.
   Future<StorageQuotaResult> checkUploadAllowed(int fileSize) async {
     final dynamic response = await _client
-        .rpc('check_upload_allowed', params: {'file_size': fileSize})
-        .single();
-    return StorageQuotaResult.fromMap(response as Map<String, dynamic>);
+        .rpc('check_upload_allowed', params: {'p_file_size': fileSize});
+    return StorageQuotaResult.fromMap(Map<String, dynamic>.from(response as Map));
   }
 
   /// Convenience wrapper — returns current storage usage without simulating an upload.
-  Future<StorageQuotaResult> getStorageUsage() => checkUploadAllowed(0);
+  Future<StorageQuotaResult> getStorageUsage() async {
+    final dynamic response = await _client.rpc('get_storage_usage');
+    return StorageQuotaResult.fromMap(Map<String, dynamic>.from(response as Map));
+  }
 
   /// Marks a storage warning level as shown so it won't be re-shown.
   Future<void> markWarningShown(int warningLevel) async {
     await _client.rpc(
       'mark_warning_shown',
-      params: {'warning_level': warningLevel},
+      params: {'p_warning_level': warningLevel},
     );
   }
 
@@ -103,7 +105,7 @@ class StorageQuotaService {
   ) async {
     final response = await _client.rpc(
       'get_expiring_media_for_conversation',
-      params: {'conversation_id': conversationId},
+      params: {'p_conversation_id': conversationId},
     );
     return List<Map<String, dynamic>>.from(response as List);
   }
@@ -112,7 +114,7 @@ class StorageQuotaService {
   Future<void> markChatMediaSaved(String mediaId) async {
     await _client.rpc(
       'mark_chat_media_saved',
-      params: {'media_id': mediaId},
+      params: {'p_media_id': mediaId},
     );
   }
 
