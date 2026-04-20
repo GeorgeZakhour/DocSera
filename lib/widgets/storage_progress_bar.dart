@@ -11,51 +11,17 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 
 /// Collapsed glass pill that expands into a full storage card.
 ///
-/// Sits in the Positioned layer of the Documents page, opposite
-/// the grid/list toggle. Tap to expand, tap again or swipe to collapse.
-class StorageProgressBar extends StatefulWidget {
-  final VoidCallback? onTap;
+/// The parent must provide expand/collapse callback so the Positioned
+/// constraints can change (pill = one corner, card = full width).
+class StorageProgressBar extends StatelessWidget {
+  final bool expanded;
+  final VoidCallback onToggle;
 
-  const StorageProgressBar({super.key, this.onTap});
-
-  @override
-  State<StorageProgressBar> createState() => _StorageProgressBarState();
-}
-
-class _StorageProgressBarState extends State<StorageProgressBar>
-    with SingleTickerProviderStateMixin {
-  bool _expanded = false;
-  late final AnimationController _controller;
-  late final Animation<double> _expandAnimation;
-
-  @override
-  void initState() {
-    super.initState();
-    _controller = AnimationController(
-      duration: const Duration(milliseconds: 300),
-      vsync: this,
-    );
-    _expandAnimation = CurvedAnimation(
-      parent: _controller,
-      curve: Curves.easeOutCubic,
-      reverseCurve: Curves.easeInCubic,
-    );
-  }
-
-  @override
-  void dispose() {
-    _controller.dispose();
-    super.dispose();
-  }
-
-  void _toggle() {
-    setState(() => _expanded = !_expanded);
-    if (_expanded) {
-      _controller.forward();
-    } else {
-      _controller.reverse();
-    }
-  }
+  const StorageProgressBar({
+    super.key,
+    required this.expanded,
+    required this.onToggle,
+  });
 
   Color _barColor(double pct) {
     if (pct >= 90) return const Color(0xFFE05252);
@@ -81,21 +47,24 @@ class _StorageProgressBarState extends State<StorageProgressBar>
         final bgColor = _barBgColor(pct);
         final progress = (pct / 100.0).clamp(0.0, 1.0);
 
-        return AnimatedBuilder(
-          animation: _expandAnimation,
-          builder: (context, _) {
-            return _expandAnimation.value < 0.01
-                ? _buildCollapsedPill(context, quota, barColor, pct)
-                : _buildExpandedCard(
-                    context, quota, barColor, bgColor, progress, pct);
-          },
+        return AnimatedCrossFade(
+          duration: const Duration(milliseconds: 250),
+          sizeCurve: Curves.easeOutCubic,
+          firstCurve: Curves.easeOut,
+          secondCurve: Curves.easeOut,
+          crossFadeState: expanded
+              ? CrossFadeState.showSecond
+              : CrossFadeState.showFirst,
+          firstChild: _buildCollapsedPill(context, quota, barColor, pct),
+          secondChild: _buildExpandedCard(
+              context, quota, barColor, bgColor, progress, pct),
         );
       },
     );
   }
 
   // ---------------------------------------------------------------------------
-  // Collapsed pill — small glass chip
+  // Collapsed pill
   // ---------------------------------------------------------------------------
   Widget _buildCollapsedPill(
     BuildContext context,
@@ -104,7 +73,7 @@ class _StorageProgressBarState extends State<StorageProgressBar>
     double pct,
   ) {
     return GestureDetector(
-      onTap: _toggle,
+      onTap: onToggle,
       child: ClipRRect(
         borderRadius: BorderRadius.circular(20.r),
         child: BackdropFilter(
@@ -150,7 +119,7 @@ class _StorageProgressBarState extends State<StorageProgressBar>
   }
 
   // ---------------------------------------------------------------------------
-  // Expanded card — full storage details
+  // Expanded card
   // ---------------------------------------------------------------------------
   Widget _buildExpandedCard(
     BuildContext context,
@@ -163,128 +132,118 @@ class _StorageProgressBarState extends State<StorageProgressBar>
     final l10n = AppLocalizations.of(context);
 
     return GestureDetector(
-      onTap: _toggle,
-      child: FadeTransition(
-        opacity: _expandAnimation,
-        child: SizeTransition(
-          sizeFactor: _expandAnimation,
-          axisAlignment: -1.0,
-          child: ClipRRect(
-            borderRadius: BorderRadius.circular(14.r),
-            child: BackdropFilter(
-              filter: ImageFilter.blur(sigmaX: 16, sigmaY: 16),
-              child: Container(
-                width: double.infinity,
-                padding: EdgeInsets.symmetric(horizontal: 14.w, vertical: 12.h),
-                decoration: BoxDecoration(
-                  color: Colors.white.withValues(alpha: 0.8),
-                  borderRadius: BorderRadius.circular(14.r),
-                  border: Border.all(
-                    color: barColor.withValues(alpha: 0.15),
-                    width: 0.5,
-                  ),
-                ),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  mainAxisSize: MainAxisSize.min,
+      onTap: onToggle,
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(14.r),
+        child: BackdropFilter(
+          filter: ImageFilter.blur(sigmaX: 16, sigmaY: 16),
+          child: Container(
+            padding: EdgeInsets.symmetric(horizontal: 14.w, vertical: 12.h),
+            decoration: BoxDecoration(
+              color: Colors.white.withValues(alpha: 0.85),
+              borderRadius: BorderRadius.circular(14.r),
+              border: Border.all(
+                color: barColor.withValues(alpha: 0.15),
+                width: 0.5,
+              ),
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                // Header row
+                Row(
                   children: [
-                    // Header row
-                    Row(
-                      children: [
-                        Container(
-                          width: 32.w,
-                          height: 32.w,
-                          decoration: BoxDecoration(
-                            color: barColor.withValues(alpha: 0.12),
-                            borderRadius: BorderRadius.circular(8.r),
-                          ),
-                          child: Icon(
-                            pct >= 90
-                                ? Icons.cloud_off_rounded
-                                : Icons.cloud_done_rounded,
-                            color: barColor,
-                            size: 16.sp,
-                          ),
-                        ),
-                        SizedBox(width: 10.w),
-                        Expanded(
-                          child: Text(
-                            l10n?.myStorageTitle ?? 'My Storage',
-                            style: AppTextStyles.getText1(context).copyWith(
-                              fontWeight: FontWeight.w600,
-                              color: AppColors.blackText,
-                            ),
-                          ),
-                        ),
-                        Directionality(
-                          textDirection: TextDirection.ltr,
-                          child: Text(
-                            '${quota.usedFormatted} / ${quota.maxFormatted}',
-                            style: AppTextStyles.getText3(context).copyWith(
-                              color: AppColors.grayMain,
-                              fontSize: 10.sp,
-                            ),
-                          ),
-                        ),
-                        SizedBox(width: 6.w),
-                        Icon(
-                          Icons.keyboard_arrow_up_rounded,
-                          color: AppColors.grayMain,
-                          size: 16.sp,
-                        ),
-                      ],
+                    Container(
+                      width: 32.w,
+                      height: 32.w,
+                      decoration: BoxDecoration(
+                        color: barColor.withValues(alpha: 0.12),
+                        borderRadius: BorderRadius.circular(8.r),
+                      ),
+                      child: Icon(
+                        pct >= 90
+                            ? Icons.cloud_off_rounded
+                            : Icons.cloud_done_rounded,
+                        color: barColor,
+                        size: 16.sp,
+                      ),
                     ),
-                    SizedBox(height: 10.h),
-
-                    // Progress bar
-                    ClipRRect(
-                      borderRadius: BorderRadius.circular(5.r),
-                      child: TweenAnimationBuilder<double>(
-                        tween: Tween(begin: 0, end: progress),
-                        duration: const Duration(milliseconds: 600),
-                        curve: Curves.easeOutCubic,
-                        builder: (context, value, _) =>
-                            LinearProgressIndicator(
-                          value: value,
-                          minHeight: 6.h,
-                          backgroundColor: bgColor,
-                          valueColor:
-                              AlwaysStoppedAnimation<Color>(barColor),
+                    SizedBox(width: 10.w),
+                    Expanded(
+                      child: Text(
+                        l10n?.myStorageTitle ?? 'My Storage',
+                        style: AppTextStyles.getText1(context).copyWith(
+                          fontWeight: FontWeight.w600,
+                          color: AppColors.blackText,
                         ),
                       ),
                     ),
-                    SizedBox(height: 6.h),
-
-                    // Footer
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        Directionality(
-                          textDirection: TextDirection.ltr,
-                          child: Text(
-                            '${quota.fileCount} ${l10n?.storageFilesLabel ?? 'files'}',
-                            style: AppTextStyles.getText3(context).copyWith(
-                              color: AppColors.grayMain,
-                              fontSize: 9.sp,
-                            ),
-                          ),
+                    Directionality(
+                      textDirection: TextDirection.ltr,
+                      child: Text(
+                        '${quota.usedFormatted} / ${quota.maxFormatted}',
+                        style: AppTextStyles.getText3(context).copyWith(
+                          color: AppColors.grayMain,
+                          fontSize: 10.sp,
                         ),
-                        Directionality(
-                          textDirection: TextDirection.ltr,
-                          child: Text(
-                            '${pct.toStringAsFixed(0)}% ${l10n?.storageUsedLabel ?? 'used'}',
-                            style: AppTextStyles.getText3(context).copyWith(
-                              color: barColor,
-                              fontWeight: FontWeight.w600,
-                              fontSize: 9.sp,
-                            ),
-                          ),
-                        ),
-                      ],
+                      ),
+                    ),
+                    SizedBox(width: 4.w),
+                    Icon(
+                      Icons.keyboard_arrow_up_rounded,
+                      color: AppColors.grayMain,
+                      size: 16.sp,
                     ),
                   ],
                 ),
-              ),
+                SizedBox(height: 10.h),
+
+                // Progress bar
+                ClipRRect(
+                  borderRadius: BorderRadius.circular(5.r),
+                  child: TweenAnimationBuilder<double>(
+                    tween: Tween(begin: 0, end: progress),
+                    duration: const Duration(milliseconds: 600),
+                    curve: Curves.easeOutCubic,
+                    builder: (context, value, _) => LinearProgressIndicator(
+                      value: value,
+                      minHeight: 6.h,
+                      backgroundColor: bgColor,
+                      valueColor: AlwaysStoppedAnimation<Color>(barColor),
+                    ),
+                  ),
+                ),
+                SizedBox(height: 6.h),
+
+                // Footer
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Directionality(
+                      textDirection: TextDirection.ltr,
+                      child: Text(
+                        '${quota.fileCount} ${l10n?.storageFilesLabel ?? 'files'}',
+                        style: AppTextStyles.getText3(context).copyWith(
+                          color: AppColors.grayMain,
+                          fontSize: 9.sp,
+                        ),
+                      ),
+                    ),
+                    Directionality(
+                      textDirection: TextDirection.ltr,
+                      child: Text(
+                        '${pct.toStringAsFixed(0)}% ${l10n?.storageUsedLabel ?? 'used'}',
+                        style: AppTextStyles.getText3(context).copyWith(
+                          color: barColor,
+                          fontWeight: FontWeight.w600,
+                          fontSize: 9.sp,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ],
             ),
           ),
         ),

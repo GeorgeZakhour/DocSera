@@ -70,6 +70,7 @@ class _DocumentsPageState extends State<DocumentsPage> with AutomaticKeepAliveCl
   static const String _viewModeKey = 'documentViewMode'; // 0 = grid, 1 = list
   static const String _notesViewModeKey = 'notesViewMode'; // 0 = grid, 1 = list
   bool _isFabExpanded = false;
+  bool _storageExpanded = false;
   String _docFilter = 'all'; // 'all', 'patient', 'doctor_added'
 
 
@@ -740,12 +741,16 @@ class _DocumentsPageState extends State<DocumentsPage> with AutomaticKeepAliveCl
           ),
 
         /// ✅ Storage pill — opposite corner from the view toggle
+        ///    Expands to full-width card when tapped.
         if (_selectedTab == 0)
           Positioned(
             top: 8.h,
-            left: isRTL ? null : 16.w,
-            right: isRTL ? 16.w : null,
-            child: const StorageProgressBar(),
+            left: _storageExpanded ? 16.w : (isRTL ? null : 16.w),
+            right: _storageExpanded ? 16.w : (isRTL ? 16.w : null),
+            child: StorageProgressBar(
+              expanded: _storageExpanded,
+              onToggle: () => setState(() => _storageExpanded = !_storageExpanded),
+            ),
           ),
       ],
     );
