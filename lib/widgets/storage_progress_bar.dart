@@ -1,5 +1,6 @@
 import 'package:docsera/Business_Logic/Storage/storage_quota_cubit.dart';
 import 'package:docsera/Business_Logic/Storage/storage_quota_state.dart';
+import 'package:docsera/services/supabase/storage_quota_service.dart';
 import 'package:docsera/app/const.dart';
 import 'package:docsera/app/text_styles.dart';
 import 'package:docsera/gen_l10n/app_localizations.dart';
@@ -7,15 +8,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 
-/// A reusable storage usage widget with two display modes.
-///
-/// - [compact] = false (Documents page): full card with title, usage text,
-///   progress bar, and subtitle showing percentage + file count.
-/// - [compact] = true (Account page): single-row with label, usage text,
-///   and inline progress bar.
-///
-/// Tapping either mode triggers [onTap] if provided.
-/// Returns [SizedBox.shrink] when the cubit state is not [StorageQuotaLoaded].
 class StorageProgressBar extends StatelessWidget {
   final bool compact;
   final VoidCallback? onTap;
@@ -26,11 +18,17 @@ class StorageProgressBar extends StatelessWidget {
     this.onTap,
   });
 
-  /// Returns the progress-bar colour based on usage percentage.
+  /// Teal at normal usage, warm amber approaching limit, soft red when full.
   Color _barColor(double pct) {
-    if (pct >= 90) return Colors.red.shade600;
-    if (pct >= 70) return Colors.orange.shade600;
-    return Colors.green.shade600;
+    if (pct >= 90) return const Color(0xFFE05252);
+    if (pct >= 70) return const Color(0xFFE8A84C);
+    return AppColors.main;
+  }
+
+  Color _barBgColor(double pct) {
+    if (pct >= 90) return const Color(0xFFE05252).withValues(alpha: 0.12);
+    if (pct >= 70) return const Color(0xFFE8A84C).withValues(alpha: 0.12);
+    return AppColors.main.withValues(alpha: 0.12);
   }
 
   @override
@@ -42,15 +40,12 @@ class StorageProgressBar extends StatelessWidget {
         final quota = state.quota;
         final pct = quota.usedPercentage.clamp(0.0, 100.0);
         final barColor = _barColor(pct);
+        final bgColor = _barBgColor(pct);
         final progress = pct / 100.0;
 
         return compact
-            ? _buildCompact(
-                context, quota.usedFormatted, quota.maxFormatted,
-                progress, barColor)
-            : _buildFull(
-                context, quota.usedFormatted, quota.maxFormatted,
-                progress, barColor, pct, quota.fileCount);
+            ? _buildCompact(context, quota, progress, barColor, bgColor, pct)
+            : _buildFull(context, quota, progress, barColor, bgColor, pct);
       },
     );
   }
@@ -61,66 +56,109 @@ class StorageProgressBar extends StatelessWidget {
 
   Widget _buildFull(
     BuildContext context,
-    String used,
-    String max,
+    StorageQuotaResult quota,
     double progress,
     Color barColor,
+    Color bgColor,
     double pct,
-    int fileCount,
   ) {
     final l10n = AppLocalizations.of(context);
-    final title = l10n?.myStorageTitle ?? 'My Storage';
-    final usedWord = l10n?.storageUsedLabel ?? 'used';
-    final filesWord = l10n?.storageFilesLabel ?? 'files';
-    final pctLabel = pct.toStringAsFixed(0);
-    final subtitleText = '$pctLabel% $usedWord · $fileCount $filesWord';
 
-    return InkWell(
+    return GestureDetector(
       onTap: onTap,
-      borderRadius: BorderRadius.circular(12.r),
       child: Container(
-        padding: EdgeInsets.symmetric(horizontal: 14.w, vertical: 12.h),
+        padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 14.h),
         decoration: BoxDecoration(
-          color: Theme.of(context).cardColor,
-          borderRadius: BorderRadius.circular(12.r),
-          border: Border.all(color: barColor.withValues(alpha: 0.2)),
+          color: AppColors.main.withValues(alpha:0.05),
+          borderRadius: BorderRadius.circular(14.r),
         ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
+        child: Row(
           children: [
-            // --- Title row ---
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Text(
-                  title,
-                  style: AppTextStyles.getTitle1(context)
-                      .copyWith(color: AppColors.main),
-                ),
-                Text(
-                  '$used / $max',
-                  style: AppTextStyles.getText2(context)
-                      .copyWith(color: AppColors.textSubColor),
-                ),
-              ],
-            ),
-            SizedBox(height: 8.h),
-            // --- Progress bar ---
-            ClipRRect(
-              borderRadius: BorderRadius.circular(4.r),
-              child: LinearProgressIndicator(
-                value: progress,
-                minHeight: 6.h,
-                backgroundColor: barColor.withValues(alpha: 0.15),
-                valueColor: AlwaysStoppedAnimation<Color>(barColor),
+            // Cloud icon
+            Container(
+              width: 40.w,
+              height: 40.w,
+              decoration: BoxDecoration(
+                color: barColor.withValues(alpha:0.12),
+                borderRadius: BorderRadius.circular(10.r),
+              ),
+              child: Icon(
+                pct >= 90
+                    ? Icons.cloud_off_rounded
+                    : Icons.cloud_done_rounded,
+                color: barColor,
+                size: 20.sp,
               ),
             ),
-            SizedBox(height: 6.h),
-            // --- Subtitle ---
-            Text(
-              subtitleText,
-              style: AppTextStyles.getText3(context)
-                  .copyWith(color: AppColors.textSubColor),
+            SizedBox(width: 12.w),
+
+            // Text + bar
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  // Title row
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Text(
+                        l10n?.myStorageTitle ?? 'My Storage',
+                        style: AppTextStyles.getText1(context).copyWith(
+                          fontWeight: FontWeight.w600,
+                          color: AppColors.blackText,
+                        ),
+                      ),
+                      Text(
+                        '${quota.usedFormatted} / ${quota.maxFormatted}',
+                        style: AppTextStyles.getText3(context).copyWith(
+                          color: AppColors.grayMain,
+                        ),
+                      ),
+                    ],
+                  ),
+                  SizedBox(height: 8.h),
+
+                  // Progress bar
+                  ClipRRect(
+                    borderRadius: BorderRadius.circular(6.r),
+                    child: TweenAnimationBuilder<double>(
+                      tween: Tween(begin: 0, end: progress),
+                      duration: const Duration(milliseconds: 800),
+                      curve: Curves.easeOutCubic,
+                      builder: (context, value, _) => LinearProgressIndicator(
+                        value: value,
+                        minHeight: 8.h,
+                        backgroundColor: bgColor,
+                        valueColor: AlwaysStoppedAnimation<Color>(barColor),
+                      ),
+                    ),
+                  ),
+                  SizedBox(height: 6.h),
+
+                  // Subtitle
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Text(
+                        '${quota.fileCount} ${l10n?.storageFilesLabel ?? 'files'}',
+                        style: AppTextStyles.getText3(context).copyWith(
+                          color: AppColors.grayMain,
+                          fontSize: 10.sp,
+                        ),
+                      ),
+                      Text(
+                        '${pct.toStringAsFixed(0)}% ${l10n?.storageUsedLabel ?? 'used'}',
+                        style: AppTextStyles.getText3(context).copyWith(
+                          color: barColor,
+                          fontWeight: FontWeight.w600,
+                          fontSize: 10.sp,
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
             ),
           ],
         ),
@@ -134,28 +172,41 @@ class StorageProgressBar extends StatelessWidget {
 
   Widget _buildCompact(
     BuildContext context,
-    String used,
-    String max,
+    StorageQuotaResult quota,
     double progress,
     Color barColor,
+    Color bgColor,
+    double pct,
   ) {
     final l10n = AppLocalizations.of(context);
-    final label = l10n?.storageTitle ?? 'Storage';
 
-    return InkWell(
+    return GestureDetector(
       onTap: onTap,
-      borderRadius: BorderRadius.circular(12.r),
       child: Container(
-        padding: EdgeInsets.symmetric(horizontal: 14.w, vertical: 10.h),
+        padding: EdgeInsets.symmetric(horizontal: 14.w, vertical: 12.h),
         decoration: BoxDecoration(
-          color: Theme.of(context).cardColor,
+          color: AppColors.main.withValues(alpha:0.05),
           borderRadius: BorderRadius.circular(12.r),
-          border: Border.all(color: barColor.withValues(alpha: 0.2)),
         ),
         child: Row(
           children: [
-            Icon(Icons.storage_rounded, size: 16.sp, color: AppColors.main),
-            SizedBox(width: 8.w),
+            // Icon
+            Container(
+              width: 32.w,
+              height: 32.w,
+              decoration: BoxDecoration(
+                color: barColor.withValues(alpha:0.12),
+                borderRadius: BorderRadius.circular(8.r),
+              ),
+              child: Icon(
+                Icons.cloud_done_rounded,
+                color: barColor,
+                size: 16.sp,
+              ),
+            ),
+            SizedBox(width: 10.w),
+
+            // Text + bar
             Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -165,32 +216,47 @@ class StorageProgressBar extends StatelessWidget {
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
                       Text(
-                        label,
-                        style: AppTextStyles.getText2(context)
-                            .copyWith(color: AppColors.blackText),
+                        l10n?.storageTitle ?? 'Storage',
+                        style: AppTextStyles.getText2(context).copyWith(
+                          fontWeight: FontWeight.w600,
+                          color: AppColors.blackText,
+                        ),
                       ),
                       Text(
-                        '$used / $max',
-                        style: AppTextStyles.getText3(context)
-                            .copyWith(color: AppColors.textSubColor),
+                        '${quota.usedFormatted} / ${quota.maxFormatted}',
+                        style: AppTextStyles.getText3(context).copyWith(
+                          color: AppColors.grayMain,
+                          fontSize: 10.sp,
+                        ),
                       ),
                     ],
                   ),
-                  SizedBox(height: 4.h),
+                  SizedBox(height: 6.h),
                   ClipRRect(
                     borderRadius: BorderRadius.circular(4.r),
-                    child: LinearProgressIndicator(
-                      value: progress,
-                      minHeight: 4.h,
-                      backgroundColor: barColor.withValues(alpha: 0.15),
-                      valueColor: AlwaysStoppedAnimation<Color>(barColor),
+                    child: TweenAnimationBuilder<double>(
+                      tween: Tween(begin: 0, end: progress),
+                      duration: const Duration(milliseconds: 800),
+                      curve: Curves.easeOutCubic,
+                      builder: (context, value, _) => LinearProgressIndicator(
+                        value: value,
+                        minHeight: 5.h,
+                        backgroundColor: bgColor,
+                        valueColor: AlwaysStoppedAnimation<Color>(barColor),
+                      ),
                     ),
                   ),
                 ],
               ),
             ),
             SizedBox(width: 8.w),
-            Icon(Icons.chevron_right, size: 16.sp, color: AppColors.grayMain),
+
+            // Chevron
+            Icon(
+              Icons.chevron_right_rounded,
+              size: 18.sp,
+              color: AppColors.grayMain,
+            ),
           ],
         ),
       ),
