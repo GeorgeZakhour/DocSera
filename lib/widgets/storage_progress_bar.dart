@@ -1,3 +1,4 @@
+import 'dart:ui';
 import 'package:docsera/Business_Logic/Storage/storage_quota_cubit.dart';
 import 'package:docsera/Business_Logic/Storage/storage_quota_state.dart';
 import 'package:docsera/services/supabase/storage_quota_service.dart';
@@ -8,17 +9,54 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 
-class StorageProgressBar extends StatelessWidget {
-  final bool compact;
+/// Collapsed glass pill that expands into a full storage card.
+///
+/// Sits in the Positioned layer of the Documents page, opposite
+/// the grid/list toggle. Tap to expand, tap again or swipe to collapse.
+class StorageProgressBar extends StatefulWidget {
   final VoidCallback? onTap;
 
-  const StorageProgressBar({
-    super.key,
-    this.compact = false,
-    this.onTap,
-  });
+  const StorageProgressBar({super.key, this.onTap});
 
-  /// Teal at normal usage, warm amber approaching limit, soft red when full.
+  @override
+  State<StorageProgressBar> createState() => _StorageProgressBarState();
+}
+
+class _StorageProgressBarState extends State<StorageProgressBar>
+    with SingleTickerProviderStateMixin {
+  bool _expanded = false;
+  late final AnimationController _controller;
+  late final Animation<double> _expandAnimation;
+
+  @override
+  void initState() {
+    super.initState();
+    _controller = AnimationController(
+      duration: const Duration(milliseconds: 300),
+      vsync: this,
+    );
+    _expandAnimation = CurvedAnimation(
+      parent: _controller,
+      curve: Curves.easeOutCubic,
+      reverseCurve: Curves.easeInCubic,
+    );
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  void _toggle() {
+    setState(() => _expanded = !_expanded);
+    if (_expanded) {
+      _controller.forward();
+    } else {
+      _controller.reverse();
+    }
+  }
+
   Color _barColor(double pct) {
     if (pct >= 90) return const Color(0xFFE05252);
     if (pct >= 70) return const Color(0xFFE8A84C);
@@ -41,223 +79,214 @@ class StorageProgressBar extends StatelessWidget {
         final pct = quota.usedPercentage.clamp(0.0, 100.0);
         final barColor = _barColor(pct);
         final bgColor = _barBgColor(pct);
-        final progress = pct / 100.0;
+        final progress = (pct / 100.0).clamp(0.0, 1.0);
 
-        return compact
-            ? _buildCompact(context, quota, progress, barColor, bgColor, pct)
-            : _buildFull(context, quota, progress, barColor, bgColor, pct);
+        return AnimatedBuilder(
+          animation: _expandAnimation,
+          builder: (context, _) {
+            return _expandAnimation.value < 0.01
+                ? _buildCollapsedPill(context, quota, barColor, pct)
+                : _buildExpandedCard(
+                    context, quota, barColor, bgColor, progress, pct);
+          },
+        );
       },
     );
   }
 
   // ---------------------------------------------------------------------------
-  // Full mode (Documents page)
+  // Collapsed pill — small glass chip
   // ---------------------------------------------------------------------------
-
-  Widget _buildFull(
+  Widget _buildCollapsedPill(
     BuildContext context,
     StorageQuotaResult quota,
-    double progress,
     Color barColor,
-    Color bgColor,
     double pct,
   ) {
-    final l10n = AppLocalizations.of(context);
-
     return GestureDetector(
-      onTap: onTap,
-      child: Container(
-        padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 14.h),
-        decoration: BoxDecoration(
-          color: AppColors.main.withValues(alpha:0.05),
-          borderRadius: BorderRadius.circular(14.r),
-        ),
-        child: Row(
-          children: [
-            // Cloud icon
-            Container(
-              width: 40.w,
-              height: 40.w,
-              decoration: BoxDecoration(
-                color: barColor.withValues(alpha:0.12),
-                borderRadius: BorderRadius.circular(10.r),
-              ),
-              child: Icon(
-                pct >= 90
-                    ? Icons.cloud_off_rounded
-                    : Icons.cloud_done_rounded,
-                color: barColor,
-                size: 20.sp,
+      onTap: _toggle,
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(20.r),
+        child: BackdropFilter(
+          filter: ImageFilter.blur(sigmaX: 12, sigmaY: 12),
+          child: Container(
+            padding: EdgeInsets.symmetric(horizontal: 10.w, vertical: 6.h),
+            decoration: BoxDecoration(
+              color: Colors.white.withValues(alpha: 0.75),
+              borderRadius: BorderRadius.circular(20.r),
+              border: Border.all(
+                color: barColor.withValues(alpha: 0.25),
+                width: 0.5,
               ),
             ),
-            SizedBox(width: 12.w),
-
-            // Text + bar
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  // Title row
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      Text(
-                        l10n?.myStorageTitle ?? 'My Storage',
-                        style: AppTextStyles.getText1(context).copyWith(
-                          fontWeight: FontWeight.w600,
-                          color: AppColors.blackText,
-                        ),
-                      ),
-                      Text(
-                        '${quota.usedFormatted} / ${quota.maxFormatted}',
-                        style: AppTextStyles.getText3(context).copyWith(
-                          color: AppColors.grayMain,
-                        ),
-                      ),
-                    ],
-                  ),
-                  SizedBox(height: 8.h),
-
-                  // Progress bar
-                  ClipRRect(
-                    borderRadius: BorderRadius.circular(6.r),
-                    child: TweenAnimationBuilder<double>(
-                      tween: Tween(begin: 0, end: progress),
-                      duration: const Duration(milliseconds: 800),
-                      curve: Curves.easeOutCubic,
-                      builder: (context, value, _) => LinearProgressIndicator(
-                        value: value,
-                        minHeight: 8.h,
-                        backgroundColor: bgColor,
-                        valueColor: AlwaysStoppedAnimation<Color>(barColor),
-                      ),
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Icon(
+                  pct >= 90
+                      ? Icons.cloud_off_rounded
+                      : Icons.cloud_done_rounded,
+                  color: barColor,
+                  size: 14.sp,
+                ),
+                SizedBox(width: 5.w),
+                Directionality(
+                  textDirection: TextDirection.ltr,
+                  child: Text(
+                    '${pct.toStringAsFixed(0)}%',
+                    style: AppTextStyles.getText3(context).copyWith(
+                      color: barColor,
+                      fontWeight: FontWeight.w700,
+                      fontSize: 10.sp,
                     ),
                   ),
-                  SizedBox(height: 6.h),
-
-                  // Subtitle
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      Text(
-                        '${quota.fileCount} ${l10n?.storageFilesLabel ?? 'files'}',
-                        style: AppTextStyles.getText3(context).copyWith(
-                          color: AppColors.grayMain,
-                          fontSize: 10.sp,
-                        ),
-                      ),
-                      Text(
-                        '${pct.toStringAsFixed(0)}% ${l10n?.storageUsedLabel ?? 'used'}',
-                        style: AppTextStyles.getText3(context).copyWith(
-                          color: barColor,
-                          fontWeight: FontWeight.w600,
-                          fontSize: 10.sp,
-                        ),
-                      ),
-                    ],
-                  ),
-                ],
-              ),
+                ),
+              ],
             ),
-          ],
+          ),
         ),
       ),
     );
   }
 
   // ---------------------------------------------------------------------------
-  // Compact mode (Account page)
+  // Expanded card — full storage details
   // ---------------------------------------------------------------------------
-
-  Widget _buildCompact(
+  Widget _buildExpandedCard(
     BuildContext context,
     StorageQuotaResult quota,
-    double progress,
     Color barColor,
     Color bgColor,
+    double progress,
     double pct,
   ) {
     final l10n = AppLocalizations.of(context);
 
     return GestureDetector(
-      onTap: onTap,
-      child: Container(
-        padding: EdgeInsets.symmetric(horizontal: 14.w, vertical: 12.h),
-        decoration: BoxDecoration(
-          color: AppColors.main.withValues(alpha:0.05),
-          borderRadius: BorderRadius.circular(12.r),
-        ),
-        child: Row(
-          children: [
-            // Icon
-            Container(
-              width: 32.w,
-              height: 32.w,
-              decoration: BoxDecoration(
-                color: barColor.withValues(alpha:0.12),
-                borderRadius: BorderRadius.circular(8.r),
-              ),
-              child: Icon(
-                Icons.cloud_done_rounded,
-                color: barColor,
-                size: 16.sp,
-              ),
-            ),
-            SizedBox(width: 10.w),
-
-            // Text + bar
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      Text(
-                        l10n?.storageTitle ?? 'Storage',
-                        style: AppTextStyles.getText2(context).copyWith(
-                          fontWeight: FontWeight.w600,
-                          color: AppColors.blackText,
-                        ),
-                      ),
-                      Text(
-                        '${quota.usedFormatted} / ${quota.maxFormatted}',
-                        style: AppTextStyles.getText3(context).copyWith(
-                          color: AppColors.grayMain,
-                          fontSize: 10.sp,
-                        ),
-                      ),
-                    ],
+      onTap: _toggle,
+      child: FadeTransition(
+        opacity: _expandAnimation,
+        child: SizeTransition(
+          sizeFactor: _expandAnimation,
+          axisAlignment: -1.0,
+          child: ClipRRect(
+            borderRadius: BorderRadius.circular(14.r),
+            child: BackdropFilter(
+              filter: ImageFilter.blur(sigmaX: 16, sigmaY: 16),
+              child: Container(
+                width: double.infinity,
+                padding: EdgeInsets.symmetric(horizontal: 14.w, vertical: 12.h),
+                decoration: BoxDecoration(
+                  color: Colors.white.withValues(alpha: 0.8),
+                  borderRadius: BorderRadius.circular(14.r),
+                  border: Border.all(
+                    color: barColor.withValues(alpha: 0.15),
+                    width: 0.5,
                   ),
-                  SizedBox(height: 6.h),
-                  ClipRRect(
-                    borderRadius: BorderRadius.circular(4.r),
-                    child: TweenAnimationBuilder<double>(
-                      tween: Tween(begin: 0, end: progress),
-                      duration: const Duration(milliseconds: 800),
-                      curve: Curves.easeOutCubic,
-                      builder: (context, value, _) => LinearProgressIndicator(
-                        value: value,
-                        minHeight: 5.h,
-                        backgroundColor: bgColor,
-                        valueColor: AlwaysStoppedAnimation<Color>(barColor),
+                ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    // Header row
+                    Row(
+                      children: [
+                        Container(
+                          width: 32.w,
+                          height: 32.w,
+                          decoration: BoxDecoration(
+                            color: barColor.withValues(alpha: 0.12),
+                            borderRadius: BorderRadius.circular(8.r),
+                          ),
+                          child: Icon(
+                            pct >= 90
+                                ? Icons.cloud_off_rounded
+                                : Icons.cloud_done_rounded,
+                            color: barColor,
+                            size: 16.sp,
+                          ),
+                        ),
+                        SizedBox(width: 10.w),
+                        Expanded(
+                          child: Text(
+                            l10n?.myStorageTitle ?? 'My Storage',
+                            style: AppTextStyles.getText1(context).copyWith(
+                              fontWeight: FontWeight.w600,
+                              color: AppColors.blackText,
+                            ),
+                          ),
+                        ),
+                        Directionality(
+                          textDirection: TextDirection.ltr,
+                          child: Text(
+                            '${quota.usedFormatted} / ${quota.maxFormatted}',
+                            style: AppTextStyles.getText3(context).copyWith(
+                              color: AppColors.grayMain,
+                              fontSize: 10.sp,
+                            ),
+                          ),
+                        ),
+                        SizedBox(width: 6.w),
+                        Icon(
+                          Icons.keyboard_arrow_up_rounded,
+                          color: AppColors.grayMain,
+                          size: 16.sp,
+                        ),
+                      ],
+                    ),
+                    SizedBox(height: 10.h),
+
+                    // Progress bar
+                    ClipRRect(
+                      borderRadius: BorderRadius.circular(5.r),
+                      child: TweenAnimationBuilder<double>(
+                        tween: Tween(begin: 0, end: progress),
+                        duration: const Duration(milliseconds: 600),
+                        curve: Curves.easeOutCubic,
+                        builder: (context, value, _) =>
+                            LinearProgressIndicator(
+                          value: value,
+                          minHeight: 6.h,
+                          backgroundColor: bgColor,
+                          valueColor:
+                              AlwaysStoppedAnimation<Color>(barColor),
+                        ),
                       ),
                     ),
-                  ),
-                ],
+                    SizedBox(height: 6.h),
+
+                    // Footer
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Directionality(
+                          textDirection: TextDirection.ltr,
+                          child: Text(
+                            '${quota.fileCount} ${l10n?.storageFilesLabel ?? 'files'}',
+                            style: AppTextStyles.getText3(context).copyWith(
+                              color: AppColors.grayMain,
+                              fontSize: 9.sp,
+                            ),
+                          ),
+                        ),
+                        Directionality(
+                          textDirection: TextDirection.ltr,
+                          child: Text(
+                            '${pct.toStringAsFixed(0)}% ${l10n?.storageUsedLabel ?? 'used'}',
+                            style: AppTextStyles.getText3(context).copyWith(
+                              color: barColor,
+                              fontWeight: FontWeight.w600,
+                              fontSize: 9.sp,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
               ),
             ),
-            SizedBox(width: 8.w),
-
-            // Chevron
-            Icon(
-              Icons.chevron_right_rounded,
-              size: 18.sp,
-              color: AppColors.grayMain,
-            ),
-          ],
+          ),
         ),
       ),
     );

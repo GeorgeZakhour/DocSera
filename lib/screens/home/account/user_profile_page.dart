@@ -1,13 +1,10 @@
 import 'package:docsera/Business_Logic/Account_page/profile/account_profile_cubit.dart';
 import 'package:docsera/Business_Logic/Account_page/profile/account_profile_state.dart';
-import 'package:docsera/Business_Logic/Storage/storage_quota_cubit.dart';
 import 'package:docsera/screens/home/account/edit_profile.dart';
 import 'package:docsera/screens/home/account/my_relatives.dart';
-import 'package:docsera/screens/home/documents_page.dart';
 import 'package:docsera/utils/full_page_loader.dart';
 import 'package:docsera/utils/page_transitions.dart';
 import 'package:docsera/widgets/base_scaffold.dart';
-import 'package:docsera/widgets/storage_progress_bar.dart';
 import 'package:flutter/material.dart';
 import 'package:docsera/app/const.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -31,7 +28,6 @@ class _UserProfilePageState extends State<UserProfilePage> {
   void initState() {
     super.initState();
     context.read<AccountProfileCubit>().loadProfile();
-    context.read<StorageQuotaCubit>().loadStorageUsage();
   }
 
 
@@ -280,22 +276,6 @@ class _UserProfilePageState extends State<UserProfilePage> {
                       ),
                     ),
                   ],
-                ),
-              ),
-
-              SizedBox(height: 16.h),
-
-              // Storage usage bar — compact row with inline progress bar
-              Padding(
-                padding: EdgeInsets.symmetric(horizontal: 16.w),
-                child: StorageProgressBar(
-                  compact: true,
-                  onTap: () {
-                    Navigator.push(
-                      context,
-                      fadePageRoute(const DocumentsPage()),
-                    );
-                  },
                 ),
               ),
 

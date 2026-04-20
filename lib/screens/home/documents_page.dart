@@ -667,61 +667,58 @@ class _DocumentsPageState extends State<DocumentsPage> with AutomaticKeepAliveCl
     final notesState = context.watch<NotesCubit>().state;
     final hasNotes = notesState is NotesLoaded && notesState.notes.isNotEmpty;
 
-    return Column(
+    final isRTL = Directionality.of(context) == TextDirection.RTL;
+
+    return Stack(
       children: [
-        // Storage bar — sits above the content, never overlaps
-        if (_selectedTab == 0)
-          Padding(
-            padding: EdgeInsets.fromLTRB(16.w, 12.h, 16.w, 0),
-            child: const StorageProgressBar(compact: false),
-          ),
+        /// ✅ المحتوى (يمرّ خلف السويتشر)
+        _selectedTab == 0
+            ? _buildDocumentsTab(documents)
+            : _buildNotesTab(),
 
-        // Toggle + content
-        Expanded(
-          child: Stack(
-            children: [
-              /// ✅ المحتوى (يمرّ خلف السويتشر)
-              _selectedTab == 0
-                  ? _buildDocumentsTab(documents)
-                  : _buildNotesTab(),
-
-              /// ✅ سويتشر الوثائق أو الملاحظات
-              if ((_selectedTab == 0 && hasDocuments) ||
-                  (_selectedTab == 1 && hasNotes))
-                Positioned(
-                  top: 0,
-                  left: 0,
-                  right: 0,
-                  child: Padding(
-                    padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 8.h),
-                    child: Align(
-                      alignment: Directionality.of(context) == TextDirection.RTL
-                          ? Alignment.centerLeft
-                          : Alignment.centerRight,
-                      child: _selectedTab == 0
-                          ? Container(
-                        padding: EdgeInsets.all(2.w),
-                        decoration: BoxDecoration(
-                          color: Colors.white,
-                          borderRadius: BorderRadius.circular(30.r),
-                          border: Border.all(color: Colors.grey.shade200),
-                        ),
-                        child: Row(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            _buildViewModeButton(Icons.grid_view, true),
-                            SizedBox(width: 4.w),
-                            _buildViewModeButton(Icons.view_list, false),
-                          ],
-                        ),
-                      )
-                          : _buildNotesViewModeSwitcher(),
-                    ),
+        /// ✅ سويتشر الوثائق أو الملاحظات (right side in RTL, left side in LTR — unchanged)
+        if ((_selectedTab == 0 && hasDocuments) ||
+            (_selectedTab == 1 && hasNotes))
+          Positioned(
+            top: 0,
+            left: 0,
+            right: 0,
+            child: Padding(
+              padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 8.h),
+              child: Align(
+                alignment: isRTL
+                    ? Alignment.centerLeft
+                    : Alignment.centerRight,
+                child: _selectedTab == 0
+                    ? Container(
+                  padding: EdgeInsets.all(2.w),
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.circular(30.r),
+                    border: Border.all(color: Colors.grey.shade200),
                   ),
-                ),
-            ],
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      _buildViewModeButton(Icons.grid_view, true),
+                      SizedBox(width: 4.w),
+                      _buildViewModeButton(Icons.view_list, false),
+                    ],
+                  ),
+                )
+                    : _buildNotesViewModeSwitcher(),
+              ),
+            ),
           ),
-        ),
+
+        /// ✅ Storage pill — opposite corner from the view toggle
+        if (_selectedTab == 0)
+          Positioned(
+            top: 8.h,
+            left: isRTL ? null : 16.w,
+            right: isRTL ? 16.w : null,
+            child: const StorageProgressBar(),
+          ),
       ],
     );
   }
