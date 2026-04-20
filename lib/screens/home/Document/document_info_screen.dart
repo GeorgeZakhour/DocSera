@@ -43,6 +43,8 @@ class DocumentInfoScreen extends StatefulWidget {
   State<DocumentInfoScreen> createState() => _DocumentInfoScreenState();
 }
 
+const int kMaxPatientFileSize = 15 * 1024 * 1024; // 15MB
+
 class _DocumentInfoScreenState extends State<DocumentInfoScreen> {
   final TextEditingController _nameController = TextEditingController();
   String? _selectedType;
@@ -419,10 +421,10 @@ class _DocumentInfoScreenState extends State<DocumentInfoScreen> {
       debugPrint(
           "Compressed size: ${(compressedSize / 1024).toStringAsFixed(2)} KB");
 
-      const int maxAllowedSize = 2 * 1024 * 1024;
+      const int maxAllowedSize = kMaxPatientFileSize;
 
       if (compressedSize >= originalSize || compressedSize > maxAllowedSize) {
-        debugPrint("⚠️ Compression skipped (inefficient or >2MB)");
+        debugPrint("⚠️ Compression skipped (inefficient or >15MB)");
         totalCompressedSize += originalSize;
         compressedImages.add(realFile);
       } else {
@@ -447,7 +449,7 @@ class _DocumentInfoScreenState extends State<DocumentInfoScreen> {
     }
     debugPrint("==============================================");
 
-    if (totalCompressedSize > 2 * 1024 * 1024) {
+    if (totalCompressedSize > kMaxPatientFileSize) {
       throw Exception(
           "💥 Document too large after compression: ${(totalCompressedSize / 1024).toStringAsFixed(2)} KB");
     }
@@ -494,7 +496,7 @@ class _DocumentInfoScreenState extends State<DocumentInfoScreen> {
         // ✅ PDF بدون ضغط – حد 5MB
         final pdfFile = File(widget.images.first);
         final sizeInBytes = await pdfFile.length();
-        if (sizeInBytes > 5 * 1024 * 1024) {
+        if (sizeInBytes > kMaxPatientFileSize) {
           throw Exception("PDF too large");
         }
         filesToUpload.add(pdfFile);
@@ -504,11 +506,11 @@ class _DocumentInfoScreenState extends State<DocumentInfoScreen> {
         final compressedFiles = await compressImages(
           widget.images.map((e) => File(File(e).absolute.path)).toList(),
         );
-        
-        // ✅ Validate Post-Compression Size (Must be < 5MB)
+
+        // ✅ Validate Post-Compression Size (Must be < 15MB)
         for (final file in compressedFiles) {
           final size = await file.length();
-          if (size > 5 * 1024 * 1024) {
+          if (size > kMaxPatientFileSize) {
              throw Exception("Document too large");
           }
         }
@@ -665,7 +667,7 @@ class _DocumentInfoScreenState extends State<DocumentInfoScreen> {
         final File pdfFile = File(widget.images.first);
         final int sizeInBytes = await pdfFile.length();
         debugPrint("📄 PDF size in bytes: $sizeInBytes");
-        if (sizeInBytes > 2 * 1024 * 1024) {
+        if (sizeInBytes > kMaxPatientFileSize) {
           debugPrint("❌ PDF too large");
           throw Exception("PDF too large");
         }
@@ -708,6 +710,13 @@ class _DocumentInfoScreenState extends State<DocumentInfoScreen> {
         debugPrint("✅ Uploaded $fileName - path: $filePath");
       }
 
+      // ✅ Calculate total file size for tracking
+      int totalFileSizeBytes = 0;
+      for (final file in filesToUpload) {
+        totalFileSizeBytes += await file.length();
+      }
+      debugPrint("📦 Total file size: $totalFileSizeBytes bytes");
+
       String previewUrl = uploadedUrls.first;
       if (isPdf) {
         debugPrint("🖼 Generating PDF thumbnail...");
@@ -744,6 +753,7 @@ class _DocumentInfoScreenState extends State<DocumentInfoScreen> {
         cameFromConversation: widget.cameFromConversation,
         conversationDoctorName: widget.conversationDoctorName,
         encrypted: true, // ✅ Phase 2C: Mark as encrypted
+        fileSizeBytes: totalFileSizeBytes, // ✅ Track total file size
       );
 
       debugPrint("📝 Inserting document into Supabase...");
