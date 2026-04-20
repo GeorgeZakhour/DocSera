@@ -1272,5 +1272,47 @@
   "formatUnknown": "ملف",
   "worksAt": "يعمل في",
   "viewCenter": "عرض المركز",
-  "centerPhone": "المركز"
+  "centerPhone": "المركز",
+  "myStorageTitle": "مساحة التخزين",
+  "storageTitle": "التخزين",
+  "storageUsedLabel": "مستخدم",
+  "storageFilesLabel": "ملفات",
+  "storageWarning70Title": "مساحة التخزين قاربت على الامتلاء",
+  "storageWarning70Body": "لقد استخدمت 70% من مساحة التخزين. يمكنك تحرير مساحة عن طريق حذف المستندات القديمة التي لم تعد بحاجة إليها.",
+  "storageWarning90Title": "مساحة التخزين شبه ممتلئة",
+  "storageWarning90Body": "لقد استخدمت 90% من مساحة التخزين. لن تتمكن من رفع مستندات جديدة عندما تمتلئ مساحة التخزين.",
+  "storageFullTitle": "مساحة التخزين ممتلئة",
+  "storageFullBody": "قم بتحرير مساحة لرفع ملفات جديدة.",
+  "storageLargestFiles": "إليك أكبر المستندات لديك:",
+  "storageViewAll": "عرض جميع المستندات",
+  "storageManage": "إدارة التخزين",
+  "okGotIt": "حسناً، فهمت",
+  "fileTooLargeTitle": "هذا الملف كبير جداً",
+  "fileTooLargeBody": "الحد الأقصى لحجم الملف: {max} ميغابايت. ملفك: {size} ميغابايت.",
+  "@fileTooLargeBody": {
+    "placeholders": {
+      "max": { "type": "String" },
+      "size": { "type": "String" }
+    }
+  },
+  "fileTypeNotSupported": "نوع الملف هذا غير مدعوم",
+  "fileTypeAllowed": "المسموح: صور (JPG، PNG) و PDF",
+  "filesExpiringSoon": "ملفات في هذه المحادثة ستنتهي صلاحيتها في",
+  "saveImportantFiles": "احفظ الملفات المهمة في مستنداتك.",
+  "expiresOn": "تنتهي الصلاحية {date}",
+  "@expiresOn": {
+    "placeholders": {
+      "date": { "type": "String" }
+    }
+  },
+  "expiresInDays": "تنتهي الصلاحية خلال {days} أيام",
+  "@expiresInDays": {
+    "placeholders": {
+      "days": { "type": "int" }
+    }
+  },
+  "fileExpired": "انتهت صلاحية الملف",
+  "deleteDocumentTitle": "حذف المستند",
+  "deleteDocumentConfirm": "هل أنت متأكد من حذف",
+  "cannotBeUndone": "لا يمكن التراجع عن هذا الإجراء."
 }

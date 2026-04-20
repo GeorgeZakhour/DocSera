@@ -3440,4 +3440,90 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get centerPhone => 'المركز';
+
+  @override
+  String get myStorageTitle => 'مساحة التخزين';
+
+  @override
+  String get storageTitle => 'التخزين';
+
+  @override
+  String get storageUsedLabel => 'مستخدم';
+
+  @override
+  String get storageFilesLabel => 'ملفات';
+
+  @override
+  String get storageWarning70Title => 'مساحة التخزين قاربت على الامتلاء';
+
+  @override
+  String get storageWarning70Body =>
+      'لقد استخدمت 70% من مساحة التخزين. يمكنك تحرير مساحة عن طريق حذف المستندات القديمة التي لم تعد بحاجة إليها.';
+
+  @override
+  String get storageWarning90Title => 'مساحة التخزين شبه ممتلئة';
+
+  @override
+  String get storageWarning90Body =>
+      'لقد استخدمت 90% من مساحة التخزين. لن تتمكن من رفع مستندات جديدة عندما تمتلئ مساحة التخزين.';
+
+  @override
+  String get storageFullTitle => 'مساحة التخزين ممتلئة';
+
+  @override
+  String get storageFullBody => 'قم بتحرير مساحة لرفع ملفات جديدة.';
+
+  @override
+  String get storageLargestFiles => 'إليك أكبر المستندات لديك:';
+
+  @override
+  String get storageViewAll => 'عرض جميع المستندات';
+
+  @override
+  String get storageManage => 'إدارة التخزين';
+
+  @override
+  String get okGotIt => 'حسناً، فهمت';
+
+  @override
+  String get fileTooLargeTitle => 'هذا الملف كبير جداً';
+
+  @override
+  String fileTooLargeBody(String max, String size) {
+    return 'الحد الأقصى لحجم الملف: $max ميغابايت. ملفك: $size ميغابايت.';
+  }
+
+  @override
+  String get fileTypeNotSupported => 'نوع الملف هذا غير مدعوم';
+
+  @override
+  String get fileTypeAllowed => 'المسموح: صور (JPG، PNG) و PDF';
+
+  @override
+  String get filesExpiringSoon => 'ملفات في هذه المحادثة ستنتهي صلاحيتها في';
+
+  @override
+  String get saveImportantFiles => 'احفظ الملفات المهمة في مستنداتك.';
+
+  @override
+  String expiresOn(String date) {
+    return 'تنتهي الصلاحية $date';
+  }
+
+  @override
+  String expiresInDays(int days) {
+    return 'تنتهي الصلاحية خلال $days أيام';
+  }
+
+  @override
+  String get fileExpired => 'انتهت صلاحية الملف';
+
+  @override
+  String get deleteDocumentTitle => 'حذف المستند';
+
+  @override
+  String get deleteDocumentConfirm => 'هل أنت متأكد من حذف';
+
+  @override
+  String get cannotBeUndone => 'لا يمكن التراجع عن هذا الإجراء.';
 }

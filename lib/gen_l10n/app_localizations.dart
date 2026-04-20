@@ -6523,6 +6523,162 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Center'**
   String get centerPhone;
+
+  /// No description provided for @myStorageTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'My Storage'**
+  String get myStorageTitle;
+
+  /// No description provided for @storageTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Storage'**
+  String get storageTitle;
+
+  /// No description provided for @storageUsedLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'used'**
+  String get storageUsedLabel;
+
+  /// No description provided for @storageFilesLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'files'**
+  String get storageFilesLabel;
+
+  /// No description provided for @storageWarning70Title.
+  ///
+  /// In en, this message translates to:
+  /// **'Storage Getting Full'**
+  String get storageWarning70Title;
+
+  /// No description provided for @storageWarning70Body.
+  ///
+  /// In en, this message translates to:
+  /// **'You\'ve used 70% of your storage. You can free up space by deleting old documents you no longer need.'**
+  String get storageWarning70Body;
+
+  /// No description provided for @storageWarning90Title.
+  ///
+  /// In en, this message translates to:
+  /// **'Storage Almost Full'**
+  String get storageWarning90Title;
+
+  /// No description provided for @storageWarning90Body.
+  ///
+  /// In en, this message translates to:
+  /// **'You\'ve used 90% of your storage. You won\'t be able to upload new documents once your storage is full.'**
+  String get storageWarning90Body;
+
+  /// No description provided for @storageFullTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Storage Full'**
+  String get storageFullTitle;
+
+  /// No description provided for @storageFullBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Free up space to upload new files.'**
+  String get storageFullBody;
+
+  /// No description provided for @storageLargestFiles.
+  ///
+  /// In en, this message translates to:
+  /// **'Here are your largest documents:'**
+  String get storageLargestFiles;
+
+  /// No description provided for @storageViewAll.
+  ///
+  /// In en, this message translates to:
+  /// **'View All Documents'**
+  String get storageViewAll;
+
+  /// No description provided for @storageManage.
+  ///
+  /// In en, this message translates to:
+  /// **'Manage Storage'**
+  String get storageManage;
+
+  /// No description provided for @okGotIt.
+  ///
+  /// In en, this message translates to:
+  /// **'OK, Got It'**
+  String get okGotIt;
+
+  /// No description provided for @fileTooLargeTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'This file is too large'**
+  String get fileTooLargeTitle;
+
+  /// No description provided for @fileTooLargeBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Maximum file size: {max}MB. Your file: {size}MB.'**
+  String fileTooLargeBody(String max, String size);
+
+  /// No description provided for @fileTypeNotSupported.
+  ///
+  /// In en, this message translates to:
+  /// **'This file type is not supported'**
+  String get fileTypeNotSupported;
+
+  /// No description provided for @fileTypeAllowed.
+  ///
+  /// In en, this message translates to:
+  /// **'Allowed: images (JPG, PNG) and PDF'**
+  String get fileTypeAllowed;
+
+  /// No description provided for @filesExpiringSoon.
+  ///
+  /// In en, this message translates to:
+  /// **'Files in this conversation will expire on'**
+  String get filesExpiringSoon;
+
+  /// No description provided for @saveImportantFiles.
+  ///
+  /// In en, this message translates to:
+  /// **'Save important files to your Documents.'**
+  String get saveImportantFiles;
+
+  /// No description provided for @expiresOn.
+  ///
+  /// In en, this message translates to:
+  /// **'Expires {date}'**
+  String expiresOn(String date);
+
+  /// No description provided for @expiresInDays.
+  ///
+  /// In en, this message translates to:
+  /// **'Expires in {days} days'**
+  String expiresInDays(int days);
+
+  /// No description provided for @fileExpired.
+  ///
+  /// In en, this message translates to:
+  /// **'File expired'**
+  String get fileExpired;
+
+  /// No description provided for @deleteDocumentTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete Document'**
+  String get deleteDocumentTitle;
+
+  /// No description provided for @deleteDocumentConfirm.
+  ///
+  /// In en, this message translates to:
+  /// **'Are you sure you want to delete'**
+  String get deleteDocumentConfirm;
+
+  /// No description provided for @cannotBeUndone.
+  ///
+  /// In en, this message translates to:
+  /// **'This cannot be undone.'**
+  String get cannotBeUndone;
 }
 
 class _AppLocalizationsDelegate

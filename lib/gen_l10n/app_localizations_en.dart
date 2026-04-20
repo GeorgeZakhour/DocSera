@@ -3482,4 +3482,90 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get centerPhone => 'Center';
+
+  @override
+  String get myStorageTitle => 'My Storage';
+
+  @override
+  String get storageTitle => 'Storage';
+
+  @override
+  String get storageUsedLabel => 'used';
+
+  @override
+  String get storageFilesLabel => 'files';
+
+  @override
+  String get storageWarning70Title => 'Storage Getting Full';
+
+  @override
+  String get storageWarning70Body =>
+      'You\'ve used 70% of your storage. You can free up space by deleting old documents you no longer need.';
+
+  @override
+  String get storageWarning90Title => 'Storage Almost Full';
+
+  @override
+  String get storageWarning90Body =>
+      'You\'ve used 90% of your storage. You won\'t be able to upload new documents once your storage is full.';
+
+  @override
+  String get storageFullTitle => 'Storage Full';
+
+  @override
+  String get storageFullBody => 'Free up space to upload new files.';
+
+  @override
+  String get storageLargestFiles => 'Here are your largest documents:';
+
+  @override
+  String get storageViewAll => 'View All Documents';
+
+  @override
+  String get storageManage => 'Manage Storage';
+
+  @override
+  String get okGotIt => 'OK, Got It';
+
+  @override
+  String get fileTooLargeTitle => 'This file is too large';
+
+  @override
+  String fileTooLargeBody(String max, String size) {
+    return 'Maximum file size: ${max}MB. Your file: ${size}MB.';
+  }
+
+  @override
+  String get fileTypeNotSupported => 'This file type is not supported';
+
+  @override
+  String get fileTypeAllowed => 'Allowed: images (JPG, PNG) and PDF';
+
+  @override
+  String get filesExpiringSoon => 'Files in this conversation will expire on';
+
+  @override
+  String get saveImportantFiles => 'Save important files to your Documents.';
+
+  @override
+  String expiresOn(String date) {
+    return 'Expires $date';
+  }
+
+  @override
+  String expiresInDays(int days) {
+    return 'Expires in $days days';
+  }
+
+  @override
+  String get fileExpired => 'File expired';
+
+  @override
+  String get deleteDocumentTitle => 'Delete Document';
+
+  @override
+  String get deleteDocumentConfirm => 'Are you sure you want to delete';
+
+  @override
+  String get cannotBeUndone => 'This cannot be undone.';
 }

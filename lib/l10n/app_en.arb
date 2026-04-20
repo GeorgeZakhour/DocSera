@@ -1250,5 +1250,47 @@
   "formatUnknown": "File",
   "worksAt": "Works at",
   "viewCenter": "View Center",
-  "centerPhone": "Center"
+  "centerPhone": "Center",
+  "myStorageTitle": "My Storage",
+  "storageTitle": "Storage",
+  "storageUsedLabel": "used",
+  "storageFilesLabel": "files",
+  "storageWarning70Title": "Storage Getting Full",
+  "storageWarning70Body": "You've used 70% of your storage. You can free up space by deleting old documents you no longer need.",
+  "storageWarning90Title": "Storage Almost Full",
+  "storageWarning90Body": "You've used 90% of your storage. You won't be able to upload new documents once your storage is full.",
+  "storageFullTitle": "Storage Full",
+  "storageFullBody": "Free up space to upload new files.",
+  "storageLargestFiles": "Here are your largest documents:",
+  "storageViewAll": "View All Documents",
+  "storageManage": "Manage Storage",
+  "okGotIt": "OK, Got It",
+  "fileTooLargeTitle": "This file is too large",
+  "fileTooLargeBody": "Maximum file size: {max}MB. Your file: {size}MB.",
+  "@fileTooLargeBody": {
+    "placeholders": {
+      "max": { "type": "String" },
+      "size": { "type": "String" }
+    }
+  },
+  "fileTypeNotSupported": "This file type is not supported",
+  "fileTypeAllowed": "Allowed: images (JPG, PNG) and PDF",
+  "filesExpiringSoon": "Files in this conversation will expire on",
+  "saveImportantFiles": "Save important files to your Documents.",
+  "expiresOn": "Expires {date}",
+  "@expiresOn": {
+    "placeholders": {
+      "date": { "type": "String" }
+    }
+  },
+  "expiresInDays": "Expires in {days} days",
+  "@expiresInDays": {
+    "placeholders": {
+      "days": { "type": "int" }
+    }
+  },
+  "fileExpired": "File expired",
+  "deleteDocumentTitle": "Delete Document",
+  "deleteDocumentConfirm": "Are you sure you want to delete",
+  "cannotBeUndone": "This cannot be undone."
 }
