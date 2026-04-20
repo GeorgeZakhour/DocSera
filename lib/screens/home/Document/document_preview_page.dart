@@ -3,7 +3,9 @@ import 'dart:io';
 import 'dart:typed_data';
 import 'package:docsera/app/text_styles.dart';
 import 'package:docsera/models/document.dart';
+import 'package:docsera/screens/home/Document/document_info_screen.dart';
 import 'package:docsera/services/encryption/message_encryption_service.dart';
+import 'package:docsera/services/supabase/storage_quota_service.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:docsera/app/const.dart';
@@ -21,6 +23,9 @@ class DocumentPreviewPage extends StatefulWidget {
   final bool cameFromConversation;
   final String? doctorName;
   final bool showActions;
+  /// Optional: chat_media.id — if provided, `markChatMediaSaved` is called
+  /// after the patient saves the PDF to their Documents vault.
+  final String? chatMediaId;
 
   const DocumentPreviewPage({
     super.key,
@@ -28,6 +33,7 @@ class DocumentPreviewPage extends StatefulWidget {
     this.cameFromConversation = false,
     this.doctorName,
     this.showActions = true,
+    this.chatMediaId,
   });
 
   @override
@@ -269,6 +275,70 @@ class _DocumentPreviewPageState extends State<DocumentPreviewPage> {
     });
   }
 
+  /// ✅ Task 15: Save PDF (already decrypted and stored in _localPdfFile) to Documents vault.
+  Future<void> _savePdfToDocuments(BuildContext context) async {
+    final local = AppLocalizations.of(context)!;
+    final messenger = ScaffoldMessenger.of(context);
+
+    // Re-use the already-downloaded (and decrypted) temp file if available,
+    // otherwise attempt to download it again.
+    File? fileToSave = _localPdfFile;
+
+    if (fileToSave == null || !fileToSave.existsSync()) {
+      try {
+        final firstPage = widget.document.pages.isNotEmpty
+            ? widget.document.pages.first
+            : widget.document.previewUrl;
+        fileToSave = await _downloadPdf(firstPage);
+      } catch (_) {
+        messenger.showSnackBar(
+          SnackBar(
+            content: Text(local.downloadFailed),
+            backgroundColor: AppColors.red.withOpacity(0.9),
+          ),
+        );
+        return;
+      }
+    }
+
+    // Copy to a stable temp path with the document name so DocumentInfoScreen
+    // gets a readable file name.
+    final dir = await getTemporaryDirectory();
+    final safeDocName = widget.document.name.endsWith('.pdf')
+        ? widget.document.name
+        : '${widget.document.name}.pdf';
+    final destFile = File('${dir.path}/$safeDocName');
+    if (fileToSave.path != destFile.path) {
+      await fileToSave.copy(destFile.path);
+    }
+
+    if (!mounted) return;
+
+    await Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (_) => DocumentInfoScreen(
+          images: [destFile.path],
+          initialName: 'PDF from ${widget.doctorName ?? local.doctor}',
+          cameFromMultiPage: false,
+          pageCount: 1,
+          initialPatientId: widget.document.patientId,
+          cameFromConversation: true,
+          conversationDoctorName: widget.doctorName ?? widget.document.conversationDoctorName,
+        ),
+      ),
+    );
+
+    // After returning from DocumentInfoScreen, mark the media as saved if we have an ID.
+    if (widget.chatMediaId != null && widget.chatMediaId!.isNotEmpty) {
+      try {
+        await StorageQuotaService().markChatMediaSaved(widget.chatMediaId!);
+      } catch (_) {
+        // Non-critical — ignore silently.
+      }
+    }
+  }
+
   @override
   void dispose() {
     _transformationController.dispose();
@@ -293,6 +363,13 @@ class _DocumentPreviewPageState extends State<DocumentPreviewPage> {
             onPressed: () => Navigator.pop(context),
           ),
           actions: widget.showActions ? [
+            // ✅ Task 15: Prominent "Add to Documents" button for PDFs from chat.
+            if (widget.cameFromConversation && isPdf)
+              IconButton(
+                tooltip: AppLocalizations.of(context)!.addToDocuments,
+                icon: const Icon(Icons.save_alt, color: Colors.white),
+                onPressed: () => _savePdfToDocuments(context),
+              ),
             IconButton(
               icon: const Icon(Icons.more_vert, color: Colors.white),
               onPressed: () {
