@@ -13,6 +13,7 @@ import 'package:docsera/Business_Logic/Available_appointments_page/doctor_schedu
 import 'package:docsera/Business_Logic/Documents_page/documents/documents_cubit.dart';
 import 'package:docsera/Business_Logic/Documents_page/notes/notes_cubit.dart';
 import 'package:docsera/Business_Logic/Health_page/patient_switcher_cubit.dart';
+import 'package:docsera/Business_Logic/Storage/storage_quota_cubit.dart';
 import 'package:docsera/Business_Logic/Main_page/main_screen_cubit.dart';
 import 'package:docsera/Business_Logic/Messages_page/messages_cubit.dart';
 import 'package:docsera/screens/doctors/doctor_profile_page.dart';
@@ -150,7 +151,7 @@ void main() async {
               prefs,
             ),
           ),
-
+          BlocProvider(create: (_) => StorageQuotaCubit()),
 
         ],
         child: BlocListener<AuthCubit, custom_auth.AppAuthState>(
