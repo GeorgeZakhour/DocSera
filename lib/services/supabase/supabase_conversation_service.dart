@@ -5,6 +5,13 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:docsera/utils/time_utils.dart';
 import 'package:docsera/services/encryption/message_encryption_service.dart';
 
+// ---------------------------------------------------------------------------
+// Per-file size limits for chat attachments
+// ---------------------------------------------------------------------------
+const int kMaxPatientChatImage = 15 * 1024 * 1024; // 15 MB
+const int kMaxPatientChatPdf   = 15 * 1024 * 1024; // 15 MB
+const int kMaxPatientChatAudio =  5 * 1024 * 1024; //  5 MB
+
 class ConversationService {
   final SupabaseClient _client;
 
@@ -104,7 +111,8 @@ class ConversationService {
   // 3) إرسال رسالة نص + مرفقات (بعد رفع المرفقات في الواجهة)
   // ---------------------------------------------------------------------------
 
-  Future<void> sendMessage({
+  /// Returns the inserted message ID (UUID string).
+  Future<String> sendMessage({
     required String conversationId,
     required String senderName,
     required String text,
@@ -142,7 +150,7 @@ class ConversationService {
     final enc = MessageEncryptionService.instance;
     final encryptedText = enc.encryptText(text);
 
-    await _client.from('messages').insert({
+    final inserted = await _client.from('messages').insert({
       if (id != null) 'id': id, // ✅ Insert with pre-generated UUID
       'conversation_id': conversationId,
       'text': encryptedText,
@@ -157,7 +165,9 @@ class ConversationService {
       'read_by_user_at': isUser ? now.toIso8601String() : null,
 
       if (attachments.isNotEmpty) 'attachments': attachments,
-    });
+    }).select('id').single();
+
+    final messageId = inserted['id'] as String;
 
     // ----------------------------------------------------------
     // 3) توليد معاينة آخر رسالة (تظهر في MessagesPage)
@@ -209,9 +219,30 @@ class ConversationService {
         .eq('id', conversationId);
 
     // ----------------------------------------------------------
-    // 5) عداد الرسائل يتم تحديثه تلقائياً بواسطة Database Trigger 
+    // 5) عداد الرسائل يتم تحديثه تلقائياً بواسطة Database Trigger
     // (fix_unread_trigger.sql)
     // ----------------------------------------------------------
+
+    // ----------------------------------------------------------
+    // 6) تسجيل بيانات وصفية لمرفقات الوسائط (non-blocking)
+    // ----------------------------------------------------------
+    for (final attachment in attachments) {
+      final filePath = (attachment['paths'] as List?)?.first as String?;
+      final fileType = attachment['type'] as String?;
+      final fileSizeBytes = attachment['file_size_bytes'] as int?;
+
+      if (filePath != null && fileType != null && fileSizeBytes != null) {
+        await _trackChatMedia(
+          messageId: messageId,
+          conversationId: conversationId,
+          filePath: filePath,
+          fileSizeBytes: fileSizeBytes,
+          fileType: fileType,
+        );
+      }
+    }
+
+    return messageId;
   }
 
   // ---------------------------------------------------------------------------
@@ -226,11 +257,35 @@ class ConversationService {
   Future<Map<String, dynamic>> uploadAttachmentFile({
     required String conversationId,
     required File file,
-    required String type, // 'image' أو 'pdf'
+    required String type, // 'image', 'pdf', or 'audio'
     required String storageName,
   }) async {
     final storagePath = '$conversationId/$storageName';
     var bytes = await file.readAsBytes();
+
+    // ----------------------------------------------------------
+    // Per-file size validation
+    // ----------------------------------------------------------
+    final originalSizeBytes = bytes.length;
+    final int maxBytes;
+    switch (type) {
+      case 'pdf':
+        maxBytes = kMaxPatientChatPdf;
+        break;
+      case 'audio':
+      case 'voice':
+        maxBytes = kMaxPatientChatAudio;
+        break;
+      default: // 'image' and anything else
+        maxBytes = kMaxPatientChatImage;
+        break;
+    }
+    if (originalSizeBytes > maxBytes) {
+      final limitMb = maxBytes ~/ (1024 * 1024);
+      throw Exception(
+        'File size exceeds the $limitMb MB limit for $type attachments.',
+      );
+    }
 
     // ✅ Phase 2C: Encrypt file bytes before upload
     bool isEncrypted = false;
@@ -260,6 +315,7 @@ class ConversationService {
       'paths': [storagePath],
       'fileName': storageName,
       'fileUrl': null,
+      'file_size_bytes': originalSizeBytes,
       if (isEncrypted) 'encrypted': true,
     };
   }
@@ -281,5 +337,35 @@ class ConversationService {
     final signedUrl =
         await storageRef.createSignedUrl(path, duration.inSeconds);
     return signedUrl;
+  }
+
+  // ---------------------------------------------------------------------------
+  // 6) تسجيل بيانات وصفية لمرفقات الوسائط (للتتبع والانتهاء الصلاحية)
+  // ---------------------------------------------------------------------------
+
+  /// 🔹 Inserts a row into `chat_media_metadata` after a successful upload + send.
+  ///
+  /// This is intentionally non-blocking — a failure here must never prevent
+  /// the message from being delivered.
+  Future<void> _trackChatMedia({
+    required String messageId,
+    required String conversationId,
+    required String filePath,
+    required int fileSizeBytes,
+    required String fileType, // 'image', 'pdf', 'audio'
+  }) async {
+    try {
+      await _client.from('chat_media_metadata').insert({
+        'message_id': messageId,
+        'conversation_id': conversationId,
+        'uploader_id': _client.auth.currentUser!.id,
+        'file_path': filePath,
+        'file_size_bytes': fileSizeBytes,
+        'file_type': fileType,
+      });
+    } catch (e) {
+      // Non-blocking — don't fail the message send if metadata insert fails
+      debugPrint('Warning: Failed to track chat media metadata: $e');
+    }
   }
 }
