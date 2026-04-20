@@ -1,6 +1,7 @@
 import 'dart:io';
 import 'dart:typed_data';
 import 'package:docsera/Business_Logic/Documents_page/documents/documents_cubit.dart';
+import 'package:docsera/Business_Logic/Health_page/patient_switcher_cubit.dart';
 import 'package:docsera/app/const.dart';
 import 'package:docsera/utils/time_utils.dart';
 import 'package:docsera/app/text_styles.dart';
@@ -766,7 +767,12 @@ class _DocumentInfoScreenState extends State<DocumentInfoScreen> {
       debugPrint("✅ Document inserted with id = $realId");
 
       if (!mounted) return;
-      context.read<DocumentsCubit>().listenToDocuments(context: context, forceReload: true); // ✅ Force refresh
+      final switcher = context.read<PatientSwitcherCubit>().state;
+      context.read<DocumentsCubit>().listenToDocuments(
+        context: context,
+        relativeId: switcher.relativeId,
+        forceReload: true,
+      );
 
       Navigator.pop(context, true);
       // (Removed Double Pop - let the caller handle it)

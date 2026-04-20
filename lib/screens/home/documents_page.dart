@@ -329,12 +329,40 @@ class _DocumentsPageState extends State<DocumentsPage> with AutomaticKeepAliveCl
         backgroundColor: AppColors.main,
         elevation: 0,
         iconTheme: const IconThemeData(color: Colors.white),
-        title: Text(
-          t.health_documents_title,
-          style: AppTextStyles.getTitle1(context).copyWith(
-            color: Colors.white,
-            fontSize: 12.sp,
-          ),
+        title: BlocBuilder<PatientSwitcherCubit, PatientSwitcherState>(
+          builder: (context, switcherState) {
+            final isRelative = switcherState.relativeId != null;
+            return Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Text(
+                  t.health_documents_title,
+                  style: AppTextStyles.getTitle1(context).copyWith(
+                    color: Colors.white,
+                    fontSize: 12.sp,
+                  ),
+                ),
+                if (isRelative)
+                  Padding(
+                    padding: EdgeInsets.only(top: 2.h),
+                    child: Container(
+                      padding: EdgeInsets.symmetric(horizontal: 8.w, vertical: 1.h),
+                      decoration: BoxDecoration(
+                        color: Colors.white.withValues(alpha: 0.2),
+                        borderRadius: BorderRadius.circular(10.r),
+                      ),
+                      child: Text(
+                        switcherState.patientName,
+                        style: AppTextStyles.getText3(context).copyWith(
+                          color: Colors.white,
+                          fontSize: 9.sp,
+                        ),
+                      ),
+                    ),
+                  ),
+              ],
+            );
+          },
         ),
       ),
       body: BlocBuilder<DocumentsCubit, DocumentsState>(
