@@ -667,47 +667,61 @@ class _DocumentsPageState extends State<DocumentsPage> with AutomaticKeepAliveCl
     final notesState = context.watch<NotesCubit>().state;
     final hasNotes = notesState is NotesLoaded && notesState.notes.isNotEmpty;
 
-    return Stack(
+    return Column(
       children: [
-        /// ✅ المحتوى (يمرّ خلف السويتشر)
-        _selectedTab == 0
-            ? _buildDocumentsTab(documents)
-            : _buildNotesTab(),
-
-        /// ✅ سويتشر الوثائق أو الملاحظات
-        if ((_selectedTab == 0 && hasDocuments) ||
-            (_selectedTab == 1 && hasNotes))
-          Positioned(
-            top: 0,
-            left: 0,
-            right: 0,
-            child: Padding(
-              padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 8.h),
-              child: Align(
-                alignment: Directionality.of(context) == TextDirection.RTL
-                    ? Alignment.centerLeft
-                    : Alignment.centerRight,
-                child: _selectedTab == 0
-                    ? Container(
-                  padding: EdgeInsets.all(2.w),
-                  decoration: BoxDecoration(
-                    color: Colors.white,
-                    borderRadius: BorderRadius.circular(30.r),
-                    border: Border.all(color: Colors.grey.shade200),
-                  ),
-                  child: Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      _buildViewModeButton(Icons.grid_view, true),
-                      SizedBox(width: 4.w),
-                      _buildViewModeButton(Icons.view_list, false),
-                    ],
-                  ),
-                )
-                    : _buildNotesViewModeSwitcher(),
-              ),
-            ),
+        // Storage bar — sits above the content, never overlaps
+        if (_selectedTab == 0)
+          Padding(
+            padding: EdgeInsets.fromLTRB(16.w, 12.h, 16.w, 0),
+            child: const StorageProgressBar(compact: false),
           ),
+
+        // Toggle + content
+        Expanded(
+          child: Stack(
+            children: [
+              /// ✅ المحتوى (يمرّ خلف السويتشر)
+              _selectedTab == 0
+                  ? _buildDocumentsTab(documents)
+                  : _buildNotesTab(),
+
+              /// ✅ سويتشر الوثائق أو الملاحظات
+              if ((_selectedTab == 0 && hasDocuments) ||
+                  (_selectedTab == 1 && hasNotes))
+                Positioned(
+                  top: 0,
+                  left: 0,
+                  right: 0,
+                  child: Padding(
+                    padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 8.h),
+                    child: Align(
+                      alignment: Directionality.of(context) == TextDirection.RTL
+                          ? Alignment.centerLeft
+                          : Alignment.centerRight,
+                      child: _selectedTab == 0
+                          ? Container(
+                        padding: EdgeInsets.all(2.w),
+                        decoration: BoxDecoration(
+                          color: Colors.white,
+                          borderRadius: BorderRadius.circular(30.r),
+                          border: Border.all(color: Colors.grey.shade200),
+                        ),
+                        child: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            _buildViewModeButton(Icons.grid_view, true),
+                            SizedBox(width: 4.w),
+                            _buildViewModeButton(Icons.view_list, false),
+                          ],
+                        ),
+                      )
+                          : _buildNotesViewModeSwitcher(),
+                    ),
+                  ),
+                ),
+            ],
+          ),
+        ),
       ],
     );
   }
@@ -859,14 +873,6 @@ class _DocumentsPageState extends State<DocumentsPage> with AutomaticKeepAliveCl
     return CustomScrollView(
       physics: const BouncingScrollPhysics(),
       slivers: [
-        // Storage usage bar
-        SliverToBoxAdapter(
-          child: Padding(
-            padding: EdgeInsets.fromLTRB(16.w, 12.h, 16.w, 0),
-            child: const StorageProgressBar(compact: false),
-          ),
-        ),
-
         // ✅ البانر كعنصر منفصل في الأعلى
         SliverToBoxAdapter(
           child: Padding(
@@ -914,14 +920,6 @@ class _DocumentsPageState extends State<DocumentsPage> with AutomaticKeepAliveCl
     return CustomScrollView(
       physics: const BouncingScrollPhysics(),
       slivers: [
-        // Storage usage bar
-        SliverToBoxAdapter(
-          child: Padding(
-            padding: EdgeInsets.fromLTRB(16.w, 12.h, 16.w, 0),
-            child: const StorageProgressBar(compact: false),
-          ),
-        ),
-
         // ✅ البانر
         SliverToBoxAdapter(
           child: Padding(
@@ -1810,11 +1808,6 @@ class _DocumentsPageState extends State<DocumentsPage> with AutomaticKeepAliveCl
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          // Storage usage bar — shown before banner so patients see
-          // how much storage they have before uploading.
-          const StorageProgressBar(compact: false),
-          SizedBox(height: 12.h),
-
           // Doctor-hub banner — shown FIRST so patients learn the page's
           // purpose before being prompted to upload.
           _buildDocumentsBannerCard(),
