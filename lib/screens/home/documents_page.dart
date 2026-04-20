@@ -36,6 +36,10 @@ import 'Document/add_image_preview_sheet.dart';
 import 'Document/document_info_screen.dart';
 import 'note/note_preview_sheet.dart';
 import 'package:path/path.dart' as path;
+import 'package:docsera/Business_Logic/Storage/storage_quota_cubit.dart';
+import 'package:docsera/Business_Logic/Storage/storage_quota_state.dart';
+import 'package:docsera/widgets/storage_progress_bar.dart';
+import 'package:docsera/widgets/storage_warning_dialog.dart';
 
 
 extension WidgetKeyExtension on Widget {
@@ -75,6 +79,7 @@ class _DocumentsPageState extends State<DocumentsPage> with AutomaticKeepAliveCl
     super.initState();
 
     _loadInitialPreferences(); // ✅ الجديدة بدلاً من القديمة
+    context.read<StorageQuotaCubit>().loadStorageUsage();
     // Phase 2 (Patient File Hub): honor the current Patient Switcher
     // selection so Documents load for the chosen user OR relative from
     // the first frame.
@@ -280,27 +285,44 @@ class _DocumentsPageState extends State<DocumentsPage> with AutomaticKeepAliveCl
     final hasNotes = notesState is NotesLoaded && notesState.notes.isNotEmpty;
     final t = AppLocalizations.of(context)!;
 
-    return BlocListener<PatientSwitcherCubit, PatientSwitcherState>(
-      // Phase 2 (Patient File Hub): Documents are now per-patient (main user
-      // OR a specific relative), so reload whenever the Health-page switcher
-      // picks a different subject.
-      listenWhen: (prev, curr) =>
-          prev.userId != curr.userId || prev.relativeId != curr.relativeId,
-      listener: (context, switcherState) {
-        context.read<DocumentsCubit>().listenToDocuments(
-              context: context,
-              relativeId: switcherState.relativeId,
-              forceReload: true,
-            );
-        // Notes: schema is user-scoped, but we still route through the switcher
-        // so the Notes tab visually mirrors the Documents tab — when a relative
-        // is selected the NotesCubit emits an empty list.
-        context.read<NotesCubit>().listenToNotes(
-              context,
-              relativeId: switcherState.relativeId,
-              forceReload: true,
-            );
-      },
+    return MultiBlocListener(
+      listeners: [
+        BlocListener<PatientSwitcherCubit, PatientSwitcherState>(
+          // Phase 2 (Patient File Hub): Documents are now per-patient (main user
+          // OR a specific relative), so reload whenever the Health-page switcher
+          // picks a different subject.
+          listenWhen: (prev, curr) =>
+              prev.userId != curr.userId || prev.relativeId != curr.relativeId,
+          listener: (context, switcherState) {
+            context.read<DocumentsCubit>().listenToDocuments(
+                  context: context,
+                  relativeId: switcherState.relativeId,
+                  forceReload: true,
+                );
+            // Notes: schema is user-scoped, but we still route through the switcher
+            // so the Notes tab visually mirrors the Documents tab — when a relative
+            // is selected the NotesCubit emits an empty list.
+            context.read<NotesCubit>().listenToNotes(
+                  context,
+                  relativeId: switcherState.relativeId,
+                  forceReload: true,
+                );
+          },
+        ),
+        BlocListener<StorageQuotaCubit, StorageQuotaState>(
+          listenWhen: (_, curr) => curr is StorageQuotaLoaded,
+          listener: (context, state) {
+            if (state is StorageQuotaLoaded) {
+              StorageWarningDialog.checkAndShowWarning(
+                context,
+                usedPercentage: state.quota.usedPercentage,
+                warning70Shown: state.quota.warning70Shown,
+                warning90Shown: state.quota.warning90Shown,
+              );
+            }
+          },
+        ),
+      ],
       child: Scaffold(
       backgroundColor: AppColors.background,
       appBar: AppBar(
@@ -837,6 +859,14 @@ class _DocumentsPageState extends State<DocumentsPage> with AutomaticKeepAliveCl
     return CustomScrollView(
       physics: const BouncingScrollPhysics(),
       slivers: [
+        // Storage usage bar
+        SliverToBoxAdapter(
+          child: Padding(
+            padding: EdgeInsets.fromLTRB(16.w, 12.h, 16.w, 0),
+            child: const StorageProgressBar(compact: false),
+          ),
+        ),
+
         // ✅ البانر كعنصر منفصل في الأعلى
         SliverToBoxAdapter(
           child: Padding(
@@ -884,6 +914,14 @@ class _DocumentsPageState extends State<DocumentsPage> with AutomaticKeepAliveCl
     return CustomScrollView(
       physics: const BouncingScrollPhysics(),
       slivers: [
+        // Storage usage bar
+        SliverToBoxAdapter(
+          child: Padding(
+            padding: EdgeInsets.fromLTRB(16.w, 12.h, 16.w, 0),
+            child: const StorageProgressBar(compact: false),
+          ),
+        ),
+
         // ✅ البانر
         SliverToBoxAdapter(
           child: Padding(
@@ -1772,6 +1810,11 @@ class _DocumentsPageState extends State<DocumentsPage> with AutomaticKeepAliveCl
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
+          // Storage usage bar — shown before banner so patients see
+          // how much storage they have before uploading.
+          const StorageProgressBar(compact: false),
+          SizedBox(height: 12.h),
+
           // Doctor-hub banner — shown FIRST so patients learn the page's
           // purpose before being prompted to upload.
           _buildDocumentsBannerCard(),
