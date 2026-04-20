@@ -21,6 +21,7 @@ class UserDocument {
   /// live in `chat.attachments` and must set this explicitly so the preview
   /// resolver can sign URLs from the right bucket.
   final String bucket;
+  final int fileSizeBytes;
 
   UserDocument({
     this.id,
@@ -40,6 +41,7 @@ class UserDocument {
     this.sourceDoctorId,
     this.sourceDoctorName,
     this.bucket = 'documents',
+    this.fileSizeBytes = 0,
   });
 
   factory UserDocument.fromMap(Map<String, dynamic> data) {
@@ -61,6 +63,7 @@ class UserDocument {
       sourceDoctorId: data['source_doctor_id']?.toString(),
       sourceDoctorName: data['source_doctor_name']?.toString(),
       bucket: data['bucket']?.toString() ?? 'documents',
+      fileSizeBytes: (data['file_size_bytes'] as num?)?.toInt() ?? 0,
     );
   }
 
@@ -86,6 +89,7 @@ class UserDocument {
       if (encrypted) 'encrypted': true,
       'source': source,
       if (sourceDoctorId != null) 'source_doctor_id': sourceDoctorId,
+      'file_size_bytes': fileSizeBytes,
     };
   }
 
@@ -100,6 +104,7 @@ class UserDocument {
     String? source,
     String? sourceDoctorId,
     String? sourceDoctorName,
+    int? fileSizeBytes,
   }) {
     return UserDocument(
       id: id,
@@ -118,6 +123,7 @@ class UserDocument {
       source: source ?? this.source,
       sourceDoctorId: sourceDoctorId ?? this.sourceDoctorId,
       sourceDoctorName: sourceDoctorName ?? this.sourceDoctorName,
+      fileSizeBytes: fileSizeBytes ?? this.fileSizeBytes,
     );
   }
 }
