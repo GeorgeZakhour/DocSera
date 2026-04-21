@@ -1315,5 +1315,9 @@
   "deleteDocumentTitle": "حذف المستند",
   "deleteDocumentConfirm": "هل أنت متأكد من حذف",
   "cannotBeUndone": "لا يمكن التراجع عن هذا الإجراء.",
-  "referralCodeOptional": "رمز الإحالة (اختياري)"
+  "referralCodeOptional": "رمز الإحالة (اختياري)",
+  "yourPoints": "نقاطك",
+  "myPoints": "نقاطي",
+  "transactionHistory": "سجل العمليات",
+  "noTransactionsYet": "لا توجد عمليات بعد"
 }

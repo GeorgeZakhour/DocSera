@@ -3571,4 +3571,16 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get referralCodeOptional => 'Referral code (optional)';
+
+  @override
+  String get yourPoints => 'Your Points';
+
+  @override
+  String get myPoints => 'My Points';
+
+  @override
+  String get transactionHistory => 'Transaction History';
+
+  @override
+  String get noTransactionsYet => 'No transactions yet';
 }

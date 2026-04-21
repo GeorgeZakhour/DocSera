@@ -3529,4 +3529,16 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get referralCodeOptional => 'رمز الإحالة (اختياري)';
+
+  @override
+  String get yourPoints => 'نقاطك';
+
+  @override
+  String get myPoints => 'نقاطي';
+
+  @override
+  String get transactionHistory => 'سجل العمليات';
+
+  @override
+  String get noTransactionsYet => 'لا توجد عمليات بعد';
 }

@@ -6685,6 +6685,30 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Referral code (optional)'**
   String get referralCodeOptional;
+
+  /// No description provided for @yourPoints.
+  ///
+  /// In en, this message translates to:
+  /// **'Your Points'**
+  String get yourPoints;
+
+  /// No description provided for @myPoints.
+  ///
+  /// In en, this message translates to:
+  /// **'My Points'**
+  String get myPoints;
+
+  /// No description provided for @transactionHistory.
+  ///
+  /// In en, this message translates to:
+  /// **'Transaction History'**
+  String get transactionHistory;
+
+  /// No description provided for @noTransactionsYet.
+  ///
+  /// In en, this message translates to:
+  /// **'No transactions yet'**
+  String get noTransactionsYet;
 }
 
 class _AppLocalizationsDelegate

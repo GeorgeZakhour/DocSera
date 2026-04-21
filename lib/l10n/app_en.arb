@@ -1293,5 +1293,9 @@
   "deleteDocumentTitle": "Delete Document",
   "deleteDocumentConfirm": "Are you sure you want to delete",
   "cannotBeUndone": "This cannot be undone.",
-  "referralCodeOptional": "Referral code (optional)"
+  "referralCodeOptional": "Referral code (optional)",
+  "yourPoints": "Your Points",
+  "myPoints": "My Points",
+  "transactionHistory": "Transaction History",
+  "noTransactionsYet": "No transactions yet"
 }
