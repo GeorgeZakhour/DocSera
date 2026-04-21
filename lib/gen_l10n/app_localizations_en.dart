@@ -3662,4 +3662,40 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get voucherInstructions =>
       'Show this QR code or voucher code to the partner staff. They will scan or enter the code to verify your discount.';
+
+  @override
+  String get referFriends => 'Refer Friends';
+
+  @override
+  String get yourReferralCode => 'Your referral code';
+
+  @override
+  String get shareWithFriends => 'Share with Friends';
+
+  @override
+  String get totalReferrals => 'Referrals';
+
+  @override
+  String get pointsEarned => 'Points Earned';
+
+  @override
+  String get howItWorks => 'How it works';
+
+  @override
+  String get referStep1 => 'Share your code with friends';
+
+  @override
+  String get referStep2 =>
+      'They sign up using your code and complete their profile';
+
+  @override
+  String get referStep3 => 'You both earn points!';
+
+  @override
+  String get recentReferrals => 'Recent Referrals';
+
+  @override
+  String referralShareMessage(String code) {
+    return 'Join DocSera and use my referral code $code when you sign up! We both get free points. Download now: https://docsera.app';
+  }
 }

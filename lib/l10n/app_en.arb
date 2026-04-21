@@ -1323,5 +1323,23 @@
   "partner": "Partner",
   "expiresAt": "Expires at",
   "howToUse": "How to use",
-  "voucherInstructions": "Show this QR code or voucher code to the partner staff. They will scan or enter the code to verify your discount."
+  "voucherInstructions": "Show this QR code or voucher code to the partner staff. They will scan or enter the code to verify your discount.",
+  "referFriends": "Refer Friends",
+  "yourReferralCode": "Your referral code",
+  "shareWithFriends": "Share with Friends",
+  "totalReferrals": "Referrals",
+  "pointsEarned": "Points Earned",
+  "howItWorks": "How it works",
+  "referStep1": "Share your code with friends",
+  "referStep2": "They sign up using your code and complete their profile",
+  "referStep3": "You both earn points!",
+  "recentReferrals": "Recent Referrals",
+  "referralShareMessage": "Join DocSera and use my referral code {code} when you sign up! We both get free points. Download now: https://docsera.app",
+  "@referralShareMessage": {
+    "placeholders": {
+      "code": {
+        "type": "String"
+      }
+    }
+  }
 }

@@ -1345,5 +1345,23 @@
   "partner": "الشريك",
   "expiresAt": "تنتهي في",
   "howToUse": "طريقة الاستخدام",
-  "voucherInstructions": "أظهر رمز QR أو رمز القسيمة لموظف الشريك. سيقوم بمسح أو إدخال الرمز للتحقق من خصمك."
+  "voucherInstructions": "أظهر رمز QR أو رمز القسيمة لموظف الشريك. سيقوم بمسح أو إدخال الرمز للتحقق من خصمك.",
+  "referFriends": "ادعُ أصدقاءك",
+  "yourReferralCode": "رمز الإحالة الخاص بك",
+  "shareWithFriends": "شارك مع أصدقائك",
+  "totalReferrals": "الإحالات",
+  "pointsEarned": "النقاط المكتسبة",
+  "howItWorks": "كيف تعمل",
+  "referStep1": "شارك رمزك مع أصدقائك",
+  "referStep2": "يقومون بالتسجيل باستخدام رمزك وإكمال ملفهم الشخصي",
+  "referStep3": "تكسبان النقاط معاً!",
+  "recentReferrals": "الإحالات الأخيرة",
+  "referralShareMessage": "انضم إلى DocSera واستخدم رمز الإحالة {code} عند التسجيل! كلانا سيحصل على نقاط مجانية. حمّل الآن: https://docsera.app",
+  "@referralShareMessage": {
+    "placeholders": {
+      "code": {
+        "type": "String"
+      }
+    }
+  }
 }

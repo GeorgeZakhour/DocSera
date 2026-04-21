@@ -6865,6 +6865,72 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Show this QR code or voucher code to the partner staff. They will scan or enter the code to verify your discount.'**
   String get voucherInstructions;
+
+  /// No description provided for @referFriends.
+  ///
+  /// In en, this message translates to:
+  /// **'Refer Friends'**
+  String get referFriends;
+
+  /// No description provided for @yourReferralCode.
+  ///
+  /// In en, this message translates to:
+  /// **'Your referral code'**
+  String get yourReferralCode;
+
+  /// No description provided for @shareWithFriends.
+  ///
+  /// In en, this message translates to:
+  /// **'Share with Friends'**
+  String get shareWithFriends;
+
+  /// No description provided for @totalReferrals.
+  ///
+  /// In en, this message translates to:
+  /// **'Referrals'**
+  String get totalReferrals;
+
+  /// No description provided for @pointsEarned.
+  ///
+  /// In en, this message translates to:
+  /// **'Points Earned'**
+  String get pointsEarned;
+
+  /// No description provided for @howItWorks.
+  ///
+  /// In en, this message translates to:
+  /// **'How it works'**
+  String get howItWorks;
+
+  /// No description provided for @referStep1.
+  ///
+  /// In en, this message translates to:
+  /// **'Share your code with friends'**
+  String get referStep1;
+
+  /// No description provided for @referStep2.
+  ///
+  /// In en, this message translates to:
+  /// **'They sign up using your code and complete their profile'**
+  String get referStep2;
+
+  /// No description provided for @referStep3.
+  ///
+  /// In en, this message translates to:
+  /// **'You both earn points!'**
+  String get referStep3;
+
+  /// No description provided for @recentReferrals.
+  ///
+  /// In en, this message translates to:
+  /// **'Recent Referrals'**
+  String get recentReferrals;
+
+  /// No description provided for @referralShareMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'Join DocSera and use my referral code {code} when you sign up! We both get free points. Download now: https://docsera.app'**
+  String referralShareMessage(String code);
 }
 
 class _AppLocalizationsDelegate

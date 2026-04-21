@@ -3620,4 +3620,39 @@ class AppLocalizationsAr extends AppLocalizations {
   @override
   String get voucherInstructions =>
       'أظهر رمز QR أو رمز القسيمة لموظف الشريك. سيقوم بمسح أو إدخال الرمز للتحقق من خصمك.';
+
+  @override
+  String get referFriends => 'ادعُ أصدقاءك';
+
+  @override
+  String get yourReferralCode => 'رمز الإحالة الخاص بك';
+
+  @override
+  String get shareWithFriends => 'شارك مع أصدقائك';
+
+  @override
+  String get totalReferrals => 'الإحالات';
+
+  @override
+  String get pointsEarned => 'النقاط المكتسبة';
+
+  @override
+  String get howItWorks => 'كيف تعمل';
+
+  @override
+  String get referStep1 => 'شارك رمزك مع أصدقائك';
+
+  @override
+  String get referStep2 => 'يقومون بالتسجيل باستخدام رمزك وإكمال ملفهم الشخصي';
+
+  @override
+  String get referStep3 => 'تكسبان النقاط معاً!';
+
+  @override
+  String get recentReferrals => 'الإحالات الأخيرة';
+
+  @override
+  String referralShareMessage(String code) {
+    return 'انضم إلى DocSera واستخدم رمز الإحالة $code عند التسجيل! كلانا سيحصل على نقاط مجانية. حمّل الآن: https://docsera.app';
+  }
 }
