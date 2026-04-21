@@ -3541,4 +3541,83 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get noTransactionsYet => 'لا توجد عمليات بعد';
+
+  @override
+  String get offers => 'العروض';
+
+  @override
+  String get all => 'الكل';
+
+  @override
+  String get healthPartners => 'شركاء الصحة';
+
+  @override
+  String get mobileCredit => 'رصيد موبايل';
+
+  @override
+  String get noOffersAvailable => 'لا توجد عروض متاحة حالياً';
+
+  @override
+  String get offerDetails => 'تفاصيل العرض';
+
+  @override
+  String get discount => 'خصم';
+
+  @override
+  String get redeemNow => 'استبدل الآن';
+
+  @override
+  String get notEnoughPoints => 'نقاط غير كافية';
+
+  @override
+  String get confirmRedeem => 'تأكيد الاستبدال';
+
+  @override
+  String get spendPoints => 'إنفاق';
+
+  @override
+  String get redeemSuccess => 'تم الاستبدال!';
+
+  @override
+  String get yourVoucherCode => 'رمز القسيمة الخاص بك:';
+
+  @override
+  String get myVouchers => 'قسائمي';
+
+  @override
+  String get active => 'نشطة';
+
+  @override
+  String get used => 'مستخدمة';
+
+  @override
+  String get expired => 'منتهية';
+
+  @override
+  String get noVouchers => 'لا توجد قسائم';
+
+  @override
+  String get voucherDetails => 'تفاصيل القسيمة';
+
+  @override
+  String get codeCopied => 'تم نسخ الرمز!';
+
+  @override
+  String get tapToCopy => 'انقر للنسخ';
+
+  @override
+  String get status => 'الحالة';
+
+  @override
+  String get partner => 'الشريك';
+
+  @override
+  String get expiresAt => 'تنتهي في';
+
+  @override
+  String get howToUse => 'طريقة الاستخدام';
+
+  @override
+  String get voucherInstructions =>
+      'أظهر رمز QR أو رمز القسيمة لموظف الشريك. سيقوم بمسح أو إدخال الرمز للتحقق من خصمك.';
 }

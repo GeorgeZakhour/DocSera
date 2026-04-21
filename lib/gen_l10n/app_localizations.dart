@@ -6709,6 +6709,162 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'No transactions yet'**
   String get noTransactionsYet;
+
+  /// No description provided for @offers.
+  ///
+  /// In en, this message translates to:
+  /// **'Offers'**
+  String get offers;
+
+  /// No description provided for @all.
+  ///
+  /// In en, this message translates to:
+  /// **'All'**
+  String get all;
+
+  /// No description provided for @healthPartners.
+  ///
+  /// In en, this message translates to:
+  /// **'Health Partners'**
+  String get healthPartners;
+
+  /// No description provided for @mobileCredit.
+  ///
+  /// In en, this message translates to:
+  /// **'Mobile Credit'**
+  String get mobileCredit;
+
+  /// No description provided for @noOffersAvailable.
+  ///
+  /// In en, this message translates to:
+  /// **'No offers available right now'**
+  String get noOffersAvailable;
+
+  /// No description provided for @offerDetails.
+  ///
+  /// In en, this message translates to:
+  /// **'Offer Details'**
+  String get offerDetails;
+
+  /// No description provided for @discount.
+  ///
+  /// In en, this message translates to:
+  /// **'discount'**
+  String get discount;
+
+  /// No description provided for @redeemNow.
+  ///
+  /// In en, this message translates to:
+  /// **'Redeem Now'**
+  String get redeemNow;
+
+  /// No description provided for @notEnoughPoints.
+  ///
+  /// In en, this message translates to:
+  /// **'Not enough points'**
+  String get notEnoughPoints;
+
+  /// No description provided for @confirmRedeem.
+  ///
+  /// In en, this message translates to:
+  /// **'Confirm Redemption'**
+  String get confirmRedeem;
+
+  /// No description provided for @spendPoints.
+  ///
+  /// In en, this message translates to:
+  /// **'Spend'**
+  String get spendPoints;
+
+  /// No description provided for @redeemSuccess.
+  ///
+  /// In en, this message translates to:
+  /// **'Redeemed!'**
+  String get redeemSuccess;
+
+  /// No description provided for @yourVoucherCode.
+  ///
+  /// In en, this message translates to:
+  /// **'Your voucher code:'**
+  String get yourVoucherCode;
+
+  /// No description provided for @myVouchers.
+  ///
+  /// In en, this message translates to:
+  /// **'My Vouchers'**
+  String get myVouchers;
+
+  /// No description provided for @active.
+  ///
+  /// In en, this message translates to:
+  /// **'Active'**
+  String get active;
+
+  /// No description provided for @used.
+  ///
+  /// In en, this message translates to:
+  /// **'Used'**
+  String get used;
+
+  /// No description provided for @expired.
+  ///
+  /// In en, this message translates to:
+  /// **'Expired'**
+  String get expired;
+
+  /// No description provided for @noVouchers.
+  ///
+  /// In en, this message translates to:
+  /// **'No vouchers'**
+  String get noVouchers;
+
+  /// No description provided for @voucherDetails.
+  ///
+  /// In en, this message translates to:
+  /// **'Voucher Details'**
+  String get voucherDetails;
+
+  /// No description provided for @codeCopied.
+  ///
+  /// In en, this message translates to:
+  /// **'Code copied!'**
+  String get codeCopied;
+
+  /// No description provided for @tapToCopy.
+  ///
+  /// In en, this message translates to:
+  /// **'Tap to copy'**
+  String get tapToCopy;
+
+  /// No description provided for @status.
+  ///
+  /// In en, this message translates to:
+  /// **'Status'**
+  String get status;
+
+  /// No description provided for @partner.
+  ///
+  /// In en, this message translates to:
+  /// **'Partner'**
+  String get partner;
+
+  /// No description provided for @expiresAt.
+  ///
+  /// In en, this message translates to:
+  /// **'Expires at'**
+  String get expiresAt;
+
+  /// No description provided for @howToUse.
+  ///
+  /// In en, this message translates to:
+  /// **'How to use'**
+  String get howToUse;
+
+  /// No description provided for @voucherInstructions.
+  ///
+  /// In en, this message translates to:
+  /// **'Show this QR code or voucher code to the partner staff. They will scan or enter the code to verify your discount.'**
+  String get voucherInstructions;
 }
 
 class _AppLocalizationsDelegate

@@ -1310,5 +1310,18 @@
   "confirmRedeem": "Confirm Redemption",
   "spendPoints": "Spend",
   "redeemSuccess": "Redeemed!",
-  "yourVoucherCode": "Your voucher code:"
+  "yourVoucherCode": "Your voucher code:",
+  "myVouchers": "My Vouchers",
+  "active": "Active",
+  "used": "Used",
+  "expired": "Expired",
+  "noVouchers": "No vouchers",
+  "voucherDetails": "Voucher Details",
+  "codeCopied": "Code copied!",
+  "tapToCopy": "Tap to copy",
+  "status": "Status",
+  "partner": "Partner",
+  "expiresAt": "Expires at",
+  "howToUse": "How to use",
+  "voucherInstructions": "Show this QR code or voucher code to the partner staff. They will scan or enter the code to verify your discount."
 }

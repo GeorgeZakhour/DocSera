@@ -3583,4 +3583,83 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get noTransactionsYet => 'No transactions yet';
+
+  @override
+  String get offers => 'Offers';
+
+  @override
+  String get all => 'All';
+
+  @override
+  String get healthPartners => 'Health Partners';
+
+  @override
+  String get mobileCredit => 'Mobile Credit';
+
+  @override
+  String get noOffersAvailable => 'No offers available right now';
+
+  @override
+  String get offerDetails => 'Offer Details';
+
+  @override
+  String get discount => 'discount';
+
+  @override
+  String get redeemNow => 'Redeem Now';
+
+  @override
+  String get notEnoughPoints => 'Not enough points';
+
+  @override
+  String get confirmRedeem => 'Confirm Redemption';
+
+  @override
+  String get spendPoints => 'Spend';
+
+  @override
+  String get redeemSuccess => 'Redeemed!';
+
+  @override
+  String get yourVoucherCode => 'Your voucher code:';
+
+  @override
+  String get myVouchers => 'My Vouchers';
+
+  @override
+  String get active => 'Active';
+
+  @override
+  String get used => 'Used';
+
+  @override
+  String get expired => 'Expired';
+
+  @override
+  String get noVouchers => 'No vouchers';
+
+  @override
+  String get voucherDetails => 'Voucher Details';
+
+  @override
+  String get codeCopied => 'Code copied!';
+
+  @override
+  String get tapToCopy => 'Tap to copy';
+
+  @override
+  String get status => 'Status';
+
+  @override
+  String get partner => 'Partner';
+
+  @override
+  String get expiresAt => 'Expires at';
+
+  @override
+  String get howToUse => 'How to use';
+
+  @override
+  String get voucherInstructions =>
+      'Show this QR code or voucher code to the partner staff. They will scan or enter the code to verify your discount.';
 }

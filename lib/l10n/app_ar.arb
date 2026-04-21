@@ -1332,5 +1332,18 @@
   "confirmRedeem": "تأكيد الاستبدال",
   "spendPoints": "إنفاق",
   "redeemSuccess": "تم الاستبدال!",
-  "yourVoucherCode": "رمز القسيمة الخاص بك:"
+  "yourVoucherCode": "رمز القسيمة الخاص بك:",
+  "myVouchers": "قسائمي",
+  "active": "نشطة",
+  "used": "مستخدمة",
+  "expired": "منتهية",
+  "noVouchers": "لا توجد قسائم",
+  "voucherDetails": "تفاصيل القسيمة",
+  "codeCopied": "تم نسخ الرمز!",
+  "tapToCopy": "انقر للنسخ",
+  "status": "الحالة",
+  "partner": "الشريك",
+  "expiresAt": "تنتهي في",
+  "howToUse": "طريقة الاستخدام",
+  "voucherInstructions": "أظهر رمز QR أو رمز القسيمة لموظف الشريك. سيقوم بمسح أو إدخال الرمز للتحقق من خصمك."
 }
