@@ -1292,5 +1292,6 @@
   "fileExpired": "File expired",
   "deleteDocumentTitle": "Delete Document",
   "deleteDocumentConfirm": "Are you sure you want to delete",
-  "cannotBeUndone": "This cannot be undone."
+  "cannotBeUndone": "This cannot be undone.",
+  "referralCodeOptional": "Referral code (optional)"
 }

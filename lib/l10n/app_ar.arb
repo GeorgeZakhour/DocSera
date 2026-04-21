@@ -1314,5 +1314,6 @@
   "fileExpired": "انتهت صلاحية الملف",
   "deleteDocumentTitle": "حذف المستند",
   "deleteDocumentConfirm": "هل أنت متأكد من حذف",
-  "cannotBeUndone": "لا يمكن التراجع عن هذا الإجراء."
+  "cannotBeUndone": "لا يمكن التراجع عن هذا الإجراء.",
+  "referralCodeOptional": "رمز الإحالة (اختياري)"
 }

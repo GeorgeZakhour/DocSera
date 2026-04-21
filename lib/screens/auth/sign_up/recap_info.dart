@@ -131,6 +131,23 @@ class RecapPage extends StatelessWidget {
     );
 
     // -------------------------------------------------------------------
+    // Complete referral if user entered a referral code
+    // -------------------------------------------------------------------
+    if (signUpInfo.referralCode != null && signUpInfo.referralCode!.isNotEmpty) {
+      try {
+        await Supabase.instance.client.rpc('complete_referral', params: {
+          'p_referral_code': signUpInfo.referralCode!,
+          'p_referred_user_id': userId,
+          'p_referred_phone': signUpInfo.phoneNumber ?? '',
+          'p_device_id': deviceId,
+        });
+      } catch (e) {
+        // Non-blocking: if referral fails, registration still succeeds
+        debugPrint('Referral completion failed: $e');
+      }
+    }
+
+    // -------------------------------------------------------------------
     // 4️⃣ تخزين محلي (غير أمني – UI فقط)
     // -------------------------------------------------------------------
     final prefs = await SharedPreferences.getInstance();

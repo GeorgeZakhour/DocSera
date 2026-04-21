@@ -3568,4 +3568,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get cannotBeUndone => 'This cannot be undone.';
+
+  @override
+  String get referralCodeOptional => 'Referral code (optional)';
 }

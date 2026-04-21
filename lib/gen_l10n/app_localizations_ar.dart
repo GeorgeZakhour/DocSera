@@ -3526,4 +3526,7 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get cannotBeUndone => 'لا يمكن التراجع عن هذا الإجراء.';
+
+  @override
+  String get referralCodeOptional => 'رمز الإحالة (اختياري)';
 }

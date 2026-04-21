@@ -25,6 +25,7 @@ class SignUpFirstPage extends StatefulWidget {
 
 class _SignUpFirstPageState extends State<SignUpFirstPage> {
   final TextEditingController _phoneController = TextEditingController();
+  final TextEditingController _referralController = TextEditingController();
   final FocusNode _phoneFocus = FocusNode();
 
   bool isValid = false;
@@ -41,6 +42,7 @@ class _SignUpFirstPageState extends State<SignUpFirstPage> {
   @override
   void dispose() {
     _phoneController.dispose();
+    _referralController.dispose();
     _phoneFocus.dispose();
     for (var c in _otpControllers) { c.dispose(); }
     for (var f in _otpFocusNodes) { f.dispose(); }
@@ -127,6 +129,9 @@ class _SignUpFirstPageState extends State<SignUpFirstPage> {
         widget.signUpInfo.phoneNumber = formattedPhone;
         widget.signUpInfo.otpCode = code; // ✅ Save code for the final registration step
         widget.signUpInfo.phoneVerified = true; // ✅ Mark phone as verified
+        widget.signUpInfo.referralCode = _referralController.text.trim().isEmpty
+            ? null
+            : _referralController.text.trim().toUpperCase();
         // Proceed to next step
         if (!mounted) return;
         
@@ -354,6 +359,32 @@ class _SignUpFirstPageState extends State<SignUpFirstPage> {
                   });
                 },
               ),
+
+              SizedBox(height: 15.h),
+
+              /// **📌 حقل رمز الإحالة (اختياري)**
+              if (!_otpSent)
+                Padding(
+                  padding: EdgeInsets.symmetric(horizontal: 0.w),
+                  child: TextField(
+                    controller: _referralController,
+                    textCapitalization: TextCapitalization.characters,
+                    style: AppTextStyles.getText2(context),
+                    decoration: InputDecoration(
+                      hintText: AppLocalizations.of(context)!.referralCodeOptional,
+                      hintStyle: AppTextStyles.getText2(context).copyWith(color: Colors.grey),
+                      prefixIcon: Icon(Icons.card_giftcard, color: AppColors.main),
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(25.r),
+                        borderSide: const BorderSide(color: Colors.grey),
+                      ),
+                      focusedBorder: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(25.r),
+                        borderSide: const BorderSide(color: AppColors.main, width: 2),
+                      ),
+                    ),
+                  ),
+                ),
 
               if (_otpSent) ...[
                 SizedBox(height: 30.h),
