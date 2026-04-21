@@ -1319,5 +1319,18 @@
   "yourPoints": "نقاطك",
   "myPoints": "نقاطي",
   "transactionHistory": "سجل العمليات",
-  "noTransactionsYet": "لا توجد عمليات بعد"
+  "noTransactionsYet": "لا توجد عمليات بعد",
+  "offers": "العروض",
+  "all": "الكل",
+  "healthPartners": "شركاء الصحة",
+  "mobileCredit": "رصيد موبايل",
+  "noOffersAvailable": "لا توجد عروض متاحة حالياً",
+  "offerDetails": "تفاصيل العرض",
+  "discount": "خصم",
+  "redeemNow": "استبدل الآن",
+  "notEnoughPoints": "نقاط غير كافية",
+  "confirmRedeem": "تأكيد الاستبدال",
+  "spendPoints": "إنفاق",
+  "redeemSuccess": "تم الاستبدال!",
+  "yourVoucherCode": "رمز القسيمة الخاص بك:"
 }

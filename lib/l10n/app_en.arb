@@ -1297,5 +1297,18 @@
   "yourPoints": "Your Points",
   "myPoints": "My Points",
   "transactionHistory": "Transaction History",
-  "noTransactionsYet": "No transactions yet"
+  "noTransactionsYet": "No transactions yet",
+  "offers": "Offers",
+  "all": "All",
+  "healthPartners": "Health Partners",
+  "mobileCredit": "Mobile Credit",
+  "noOffersAvailable": "No offers available right now",
+  "offerDetails": "Offer Details",
+  "discount": "discount",
+  "redeemNow": "Redeem Now",
+  "notEnoughPoints": "Not enough points",
+  "confirmRedeem": "Confirm Redemption",
+  "spendPoints": "Spend",
+  "redeemSuccess": "Redeemed!",
+  "yourVoucherCode": "Your voucher code:"
 }
