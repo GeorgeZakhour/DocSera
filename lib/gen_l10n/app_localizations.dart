@@ -6686,6 +6686,12 @@ abstract class AppLocalizations {
   /// **'Referral code (optional)'**
   String get referralCodeOptional;
 
+  /// No description provided for @loyaltyRewards.
+  ///
+  /// In en, this message translates to:
+  /// **'Loyalty & Rewards'**
+  String get loyaltyRewards;
+
   /// No description provided for @yourPoints.
   ///
   /// In en, this message translates to:

@@ -3531,6 +3531,9 @@ class AppLocalizationsAr extends AppLocalizations {
   String get referralCodeOptional => 'رمز الإحالة (اختياري)';
 
   @override
+  String get loyaltyRewards => 'الولاء والمكافآت';
+
+  @override
   String get yourPoints => 'نقاطك';
 
   @override
