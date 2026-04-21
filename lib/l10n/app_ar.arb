@@ -1316,6 +1316,7 @@
   "deleteDocumentConfirm": "هل أنت متأكد من حذف",
   "cannotBeUndone": "لا يمكن التراجع عن هذا الإجراء.",
   "referralCodeOptional": "رمز الإحالة (اختياري)",
+  "loyaltyRewards": "الولاء والمكافآت",
   "yourPoints": "نقاطك",
   "myPoints": "نقاطي",
   "transactionHistory": "سجل العمليات",

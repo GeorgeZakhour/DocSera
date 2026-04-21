@@ -1294,6 +1294,7 @@
   "deleteDocumentConfirm": "Are you sure you want to delete",
   "cannotBeUndone": "This cannot be undone.",
   "referralCodeOptional": "Referral code (optional)",
+  "loyaltyRewards": "Loyalty & Rewards",
   "yourPoints": "Your Points",
   "myPoints": "My Points",
   "transactionHistory": "Transaction History",

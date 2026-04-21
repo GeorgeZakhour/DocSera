@@ -30,6 +30,10 @@ import '../../Business_Logic/Account_page/user_cubit.dart';
 import '../../Business_Logic/Account_page/user_state.dart';
 import 'package:package_info_plus/package_info_plus.dart';
 import 'account/preferences.dart';
+import 'loyalty/wallet_page.dart';
+import 'loyalty/offers_page.dart';
+import 'loyalty/vouchers_page.dart';
+import 'loyalty/referral_section.dart';
 
 // 🆕 NEW COMPONENTS
 import 'account/widgets/account_banner_card.dart';
@@ -214,10 +218,48 @@ class _AccountScreenState extends State<AccountScreen> {
             children: [
               SizedBox(height: 5.h),
               const AccountBannerCard(),
-              // SizedBox(height: 5.h),
-              // PointsCard(userPoints: state.userPoints, userId: state.userId),
-              // Divider(color: Colors.grey[200], height: 2.h),
 
+              const SizedBox(height: 15),
+              AccountSectionTitle(title: AppLocalizations.of(context)!.loyaltyRewards),
+              Divider(color: Colors.grey[200], height: 2.h),
+
+              // My Points
+              AccountListTile(
+                icon: Icons.stars,
+                title: AppLocalizations.of(context)!.myPoints,
+                subtitle: '${state.userPoints} ${AppLocalizations.of(context)!.points}',
+                onTap: () => Navigator.push(context, fadePageRoute(const WalletPage())),
+              ),
+              Divider(color: Colors.grey[200], height: 2.h),
+
+              // Offers
+              AccountListTile(
+                icon: Icons.local_offer,
+                title: AppLocalizations.of(context)!.offers,
+                subtitle: '',
+                onTap: () => Navigator.push(context, fadePageRoute(const OffersPage())),
+              ),
+              Divider(color: Colors.grey[200], height: 2.h),
+
+              // My Vouchers
+              AccountListTile(
+                icon: Icons.confirmation_number,
+                title: AppLocalizations.of(context)!.myVouchers,
+                subtitle: '',
+                onTap: () => Navigator.push(context, fadePageRoute(const VouchersPage())),
+              ),
+              Divider(color: Colors.grey[200], height: 2.h),
+
+              // Refer Friends
+              AccountListTile(
+                icon: Icons.card_giftcard,
+                title: AppLocalizations.of(context)!.referFriends,
+                subtitle: '',
+                onTap: () => Navigator.push(context, fadePageRoute(const ReferralSectionPage())),
+              ),
+              Divider(color: Colors.grey[200], height: 2.h),
+
+              const SizedBox(height: 15),
               AccountSectionTitle(title: AppLocalizations.of(context)!.personalInformation),
               Divider(color: Colors.grey[200], height: 2.h),
 
