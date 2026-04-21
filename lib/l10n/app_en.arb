@@ -100,8 +100,8 @@
   "takeNotesDescription": "For example, track symptoms, note mental health concerns, and prepare questions for your practitioners.",
   "addDocument": "Add Document",
   "uploadingDocument": "Uploading document...",
-  "documentTooLarge": "The compressed file exceeds 2 MB. Please reduce the number of images or use smaller ones.",
-  "pdfTooLarge": "The PDF file is too large. Please use a file smaller than 2MB.",
+  "documentTooLarge": "The file exceeds the 15 MB limit. Please reduce the number of images or use smaller ones.",
+  "pdfTooLarge": "The PDF file is too large. Maximum file size is 15 MB.",
   "chooseAddDocumentMethod": "Choose a method",
   "createNote": "Create Note",
   "documentDeleted": "Document deleted successfully",
@@ -114,7 +114,7 @@
   "sendMessage": "Send a message",
   "easilySendMessages": "Easily send messages to practitioners",
   "sendMessagesDescription": "Start a conversation with your practitioners. Ask about exam results, request referral letters, and more.",
-  "fileTooLarge": "The total size of images is too large (max 4MB). Please reduce the number or size of images.",
+  "fileTooLarge": "The total size of images is too large (max 15 MB). Please reduce the number or size of images.",
   "chooseAttachmentType": "Send attachment",
 
   "@accountPage================================": "👤 Account Page",
@@ -1342,5 +1342,62 @@
         "type": "String"
       }
     }
-  }
+  },
+  "pending": "Pending",
+  "confirmed": "Confirmed",
+  "megaOffer": "MEGA OFFER",
+  "currency": "SYP",
+  "daysLeft": "{days}d {hours}h left",
+  "@daysLeft": {
+    "placeholders": {
+      "days": {"type": "int"},
+      "hours": {"type": "int"}
+    }
+  },
+  "voucherExpired": "Expired",
+  "earnPointsTitle": "How to earn points",
+  "earnPointsReferral": "Refer a friend: +25 points",
+  "earnPointsAppointment": "Complete an appointment: +10 points",
+  "earnPointsReferred": "Join via referral: +15 points",
+  "pointsValue": "1 point ≈ 500 SYP",
+  "transactionReferral": "Referral reward",
+  "transactionWelcome": "Welcome bonus",
+  "transactionAppointment": "Appointment reward",
+  "transactionRedeemed": "Offer redeemed",
+  "processingNote": "Points are processed within 72 hours",
+  "availableOffers": "Available offers",
+  "validUntil": "Valid until {date}",
+  "@validUntil": {
+    "placeholders": {
+      "date": {"type": "String"}
+    }
+  },
+  "redeemConfirmMessage": "Spend {points} points on this offer?",
+  "@redeemConfirmMessage": {
+    "placeholders": {
+      "points": {"type": "int"}
+    }
+  },
+  "goToVouchers": "View My Vouchers",
+  "referralReward": "You earn 25 points, your friend earns 15!",
+  "noReferralsYet": "No referrals yet. Share your code!",
+  "address": "Address",
+  "freeFirstConsultation": "Free First Consultation",
+  "percentageDiscount": "Discount",
+  "fixedDiscount": "Discount",
+  "freeFollowup": "Free Follow-up Visit",
+  "specialOffer": "Special Offer",
+  "newPatientsOnly": "New Patients Only",
+  "daysRemaining": "days left",
+  "claimOffer": "Claim Offer",
+  "claimOfferDesc": "Claim this offer to receive a voucher code that you can show to the doctor during your visit.",
+  "voucherCode": "Voucher Code",
+  "voucherExpiry": "Valid for 7 days",
+  "showCodeToDoctor": "Show this code to the doctor during your visit",
+  "alreadyClaimed": "You have already claimed this offer",
+  "offerExpired": "This offer has expired",
+  "offerFull": "This offer has reached the maximum number of claims",
+  "claimSuccess": "Offer claimed successfully!",
+  "copyCode": "Copy Code",
+  "codeCopied": "Code copied!"
 }

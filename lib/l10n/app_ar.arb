@@ -105,8 +105,8 @@
   "takeNotesDescription": "مثلاً، تتبع الأعراض، سجل ملاحظات حول صحتك النفسية، وحضر أسئلة لمناقشتها مع طبيبك.",
   "addDocument": "إضافة مستند",
   "uploadingDocument": "جاري رفع المستند...",
-  "documentTooLarge": "الملف بعد الضغط أكبر من 2 ميغابايت، الرجاء تقليل عدد الصور أو استخدام صور أصغر.",
-  "pdfTooLarge": "ملف PDF كبير جداً، الرجاء استخدام ملف أصغر من 2MB",
+  "documentTooLarge": "الملف يتجاوز الحد الأقصى 15 ميغابايت. الرجاء تقليل عدد الصور أو استخدام صور أصغر.",
+  "pdfTooLarge": "ملف PDF كبير جداً. الحد الأقصى لحجم الملف هو 15 ميغابايت.",
   "chooseAddDocumentMethod": "اختر طريقة إضافة المستند",
   "createNote": "إنشاء ملاحظة",
   "documentDeleted": "تم حذف المستند بنجاح",
@@ -120,7 +120,7 @@
   "sendMessage": "إرسال رسالة",
   "easilySendMessages": "أرسل الرسائل بسهولة إلى الأطباء",
   "sendMessagesDescription": "ابدأ محادثة مع طبيبك. استفسر عن نتائج الفحوصات، اطلب خطابات الإحالة، والمزيد.",
-  "fileTooLarge": "إجمالي حجم الصور كبير جداً (الحد الأقصى 4 ميغابايت). يرجى تقليل عدد الصور أو تصغير حجمها.",
+  "fileTooLarge": "إجمالي حجم الصور كبير جداً (الحد الأقصى 15 ميغابايت). يرجى تقليل عدد الصور أو تصغير حجمها.",
   "chooseAttachmentType": "إرسال مرفق",
 
   "@accountPage================================": {
@@ -1364,5 +1364,62 @@
         "type": "String"
       }
     }
-  }
+  },
+  "pending": "قيد المعالجة",
+  "confirmed": "مؤكد",
+  "megaOffer": "عرض ضخم",
+  "currency": "ل.س",
+  "daysLeft": "{days} يوم {hours} ساعة متبقية",
+  "@daysLeft": {
+    "placeholders": {
+      "days": {"type": "int"},
+      "hours": {"type": "int"}
+    }
+  },
+  "voucherExpired": "منتهية الصلاحية",
+  "earnPointsTitle": "كيف تكسب النقاط",
+  "earnPointsReferral": "ادعُ صديقاً: +25 نقطة",
+  "earnPointsAppointment": "أكمل موعداً: +10 نقاط",
+  "earnPointsReferred": "انضم عبر إحالة: +15 نقطة",
+  "pointsValue": "١ نقطة ≈ ٥٠٠ ل.س",
+  "transactionReferral": "مكافأة إحالة",
+  "transactionWelcome": "مكافأة ترحيبية",
+  "transactionAppointment": "مكافأة موعد",
+  "transactionRedeemed": "تم استبدال عرض",
+  "processingNote": "تتم معالجة النقاط خلال 72 ساعة",
+  "availableOffers": "العروض المتاحة",
+  "validUntil": "صالح حتى {date}",
+  "@validUntil": {
+    "placeholders": {
+      "date": {"type": "String"}
+    }
+  },
+  "redeemConfirmMessage": "إنفاق {points} نقطة على هذا العرض؟",
+  "@redeemConfirmMessage": {
+    "placeholders": {
+      "points": {"type": "int"}
+    }
+  },
+  "goToVouchers": "عرض قسائمي",
+  "referralReward": "تكسب 25 نقطة، وصديقك يكسب 15!",
+  "noReferralsYet": "لا توجد إحالات بعد. شارك رمزك!",
+  "address": "العنوان",
+  "freeFirstConsultation": "استشارة أولى مجانية",
+  "percentageDiscount": "خصم",
+  "fixedDiscount": "خصم",
+  "freeFollowup": "زيارة متابعة مجانية",
+  "specialOffer": "عرض خاص",
+  "newPatientsOnly": "للمرضى الجدد فقط",
+  "daysRemaining": "يوم متبقي",
+  "claimOffer": "احصل على العرض",
+  "claimOfferDesc": "احصل على هذا العرض لتحصل على رمز قسيمة يمكنك إظهاره للطبيب أثناء زيارتك.",
+  "voucherCode": "رمز القسيمة",
+  "voucherExpiry": "صالح لمدة 7 أيام",
+  "showCodeToDoctor": "أظهر هذا الرمز للطبيب أثناء زيارتك",
+  "alreadyClaimed": "لقد حصلت على هذا العرض مسبقاً",
+  "offerExpired": "انتهت صلاحية هذا العرض",
+  "offerFull": "وصل هذا العرض للحد الأقصى من المطالبات",
+  "claimSuccess": "تم الحصول على العرض بنجاح!",
+  "copyCode": "نسخ الرمز",
+  "codeCopied": "تم نسخ الرمز!"
 }

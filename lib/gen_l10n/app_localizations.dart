@@ -623,13 +623,13 @@ abstract class AppLocalizations {
   /// No description provided for @documentTooLarge.
   ///
   /// In en, this message translates to:
-  /// **'The compressed file exceeds 2 MB. Please reduce the number of images or use smaller ones.'**
+  /// **'The file exceeds the 15 MB limit. Please reduce the number of images or use smaller ones.'**
   String get documentTooLarge;
 
   /// No description provided for @pdfTooLarge.
   ///
   /// In en, this message translates to:
-  /// **'The PDF file is too large. Please use a file smaller than 2MB.'**
+  /// **'The PDF file is too large. Maximum file size is 15 MB.'**
   String get pdfTooLarge;
 
   /// No description provided for @chooseAddDocumentMethod.
@@ -689,7 +689,7 @@ abstract class AppLocalizations {
   /// No description provided for @fileTooLarge.
   ///
   /// In en, this message translates to:
-  /// **'The total size of images is too large (max 4MB). Please reduce the number or size of images.'**
+  /// **'The total size of images is too large (max 15 MB). Please reduce the number or size of images.'**
   String get fileTooLarge;
 
   /// No description provided for @chooseAttachmentType.
@@ -6937,6 +6937,240 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Join DocSera and use my referral code {code} when you sign up! We both get free points. Download now: https://docsera.app'**
   String referralShareMessage(String code);
+
+  /// No description provided for @pending.
+  ///
+  /// In en, this message translates to:
+  /// **'Pending'**
+  String get pending;
+
+  /// No description provided for @confirmed.
+  ///
+  /// In en, this message translates to:
+  /// **'Confirmed'**
+  String get confirmed;
+
+  /// No description provided for @megaOffer.
+  ///
+  /// In en, this message translates to:
+  /// **'MEGA OFFER'**
+  String get megaOffer;
+
+  /// No description provided for @currency.
+  ///
+  /// In en, this message translates to:
+  /// **'SYP'**
+  String get currency;
+
+  /// No description provided for @daysLeft.
+  ///
+  /// In en, this message translates to:
+  /// **'{days}d {hours}h left'**
+  String daysLeft(int days, int hours);
+
+  /// No description provided for @voucherExpired.
+  ///
+  /// In en, this message translates to:
+  /// **'Expired'**
+  String get voucherExpired;
+
+  /// No description provided for @earnPointsTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'How to earn points'**
+  String get earnPointsTitle;
+
+  /// No description provided for @earnPointsReferral.
+  ///
+  /// In en, this message translates to:
+  /// **'Refer a friend: +25 points'**
+  String get earnPointsReferral;
+
+  /// No description provided for @earnPointsAppointment.
+  ///
+  /// In en, this message translates to:
+  /// **'Complete an appointment: +10 points'**
+  String get earnPointsAppointment;
+
+  /// No description provided for @earnPointsReferred.
+  ///
+  /// In en, this message translates to:
+  /// **'Join via referral: +15 points'**
+  String get earnPointsReferred;
+
+  /// No description provided for @pointsValue.
+  ///
+  /// In en, this message translates to:
+  /// **'1 point ≈ 500 SYP'**
+  String get pointsValue;
+
+  /// No description provided for @transactionReferral.
+  ///
+  /// In en, this message translates to:
+  /// **'Referral reward'**
+  String get transactionReferral;
+
+  /// No description provided for @transactionWelcome.
+  ///
+  /// In en, this message translates to:
+  /// **'Welcome bonus'**
+  String get transactionWelcome;
+
+  /// No description provided for @transactionAppointment.
+  ///
+  /// In en, this message translates to:
+  /// **'Appointment reward'**
+  String get transactionAppointment;
+
+  /// No description provided for @transactionRedeemed.
+  ///
+  /// In en, this message translates to:
+  /// **'Offer redeemed'**
+  String get transactionRedeemed;
+
+  /// No description provided for @processingNote.
+  ///
+  /// In en, this message translates to:
+  /// **'Points are processed within 72 hours'**
+  String get processingNote;
+
+  /// No description provided for @availableOffers.
+  ///
+  /// In en, this message translates to:
+  /// **'Available offers'**
+  String get availableOffers;
+
+  /// No description provided for @validUntil.
+  ///
+  /// In en, this message translates to:
+  /// **'Valid until {date}'**
+  String validUntil(String date);
+
+  /// No description provided for @redeemConfirmMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'Spend {points} points on this offer?'**
+  String redeemConfirmMessage(int points);
+
+  /// No description provided for @goToVouchers.
+  ///
+  /// In en, this message translates to:
+  /// **'View My Vouchers'**
+  String get goToVouchers;
+
+  /// No description provided for @referralReward.
+  ///
+  /// In en, this message translates to:
+  /// **'You earn 25 points, your friend earns 15!'**
+  String get referralReward;
+
+  /// No description provided for @noReferralsYet.
+  ///
+  /// In en, this message translates to:
+  /// **'No referrals yet. Share your code!'**
+  String get noReferralsYet;
+
+  /// No description provided for @freeFirstConsultation.
+  ///
+  /// In en, this message translates to:
+  /// **'Free First Consultation'**
+  String get freeFirstConsultation;
+
+  /// No description provided for @percentageDiscount.
+  ///
+  /// In en, this message translates to:
+  /// **'Discount'**
+  String get percentageDiscount;
+
+  /// No description provided for @fixedDiscount.
+  ///
+  /// In en, this message translates to:
+  /// **'Discount'**
+  String get fixedDiscount;
+
+  /// No description provided for @freeFollowup.
+  ///
+  /// In en, this message translates to:
+  /// **'Free Follow-up Visit'**
+  String get freeFollowup;
+
+  /// No description provided for @specialOffer.
+  ///
+  /// In en, this message translates to:
+  /// **'Special Offer'**
+  String get specialOffer;
+
+  /// No description provided for @newPatientsOnly.
+  ///
+  /// In en, this message translates to:
+  /// **'New Patients Only'**
+  String get newPatientsOnly;
+
+  /// No description provided for @daysRemaining.
+  ///
+  /// In en, this message translates to:
+  /// **'days left'**
+  String get daysRemaining;
+
+  /// No description provided for @claimOffer.
+  ///
+  /// In en, this message translates to:
+  /// **'Claim Offer'**
+  String get claimOffer;
+
+  /// No description provided for @claimOfferDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Claim this offer to receive a voucher code that you can show to the doctor during your visit.'**
+  String get claimOfferDesc;
+
+  /// No description provided for @voucherCode.
+  ///
+  /// In en, this message translates to:
+  /// **'Voucher Code'**
+  String get voucherCode;
+
+  /// No description provided for @voucherExpiry.
+  ///
+  /// In en, this message translates to:
+  /// **'Valid for 7 days'**
+  String get voucherExpiry;
+
+  /// No description provided for @showCodeToDoctor.
+  ///
+  /// In en, this message translates to:
+  /// **'Show this code to the doctor during your visit'**
+  String get showCodeToDoctor;
+
+  /// No description provided for @alreadyClaimed.
+  ///
+  /// In en, this message translates to:
+  /// **'You have already claimed this offer'**
+  String get alreadyClaimed;
+
+  /// No description provided for @offerExpired.
+  ///
+  /// In en, this message translates to:
+  /// **'This offer has expired'**
+  String get offerExpired;
+
+  /// No description provided for @offerFull.
+  ///
+  /// In en, this message translates to:
+  /// **'This offer has reached the maximum number of claims'**
+  String get offerFull;
+
+  /// No description provided for @claimSuccess.
+  ///
+  /// In en, this message translates to:
+  /// **'Offer claimed successfully!'**
+  String get claimSuccess;
+
+  /// No description provided for @copyCode.
+  ///
+  /// In en, this message translates to:
+  /// **'Copy Code'**
+  String get copyCode;
 }
 
 class _AppLocalizationsDelegate

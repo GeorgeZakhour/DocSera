@@ -293,10 +293,11 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get documentTooLarge =>
-      'الملف بعد الضغط أكبر من 2 ميغابايت، الرجاء تقليل عدد الصور أو استخدام صور أصغر.';
+      'الملف يتجاوز الحد الأقصى 15 ميغابايت. الرجاء تقليل عدد الصور أو استخدام صور أصغر.';
 
   @override
-  String get pdfTooLarge => 'ملف PDF كبير جداً، الرجاء استخدام ملف أصغر من 2MB';
+  String get pdfTooLarge =>
+      'ملف PDF كبير جداً. الحد الأقصى لحجم الملف هو 15 ميغابايت.';
 
   @override
   String get chooseAddDocumentMethod => 'اختر طريقة إضافة المستند';
@@ -330,7 +331,7 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get fileTooLarge =>
-      'إجمالي حجم الصور كبير جداً (الحد الأقصى 4 ميغابايت). يرجى تقليل عدد الصور أو تصغير حجمها.';
+      'إجمالي حجم الصور كبير جداً (الحد الأقصى 15 ميغابايت). يرجى تقليل عدد الصور أو تصغير حجمها.';
 
   @override
   String get chooseAttachmentType => 'إرسال مرفق';
@@ -3658,4 +3659,128 @@ class AppLocalizationsAr extends AppLocalizations {
   String referralShareMessage(String code) {
     return 'انضم إلى DocSera واستخدم رمز الإحالة $code عند التسجيل! كلانا سيحصل على نقاط مجانية. حمّل الآن: https://docsera.app';
   }
+
+  @override
+  String get pending => 'قيد المعالجة';
+
+  @override
+  String get confirmed => 'مؤكد';
+
+  @override
+  String get megaOffer => 'عرض ضخم';
+
+  @override
+  String get currency => 'ل.س';
+
+  @override
+  String daysLeft(int days, int hours) {
+    return '$days يوم $hours ساعة متبقية';
+  }
+
+  @override
+  String get voucherExpired => 'منتهية الصلاحية';
+
+  @override
+  String get earnPointsTitle => 'كيف تكسب النقاط';
+
+  @override
+  String get earnPointsReferral => 'ادعُ صديقاً: +25 نقطة';
+
+  @override
+  String get earnPointsAppointment => 'أكمل موعداً: +10 نقاط';
+
+  @override
+  String get earnPointsReferred => 'انضم عبر إحالة: +15 نقطة';
+
+  @override
+  String get pointsValue => '١ نقطة ≈ ٥٠٠ ل.س';
+
+  @override
+  String get transactionReferral => 'مكافأة إحالة';
+
+  @override
+  String get transactionWelcome => 'مكافأة ترحيبية';
+
+  @override
+  String get transactionAppointment => 'مكافأة موعد';
+
+  @override
+  String get transactionRedeemed => 'تم استبدال عرض';
+
+  @override
+  String get processingNote => 'تتم معالجة النقاط خلال 72 ساعة';
+
+  @override
+  String get availableOffers => 'العروض المتاحة';
+
+  @override
+  String validUntil(String date) {
+    return 'صالح حتى $date';
+  }
+
+  @override
+  String redeemConfirmMessage(int points) {
+    return 'إنفاق $points نقطة على هذا العرض؟';
+  }
+
+  @override
+  String get goToVouchers => 'عرض قسائمي';
+
+  @override
+  String get referralReward => 'تكسب 25 نقطة، وصديقك يكسب 15!';
+
+  @override
+  String get noReferralsYet => 'لا توجد إحالات بعد. شارك رمزك!';
+
+  @override
+  String get freeFirstConsultation => 'استشارة أولى مجانية';
+
+  @override
+  String get percentageDiscount => 'خصم';
+
+  @override
+  String get fixedDiscount => 'خصم';
+
+  @override
+  String get freeFollowup => 'زيارة متابعة مجانية';
+
+  @override
+  String get specialOffer => 'عرض خاص';
+
+  @override
+  String get newPatientsOnly => 'للمرضى الجدد فقط';
+
+  @override
+  String get daysRemaining => 'يوم متبقي';
+
+  @override
+  String get claimOffer => 'احصل على العرض';
+
+  @override
+  String get claimOfferDesc =>
+      'احصل على هذا العرض لتحصل على رمز قسيمة يمكنك إظهاره للطبيب أثناء زيارتك.';
+
+  @override
+  String get voucherCode => 'رمز القسيمة';
+
+  @override
+  String get voucherExpiry => 'صالح لمدة 7 أيام';
+
+  @override
+  String get showCodeToDoctor => 'أظهر هذا الرمز للطبيب أثناء زيارتك';
+
+  @override
+  String get alreadyClaimed => 'لقد حصلت على هذا العرض مسبقاً';
+
+  @override
+  String get offerExpired => 'انتهت صلاحية هذا العرض';
+
+  @override
+  String get offerFull => 'وصل هذا العرض للحد الأقصى من المطالبات';
+
+  @override
+  String get claimSuccess => 'تم الحصول على العرض بنجاح!';
+
+  @override
+  String get copyCode => 'نسخ الرمز';
 }

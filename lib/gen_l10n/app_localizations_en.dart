@@ -297,11 +297,11 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get documentTooLarge =>
-      'The compressed file exceeds 2 MB. Please reduce the number of images or use smaller ones.';
+      'The file exceeds the 15 MB limit. Please reduce the number of images or use smaller ones.';
 
   @override
   String get pdfTooLarge =>
-      'The PDF file is too large. Please use a file smaller than 2MB.';
+      'The PDF file is too large. Maximum file size is 15 MB.';
 
   @override
   String get chooseAddDocumentMethod => 'Choose a method';
@@ -335,7 +335,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get fileTooLarge =>
-      'The total size of images is too large (max 4MB). Please reduce the number or size of images.';
+      'The total size of images is too large (max 15 MB). Please reduce the number or size of images.';
 
   @override
   String get chooseAttachmentType => 'Send attachment';
@@ -3701,4 +3701,129 @@ class AppLocalizationsEn extends AppLocalizations {
   String referralShareMessage(String code) {
     return 'Join DocSera and use my referral code $code when you sign up! We both get free points. Download now: https://docsera.app';
   }
+
+  @override
+  String get pending => 'Pending';
+
+  @override
+  String get confirmed => 'Confirmed';
+
+  @override
+  String get megaOffer => 'MEGA OFFER';
+
+  @override
+  String get currency => 'SYP';
+
+  @override
+  String daysLeft(int days, int hours) {
+    return '${days}d ${hours}h left';
+  }
+
+  @override
+  String get voucherExpired => 'Expired';
+
+  @override
+  String get earnPointsTitle => 'How to earn points';
+
+  @override
+  String get earnPointsReferral => 'Refer a friend: +25 points';
+
+  @override
+  String get earnPointsAppointment => 'Complete an appointment: +10 points';
+
+  @override
+  String get earnPointsReferred => 'Join via referral: +15 points';
+
+  @override
+  String get pointsValue => '1 point ≈ 500 SYP';
+
+  @override
+  String get transactionReferral => 'Referral reward';
+
+  @override
+  String get transactionWelcome => 'Welcome bonus';
+
+  @override
+  String get transactionAppointment => 'Appointment reward';
+
+  @override
+  String get transactionRedeemed => 'Offer redeemed';
+
+  @override
+  String get processingNote => 'Points are processed within 72 hours';
+
+  @override
+  String get availableOffers => 'Available offers';
+
+  @override
+  String validUntil(String date) {
+    return 'Valid until $date';
+  }
+
+  @override
+  String redeemConfirmMessage(int points) {
+    return 'Spend $points points on this offer?';
+  }
+
+  @override
+  String get goToVouchers => 'View My Vouchers';
+
+  @override
+  String get referralReward => 'You earn 25 points, your friend earns 15!';
+
+  @override
+  String get noReferralsYet => 'No referrals yet. Share your code!';
+
+  @override
+  String get freeFirstConsultation => 'Free First Consultation';
+
+  @override
+  String get percentageDiscount => 'Discount';
+
+  @override
+  String get fixedDiscount => 'Discount';
+
+  @override
+  String get freeFollowup => 'Free Follow-up Visit';
+
+  @override
+  String get specialOffer => 'Special Offer';
+
+  @override
+  String get newPatientsOnly => 'New Patients Only';
+
+  @override
+  String get daysRemaining => 'days left';
+
+  @override
+  String get claimOffer => 'Claim Offer';
+
+  @override
+  String get claimOfferDesc =>
+      'Claim this offer to receive a voucher code that you can show to the doctor during your visit.';
+
+  @override
+  String get voucherCode => 'Voucher Code';
+
+  @override
+  String get voucherExpiry => 'Valid for 7 days';
+
+  @override
+  String get showCodeToDoctor =>
+      'Show this code to the doctor during your visit';
+
+  @override
+  String get alreadyClaimed => 'You have already claimed this offer';
+
+  @override
+  String get offerExpired => 'This offer has expired';
+
+  @override
+  String get offerFull => 'This offer has reached the maximum number of claims';
+
+  @override
+  String get claimSuccess => 'Offer claimed successfully!';
+
+  @override
+  String get copyCode => 'Copy Code';
 }
