@@ -99,6 +99,7 @@
   "takeNotesTitle": "Take important notes\n about your health",
   "takeNotesDescription": "For example, track symptoms, note mental health concerns, and prepare questions for your practitioners.",
   "addDocument": "Add Document",
+  "fieldRequired": "This field is required",
   "uploadingDocument": "Uploading document...",
   "documentTooLarge": "The file exceeds the 15 MB limit. Please reduce the number of images or use smaller ones.",
   "pdfTooLarge": "The PDF file is too large. Maximum file size is 15 MB.",
@@ -1137,6 +1138,8 @@
   "downloadFailed": "Failed to download image",
   "imagesDownloadFailed": "Failed to download images",
   "ofText": "of",
+  "imageFromDoctor": "Image from {doctorName}",
+  "pdfFromDoctor": "PDF from {doctorName}",
   "importedFromConversationWith": "Imported from the conversation with {name} on {date}",
   "documentAccessInfo": "Documents you upload here are visible to doctors who have you as a patient. You can manage and delete your own uploads. Files added by doctors appear here as read-only.",
   "notesAccessInfo": "Only you can access and manage your notes securely.",
@@ -1225,6 +1228,7 @@
   "sourceBadgeReport": "Report",
 
   "detailFileFormat": "File format",
+  "detailFileSize": "File size",
   "detailSource": "Source",
   "detailNumberOfPages": "Number of pages",
   "detailVisibility": "Visibility",
@@ -1265,6 +1269,10 @@
   "storageViewAll": "View All Documents",
   "storageManage": "Manage Storage",
   "okGotIt": "OK, Got It",
+  "storageDismiss": "Dismiss",
+  "storageFullUploadBlocked": "Your storage is full. Delete some documents to free up space before uploading.",
+  "storageInfoTitle": "About Your Storage",
+  "storageInfoBody": "This is your account's document storage.\n\n• Storage is shared across your account — documents for you and all your relatives count toward the same limit.\n\n• Only documents you upload are counted. Files added by your doctors do not use your storage.\n\n• You can free up space anytime by deleting documents you no longer need.",
   "fileTooLargeTitle": "This file is too large",
   "fileTooLargeBody": "Maximum file size: {max}MB. Your file: {size}MB.",
   "@fileTooLargeBody": {
@@ -1399,5 +1407,69 @@
   "offerFull": "This offer has reached the maximum number of claims",
   "claimSuccess": "Offer claimed successfully!",
   "copyCode": "Copy Code",
-  "codeCopied": "Code copied!"
+  "codeCopied": "Code copied!",
+
+  "totalEarned": "Earned",
+  "totalSpent": "Spent",
+  "transactionType": "Type",
+  "transactionTime": "Date & Time",
+  "transactionAmount": "Amount",
+  "transactionStatus": "Status",
+  "transactionCompleted": "Completed",
+  "transactionProcessing": "Processing",
+
+  "doctor": "Doctor",
+  "appointmentDate": "Appointment date",
+  "appointmentMarkedDone": "Marked as done",
+  "patientName": "Patient",
+  "forRelative": "For a relative",
+  "referredUser": "Referred user",
+  "offerDetails": "Offer",
+  "redeemedOn": "Redeemed on",
+  "pendingPointsNote": "Points will be added to your wallet after the review period.",
+  "pendingTimeRemaining": "Time remaining",
+  "hoursRemaining": "{hours}h remaining",
+  "@hoursRemaining": {
+    "placeholders": {
+      "hours": {"type": "int"}
+    }
+  },
+  "pointsAddedToWallet": "Added to wallet",
+  "am": "AM",
+  "pm": "PM",
+  "referralInvitation": "Friend referral",
+  "partnerLabel": "Partner",
+  "voucherLocation": "Your voucher is in the \"My Vouchers\" section",
+  "voucherValidFor": "Valid for {days} days",
+  "@voucherValidFor": {
+    "placeholders": {
+      "days": {"type": "int"}
+    }
+  },
+  "redeemWarningTitle": "Before you redeem",
+  "redeemWarningVoucher": "Your points will be converted into a voucher in \"My Vouchers\"",
+  "redeemWarningValidity": "The voucher is valid for {days} days from the redemption date — don't redeem too early!",
+  "@redeemWarningValidity": {
+    "placeholders": {
+      "days": {"type": "int"}
+    }
+  },
+  "redeemWarningIrreversible": "This action is irreversible — you cannot get your points back once redeemed",
+  "redeemWarningUseIt": "Show the voucher code to the partner when using the offer",
+  "iUnderstandRedeem": "I understand, redeem now",
+  "eventDate": "Event date",
+  "pointsAvailableOn": "Points available on",
+  "voucherExpiresOn": "Voucher expires",
+  "promotionPressHereToClaim": "Press here to claim the offer and get your discount code. Simply telling the doctor verbally is not enough.",
+  "promotionFirstVisitOnly": "This offer is available only for your first visit with this doctor.",
+  "promotionSingleUse": "This offer can be used only once.",
+  "promotionMultiUse": "This offer can be used up to {n} times.",
+  "@promotionMultiUse": {
+    "placeholders": {
+      "n": {"type": "int"}
+    }
+  },
+  "promotionAlreadyUsed": "You have already used this offer.",
+  "promotionMaxClaimsReached": "You have already used this offer the maximum number of times allowed.",
+  "promotionShowCodeAtPayment": "When you visit the doctor, show this code to the receptionist at payment so the discount is applied to your bill automatically."
 }

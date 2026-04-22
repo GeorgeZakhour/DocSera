@@ -174,9 +174,7 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
-  String patientName(Object name) {
-    return 'Patient: $name';
-  }
+  String get patientName => 'Patient';
 
   @override
   String get bookAgain => 'Book again';
@@ -291,6 +289,9 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get addDocument => 'Add Document';
+
+  @override
+  String get fieldRequired => 'This field is required';
 
   @override
   String get uploadingDocument => 'Uploading document...';
@@ -1464,9 +1465,7 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
-  String appointmentDate(Object date) {
-    return 'Date: $date';
-  }
+  String get appointmentDate => 'Appointment date';
 
   @override
   String appointmentTime2(Object time) {
@@ -3195,6 +3194,16 @@ class AppLocalizationsEn extends AppLocalizations {
   String get ofText => 'of';
 
   @override
+  String imageFromDoctor(Object doctorName) {
+    return 'Image from $doctorName';
+  }
+
+  @override
+  String pdfFromDoctor(Object doctorName) {
+    return 'PDF from $doctorName';
+  }
+
+  @override
   String importedFromConversationWith(Object date, Object name) {
     return 'Imported from the conversation with $name on $date';
   }
@@ -3426,6 +3435,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get detailFileFormat => 'File format';
 
   @override
+  String get detailFileSize => 'File size';
+
+  @override
   String get detailSource => 'Source';
 
   @override
@@ -3528,6 +3540,20 @@ class AppLocalizationsEn extends AppLocalizations {
   String get okGotIt => 'OK, Got It';
 
   @override
+  String get storageDismiss => 'Dismiss';
+
+  @override
+  String get storageFullUploadBlocked =>
+      'Your storage is full. Delete some documents to free up space before uploading.';
+
+  @override
+  String get storageInfoTitle => 'About Your Storage';
+
+  @override
+  String get storageInfoBody =>
+      'This is your account\'s document storage.\n\n• Storage is shared across your account — documents for you and all your relatives count toward the same limit.\n\n• Only documents you upload are counted. Files added by your doctors do not use your storage.\n\n• You can free up space anytime by deleting documents you no longer need.';
+
+  @override
   String get fileTooLargeTitle => 'This file is too large';
 
   @override
@@ -3603,7 +3629,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get noOffersAvailable => 'No offers available right now';
 
   @override
-  String get offerDetails => 'Offer Details';
+  String get offerDetails => 'Offer';
 
   @override
   String get discount => 'discount';
@@ -3826,4 +3852,135 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get copyCode => 'Copy Code';
+
+  @override
+  String get totalEarned => 'Earned';
+
+  @override
+  String get totalSpent => 'Spent';
+
+  @override
+  String get transactionType => 'Type';
+
+  @override
+  String get transactionTime => 'Date & Time';
+
+  @override
+  String get transactionAmount => 'Amount';
+
+  @override
+  String get transactionStatus => 'Status';
+
+  @override
+  String get transactionCompleted => 'Completed';
+
+  @override
+  String get transactionProcessing => 'Processing';
+
+  @override
+  String get appointmentMarkedDone => 'Marked as done';
+
+  @override
+  String get forRelative => 'For a relative';
+
+  @override
+  String get referredUser => 'Referred user';
+
+  @override
+  String get redeemedOn => 'Redeemed on';
+
+  @override
+  String get pendingPointsNote =>
+      'Points will be added to your wallet after the review period.';
+
+  @override
+  String get pendingTimeRemaining => 'Time remaining';
+
+  @override
+  String hoursRemaining(int hours) {
+    return '${hours}h remaining';
+  }
+
+  @override
+  String get pointsAddedToWallet => 'Added to wallet';
+
+  @override
+  String get am => 'AM';
+
+  @override
+  String get pm => 'PM';
+
+  @override
+  String get referralInvitation => 'Friend referral';
+
+  @override
+  String get partnerLabel => 'Partner';
+
+  @override
+  String get voucherLocation =>
+      'Your voucher is in the \"My Vouchers\" section';
+
+  @override
+  String voucherValidFor(int days) {
+    return 'Valid for $days days';
+  }
+
+  @override
+  String get redeemWarningTitle => 'Before you redeem';
+
+  @override
+  String get redeemWarningVoucher =>
+      'Your points will be converted into a voucher in \"My Vouchers\"';
+
+  @override
+  String redeemWarningValidity(int days) {
+    return 'The voucher is valid for $days days from the redemption date — don\'t redeem too early!';
+  }
+
+  @override
+  String get redeemWarningIrreversible =>
+      'This action is irreversible — you cannot get your points back once redeemed';
+
+  @override
+  String get redeemWarningUseIt =>
+      'Show the voucher code to the partner when using the offer';
+
+  @override
+  String get iUnderstandRedeem => 'I understand, redeem now';
+
+  @override
+  String get eventDate => 'Event date';
+
+  @override
+  String get pointsAvailableOn => 'Points available on';
+
+  @override
+  String get voucherExpiresOn => 'Voucher expires';
+
+  @override
+  String get promotionPressHereToClaim =>
+      'Press here to claim the offer and get your discount code. Simply telling the doctor verbally is not enough.';
+
+  @override
+  String get promotionFirstVisitOnly =>
+      'This offer is available only for your first visit with this doctor.';
+
+  @override
+  String get promotionSingleUse => 'This offer can be used only once.';
+
+  @override
+  String promotionMultiUse(int n) {
+    return 'This offer can be used up to $n times.';
+  }
+
+  @override
+  String get promotionAlreadyUsed => 'You have already used this offer.';
+
+  @override
+  String get promotionMaxClaimsReached =>
+      'You have already used this offer the maximum number of times allowed.';
+
+  @override
+  String get promotionShowCodeAtPayment =>
+      'When you visit the doctor, show this code to the receptionist at payment so the discount is applied to your bill automatically.';
 }

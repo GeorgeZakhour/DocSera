@@ -173,9 +173,7 @@ class AppLocalizationsAr extends AppLocalizations {
   }
 
   @override
-  String patientName(Object name) {
-    return 'المريض: $name';
-  }
+  String get patientName => 'المريض';
 
   @override
   String get bookAgain => 'احجز مرة أخرى';
@@ -287,6 +285,9 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get addDocument => 'إضافة مستند';
+
+  @override
+  String get fieldRequired => 'هذا الحقل مطلوب';
 
   @override
   String get uploadingDocument => 'جاري رفع المستند...';
@@ -1448,9 +1449,7 @@ class AppLocalizationsAr extends AppLocalizations {
   }
 
   @override
-  String appointmentDate(Object date) {
-    return 'التاريخ: $date';
-  }
+  String get appointmentDate => 'تاريخ الموعد';
 
   @override
   String appointmentTime2(Object time) {
@@ -3155,6 +3154,16 @@ class AppLocalizationsAr extends AppLocalizations {
   String get ofText => 'من';
 
   @override
+  String imageFromDoctor(Object doctorName) {
+    return 'صورة من $doctorName';
+  }
+
+  @override
+  String pdfFromDoctor(Object doctorName) {
+    return 'ملف من $doctorName';
+  }
+
+  @override
   String importedFromConversationWith(Object date, Object name) {
     return 'تم الاستيراد من المحادثة مع $name بتاريخ $date';
   }
@@ -3385,6 +3394,9 @@ class AppLocalizationsAr extends AppLocalizations {
   String get detailFileFormat => 'صيغة الملف';
 
   @override
+  String get detailFileSize => 'حجم الملف';
+
+  @override
   String get detailSource => 'المصدر';
 
   @override
@@ -3487,6 +3499,20 @@ class AppLocalizationsAr extends AppLocalizations {
   String get okGotIt => 'حسناً، فهمت';
 
   @override
+  String get storageDismiss => 'تجاهل';
+
+  @override
+  String get storageFullUploadBlocked =>
+      'مساحة التخزين ممتلئة. احذف بعض المستندات لتحرير مساحة قبل الرفع.';
+
+  @override
+  String get storageInfoTitle => 'حول مساحة التخزين';
+
+  @override
+  String get storageInfoBody =>
+      'هذه مساحة تخزين المستندات الخاصة بحسابك.\n\n• مساحة التخزين مشتركة لجميع حسابك — مستندات المستخدم الرئيسي وجميع الأقارب تُحتسب من نفس المساحة.\n\n• يتم احتساب المستندات التي ترفعها أنت فقط. الملفات المضافة من قبل أطبائك لا تستهلك مساحتك.\n\n• يمكنك تحرير مساحة في أي وقت عن طريق حذف المستندات التي لم تعد بحاجة إليها.';
+
+  @override
   String get fileTooLargeTitle => 'هذا الملف كبير جداً';
 
   @override
@@ -3529,7 +3555,7 @@ class AppLocalizationsAr extends AppLocalizations {
   String get cannotBeUndone => 'لا يمكن التراجع عن هذا الإجراء.';
 
   @override
-  String get referralCodeOptional => 'رمز الإحالة (اختياري)';
+  String get referralCodeOptional => 'رمز الدعوة (اختياري)';
 
   @override
   String get loyaltyRewards => 'الولاء والمكافآت';
@@ -3562,7 +3588,7 @@ class AppLocalizationsAr extends AppLocalizations {
   String get noOffersAvailable => 'لا توجد عروض متاحة حالياً';
 
   @override
-  String get offerDetails => 'تفاصيل العرض';
+  String get offerDetails => 'العرض';
 
   @override
   String get discount => 'خصم';
@@ -3629,13 +3655,13 @@ class AppLocalizationsAr extends AppLocalizations {
   String get referFriends => 'ادعُ أصدقاءك';
 
   @override
-  String get yourReferralCode => 'رمز الإحالة الخاص بك';
+  String get yourReferralCode => 'رمز الدعوة الخاص بك';
 
   @override
   String get shareWithFriends => 'شارك مع أصدقائك';
 
   @override
-  String get totalReferrals => 'الإحالات';
+  String get totalReferrals => 'الدعوات';
 
   @override
   String get pointsEarned => 'النقاط المكتسبة';
@@ -3653,11 +3679,11 @@ class AppLocalizationsAr extends AppLocalizations {
   String get referStep3 => 'تكسبان النقاط معاً!';
 
   @override
-  String get recentReferrals => 'الإحالات الأخيرة';
+  String get recentReferrals => 'الدعوات الأخيرة';
 
   @override
   String referralShareMessage(String code) {
-    return 'انضم إلى DocSera واستخدم رمز الإحالة $code عند التسجيل! كلانا سيحصل على نقاط مجانية. حمّل الآن: https://docsera.app';
+    return 'انضم إلى DocSera واستخدم رمز الدعوة $code عند التسجيل! كلانا سيحصل على نقاط مجانية. حمّل الآن: https://docsera.app';
   }
 
   @override
@@ -3690,13 +3716,13 @@ class AppLocalizationsAr extends AppLocalizations {
   String get earnPointsAppointment => 'أكمل موعداً: +10 نقاط';
 
   @override
-  String get earnPointsReferred => 'انضم عبر إحالة: +15 نقطة';
+  String get earnPointsReferred => 'انضم عبر دعوة: +15 نقطة';
 
   @override
   String get pointsValue => '١ نقطة ≈ ٥٠٠ ل.س';
 
   @override
-  String get transactionReferral => 'مكافأة إحالة';
+  String get transactionReferral => 'مكافأة دعوة صديق';
 
   @override
   String get transactionWelcome => 'مكافأة ترحيبية';
@@ -3730,7 +3756,7 @@ class AppLocalizationsAr extends AppLocalizations {
   String get referralReward => 'تكسب 25 نقطة، وصديقك يكسب 15!';
 
   @override
-  String get noReferralsYet => 'لا توجد إحالات بعد. شارك رمزك!';
+  String get noReferralsYet => 'لا توجد دعوات بعد. شارك رمزك!';
 
   @override
   String get freeFirstConsultation => 'استشارة أولى مجانية';
@@ -3783,4 +3809,133 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get copyCode => 'نسخ الرمز';
+
+  @override
+  String get totalEarned => 'مكتسبة';
+
+  @override
+  String get totalSpent => 'مستهلكة';
+
+  @override
+  String get transactionType => 'النوع';
+
+  @override
+  String get transactionTime => 'التاريخ والوقت';
+
+  @override
+  String get transactionAmount => 'المبلغ';
+
+  @override
+  String get transactionStatus => 'الحالة';
+
+  @override
+  String get transactionCompleted => 'مكتملة';
+
+  @override
+  String get transactionProcessing => 'قيد المعالجة';
+
+  @override
+  String get appointmentMarkedDone => 'تم تأكيد إتمامه';
+
+  @override
+  String get forRelative => 'لأحد الأقارب';
+
+  @override
+  String get referredUser => 'المستخدم المُحال';
+
+  @override
+  String get redeemedOn => 'تم الاستبدال في';
+
+  @override
+  String get pendingPointsNote =>
+      'ستتم إضافة النقاط إلى محفظتك بعد فترة المراجعة.';
+
+  @override
+  String get pendingTimeRemaining => 'الوقت المتبقي';
+
+  @override
+  String hoursRemaining(int hours) {
+    return '$hours ساعة متبقية';
+  }
+
+  @override
+  String get pointsAddedToWallet => 'تمت الإضافة للمحفظة';
+
+  @override
+  String get am => 'ص';
+
+  @override
+  String get pm => 'م';
+
+  @override
+  String get referralInvitation => 'دعوة صديق';
+
+  @override
+  String get partnerLabel => 'الشريك';
+
+  @override
+  String get voucherLocation => 'قسيمتك موجودة في قسم \"قسائمي\"';
+
+  @override
+  String voucherValidFor(int days) {
+    return 'صالحة لمدة $days يوم';
+  }
+
+  @override
+  String get redeemWarningTitle => 'قبل الاستبدال';
+
+  @override
+  String get redeemWarningVoucher =>
+      'سيتم تحويل نقاطك إلى قسيمة في قسم \"قسائمي\"';
+
+  @override
+  String redeemWarningValidity(int days) {
+    return 'القسيمة صالحة لمدة $days يوم من تاريخ الاستبدال — لا تستبدلها مبكراً!';
+  }
+
+  @override
+  String get redeemWarningIrreversible =>
+      'هذا الإجراء لا يمكن التراجع عنه — لا يمكنك استرداد نقاطك بعد الاستبدال';
+
+  @override
+  String get redeemWarningUseIt => 'أظهر رمز القسيمة للشريك عند استخدام العرض';
+
+  @override
+  String get iUnderstandRedeem => 'فهمت، استبدل الآن';
+
+  @override
+  String get eventDate => 'تاريخ الحدث';
+
+  @override
+  String get pointsAvailableOn => 'النقاط متاحة في';
+
+  @override
+  String get voucherExpiresOn => 'القسيمة تنتهي في';
+
+  @override
+  String get promotionPressHereToClaim =>
+      'اضغط هنا لحجز العرض والحصول على رمز الخصم الخاص بك. لا يكفي إبلاغ الطبيب شفهياً.';
+
+  @override
+  String get promotionFirstVisitOnly =>
+      'هذا العرض متاح فقط لزيارتك الأولى لدى هذا الطبيب.';
+
+  @override
+  String get promotionSingleUse => 'يمكن الاستفادة من هذا العرض مرة واحدة فقط.';
+
+  @override
+  String promotionMultiUse(int n) {
+    return 'يمكن الاستفادة من هذا العرض حتى $n مرات.';
+  }
+
+  @override
+  String get promotionAlreadyUsed => 'لقد استفدت من هذا العرض مسبقاً.';
+
+  @override
+  String get promotionMaxClaimsReached =>
+      'لقد استفدت من هذا العرض الحد الأقصى من المرات المسموح بها.';
+
+  @override
+  String get promotionShowCodeAtPayment =>
+      'عند زيارتك للطبيب، اعرض هذا الرمز لموظف الاستقبال عند الدفع ليتم تطبيق الخصم على فاتورتك تلقائياً.';
 }

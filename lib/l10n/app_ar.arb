@@ -104,6 +104,7 @@
   "takeNotesTitle": "دوِّن ملاحظات\n مهمة حول صحتك",
   "takeNotesDescription": "مثلاً، تتبع الأعراض، سجل ملاحظات حول صحتك النفسية، وحضر أسئلة لمناقشتها مع طبيبك.",
   "addDocument": "إضافة مستند",
+  "fieldRequired": "هذا الحقل مطلوب",
   "uploadingDocument": "جاري رفع المستند...",
   "documentTooLarge": "الملف يتجاوز الحد الأقصى 15 ميغابايت. الرجاء تقليل عدد الصور أو استخدام صور أصغر.",
   "pdfTooLarge": "ملف PDF كبير جداً. الحد الأقصى لحجم الملف هو 15 ميغابايت.",
@@ -1159,6 +1160,8 @@
   "downloadFailed": "فشل تحميل الصورة",
   "imagesDownloadFailed": "فشل تحميل الصور",
   "ofText": "من",
+  "imageFromDoctor": "صورة من {doctorName}",
+  "pdfFromDoctor": "ملف من {doctorName}",
   "importedFromConversationWith": "تم الاستيراد من المحادثة مع {name} بتاريخ {date}",
   "documentAccessInfo": "المستندات التي ترفعها هنا مرئية للأطباء الذين أنت مسجّل لديهم كمريض. يمكنك إدارة وحذف ملفاتك. الملفات المضافة من الأطباء تظهر هنا للقراءة فقط.",
   "notesAccessInfo": "يمكنك أنت فقط الوصول إلى ملاحظاتك وإدارتها بأمان.",
@@ -1247,6 +1250,7 @@
   "sourceBadgeReport": "تقرير",
 
   "detailFileFormat": "صيغة الملف",
+  "detailFileSize": "حجم الملف",
   "detailSource": "المصدر",
   "detailNumberOfPages": "عدد الصفحات",
   "detailVisibility": "الرؤية",
@@ -1287,6 +1291,10 @@
   "storageViewAll": "عرض جميع المستندات",
   "storageManage": "إدارة التخزين",
   "okGotIt": "حسناً، فهمت",
+  "storageDismiss": "تجاهل",
+  "storageFullUploadBlocked": "مساحة التخزين ممتلئة. احذف بعض المستندات لتحرير مساحة قبل الرفع.",
+  "storageInfoTitle": "حول مساحة التخزين",
+  "storageInfoBody": "هذه مساحة تخزين المستندات الخاصة بحسابك.\n\n• مساحة التخزين مشتركة لجميع حسابك — مستندات المستخدم الرئيسي وجميع الأقارب تُحتسب من نفس المساحة.\n\n• يتم احتساب المستندات التي ترفعها أنت فقط. الملفات المضافة من قبل أطبائك لا تستهلك مساحتك.\n\n• يمكنك تحرير مساحة في أي وقت عن طريق حذف المستندات التي لم تعد بحاجة إليها.",
   "fileTooLargeTitle": "هذا الملف كبير جداً",
   "fileTooLargeBody": "الحد الأقصى لحجم الملف: {max} ميغابايت. ملفك: {size} ميغابايت.",
   "@fileTooLargeBody": {
@@ -1315,7 +1323,7 @@
   "deleteDocumentTitle": "حذف المستند",
   "deleteDocumentConfirm": "هل أنت متأكد من حذف",
   "cannotBeUndone": "لا يمكن التراجع عن هذا الإجراء.",
-  "referralCodeOptional": "رمز الإحالة (اختياري)",
+  "referralCodeOptional": "رمز الدعوة (اختياري)",
   "loyaltyRewards": "الولاء والمكافآت",
   "yourPoints": "نقاطك",
   "myPoints": "نقاطي",
@@ -1348,16 +1356,16 @@
   "howToUse": "طريقة الاستخدام",
   "voucherInstructions": "أظهر رمز QR أو رمز القسيمة لموظف الشريك. سيقوم بمسح أو إدخال الرمز للتحقق من خصمك.",
   "referFriends": "ادعُ أصدقاءك",
-  "yourReferralCode": "رمز الإحالة الخاص بك",
+  "yourReferralCode": "رمز الدعوة الخاص بك",
   "shareWithFriends": "شارك مع أصدقائك",
-  "totalReferrals": "الإحالات",
+  "totalReferrals": "الدعوات",
   "pointsEarned": "النقاط المكتسبة",
   "howItWorks": "كيف تعمل",
   "referStep1": "شارك رمزك مع أصدقائك",
   "referStep2": "يقومون بالتسجيل باستخدام رمزك وإكمال ملفهم الشخصي",
   "referStep3": "تكسبان النقاط معاً!",
-  "recentReferrals": "الإحالات الأخيرة",
-  "referralShareMessage": "انضم إلى DocSera واستخدم رمز الإحالة {code} عند التسجيل! كلانا سيحصل على نقاط مجانية. حمّل الآن: https://docsera.app",
+  "recentReferrals": "الدعوات الأخيرة",
+  "referralShareMessage": "انضم إلى DocSera واستخدم رمز الدعوة {code} عند التسجيل! كلانا سيحصل على نقاط مجانية. حمّل الآن: https://docsera.app",
   "@referralShareMessage": {
     "placeholders": {
       "code": {
@@ -1380,9 +1388,9 @@
   "earnPointsTitle": "كيف تكسب النقاط",
   "earnPointsReferral": "ادعُ صديقاً: +25 نقطة",
   "earnPointsAppointment": "أكمل موعداً: +10 نقاط",
-  "earnPointsReferred": "انضم عبر إحالة: +15 نقطة",
+  "earnPointsReferred": "انضم عبر دعوة: +15 نقطة",
   "pointsValue": "١ نقطة ≈ ٥٠٠ ل.س",
-  "transactionReferral": "مكافأة إحالة",
+  "transactionReferral": "مكافأة دعوة صديق",
   "transactionWelcome": "مكافأة ترحيبية",
   "transactionAppointment": "مكافأة موعد",
   "transactionRedeemed": "تم استبدال عرض",
@@ -1402,7 +1410,7 @@
   },
   "goToVouchers": "عرض قسائمي",
   "referralReward": "تكسب 25 نقطة، وصديقك يكسب 15!",
-  "noReferralsYet": "لا توجد إحالات بعد. شارك رمزك!",
+  "noReferralsYet": "لا توجد دعوات بعد. شارك رمزك!",
   "address": "العنوان",
   "freeFirstConsultation": "استشارة أولى مجانية",
   "percentageDiscount": "خصم",
@@ -1421,5 +1429,69 @@
   "offerFull": "وصل هذا العرض للحد الأقصى من المطالبات",
   "claimSuccess": "تم الحصول على العرض بنجاح!",
   "copyCode": "نسخ الرمز",
-  "codeCopied": "تم نسخ الرمز!"
+  "codeCopied": "تم نسخ الرمز!",
+
+  "totalEarned": "مكتسبة",
+  "totalSpent": "مستهلكة",
+  "transactionType": "النوع",
+  "transactionTime": "التاريخ والوقت",
+  "transactionAmount": "المبلغ",
+  "transactionStatus": "الحالة",
+  "transactionCompleted": "مكتملة",
+  "transactionProcessing": "قيد المعالجة",
+
+  "doctor": "الطبيب",
+  "appointmentDate": "تاريخ الموعد",
+  "appointmentMarkedDone": "تم تأكيد إتمامه",
+  "patientName": "المريض",
+  "forRelative": "لأحد الأقارب",
+  "referredUser": "المستخدم المُحال",
+  "offerDetails": "العرض",
+  "redeemedOn": "تم الاستبدال في",
+  "pendingPointsNote": "ستتم إضافة النقاط إلى محفظتك بعد فترة المراجعة.",
+  "pendingTimeRemaining": "الوقت المتبقي",
+  "hoursRemaining": "{hours} ساعة متبقية",
+  "@hoursRemaining": {
+    "placeholders": {
+      "hours": {"type": "int"}
+    }
+  },
+  "pointsAddedToWallet": "تمت الإضافة للمحفظة",
+  "am": "ص",
+  "pm": "م",
+  "referralInvitation": "دعوة صديق",
+  "partnerLabel": "الشريك",
+  "voucherLocation": "قسيمتك موجودة في قسم \"قسائمي\"",
+  "voucherValidFor": "صالحة لمدة {days} يوم",
+  "@voucherValidFor": {
+    "placeholders": {
+      "days": {"type": "int"}
+    }
+  },
+  "redeemWarningTitle": "قبل الاستبدال",
+  "redeemWarningVoucher": "سيتم تحويل نقاطك إلى قسيمة في قسم \"قسائمي\"",
+  "redeemWarningValidity": "القسيمة صالحة لمدة {days} يوم من تاريخ الاستبدال — لا تستبدلها مبكراً!",
+  "@redeemWarningValidity": {
+    "placeholders": {
+      "days": {"type": "int"}
+    }
+  },
+  "redeemWarningIrreversible": "هذا الإجراء لا يمكن التراجع عنه — لا يمكنك استرداد نقاطك بعد الاستبدال",
+  "redeemWarningUseIt": "أظهر رمز القسيمة للشريك عند استخدام العرض",
+  "iUnderstandRedeem": "فهمت، استبدل الآن",
+  "eventDate": "تاريخ الحدث",
+  "pointsAvailableOn": "النقاط متاحة في",
+  "voucherExpiresOn": "القسيمة تنتهي في",
+  "promotionPressHereToClaim": "اضغط هنا لحجز العرض والحصول على رمز الخصم الخاص بك. لا يكفي إبلاغ الطبيب شفهياً.",
+  "promotionFirstVisitOnly": "هذا العرض متاح فقط لزيارتك الأولى لدى هذا الطبيب.",
+  "promotionSingleUse": "يمكن الاستفادة من هذا العرض مرة واحدة فقط.",
+  "promotionMultiUse": "يمكن الاستفادة من هذا العرض حتى {n} مرات.",
+  "@promotionMultiUse": {
+    "placeholders": {
+      "n": {"type": "int"}
+    }
+  },
+  "promotionAlreadyUsed": "لقد استفدت من هذا العرض مسبقاً.",
+  "promotionMaxClaimsReached": "لقد استفدت من هذا العرض الحد الأقصى من المرات المسموح بها.",
+  "promotionShowCodeAtPayment": "عند زيارتك للطبيب، اعرض هذا الرمز لموظف الاستقبال عند الدفع ليتم تطبيق الخصم على فاتورتك تلقائياً."
 }

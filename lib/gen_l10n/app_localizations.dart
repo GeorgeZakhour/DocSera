@@ -407,8 +407,8 @@ abstract class AppLocalizations {
   /// No description provided for @patientName.
   ///
   /// In en, this message translates to:
-  /// **'Patient: {name}'**
-  String patientName(Object name);
+  /// **'Patient'**
+  String get patientName;
 
   /// No description provided for @bookAgain.
   ///
@@ -613,6 +613,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Add Document'**
   String get addDocument;
+
+  /// No description provided for @fieldRequired.
+  ///
+  /// In en, this message translates to:
+  /// **'This field is required'**
+  String get fieldRequired;
 
   /// No description provided for @uploadingDocument.
   ///
@@ -2813,8 +2819,8 @@ abstract class AppLocalizations {
   /// No description provided for @appointmentDate.
   ///
   /// In en, this message translates to:
-  /// **'Date: {date}'**
-  String appointmentDate(Object date);
+  /// **'Appointment date'**
+  String get appointmentDate;
 
   /// No description provided for @appointmentTime2.
   ///
@@ -5996,6 +6002,18 @@ abstract class AppLocalizations {
   /// **'of'**
   String get ofText;
 
+  /// No description provided for @imageFromDoctor.
+  ///
+  /// In en, this message translates to:
+  /// **'Image from {doctorName}'**
+  String imageFromDoctor(Object doctorName);
+
+  /// No description provided for @pdfFromDoctor.
+  ///
+  /// In en, this message translates to:
+  /// **'PDF from {doctorName}'**
+  String pdfFromDoctor(Object doctorName);
+
   /// No description provided for @importedFromConversationWith.
   ///
   /// In en, this message translates to:
@@ -6428,6 +6446,12 @@ abstract class AppLocalizations {
   /// **'File format'**
   String get detailFileFormat;
 
+  /// No description provided for @detailFileSize.
+  ///
+  /// In en, this message translates to:
+  /// **'File size'**
+  String get detailFileSize;
+
   /// No description provided for @detailSource.
   ///
   /// In en, this message translates to:
@@ -6608,6 +6632,30 @@ abstract class AppLocalizations {
   /// **'OK, Got It'**
   String get okGotIt;
 
+  /// No description provided for @storageDismiss.
+  ///
+  /// In en, this message translates to:
+  /// **'Dismiss'**
+  String get storageDismiss;
+
+  /// No description provided for @storageFullUploadBlocked.
+  ///
+  /// In en, this message translates to:
+  /// **'Your storage is full. Delete some documents to free up space before uploading.'**
+  String get storageFullUploadBlocked;
+
+  /// No description provided for @storageInfoTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'About Your Storage'**
+  String get storageInfoTitle;
+
+  /// No description provided for @storageInfoBody.
+  ///
+  /// In en, this message translates to:
+  /// **'This is your account\'s document storage.\n\n• Storage is shared across your account — documents for you and all your relatives count toward the same limit.\n\n• Only documents you upload are counted. Files added by your doctors do not use your storage.\n\n• You can free up space anytime by deleting documents you no longer need.'**
+  String get storageInfoBody;
+
   /// No description provided for @fileTooLargeTitle.
   ///
   /// In en, this message translates to:
@@ -6749,7 +6797,7 @@ abstract class AppLocalizations {
   /// No description provided for @offerDetails.
   ///
   /// In en, this message translates to:
-  /// **'Offer Details'**
+  /// **'Offer'**
   String get offerDetails;
 
   /// No description provided for @discount.
@@ -7171,6 +7219,234 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Copy Code'**
   String get copyCode;
+
+  /// No description provided for @totalEarned.
+  ///
+  /// In en, this message translates to:
+  /// **'Earned'**
+  String get totalEarned;
+
+  /// No description provided for @totalSpent.
+  ///
+  /// In en, this message translates to:
+  /// **'Spent'**
+  String get totalSpent;
+
+  /// No description provided for @transactionType.
+  ///
+  /// In en, this message translates to:
+  /// **'Type'**
+  String get transactionType;
+
+  /// No description provided for @transactionTime.
+  ///
+  /// In en, this message translates to:
+  /// **'Date & Time'**
+  String get transactionTime;
+
+  /// No description provided for @transactionAmount.
+  ///
+  /// In en, this message translates to:
+  /// **'Amount'**
+  String get transactionAmount;
+
+  /// No description provided for @transactionStatus.
+  ///
+  /// In en, this message translates to:
+  /// **'Status'**
+  String get transactionStatus;
+
+  /// No description provided for @transactionCompleted.
+  ///
+  /// In en, this message translates to:
+  /// **'Completed'**
+  String get transactionCompleted;
+
+  /// No description provided for @transactionProcessing.
+  ///
+  /// In en, this message translates to:
+  /// **'Processing'**
+  String get transactionProcessing;
+
+  /// No description provided for @appointmentMarkedDone.
+  ///
+  /// In en, this message translates to:
+  /// **'Marked as done'**
+  String get appointmentMarkedDone;
+
+  /// No description provided for @forRelative.
+  ///
+  /// In en, this message translates to:
+  /// **'For a relative'**
+  String get forRelative;
+
+  /// No description provided for @referredUser.
+  ///
+  /// In en, this message translates to:
+  /// **'Referred user'**
+  String get referredUser;
+
+  /// No description provided for @redeemedOn.
+  ///
+  /// In en, this message translates to:
+  /// **'Redeemed on'**
+  String get redeemedOn;
+
+  /// No description provided for @pendingPointsNote.
+  ///
+  /// In en, this message translates to:
+  /// **'Points will be added to your wallet after the review period.'**
+  String get pendingPointsNote;
+
+  /// No description provided for @pendingTimeRemaining.
+  ///
+  /// In en, this message translates to:
+  /// **'Time remaining'**
+  String get pendingTimeRemaining;
+
+  /// No description provided for @hoursRemaining.
+  ///
+  /// In en, this message translates to:
+  /// **'{hours}h remaining'**
+  String hoursRemaining(int hours);
+
+  /// No description provided for @pointsAddedToWallet.
+  ///
+  /// In en, this message translates to:
+  /// **'Added to wallet'**
+  String get pointsAddedToWallet;
+
+  /// No description provided for @am.
+  ///
+  /// In en, this message translates to:
+  /// **'AM'**
+  String get am;
+
+  /// No description provided for @pm.
+  ///
+  /// In en, this message translates to:
+  /// **'PM'**
+  String get pm;
+
+  /// No description provided for @referralInvitation.
+  ///
+  /// In en, this message translates to:
+  /// **'Friend referral'**
+  String get referralInvitation;
+
+  /// No description provided for @partnerLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Partner'**
+  String get partnerLabel;
+
+  /// No description provided for @voucherLocation.
+  ///
+  /// In en, this message translates to:
+  /// **'Your voucher is in the \"My Vouchers\" section'**
+  String get voucherLocation;
+
+  /// No description provided for @voucherValidFor.
+  ///
+  /// In en, this message translates to:
+  /// **'Valid for {days} days'**
+  String voucherValidFor(int days);
+
+  /// No description provided for @redeemWarningTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Before you redeem'**
+  String get redeemWarningTitle;
+
+  /// No description provided for @redeemWarningVoucher.
+  ///
+  /// In en, this message translates to:
+  /// **'Your points will be converted into a voucher in \"My Vouchers\"'**
+  String get redeemWarningVoucher;
+
+  /// No description provided for @redeemWarningValidity.
+  ///
+  /// In en, this message translates to:
+  /// **'The voucher is valid for {days} days from the redemption date — don\'t redeem too early!'**
+  String redeemWarningValidity(int days);
+
+  /// No description provided for @redeemWarningIrreversible.
+  ///
+  /// In en, this message translates to:
+  /// **'This action is irreversible — you cannot get your points back once redeemed'**
+  String get redeemWarningIrreversible;
+
+  /// No description provided for @redeemWarningUseIt.
+  ///
+  /// In en, this message translates to:
+  /// **'Show the voucher code to the partner when using the offer'**
+  String get redeemWarningUseIt;
+
+  /// No description provided for @iUnderstandRedeem.
+  ///
+  /// In en, this message translates to:
+  /// **'I understand, redeem now'**
+  String get iUnderstandRedeem;
+
+  /// No description provided for @eventDate.
+  ///
+  /// In en, this message translates to:
+  /// **'Event date'**
+  String get eventDate;
+
+  /// No description provided for @pointsAvailableOn.
+  ///
+  /// In en, this message translates to:
+  /// **'Points available on'**
+  String get pointsAvailableOn;
+
+  /// No description provided for @voucherExpiresOn.
+  ///
+  /// In en, this message translates to:
+  /// **'Voucher expires'**
+  String get voucherExpiresOn;
+
+  /// No description provided for @promotionPressHereToClaim.
+  ///
+  /// In en, this message translates to:
+  /// **'Press here to claim the offer and get your discount code. Simply telling the doctor verbally is not enough.'**
+  String get promotionPressHereToClaim;
+
+  /// No description provided for @promotionFirstVisitOnly.
+  ///
+  /// In en, this message translates to:
+  /// **'This offer is available only for your first visit with this doctor.'**
+  String get promotionFirstVisitOnly;
+
+  /// No description provided for @promotionSingleUse.
+  ///
+  /// In en, this message translates to:
+  /// **'This offer can be used only once.'**
+  String get promotionSingleUse;
+
+  /// No description provided for @promotionMultiUse.
+  ///
+  /// In en, this message translates to:
+  /// **'This offer can be used up to {n} times.'**
+  String promotionMultiUse(int n);
+
+  /// No description provided for @promotionAlreadyUsed.
+  ///
+  /// In en, this message translates to:
+  /// **'You have already used this offer.'**
+  String get promotionAlreadyUsed;
+
+  /// No description provided for @promotionMaxClaimsReached.
+  ///
+  /// In en, this message translates to:
+  /// **'You have already used this offer the maximum number of times allowed.'**
+  String get promotionMaxClaimsReached;
+
+  /// No description provided for @promotionShowCodeAtPayment.
+  ///
+  /// In en, this message translates to:
+  /// **'When you visit the doctor, show this code to the receptionist at payment so the discount is applied to your bill automatically.'**
+  String get promotionShowCodeAtPayment;
 }
 
 class _AppLocalizationsDelegate
