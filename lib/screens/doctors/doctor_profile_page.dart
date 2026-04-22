@@ -3311,6 +3311,8 @@ class _ClaimPromotionSheetState extends State<_ClaimPromotionSheet>
   bool _isClaiming = false;
   String? _voucherCode;
   String? _error;
+  bool _isRetrieved = false; // true when showing an already-claimed voucher
+  String? _expiresAt;
 
   // Animation controllers
   late AnimationController _celebrationController;
@@ -3369,16 +3371,24 @@ class _ClaimPromotionSheetState extends State<_ClaimPromotionSheet>
 
       final result = response as Map<String, dynamic>;
       if (result['success'] == true) {
+        final alreadyClaimed = result['already_claimed'] == true;
         setState(() {
           _voucherCode = result['voucher_code'] as String?;
+          _expiresAt = result['expires_at'] as String?;
+          _isRetrieved = alreadyClaimed;
           _isClaiming = false;
         });
-        // Trigger celebration animations sequentially
-        _celebrationController.forward();
-        await Future.delayed(const Duration(milliseconds: 200));
-        _checkController.forward();
-        await Future.delayed(const Duration(milliseconds: 400));
-        _codeRevealController.forward();
+        if (alreadyClaimed) {
+          // Skip celebration, just reveal the code
+          _codeRevealController.forward();
+        } else {
+          // Trigger celebration animations sequentially
+          _celebrationController.forward();
+          await Future.delayed(const Duration(milliseconds: 200));
+          _checkController.forward();
+          await Future.delayed(const Duration(milliseconds: 400));
+          _codeRevealController.forward();
+        }
       } else {
         final errorCode = result['error'] as String? ?? 'unknown';
         setState(() {
@@ -3441,88 +3451,127 @@ class _ClaimPromotionSheetState extends State<_ClaimPromotionSheet>
 
           // ── Success state with animations ──
           if (_voucherCode != null) ...[
-            SizedBox(
-              height: 320.h,
-              child: Stack(
-                alignment: Alignment.center,
-                children: [
-                  // Confetti particles
-                  AnimatedBuilder(
-                    animation: _celebrationController,
-                    builder: (context, _) {
-                      return CustomPaint(
-                        size: Size(300.w, 300.h),
-                        painter: _ConfettiPainter(
-                          progress: _celebrationController.value,
-                          colors: [
-                            AppColors.main,
-                            const Color(0xFF4CAF50),
-                            const Color(0xFFFF9800),
-                            const Color(0xFF2196F3),
-                            const Color(0xFFE91E63),
-                            AppColors.main.withOpacity(0.6),
-                          ],
-                        ),
-                      );
-                    },
-                  ),
-                  // Content
-                  Column(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      // Animated check circle
-                      ScaleTransition(
-                        scale: _checkAnimation,
-                        child: Container(
-                          width: 64.r,
-                          height: 64.r,
-                          decoration: BoxDecoration(
-                            shape: BoxShape.circle,
-                            gradient: LinearGradient(
+            Flexible(
+              child: SingleChildScrollView(
+                child: Stack(
+                  alignment: Alignment.topCenter,
+                  children: [
+                    // Confetti particles (only for new claims)
+                    if (!_isRetrieved)
+                      AnimatedBuilder(
+                        animation: _celebrationController,
+                        builder: (context, _) {
+                          return CustomPaint(
+                            size: Size(300.w, 300.h),
+                            painter: _ConfettiPainter(
+                              progress: _celebrationController.value,
                               colors: [
                                 AppColors.main,
-                                AppColors.main.withOpacity(0.8),
+                                const Color(0xFF4CAF50),
+                                const Color(0xFFFF9800),
+                                const Color(0xFF2196F3),
+                                const Color(0xFFE91E63),
+                                AppColors.main.withOpacity(0.6),
                               ],
-                              begin: Alignment.topLeft,
-                              end: Alignment.bottomRight,
                             ),
-                            boxShadow: [
-                              BoxShadow(
-                                color: AppColors.main.withOpacity(0.3),
-                                blurRadius: 20,
-                                offset: const Offset(0, 6),
+                          );
+                        },
+                      ),
+                    // Content
+                    FadeTransition(
+                      opacity: _codeFadeAnimation,
+                      child: Column(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          // Animated check circle (new claim) or info circle (retrieved)
+                          if (!_isRetrieved)
+                            ScaleTransition(
+                              scale: _checkAnimation,
+                              child: Container(
+                                width: 64.r,
+                                height: 64.r,
+                                decoration: BoxDecoration(
+                                  shape: BoxShape.circle,
+                                  gradient: LinearGradient(
+                                    colors: [
+                                      AppColors.main,
+                                      AppColors.main.withOpacity(0.8),
+                                    ],
+                                    begin: Alignment.topLeft,
+                                    end: Alignment.bottomRight,
+                                  ),
+                                  boxShadow: [
+                                    BoxShadow(
+                                      color: AppColors.main.withOpacity(0.3),
+                                      blurRadius: 20,
+                                      offset: const Offset(0, 6),
+                                    ),
+                                  ],
+                                ),
+                                child: Icon(
+                                  Icons.check_rounded,
+                                  color: Colors.white,
+                                  size: 32.sp,
+                                ),
                               ),
-                            ],
+                            )
+                          else
+                            Container(
+                              width: 48.r,
+                              height: 48.r,
+                              decoration: BoxDecoration(
+                                color: widget.color.withOpacity(0.08),
+                                shape: BoxShape.circle,
+                              ),
+                              child: Icon(widget.icon, color: widget.color, size: 22.sp),
+                            ),
+                          SizedBox(height: 12.h),
+
+                          // Title text
+                          Text(
+                            _isRetrieved ? l.yourVoucher : l.claimSuccess,
+                            style: AppTextStyles.getTitle2(context).copyWith(
+                              color: AppColors.mainDark,
+                              fontWeight: FontWeight.w700,
+                            ),
                           ),
-                          child: Icon(
-                            Icons.check_rounded,
-                            color: Colors.white,
-                            size: 32.sp,
+                          SizedBox(height: 4.h),
+
+                          // Promotion title
+                          Text(
+                            widget.title,
+                            style: AppTextStyles.getText2(context).copyWith(
+                              color: Colors.grey[500],
+                            ),
+                            textAlign: TextAlign.center,
                           ),
-                        ),
-                      ),
-                      SizedBox(height: 16.h),
-                      // Success text
-                      FadeTransition(
-                        opacity: _codeFadeAnimation,
-                        child: Text(
-                          l.claimSuccess,
-                          style: AppTextStyles.getTitle2(context).copyWith(
-                            color: AppColors.mainDark,
-                            fontWeight: FontWeight.w700,
+                          SizedBox(height: 20.h),
+
+                          // QR Code
+                          Container(
+                            padding: EdgeInsets.all(12.w),
+                            decoration: BoxDecoration(
+                              color: Colors.white,
+                              borderRadius: BorderRadius.circular(16.r),
+                              border: Border.all(
+                                color: AppColors.main.withOpacity(0.1),
+                                width: 2,
+                              ),
+                            ),
+                            child: QrImageView(
+                              data: _voucherCode!,
+                              version: QrVersions.auto,
+                              size: 160.w,
+                              foregroundColor: AppColors.mainDark,
+                            ),
                           ),
-                        ),
-                      ),
-                      SizedBox(height: 20.h),
-                      // Voucher code card
-                      FadeTransition(
-                        opacity: _codeFadeAnimation,
-                        child: ScaleTransition(
-                          scale: _codeScaleAnimation,
-                          child: Container(
+                          SizedBox(height: 16.h),
+
+                          // Voucher code card
+                          Container(
                             padding: EdgeInsets.symmetric(
                               horizontal: 24.w,
-                              vertical: 16.h,
+                              vertical: 12.h,
                             ),
                             decoration: BoxDecoration(
                               color: AppColors.main.withOpacity(0.05),
@@ -3539,7 +3588,7 @@ class _ClaimPromotionSheetState extends State<_ClaimPromotionSheet>
                                     color: Colors.grey[500],
                                   ),
                                 ),
-                                SizedBox(height: 6.h),
+                                SizedBox(height: 4.h),
                                 GestureDetector(
                                   onTap: () {
                                     Clipboard.setData(
@@ -3577,44 +3626,64 @@ class _ClaimPromotionSheetState extends State<_ClaimPromotionSheet>
                                     ],
                                   ),
                                 ),
-                                SizedBox(height: 6.h),
-                                Text(
-                                  l.voucherExpiry,
-                                  style: AppTextStyles.getText3(context).copyWith(
-                                    color: Colors.grey[400],
-                                    fontSize: 10.sp,
+                                if (_expiresAt != null) ...[
+                                  SizedBox(height: 4.h),
+                                  Builder(builder: (context) {
+                                    final end = DateTime.tryParse(_expiresAt!);
+                                    if (end == null) return const SizedBox.shrink();
+                                    final daysLeft = end.difference(DateTime.now()).inDays;
+                                    final text = daysLeft > 0
+                                        ? '${l.validFor} $daysLeft ${l.daysRemaining}'
+                                        : l.validWhileOfferActive;
+                                    return Text(
+                                      text,
+                                      style: AppTextStyles.getText3(context).copyWith(
+                                        color: Colors.grey[400],
+                                        fontSize: 10.sp,
+                                      ),
+                                    );
+                                  }),
+                                ],
+                              ],
+                            ),
+                          ),
+                          SizedBox(height: 16.h),
+
+                          // Show to doctor hint
+                          Container(
+                            padding: EdgeInsets.symmetric(horizontal: 14.w, vertical: 10.h),
+                            decoration: BoxDecoration(
+                              color: AppColors.main.withOpacity(0.04),
+                              borderRadius: BorderRadius.circular(10.r),
+                              border: Border.all(color: AppColors.main.withOpacity(0.10)),
+                            ),
+                            child: Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                Icon(
+                                  Icons.qr_code_scanner_rounded,
+                                  size: 16.sp,
+                                  color: AppColors.main,
+                                ),
+                                SizedBox(width: 8.w),
+                                Flexible(
+                                  child: Text(
+                                    l.showQrToDoctor,
+                                    style: AppTextStyles.getText3(context).copyWith(
+                                      color: AppColors.main,
+                                      fontWeight: FontWeight.w500,
+                                    ),
                                   ),
                                 ),
                               ],
                             ),
                           ),
-                        ),
+                          SizedBox(height: 8.h),
+                        ],
                       ),
-                      SizedBox(height: 16.h),
-                      // Show to doctor hint
-                      FadeTransition(
-                        opacity: _codeFadeAnimation,
-                        child: Row(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            Icon(
-                              Icons.info_outline_rounded,
-                              size: 14.sp,
-                              color: Colors.grey[400],
-                            ),
-                            SizedBox(width: 6.w),
-                            Text(
-                              l.showCodeToDoctor,
-                              style: AppTextStyles.getText3(context).copyWith(
-                                color: Colors.grey[500],
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                    ],
-                  ),
-                ],
+                    ),
+                  ],
+                ),
               ),
             ),
           ]

@@ -7447,6 +7447,30 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'When you visit the doctor, show this code to the receptionist at payment so the discount is applied to your bill automatically.'**
   String get promotionShowCodeAtPayment;
+
+  /// No description provided for @yourVoucher.
+  ///
+  /// In en, this message translates to:
+  /// **'Your Voucher'**
+  String get yourVoucher;
+
+  /// No description provided for @showQrToDoctor.
+  ///
+  /// In en, this message translates to:
+  /// **'Show this QR code to the doctor or receptionist during your visit'**
+  String get showQrToDoctor;
+
+  /// No description provided for @validFor.
+  ///
+  /// In en, this message translates to:
+  /// **'Valid for'**
+  String get validFor;
+
+  /// No description provided for @validWhileOfferActive.
+  ///
+  /// In en, this message translates to:
+  /// **'Valid while offer is active'**
+  String get validWhileOfferActive;
 }
 
 class _AppLocalizationsDelegate

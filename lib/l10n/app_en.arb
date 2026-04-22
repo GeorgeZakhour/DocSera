@@ -1471,5 +1471,9 @@
   },
   "promotionAlreadyUsed": "You have already used this offer.",
   "promotionMaxClaimsReached": "You have already used this offer the maximum number of times allowed.",
-  "promotionShowCodeAtPayment": "When you visit the doctor, show this code to the receptionist at payment so the discount is applied to your bill automatically."
+  "promotionShowCodeAtPayment": "When you visit the doctor, show this code to the receptionist at payment so the discount is applied to your bill automatically.",
+  "yourVoucher": "Your Voucher",
+  "showQrToDoctor": "Show this QR code to the doctor or receptionist during your visit",
+  "validFor": "Valid for",
+  "validWhileOfferActive": "Valid while offer is active"
 }

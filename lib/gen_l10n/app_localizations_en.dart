@@ -3983,4 +3983,17 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get promotionShowCodeAtPayment =>
       'When you visit the doctor, show this code to the receptionist at payment so the discount is applied to your bill automatically.';
+
+  @override
+  String get yourVoucher => 'Your Voucher';
+
+  @override
+  String get showQrToDoctor =>
+      'Show this QR code to the doctor or receptionist during your visit';
+
+  @override
+  String get validFor => 'Valid for';
+
+  @override
+  String get validWhileOfferActive => 'Valid while offer is active';
 }

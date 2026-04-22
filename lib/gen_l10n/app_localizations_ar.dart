@@ -3938,4 +3938,17 @@ class AppLocalizationsAr extends AppLocalizations {
   @override
   String get promotionShowCodeAtPayment =>
       'عند زيارتك للطبيب، اعرض هذا الرمز لموظف الاستقبال عند الدفع ليتم تطبيق الخصم على فاتورتك تلقائياً.';
+
+  @override
+  String get yourVoucher => 'قسيمتك';
+
+  @override
+  String get showQrToDoctor =>
+      'أظهر رمز QR هذا للطبيب أو موظف الاستقبال أثناء زيارتك';
+
+  @override
+  String get validFor => 'صالح لمدة';
+
+  @override
+  String get validWhileOfferActive => 'صالح طالما العرض فعّال';
 }
