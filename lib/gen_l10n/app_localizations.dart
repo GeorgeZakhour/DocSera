@@ -7471,6 +7471,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Valid while offer is active'**
   String get validWhileOfferActive;
+
+  /// No description provided for @showAll.
+  ///
+  /// In en, this message translates to:
+  /// **'Show all'**
+  String get showAll;
 }
 
 class _AppLocalizationsDelegate

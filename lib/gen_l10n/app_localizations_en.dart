@@ -3996,4 +3996,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get validWhileOfferActive => 'Valid while offer is active';
+
+  @override
+  String get showAll => 'Show all';
 }

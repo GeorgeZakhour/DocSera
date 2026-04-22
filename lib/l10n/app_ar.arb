@@ -1497,5 +1497,6 @@
   "yourVoucher": "قسيمتك",
   "showQrToDoctor": "أظهر رمز QR هذا للطبيب أو موظف الاستقبال أثناء زيارتك",
   "validFor": "صالح لمدة",
-  "validWhileOfferActive": "صالح طالما العرض فعّال"
+  "validWhileOfferActive": "صالح طالما العرض فعّال",
+  "showAll": "عرض الكل"
 }

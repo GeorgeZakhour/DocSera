@@ -1475,5 +1475,6 @@
   "yourVoucher": "Your Voucher",
   "showQrToDoctor": "Show this QR code to the doctor or receptionist during your visit",
   "validFor": "Valid for",
-  "validWhileOfferActive": "Valid while offer is active"
+  "validWhileOfferActive": "Valid while offer is active",
+  "showAll": "Show all"
 }

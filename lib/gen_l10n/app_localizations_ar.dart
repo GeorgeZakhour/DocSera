@@ -3951,4 +3951,7 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get validWhileOfferActive => 'صالح طالما العرض فعّال';
+
+  @override
+  String get showAll => 'عرض الكل';
 }

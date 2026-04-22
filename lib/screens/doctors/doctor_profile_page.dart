@@ -766,17 +766,143 @@ class _DoctorProfilePageState extends State<DoctorProfilePage> {
               ],
             ),
             SizedBox(height: 14.h),
-            // Offer items
-            ListView.separated(
-              padding: EdgeInsets.zero,
-              shrinkWrap: true,
-              physics: const NeverScrollableScrollPhysics(),
-              itemCount: promotions.length,
-              separatorBuilder: (_, __) => SizedBox(height: 8.h),
-              itemBuilder: (context, index) {
-                final promo = promotions[index];
-                return _buildPromotionItem(promo, l, isAr);
-              },
+            // Offer items — show max 2, with "show all" if more
+            ...promotions.take(2).map((promo) => Padding(
+              padding: EdgeInsets.only(bottom: 8.h),
+              child: _buildPromotionItem(promo, l, isAr),
+            )),
+            // "Show all" button when more than 2
+            if (promotions.length > 2)
+              Padding(
+                padding: EdgeInsets.only(top: 4.h),
+                child: Center(
+                  child: TextButton.icon(
+                    onPressed: () => _showAllPromotionsSheet(promotions, l, isAr),
+                    icon: Icon(Icons.expand_more_rounded, size: 16.sp, color: AppColors.main),
+                    label: Text(
+                      '${l.showAll} (${promotions.length})',
+                      style: AppTextStyles.getText3(context).copyWith(
+                        color: AppColors.main,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                    style: TextButton.styleFrom(
+                      padding: EdgeInsets.symmetric(horizontal: 12.w, vertical: 4.h),
+                    ),
+                  ),
+                ),
+              ),
+            // Single instruction text at the bottom
+            SizedBox(height: 6.h),
+            Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Icon(Icons.info_outline_rounded, size: 13.sp, color: Colors.grey[400]),
+                SizedBox(width: 4.w),
+                Expanded(
+                  child: Text(
+                    l.promotionPressHereToClaim,
+                    style: AppTextStyles.getText3(context).copyWith(
+                      color: Colors.grey[500],
+                      fontSize: 10.sp,
+                      height: 1.4,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  void _showAllPromotionsSheet(
+    List<dynamic> promotions,
+    AppLocalizations l,
+    bool isAr,
+  ) {
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (ctx) => Container(
+        constraints: BoxConstraints(maxHeight: MediaQuery.of(context).size.height * 0.7),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.vertical(top: Radius.circular(24.r)),
+        ),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            // Handle bar
+            Container(
+              width: 36.w,
+              height: 4.h,
+              margin: EdgeInsets.only(top: 12.h, bottom: 16.h),
+              decoration: BoxDecoration(
+                color: Colors.grey.shade300,
+                borderRadius: BorderRadius.circular(2.r),
+              ),
+            ),
+            // Header
+            Padding(
+              padding: EdgeInsets.symmetric(horizontal: 20.w),
+              child: Row(
+                children: [
+                  Container(
+                    padding: EdgeInsets.all(6.r),
+                    decoration: BoxDecoration(
+                      gradient: const LinearGradient(
+                        colors: [AppColors.main, Color(0xFF00B4B6)],
+                        begin: Alignment.topLeft,
+                        end: Alignment.bottomRight,
+                      ),
+                      borderRadius: BorderRadius.circular(8.r),
+                    ),
+                    child: Icon(Icons.local_offer_rounded, color: Colors.white, size: 14.sp),
+                  ),
+                  SizedBox(width: 8.w),
+                  Text(
+                    '${l.offers} (${promotions.length})',
+                    style: AppTextStyles.getTitle1(context).copyWith(fontSize: 13.sp),
+                  ),
+                ],
+              ),
+            ),
+            SizedBox(height: 12.h),
+            // All promotions list
+            Flexible(
+              child: ListView.separated(
+                padding: EdgeInsets.fromLTRB(20.w, 0, 20.w, 20.h),
+                shrinkWrap: true,
+                itemCount: promotions.length,
+                separatorBuilder: (_, __) => SizedBox(height: 8.h),
+                itemBuilder: (context, index) {
+                  return _buildPromotionItem(promotions[index] as Map<String, dynamic>, l, isAr);
+                },
+              ),
+            ),
+            // Single instruction at bottom
+            Padding(
+              padding: EdgeInsets.fromLTRB(20.w, 0, 20.w, 20.h),
+              child: Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Icon(Icons.info_outline_rounded, size: 13.sp, color: Colors.grey[400]),
+                  SizedBox(width: 4.w),
+                  Expanded(
+                    child: Text(
+                      l.promotionPressHereToClaim,
+                      style: AppTextStyles.getText3(context).copyWith(
+                        color: Colors.grey[500],
+                        fontSize: 10.sp,
+                        height: 1.4,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
             ),
           ],
         ),
@@ -796,6 +922,7 @@ class _DoctorProfilePageState extends State<DoctorProfilePage> {
     final description = promo['description'] as String?;
     final descriptionAr = promo['description_ar'] as String?;
     final audience = promo['audience'] as String? ?? 'all_patients';
+    final maxPerPatient = promo['max_claims_per_patient'] as int?;
     final endDate = promo['end_date'] as String?;
     final currency = l.currency;
 
@@ -870,122 +997,86 @@ class _DoctorProfilePageState extends State<DoctorProfilePage> {
       }
     }
 
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        GestureDetector(
-          onTap: () => _showClaimPromotionDialog(promo, title, desc, color, icon),
-          child: Container(
-            padding: EdgeInsets.all(12.r),
-            decoration: BoxDecoration(
-              borderRadius: BorderRadius.circular(10.r),
-              color: color.withOpacity(0.05),
-              border: Border.all(color: color.withOpacity(0.15)),
-            ),
-            child: Row(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Container(
-                  width: 38.r,
-                  height: 38.r,
-                  decoration: BoxDecoration(
-                    gradient: LinearGradient(
-                      colors: [
-                        color.withOpacity(0.85),
-                        color.withOpacity(0.45),
-                      ],
-                      begin: Alignment.topLeft,
-                      end: Alignment.bottomRight,
-                    ),
-                    borderRadius: BorderRadius.circular(10.r),
-                  ),
-                  child: Icon(icon, color: Colors.white, size: 18.sp),
-                ),
-                SizedBox(width: 10.w),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        title,
-                        style: AppTextStyles.getTitle2(context).copyWith(
-                        fontSize: 11.sp,
-                        fontWeight: FontWeight.w700,
-                      ),
-                    ),
-                    if (desc != null && desc.isNotEmpty) ...[
-                      SizedBox(height: 4.h),
-                      Text(
-                        desc,
-                        style: AppTextStyles.getText3(context).copyWith(
-                          color: Colors.black54,
-                          height: 1.4,
-                        ),
-                        maxLines: 2,
-                        overflow: TextOverflow.ellipsis,
-                        textDirection:
-                            isAr ? TextDirection.rtl : TextDirection.ltr,
-                      ),
-                    ],
-                    if (audience == 'new_patients_only' || expiryText != null) ...[
-                      SizedBox(height: 6.h),
-                      Wrap(
-                        spacing: 6.w,
-                        runSpacing: 4.h,
-                        children: [
-                          if (audience == 'new_patients_only')
-                            _promoTag(l.newPatientsOnly, Colors.blue),
-                          if (expiryText != null)
-                            _promoTag(expiryText, Colors.orange),
-                        ],
-                      ),
-                    ],
-                  ],
-                ),
-              ),
-            ],
-            ),
-          ),
-        ),
-        // Eligibility info text
-        Padding(
-          padding: EdgeInsets.only(top: 6.h, left: 4.w, right: 4.w, bottom: 4.h),
-          child: Row(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Icon(Icons.info_outline_rounded, size: 13.sp, color: Colors.grey[400]),
-              SizedBox(width: 4.w),
-              Expanded(
-                child: Text(
-                  _getPromotionInfoText(promo, l),
-                  style: AppTextStyles.getText3(context).copyWith(
-                    color: Colors.grey[500],
-                    fontSize: 10.sp,
-                    height: 1.4,
-                  ),
-                ),
-              ),
-            ],
-          ),
-        ),
-      ],
-    );
-  }
-
-  String _getPromotionInfoText(Map<String, dynamic> promo, AppLocalizations l) {
-    final offerType = promo['offer_type'] as String? ?? '';
-    final maxPerPatient = promo['max_claims_per_patient'] as int?;
-
+    // Per-item eligibility tag text (short, not the long instruction)
+    String? eligibilityTag;
     if (offerType == 'free_first_consultation') {
-      return '${l.promotionFirstVisitOnly} ${l.promotionPressHereToClaim}';
+      eligibilityTag = l.promotionFirstVisitOnly;
+    } else if (maxPerPatient != null && maxPerPatient == 1) {
+      eligibilityTag = l.promotionSingleUse;
+    } else if (maxPerPatient != null && maxPerPatient > 1) {
+      eligibilityTag = l.promotionMultiUse(maxPerPatient);
     }
-    if (maxPerPatient != null && maxPerPatient == 1) {
-      return '${l.promotionSingleUse} ${l.promotionPressHereToClaim}';
-    }
-    if (maxPerPatient != null && maxPerPatient > 1) {
-      return '${l.promotionMultiUse(maxPerPatient)} ${l.promotionPressHereToClaim}';
-    }
-    return l.promotionPressHereToClaim;
+
+    return GestureDetector(
+      onTap: () => _showClaimPromotionDialog(promo, title, desc, color, icon),
+      child: Container(
+        padding: EdgeInsets.all(12.r),
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(10.r),
+          color: color.withOpacity(0.05),
+          border: Border.all(color: color.withOpacity(0.15)),
+        ),
+        child: Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Container(
+              width: 38.r,
+              height: 38.r,
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  colors: [
+                    color.withOpacity(0.85),
+                    color.withOpacity(0.45),
+                  ],
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                ),
+                borderRadius: BorderRadius.circular(10.r),
+              ),
+              child: Icon(icon, color: Colors.white, size: 18.sp),
+            ),
+            SizedBox(width: 10.w),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    title,
+                    style: AppTextStyles.getTitle2(context).copyWith(
+                      fontSize: 11.sp,
+                      fontWeight: FontWeight.w700,
+                    ),
+                  ),
+                  if (eligibilityTag != null) ...[
+                    SizedBox(height: 3.h),
+                    Text(
+                      eligibilityTag,
+                      style: AppTextStyles.getText3(context).copyWith(
+                        color: Colors.grey[500],
+                        fontSize: 9.sp,
+                      ),
+                    ),
+                  ],
+                  if (audience == 'new_patients_only' || expiryText != null) ...[
+                    SizedBox(height: 6.h),
+                    Wrap(
+                      spacing: 6.w,
+                      runSpacing: 4.h,
+                      children: [
+                        if (audience == 'new_patients_only')
+                          _promoTag(l.newPatientsOnly, Colors.blue),
+                        if (expiryText != null)
+                          _promoTag(expiryText, Colors.orange),
+                      ],
+                    ),
+                  ],
+                ],
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
   }
 
   void _showClaimPromotionDialog(
