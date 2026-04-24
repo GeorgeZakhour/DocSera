@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'dart:io';
 
+import 'package:flutter/foundation.dart';
 import 'package:bloc/bloc.dart';
 import 'package:docsera/services/supabase/supabase_conversation_service.dart';
 import 'package:uuid/uuid.dart';
@@ -47,13 +48,22 @@ class ConversationCubit extends Cubit<ConversationState> {
 
       // ✅ NEW: Remove pending messages that have arrived in the stream
       final currentPending = List<Map<String, dynamic>>.from(state.pendingMessages);
+      if (currentPending.isNotEmpty) {
+        debugPrint('🔍 Pending messages: ${currentPending.map((m) => '${m['id']} (status=${m['status']})').toList()}');
+        debugPrint('🔍 Stream message IDs: ${uniqueMap.keys.toList().reversed.take(5).toList()}');
+      }
       currentPending.removeWhere((pending) {
-        final pendingId = pending['id'];
-        return uniqueMap.containsKey(pendingId);
+        final pendingId = pending['id']?.toString();
+        final found = uniqueMap.containsKey(pendingId);
+        if (found) debugPrint('✅ Removing pending message $pendingId — confirmed by stream');
+        return found;
       });
+      if (currentPending.isNotEmpty) {
+        debugPrint('⚠️ ${currentPending.length} pending message(s) still not confirmed by stream');
+      }
 
       emit(state.copyWith(
-          isLoading: false, 
+          isLoading: false,
           messages: messages,
           pendingMessages: currentPending,
       ));
@@ -204,24 +214,28 @@ class ConversationCubit extends Cubit<ConversationState> {
       // 5. Upload Background
       // Images
       for (final file in images) {
-        final name = "${DocSeraTime.nowUtc().millisecondsSinceEpoch}_${file.path.split('/').last}";
+        final originalName = file.path.split('/').last;
+        final name = "${DocSeraTime.nowUtc().millisecondsSinceEpoch}_$originalName";
         final uploaded = await _service.uploadAttachmentFile(
           conversationId: conversationId,
           file: file,
           type: 'image',
           storageName: name,
+          displayName: originalName,
         );
         finalAttachments.add(uploaded);
       }
 
       // PDF
       if (pdf != null) {
-        final name = "${DocSeraTime.nowUtc().millisecondsSinceEpoch}_${pdf.path.split('/').last}";
+        final originalName = pdf.path.split('/').last;
+        final name = "${DocSeraTime.nowUtc().millisecondsSinceEpoch}_$originalName";
         final uploaded = await _service.uploadAttachmentFile(
           conversationId: conversationId,
           file: pdf,
           type: 'pdf',
           storageName: name,
+          displayName: originalName,
         );
         finalAttachments.add(uploaded);
       }
@@ -236,8 +250,10 @@ class ConversationCubit extends Cubit<ConversationState> {
         id: localId,
       );
 
-    } catch (e) {
+    } catch (e, stackTrace) {
       // 7. On Failure
+      debugPrint('❌ sendMediaMessage FAILED: $e');
+      debugPrint('❌ Stack trace: $stackTrace');
       final failedPending = state.pendingMessages.map((msg) {
         if (msg['id'] == localId) {
           return {...msg, 'status': 'failed'};
@@ -277,12 +293,14 @@ class ConversationCubit extends Cubit<ConversationState> {
         for (final att in finalAttachments) {
           if (att.containsKey('localPath') && (att['paths'] == null || (att['paths'] as List).isEmpty)) {
              final file = File(att['localPath']);
-             final name = "${DocSeraTime.nowUtc().millisecondsSinceEpoch}_${file.path.split('/').last}";
+             final originalName = att['fileName'] ?? file.path.split('/').last;
+             final name = "${DocSeraTime.nowUtc().millisecondsSinceEpoch}_$originalName";
              final uploaded = await _service.uploadAttachmentFile(
                conversationId: failedMsg['conversation_id'],
                file: file,
                type: att['type'] ?? 'image',
                storageName: name,
+               displayName: originalName,
              );
              newAttachments.add(uploaded);
           } else {

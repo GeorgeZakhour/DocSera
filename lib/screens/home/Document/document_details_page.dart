@@ -30,6 +30,13 @@ class _DocumentDetailsPageState extends State<DocumentDetailsPage> {
     documentName = widget.document.name;
   }
 
+  String _formatFileSize(int bytes) {
+    if (bytes <= 0) return '—';
+    if (bytes < 1024) return '$bytes B';
+    if (bytes < 1024 * 1024) return '${(bytes / 1024).toStringAsFixed(1)} KB';
+    return '${(bytes / (1024 * 1024)).toStringAsFixed(1)} MB';
+  }
+
   String _resolveFileFormat(AppLocalizations locale) {
     final ft = widget.document.fileType.toLowerCase();
     if (ft.contains('pdf')) return locale.formatPdf;
@@ -139,6 +146,10 @@ class _DocumentDetailsPageState extends State<DocumentDetailsPage> {
 
             // ── File format ──
             _buildRow(context, Icons.description_rounded, locale.detailFileFormat, _resolveFileFormat(locale)),
+
+            // ── File size ──
+            if (widget.document.fileSizeBytes > 0)
+              _buildRow(context, Icons.data_usage_rounded, locale.detailFileSize, _formatFileSize(widget.document.fileSizeBytes)),
 
             // ── Date ──
             _buildRow(context, Icons.calendar_today_rounded, locale.createdAt, formattedDate),

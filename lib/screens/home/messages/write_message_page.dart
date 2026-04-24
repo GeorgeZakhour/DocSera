@@ -15,8 +15,12 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:docsera/gen_l10n/app_localizations.dart';
 import 'package:flutter_svg/svg.dart';
-import 'package:image_picker/image_picker.dart';import 'package:shared_preferences/shared_preferences.dart';
+import 'package:image_picker/image_picker.dart';
+import 'package:http/http.dart' as http;
+import 'package:path_provider/path_provider.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
+import 'package:docsera/services/encryption/message_encryption_service.dart';
 
 import 'conversation/conversation_page.dart';
 
@@ -56,6 +60,7 @@ class _WriteMessagePageState extends State<WriteMessagePage> {
   String? _pendingFileType;
   final bool _showAllAttachments = false;
   UserDocument? _attachedDocument;
+  File? _resolvedDocFile; // Local file for attached document preview
   bool _expandedImageOverlay = false;
   List<String> _expandedImageUrls = [];
   int _initialImageIndex = 0;
@@ -71,7 +76,49 @@ class _WriteMessagePageState extends State<WriteMessagePage> {
         _pendingFileType = 'pdf';
       } else {
         _pendingFileType = 'image';
+        _downloadAttachedDocPreview();
       }
+    }
+  }
+
+  /// Download the attached document image to a local file for preview.
+  Future<void> _downloadAttachedDocPreview() async {
+    try {
+      final doc = _attachedDocument!;
+      final pageRef = doc.pages.isNotEmpty ? doc.pages.first : doc.previewUrl;
+      if (pageRef.isEmpty) return;
+
+      String downloadUrl;
+      if (pageRef.startsWith('http://') || pageRef.startsWith('https://')) {
+        downloadUrl = pageRef;
+      } else {
+        downloadUrl = await Supabase.instance.client.storage
+            .from(doc.bucket)
+            .createSignedUrl(pageRef, 3600);
+      }
+
+      final response = await http.get(Uri.parse(downloadUrl));
+      if (response.statusCode != 200) return;
+
+      var bytes = response.bodyBytes;
+      if (doc.encrypted) {
+        try {
+          final svc = MessageEncryptionService.instance;
+          await svc.init();
+          final decrypted = svc.decryptBytes(bytes);
+          if (decrypted != null) bytes = decrypted;
+        } catch (_) {}
+      }
+
+      final tempDir = await getTemporaryDirectory();
+      final file = File('${tempDir.path}/attached_doc_preview.jpg');
+      await file.writeAsBytes(bytes);
+
+      if (mounted) {
+        setState(() => _resolvedDocFile = file);
+      }
+    } catch (e) {
+      debugPrint('⚠️ Failed to download attached doc preview: $e');
     }
   }
 
@@ -378,7 +425,9 @@ class _WriteMessagePageState extends State<WriteMessagePage> {
                     // Simplified logic: If _attachedDocument exists (and is image), it's index 0. Local files follow.
                     if (_attachedDocument != null && !isPdf) {
                          if (i == 0) {
-                            imageWidget = Image.network(_attachedDocument!.previewUrl, fit: BoxFit.cover);
+                            imageWidget = _resolvedDocFile != null
+                                ? Image.file(_resolvedDocFile!, fit: BoxFit.cover)
+                                : const Center(child: CircularProgressIndicator(strokeWidth: 2));
                             isAttachedRemote = true;
                          } else {
                             imageWidget = Image.file(_selectedImageFiles[i-1], fit: BoxFit.cover);

@@ -3,6 +3,7 @@ import 'dart:convert';
 import 'package:docsera/Business_Logic/Health_page/health_cubit.dart';
 import 'package:docsera/screens/home/health/models/health_models.dart';
 import 'package:docsera/screens/home/health/widgets/steps/health_family_member_step.dart';
+import 'package:docsera/screens/home/health/widgets/steps/health_manual_entry_form.dart';
 import 'package:docsera/screens/home/health/widgets/steps/health_master_search_step.dart';
 import 'package:docsera/screens/home/health/widgets/steps/health_recap_step.dart';
 import 'package:docsera/screens/home/health/widgets/steps/health_stepper_bottom_sheet.dart';
@@ -27,13 +28,41 @@ class _AddFamilyBottomSheetState extends State<AddFamilyBottomSheet> {
   int? diagnosisAge;
 
   bool saving = false;
+  bool _showManualForm = false;
 
   void _next() => setState(() => step++);
   void _back() {
+    if (_showManualForm) {
+      setState(() => _showManualForm = false);
+      return;
+    }
     if (step == 1) {
       Navigator.pop(context);
     } else {
       setState(() => step--);
+    }
+  }
+
+  Future<void> _handleManualSubmit({
+    required String name,
+    String? description,
+  }) async {
+    final cubit = context.read<HealthCubit>();
+    final isArabic = Directionality.of(context) == TextDirection.rtl;
+    try {
+      final masterItem = await cubit.createCustomMasterItem(
+        nameEn: name,
+        nameAr: name,
+        descriptionEn: isArabic ? null : description,
+        descriptionAr: isArabic ? description : null,
+      );
+      setState(() {
+        selectedMaster = masterItem;
+        _showManualForm = false;
+      });
+      _next();
+    } catch (e) {
+      debugPrint("❌ Error creating custom master item: $e");
     }
   }
 
@@ -75,23 +104,31 @@ class _AddFamilyBottomSheetState extends State<AddFamilyBottomSheet> {
         t.addFamily_step4_title,
       ],
       steps: [
-        /// STEP 1 — SEARCH CONDITION
-        HealthMasterSearchStep(
-          onSearch: cubit.searchMaster,
-          getTitle: (i, isAr) => isAr && i.nameAr.isNotEmpty ? i.nameAr : i.nameEn,
-          getSubtitle: (i, isAr) =>
-          isAr ? (i.descriptionAr ?? "") : (i.descriptionEn ?? ""),
-          icon: Icons.group_rounded,
-          isDisabled: (i) => existing.contains(i.id),
-          alreadyAddedText: t.already_added,
-          emptyResultsText: t.noResults,
-          searchValue: t.health_family_title,
-          headerText: t.addFamily_step1_desc,
-          onSelect: (i) {
-            selectedMaster = i;
-            _next();
-          },
-        ),
+        /// STEP 1 — SEARCH CONDITION or MANUAL ENTRY
+        _showManualForm
+            ? HealthManualEntryForm(
+                icon: Icons.group_rounded,
+                onSubmit: ({required name, description}) {
+                  _handleManualSubmit(name: name, description: description);
+                },
+              )
+            : HealthMasterSearchStep(
+                onSearch: cubit.searchMaster,
+                getTitle: (i, isAr) => isAr && i.nameAr.isNotEmpty ? i.nameAr : i.nameEn,
+                getSubtitle: (i, isAr) =>
+                isAr ? (i.descriptionAr ?? "") : (i.descriptionEn ?? ""),
+                icon: Icons.group_rounded,
+                isDisabled: (i) => existing.contains(i.id),
+                alreadyAddedText: t.already_added,
+                emptyResultsText: t.noResults,
+                searchValue: t.health_family_title,
+                headerText: t.addFamily_step1_desc,
+                onManualEntry: () => setState(() => _showManualForm = true),
+                onSelect: (i) {
+                  selectedMaster = i;
+                  _next();
+                },
+              ),
 
         /// STEP 2 — SELECT FAMILY MEMBERS
         FamilyMembersStep(

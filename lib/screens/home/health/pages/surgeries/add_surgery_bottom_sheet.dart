@@ -1,5 +1,6 @@
 import 'package:docsera/Business_Logic/Health_page/health_cubit.dart';
 import 'package:docsera/screens/home/health/models/health_models.dart';
+import 'package:docsera/screens/home/health/widgets/steps/health_manual_entry_form.dart';
 import 'package:docsera/screens/home/health/widgets/steps/health_master_search_step.dart';
 import 'package:docsera/screens/home/health/widgets/steps/health_recap_step.dart';
 import 'package:docsera/screens/home/health/widgets/steps/health_stepper_bottom_sheet.dart';
@@ -22,14 +23,42 @@ class _AddSurgeryBottomSheetState extends State<AddSurgeryBottomSheet> {
   int? selectedYear;
 
   bool saving = false;
+  bool _showManualForm = false;
 
   void _next() => setState(() => step++);
 
   void _back() {
+    if (_showManualForm) {
+      setState(() => _showManualForm = false);
+      return;
+    }
     if (step == 1) {
       Navigator.pop(context);
     } else {
       setState(() => step--);
+    }
+  }
+
+  Future<void> _handleManualSubmit({
+    required String name,
+    String? description,
+  }) async {
+    final cubit = context.read<HealthCubit>();
+    final isArabic = Directionality.of(context) == TextDirection.rtl;
+    try {
+      final masterItem = await cubit.createCustomMasterItem(
+        nameEn: name,
+        nameAr: name,
+        descriptionEn: isArabic ? null : description,
+        descriptionAr: isArabic ? description : null,
+      );
+      setState(() {
+        selectedMaster = masterItem;
+        _showManualForm = false;
+      });
+      _next();
+    } catch (e) {
+      debugPrint("❌ Error creating custom master item: $e");
     }
   }
 
@@ -70,24 +99,32 @@ class _AddSurgeryBottomSheetState extends State<AddSurgeryBottomSheet> {
       ],
 
       steps: [
-        /// STEP 1 — SELECT SURGERY
-        HealthMasterSearchStep<HealthMasterItem>(
-          onSearch: (q) => cubit.searchMaster(q),
-          getTitle: (item, isAr) =>
-          isAr && item.nameAr.isNotEmpty ? item.nameAr : item.nameEn,
-          getSubtitle: (item, isAr) =>
-          isAr ? (item.descriptionAr ?? "") : (item.descriptionEn ?? ""),
-          icon: Icons.local_hospital_rounded,
-          isDisabled: (item) => existingIds.contains(item.id),
-          alreadyAddedText: t.already_added,
-          emptyResultsText: t.noResults,
-          searchValue: t.health_operations_title,
-          headerText: t.addSurgery_step1_desc,
-          onSelect: (item) {
-            selectedMaster = item;
-            _next();
-          },
-        ),
+        /// STEP 1 — SELECT SURGERY or MANUAL ENTRY
+        _showManualForm
+            ? HealthManualEntryForm(
+                icon: Icons.local_hospital_rounded,
+                onSubmit: ({required name, description}) {
+                  _handleManualSubmit(name: name, description: description);
+                },
+              )
+            : HealthMasterSearchStep<HealthMasterItem>(
+                onSearch: (q) => cubit.searchMaster(q),
+                getTitle: (item, isAr) =>
+                isAr && item.nameAr.isNotEmpty ? item.nameAr : item.nameEn,
+                getSubtitle: (item, isAr) =>
+                isAr ? (item.descriptionAr ?? "") : (item.descriptionEn ?? ""),
+                icon: Icons.local_hospital_rounded,
+                isDisabled: (item) => existingIds.contains(item.id),
+                alreadyAddedText: t.already_added,
+                emptyResultsText: t.noResults,
+                searchValue: t.health_operations_title,
+                headerText: t.addSurgery_step1_desc,
+                onManualEntry: () => setState(() => _showManualForm = true),
+                onSelect: (item) {
+                  selectedMaster = item;
+                  _next();
+                },
+              ),
 
         /// STEP 2 — YEAR
         HealthYearStep(

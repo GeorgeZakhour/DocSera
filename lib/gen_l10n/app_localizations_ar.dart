@@ -3848,7 +3848,7 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get pendingPointsNote =>
-      'ستتم إضافة النقاط إلى محفظتك بعد فترة المراجعة.';
+      'ستتم إضافة النقاط إلى محفظتك خلال 72 ساعة كحد أقصى (فترة المراجعة).';
 
   @override
   String get pendingTimeRemaining => 'الوقت المتبقي';
@@ -3954,4 +3954,78 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get showAll => 'عرض الكل';
+
+  @override
+  String get voucherUsedNote =>
+      'تم استخدام هذه القسيمة بالفعل. يمكنك الحصول على قسيمة جديدة إذا كان العرض يسمح بذلك.';
+
+  @override
+  String get voucherUsedAt => 'تم الاستخدام في';
+
+  @override
+  String get claimNewCode => 'احصل على رمز جديد';
+
+  @override
+  String get promotionStillAvailable =>
+      'هذا العرض لا يزال متاحاً! يمكنك الحصول على رمز قسيمة جديد.';
+
+  @override
+  String get health_manual_entry_cta => 'لم تجد ما تبحث عنه؟';
+
+  @override
+  String get health_manual_entry_button => 'أضف يدوياً';
+
+  @override
+  String get health_manual_entry_title => 'إضافة عنصر مخصص';
+
+  @override
+  String get health_manual_entry_name_label => 'الاسم';
+
+  @override
+  String get health_manual_entry_name_hint => 'أدخل اسم العنصر';
+
+  @override
+  String get health_manual_entry_desc_label => 'الوصف (اختياري)';
+
+  @override
+  String get health_manual_entry_desc_hint => 'أضف أي تفاصيل ذات صلة';
+
+  @override
+  String get health_manual_entry_submit => 'متابعة بهذا العنصر';
+
+  @override
+  String get health_manual_entry_name_required => 'يرجى إدخال الاسم';
+
+  @override
+  String get health_manual_entry_disclaimer =>
+      'سيتم حفظ هذا العنصر للمراجعة. قد يتم استبداله بنسخة موثقة لاحقاً.';
+
+  @override
+  String get health_custom_entry_badge => 'إدخال مخصص';
+
+  @override
+  String get health_verification_status => 'نوع الإدخال';
+
+  @override
+  String get health_verified => 'قياسي';
+
+  @override
+  String get health_unverified => 'إدخال مخصص';
+
+  @override
+  String get offerUsedBadge => 'مستخدم';
+
+  @override
+  String offerUsedTimesBadge(int n) {
+    return '$n× استخدم';
+  }
+
+  @override
+  String get offerCodeReady => 'رمز جاهز';
+
+  @override
+  String get offerNotEligible => 'غير متاح لك';
+
+  @override
+  String get offerFirstVisitOnlyHint => 'فقط لزيارتك الأولى عند هذا الطبيب';
 }

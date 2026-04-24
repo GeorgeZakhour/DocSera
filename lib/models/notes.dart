@@ -2,9 +2,10 @@ import 'package:docsera/utils/time_utils.dart';
 class Note {
   final String id;
   final String title;
-  final List<dynamic> content; // ✅ تعديل النوع
+  final List<dynamic> content;
   final DateTime createdAt;
   final String userId;
+  final String? relativeId;
 
   Note({
     required this.id,
@@ -12,6 +13,7 @@ class Note {
     required this.content,
     required this.createdAt,
     required this.userId,
+    this.relativeId,
   });
 
   factory Note.fromMap(Map<String, dynamic> data) {
@@ -21,6 +23,7 @@ class Note {
       content: data['content'] ?? [],
       createdAt: DocSeraTime.tryParseToSyria(data['created_at'].toString()) ?? DocSeraTime.nowSyria(),
       userId: data['user_id'] ?? '',
+      relativeId: data['relative_id'],
     );
   }
 
@@ -31,6 +34,7 @@ class Note {
       'content': content,
       'created_at': DocSeraTime.toUtc(createdAt).toIso8601String(),
       'user_id': userId,
+      if (relativeId != null) 'relative_id': relativeId,
     };
   }
 
@@ -44,6 +48,7 @@ class Note {
       content: content ?? this.content,
       createdAt: createdAt,
       userId: userId,
+      relativeId: relativeId,
     );
   }
 }

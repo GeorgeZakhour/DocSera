@@ -244,6 +244,13 @@ class _VaccinationList extends StatelessWidget {
                   ? Icons.verified_rounded
                   : Icons.info_outline_rounded,
             ),
+
+            if (!master.isVerified)
+              _tag(
+                t.health_custom_entry_badge,
+                Colors.amber.shade700,
+                icon: Icons.edit_note_rounded,
+              ),
           ],
           onTap: () => _openDetails(context, record),
           onMenu: () => _openMenu(context, record),
@@ -313,6 +320,8 @@ class _VaccinationList extends StatelessWidget {
           DetailRow(t.addedAt, _formatDate(record.createdAt, t)),
           if (record.updatedAt != null)
             DetailRow(t.updatedAt, _formatDate(record.updatedAt, t)),
+          if (!master.isVerified)
+            DetailRow(t.health_verification_status, t.health_unverified),
         ],
       ),
     );

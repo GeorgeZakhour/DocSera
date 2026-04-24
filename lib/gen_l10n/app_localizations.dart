@@ -7295,7 +7295,7 @@ abstract class AppLocalizations {
   /// No description provided for @pendingPointsNote.
   ///
   /// In en, this message translates to:
-  /// **'Points will be added to your wallet after the review period.'**
+  /// **'Points will be added to your wallet within up to 72 hours (review period).'**
   String get pendingPointsNote;
 
   /// No description provided for @pendingTimeRemaining.
@@ -7477,6 +7477,144 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Show all'**
   String get showAll;
+
+  /// No description provided for @voucherUsedNote.
+  ///
+  /// In en, this message translates to:
+  /// **'This voucher has already been used. You can claim a new one if the offer allows it.'**
+  String get voucherUsedNote;
+
+  /// No description provided for @voucherUsedAt.
+  ///
+  /// In en, this message translates to:
+  /// **'Used on'**
+  String get voucherUsedAt;
+
+  /// No description provided for @claimNewCode.
+  ///
+  /// In en, this message translates to:
+  /// **'Claim New Code'**
+  String get claimNewCode;
+
+  /// No description provided for @promotionStillAvailable.
+  ///
+  /// In en, this message translates to:
+  /// **'This offer is still available! You can claim a new voucher code.'**
+  String get promotionStillAvailable;
+
+  /// No description provided for @health_manual_entry_cta.
+  ///
+  /// In en, this message translates to:
+  /// **'Can\'t find what you\'re looking for?'**
+  String get health_manual_entry_cta;
+
+  /// No description provided for @health_manual_entry_button.
+  ///
+  /// In en, this message translates to:
+  /// **'Add manually'**
+  String get health_manual_entry_button;
+
+  /// No description provided for @health_manual_entry_title.
+  ///
+  /// In en, this message translates to:
+  /// **'Add a custom entry'**
+  String get health_manual_entry_title;
+
+  /// No description provided for @health_manual_entry_name_label.
+  ///
+  /// In en, this message translates to:
+  /// **'Name'**
+  String get health_manual_entry_name_label;
+
+  /// No description provided for @health_manual_entry_name_hint.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter the name of the item'**
+  String get health_manual_entry_name_hint;
+
+  /// No description provided for @health_manual_entry_desc_label.
+  ///
+  /// In en, this message translates to:
+  /// **'Description (optional)'**
+  String get health_manual_entry_desc_label;
+
+  /// No description provided for @health_manual_entry_desc_hint.
+  ///
+  /// In en, this message translates to:
+  /// **'Add any relevant details'**
+  String get health_manual_entry_desc_hint;
+
+  /// No description provided for @health_manual_entry_submit.
+  ///
+  /// In en, this message translates to:
+  /// **'Continue with this entry'**
+  String get health_manual_entry_submit;
+
+  /// No description provided for @health_manual_entry_name_required.
+  ///
+  /// In en, this message translates to:
+  /// **'Please enter a name'**
+  String get health_manual_entry_name_required;
+
+  /// No description provided for @health_manual_entry_disclaimer.
+  ///
+  /// In en, this message translates to:
+  /// **'This entry will be saved for review. A verified version may replace it later.'**
+  String get health_manual_entry_disclaimer;
+
+  /// No description provided for @health_custom_entry_badge.
+  ///
+  /// In en, this message translates to:
+  /// **'Custom entry'**
+  String get health_custom_entry_badge;
+
+  /// No description provided for @health_verification_status.
+  ///
+  /// In en, this message translates to:
+  /// **'Entry Type'**
+  String get health_verification_status;
+
+  /// No description provided for @health_verified.
+  ///
+  /// In en, this message translates to:
+  /// **'Standard'**
+  String get health_verified;
+
+  /// No description provided for @health_unverified.
+  ///
+  /// In en, this message translates to:
+  /// **'Custom Entry'**
+  String get health_unverified;
+
+  /// No description provided for @offerUsedBadge.
+  ///
+  /// In en, this message translates to:
+  /// **'Used'**
+  String get offerUsedBadge;
+
+  /// No description provided for @offerUsedTimesBadge.
+  ///
+  /// In en, this message translates to:
+  /// **'Used {n}×'**
+  String offerUsedTimesBadge(int n);
+
+  /// No description provided for @offerCodeReady.
+  ///
+  /// In en, this message translates to:
+  /// **'Code ready'**
+  String get offerCodeReady;
+
+  /// No description provided for @offerNotEligible.
+  ///
+  /// In en, this message translates to:
+  /// **'Not eligible'**
+  String get offerNotEligible;
+
+  /// No description provided for @offerFirstVisitOnlyHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Only for your first visit with this doctor'**
+  String get offerFirstVisitOnlyHint;
 }
 
 class _AppLocalizationsDelegate

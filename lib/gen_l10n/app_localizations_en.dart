@@ -3891,7 +3891,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get pendingPointsNote =>
-      'Points will be added to your wallet after the review period.';
+      'Points will be added to your wallet within up to 72 hours (review period).';
 
   @override
   String get pendingTimeRemaining => 'Time remaining';
@@ -3999,4 +3999,79 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get showAll => 'Show all';
+
+  @override
+  String get voucherUsedNote =>
+      'This voucher has already been used. You can claim a new one if the offer allows it.';
+
+  @override
+  String get voucherUsedAt => 'Used on';
+
+  @override
+  String get claimNewCode => 'Claim New Code';
+
+  @override
+  String get promotionStillAvailable =>
+      'This offer is still available! You can claim a new voucher code.';
+
+  @override
+  String get health_manual_entry_cta => 'Can\'t find what you\'re looking for?';
+
+  @override
+  String get health_manual_entry_button => 'Add manually';
+
+  @override
+  String get health_manual_entry_title => 'Add a custom entry';
+
+  @override
+  String get health_manual_entry_name_label => 'Name';
+
+  @override
+  String get health_manual_entry_name_hint => 'Enter the name of the item';
+
+  @override
+  String get health_manual_entry_desc_label => 'Description (optional)';
+
+  @override
+  String get health_manual_entry_desc_hint => 'Add any relevant details';
+
+  @override
+  String get health_manual_entry_submit => 'Continue with this entry';
+
+  @override
+  String get health_manual_entry_name_required => 'Please enter a name';
+
+  @override
+  String get health_manual_entry_disclaimer =>
+      'This entry will be saved for review. A verified version may replace it later.';
+
+  @override
+  String get health_custom_entry_badge => 'Custom entry';
+
+  @override
+  String get health_verification_status => 'Entry Type';
+
+  @override
+  String get health_verified => 'Standard';
+
+  @override
+  String get health_unverified => 'Custom Entry';
+
+  @override
+  String get offerUsedBadge => 'Used';
+
+  @override
+  String offerUsedTimesBadge(int n) {
+    return 'Used $n×';
+  }
+
+  @override
+  String get offerCodeReady => 'Code ready';
+
+  @override
+  String get offerNotEligible => 'Not eligible';
+
+  @override
+  String get offerFirstVisitOnlyHint =>
+      'Only for your first visit with this doctor';
 }

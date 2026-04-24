@@ -9,6 +9,7 @@ class HealthMasterItem {
   final String? descriptionEn;
   final String? descriptionAr;
   final bool severityAllowed;
+  final bool isVerified;
 
   HealthMasterItem({
     required this.id,
@@ -21,6 +22,7 @@ class HealthMasterItem {
     this.descriptionEn,
     this.descriptionAr,
     required this.severityAllowed,
+    this.isVerified = true,
   });
 
   factory HealthMasterItem.fromMap(Map<String, dynamic> map) {
@@ -35,6 +37,7 @@ class HealthMasterItem {
       descriptionEn: map['description_en'],
       descriptionAr: map['description_ar'],
       severityAllowed: map['severity_allowed'] ?? false,
+      isVerified: map['is_verified'] as bool? ?? true,
     );
   }
 }

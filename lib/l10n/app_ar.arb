@@ -1448,7 +1448,7 @@
   "referredUser": "المستخدم المُحال",
   "offerDetails": "العرض",
   "redeemedOn": "تم الاستبدال في",
-  "pendingPointsNote": "ستتم إضافة النقاط إلى محفظتك بعد فترة المراجعة.",
+  "pendingPointsNote": "ستتم إضافة النقاط إلى محفظتك خلال 72 ساعة كحد أقصى (فترة المراجعة).",
   "pendingTimeRemaining": "الوقت المتبقي",
   "hoursRemaining": "{hours} ساعة متبقية",
   "@hoursRemaining": {
@@ -1498,5 +1498,39 @@
   "showQrToDoctor": "أظهر رمز QR هذا للطبيب أو موظف الاستقبال أثناء زيارتك",
   "validFor": "صالح لمدة",
   "validWhileOfferActive": "صالح طالما العرض فعّال",
-  "showAll": "عرض الكل"
+  "showAll": "عرض الكل",
+  "voucherUsedNote": "لقد استخدمت هذا الرمز مسبقاً واستفدت من العرض عند الطبيب.",
+  "voucherUsedAt": "تم الاستخدام بتاريخ",
+  "claimNewCode": "احصل على رمز جديد",
+  "promotionStillAvailable": "لا يزال بإمكانك الاستفادة من هذا العرض مجدداً.",
+
+  "health_manual_entry_cta": "لم تجد ما تبحث عنه؟",
+  "health_manual_entry_button": "أضف يدوياً",
+  "health_manual_entry_title": "إضافة عنصر مخصص",
+  "health_manual_entry_name_label": "الاسم",
+  "health_manual_entry_name_hint": "أدخل اسم العنصر",
+  "health_manual_entry_desc_label": "الوصف (اختياري)",
+  "health_manual_entry_desc_hint": "أضف أي تفاصيل ذات صلة",
+  "health_manual_entry_submit": "متابعة بهذا العنصر",
+  "health_manual_entry_name_required": "يرجى إدخال الاسم",
+  "health_manual_entry_disclaimer": "سيتم حفظ هذا العنصر للمراجعة. قد يتم استبداله بنسخة موثقة لاحقاً.",
+  "health_custom_entry_badge": "إدخال مخصص",
+
+  "voucherUsedNote": "تم استخدام هذه القسيمة بالفعل. يمكنك الحصول على قسيمة جديدة إذا كان العرض يسمح بذلك.",
+  "voucherUsedAt": "تم الاستخدام في",
+  "promotionStillAvailable": "هذا العرض لا يزال متاحاً! يمكنك الحصول على رمز قسيمة جديد.",
+  "claimNewCode": "احصل على رمز جديد",
+
+  "health_verification_status": "نوع الإدخال",
+  "health_verified": "قياسي",
+  "health_unverified": "إدخال مخصص",
+
+  "offerUsedBadge": "مستخدم",
+  "offerUsedTimesBadge": "{n}× استخدم",
+  "@offerUsedTimesBadge": {
+    "placeholders": {"n": {"type": "int"}}
+  },
+  "offerCodeReady": "رمز جاهز",
+  "offerNotEligible": "غير متاح لك",
+  "offerFirstVisitOnlyHint": "فقط لزيارتك الأولى عند هذا الطبيب"
 }

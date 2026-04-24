@@ -90,7 +90,9 @@ flutter:
 
   assets:
     - assets/images/
+    - assets/images/health/
     - assets/images/popup/
+    - assets/images/body_map/
     - assets/icons/
     - assets/icons/specialties/
     - assets/shapes/

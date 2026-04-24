@@ -11,12 +11,18 @@ class VouchersCubit extends Cubit<VouchersState> {
     emit(VouchersLoading());
 
     try {
-      final vouchers = await _service.getUserVouchers();
+      // Fetch both partner vouchers and doctor promotion claims
+      final results = await Future.wait([
+        _service.getUserVouchers(),
+        _service.getMyDoctorPromotionClaims(),
+      ]);
+
+      final allVouchers = [...results[0], ...results[1]];
 
       emit(VouchersLoaded(
-        active: vouchers.where((v) => v.isActive).toList(),
-        used: vouchers.where((v) => v.isUsed).toList(),
-        expired: vouchers.where((v) => v.isExpired).toList(),
+        active: allVouchers.where((v) => v.isActive).toList(),
+        used: allVouchers.where((v) => v.isUsed).toList(),
+        expired: allVouchers.where((v) => v.isExpired).toList(),
       ));
     } catch (e) {
       emit(VouchersError('Failed to load vouchers: $e'));

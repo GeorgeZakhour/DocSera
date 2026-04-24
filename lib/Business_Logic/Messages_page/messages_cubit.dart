@@ -1,5 +1,7 @@
 import 'dart:async';
 import 'dart:io';
+import 'dart:typed_data';
+import 'package:http/http.dart' as http;
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:docsera/models/document.dart';
 import 'package:flutter/widgets.dart';
@@ -12,6 +14,8 @@ import 'dart:convert';
 import 'package:docsera/utils/error_handler.dart';
 import 'package:docsera/utils/time_utils.dart';
 import 'package:docsera/services/encryption/message_encryption_service.dart';
+import 'package:pdf/pdf.dart';
+import 'package:pdf/widgets.dart' as pw;
 class MessagesCubit extends Cubit<MessagesState> {
   final SupabaseClient _supabase;
 
@@ -313,19 +317,84 @@ class MessagesCubit extends Cubit<MessagesState> {
         }
       }
 
-      // B. Existing UserDocument
-      if (initialDocument != null) {
-          // Use direct URL from the document
-          // Assuming pages has at least one URL.
-          if (initialDocument.pages.isNotEmpty) {
-             attachments.add({
-               'type': initialDocument.type, 
-               'fileName': initialDocument.name,
-               'fileUrl': initialDocument.pages.first, // Use the public/signed URL directly
-               // bucket/paths can be omitted if fileUrl is used by service
-               // But we can verify if it's a Supabase URL to be safe, but fileUrl logic handles generic URLs too.
-             });
+      // B. Existing UserDocument — download from its bucket and re-upload
+      //    to chat.attachments so the message attachment resolves correctly.
+      if (initialDocument != null && initialDocument.pages.isNotEmpty) {
+        try {
+          final isPdf = initialDocument.type == 'pdf' || initialDocument.fileType == 'pdf' ||
+              initialDocument.name.toLowerCase().endsWith('.pdf');
+          final isMultiPageImage = !isPdf && initialDocument.pages.length > 1;
+
+          // Helper to download a single page
+          Future<Uint8List?> downloadPage(String pageRef) async {
+            Uint8List bytes;
+            if (pageRef.startsWith('http://') || pageRef.startsWith('https://')) {
+              final resp = await http.get(Uri.parse(pageRef));
+              if (resp.statusCode != 200) return null;
+              bytes = resp.bodyBytes;
+            } else {
+              bytes = await _supabase.storage
+                  .from(initialDocument.bucket)
+                  .download(pageRef);
+            }
+            if (initialDocument.encrypted) {
+              final dec = MessageEncryptionService.instance.decryptBytes(bytes);
+              if (dec != null) bytes = dec;
+            }
+            return bytes;
           }
+
+          Uint8List uploadBytes;
+          String fileType;
+
+          if (isPdf) {
+            // Native PDF — download directly
+            final bytes = await downloadPage(initialDocument.pages.first);
+            if (bytes == null) throw Exception('Download failed');
+            uploadBytes = bytes;
+            fileType = 'pdf';
+          } else if (isMultiPageImage) {
+            // Multi-page image document → compose into PDF
+            final pdf = pw.Document();
+            for (final pageRef in initialDocument.pages) {
+              final imageBytes = await downloadPage(pageRef);
+              if (imageBytes == null) continue;
+              final image = pw.MemoryImage(imageBytes);
+              final decoded = await decodeImageFromList(imageBytes);
+              pdf.addPage(pw.Page(
+                pageFormat: PdfPageFormat(decoded.width.toDouble(), decoded.height.toDouble()),
+                build: (_) => pw.Image(image, fit: pw.BoxFit.fill),
+              ));
+            }
+            uploadBytes = Uint8List.fromList(await pdf.save());
+            fileType = 'pdf';
+          } else {
+            // Single image
+            final bytes = await downloadPage(initialDocument.pages.first);
+            if (bytes == null) throw Exception('Download failed');
+            uploadBytes = bytes;
+            fileType = 'image';
+          }
+
+          final ext = fileType == 'pdf' ? 'pdf' : 'jpg';
+          final fileName = "${now.millisecondsSinceEpoch}_${initialDocument.name}.$ext";
+          final storagePath = '$convoId/$fileName';
+
+          await _supabase.storage.from('chat.attachments').uploadBinary(
+            storagePath,
+            uploadBytes,
+            fileOptions: const FileOptions(upsert: true, cacheControl: '3600'),
+          );
+
+          attachments.add({
+            'type': fileType,
+            'bucket': 'chat.attachments',
+            'paths': [storagePath],
+            'fileName': initialDocument.name,
+          });
+        } catch (e) {
+          debugPrint('⚠️ Failed to upload attached document to chat: $e');
+        }
       }
 
       // --------------------------------------------------------------

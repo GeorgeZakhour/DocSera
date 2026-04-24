@@ -1,9 +1,13 @@
+import 'dart:convert';
+
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:docsera/app/const.dart';
 import 'package:docsera/models/document.dart';
 import 'package:docsera/screens/home/Document/document_preview_page.dart';
 import 'package:docsera/screens/home/health/pages/visit_reports/modular_report_model.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:flutter_svg/flutter_svg.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'patient_section_card.dart';
 
@@ -36,6 +40,23 @@ class PatientSectionRenderers {
     final content = _renderContent(section, context);
     if (content == null) return const SizedBox.shrink();
     return PatientSectionCard(title: label, child: content);
+  }
+
+  /// Renders a loading placeholder for heavy sections being lazy-loaded.
+  static Widget renderLoading(ModularReportSection section) {
+    final label = section.label ?? _sectionLabels[section.type] ?? section.type;
+    return PatientSectionCard(
+      title: label,
+      child: Padding(
+        padding: EdgeInsets.symmetric(vertical: 24.h),
+        child: Center(
+          child: CircularProgressIndicator(
+            strokeWidth: 2,
+            color: AppColors.main,
+          ),
+        ),
+      ),
+    );
   }
 
   static Widget? _renderContent(ModularReportSection section, BuildContext context) {
@@ -80,6 +101,12 @@ class PatientSectionRenderers {
 
       case 'checklist':
         return _checklist(section);
+
+      case 'body_map':
+        return _bodyMap(section.value);
+
+      case 'image_comparison':
+        return _imageComparison(section.value, context);
 
       case 'attachments':
         return _attachments(section.value, context);
@@ -578,6 +605,496 @@ class PatientSectionRenderers {
                   ),
                 ),
               ),
+            ],
+          ),
+        );
+      }).toList(),
+    );
+  }
+
+  // ── Body Map ──
+
+  static const _diagramTypeToAsset = <String, String>{
+    'full_body_anterior': 'assets/images/body_map/body_front.svg',
+    'full_body_posterior': 'assets/images/body_map/body_back.svg',
+    'full_body_anterior_female': 'assets/images/body_map/full_body_anterior_female.svg',
+    'full_body_posterior_female': 'assets/images/body_map/full_body_posterior_female.svg',
+    'head_face': 'assets/images/body_map/head_face.svg',
+    'head_lateral': 'assets/images/body_map/head_lateral.svg',
+    'head_posterior': 'assets/images/body_map/head_posterior.svg',
+    'neck_anterior': 'assets/images/body_map/neck_anterior.svg',
+    'hand_palmar': 'assets/images/body_map/hand_palmar.svg',
+    'hand_dorsal': 'assets/images/body_map/hand_dorsal.svg',
+    'foot_plantar': 'assets/images/body_map/foot_plantar.svg',
+    'foot_dorsal': 'assets/images/body_map/foot_dorsal.svg',
+    'torso_anterior_male': 'assets/images/body_map/torso_anterior_male.svg',
+    'torso_anterior_female': 'assets/images/body_map/torso_anterior_female.svg',
+    'torso_posterior': 'assets/images/body_map/torso_posterior.svg',
+    'torso_lateral': 'assets/images/body_map/torso_lateral.svg',
+    'shoulder_anterior': 'assets/images/body_map/shoulder_anterior.svg',
+    'shoulder_posterior': 'assets/images/body_map/shoulder_posterior.svg',
+    'arm_anterior': 'assets/images/body_map/arm_anterior.svg',
+    'arm_posterior': 'assets/images/body_map/arm_posterior.svg',
+    'wrist_dorsal': 'assets/images/body_map/wrist_dorsal.svg',
+    'wrist_palmar': 'assets/images/body_map/wrist_palmar.svg',
+    'hip_anterior': 'assets/images/body_map/hip_anterior.svg',
+    'hip_posterior': 'assets/images/body_map/hip_posterior.svg',
+    'knee_anterior': 'assets/images/body_map/knee_anterior.svg',
+    'knee_posterior': 'assets/images/body_map/knee_posterior.svg',
+    'leg_lateral': 'assets/images/body_map/leg_lateral.svg',
+    'leg_medial': 'assets/images/body_map/leg_medial.svg',
+  };
+
+  static const _svgAspects = <String, double>{
+    'assets/images/body_map/body_front.svg': 2328.0 / 1052.0,
+    'assets/images/body_map/body_back.svg': 2328.0 / 1052.0,
+    'assets/images/body_map/full_body_anterior_female.svg': 2400.0 / 1792.0,
+    'assets/images/body_map/full_body_posterior_female.svg': 2400.0 / 1792.0,
+    'assets/images/body_map/head_face.svg': 1858.0 / 1331.0,
+    'assets/images/body_map/head_lateral.svg': 2210.0 / 1650.0,
+    'assets/images/body_map/head_posterior.svg': 2210.0 / 1650.0,
+    'assets/images/body_map/neck_anterior.svg': 2210.0 / 1650.0,
+    'assets/images/body_map/hand_palmar.svg': 1858.0 / 1331.0,
+    'assets/images/body_map/hand_dorsal.svg': 1858.0 / 1331.0,
+    'assets/images/body_map/foot_plantar.svg': 1858.0 / 1331.0,
+    'assets/images/body_map/foot_dorsal.svg': 1858.0 / 1331.0,
+    'assets/images/body_map/torso_anterior_male.svg': 2210.0 / 1650.0,
+    'assets/images/body_map/torso_anterior_female.svg': 2210.0 / 1650.0,
+    'assets/images/body_map/torso_posterior.svg': 2210.0 / 1650.0,
+    'assets/images/body_map/torso_lateral.svg': 2210.0 / 1650.0,
+    'assets/images/body_map/shoulder_anterior.svg': 2210.0 / 1650.0,
+    'assets/images/body_map/shoulder_posterior.svg': 2210.0 / 1650.0,
+    'assets/images/body_map/arm_anterior.svg': 2210.0 / 1650.0,
+    'assets/images/body_map/arm_posterior.svg': 2210.0 / 1650.0,
+    'assets/images/body_map/wrist_dorsal.svg': 2210.0 / 1650.0,
+    'assets/images/body_map/wrist_palmar.svg': 2210.0 / 1650.0,
+    'assets/images/body_map/hip_anterior.svg': 2400.0 / 1792.0,
+    'assets/images/body_map/hip_posterior.svg': 2400.0 / 1792.0,
+    'assets/images/body_map/knee_anterior.svg': 2400.0 / 1792.0,
+    'assets/images/body_map/knee_posterior.svg': 2400.0 / 1792.0,
+    'assets/images/body_map/leg_lateral.svg': 2400.0 / 1792.0,
+    'assets/images/body_map/leg_medial.svg': 2400.0 / 1792.0,
+  };
+
+  static const _categoryColors = <String, Color>{
+    'pain': Color(0xFFE53935),
+    'lesion': Color(0xFFFB8C00),
+    'swelling': Color(0xFF1E88E5),
+    'surgical': Color(0xFF8E24AA),
+    'other': Color(0xFF757575),
+  };
+
+  static const _categoryLabels = <String, String>{
+    'pain': 'ألم',
+    'lesion': 'آفة',
+    'swelling': 'تورم',
+    'surgical': 'جراحي',
+    'other': 'أخرى',
+  };
+
+  static Widget? _bodyMap(dynamic value) {
+    if (value is! Map) return null;
+    final pins = (value['pins'] as List?)?.whereType<Map>().toList() ?? [];
+    if (pins.isEmpty) return null;
+
+    final diagramType = value['diagram_type']?.toString() ?? '';
+    final assetPath = _diagramTypeToAsset[diagramType] ??
+        _diagramTypeToAsset['full_body_anterior']!;
+    final aspect = _svgAspects[assetPath] ?? (2328.0 / 1052.0);
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        // SVG diagram with pin overlay
+        Center(
+          child: LayoutBuilder(
+            builder: (context, constraints) {
+              final maxW = constraints.maxWidth * 0.7;
+              final diagramWidth = maxW;
+              final diagramHeight = diagramWidth * aspect;
+
+              return SizedBox(
+                width: diagramWidth,
+                height: diagramHeight,
+                child: Stack(
+                  clipBehavior: Clip.none,
+                  children: [
+                    Positioned.fill(
+                      child: SvgPicture.asset(
+                        assetPath,
+                        fit: BoxFit.contain,
+                        colorFilter: const ColorFilter.mode(
+                          Color(0xFF424242),
+                          BlendMode.srcIn,
+                        ),
+                      ),
+                    ),
+                    // Pin markers
+                    for (int i = 0; i < pins.length; i++)
+                      Builder(builder: (context) {
+                        final pin = pins[i];
+                        final px = (pin['x'] as num?)?.toDouble() ?? 0.0;
+                        final py = (pin['y'] as num?)?.toDouble() ?? 0.0;
+                        final cat = pin['category']?.toString() ?? 'other';
+                        final color =
+                            _categoryColors[cat] ?? _categoryColors['other']!;
+                        const pinSize = 20.0;
+
+                        return Positioned(
+                          left: px * diagramWidth - pinSize / 2,
+                          top: py * diagramHeight - pinSize / 2,
+                          child: Container(
+                            width: pinSize,
+                            height: pinSize,
+                            decoration: BoxDecoration(
+                              shape: BoxShape.circle,
+                              color: color,
+                              border: Border.all(color: Colors.white, width: 1.5),
+                              boxShadow: [
+                                BoxShadow(
+                                  color: color.withValues(alpha: 0.4),
+                                  blurRadius: 4,
+                                  offset: const Offset(0, 1),
+                                ),
+                              ],
+                            ),
+                            alignment: Alignment.center,
+                            child: Text(
+                              '${i + 1}',
+                              style: TextStyle(
+                                color: Colors.white,
+                                fontSize: 9.sp,
+                                fontWeight: FontWeight.w700,
+                                fontFamily: 'Montserrat',
+                              ),
+                            ),
+                          ),
+                        );
+                      }),
+                  ],
+                ),
+              );
+            },
+          ),
+        ),
+        SizedBox(height: 12.h),
+
+        // Pin legend
+        ...pins.asMap().entries.map((entry) {
+          final pin = entry.value;
+          final cat = pin['category']?.toString() ?? 'other';
+          final color = _categoryColors[cat] ?? _categoryColors['other']!;
+          final label = pin['label']?.toString() ?? '';
+          final note = pin['note']?.toString() ?? '';
+          final catLabel = _categoryLabels[cat] ?? 'أخرى';
+
+          return Padding(
+            padding: EdgeInsets.only(bottom: 6.h),
+            child: Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Container(
+                  width: 20.w,
+                  height: 20.w,
+                  decoration: BoxDecoration(
+                    color: color,
+                    shape: BoxShape.circle,
+                  ),
+                  alignment: Alignment.center,
+                  child: Text(
+                    '${entry.key + 1}',
+                    style: TextStyle(
+                      color: Colors.white,
+                      fontSize: 10.sp,
+                      fontWeight: FontWeight.w700,
+                      fontFamily: 'Montserrat',
+                    ),
+                  ),
+                ),
+                SizedBox(width: 8.w),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        label.isNotEmpty ? label : catLabel,
+                        style: TextStyle(
+                          fontSize: 12.sp,
+                          fontWeight: FontWeight.w600,
+                          color: AppColors.mainDark,
+                        ),
+                      ),
+                      if (note.isNotEmpty)
+                        Padding(
+                          padding: EdgeInsets.only(top: 1.h),
+                          child: Text(
+                            note,
+                            style: TextStyle(
+                              fontSize: 10.5.sp,
+                              color: AppColors.textSubColor,
+                            ),
+                          ),
+                        ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+          );
+        }),
+      ],
+    );
+  }
+
+  // ── Image Comparison ──
+
+  static void _openFullScreenImage(BuildContext context, String? url) {
+    if (url == null || url.isEmpty) return;
+    final overlay = Overlay.of(context, rootOverlay: true);
+    late OverlayEntry entry;
+
+    Widget imageWidget;
+    if (url.startsWith('data:')) {
+      final dataStr = url.split(',').last;
+      final bytes = base64Decode(dataStr);
+      imageWidget = Image.memory(bytes, fit: BoxFit.contain);
+    } else {
+      imageWidget = CachedNetworkImage(
+        imageUrl: url,
+        fit: BoxFit.contain,
+        placeholder: (_, __) => const Center(
+          child: CircularProgressIndicator(color: Colors.white70, strokeWidth: 2),
+        ),
+        errorWidget: (_, __, ___) => const Icon(
+          Icons.image_not_supported_rounded,
+          color: Colors.white38,
+          size: 64,
+        ),
+      );
+    }
+
+    entry = OverlayEntry(
+      builder: (_) {
+        final padding = MediaQuery.of(context).padding;
+        return Material(
+          color: Colors.black,
+          child: SizedBox.expand(
+            child: Stack(
+              fit: StackFit.expand,
+              children: [
+                InteractiveViewer(
+                  minScale: 0.5,
+                  maxScale: 4.0,
+                  child: Center(child: imageWidget),
+                ),
+                Positioned(
+                  top: padding.top + 8,
+                  right: 8,
+                  child: IconButton(
+                    onPressed: () {
+                      if (entry.mounted) entry.remove();
+                    },
+                    icon: const Icon(Icons.close_rounded,
+                        color: Colors.white, size: 28),
+                    style: IconButton.styleFrom(
+                      backgroundColor: Colors.black54,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        );
+      },
+    );
+    overlay.insert(entry);
+  }
+
+  static Widget _buildImage(String? url, {double? height}) {
+    if (url == null || url.isEmpty) {
+      return Container(
+        height: height ?? 150,
+        decoration: BoxDecoration(
+          color: Colors.grey.shade200,
+          borderRadius: BorderRadius.circular(8.r),
+        ),
+        child: const Center(
+          child: Icon(Icons.image_rounded, size: 32, color: Colors.grey),
+        ),
+      );
+    }
+    if (url.startsWith('data:')) {
+      final dataStr = url.split(',').last;
+      final bytes = base64Decode(dataStr);
+      return ClipRRect(
+        borderRadius: BorderRadius.circular(8.r),
+        child: Image.memory(
+          bytes,
+          height: height ?? 150,
+          fit: BoxFit.cover,
+        ),
+      );
+    }
+    return ClipRRect(
+      borderRadius: BorderRadius.circular(8.r),
+      child: CachedNetworkImage(
+        imageUrl: url,
+        height: height ?? 150,
+        fit: BoxFit.cover,
+        placeholder: (_, __) => Container(
+          height: height ?? 150,
+          color: Colors.grey.shade200,
+          child: Center(
+            child: CircularProgressIndicator(
+              strokeWidth: 2,
+              color: AppColors.main,
+            ),
+          ),
+        ),
+        errorWidget: (_, __, ___) => Container(
+          height: height ?? 150,
+          color: Colors.grey.shade200,
+          child: const Center(
+            child: Icon(Icons.broken_image_rounded, color: Colors.grey),
+          ),
+        ),
+      ),
+    );
+  }
+
+  static Widget? _imageComparison(dynamic value, BuildContext context) {
+    if (value is! Map) return null;
+    final mode = value['mode']?.toString() ?? '';
+    final images = (value['images'] as List?)?.whereType<Map>().toList() ?? [];
+    if (images.isEmpty) return null;
+
+    if (mode == 'before_after') {
+      final before = images.where((i) => i['role'] == 'before').firstOrNull;
+      final after = images.where((i) => i['role'] == 'after').firstOrNull;
+
+      return Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          if (before != null)
+            Expanded(
+              child: Column(
+                children: [
+                  GestureDetector(
+                    onTap: () => _openFullScreenImage(context, before['url']?.toString()),
+                    child: _buildImage(before['url']?.toString(), height: 160.h),
+                  ),
+                  SizedBox(height: 4.h),
+                  Text(
+                    'قبل',
+                    style: TextStyle(
+                      fontSize: 11.sp,
+                      fontWeight: FontWeight.w700,
+                      color: AppColors.mainDark,
+                    ),
+                  ),
+                  if ((before['date']?.toString() ?? '').isNotEmpty)
+                    Text(
+                      before['date'].toString(),
+                      style: TextStyle(
+                        fontSize: 10.sp,
+                        color: AppColors.textSubColor,
+                      ),
+                    ),
+                  if ((before['note']?.toString() ?? '').isNotEmpty)
+                    Text(
+                      before['note'].toString(),
+                      style: TextStyle(
+                        fontSize: 9.5.sp,
+                        color: AppColors.textSubColor,
+                        fontStyle: FontStyle.italic,
+                      ),
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                ],
+              ),
+            ),
+          SizedBox(width: 8.w),
+          if (after != null)
+            Expanded(
+              child: Column(
+                children: [
+                  GestureDetector(
+                    onTap: () => _openFullScreenImage(context, after['url']?.toString()),
+                    child: _buildImage(after['url']?.toString(), height: 160.h),
+                  ),
+                  SizedBox(height: 4.h),
+                  Text(
+                    'بعد',
+                    style: TextStyle(
+                      fontSize: 11.sp,
+                      fontWeight: FontWeight.w700,
+                      color: AppColors.mainDark,
+                    ),
+                  ),
+                  if ((after['date']?.toString() ?? '').isNotEmpty)
+                    Text(
+                      after['date'].toString(),
+                      style: TextStyle(
+                        fontSize: 10.sp,
+                        color: AppColors.textSubColor,
+                      ),
+                    ),
+                  if ((after['note']?.toString() ?? '').isNotEmpty)
+                    Text(
+                      after['note'].toString(),
+                      style: TextStyle(
+                        fontSize: 9.5.sp,
+                        color: AppColors.textSubColor,
+                        fontStyle: FontStyle.italic,
+                      ),
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                ],
+              ),
+            ),
+        ],
+      );
+    }
+
+    // Progress timeline
+    return Wrap(
+      spacing: 8.w,
+      runSpacing: 8.h,
+      children: images.asMap().entries.map((entry) {
+        final img = entry.value;
+        final date = img['date']?.toString() ?? '';
+        final note = img['note']?.toString() ?? '';
+        return SizedBox(
+          width: 100.w,
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              GestureDetector(
+                onTap: () => _openFullScreenImage(context, img['url']?.toString()),
+                child: _buildImage(img['url']?.toString(), height: 100.h),
+              ),
+              SizedBox(height: 2.h),
+              if (date.isNotEmpty)
+                Text(
+                  date,
+                  style: TextStyle(
+                    fontSize: 10.sp,
+                    fontWeight: FontWeight.w600,
+                    color: AppColors.mainDark,
+                  ),
+                ),
+              if (note.isNotEmpty)
+                Text(
+                  note,
+                  style: TextStyle(
+                    fontSize: 9.5.sp,
+                    color: AppColors.textSubColor,
+                  ),
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
+                ),
             ],
           ),
         );

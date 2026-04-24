@@ -2,6 +2,7 @@ import 'dart:io';
 import 'dart:typed_data';
 import 'package:docsera/Business_Logic/Documents_page/documents/documents_cubit.dart';
 import 'package:docsera/Business_Logic/Health_page/patient_switcher_cubit.dart';
+import 'package:docsera/Business_Logic/Storage/storage_quota_cubit.dart';
 import 'package:docsera/app/const.dart';
 import 'package:docsera/utils/time_utils.dart';
 import 'package:docsera/app/text_styles.dart';
@@ -52,6 +53,7 @@ class _DocumentInfoScreenState extends State<DocumentInfoScreen> {
   List<Map<String, String>> _patients = [];
   late List<Color> avatarColors;
   bool _isUploading = false;
+  bool _triedToSubmit = false;
 
   final Map<String, String Function(AppLocalizations)> _documentTypeMap = {
     'نتائج': (locale) => locale.results,
@@ -234,6 +236,8 @@ class _DocumentInfoScreenState extends State<DocumentInfoScreen> {
                 );
               }).toList(),
               onChanged: (value) => setState(() => _selectedType = value),
+              showError: _triedToSubmit,
+              errorText: locale.fieldRequired,
             ),
 
             SizedBox(height: 20.h),
@@ -270,6 +274,8 @@ class _DocumentInfoScreenState extends State<DocumentInfoScreen> {
                 );
               }).toList(),
               onChanged: (value) => setState(() => _selectedPatientId = value),
+              showError: _triedToSubmit,
+              errorText: locale.fieldRequired,
             ),
 
             const Spacer(),
@@ -294,11 +300,19 @@ class _DocumentInfoScreenState extends State<DocumentInfoScreen> {
             SizedBox(height: 10.h),
 
             ElevatedButton(
-              onPressed: isFormValid && !_isUploading ? _submitDocument : null,
+              onPressed: _isUploading
+                  ? null
+                  : () {
+                      if (!isFormValid) {
+                        setState(() => _triedToSubmit = true);
+                        return;
+                      }
+                      _submitDocument();
+                    },
               style: ElevatedButton.styleFrom(
                 minimumSize: Size(double.infinity, 48.h),
                 backgroundColor:
-                isFormValid && !_isUploading ? AppColors.main : Colors.grey,
+                isFormValid && !_isUploading ? AppColors.main : Colors.grey[400],
                 padding: EdgeInsets.symmetric(vertical: 12.h),
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(8.0),
@@ -773,6 +787,7 @@ class _DocumentInfoScreenState extends State<DocumentInfoScreen> {
         relativeId: switcher.relativeId,
         forceReload: true,
       );
+      context.read<StorageQuotaCubit>().loadStorageUsage();
 
       Navigator.pop(context, true);
       // (Removed Double Pop - let the caller handle it)
@@ -825,42 +840,68 @@ class _DocumentInfoScreenState extends State<DocumentInfoScreen> {
     required List<DropdownMenuItem<String>> items,
     required void Function(String?) onChanged,
     DropdownButtonBuilder? selectedItemBuilder,
+    bool showError = false,
+    String? errorText,
   }) {
-    return DropdownButtonHideUnderline(
-      child: DropdownButtonFormField<String>(
-        value: value,
-        isExpanded: true,
-        icon:
-        Icon(Icons.arrow_drop_down, color: AppColors.main, size: 22.sp),
-        borderRadius: BorderRadius.circular(15.r),
-        menuMaxHeight: 380.h,
-        dropdownColor: Colors.white.withOpacity(0.99),
-        elevation: 1,
-        selectedItemBuilder: selectedItemBuilder,
-        decoration: InputDecoration(
-          labelText: hint,
-          floatingLabelBehavior: FloatingLabelBehavior.auto,
-          labelStyle: AppTextStyles.getText3(context)
-              .copyWith(color: Colors.grey, fontSize: 12.sp),
-          floatingLabelStyle: AppTextStyles.getText3(context)
-              .copyWith(color: AppColors.main, fontSize: 14.sp),
-          hintStyle: AppTextStyles.getText3(context)
-              .copyWith(color: Colors.grey, fontSize: 11.sp),
-          contentPadding:
-          EdgeInsets.symmetric(vertical: 12.h, horizontal: 14.w),
-          enabledBorder: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(25.r),
-            borderSide: const BorderSide(color: Colors.grey),
-          ),
-          focusedBorder: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(25.r),
-            borderSide:
-            const BorderSide(color: AppColors.main, width: 2),
+    final hasError = showError && value == null;
+    final borderColor = hasError ? AppColors.red : Colors.grey;
+    final labelColor = hasError ? AppColors.red : Colors.grey;
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        DropdownButtonHideUnderline(
+          child: DropdownButtonFormField<String>(
+            value: value,
+            isExpanded: true,
+            icon:
+            Icon(Icons.arrow_drop_down, color: hasError ? AppColors.red : AppColors.main, size: 22.sp),
+            borderRadius: BorderRadius.circular(15.r),
+            menuMaxHeight: 380.h,
+            dropdownColor: Colors.white.withOpacity(0.99),
+            elevation: 1,
+            selectedItemBuilder: selectedItemBuilder,
+            decoration: InputDecoration(
+              labelText: hint,
+              floatingLabelBehavior: FloatingLabelBehavior.auto,
+              labelStyle: AppTextStyles.getText3(context)
+                  .copyWith(color: labelColor, fontSize: 12.sp),
+              floatingLabelStyle: AppTextStyles.getText3(context)
+                  .copyWith(color: hasError ? AppColors.red : AppColors.main, fontSize: 14.sp),
+              hintStyle: AppTextStyles.getText3(context)
+                  .copyWith(color: Colors.grey, fontSize: 11.sp),
+              contentPadding:
+              EdgeInsets.symmetric(vertical: 12.h, horizontal: 14.w),
+              enabledBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(25.r),
+                borderSide: BorderSide(color: borderColor, width: hasError ? 1.5 : 1),
+              ),
+              focusedBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(25.r),
+                borderSide:
+                BorderSide(color: hasError ? AppColors.red : AppColors.main, width: 2),
+              ),
+            ),
+            items: items,
+            onChanged: (val) {
+              onChanged(val);
+              if (_triedToSubmit) setState(() {});
+            },
           ),
         ),
-        items: items,
-        onChanged: onChanged,
-      ),
+        if (hasError && errorText != null)
+          Padding(
+            padding: EdgeInsets.only(top: 4.h, left: 14.w, right: 14.w),
+            child: Text(
+              errorText,
+              style: AppTextStyles.getText3(context).copyWith(
+                color: AppColors.red,
+                fontSize: 10.sp,
+              ),
+            ),
+          ),
+      ],
     );
   }
 }

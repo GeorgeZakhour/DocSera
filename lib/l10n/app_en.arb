@@ -1426,7 +1426,7 @@
   "referredUser": "Referred user",
   "offerDetails": "Offer",
   "redeemedOn": "Redeemed on",
-  "pendingPointsNote": "Points will be added to your wallet after the review period.",
+  "pendingPointsNote": "Points will be added to your wallet within up to 72 hours (review period).",
   "pendingTimeRemaining": "Time remaining",
   "hoursRemaining": "{hours}h remaining",
   "@hoursRemaining": {
@@ -1476,5 +1476,39 @@
   "showQrToDoctor": "Show this QR code to the doctor or receptionist during your visit",
   "validFor": "Valid for",
   "validWhileOfferActive": "Valid while offer is active",
-  "showAll": "Show all"
+  "showAll": "Show all",
+  "voucherUsedNote": "You've already used this code and received the offer from the doctor.",
+  "voucherUsedAt": "Used on",
+  "claimNewCode": "Get a new code",
+  "promotionStillAvailable": "You can still use this promotion again.",
+
+  "health_manual_entry_cta": "Can't find what you're looking for?",
+  "health_manual_entry_button": "Add manually",
+  "health_manual_entry_title": "Add a custom entry",
+  "health_manual_entry_name_label": "Name",
+  "health_manual_entry_name_hint": "Enter the name of the item",
+  "health_manual_entry_desc_label": "Description (optional)",
+  "health_manual_entry_desc_hint": "Add any relevant details",
+  "health_manual_entry_submit": "Continue with this entry",
+  "health_manual_entry_name_required": "Please enter a name",
+  "health_manual_entry_disclaimer": "This entry will be saved for review. A verified version may replace it later.",
+  "health_custom_entry_badge": "Custom entry",
+
+  "voucherUsedNote": "This voucher has already been used. You can claim a new one if the offer allows it.",
+  "voucherUsedAt": "Used on",
+  "promotionStillAvailable": "This offer is still available! You can claim a new voucher code.",
+  "claimNewCode": "Claim New Code",
+
+  "health_verification_status": "Entry Type",
+  "health_verified": "Standard",
+  "health_unverified": "Custom Entry",
+
+  "offerUsedBadge": "Used",
+  "offerUsedTimesBadge": "Used {n}×",
+  "@offerUsedTimesBadge": {
+    "placeholders": {"n": {"type": "int"}}
+  },
+  "offerCodeReady": "Code ready",
+  "offerNotEligible": "Not eligible",
+  "offerFirstVisitOnlyHint": "Only for your first visit with this doctor"
 }

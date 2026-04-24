@@ -14,6 +14,7 @@ import 'package:docsera/screens/home/health/pages/allergies/allergies_page.dart'
 import 'package:docsera/screens/home/health/pages/chronic/chronic_diseases_page.dart';
 import 'package:docsera/screens/home/health/pages/family/family_history_page.dart';
 import 'package:docsera/screens/home/health/pages/medications/medications_page.dart';
+import 'package:docsera/screens/home/health/pages/other/other_records_page.dart';
 import 'package:docsera/screens/home/health/pages/surgeries/surgeries_page.dart';
 import 'package:docsera/screens/home/health/pages/vaccinations/vaccinations_page.dart';
 import 'package:docsera/screens/home/health/pages/visit_reports/visit_reports_page.dart';
@@ -128,21 +129,21 @@ class _HealthAuthenticatedViewState extends State<HealthAuthenticatedView> {
 
                     _buildSectionTitle(
                       context,
-                      t.health_summary,
-                      t.health_patientSubtitle,
-                    ),
-                    SizedBox(height: 14.h),
-                    _buildCategoriesGrid(context, summary, isArabic),
-
-                    SizedBox(height: 18.h),
-
-                    _build2ndSectionTitle(
-                      context,
                       t.health_personalRecords_title,
                       t.health_personalRecords_subtitle,
                     ),
                     SizedBox(height: 10.h),
                     _buildCategoriesGrid(context, personal, isArabic),
+
+                    SizedBox(height: 18.h),
+
+                    _build2ndSectionTitle(
+                      context,
+                      t.health_summary,
+                      t.health_patientSubtitle,
+                    ),
+                    SizedBox(height: 14.h),
+                    _buildCategoriesGrid(context, summary, isArabic),
                   ],
                 ),
               );
@@ -466,7 +467,7 @@ class _HealthAuthenticatedViewState extends State<HealthAuthenticatedView> {
           subtitle,
           style: AppTextStyles.getText3(context).copyWith(
             fontSize: 11.sp,
-            color: AppColors.grayMain,
+            color: AppColors.main,
           ),
         ),
       ],
@@ -568,6 +569,14 @@ class _HealthAuthenticatedViewState extends State<HealthAuthenticatedView> {
 
 
 
+    if (category.id == "other") {
+      Navigator.push(
+        context,
+        fadePageRoute(const OtherRecordsPage()),
+      );
+      return;
+    }
+
     // باقي التابات لاحقاً
     Navigator.push(
       context,
@@ -621,6 +630,12 @@ class _HealthAuthenticatedViewState extends State<HealthAuthenticatedView> {
         title: t.health_vaccines_title,
         description: t.health_vaccines_desc,
         icon: Icons.vaccines_rounded,
+      ),
+      _HealthCategory(
+        id: "other",
+        title: t.health_other_title,
+        description: t.health_other_desc,
+        icon: Icons.monitor_heart_rounded,
       ),
     ];
   }

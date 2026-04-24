@@ -9,17 +9,26 @@ class NotesService {
   NotesService({SupabaseClient? client}) 
       : _client = client ?? Supabase.instance.client;
 
-  Future<List<Note>> fetchNotes(String userId) async {
-    final response = await _client
+  /// Fetch notes for a user OR a relative.
+  /// When [relativeId] is provided, filter by relative_id.
+  /// When null, fetch only notes with no relative_id (main user's own notes).
+  Future<List<Note>> fetchNotes(String userId, {String? relativeId}) async {
+    var query = _client
         .from('notes')
         .select()
-        .eq('user_id', userId)
-        .order('created_at', ascending: false);
+        .eq('user_id', userId);
 
+    if (relativeId != null) {
+      query = query.eq('relative_id', relativeId);
+    } else {
+      query = query.isFilter('relative_id', null);
+    }
+
+    final response = await query.order('created_at', ascending: false);
     return (response as List).map((e) => Note.fromMap(e)).toList();
   }
 
-  Future<void> addNote(String title, List<dynamic> content, String userId) async {
+  Future<void> addNote(String title, List<dynamic> content, String userId, {String? relativeId}) async {
     final noteId = const Uuid().v4();
     final createdAt = DocSeraTime.nowUtc();
 
@@ -29,6 +38,7 @@ class NotesService {
       'content': content,
       'created_at': createdAt.toIso8601String(),
       'user_id': userId,
+      if (relativeId != null) 'relative_id': relativeId,
     };
 
     await _client.from('notes').insert(noteData);
@@ -50,9 +60,12 @@ class NotesService {
         .eq('user_id', userId);
   }
 
+  /// Subscribe to realtime note changes for the current patient context.
+  /// Uses user_id filter — Supabase realtime only supports one filter,
+  /// so we do client-side filtering for relative_id in the cubit.
   RealtimeChannel? subscribeToNotes(String userId, Function() onChange) {
     return _client
-        .channel('public:notes')
+        .channel('public:notes:user_id:$userId')
         .onPostgresChanges(
           event: PostgresChangeEvent.all,
           schema: 'public',

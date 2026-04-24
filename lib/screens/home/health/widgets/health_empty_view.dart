@@ -9,8 +9,8 @@ class HealthEmptyView extends StatelessWidget {
   final String title;
   final String subtitle;
 
-  final String primaryButtonText;
-  final VoidCallback onPrimaryPressed;
+  final String? primaryButtonText;
+  final VoidCallback? onPrimaryPressed;
 
   const HealthEmptyView({
     super.key,
@@ -18,8 +18,8 @@ class HealthEmptyView extends StatelessWidget {
     this.imagePath,
     required this.title,
     required this.subtitle,
-    required this.primaryButtonText,
-    required this.onPrimaryPressed,
+    this.primaryButtonText,
+    this.onPrimaryPressed,
   }) : assert(icon != null || imagePath != null, "Either icon or imagePath must be provided");
 
   @override
@@ -84,32 +84,34 @@ class HealthEmptyView extends StatelessWidget {
             ),
           ),
 
-          SizedBox(height: 40.h),
+          if (primaryButtonText != null && onPrimaryPressed != null) ...[
+            SizedBox(height: 40.h),
 
-          /// ADD BUTTON
-          SizedBox(
-            width: double.infinity,
-            child: ElevatedButton(
-              onPressed: onPrimaryPressed,
-              style: ElevatedButton.styleFrom(
-                backgroundColor: AppColors.main,
-                foregroundColor: Colors.white,
-                elevation: 0,
-                shadowColor: Colors.transparent,
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(16.r),
+            /// ADD BUTTON
+            SizedBox(
+              width: double.infinity,
+              child: ElevatedButton(
+                onPressed: onPrimaryPressed,
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: AppColors.main,
+                  foregroundColor: Colors.white,
+                  elevation: 0,
+                  shadowColor: Colors.transparent,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(16.r),
+                  ),
+                  padding: EdgeInsets.symmetric(vertical: 16.h),
                 ),
-                padding: EdgeInsets.symmetric(vertical: 16.h),
-              ),
-              child: Text(
-                primaryButtonText,
-                style: AppTextStyles.getTitle2(context).copyWith(
-                  fontSize: 14.sp,
-                  color: Colors.white,
+                child: Text(
+                  primaryButtonText!,
+                  style: AppTextStyles.getTitle2(context).copyWith(
+                    fontSize: 14.sp,
+                    color: Colors.white,
+                  ),
                 ),
               ),
             ),
-          ),
+          ],
         ],
       ),
     );

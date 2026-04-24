@@ -40,6 +40,7 @@ import 'account/widgets/account_banner_card.dart';
 import 'account/widgets/points_card.dart';
 import 'account/widgets/account_section_title.dart';
 import 'account/widgets/account_list_tile.dart';
+import 'account/widgets/loyalty_rewards_banner.dart';
 import 'account/sheets/edit_contact_info_sheet.dart';
 import 'account/sheets/change_password_sheet.dart';
 import 'account/sheets/language_selection_sheet.dart';
@@ -219,45 +220,16 @@ class _AccountScreenState extends State<AccountScreen> {
               SizedBox(height: 5.h),
               const AccountBannerCard(),
 
-              const SizedBox(height: 15),
-              AccountSectionTitle(title: AppLocalizations.of(context)!.loyaltyRewards),
-              Divider(color: Colors.grey[200], height: 2.h),
+              SizedBox(height: 10.h),
 
-              // My Points
-              AccountListTile(
-                icon: Icons.stars,
-                title: AppLocalizations.of(context)!.myPoints,
-                subtitle: '${state.userPoints} ${AppLocalizations.of(context)!.points}',
-                onTap: () => Navigator.push(context, fadePageRoute(const WalletPage())),
+              // Loyalty Rewards Banner
+              LoyaltyRewardsBanner(
+                points: state.userPoints,
+                onPointsTap: () => Navigator.push(context, fadePageRoute(const WalletPage())),
+                onOffersTap: () => Navigator.push(context, fadePageRoute(const OffersPage())),
+                onVouchersTap: () => Navigator.push(context, fadePageRoute(const VouchersPage())),
+                onReferralTap: () => Navigator.push(context, fadePageRoute(const ReferralSectionPage())),
               ),
-              Divider(color: Colors.grey[200], height: 2.h),
-
-              // Offers
-              AccountListTile(
-                icon: Icons.local_offer,
-                title: AppLocalizations.of(context)!.offers,
-                subtitle: '',
-                onTap: () => Navigator.push(context, fadePageRoute(const OffersPage())),
-              ),
-              Divider(color: Colors.grey[200], height: 2.h),
-
-              // My Vouchers
-              AccountListTile(
-                icon: Icons.confirmation_number,
-                title: AppLocalizations.of(context)!.myVouchers,
-                subtitle: '',
-                onTap: () => Navigator.push(context, fadePageRoute(const VouchersPage())),
-              ),
-              Divider(color: Colors.grey[200], height: 2.h),
-
-              // Refer Friends
-              AccountListTile(
-                icon: Icons.card_giftcard,
-                title: AppLocalizations.of(context)!.referFriends,
-                subtitle: '',
-                onTap: () => Navigator.push(context, fadePageRoute(const ReferralSectionPage())),
-              ),
-              Divider(color: Colors.grey[200], height: 2.h),
 
               const SizedBox(height: 15),
               AccountSectionTitle(title: AppLocalizations.of(context)!.personalInformation),

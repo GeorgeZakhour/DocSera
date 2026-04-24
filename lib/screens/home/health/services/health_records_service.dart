@@ -19,7 +19,8 @@ class HealthRecordsService {
     name_ar,
     description_en,
     description_ar,
-    severity_allowed
+    severity_allowed,
+    is_verified
   ''';
 
   // ------------------------------------------------------------------
@@ -67,7 +68,8 @@ class HealthRecordsService {
           name_ar,
           description_en,
           description_ar,
-          severity_allowed
+          severity_allowed,
+          is_verified
         )
       ''')
         .eq(filterColumn, filterValue!)
@@ -161,6 +163,32 @@ class HealthRecordsService {
       'notes_en': isArabicNotes ? null : notes,
       'notes_ar': isArabicNotes ? notes : null,
     });
+  }
+
+  // ------------------------------------------------------------------
+  // CREATE CUSTOM MASTER ITEM (for manual entry)
+  // ------------------------------------------------------------------
+  Future<HealthMasterItem> createCustomMasterItem({
+    required String category,
+    required String nameEn,
+    required String nameAr,
+    String? descriptionEn,
+    String? descriptionAr,
+  }) async {
+    final row = await _client.from('medical_master').insert({
+      'category': category,
+      'name_en': nameEn,
+      'name_ar': nameAr,
+      'description_en': descriptionEn,
+      'description_ar': descriptionAr,
+      'severity_allowed': true,
+      'is_active': true,
+      'is_verified': false,
+      'source': 'patient',
+      'created_by': _client.auth.currentUser?.id,
+    }).select(_selectMasterFields).single();
+
+    return HealthMasterItem.fromMap(row);
   }
 
   // ------------------------------------------------------------------
