@@ -60,7 +60,6 @@ import 'services/supabase/repositories/auth_repository.dart';
 import 'services/supabase/repositories/user_repository.dart';
 import 'services/supabase/repositories/favorites_repository.dart';
 import 'services/supabase/repositories/appointment_repository.dart';
-import 'services/supabase/repositories/health_profile_repository.dart';
 import 'services/supabase/loyalty/loyalty_service.dart';
 import 'services/encryption/message_encryption_service.dart';
 
@@ -94,8 +93,6 @@ void main() async {
   final userRepo = UserRepository(supabase: client);
   final favRepo = FavoritesRepository(supabase: client);
   final apptRepo = AppointmentRepository(supabase: client);
-  // ignore: unused_local_variable — wired into HealthProfileWizard in Task F2
-  final healthProfileRepository = HealthProfileRepository();
 
   final supabaseService = SupabaseUserService(
     auth: authRepo,
