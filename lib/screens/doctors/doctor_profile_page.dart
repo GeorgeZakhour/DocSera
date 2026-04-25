@@ -1299,12 +1299,24 @@ class _DoctorProfilePageState extends State<DoctorProfilePage> {
                         ),
                       ),
                     ],
-                    if (audience == 'new_patients' || expiryText != null) ...[
+                    // Tags row — center-owned badge (if applicable), plus
+                    // existing new-patients / expiry tags.
+                    if ((promo['owner_type'] as String?) == 'center' ||
+                        audience == 'new_patients' ||
+                        expiryText != null) ...[
                       SizedBox(height: 6.h),
                       Wrap(
                         spacing: 6.w,
                         runSpacing: 4.h,
                         children: [
+                          if ((promo['owner_type'] as String?) == 'center')
+                            _promoTag(
+                              (promo['center_name'] as String?)?.isNotEmpty ==
+                                      true
+                                  ? l.fromCenter(promo['center_name'] as String)
+                                  : l.fromCenter(''),
+                              AppColors.main,
+                            ),
                           if (audience == 'new_patients')
                             _promoTag(l.newPatientsOnly, Colors.blue),
                           if (expiryText != null)
@@ -3619,6 +3631,57 @@ class _CustomExpandableServiceTileState extends State<_CustomExpandableServiceTi
       ),
     );
   }
+}
+
+// ─── Public helper — open the promotion claim sheet from other pages ───────
+//
+// Exposed so screens like `center_profile_page.dart` can reuse the exact
+// same claim-flow UX (status lookup, voucher generation, QR code render,
+// etc.) that the doctor profile shows. Keep the underlying
+// _ClaimPromotionSheet private to this file — callers only see this
+// helper's signature.
+void showPromotionClaimSheet(
+  BuildContext context, {
+  required String promoId,
+  required String title,
+  required String? description,
+  required Color color,
+  required IconData icon,
+}) {
+  final user = Supabase.instance.client.auth.currentUser;
+  if (user == null) {
+    // Match the doctor-profile behavior — a non-authenticated user sees
+    // a gentle nudge to log in rather than a silent no-op.
+    showDialog(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: Text(AppLocalizations.of(ctx)?.logIn ?? 'Log in'),
+        content: const Text(
+          'You need to be logged in to claim this offer.',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx),
+            child: Text(AppLocalizations.of(ctx)?.cancel ?? 'Cancel'),
+          ),
+        ],
+      ),
+    );
+    return;
+  }
+  showModalBottomSheet(
+    context: context,
+    isScrollControlled: true,
+    backgroundColor: Colors.transparent,
+    builder: (ctx) => _ClaimPromotionSheet(
+      promoId: promoId,
+      title: title,
+      description: description,
+      color: color,
+      icon: icon,
+      local: AppLocalizations.of(ctx)!,
+    ),
+  );
 }
 
 // ─── Claim Promotion Bottom Sheet ───────────────────────────────────────────

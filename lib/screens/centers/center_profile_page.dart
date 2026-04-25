@@ -6,8 +6,6 @@ import 'package:docsera/app/const.dart';
 import 'package:docsera/app/text_styles.dart';
 import 'package:docsera/gen_l10n/app_localizations.dart';
 import 'package:docsera/screens/doctors/doctor_profile_page.dart';
-import 'package:docsera/models/promotion.dart';
-import 'package:docsera/services/supabase/loyalty/loyalty_service.dart';
 import 'package:docsera/services/supabase/supabase_center_service.dart';
 import 'package:docsera/services/supabase/repositories/favorites_repository.dart';
 import 'package:docsera/utils/doctor_image_utils.dart';
@@ -37,7 +35,10 @@ class CenterProfilePage extends StatefulWidget {
 class _CenterProfilePageState extends State<CenterProfilePage> {
   Map<String, dynamic>? _centerData;
   List<Map<String, dynamic>> _teamDoctors = [];
-  List<Promotion> _promotions = const [];
+
+  /// Raw map representation (mirrors what the doctor profile uses), so
+  /// the promotion renderer can share the exact same look + claim flow.
+  List<Map<String, dynamic>> _promotions = const [];
   bool _isLoading = true;
   bool _isFavorite = false; // Add favorite tracker
   final ScrollController _scrollController = ScrollController();
@@ -45,10 +46,28 @@ class _CenterProfilePageState extends State<CenterProfilePage> {
 
   Future<void> _loadCenterPromotions() async {
     try {
-      final list =
-          await LoyaltyService().getPublicCenterPromotions(widget.centerId);
+      // Call the RPC directly and keep the JSON shape so the promotion
+      // renderer (copied from the doctor profile) can consume the same
+      // keys it already knows how to read.
+      final response = await Supabase.instance.client.rpc(
+        'get_public_center_promotions',
+        params: {'p_center_id': widget.centerId},
+      );
       if (!mounted) return;
-      setState(() => _promotions = list);
+      if (response is List) {
+        final all = List<Map<String, dynamic>>.from(
+          response.map((e) => Map<String, dynamic>.from(e as Map)),
+        );
+        // Hide promotions that have hit their global cap — matches the
+        // doctor profile's filtering so the two UIs behave consistently.
+        final visible = all.where((p) {
+          final maxClaims = p['max_claims'] as int?;
+          final currentClaims = p['current_claims'] as int? ?? 0;
+          if (maxClaims != null && currentClaims >= maxClaims) return false;
+          return true;
+        }).toList();
+        setState(() => _promotions = visible);
+      }
     } catch (_) {
       // Silent failure — promotions are optional content.
     }
@@ -787,37 +806,449 @@ class _CenterProfilePageState extends State<CenterProfilePage> {
 
   // ═══════════════════════════════════════════════════════
   // ── PROMOTIONS SECTION (FIRST)
+  //
+  // Mirrors the doctor profile's promotions section so the visual
+  // language is identical across both pages: gradient icon header,
+  // colored offer-type cards, "Show all" sheet, claim sheet reused
+  // via showPromotionClaimSheet (defined in doctor_profile_page.dart).
   // ═══════════════════════════════════════════════════════
-  Widget _buildPromotionsSection(List<Promotion> promotions) {
+  Widget _buildPromotionsSection(List<Map<String, dynamic>> promotions) {
     if (promotions.isEmpty) return const SizedBox.shrink();
+    final l = AppLocalizations.of(context)!;
     final isAr = Localizations.localeOf(context).languageCode == 'ar';
-    return _buildSectionCard(
-      icon: Icons.local_offer_outlined,
-      title: 'Promotions', // localized in Task 28
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: promotions
-            .take(2)
-            .map((p) => Padding(
-                  padding: EdgeInsets.only(bottom: 8.h),
-                  child: _CenterPromotionTile(
-                    promotion: p,
-                    isAr: isAr,
-                    onClaim: () => _claimCenterPromotion(p),
+
+    return Card(
+      color: AppColors.background2,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(12.r),
+        side: BorderSide(
+            color: AppColors.main.withValues(alpha: 0.20), width: 0.8),
+      ),
+      elevation: 0,
+      child: Padding(
+        padding: EdgeInsets.all(12.r),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // Header — gradient icon + "Promotions" title
+            Row(
+              children: [
+                Container(
+                  padding: EdgeInsets.all(6.r),
+                  decoration: BoxDecoration(
+                    gradient: const LinearGradient(
+                      colors: [AppColors.main, Color(0xFF00B4B6)],
+                      begin: Alignment.topLeft,
+                      end: Alignment.bottomRight,
+                    ),
+                    borderRadius: BorderRadius.circular(8.r),
                   ),
-                ))
-            .toList(growable: false),
+                  child: Icon(Icons.local_offer_rounded,
+                      color: Colors.white, size: 14.sp),
+                ),
+                SizedBox(width: 8.w),
+                Text(
+                  l.promotions,
+                  style: AppTextStyles.getTitle1(context)
+                      .copyWith(fontSize: 11.sp),
+                ),
+              ],
+            ),
+            SizedBox(height: 14.h),
+            ...promotions.take(2).map((promo) => Padding(
+                  padding: EdgeInsets.only(bottom: 8.h),
+                  child: _buildPromotionItem(promo, l, isAr),
+                )),
+            if (promotions.length > 2)
+              Padding(
+                padding: EdgeInsets.only(top: 4.h),
+                child: Center(
+                  child: TextButton.icon(
+                    onPressed: () =>
+                        _showAllPromotionsSheet(promotions, l, isAr),
+                    icon: Icon(Icons.expand_more_rounded,
+                        size: 16.sp, color: AppColors.main),
+                    label: Text(
+                      '${l.showAll} (${promotions.length})',
+                      style: AppTextStyles.getText3(context).copyWith(
+                        color: AppColors.main,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                    style: TextButton.styleFrom(
+                      padding: EdgeInsets.symmetric(
+                          horizontal: 12.w, vertical: 4.h),
+                    ),
+                  ),
+                ),
+              ),
+            SizedBox(height: 6.h),
+            Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Icon(Icons.info_outline_rounded,
+                    size: 13.sp, color: Colors.grey[400]),
+                SizedBox(width: 4.w),
+                Expanded(
+                  child: Text(
+                    l.promotionPressHereToClaim,
+                    style: AppTextStyles.getText3(context).copyWith(
+                      color: Colors.grey[500],
+                      fontSize: 10.sp,
+                      height: 1.4,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ],
+        ),
       ),
     );
   }
 
-  Future<void> _claimCenterPromotion(Promotion promo) async {
-    final result = await LoyaltyService().claimDoctorPromotion(promo.id);
-    if (!mounted) return;
-    final ok = result['success'] == true;
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text(ok ? 'Claimed' : 'Could not claim — try again'),
+  void _showAllPromotionsSheet(
+    List<Map<String, dynamic>> promotions,
+    AppLocalizations l,
+    bool isAr,
+  ) {
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (ctx) => Container(
+        constraints: BoxConstraints(
+            maxHeight: MediaQuery.of(context).size.height * 0.7),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.vertical(top: Radius.circular(24.r)),
+        ),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Container(
+              width: 36.w,
+              height: 4.h,
+              margin: EdgeInsets.only(top: 12.h, bottom: 16.h),
+              decoration: BoxDecoration(
+                color: Colors.grey.shade300,
+                borderRadius: BorderRadius.circular(2.r),
+              ),
+            ),
+            Padding(
+              padding: EdgeInsets.symmetric(horizontal: 20.w),
+              child: Row(
+                children: [
+                  Container(
+                    padding: EdgeInsets.all(6.r),
+                    decoration: BoxDecoration(
+                      gradient: const LinearGradient(
+                        colors: [AppColors.main, Color(0xFF00B4B6)],
+                        begin: Alignment.topLeft,
+                        end: Alignment.bottomRight,
+                      ),
+                      borderRadius: BorderRadius.circular(8.r),
+                    ),
+                    child: Icon(Icons.local_offer_rounded,
+                        color: Colors.white, size: 14.sp),
+                  ),
+                  SizedBox(width: 8.w),
+                  Text(
+                    '${l.promotions} (${promotions.length})',
+                    style: AppTextStyles.getTitle1(context)
+                        .copyWith(fontSize: 13.sp),
+                  ),
+                ],
+              ),
+            ),
+            SizedBox(height: 12.h),
+            Flexible(
+              child: ListView.separated(
+                padding: EdgeInsets.fromLTRB(20.w, 0, 20.w, 20.h),
+                shrinkWrap: true,
+                itemCount: promotions.length,
+                separatorBuilder: (_, __) => SizedBox(height: 8.h),
+                itemBuilder: (ctx, index) =>
+                    _buildPromotionItem(promotions[index], l, isAr),
+              ),
+            ),
+            Padding(
+              padding: EdgeInsets.fromLTRB(20.w, 0, 20.w, 20.h),
+              child: Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Icon(Icons.info_outline_rounded,
+                      size: 13.sp, color: Colors.grey[400]),
+                  SizedBox(width: 4.w),
+                  Expanded(
+                    child: Text(
+                      l.promotionPressHereToClaim,
+                      style: AppTextStyles.getText3(context).copyWith(
+                        color: Colors.grey[500],
+                        fontSize: 10.sp,
+                        height: 1.4,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildPromotionItem(
+    Map<String, dynamic> promo,
+    AppLocalizations l,
+    bool isAr,
+  ) {
+    final offerType = promo['offer_type'] as String? ?? 'custom';
+    final discountValue = (promo['discount_value'] as num?)?.toDouble();
+    final discountType = promo['discount_type'] as String?;
+    final customTitle = promo['custom_title'] as String?;
+    final customTitleAr = promo['custom_title_ar'] as String?;
+    final description = promo['description'] as String?;
+    final descriptionAr = promo['description_ar'] as String?;
+    final audience = promo['audience'] as String? ?? 'all_patients';
+    final maxPerPatient = promo['max_claims_per_patient'] as int?;
+    final endDate = promo['end_date'] as String?;
+    final currency = l.currency;
+
+    String title;
+    if (offerType == 'custom') {
+      String baseTitle;
+      if (isAr && customTitleAr != null && customTitleAr.isNotEmpty) {
+        baseTitle = customTitleAr;
+      } else if (customTitle != null && customTitle.isNotEmpty) {
+        baseTitle = customTitle;
+      } else {
+        baseTitle = customTitleAr ?? l.promotions;
+      }
+      if (discountValue != null && discountValue > 0) {
+        final valuePart = discountType == 'fixed'
+            ? '⁨${discountValue.toInt()} $currency⁩'
+            : '⁨${discountValue.toInt()}%⁩';
+        title = '$baseTitle • $valuePart';
+      } else {
+        title = baseTitle;
+      }
+    } else {
+      switch (offerType) {
+        case 'free_first_consultation':
+          title = l.freeFirstConsultation;
+          break;
+        case 'percentage_discount':
+          title = '${discountValue?.toInt() ?? 0}% ${l.percentageDiscount}';
+          break;
+        case 'fixed_discount':
+          title =
+              '${discountValue?.toInt() ?? 0} $currency ${l.fixedDiscount}';
+          break;
+        case 'free_followup':
+          title = l.freeFollowup;
+          break;
+        default:
+          title = l.specialOffer;
+      }
+    }
+
+    final desc = isAr
+        ? (descriptionAr ?? description)
+        : (description ?? descriptionAr);
+
+    IconData icon;
+    Color color;
+    switch (offerType) {
+      case 'free_first_consultation':
+        icon = Icons.medical_services_outlined;
+        color = const Color(0xFF3BB273);
+        break;
+      case 'percentage_discount':
+        icon = Icons.percent_rounded;
+        color = const Color(0xFF5B8DEF);
+        break;
+      case 'fixed_discount':
+        icon = Icons.attach_money_rounded;
+        color = const Color(0xFFE8A838);
+        break;
+      case 'free_followup':
+        icon = Icons.repeat_rounded;
+        color = const Color(0xFF9B59B6);
+        break;
+      default:
+        icon = Icons.auto_awesome_rounded;
+        color = AppColors.main;
+    }
+
+    String? expiryText;
+    if (endDate != null) {
+      final end = DateTime.tryParse(endDate);
+      if (end != null) {
+        final daysLeft = end.difference(DateTime.now()).inDays;
+        if (daysLeft > 0 && daysLeft <= 30) {
+          expiryText = '$daysLeft ${l.daysRemaining}';
+        }
+      }
+    }
+
+    String? eligibilityTag;
+    if (offerType == 'free_first_consultation') {
+      eligibilityTag = l.promotionFirstVisitOnly;
+    } else if (maxPerPatient != null && maxPerPatient == 1) {
+      eligibilityTag = l.promotionSingleUse;
+    } else if (maxPerPatient != null && maxPerPatient > 1) {
+      eligibilityTag = l.promotionMultiUse(maxPerPatient);
+    }
+
+    final hasActiveVoucher = promo['has_active_voucher'] == true;
+    final bgColor = hasActiveVoucher
+        ? color.withValues(alpha: 0.12)
+        : color.withValues(alpha: 0.05);
+    final borderColor = hasActiveVoucher
+        ? color.withValues(alpha: 0.45)
+        : color.withValues(alpha: 0.15);
+    final borderWidth = hasActiveVoucher ? 1.2 : 1.0;
+
+    return GestureDetector(
+      onTap: () {
+        // Reuse the doctor profile's claim sheet — same QR / status /
+        // reuse-on-existing-voucher flow as a doctor-owned promotion.
+        showPromotionClaimSheet(
+          context,
+          promoId: promo['id'] as String,
+          title: title,
+          description: desc,
+          color: color,
+          icon: icon,
+        );
+      },
+      child: Container(
+        padding: EdgeInsets.all(12.r),
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(10.r),
+          color: bgColor,
+          border: Border.all(color: borderColor, width: borderWidth),
+          boxShadow: hasActiveVoucher
+              ? [
+                  BoxShadow(
+                    color: color.withValues(alpha: 0.15),
+                    blurRadius: 10,
+                    offset: const Offset(0, 3),
+                  ),
+                ]
+              : null,
+        ),
+        child: Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            SizedBox(
+              width: 38.r,
+              height: 38.r,
+              child: Stack(
+                clipBehavior: Clip.none,
+                children: [
+                  Container(
+                    width: 38.r,
+                    height: 38.r,
+                    decoration: BoxDecoration(
+                      gradient: LinearGradient(
+                        colors: [
+                          color.withValues(alpha: 0.85),
+                          color.withValues(alpha: 0.45),
+                        ],
+                        begin: Alignment.topLeft,
+                        end: Alignment.bottomRight,
+                      ),
+                      borderRadius: BorderRadius.circular(10.r),
+                    ),
+                    child: Icon(icon, color: Colors.white, size: 18.sp),
+                  ),
+                  if (hasActiveVoucher)
+                    Positioned(
+                      top: -2,
+                      right: -2,
+                      child: Container(
+                        width: 14.r,
+                        height: 14.r,
+                        decoration: BoxDecoration(
+                          color: Colors.white,
+                          shape: BoxShape.circle,
+                          boxShadow: [
+                            BoxShadow(
+                              color: Colors.black.withValues(alpha: 0.1),
+                              blurRadius: 3,
+                              offset: const Offset(0, 1),
+                            ),
+                          ],
+                        ),
+                        child: Icon(Icons.qr_code_rounded,
+                            color: color, size: 10.sp),
+                      ),
+                    ),
+                ],
+              ),
+            ),
+            SizedBox(width: 10.w),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    title,
+                    style: AppTextStyles.getTitle2(context).copyWith(
+                      fontSize: 11.sp,
+                      fontWeight: FontWeight.w700,
+                    ),
+                  ),
+                  if (eligibilityTag != null) ...[
+                    SizedBox(height: 3.h),
+                    Text(
+                      eligibilityTag,
+                      style: AppTextStyles.getText3(context).copyWith(
+                        color: Colors.grey[500],
+                        fontSize: 9.sp,
+                      ),
+                    ),
+                  ],
+                  if (audience == 'new_patients' || expiryText != null) ...[
+                    SizedBox(height: 6.h),
+                    Wrap(
+                      spacing: 6.w,
+                      runSpacing: 4.h,
+                      children: [
+                        if (audience == 'new_patients')
+                          _promoTag(l.newPatientsOnly, Colors.blue),
+                        if (expiryText != null)
+                          _promoTag(expiryText, Colors.orange),
+                      ],
+                    ),
+                  ],
+                ],
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _promoTag(String label, Color color) {
+    return Container(
+      padding: EdgeInsets.symmetric(horizontal: 8.w, vertical: 2.h),
+      decoration: BoxDecoration(
+        color: color.withValues(alpha: 0.08),
+        borderRadius: BorderRadius.circular(6.r),
+        border: Border.all(color: color.withValues(alpha: 0.20)),
+      ),
+      child: Text(
+        label,
+        style: TextStyle(
+          fontSize: 9.sp,
+          fontWeight: FontWeight.w600,
+          color: color,
+        ),
       ),
     );
   }
@@ -2480,95 +2911,5 @@ class _CustomExpandableServiceTileState extends State<_CustomExpandableServiceTi
         ),
       ),
     );
-  }
-}
-
-/// Single promotion row in the center profile's Promotions section.
-/// Renders the title, scope tag, and a Claim button.
-class _CenterPromotionTile extends StatelessWidget {
-  final Promotion promotion;
-  final bool isAr;
-  final VoidCallback onClaim;
-
-  const _CenterPromotionTile({
-    required this.promotion,
-    required this.isAr,
-    required this.onClaim,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    final title = _title();
-    final scopeLabel = _scopeLabel();
-    return Container(
-      padding: EdgeInsets.all(10.w),
-      decoration: BoxDecoration(
-        color: AppColors.main.withValues(alpha: 0.05),
-        borderRadius: BorderRadius.circular(10.r),
-        border: Border.all(color: AppColors.main.withValues(alpha: 0.20)),
-      ),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.center,
-        children: [
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(title, style: AppTextStyles.getTitle3(context)),
-                SizedBox(height: 2.h),
-                Text(
-                  scopeLabel,
-                  style: AppTextStyles.getText4(context)
-                      .copyWith(color: Colors.black54),
-                ),
-              ],
-            ),
-          ),
-          SizedBox(width: 8.w),
-          ElevatedButton(
-            onPressed: onClaim,
-            style: ElevatedButton.styleFrom(
-              backgroundColor: AppColors.main,
-              foregroundColor: Colors.white,
-              padding: EdgeInsets.symmetric(horizontal: 14.w, vertical: 6.h),
-              minimumSize: const Size(0, 0),
-              tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-            ),
-            child: const Text('Claim'),
-          ),
-        ],
-      ),
-    );
-  }
-
-  String _title() {
-    if (isAr &&
-        promotion.customTitleAr != null &&
-        promotion.customTitleAr!.isNotEmpty) {
-      return promotion.customTitleAr!;
-    }
-    if (promotion.customTitle != null && promotion.customTitle!.isNotEmpty) {
-      return promotion.customTitle!;
-    }
-    switch (promotion.offerType) {
-      case 'free_first_consultation':
-        return 'Free First Consultation';
-      case 'percentage_discount':
-        return '${promotion.discountValue?.toInt() ?? 0}% Discount';
-      case 'fixed_discount':
-        return '${promotion.discountValue?.toInt() ?? 0} SYP Discount';
-      case 'free_followup':
-        return 'Free Follow-up Visit';
-      default:
-        return 'Special Offer';
-    }
-  }
-
-  String _scopeLabel() {
-    if (promotion.targetScope == 'center_wide') {
-      return 'Valid with any doctor at this center';
-    }
-    final n = promotion.targetDoctorIds.length;
-    return 'Applies to: $n ${n == 1 ? 'doctor' : 'doctors'}';
   }
 }
