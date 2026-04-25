@@ -342,7 +342,10 @@ class _BodyState extends State<_Body> {
                             WizardNoDataButton(
                               label: widget.noDataLabel,
                               anySelected: anySelected,
+                              confirmed: _noTapped,
                               onTap: () => setState(() => _noTapped = true),
+                              onChange: () =>
+                                  setState(() => _noTapped = false),
                             ),
                           ],
                         ),

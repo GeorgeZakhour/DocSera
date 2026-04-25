@@ -8,8 +8,8 @@ import 'package:docsera/gen_l10n/app_localizations.dart';
 import 'package:docsera/screens/home/health/wizard/health_profile_wizard_page.dart';
 import 'package:docsera/services/supabase/repositories/health_profile_repository.dart';
 
-/// Read-only view of the patient's lifestyle answers (sport / smoking /
-/// alcohol). Update CTA reopens the wizard.
+enum _LifestyleField { sport, smoking, alcohol }
+
 class LifestyleViewPage extends StatefulWidget {
   const LifestyleViewPage({super.key});
 
@@ -85,6 +85,136 @@ class _LifestyleViewPageState extends State<LifestyleViewPage> {
     }
   }
 
+  Future<void> _edit(_LifestyleField field) async {
+    final t = AppLocalizations.of(context)!;
+    final List<({String code, String label})> options;
+    final String currentCode;
+    final String title;
+
+    switch (field) {
+      case _LifestyleField.sport:
+        title = t.healthProfile_step_sport_title;
+        currentCode = _row?['sport_frequency'] as String? ?? '';
+        options = [
+          (code: 'never', label: t.healthProfile_freq_never),
+          (code: 'less_than_weekly', label: t.healthProfile_freq_lt_weekly),
+          (code: '1_2', label: t.healthProfile_freq_1_2),
+          (code: '3_4', label: t.healthProfile_freq_3_4),
+          (code: '5_plus', label: t.healthProfile_freq_5_plus),
+        ];
+        break;
+      case _LifestyleField.smoking:
+        title = t.healthProfile_step_smoking_title;
+        currentCode = _row?['smoking_status'] as String? ?? '';
+        options = [
+          (code: 'never', label: t.healthProfile_smoking_never),
+          (code: 'former', label: t.healthProfile_smoking_former),
+          (code: 'occasional', label: t.healthProfile_smoking_occasional),
+          (code: 'daily', label: t.healthProfile_smoking_daily),
+        ];
+        break;
+      case _LifestyleField.alcohol:
+        title = t.healthProfile_step_alcohol_title;
+        currentCode = _row?['alcohol_frequency'] as String? ?? '';
+        options = [
+          (code: 'never', label: t.healthProfile_freq_never),
+          (code: 'less_than_weekly', label: t.healthProfile_freq_lt_weekly),
+          (code: '1_2', label: t.healthProfile_freq_1_2),
+          (code: '3_4', label: t.healthProfile_freq_3_4),
+          (code: '5_plus', label: t.healthProfile_freq_5_plus),
+        ];
+        break;
+    }
+
+    final selected = await showModalBottomSheet<String>(
+      context: context,
+      backgroundColor: Colors.white,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(24.r)),
+      ),
+      builder: (sheetCtx) => SafeArea(
+        child: Padding(
+          padding: EdgeInsets.fromLTRB(20.w, 20.h, 20.w, 12.h),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                title,
+                style: AppTextStyles.getTitle2(context).copyWith(
+                  color: AppColors.mainDark,
+                ),
+              ),
+              SizedBox(height: 16.h),
+              ...options.map((o) {
+                final isSel = o.code == currentCode;
+                return InkWell(
+                  onTap: () => Navigator.pop(sheetCtx, o.code),
+                  borderRadius: BorderRadius.circular(12.r),
+                  child: Container(
+                    padding: EdgeInsets.symmetric(
+                      horizontal: 14.w,
+                      vertical: 14.h,
+                    ),
+                    margin: EdgeInsets.only(bottom: 6.h),
+                    decoration: BoxDecoration(
+                      color: isSel
+                          ? AppColors.main.withValues(alpha: 0.08)
+                          : null,
+                      borderRadius: BorderRadius.circular(12.r),
+                      border: Border.all(
+                        color: AppColors.main.withValues(
+                          alpha: isSel ? 0.3 : 0.10,
+                        ),
+                      ),
+                    ),
+                    child: Row(
+                      children: [
+                        Expanded(
+                          child: Text(
+                            o.label,
+                            style: AppTextStyles.getText1(context).copyWith(
+                              color: isSel
+                                  ? AppColors.mainDark
+                                  : AppColors.blackText,
+                              fontWeight:
+                                  isSel ? FontWeight.w700 : FontWeight.w500,
+                            ),
+                          ),
+                        ),
+                        if (isSel)
+                          Icon(
+                            Icons.check_rounded,
+                            color: AppColors.main,
+                            size: 20.sp,
+                          ),
+                      ],
+                    ),
+                  ),
+                );
+              }),
+            ],
+          ),
+        ),
+      ),
+    );
+
+    if (selected == null) return;
+
+    switch (field) {
+      case _LifestyleField.sport:
+        await _repo.upsertVitalsLifestyle(sportFrequency: selected);
+        break;
+      case _LifestyleField.smoking:
+        await _repo.upsertVitalsLifestyle(smokingStatus: selected);
+        break;
+      case _LifestyleField.alcohol:
+        await _repo.upsertVitalsLifestyle(alcoholFrequency: selected);
+        break;
+    }
+    await _load();
+  }
+
   @override
   Widget build(BuildContext context) {
     final t = AppLocalizations.of(context)!;
@@ -125,48 +255,27 @@ class _LifestyleViewPageState extends State<LifestyleViewPage> {
     String? smoking,
     String? alcohol,
   ) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.stretch,
+    return ListView(
       children: [
         _LifestyleRow(
           icon: Icons.directions_run_rounded,
           label: t.healthProfile_step_sport_title,
           value: _freqLabel(t, sport) ?? '—',
+          onTap: () => _edit(_LifestyleField.sport),
         ),
         SizedBox(height: 10.h),
         _LifestyleRow(
           icon: Icons.smoking_rooms_rounded,
           label: t.healthProfile_step_smoking_title,
           value: _smokingLabel(t, smoking) ?? '—',
+          onTap: () => _edit(_LifestyleField.smoking),
         ),
         SizedBox(height: 10.h),
         _LifestyleRow(
           icon: Icons.local_bar_rounded,
           label: t.healthProfile_step_alcohol_title,
           value: _freqLabel(t, alcohol) ?? '—',
-        ),
-        const Spacer(),
-        SizedBox(
-          width: double.infinity,
-          child: ElevatedButton(
-            onPressed: _openWizard,
-            style: ElevatedButton.styleFrom(
-              backgroundColor: AppColors.main,
-              foregroundColor: Colors.white,
-              elevation: 0,
-              padding: EdgeInsets.symmetric(vertical: 14.h),
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(12.r),
-              ),
-            ),
-            child: Text(
-              t.healthProfile_view_update,
-              style: AppTextStyles.getText2(context).copyWith(
-                color: Colors.white,
-                fontWeight: FontWeight.bold,
-              ),
-            ),
-          ),
+          onTap: () => _edit(_LifestyleField.alcohol),
         ),
       ],
     );
@@ -177,57 +286,71 @@ class _LifestyleRow extends StatelessWidget {
   final IconData icon;
   final String label;
   final String value;
+  final VoidCallback onTap;
   const _LifestyleRow({
     required this.icon,
     required this.label,
     required this.value,
+    required this.onTap,
   });
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 14.h),
-      decoration: BoxDecoration(
-        color: Colors.white,
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+        onTap: onTap,
         borderRadius: BorderRadius.circular(16.r),
-        border: Border.all(color: AppColors.main.withValues(alpha: 0.10)),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
+        child: Container(
+          padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 14.h),
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(16.r),
+            border: Border.all(color: AppColors.main.withValues(alpha: 0.10)),
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Container(
-                width: 32.w,
-                height: 32.w,
-                decoration: BoxDecoration(
-                  shape: BoxShape.circle,
-                  color: AppColors.main.withValues(alpha: 0.10),
-                ),
-                child: Icon(icon, size: 18.sp, color: AppColors.mainDark),
-              ),
-              SizedBox(width: 10.w),
-              Expanded(
-                child: Text(
-                  label,
-                  style: AppTextStyles.getText2(context).copyWith(
-                    color: AppColors.grayMain,
+              Row(
+                children: [
+                  Container(
+                    width: 32.w,
+                    height: 32.w,
+                    decoration: BoxDecoration(
+                      shape: BoxShape.circle,
+                      color: AppColors.main.withValues(alpha: 0.10),
+                    ),
+                    child: Icon(icon, size: 18.sp, color: AppColors.mainDark),
                   ),
-                  maxLines: 2,
-                  overflow: TextOverflow.ellipsis,
+                  SizedBox(width: 10.w),
+                  Expanded(
+                    child: Text(
+                      label,
+                      style: AppTextStyles.getText2(context).copyWith(
+                        color: AppColors.grayMain,
+                      ),
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                  ),
+                  Icon(
+                    Icons.chevron_right_rounded,
+                    color: AppColors.grayMain.withValues(alpha: 0.6),
+                    size: 18.sp,
+                  ),
+                ],
+              ),
+              SizedBox(height: 6.h),
+              Text(
+                value,
+                style: AppTextStyles.getText1(context).copyWith(
+                  color: AppColors.mainDark,
+                  fontWeight: FontWeight.w700,
                 ),
               ),
             ],
           ),
-          SizedBox(height: 6.h),
-          Text(
-            value,
-            style: AppTextStyles.getText1(context).copyWith(
-              color: AppColors.mainDark,
-              fontWeight: FontWeight.w700,
-            ),
-          ),
-        ],
+        ),
       ),
     );
   }

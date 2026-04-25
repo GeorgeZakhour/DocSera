@@ -7976,6 +7976,42 @@ abstract class AppLocalizations {
   /// **'Start'**
   String get healthProfile_points_inline_cta;
 
+  /// No description provided for @healthProfile_error_title.
+  ///
+  /// In en, this message translates to:
+  /// **'Something went wrong'**
+  String get healthProfile_error_title;
+
+  /// No description provided for @healthProfile_error_retry.
+  ///
+  /// In en, this message translates to:
+  /// **'Try again'**
+  String get healthProfile_error_retry;
+
+  /// No description provided for @healthProfile_error_close.
+  ///
+  /// In en, this message translates to:
+  /// **'Close'**
+  String get healthProfile_error_close;
+
+  /// No description provided for @healthProfile_no_entry_confirmed.
+  ///
+  /// In en, this message translates to:
+  /// **'No entries — confirmed'**
+  String get healthProfile_no_entry_confirmed;
+
+  /// No description provided for @healthProfile_change.
+  ///
+  /// In en, this message translates to:
+  /// **'Change'**
+  String get healthProfile_change;
+
+  /// No description provided for @healthProfile_bmi_explanation.
+  ///
+  /// In en, this message translates to:
+  /// **'Calculated automatically from your height and weight.'**
+  String get healthProfile_bmi_explanation;
+
   /// No description provided for @healthProfile_step_allergies_title.
   ///
   /// In en, this message translates to:

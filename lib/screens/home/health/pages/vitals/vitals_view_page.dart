@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
@@ -8,9 +9,9 @@ import 'package:docsera/gen_l10n/app_localizations.dart';
 import 'package:docsera/screens/home/health/wizard/health_profile_wizard_page.dart';
 import 'package:docsera/services/supabase/repositories/health_profile_repository.dart';
 
-/// Read-only view of the patient's vitals (height, weight, BMI).
-/// Tapping the bottom CTA reopens the wizard so the user can edit;
-/// the RPC is idempotent so no points are re-awarded.
+/// View + inline-edit page for the patient's vitals (height, weight, BMI).
+/// Tap any row to update that field via a small dialog. BMI is read-only
+/// because it's derived from height + weight.
 class VitalsViewPage extends StatefulWidget {
   const VitalsViewPage({super.key});
 
@@ -54,6 +55,150 @@ class _VitalsViewPageState extends State<VitalsViewPage> {
     ).then((_) => _load());
   }
 
+  Future<void> _editHeight() async {
+    final t = AppLocalizations.of(context)!;
+    final current = _row?['height_cm'] as num?;
+    final result = await _showNumberEditDialog(
+      title: t.healthProfile_step_height_title,
+      label: t.healthProfile_step_height_input,
+      initial: current?.toString(),
+    );
+    if (result == null) return;
+    await _repo.upsertVitalsLifestyle(heightCm: result);
+    await _load();
+  }
+
+  Future<void> _editWeight() async {
+    final t = AppLocalizations.of(context)!;
+    final current = _row?['weight_kg'] as num?;
+    final result = await _showNumberEditDialog(
+      title: t.healthProfile_step_weight_title,
+      label: t.healthProfile_step_weight_input,
+      initial: current?.toString(),
+    );
+    if (result == null) return;
+    await _repo.upsertVitalsLifestyle(weightKg: result);
+    await _load();
+  }
+
+  Future<num?> _showNumberEditDialog({
+    required String title,
+    required String label,
+    required String? initial,
+  }) {
+    final t = AppLocalizations.of(context)!;
+    final controller = TextEditingController(text: initial ?? '');
+    return showDialog<num?>(
+      context: context,
+      builder: (dialogCtx) => Dialog(
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(20.r),
+        ),
+        child: Padding(
+          padding: EdgeInsets.fromLTRB(20.w, 20.h, 20.w, 16.h),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              Text(
+                title,
+                style: AppTextStyles.getTitle2(context).copyWith(
+                  color: AppColors.mainDark,
+                ),
+              ),
+              SizedBox(height: 14.h),
+              TextField(
+                controller: controller,
+                keyboardType:
+                    const TextInputType.numberWithOptions(decimal: false),
+                inputFormatters: [FilteringTextInputFormatter.digitsOnly],
+                autofocus: true,
+                style: AppTextStyles.getText1(context).copyWith(
+                  color: AppColors.mainDark,
+                  fontWeight: FontWeight.w600,
+                ),
+                decoration: InputDecoration(
+                  labelText: label,
+                  labelStyle: AppTextStyles.getText2(context).copyWith(
+                    color: Colors.grey,
+                  ),
+                  contentPadding: EdgeInsets.symmetric(
+                    horizontal: 18.w,
+                    vertical: 14.h,
+                  ),
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(25.r),
+                    borderSide: const BorderSide(color: Colors.grey),
+                  ),
+                  enabledBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(25.r),
+                    borderSide: const BorderSide(color: Colors.grey),
+                  ),
+                  focusedBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(25.r),
+                    borderSide:
+                        const BorderSide(color: AppColors.main, width: 2),
+                  ),
+                ),
+              ),
+              SizedBox(height: 16.h),
+              Row(
+                children: [
+                  Expanded(
+                    child: OutlinedButton(
+                      onPressed: () => Navigator.pop(dialogCtx),
+                      style: OutlinedButton.styleFrom(
+                        padding: EdgeInsets.symmetric(vertical: 12.h),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12.r),
+                        ),
+                        side: BorderSide(
+                          color: AppColors.grayMain.withValues(alpha: 0.5),
+                        ),
+                      ),
+                      child: Text(
+                        t.cancel,
+                        style: AppTextStyles.getText2(context).copyWith(
+                          color: AppColors.grayMain,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                    ),
+                  ),
+                  SizedBox(width: 10.w),
+                  Expanded(
+                    child: ElevatedButton(
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: AppColors.main,
+                        foregroundColor: Colors.white,
+                        elevation: 0,
+                        padding: EdgeInsets.symmetric(vertical: 12.h),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12.r),
+                        ),
+                      ),
+                      onPressed: () {
+                        final v = int.tryParse(controller.text.trim());
+                        Navigator.pop(dialogCtx, v);
+                      },
+                      child: Text(
+                        t.save,
+                        style: AppTextStyles.getText2(context).copyWith(
+                          color: Colors.white,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final t = AppLocalizations.of(context)!;
@@ -85,109 +230,122 @@ class _VitalsViewPageState extends State<VitalsViewPage> {
               padding: EdgeInsets.fromLTRB(20.w, 12.h, 20.w, 16.h),
               child: hasAny
                   ? _buildLoaded(t, height, weight, bmi)
-                  : _buildEmpty(t),
+                  : _EmptyView(onComplete: _openWizard),
             ),
     );
   }
 
   Widget _buildLoaded(AppLocalizations t, num? height, num? weight, num? bmi) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.stretch,
+    return ListView(
       children: [
-        _ValueCard(
+        _ValueRow(
           icon: Icons.height_rounded,
           label: t.vital_height,
           value: height == null ? '—' : '$height cm',
+          onTap: _editHeight,
         ),
         SizedBox(height: 10.h),
-        _ValueCard(
+        _ValueRow(
           icon: Icons.monitor_weight_rounded,
           label: t.vital_weight,
           value: weight == null ? '—' : '$weight kg',
+          onTap: _editWeight,
         ),
         SizedBox(height: 10.h),
-        _ValueCard(
+        _ValueRow(
           icon: Icons.straighten_rounded,
           label: t.healthProfile_view_bmi_label,
+          subtitle: t.healthProfile_bmi_explanation,
           value: bmi == null ? '—' : bmi.toStringAsFixed(1),
-        ),
-        const Spacer(),
-        SizedBox(
-          width: double.infinity,
-          child: ElevatedButton(
-            onPressed: _openWizard,
-            style: ElevatedButton.styleFrom(
-              backgroundColor: AppColors.main,
-              foregroundColor: Colors.white,
-              elevation: 0,
-              padding: EdgeInsets.symmetric(vertical: 14.h),
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(12.r),
-              ),
-            ),
-            child: Text(
-              t.healthProfile_view_update,
-              style: AppTextStyles.getText2(context).copyWith(
-                color: Colors.white,
-                fontWeight: FontWeight.bold,
-              ),
-            ),
-          ),
+          onTap: null, // computed — not editable
         ),
       ],
     );
   }
-
-  Widget _buildEmpty(AppLocalizations t) => _EmptyView(onComplete: _openWizard);
 }
 
-class _ValueCard extends StatelessWidget {
+class _ValueRow extends StatelessWidget {
   final IconData icon;
   final String label;
+  final String? subtitle;
   final String value;
-  const _ValueCard({
+  final VoidCallback? onTap;
+  const _ValueRow({
     required this.icon,
     required this.label,
+    this.subtitle,
     required this.value,
+    required this.onTap,
   });
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 14.h),
-      decoration: BoxDecoration(
-        color: Colors.white,
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+        onTap: onTap,
         borderRadius: BorderRadius.circular(16.r),
-        border: Border.all(color: AppColors.main.withValues(alpha: 0.10)),
-      ),
-      child: Row(
-        children: [
-          Container(
-            width: 36.w,
-            height: 36.w,
-            decoration: BoxDecoration(
-              shape: BoxShape.circle,
-              color: AppColors.main.withValues(alpha: 0.10),
-            ),
-            child: Icon(icon, size: 20.sp, color: AppColors.mainDark),
+        child: Container(
+          padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 14.h),
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(16.r),
+            border:
+                Border.all(color: AppColors.main.withValues(alpha: 0.10)),
           ),
-          SizedBox(width: 12.w),
-          Expanded(
-            child: Text(
-              label,
-              style: AppTextStyles.getText2(context).copyWith(
-                color: AppColors.grayMain,
+          child: Row(
+            children: [
+              Container(
+                width: 36.w,
+                height: 36.w,
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  color: AppColors.main.withValues(alpha: 0.10),
+                ),
+                child: Icon(icon, size: 20.sp, color: AppColors.mainDark),
               ),
-            ),
+              SizedBox(width: 12.w),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      label,
+                      style: AppTextStyles.getText2(context).copyWith(
+                        color: AppColors.grayMain,
+                      ),
+                    ),
+                    if (subtitle != null) ...[
+                      SizedBox(height: 2.h),
+                      Text(
+                        subtitle!,
+                        style: AppTextStyles.getText3(context).copyWith(
+                          color: AppColors.grayMain.withValues(alpha: 0.85),
+                          fontStyle: FontStyle.italic,
+                        ),
+                      ),
+                    ],
+                  ],
+                ),
+              ),
+              Text(
+                value,
+                style: AppTextStyles.getText1(context).copyWith(
+                  color: AppColors.mainDark,
+                  fontWeight: FontWeight.w700,
+                ),
+              ),
+              if (onTap != null) ...[
+                SizedBox(width: 6.w),
+                Icon(
+                  Icons.chevron_right_rounded,
+                  color: AppColors.grayMain.withValues(alpha: 0.6),
+                  size: 18.sp,
+                ),
+              ],
+            ],
           ),
-          Text(
-            value,
-            style: AppTextStyles.getText1(context).copyWith(
-              color: AppColors.mainDark,
-              fontWeight: FontWeight.w700,
-            ),
-          ),
-        ],
+        ),
       ),
     );
   }

@@ -4280,6 +4280,25 @@ class AppLocalizationsEn extends AppLocalizations {
   String get healthProfile_points_inline_cta => 'Start';
 
   @override
+  String get healthProfile_error_title => 'Something went wrong';
+
+  @override
+  String get healthProfile_error_retry => 'Try again';
+
+  @override
+  String get healthProfile_error_close => 'Close';
+
+  @override
+  String get healthProfile_no_entry_confirmed => 'No entries — confirmed';
+
+  @override
+  String get healthProfile_change => 'Change';
+
+  @override
+  String get healthProfile_bmi_explanation =>
+      'Calculated automatically from your height and weight.';
+
+  @override
   String get healthProfile_step_allergies_title =>
       'Do you have any allergies or intolerances?';
 

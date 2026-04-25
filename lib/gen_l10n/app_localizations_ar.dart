@@ -4231,6 +4231,24 @@ class AppLocalizationsAr extends AppLocalizations {
   String get healthProfile_points_inline_cta => 'ابدأ';
 
   @override
+  String get healthProfile_error_title => 'حدث خطأ ما';
+
+  @override
+  String get healthProfile_error_retry => 'إعادة المحاولة';
+
+  @override
+  String get healthProfile_error_close => 'إغلاق';
+
+  @override
+  String get healthProfile_no_entry_confirmed => 'بدون مدخلات — تم التأكيد';
+
+  @override
+  String get healthProfile_change => 'تغيير';
+
+  @override
+  String get healthProfile_bmi_explanation => 'يُحسب تلقائياً من طولك ووزنك.';
+
+  @override
   String get healthProfile_step_allergies_title =>
       'هل لديك حساسية أو عدم تحمل لأي مادة؟';
 

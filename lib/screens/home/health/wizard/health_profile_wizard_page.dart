@@ -149,18 +149,88 @@ class _Body extends StatelessWidget {
           );
         }
         if (state is WizardError) {
+          final cubit = context.read<HealthProfileWizardCubit>();
           return Scaffold(
             backgroundColor: AppColors.background,
-            body: Center(
-              child: Padding(
-                padding: EdgeInsets.symmetric(horizontal: 24.w),
-                child: Text(
-                  state.message,
-                  textAlign: TextAlign.center,
-                  style: AppTextStyles.getText1(context).copyWith(
-                    color: AppColors.grayMain,
+            appBar: AppBar(
+              backgroundColor: AppColors.background,
+              surfaceTintColor: Colors.transparent,
+              elevation: 0,
+              leading: IconButton(
+                onPressed: () => Navigator.of(context).pop(),
+                icon: const Icon(Icons.close_rounded,
+                    color: AppColors.mainDark),
+              ),
+            ),
+            body: Padding(
+              padding: EdgeInsets.symmetric(horizontal: 24.w),
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Container(
+                    width: 72.w,
+                    height: 72.w,
+                    decoration: BoxDecoration(
+                      shape: BoxShape.circle,
+                      color: AppColors.main.withValues(alpha: 0.10),
+                    ),
+                    child: Icon(
+                      Icons.error_outline_rounded,
+                      size: 36.sp,
+                      color: AppColors.main,
+                    ),
                   ),
-                ),
+                  SizedBox(height: 16.h),
+                  Text(
+                    t.healthProfile_error_title,
+                    textAlign: TextAlign.center,
+                    style: AppTextStyles.getTitle2(context).copyWith(
+                      color: AppColors.mainDark,
+                    ),
+                  ),
+                  SizedBox(height: 8.h),
+                  Text(
+                    state.message,
+                    textAlign: TextAlign.center,
+                    style: AppTextStyles.getText3(context).copyWith(
+                      color: AppColors.grayMain,
+                      height: 1.5,
+                    ),
+                  ),
+                  SizedBox(height: 24.h),
+                  SizedBox(
+                    width: double.infinity,
+                    child: ElevatedButton(
+                      onPressed: () => cubit.init(),
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: AppColors.main,
+                        foregroundColor: Colors.white,
+                        elevation: 0,
+                        padding: EdgeInsets.symmetric(vertical: 12.h),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12.r),
+                        ),
+                      ),
+                      child: Text(
+                        t.healthProfile_error_retry,
+                        style: AppTextStyles.getText2(context).copyWith(
+                          color: Colors.white,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                    ),
+                  ),
+                  SizedBox(height: 8.h),
+                  TextButton(
+                    onPressed: () => Navigator.of(context).pop(),
+                    child: Text(
+                      t.healthProfile_error_close,
+                      style: AppTextStyles.getText2(context).copyWith(
+                        color: AppColors.grayMain,
+                      ),
+                    ),
+                  ),
+                ],
               ),
             ),
           );
@@ -188,11 +258,9 @@ class _Body extends StatelessWidget {
               icon: Icon(
                 s.stepIndex == 0
                     ? Icons.close_rounded
-                    : (Directionality.of(context) == TextDirection.rtl
-                        ? Icons.chevron_right_rounded
-                        : Icons.chevron_left_rounded),
+                    : Icons.arrow_back_ios_rounded,
                 color: AppColors.mainDark,
-                size: 24.sp,
+                size: s.stepIndex == 0 ? 24.sp : 18.sp,
               ),
             ),
             title: Text(
