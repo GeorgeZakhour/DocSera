@@ -4291,4 +4291,47 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get healthProfile_points_row_title => 'اكتمل ملفك الصحي';
+
+  @override
+  String get browseOffersWithPoints => 'تصفّح العروض مقابل نقاطك';
+
+  @override
+  String get pharmacies => 'صيدليات';
+
+  @override
+  String get labs => 'مخابر';
+
+  @override
+  String get opticalShops => 'نظارات';
+
+  @override
+  String get clinics => 'عيادات';
+
+  @override
+  String get featuredPartners => 'شركاؤنا المميزون';
+
+  @override
+  String get allOffersTitle => 'جميع العروض';
+
+  @override
+  String viewAllOffersFromPartner(int count) {
+    return 'عرض جميع العروض ($count)';
+  }
+
+  @override
+  String get aboutPartner => 'عن الشريك';
+
+  @override
+  String get partnerBadge => 'شريك صحي';
+
+  @override
+  String get noActiveOffersFromPartner => 'لا توجد عروض نشطة حاليًا.';
+
+  @override
+  String get partnerUnavailable => 'الشريك غير متاح';
+
+  @override
+  String xLeft(int count) {
+    return 'متبقّي $count';
+  }
 }

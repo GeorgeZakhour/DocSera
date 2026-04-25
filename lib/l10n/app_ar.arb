@@ -1623,5 +1623,19 @@
   "healthProfile_completion_cta": "تم",
   "healthProfile_pointsAwarded": "+15 نقطة",
 
-  "healthProfile_points_row_title": "اكتمل ملفك الصحي"
+  "healthProfile_points_row_title": "اكتمل ملفك الصحي",
+
+  "browseOffersWithPoints": "تصفّح العروض مقابل نقاطك",
+  "pharmacies": "صيدليات",
+  "labs": "مخابر",
+  "opticalShops": "نظارات",
+  "clinics": "عيادات",
+  "featuredPartners": "شركاؤنا المميزون",
+  "allOffersTitle": "جميع العروض",
+  "viewAllOffersFromPartner": "عرض جميع العروض ({count})",
+  "aboutPartner": "عن الشريك",
+  "partnerBadge": "شريك صحي",
+  "noActiveOffersFromPartner": "لا توجد عروض نشطة حاليًا.",
+  "partnerUnavailable": "الشريك غير متاح",
+  "xLeft": "متبقّي {count}"
 }

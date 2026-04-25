@@ -4342,4 +4342,48 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get healthProfile_points_row_title => 'Health profile completed';
+
+  @override
+  String get browseOffersWithPoints => 'Browse offers with your points';
+
+  @override
+  String get pharmacies => 'Pharmacies';
+
+  @override
+  String get labs => 'Labs';
+
+  @override
+  String get opticalShops => 'Optical';
+
+  @override
+  String get clinics => 'Clinics';
+
+  @override
+  String get featuredPartners => 'Featured Partners';
+
+  @override
+  String get allOffersTitle => 'All Offers';
+
+  @override
+  String viewAllOffersFromPartner(int count) {
+    return 'View all offers ($count)';
+  }
+
+  @override
+  String get aboutPartner => 'About';
+
+  @override
+  String get partnerBadge => 'Health Partner';
+
+  @override
+  String get noActiveOffersFromPartner =>
+      'This partner has no active offers right now.';
+
+  @override
+  String get partnerUnavailable => 'Partner unavailable';
+
+  @override
+  String xLeft(int count) {
+    return '$count left';
+  }
 }

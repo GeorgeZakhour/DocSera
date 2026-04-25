@@ -1604,5 +1604,36 @@
   "healthProfile_completion_cta": "Got it",
   "healthProfile_pointsAwarded": "+15 points",
 
-  "healthProfile_points_row_title": "Health profile completed"
+  "healthProfile_points_row_title": "Health profile completed",
+
+  "browseOffersWithPoints": "Browse offers with your points",
+  "@browseOffersWithPoints": {},
+  "pharmacies": "Pharmacies",
+  "@pharmacies": {},
+  "labs": "Labs",
+  "@labs": {},
+  "opticalShops": "Optical",
+  "@opticalShops": {},
+  "clinics": "Clinics",
+  "@clinics": {},
+  "featuredPartners": "Featured Partners",
+  "@featuredPartners": {},
+  "allOffersTitle": "All Offers",
+  "@allOffersTitle": {},
+  "viewAllOffersFromPartner": "View all offers ({count})",
+  "@viewAllOffersFromPartner": {
+    "placeholders": { "count": { "type": "int" } }
+  },
+  "aboutPartner": "About",
+  "@aboutPartner": {},
+  "partnerBadge": "Health Partner",
+  "@partnerBadge": {},
+  "noActiveOffersFromPartner": "This partner has no active offers right now.",
+  "@noActiveOffersFromPartner": {},
+  "partnerUnavailable": "Partner unavailable",
+  "@partnerUnavailable": {},
+  "xLeft": "{count} left",
+  "@xLeft": {
+    "placeholders": { "count": { "type": "int" } }
+  }
 }

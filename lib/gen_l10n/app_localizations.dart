@@ -8083,6 +8083,84 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Health profile completed'**
   String get healthProfile_points_row_title;
+
+  /// No description provided for @browseOffersWithPoints.
+  ///
+  /// In en, this message translates to:
+  /// **'Browse offers with your points'**
+  String get browseOffersWithPoints;
+
+  /// No description provided for @pharmacies.
+  ///
+  /// In en, this message translates to:
+  /// **'Pharmacies'**
+  String get pharmacies;
+
+  /// No description provided for @labs.
+  ///
+  /// In en, this message translates to:
+  /// **'Labs'**
+  String get labs;
+
+  /// No description provided for @opticalShops.
+  ///
+  /// In en, this message translates to:
+  /// **'Optical'**
+  String get opticalShops;
+
+  /// No description provided for @clinics.
+  ///
+  /// In en, this message translates to:
+  /// **'Clinics'**
+  String get clinics;
+
+  /// No description provided for @featuredPartners.
+  ///
+  /// In en, this message translates to:
+  /// **'Featured Partners'**
+  String get featuredPartners;
+
+  /// No description provided for @allOffersTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'All Offers'**
+  String get allOffersTitle;
+
+  /// No description provided for @viewAllOffersFromPartner.
+  ///
+  /// In en, this message translates to:
+  /// **'View all offers ({count})'**
+  String viewAllOffersFromPartner(int count);
+
+  /// No description provided for @aboutPartner.
+  ///
+  /// In en, this message translates to:
+  /// **'About'**
+  String get aboutPartner;
+
+  /// No description provided for @partnerBadge.
+  ///
+  /// In en, this message translates to:
+  /// **'Health Partner'**
+  String get partnerBadge;
+
+  /// No description provided for @noActiveOffersFromPartner.
+  ///
+  /// In en, this message translates to:
+  /// **'This partner has no active offers right now.'**
+  String get noActiveOffersFromPartner;
+
+  /// No description provided for @partnerUnavailable.
+  ///
+  /// In en, this message translates to:
+  /// **'Partner unavailable'**
+  String get partnerUnavailable;
+
+  /// No description provided for @xLeft.
+  ///
+  /// In en, this message translates to:
+  /// **'{count} left'**
+  String xLeft(int count);
 }
 
 class _AppLocalizationsDelegate
