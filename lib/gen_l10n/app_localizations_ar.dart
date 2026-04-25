@@ -3719,6 +3719,9 @@ class AppLocalizationsAr extends AppLocalizations {
   String get earnPointsReferred => 'انضم عبر دعوة: +15 نقطة';
 
   @override
+  String get earnPointsHealthProfile => '+15 — أكمل ملفك الصحي (مرة واحدة فقط)';
+
+  @override
   String get pointsValue => '١ نقطة ≈ ٥٠٠ ل.س';
 
   @override
@@ -4094,4 +4097,171 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get couldNotClaimTryAgain => 'تعذّر الحصول على العرض — حاول مرة أخرى';
+
+  @override
+  String get healthProfile_wizard_title => 'الملف الصحي';
+
+  @override
+  String get healthProfile_skip_step => 'تخطّي هذه الخطوة';
+
+  @override
+  String get healthProfile_step_height_title => 'كم طولك؟';
+
+  @override
+  String get healthProfile_step_height_input => 'الطول (سم)';
+
+  @override
+  String get healthProfile_step_weight_title => 'كم وزنك حالياً؟';
+
+  @override
+  String get healthProfile_step_weight_input => 'الوزن (كجم)';
+
+  @override
+  String get healthProfile_step_sport_title => 'كم مرة تمارس الرياضة؟';
+
+  @override
+  String get healthProfile_step_sport_subtitle =>
+      'يشمل أي رياضة أو نشاط بدني مكثّف مثل الجري والسباحة والمشي وركوب الدراجة.';
+
+  @override
+  String get healthProfile_step_smoking_title =>
+      'هل تدخّن منتجات التبغ أو النيكوتين؟';
+
+  @override
+  String get healthProfile_step_smoking_subtitle =>
+      'مثل: سيجارة، سيجارة إلكترونية، سيجار، حشيش.';
+
+  @override
+  String get healthProfile_step_alcohol_title => 'كم مرة تتناول الكحول؟';
+
+  @override
+  String get healthProfile_step_alcohol_subtitle =>
+      'يشمل النبيذ والبيرة والكوكتيلات والمشروبات الروحية.';
+
+  @override
+  String get healthProfile_freq_never => 'أبدًا';
+
+  @override
+  String get healthProfile_freq_lt_weekly => 'أقل من مرة في الأسبوع';
+
+  @override
+  String get healthProfile_freq_1_2 => '1 إلى 2 مرة في الأسبوع';
+
+  @override
+  String get healthProfile_freq_3_4 => '3 إلى 4 مرات في الأسبوع';
+
+  @override
+  String get healthProfile_freq_5_plus => '5 مرات أو أكثر في الأسبوع';
+
+  @override
+  String get healthProfile_smoking_never => 'أبدًا';
+
+  @override
+  String get healthProfile_smoking_former => 'مستخدم سابق';
+
+  @override
+  String get healthProfile_smoking_occasional => 'نعم، أحيانًا';
+
+  @override
+  String get healthProfile_smoking_daily => 'نعم، يوميًا';
+
+  @override
+  String get healthProfile_already_in_profile => 'موجود مسبقاً في ملفك';
+
+  @override
+  String get healthProfile_step_allergies_title =>
+      'هل لديك حساسية أو عدم تحمل لأي مادة؟';
+
+  @override
+  String get healthProfile_step_allergies_subtitle =>
+      'اختر كل ما ينطبق عليك. يمكنك إضافة حساسية إن لم تكن مدرجة.';
+
+  @override
+  String get healthProfile_step_allergies_addCustom => '+ إضافة حساسية';
+
+  @override
+  String get healthProfile_step_allergies_none => 'لا توجد حساسية';
+
+  @override
+  String get healthProfile_step_conditions_title =>
+      'هل تعاني من حالة طبية مزمنة؟';
+
+  @override
+  String get healthProfile_step_conditions_subtitle =>
+      'اختر كل ما ينطبق عليك. يمكنك إضافة حالة إن لم تكن مدرجة.';
+
+  @override
+  String get healthProfile_step_conditions_addCustom => '+ إضافة حالة';
+
+  @override
+  String get healthProfile_step_conditions_none => 'لا توجد حالة';
+
+  @override
+  String get healthProfile_step_surgeries_title => 'هل أجريت أي عملية جراحية؟';
+
+  @override
+  String get healthProfile_step_surgeries_subtitle =>
+      'اختر كل ما ينطبق عليك. يمكنك إضافة عملية إن لم تكن مدرجة.';
+
+  @override
+  String get healthProfile_step_surgeries_addCustom => '+ إضافة عملية';
+
+  @override
+  String get healthProfile_step_surgeries_none => 'لا توجد عمليات جراحية';
+
+  @override
+  String get healthProfile_step_family_title =>
+      'هل توجد أمراض موروثة في عائلتك؟';
+
+  @override
+  String get healthProfile_step_family_subtitle =>
+      'اختر الأمراض الموجودة في عائلتك البيولوجية. يمكنك إضافة حالة إن لم تكن مدرجة.';
+
+  @override
+  String get healthProfile_step_family_addCustom => '+ إضافة حالة';
+
+  @override
+  String get healthProfile_step_family_none => 'لا يوجد تاريخ عائلي';
+
+  @override
+  String get healthProfile_step_medications_title =>
+      'هل تتناول أي دواء بشكل منتظم؟';
+
+  @override
+  String get healthProfile_step_medications_subtitle =>
+      'ابحث باسم الدواء أو المادة الفعّالة — مثلاً: أسبرين أو حمض أسيتيل الساليسيليك.';
+
+  @override
+  String get healthProfile_step_medications_addCustom => '+ إضافة دواء';
+
+  @override
+  String get healthProfile_step_medications_none => 'لا أتناول أي دواء';
+
+  @override
+  String get healthProfile_banner_title => 'أكمل ملفك الصحي';
+
+  @override
+  String get healthProfile_banner_subtitle => 'اكسب +15 نقطة';
+
+  @override
+  String get healthProfile_banner_cta => 'ابدأ';
+
+  @override
+  String get healthProfile_completion_title => 'اكتمل ملفك الصحي';
+
+  @override
+  String get healthProfile_completion_body => 'ستجد كل معلوماتك في قسم الصحة';
+
+  @override
+  String get healthProfile_completion_alreadyBody =>
+      'تم احتسابها سابقاً — ستجد كل شيء في قسم الصحة';
+
+  @override
+  String get healthProfile_completion_cta => 'تم';
+
+  @override
+  String get healthProfile_pointsAwarded => '+15 نقطة';
+
+  @override
+  String get healthProfile_points_row_title => 'اكتمل ملفك الصحي';
 }

@@ -3761,6 +3761,10 @@ class AppLocalizationsEn extends AppLocalizations {
   String get earnPointsReferred => 'Join via referral: +15 points';
 
   @override
+  String get earnPointsHealthProfile =>
+      '+15 — Complete your health profile (one-time)';
+
+  @override
   String get pointsValue => '1 point ≈ 500 SYP';
 
   @override
@@ -4141,4 +4145,174 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get couldNotClaimTryAgain => 'Could not claim — try again';
+
+  @override
+  String get healthProfile_wizard_title => 'Health profile';
+
+  @override
+  String get healthProfile_skip_step => 'Skip this step';
+
+  @override
+  String get healthProfile_step_height_title => 'How tall are you?';
+
+  @override
+  String get healthProfile_step_height_input => 'Height (cm)';
+
+  @override
+  String get healthProfile_step_weight_title => 'How much do you weigh?';
+
+  @override
+  String get healthProfile_step_weight_input => 'Weight (kg)';
+
+  @override
+  String get healthProfile_step_sport_title => 'How often do you exercise?';
+
+  @override
+  String get healthProfile_step_sport_subtitle =>
+      'Includes any sport or vigorous activity like running, swimming, hiking, cycling.';
+
+  @override
+  String get healthProfile_step_smoking_title =>
+      'Do you smoke tobacco or nicotine products?';
+
+  @override
+  String get healthProfile_step_smoking_subtitle =>
+      'For example: cigarette, e-cigarette, cigar, cannabis.';
+
+  @override
+  String get healthProfile_step_alcohol_title =>
+      'How often do you drink alcohol?';
+
+  @override
+  String get healthProfile_step_alcohol_subtitle =>
+      'Includes wine, beer, cocktails and spirits.';
+
+  @override
+  String get healthProfile_freq_never => 'Never';
+
+  @override
+  String get healthProfile_freq_lt_weekly => 'Less than once a week';
+
+  @override
+  String get healthProfile_freq_1_2 => '1 to 2 times a week';
+
+  @override
+  String get healthProfile_freq_3_4 => '3 to 4 times a week';
+
+  @override
+  String get healthProfile_freq_5_plus => '5 or more times a week';
+
+  @override
+  String get healthProfile_smoking_never => 'Never';
+
+  @override
+  String get healthProfile_smoking_former => 'Former user';
+
+  @override
+  String get healthProfile_smoking_occasional => 'Yes, occasionally';
+
+  @override
+  String get healthProfile_smoking_daily => 'Yes, daily';
+
+  @override
+  String get healthProfile_already_in_profile => 'Already in your profile';
+
+  @override
+  String get healthProfile_step_allergies_title =>
+      'Do you have any allergies or intolerances?';
+
+  @override
+  String get healthProfile_step_allergies_subtitle =>
+      'Select all that apply. You can add an allergy if it isn\'t listed.';
+
+  @override
+  String get healthProfile_step_allergies_addCustom => '+ Add an allergy';
+
+  @override
+  String get healthProfile_step_allergies_none => 'No allergy';
+
+  @override
+  String get healthProfile_step_conditions_title =>
+      'Do you have a medical condition?';
+
+  @override
+  String get healthProfile_step_conditions_subtitle =>
+      'Select all that apply. You can add a condition if it isn\'t listed.';
+
+  @override
+  String get healthProfile_step_conditions_addCustom => '+ Add a condition';
+
+  @override
+  String get healthProfile_step_conditions_none => 'No condition';
+
+  @override
+  String get healthProfile_step_surgeries_title => 'Have you had any surgery?';
+
+  @override
+  String get healthProfile_step_surgeries_subtitle =>
+      'Select all that apply. You can add a surgery if it isn\'t listed.';
+
+  @override
+  String get healthProfile_step_surgeries_addCustom => '+ Add a surgery';
+
+  @override
+  String get healthProfile_step_surgeries_none => 'No surgery';
+
+  @override
+  String get healthProfile_step_family_title =>
+      'Are there any conditions in your family?';
+
+  @override
+  String get healthProfile_step_family_subtitle =>
+      'Select biological-family conditions. You can add a condition if it isn\'t listed.';
+
+  @override
+  String get healthProfile_step_family_addCustom => '+ Add a condition';
+
+  @override
+  String get healthProfile_step_family_none => 'No family history';
+
+  @override
+  String get healthProfile_step_medications_title =>
+      'Do you take any medication regularly?';
+
+  @override
+  String get healthProfile_step_medications_subtitle =>
+      'Search by medication name or active ingredient — for example, Aspirin or Acetylsalicylic acid.';
+
+  @override
+  String get healthProfile_step_medications_addCustom => '+ Add a medication';
+
+  @override
+  String get healthProfile_step_medications_none => 'No medication';
+
+  @override
+  String get healthProfile_banner_title => 'Complete your health profile';
+
+  @override
+  String get healthProfile_banner_subtitle => 'Earn +15 points';
+
+  @override
+  String get healthProfile_banner_cta => 'Start';
+
+  @override
+  String get healthProfile_completion_title =>
+      'Your health profile is complete';
+
+  @override
+  String get healthProfile_completion_body =>
+      'Find all your information in the Health section';
+
+  @override
+  String get healthProfile_completion_alreadyBody =>
+      'Already counted earlier — you\'ll find everything in the Health section';
+
+  @override
+  String get healthProfile_completion_cta => 'Got it';
+
+  @override
+  String get healthProfile_pointsAwarded => '+15 points';
+
+  @override
+  String get healthProfile_points_row_title => 'Health profile completed';
 }

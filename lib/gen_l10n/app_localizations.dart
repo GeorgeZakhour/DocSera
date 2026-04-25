@@ -7046,6 +7046,12 @@ abstract class AppLocalizations {
   /// **'Join via referral: +15 points'**
   String get earnPointsReferred;
 
+  /// No description provided for @earnPointsHealthProfile.
+  ///
+  /// In en, this message translates to:
+  /// **'+15 — Complete your health profile (one-time)'**
+  String get earnPointsHealthProfile;
+
   /// No description provided for @pointsValue.
   ///
   /// In en, this message translates to:
@@ -7717,6 +7723,312 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Could not claim — try again'**
   String get couldNotClaimTryAgain;
+
+  /// No description provided for @healthProfile_wizard_title.
+  ///
+  /// In en, this message translates to:
+  /// **'Health profile'**
+  String get healthProfile_wizard_title;
+
+  /// No description provided for @healthProfile_skip_step.
+  ///
+  /// In en, this message translates to:
+  /// **'Skip this step'**
+  String get healthProfile_skip_step;
+
+  /// No description provided for @healthProfile_step_height_title.
+  ///
+  /// In en, this message translates to:
+  /// **'How tall are you?'**
+  String get healthProfile_step_height_title;
+
+  /// No description provided for @healthProfile_step_height_input.
+  ///
+  /// In en, this message translates to:
+  /// **'Height (cm)'**
+  String get healthProfile_step_height_input;
+
+  /// No description provided for @healthProfile_step_weight_title.
+  ///
+  /// In en, this message translates to:
+  /// **'How much do you weigh?'**
+  String get healthProfile_step_weight_title;
+
+  /// No description provided for @healthProfile_step_weight_input.
+  ///
+  /// In en, this message translates to:
+  /// **'Weight (kg)'**
+  String get healthProfile_step_weight_input;
+
+  /// No description provided for @healthProfile_step_sport_title.
+  ///
+  /// In en, this message translates to:
+  /// **'How often do you exercise?'**
+  String get healthProfile_step_sport_title;
+
+  /// No description provided for @healthProfile_step_sport_subtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Includes any sport or vigorous activity like running, swimming, hiking, cycling.'**
+  String get healthProfile_step_sport_subtitle;
+
+  /// No description provided for @healthProfile_step_smoking_title.
+  ///
+  /// In en, this message translates to:
+  /// **'Do you smoke tobacco or nicotine products?'**
+  String get healthProfile_step_smoking_title;
+
+  /// No description provided for @healthProfile_step_smoking_subtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'For example: cigarette, e-cigarette, cigar, cannabis.'**
+  String get healthProfile_step_smoking_subtitle;
+
+  /// No description provided for @healthProfile_step_alcohol_title.
+  ///
+  /// In en, this message translates to:
+  /// **'How often do you drink alcohol?'**
+  String get healthProfile_step_alcohol_title;
+
+  /// No description provided for @healthProfile_step_alcohol_subtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Includes wine, beer, cocktails and spirits.'**
+  String get healthProfile_step_alcohol_subtitle;
+
+  /// No description provided for @healthProfile_freq_never.
+  ///
+  /// In en, this message translates to:
+  /// **'Never'**
+  String get healthProfile_freq_never;
+
+  /// No description provided for @healthProfile_freq_lt_weekly.
+  ///
+  /// In en, this message translates to:
+  /// **'Less than once a week'**
+  String get healthProfile_freq_lt_weekly;
+
+  /// No description provided for @healthProfile_freq_1_2.
+  ///
+  /// In en, this message translates to:
+  /// **'1 to 2 times a week'**
+  String get healthProfile_freq_1_2;
+
+  /// No description provided for @healthProfile_freq_3_4.
+  ///
+  /// In en, this message translates to:
+  /// **'3 to 4 times a week'**
+  String get healthProfile_freq_3_4;
+
+  /// No description provided for @healthProfile_freq_5_plus.
+  ///
+  /// In en, this message translates to:
+  /// **'5 or more times a week'**
+  String get healthProfile_freq_5_plus;
+
+  /// No description provided for @healthProfile_smoking_never.
+  ///
+  /// In en, this message translates to:
+  /// **'Never'**
+  String get healthProfile_smoking_never;
+
+  /// No description provided for @healthProfile_smoking_former.
+  ///
+  /// In en, this message translates to:
+  /// **'Former user'**
+  String get healthProfile_smoking_former;
+
+  /// No description provided for @healthProfile_smoking_occasional.
+  ///
+  /// In en, this message translates to:
+  /// **'Yes, occasionally'**
+  String get healthProfile_smoking_occasional;
+
+  /// No description provided for @healthProfile_smoking_daily.
+  ///
+  /// In en, this message translates to:
+  /// **'Yes, daily'**
+  String get healthProfile_smoking_daily;
+
+  /// No description provided for @healthProfile_already_in_profile.
+  ///
+  /// In en, this message translates to:
+  /// **'Already in your profile'**
+  String get healthProfile_already_in_profile;
+
+  /// No description provided for @healthProfile_step_allergies_title.
+  ///
+  /// In en, this message translates to:
+  /// **'Do you have any allergies or intolerances?'**
+  String get healthProfile_step_allergies_title;
+
+  /// No description provided for @healthProfile_step_allergies_subtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Select all that apply. You can add an allergy if it isn\'t listed.'**
+  String get healthProfile_step_allergies_subtitle;
+
+  /// No description provided for @healthProfile_step_allergies_addCustom.
+  ///
+  /// In en, this message translates to:
+  /// **'+ Add an allergy'**
+  String get healthProfile_step_allergies_addCustom;
+
+  /// No description provided for @healthProfile_step_allergies_none.
+  ///
+  /// In en, this message translates to:
+  /// **'No allergy'**
+  String get healthProfile_step_allergies_none;
+
+  /// No description provided for @healthProfile_step_conditions_title.
+  ///
+  /// In en, this message translates to:
+  /// **'Do you have a medical condition?'**
+  String get healthProfile_step_conditions_title;
+
+  /// No description provided for @healthProfile_step_conditions_subtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Select all that apply. You can add a condition if it isn\'t listed.'**
+  String get healthProfile_step_conditions_subtitle;
+
+  /// No description provided for @healthProfile_step_conditions_addCustom.
+  ///
+  /// In en, this message translates to:
+  /// **'+ Add a condition'**
+  String get healthProfile_step_conditions_addCustom;
+
+  /// No description provided for @healthProfile_step_conditions_none.
+  ///
+  /// In en, this message translates to:
+  /// **'No condition'**
+  String get healthProfile_step_conditions_none;
+
+  /// No description provided for @healthProfile_step_surgeries_title.
+  ///
+  /// In en, this message translates to:
+  /// **'Have you had any surgery?'**
+  String get healthProfile_step_surgeries_title;
+
+  /// No description provided for @healthProfile_step_surgeries_subtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Select all that apply. You can add a surgery if it isn\'t listed.'**
+  String get healthProfile_step_surgeries_subtitle;
+
+  /// No description provided for @healthProfile_step_surgeries_addCustom.
+  ///
+  /// In en, this message translates to:
+  /// **'+ Add a surgery'**
+  String get healthProfile_step_surgeries_addCustom;
+
+  /// No description provided for @healthProfile_step_surgeries_none.
+  ///
+  /// In en, this message translates to:
+  /// **'No surgery'**
+  String get healthProfile_step_surgeries_none;
+
+  /// No description provided for @healthProfile_step_family_title.
+  ///
+  /// In en, this message translates to:
+  /// **'Are there any conditions in your family?'**
+  String get healthProfile_step_family_title;
+
+  /// No description provided for @healthProfile_step_family_subtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Select biological-family conditions. You can add a condition if it isn\'t listed.'**
+  String get healthProfile_step_family_subtitle;
+
+  /// No description provided for @healthProfile_step_family_addCustom.
+  ///
+  /// In en, this message translates to:
+  /// **'+ Add a condition'**
+  String get healthProfile_step_family_addCustom;
+
+  /// No description provided for @healthProfile_step_family_none.
+  ///
+  /// In en, this message translates to:
+  /// **'No family history'**
+  String get healthProfile_step_family_none;
+
+  /// No description provided for @healthProfile_step_medications_title.
+  ///
+  /// In en, this message translates to:
+  /// **'Do you take any medication regularly?'**
+  String get healthProfile_step_medications_title;
+
+  /// No description provided for @healthProfile_step_medications_subtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Search by medication name or active ingredient — for example, Aspirin or Acetylsalicylic acid.'**
+  String get healthProfile_step_medications_subtitle;
+
+  /// No description provided for @healthProfile_step_medications_addCustom.
+  ///
+  /// In en, this message translates to:
+  /// **'+ Add a medication'**
+  String get healthProfile_step_medications_addCustom;
+
+  /// No description provided for @healthProfile_step_medications_none.
+  ///
+  /// In en, this message translates to:
+  /// **'No medication'**
+  String get healthProfile_step_medications_none;
+
+  /// No description provided for @healthProfile_banner_title.
+  ///
+  /// In en, this message translates to:
+  /// **'Complete your health profile'**
+  String get healthProfile_banner_title;
+
+  /// No description provided for @healthProfile_banner_subtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Earn +15 points'**
+  String get healthProfile_banner_subtitle;
+
+  /// No description provided for @healthProfile_banner_cta.
+  ///
+  /// In en, this message translates to:
+  /// **'Start'**
+  String get healthProfile_banner_cta;
+
+  /// No description provided for @healthProfile_completion_title.
+  ///
+  /// In en, this message translates to:
+  /// **'Your health profile is complete'**
+  String get healthProfile_completion_title;
+
+  /// No description provided for @healthProfile_completion_body.
+  ///
+  /// In en, this message translates to:
+  /// **'Find all your information in the Health section'**
+  String get healthProfile_completion_body;
+
+  /// No description provided for @healthProfile_completion_alreadyBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Already counted earlier — you\'ll find everything in the Health section'**
+  String get healthProfile_completion_alreadyBody;
+
+  /// No description provided for @healthProfile_completion_cta.
+  ///
+  /// In en, this message translates to:
+  /// **'Got it'**
+  String get healthProfile_completion_cta;
+
+  /// No description provided for @healthProfile_pointsAwarded.
+  ///
+  /// In en, this message translates to:
+  /// **'+15 points'**
+  String get healthProfile_pointsAwarded;
+
+  /// No description provided for @healthProfile_points_row_title.
+  ///
+  /// In en, this message translates to:
+  /// **'Health profile completed'**
+  String get healthProfile_points_row_title;
 }
 
 class _AppLocalizationsDelegate
