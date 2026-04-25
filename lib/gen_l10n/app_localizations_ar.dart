@@ -4043,4 +4043,53 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get healthProfile_step_weight_input => 'الوزن (كجم)';
+
+  @override
+  String get healthProfile_step_sport_title => 'كم مرة تمارس الرياضة؟';
+
+  @override
+  String get healthProfile_step_sport_subtitle =>
+      'يشمل أي رياضة أو نشاط بدني مكثّف مثل الجري والسباحة والمشي وركوب الدراجة.';
+
+  @override
+  String get healthProfile_step_smoking_title =>
+      'هل تدخّن منتجات التبغ أو النيكوتين؟';
+
+  @override
+  String get healthProfile_step_smoking_subtitle =>
+      'مثل: سيجارة، سيجارة إلكترونية، سيجار، حشيش.';
+
+  @override
+  String get healthProfile_step_alcohol_title => 'كم مرة تتناول الكحول؟';
+
+  @override
+  String get healthProfile_step_alcohol_subtitle =>
+      'يشمل النبيذ والبيرة والكوكتيلات والمشروبات الروحية.';
+
+  @override
+  String get healthProfile_freq_never => 'أبدًا';
+
+  @override
+  String get healthProfile_freq_lt_weekly => 'أقل من مرة في الأسبوع';
+
+  @override
+  String get healthProfile_freq_1_2 => '1 إلى 2 مرة في الأسبوع';
+
+  @override
+  String get healthProfile_freq_3_4 => '3 إلى 4 مرات في الأسبوع';
+
+  @override
+  String get healthProfile_freq_5_plus => '5 مرات أو أكثر في الأسبوع';
+
+  @override
+  String get healthProfile_smoking_never => 'أبدًا';
+
+  @override
+  String get healthProfile_smoking_former => 'مستخدم سابق';
+
+  @override
+  String get healthProfile_smoking_occasional => 'نعم، أحيانًا';
+
+  @override
+  String get healthProfile_smoking_daily => 'نعم، يوميًا';
 }

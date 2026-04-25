@@ -4089,4 +4089,54 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get healthProfile_step_weight_input => 'Weight (kg)';
+
+  @override
+  String get healthProfile_step_sport_title => 'How often do you exercise?';
+
+  @override
+  String get healthProfile_step_sport_subtitle =>
+      'Includes any sport or vigorous activity like running, swimming, hiking, cycling.';
+
+  @override
+  String get healthProfile_step_smoking_title =>
+      'Do you smoke tobacco or nicotine products?';
+
+  @override
+  String get healthProfile_step_smoking_subtitle =>
+      'For example: cigarette, e-cigarette, cigar, cannabis.';
+
+  @override
+  String get healthProfile_step_alcohol_title =>
+      'How often do you drink alcohol?';
+
+  @override
+  String get healthProfile_step_alcohol_subtitle =>
+      'Includes wine, beer, cocktails and spirits.';
+
+  @override
+  String get healthProfile_freq_never => 'Never';
+
+  @override
+  String get healthProfile_freq_lt_weekly => 'Less than once a week';
+
+  @override
+  String get healthProfile_freq_1_2 => '1 to 2 times a week';
+
+  @override
+  String get healthProfile_freq_3_4 => '3 to 4 times a week';
+
+  @override
+  String get healthProfile_freq_5_plus => '5 or more times a week';
+
+  @override
+  String get healthProfile_smoking_never => 'Never';
+
+  @override
+  String get healthProfile_smoking_former => 'Former user';
+
+  @override
+  String get healthProfile_smoking_occasional => 'Yes, occasionally';
+
+  @override
+  String get healthProfile_smoking_daily => 'Yes, daily';
 }

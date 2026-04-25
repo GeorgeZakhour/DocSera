@@ -1538,5 +1538,20 @@
   "healthProfile_step_height_title": "كم طولك؟",
   "healthProfile_step_height_input": "الطول (سم)",
   "healthProfile_step_weight_title": "كم وزنك حالياً؟",
-  "healthProfile_step_weight_input": "الوزن (كجم)"
+  "healthProfile_step_weight_input": "الوزن (كجم)",
+  "healthProfile_step_sport_title": "كم مرة تمارس الرياضة؟",
+  "healthProfile_step_sport_subtitle": "يشمل أي رياضة أو نشاط بدني مكثّف مثل الجري والسباحة والمشي وركوب الدراجة.",
+  "healthProfile_step_smoking_title": "هل تدخّن منتجات التبغ أو النيكوتين؟",
+  "healthProfile_step_smoking_subtitle": "مثل: سيجارة، سيجارة إلكترونية، سيجار، حشيش.",
+  "healthProfile_step_alcohol_title": "كم مرة تتناول الكحول؟",
+  "healthProfile_step_alcohol_subtitle": "يشمل النبيذ والبيرة والكوكتيلات والمشروبات الروحية.",
+  "healthProfile_freq_never": "أبدًا",
+  "healthProfile_freq_lt_weekly": "أقل من مرة في الأسبوع",
+  "healthProfile_freq_1_2": "1 إلى 2 مرة في الأسبوع",
+  "healthProfile_freq_3_4": "3 إلى 4 مرات في الأسبوع",
+  "healthProfile_freq_5_plus": "5 مرات أو أكثر في الأسبوع",
+  "healthProfile_smoking_never": "أبدًا",
+  "healthProfile_smoking_former": "مستخدم سابق",
+  "healthProfile_smoking_occasional": "نعم، أحيانًا",
+  "healthProfile_smoking_daily": "نعم، يوميًا"
 }

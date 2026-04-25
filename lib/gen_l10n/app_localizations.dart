@@ -7645,6 +7645,96 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Weight (kg)'**
   String get healthProfile_step_weight_input;
+
+  /// No description provided for @healthProfile_step_sport_title.
+  ///
+  /// In en, this message translates to:
+  /// **'How often do you exercise?'**
+  String get healthProfile_step_sport_title;
+
+  /// No description provided for @healthProfile_step_sport_subtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Includes any sport or vigorous activity like running, swimming, hiking, cycling.'**
+  String get healthProfile_step_sport_subtitle;
+
+  /// No description provided for @healthProfile_step_smoking_title.
+  ///
+  /// In en, this message translates to:
+  /// **'Do you smoke tobacco or nicotine products?'**
+  String get healthProfile_step_smoking_title;
+
+  /// No description provided for @healthProfile_step_smoking_subtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'For example: cigarette, e-cigarette, cigar, cannabis.'**
+  String get healthProfile_step_smoking_subtitle;
+
+  /// No description provided for @healthProfile_step_alcohol_title.
+  ///
+  /// In en, this message translates to:
+  /// **'How often do you drink alcohol?'**
+  String get healthProfile_step_alcohol_title;
+
+  /// No description provided for @healthProfile_step_alcohol_subtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Includes wine, beer, cocktails and spirits.'**
+  String get healthProfile_step_alcohol_subtitle;
+
+  /// No description provided for @healthProfile_freq_never.
+  ///
+  /// In en, this message translates to:
+  /// **'Never'**
+  String get healthProfile_freq_never;
+
+  /// No description provided for @healthProfile_freq_lt_weekly.
+  ///
+  /// In en, this message translates to:
+  /// **'Less than once a week'**
+  String get healthProfile_freq_lt_weekly;
+
+  /// No description provided for @healthProfile_freq_1_2.
+  ///
+  /// In en, this message translates to:
+  /// **'1 to 2 times a week'**
+  String get healthProfile_freq_1_2;
+
+  /// No description provided for @healthProfile_freq_3_4.
+  ///
+  /// In en, this message translates to:
+  /// **'3 to 4 times a week'**
+  String get healthProfile_freq_3_4;
+
+  /// No description provided for @healthProfile_freq_5_plus.
+  ///
+  /// In en, this message translates to:
+  /// **'5 or more times a week'**
+  String get healthProfile_freq_5_plus;
+
+  /// No description provided for @healthProfile_smoking_never.
+  ///
+  /// In en, this message translates to:
+  /// **'Never'**
+  String get healthProfile_smoking_never;
+
+  /// No description provided for @healthProfile_smoking_former.
+  ///
+  /// In en, this message translates to:
+  /// **'Former user'**
+  String get healthProfile_smoking_former;
+
+  /// No description provided for @healthProfile_smoking_occasional.
+  ///
+  /// In en, this message translates to:
+  /// **'Yes, occasionally'**
+  String get healthProfile_smoking_occasional;
+
+  /// No description provided for @healthProfile_smoking_daily.
+  ///
+  /// In en, this message translates to:
+  /// **'Yes, daily'**
+  String get healthProfile_smoking_daily;
 }
 
 class _AppLocalizationsDelegate
