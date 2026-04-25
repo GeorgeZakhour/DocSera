@@ -60,12 +60,27 @@ CREATE INDEX IF NOT EXISTS idx_partners_partner_type ON public.partners(partner_
 ```sql
 CREATE OR REPLACE FUNCTION public.get_partner_profile(p_partner_id uuid)
 RETURNS jsonb
-LANGUAGE plpgsql SECURITY DEFINER AS $$
+LANGUAGE plpgsql
+SECURITY DEFINER
+SET search_path = public, pg_temp
+AS $$
 DECLARE
   v_partner jsonb;
   v_offers  jsonb;
 BEGIN
-  SELECT to_jsonb(p) INTO v_partner
+  -- Explicit projection — never use to_jsonb(partners) here, it leaks verification_secret.
+  SELECT jsonb_build_object(
+    'id', p.id,
+    'name', p.name, 'name_ar', p.name_ar,
+    'logo_url', p.logo_url,
+    'address', p.address, 'address_ar', p.address_ar,
+    'phone', p.phone,
+    'is_active', p.is_active,
+    'brand_color', p.brand_color,
+    'about', p.about, 'about_ar', p.about_ar,
+    'cover_url', p.cover_url,
+    'partner_type', p.partner_type
+  ) INTO v_partner
   FROM public.partners p
   WHERE p.id = p_partner_id AND p.is_active = true;
 

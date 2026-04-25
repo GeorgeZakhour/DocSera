@@ -105,6 +105,7 @@ CREATE OR REPLACE FUNCTION public.get_available_offers(p_category text DEFAULT N
 RETURNS SETOF jsonb
 LANGUAGE plpgsql
 SECURITY DEFINER
+SET search_path = public, pg_temp
 AS $$
 BEGIN
   RETURN QUERY
@@ -188,16 +189,34 @@ git commit -m "feat(loyalty): extend get_available_offers with partner branding 
 ```sql
 -- Returns a single partner row + all of its currently-active offers
 -- in one round-trip, used by the patient PartnerProfilePage.
+-- Explicit partner projection avoids leaking server-side columns
+-- (notably verification_secret) to authenticated patients.
 CREATE OR REPLACE FUNCTION public.get_partner_profile(p_partner_id uuid)
 RETURNS jsonb
 LANGUAGE plpgsql
 SECURITY DEFINER
+SET search_path = public, pg_temp
 AS $$
 DECLARE
   v_partner jsonb;
   v_offers  jsonb;
 BEGIN
-  SELECT to_jsonb(p) INTO v_partner
+  SELECT jsonb_build_object(
+    'id', p.id,
+    'name', p.name,
+    'name_ar', p.name_ar,
+    'logo_url', p.logo_url,
+    'address', p.address,
+    'address_ar', p.address_ar,
+    'phone', p.phone,
+    'is_active', p.is_active,
+    'brand_color', p.brand_color,
+    'about', p.about,
+    'about_ar', p.about_ar,
+    'cover_url', p.cover_url,
+    'partner_type', p.partner_type
+  )
+  INTO v_partner
   FROM public.partners p
   WHERE p.id = p_partner_id AND p.is_active = true;
 
