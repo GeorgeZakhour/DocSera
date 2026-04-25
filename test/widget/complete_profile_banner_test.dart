@@ -14,17 +14,15 @@ void main() {
         ),
       );
 
-  testWidgets('renders title, points pill and start CTA', (tester) async {
+  testWidgets('renders +15 reward badge and Start CTA', (tester) async {
     await tester.pumpWidget(wrap(CompleteProfileBanner(
       progress: 0.0,
       onTap: () {},
     )));
-    // Heart icon (in the bubble) + arrow icon (on the start chip)
-    expect(find.byIcon(Icons.favorite_rounded), findsOneWidget);
-    // The +15 sits in the points pill
     expect(find.text('15'), findsOneWidget);
-    // The CTA label
     expect(find.text('Start'), findsOneWidget);
+    // Sparkle accent on the badge
+    expect(find.byIcon(Icons.star_rounded), findsOneWidget);
   });
 
   testWidgets('invokes onTap when CTA pressed', (tester) async {
@@ -34,7 +32,7 @@ void main() {
       onTap: () => taps++,
     )));
     await tester.tap(find.text('Start'));
-    await tester.pump(); // one frame — pulse animation loops forever
+    await tester.pump(); // one frame — animations loop forever
     expect(taps, 1);
   });
 
@@ -43,8 +41,6 @@ void main() {
       progress: 0.0,
       onTap: () {},
     )));
-    // RTL is the default in this app's tests; in any direction one of
-    // these arrows should be present alongside the Start label.
     final hasArrow =
         find.byIcon(Icons.arrow_forward_rounded).evaluate().isNotEmpty ||
             find.byIcon(Icons.arrow_back_rounded).evaluate().isNotEmpty;
