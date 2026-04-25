@@ -4,6 +4,7 @@ import 'package:docsera/models/offer_model.dart';
 import 'package:docsera/models/voucher_model.dart';
 import 'package:docsera/models/referral_model.dart';
 import 'package:docsera/models/promotion.dart';
+import 'package:docsera/models/partner_model.dart';
 
 class LoyaltyService {
   final SupabaseClient _client = Supabase.instance.client;
@@ -295,5 +296,31 @@ class LoyaltyService {
       'custom': locale == 'ar' ? 'عرض خاص' : 'Special Offer',
     };
     return titles[offerType] ?? titles['custom']!;
+  }
+
+  /// Returns `(partner, offers)` for the given partner id, or `null` if the
+  /// partner is not found / inactive. Used by [PartnerProfilePage].
+  Future<({PartnerModel partner, List<OfferModel> offers})?> getPartnerProfile(
+    String partnerId,
+  ) async {
+    try {
+      final response = await _client.rpc(
+        'get_partner_profile',
+        params: {'p_partner_id': partnerId},
+      );
+      if (response is! Map<String, dynamic>) return null;
+      final partnerJson = response['partner'];
+      if (partnerJson is! Map<String, dynamic>) return null;
+      final offersJson = (response['offers'] as List<dynamic>? ?? const []);
+      return (
+        partner: PartnerModel.fromJson(partnerJson),
+        offers: offersJson
+            .map((j) => OfferModel.fromJson(j as Map<String, dynamic>))
+            .toList(growable: false),
+      );
+    } catch (e) {
+      debugPrint('Error fetching partner profile: $e');
+      return null;
+    }
   }
 }
