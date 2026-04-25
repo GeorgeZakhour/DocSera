@@ -1,3 +1,5 @@
+import 'dart:ui';
+
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -161,19 +163,30 @@ class _PartnerProfileView extends StatelessWidget {
                 offset: Offset(0, -50.h),
                 child: Container(
               margin: EdgeInsets.symmetric(horizontal: 16.w),
-              padding: EdgeInsets.all(16.w),
               decoration: BoxDecoration(
-                color: Colors.white,
                 borderRadius: BorderRadius.circular(18.r),
                 boxShadow: [
                   BoxShadow(
-                    color: Colors.black.withOpacity(0.10),
-                    blurRadius: 16,
+                    color: Colors.black.withOpacity(0.12),
+                    blurRadius: 18,
                     offset: const Offset(0, 6),
                   ),
                 ],
               ),
-              child: Row(
+              child: ClipRRect(
+                borderRadius: BorderRadius.circular(18.r),
+                child: BackdropFilter(
+                  filter: ImageFilter.blur(sigmaX: 18, sigmaY: 18),
+                  child: Container(
+                    padding: EdgeInsets.all(16.w),
+                    decoration: BoxDecoration(
+                      color: Colors.white.withOpacity(0.72),
+                      border: Border.all(
+                        color: Colors.white.withOpacity(0.45),
+                        width: 1,
+                      ),
+                    ),
+                    child: Row(
                 children: [
                   Container(
                     width: 64.w,
@@ -227,6 +240,9 @@ class _PartnerProfileView extends StatelessWidget {
                     ),
                   ),
                 ],
+                    ),
+                  ),
+                ),
               ),
             ),
           ),
@@ -340,9 +356,7 @@ class _PartnerProfileView extends StatelessWidget {
               child: Padding(
                 padding: EdgeInsets.all(8.w),
                 child: Icon(
-                  Directionality.of(context) == TextDirection.rtl
-                      ? Icons.arrow_forward_ios_rounded
-                      : Icons.arrow_back_ios_new_rounded,
+                  Icons.arrow_back_ios_new_rounded,
                   color: Colors.white,
                   size: 18.sp,
                 ),
