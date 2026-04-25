@@ -1,5 +1,6 @@
 import 'package:animations/animations.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 
@@ -20,13 +21,12 @@ import 'package:docsera/screens/home/health/wizard/steps/surgeries_step.dart';
 import 'package:docsera/screens/home/health/wizard/steps/vitals_height_step.dart';
 import 'package:docsera/screens/home/health/wizard/steps/vitals_weight_step.dart';
 
-import 'package:docsera/screens/home/health/wizard/widgets/wizard_color_bloom.dart';
 import 'package:docsera/screens/home/health/wizard/widgets/wizard_completion_screen.dart';
 import 'package:docsera/screens/home/health/wizard/widgets/wizard_lottie_header.dart';
 import 'package:docsera/screens/home/health/wizard/widgets/wizard_progress_bar.dart';
 
 /// Top-level wizard page. Owns the [HealthProfileWizardCubit], renders the
-/// app bar with progress bar + close/back, the per-step Lottie header, and
+/// app bar with progress bar + close/back, the per-step Lottie bubble, and
 /// orchestrates step transitions via SharedAxis. On WizardCompleted it
 /// swaps the whole body for the completion showpiece.
 class HealthProfileWizardPage extends StatelessWidget {
@@ -40,15 +40,31 @@ class HealthProfileWizardPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return BlocProvider(
-      create: (_) =>
-          HealthProfileWizardCubit(repo: repo, userId: userId)..init(),
-      child: const _Body(),
+    // Lock the wizard's surface to a light theme so dark-mode users still
+    // see the cream / white design rather than black.
+    return Theme(
+      data: ThemeData.light().copyWith(
+        scaffoldBackgroundColor: AppColors.background,
+        colorScheme: const ColorScheme.light(
+          primary: AppColors.main,
+          surface: AppColors.background,
+        ),
+      ),
+      child: AnnotatedRegion<SystemUiOverlayStyle>(
+        value: const SystemUiOverlayStyle(
+          statusBarBrightness: Brightness.light,
+          statusBarIconBrightness: Brightness.dark,
+        ),
+        child: BlocProvider(
+          create: (_) =>
+              HealthProfileWizardCubit(repo: repo, userId: userId)..init(),
+          child: const _Body(),
+        ),
+      ),
     );
   }
 }
 
-/// Per-step Lottie asset name keyed by step index 0..9.
 const _kLottieByStep = <String>[
   'vitals_height',
   'vitals_weight',
@@ -88,18 +104,23 @@ class _Body extends StatelessWidget {
       builder: (context, state) {
         if (state is WizardLoading) {
           return const Scaffold(
+            backgroundColor: AppColors.background,
             body: Center(child: CircularProgressIndicator()),
           );
         }
         if (state is WizardError) {
           return Scaffold(
+            backgroundColor: AppColors.background,
             body: Center(
               child: Padding(
                 padding: EdgeInsets.symmetric(horizontal: 24.w),
                 child: Text(
                   state.message,
                   textAlign: TextAlign.center,
-                  style: TextStyle(color: AppColors.grayMain, fontSize: 14.sp),
+                  style: TextStyle(
+                    color: AppColors.grayMain,
+                    fontSize: 14.sp,
+                  ),
                 ),
               ),
             ),
@@ -114,65 +135,67 @@ class _Body extends StatelessWidget {
 
         final s = state as WizardActive;
         final cubit = context.read<HealthProfileWizardCubit>();
-        return WizardColorBloom(
-          child: Scaffold(
-            backgroundColor: Colors.transparent,
-            appBar: AppBar(
-              backgroundColor: Colors.transparent,
-              elevation: 0,
-              leading: IconButton(
-                onPressed: s.stepIndex == 0
-                    ? () => Navigator.of(context).pop()
-                    : cubit.back,
-                icon: Icon(
-                  s.stepIndex == 0 ? Icons.close : Icons.arrow_back,
-                  color: AppColors.mainDark,
-                ),
+        return Scaffold(
+          backgroundColor: AppColors.background,
+          appBar: AppBar(
+            backgroundColor: AppColors.background,
+            surfaceTintColor: Colors.transparent,
+            elevation: 0,
+            scrolledUnderElevation: 0,
+            leading: IconButton(
+              onPressed: s.stepIndex == 0
+                  ? () => Navigator.of(context).pop()
+                  : cubit.back,
+              icon: Icon(
+                s.stepIndex == 0 ? Icons.close_rounded : Icons.arrow_back_rounded,
+                color: AppColors.mainDark,
               ),
-              title: Text(
-                t.healthProfile_wizard_title,
-                style: const TextStyle(
-                  color: AppColors.mainDark,
-                  fontWeight: FontWeight.w700,
-                ),
+            ),
+            title: Text(
+              t.healthProfile_wizard_title,
+              style: TextStyle(
+                color: AppColors.mainDark,
+                fontWeight: FontWeight.w600,
+                fontSize: 15.sp,
               ),
-              centerTitle: true,
-              bottom: PreferredSize(
-                preferredSize: Size.fromHeight(8.h),
-                child: Padding(
-                  padding: EdgeInsets.symmetric(horizontal: 16.w),
-                  child: WizardProgressBar(
-                    totalSteps: kWizardTotalInputSteps,
-                    currentIndex: s.stepIndex,
-                  ),
+            ),
+            centerTitle: true,
+            bottom: PreferredSize(
+              preferredSize: Size.fromHeight(14.h),
+              child: Padding(
+                padding: EdgeInsets.fromLTRB(20.w, 0, 20.w, 8.h),
+                child: WizardProgressBar(
+                  totalSteps: kWizardTotalInputSteps,
+                  currentIndex: s.stepIndex,
                 ),
               ),
             ),
-            body: Column(
-              children: [
-                Padding(
-                  padding: EdgeInsets.only(top: 8.h),
-                  child: WizardLottieHeader(
-                    assetName: _kLottieByStep[s.stepIndex],
+          ),
+          body: Column(
+            children: [
+              Padding(
+                padding: EdgeInsets.symmetric(vertical: 12.h),
+                child: WizardLottieHeader(
+                  assetName: _kLottieByStep[s.stepIndex],
+                ),
+              ),
+              Expanded(
+                child: PageTransitionSwitcher(
+                  transitionBuilder: (child, primary, secondary) =>
+                      SharedAxisTransition(
+                    animation: primary,
+                    secondaryAnimation: secondary,
+                    transitionType: SharedAxisTransitionType.horizontal,
+                    fillColor: Colors.transparent,
+                    child: child,
+                  ),
+                  child: KeyedSubtree(
+                    key: ValueKey(s.stepIndex),
+                    child: _buildStep(s.stepIndex),
                   ),
                 ),
-                Expanded(
-                  child: PageTransitionSwitcher(
-                    transitionBuilder: (child, primary, secondary) =>
-                        SharedAxisTransition(
-                      animation: primary,
-                      secondaryAnimation: secondary,
-                      transitionType: SharedAxisTransitionType.horizontal,
-                      child: child,
-                    ),
-                    child: KeyedSubtree(
-                      key: ValueKey(s.stepIndex),
-                      child: _buildStep(s.stepIndex),
-                    ),
-                  ),
-                ),
-              ],
-            ),
+              ),
+            ],
           ),
         );
       },

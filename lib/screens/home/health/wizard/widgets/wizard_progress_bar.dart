@@ -2,17 +2,11 @@ import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:docsera/app/const.dart';
 
-/// Segmented progress bar shown at the top of the wizard.
-///
-/// - Filled segments use a teal → mainDark gradient.
-/// - The current segment uses a half-opacity teal to indicate "in-progress".
-/// - Pending segments use a low-opacity teal background.
-///
-/// The animation is on each segment's color/gradient transition (450ms),
-/// not on per-segment shimmer — that can be added later if needed.
+/// Refined segmented progress bar shown at the top of the wizard.
+/// Thin pills, gradient on filled segments, subtle pending segments.
 class WizardProgressBar extends StatelessWidget {
   final int totalSteps;
-  final int currentIndex; // 0-based; segment at currentIndex is the "active"
+  final int currentIndex; // 0-based
 
   const WizardProgressBar({
     super.key,
@@ -23,7 +17,7 @@ class WizardProgressBar extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return SizedBox(
-      height: 4.h,
+      height: 3.h,
       child: Row(
         children: List.generate(totalSteps, (i) {
           final isFilled = i < currentIndex;
@@ -31,23 +25,23 @@ class WizardProgressBar extends StatelessWidget {
           return Expanded(
             child: Padding(
               padding: EdgeInsetsDirectional.only(
-                end: i == totalSteps - 1 ? 0 : 2.w,
+                end: i == totalSteps - 1 ? 0 : 3.w,
               ),
               child: AnimatedContainer(
-                duration: const Duration(milliseconds: 450),
+                duration: const Duration(milliseconds: 420),
                 curve: Curves.easeOutCubic,
                 decoration: BoxDecoration(
                   color: isFilled
-                      ? null // gradient takes over below
+                      ? null
                       : isActive
-                          ? AppColors.main.withValues(alpha: 0.55)
-                          : AppColors.main.withValues(alpha: 0.12),
+                          ? AppColors.main
+                          : AppColors.main.withValues(alpha: 0.10),
                   gradient: isFilled
                       ? const LinearGradient(
                           colors: [AppColors.main, AppColors.mainDark],
                         )
                       : null,
-                  borderRadius: BorderRadius.circular(2.r),
+                  borderRadius: BorderRadius.circular(99),
                 ),
               ),
             ),

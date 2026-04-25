@@ -14,12 +14,16 @@ void main() {
         ),
       );
 
-  testWidgets('renders progress ring + start CTA', (tester) async {
+  testWidgets('renders title, points pill and start CTA', (tester) async {
     await tester.pumpWidget(wrap(CompleteProfileBanner(
-      progress: 0.3,
+      progress: 0.0,
       onTap: () {},
     )));
-    expect(find.byType(CircularProgressIndicator), findsOneWidget);
+    // Heart icon (in the bubble) + arrow icon (on the start chip)
+    expect(find.byIcon(Icons.favorite_rounded), findsOneWidget);
+    // The +15 sits in the points pill
+    expect(find.text('15'), findsOneWidget);
+    // The CTA label
     expect(find.text('Start'), findsOneWidget);
   });
 
@@ -30,7 +34,20 @@ void main() {
       onTap: () => taps++,
     )));
     await tester.tap(find.text('Start'));
-    await tester.pump(); // one frame — no pumpAndSettle because the pulse animation loops forever
+    await tester.pump(); // one frame — pulse animation loops forever
     expect(taps, 1);
+  });
+
+  testWidgets('tapping anywhere on the card also fires onTap', (tester) async {
+    var taps = 0;
+    await tester.pumpWidget(wrap(CompleteProfileBanner(
+      progress: 0.0,
+      onTap: () => taps++,
+    )));
+    await tester.tap(find.byIcon(Icons.favorite_rounded));
+    await tester.pump();
+    // The heart bubble is wrapped in the outer InkWell, so a tap there
+    // should also fire onTap.
+    expect(taps, greaterThanOrEqualTo(1));
   });
 }
