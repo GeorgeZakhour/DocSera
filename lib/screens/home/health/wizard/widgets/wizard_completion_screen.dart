@@ -83,19 +83,23 @@ class _WizardCompletionScreenState extends State<WizardCompletionScreen>
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.center,
                 children: [
-                  SizedBox(height: 60.h),
-                  // Hero Lottie
+                  SizedBox(height: 40.h),
+                  // Hero — custom celebration composition under the Lottie.
+                  // The empty placeholder JSON renders nothing, so the
+                  // composition shows. A real Lottie (when added) covers it.
                   SizedBox(
-                    width: 280.w,
-                    height: 280.w,
-                    child: Lottie.asset(
-                      'assets/lottie/health_profile/completion_hero.json',
-                      repeat: false,
-                      errorBuilder: (_, __, ___) => Icon(
-                        Icons.check_circle_rounded,
-                        size: 220.w,
-                        color: AppColors.main,
-                      ),
+                    width: 220.w,
+                    height: 220.w,
+                    child: Stack(
+                      alignment: Alignment.center,
+                      children: [
+                        _CelebrationHero(controller: _master),
+                        Lottie.asset(
+                          'assets/lottie/health_profile/completion_hero.json',
+                          repeat: false,
+                          errorBuilder: (_, __, ___) => const SizedBox.shrink(),
+                        ),
+                      ],
                     ),
                   ),
                   SizedBox(height: 24.h),
@@ -264,4 +268,157 @@ class _CompletionBloomPainter extends CustomPainter {
   @override
   bool shouldRepaint(covariant _CompletionBloomPainter oldDelegate) =>
       oldDelegate.t != t;
+}
+
+/// Celebration composition shown when no real Lottie hero is provided.
+///
+/// Layered build: outer breathing halo, inner gradient disk, white
+/// check at the centre, sparkle accents drifting around the disk.
+/// Driven by the same master controller so it choreographs with the
+/// rest of the screen.
+class _CelebrationHero extends StatelessWidget {
+  final AnimationController controller;
+  const _CelebrationHero({required this.controller});
+
+  @override
+  Widget build(BuildContext context) {
+    return AnimatedBuilder(
+      animation: controller,
+      builder: (_, __) {
+        // Disk grows in over the first 35% of the master timeline.
+        final diskT =
+            (controller.value / 0.35).clamp(0.0, 1.0);
+        // Check mark scales in from 0.20 to 0.50 of the timeline.
+        final checkT =
+            ((controller.value - 0.20) / 0.30).clamp(0.0, 1.0);
+        // Sparkle pulse — gentle, continuous.
+        final sparkleT = controller.value;
+
+        return Stack(
+          alignment: Alignment.center,
+          children: [
+            // Outer halo
+            Transform.scale(
+              scale: 0.85 + 0.15 * diskT,
+              child: Container(
+                width: 200.w,
+                height: 200.w,
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  gradient: RadialGradient(
+                    colors: [
+                      AppColors.main.withValues(alpha: 0.18 * diskT),
+                      AppColors.main.withValues(alpha: 0.0),
+                    ],
+                  ),
+                ),
+              ),
+            ),
+            // Coin disk
+            Transform.scale(
+              scale: Curves.easeOutBack.transform(diskT),
+              child: Container(
+                width: 140.w,
+                height: 140.w,
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  gradient: const LinearGradient(
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
+                    colors: [AppColors.main, AppColors.mainDark],
+                  ),
+                  border: Border.all(
+                    color: Colors.white.withValues(alpha: 0.55),
+                    width: 2,
+                  ),
+                  boxShadow: [
+                    BoxShadow(
+                      color:
+                          AppColors.mainDark.withValues(alpha: 0.20 * diskT),
+                      blurRadius: 24,
+                      offset: const Offset(0, 8),
+                    ),
+                  ],
+                ),
+                alignment: Alignment.center,
+                child: Transform.scale(
+                  scale: Curves.elasticOut.transform(checkT.clamp(0.0, 1.0)),
+                  child: Icon(
+                    Icons.check_rounded,
+                    size: 78.sp,
+                    color: Colors.white,
+                  ),
+                ),
+              ),
+            ),
+            // Sparkle accents — top-right, top-left, bottom
+            _Sparkle(
+              top: 4.h,
+              right: 18.w,
+              size: 22.sp,
+              t: sparkleT,
+              phase: 0.0,
+            ),
+            _Sparkle(
+              top: 14.h,
+              left: 18.w,
+              size: 14.sp,
+              t: sparkleT,
+              phase: 0.4,
+            ),
+            _Sparkle(
+              bottom: 18.h,
+              right: 38.w,
+              size: 12.sp,
+              t: sparkleT,
+              phase: 0.7,
+            ),
+          ],
+        );
+      },
+    );
+  }
+}
+
+class _Sparkle extends StatelessWidget {
+  final double? top;
+  final double? bottom;
+  final double? left;
+  final double? right;
+  final double size;
+  final double t;
+  final double phase;
+  const _Sparkle({
+    this.top,
+    this.bottom,
+    this.left,
+    this.right,
+    required this.size,
+    required this.t,
+    required this.phase,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final twinkle = (math.sin((t + phase) * 2 * math.pi) + 1) / 2;
+    final opacity = 0.45 + 0.55 * twinkle;
+    final scale = 0.85 + 0.25 * twinkle;
+    return Positioned(
+      top: top,
+      bottom: bottom,
+      left: left,
+      right: right,
+      child: Opacity(
+        opacity: opacity,
+        child: Transform.scale(
+          scale: scale,
+          child: Icon(
+            Icons.auto_awesome_rounded,
+            color: Colors.amber.shade400,
+            size: size,
+          ),
+        ),
+      ),
+    );
+  }
 }
