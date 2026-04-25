@@ -18,11 +18,13 @@ begin
     raise exception 'auth required';
   end if;
 
-  select health_profile_completed_at into v_existing
-    from public.users where id = v_user_id for update;
+  select health_profile_completed_at, points
+    into v_existing, v_new_balance
+    from public.users
+    where id = v_user_id
+    for update;
 
   if v_existing is not null then
-    select points into v_new_balance from public.users where id = v_user_id;
     return jsonb_build_object(
       'already_awarded', true,
       'new_balance', v_new_balance,
