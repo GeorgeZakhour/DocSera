@@ -97,7 +97,7 @@ class _PartnerProfileView extends StatelessWidget {
     return CustomScrollView(
       slivers: [
         SliverAppBar(
-          expandedHeight: 200.h,
+          expandedHeight: 220.h,
           pinned: true,
           backgroundColor: brand,
           iconTheme: const IconThemeData(color: Colors.white),
@@ -113,15 +113,43 @@ class _PartnerProfileView extends StatelessWidget {
                   )
                 else
                   _brandGradient(brand),
-                Container(
-                  decoration: BoxDecoration(
-                    gradient: LinearGradient(
-                      begin: Alignment.topCenter,
-                      end: Alignment.bottomCenter,
-                      colors: [
-                        Colors.black.withOpacity(0.05),
-                        Colors.black.withOpacity(0.45),
-                      ],
+                // Subtle dark vignette at top so the white back arrow stays
+                // legible over bright cover images.
+                Positioned(
+                  top: 0,
+                  left: 0,
+                  right: 0,
+                  height: 90.h,
+                  child: Container(
+                    decoration: BoxDecoration(
+                      gradient: LinearGradient(
+                        begin: Alignment.topCenter,
+                        end: Alignment.bottomCenter,
+                        colors: [
+                          Colors.black.withOpacity(0.28),
+                          Colors.transparent,
+                        ],
+                      ),
+                    ),
+                  ),
+                ),
+                // Bottom fade — dissolves the cover into the page background
+                // instead of ending in a hard cut.
+                Positioned(
+                  bottom: 0,
+                  left: 0,
+                  right: 0,
+                  height: 110.h,
+                  child: Container(
+                    decoration: const BoxDecoration(
+                      gradient: LinearGradient(
+                        begin: Alignment.topCenter,
+                        end: Alignment.bottomCenter,
+                        colors: [
+                          Color(0x00F7F8FA),
+                          Color(0xFFF7F8FA),
+                        ],
+                      ),
                     ),
                   ),
                 ),
@@ -131,7 +159,7 @@ class _PartnerProfileView extends StatelessWidget {
         ),
         SliverToBoxAdapter(
           child: Transform.translate(
-            offset: Offset(0, -36.h),
+            offset: Offset(0, -56.h),
             child: Container(
               margin: EdgeInsets.symmetric(horizontal: 16.w),
               padding: EdgeInsets.all(16.w),
@@ -140,9 +168,9 @@ class _PartnerProfileView extends StatelessWidget {
                 borderRadius: BorderRadius.circular(18.r),
                 boxShadow: [
                   BoxShadow(
-                    color: Colors.black.withOpacity(0.05),
-                    blurRadius: 10,
-                    offset: const Offset(0, 4),
+                    color: Colors.black.withOpacity(0.10),
+                    blurRadius: 16,
+                    offset: const Offset(0, 6),
                   ),
                 ],
               ),
