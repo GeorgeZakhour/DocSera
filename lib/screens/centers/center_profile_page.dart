@@ -6,6 +6,8 @@ import 'package:docsera/app/const.dart';
 import 'package:docsera/app/text_styles.dart';
 import 'package:docsera/gen_l10n/app_localizations.dart';
 import 'package:docsera/screens/doctors/doctor_profile_page.dart';
+import 'package:docsera/models/promotion.dart';
+import 'package:docsera/services/supabase/loyalty/loyalty_service.dart';
 import 'package:docsera/services/supabase/supabase_center_service.dart';
 import 'package:docsera/services/supabase/repositories/favorites_repository.dart';
 import 'package:docsera/utils/doctor_image_utils.dart';
@@ -35,15 +37,28 @@ class CenterProfilePage extends StatefulWidget {
 class _CenterProfilePageState extends State<CenterProfilePage> {
   Map<String, dynamic>? _centerData;
   List<Map<String, dynamic>> _teamDoctors = [];
+  List<Promotion> _promotions = const [];
   bool _isLoading = true;
   bool _isFavorite = false; // Add favorite tracker
   final ScrollController _scrollController = ScrollController();
   bool _showAppBar = false;
 
+  Future<void> _loadCenterPromotions() async {
+    try {
+      final list =
+          await LoyaltyService().getPublicCenterPromotions(widget.centerId);
+      if (!mounted) return;
+      setState(() => _promotions = list);
+    } catch (_) {
+      // Silent failure — promotions are optional content.
+    }
+  }
+
   @override
   void initState() {
     super.initState();
     _loadCenterData();
+    _loadCenterPromotions();
     _scrollController.addListener(() {
       final show =
           _scrollController.offset > MediaQuery.of(context).size.height * 0.18;
@@ -565,6 +580,12 @@ class _CenterProfilePageState extends State<CenterProfilePage> {
                     child: Column(children: [
                       SizedBox(height: 15.h),
 
+                      // 1. Promotions (FIRST section — strong "reason to book" signal)
+                      if (_promotions.isNotEmpty) ...[
+                        _buildPromotionsSection(_promotions),
+                        SizedBox(height: 10.h),
+                      ],
+
                       // 2. Description
                       if (description.isNotEmpty) ...[
                         _buildDescriptionSection(description),
@@ -760,6 +781,43 @@ class _CenterProfilePageState extends State<CenterProfilePage> {
             ),
           ],
         ),
+      ),
+    );
+  }
+
+  // ═══════════════════════════════════════════════════════
+  // ── PROMOTIONS SECTION (FIRST)
+  // ═══════════════════════════════════════════════════════
+  Widget _buildPromotionsSection(List<Promotion> promotions) {
+    if (promotions.isEmpty) return const SizedBox.shrink();
+    final isAr = Localizations.localeOf(context).languageCode == 'ar';
+    return _buildSectionCard(
+      icon: Icons.local_offer_outlined,
+      title: 'Promotions', // localized in Task 28
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: promotions
+            .take(2)
+            .map((p) => Padding(
+                  padding: EdgeInsets.only(bottom: 8.h),
+                  child: _CenterPromotionTile(
+                    promotion: p,
+                    isAr: isAr,
+                    onClaim: () => _claimCenterPromotion(p),
+                  ),
+                ))
+            .toList(growable: false),
+      ),
+    );
+  }
+
+  Future<void> _claimCenterPromotion(Promotion promo) async {
+    final result = await LoyaltyService().claimDoctorPromotion(promo.id);
+    if (!mounted) return;
+    final ok = result['success'] == true;
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(ok ? 'Claimed' : 'Could not claim — try again'),
       ),
     );
   }
@@ -2422,5 +2480,95 @@ class _CustomExpandableServiceTileState extends State<_CustomExpandableServiceTi
         ),
       ),
     );
+  }
+}
+
+/// Single promotion row in the center profile's Promotions section.
+/// Renders the title, scope tag, and a Claim button.
+class _CenterPromotionTile extends StatelessWidget {
+  final Promotion promotion;
+  final bool isAr;
+  final VoidCallback onClaim;
+
+  const _CenterPromotionTile({
+    required this.promotion,
+    required this.isAr,
+    required this.onClaim,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final title = _title();
+    final scopeLabel = _scopeLabel();
+    return Container(
+      padding: EdgeInsets.all(10.w),
+      decoration: BoxDecoration(
+        color: AppColors.main.withValues(alpha: 0.05),
+        borderRadius: BorderRadius.circular(10.r),
+        border: Border.all(color: AppColors.main.withValues(alpha: 0.20)),
+      ),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.center,
+        children: [
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(title, style: AppTextStyles.getTitle3(context)),
+                SizedBox(height: 2.h),
+                Text(
+                  scopeLabel,
+                  style: AppTextStyles.getText4(context)
+                      .copyWith(color: Colors.black54),
+                ),
+              ],
+            ),
+          ),
+          SizedBox(width: 8.w),
+          ElevatedButton(
+            onPressed: onClaim,
+            style: ElevatedButton.styleFrom(
+              backgroundColor: AppColors.main,
+              foregroundColor: Colors.white,
+              padding: EdgeInsets.symmetric(horizontal: 14.w, vertical: 6.h),
+              minimumSize: const Size(0, 0),
+              tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+            ),
+            child: const Text('Claim'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  String _title() {
+    if (isAr &&
+        promotion.customTitleAr != null &&
+        promotion.customTitleAr!.isNotEmpty) {
+      return promotion.customTitleAr!;
+    }
+    if (promotion.customTitle != null && promotion.customTitle!.isNotEmpty) {
+      return promotion.customTitle!;
+    }
+    switch (promotion.offerType) {
+      case 'free_first_consultation':
+        return 'Free First Consultation';
+      case 'percentage_discount':
+        return '${promotion.discountValue?.toInt() ?? 0}% Discount';
+      case 'fixed_discount':
+        return '${promotion.discountValue?.toInt() ?? 0} SYP Discount';
+      case 'free_followup':
+        return 'Free Follow-up Visit';
+      default:
+        return 'Special Offer';
+    }
+  }
+
+  String _scopeLabel() {
+    if (promotion.targetScope == 'center_wide') {
+      return 'Valid with any doctor at this center';
+    }
+    final n = promotion.targetDoctorIds.length;
+    return 'Applies to: $n ${n == 1 ? 'doctor' : 'doctors'}';
   }
 }

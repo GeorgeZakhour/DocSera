@@ -270,15 +270,20 @@ class _DoctorProfilePageState extends State<DoctorProfilePage> {
     final doctorId = widget.doctorId.trim();
     if (doctorId.isEmpty) return;
     try {
-      final response = await Supabase.instance.client
-          .from('doctor_promotions')
-          .select()
-          .eq('doctor_id', doctorId)
-          .eq('is_active', true)
-          .or('end_date.is.null,end_date.gt.${DateTime.now().toUtc().toIso8601String()}');
+      // get_promotions_for_doctor returns BOTH the doctor's own
+      // promotions AND eligible center-owned ones (where this doctor
+      // is a member and either the promo is center-wide or scoped to
+      // include this doctor). Each row carries owner_type, center_id,
+      // center_name, target_doctor_ids.
+      final response = await Supabase.instance.client.rpc(
+        'get_promotions_for_doctor',
+        params: {'p_doctor_id': doctorId},
+      );
 
       if (mounted && response is List && response.isNotEmpty) {
-        final all = List<Map<String, dynamic>>.from(response);
+        final all = List<Map<String, dynamic>>.from(
+          response.map((e) => Map<String, dynamic>.from(e as Map)),
+        );
         // Hide promotions where global max claims is reached
         final visible = all.where((p) {
           final maxClaims = p['max_claims'] as int?;
@@ -3253,22 +3258,26 @@ $deepLink
                       children: [
 
                         SizedBox(height: 25.h),
-                        if (_doctorData?['gallery'] != null &&
-                            (_doctorData!['gallery'] as List).isNotEmpty)
-                          SizedBox(height: 10.h),
+                        // Promotions surfaced FIRST so the "reason to
+                        // book" signal lands above other content.
+                        // Includes both the doctor's own promos and any
+                        // eligible center-owned promos via the
+                        // get_promotions_for_doctor RPC.
+                        if (_promotions.isNotEmpty)
+                          _buildPromotionsSection(_promotions),
+                        if (_promotions.isNotEmpty) SizedBox(height: 10.h),
                         if (_doctorData?['gallery'] != null &&
                             (_doctorData!['gallery'] as List).isNotEmpty)
                           _buildGallerySection(_doctorData!['gallery']),
-                        if (_doctorData?['pricing'] != null &&
-                            (_doctorData!['pricing'] as List).isNotEmpty)
+                        if (_doctorData?['gallery'] != null &&
+                            (_doctorData!['gallery'] as List).isNotEmpty)
                           SizedBox(height: 10.h),
                         if (_doctorData?['pricing'] != null &&
                             (_doctorData!['pricing'] as List).isNotEmpty)
                           _buildPricingSection(_doctorData!['pricing'] as List),
-                        if (_promotions.isNotEmpty)
+                        if (_doctorData?['pricing'] != null &&
+                            (_doctorData!['pricing'] as List).isNotEmpty)
                           SizedBox(height: 10.h),
-                        if (_promotions.isNotEmpty)
-                          _buildPromotionsSection(_promotions),
                         if (profileDescription != null ||
                             (specialties != null && specialties.isNotEmpty))
                           SizedBox(height: 10.h),
