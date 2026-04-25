@@ -18,25 +18,30 @@ void main() {
           DateTime.parse('2026-04-25T10:00:00.000Z'));
     });
 
-    test('uses defaults for null values', () {
-      final result = CompleteHealthProfileResult.fromMap({
-        'already_awarded': null,
-        'new_balance': null,
-        'completed_at': null,
-      });
-
-      expect(result.alreadyAwarded, isFalse);
-      expect(result.newBalance, 0);
-      // completed_at fallback produces a DateTime close to now
-      expect(result.completedAt, isA<DateTime>());
+    test('throws FormatException when completed_at is null', () {
+      expect(
+        () => CompleteHealthProfileResult.fromMap({
+          'already_awarded': null,
+          'new_balance': null,
+          'completed_at': null,
+        }),
+        throwsA(isA<FormatException>()),
+      );
     });
 
-    test('uses defaults for entirely missing keys', () {
-      final result = CompleteHealthProfileResult.fromMap({});
+    test('throws FormatException when completed_at is missing', () {
+      expect(
+        () => CompleteHealthProfileResult.fromMap({}),
+        throwsA(isA<FormatException>()),
+      );
+    });
 
+    test('uses defaults for missing already_awarded and new_balance when completed_at present', () {
+      final result = CompleteHealthProfileResult.fromMap({
+        'completed_at': '2026-04-25T00:00:00.000Z',
+      });
       expect(result.alreadyAwarded, isFalse);
       expect(result.newBalance, 0);
-      expect(result.completedAt, isA<DateTime>());
     });
 
     test('coerces num new_balance to int', () {
