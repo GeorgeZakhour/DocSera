@@ -1,7 +1,7 @@
 -- 20260425100200_health_profile_rpcs.sql
 -- RPCs that back the patient health-profile wizard.
 -- A3: complete_health_profile()  — idempotent +15 points award on first reach
--- A4: upsert_health_profile_vitals_lifestyle(...)  — partial save between steps (added later)
+-- A4: upsert_health_profile_vitals_lifestyle(...)  — partial save between steps
 
 create or replace function public.complete_health_profile()
 returns jsonb
@@ -57,3 +57,40 @@ end;
 $$;
 
 grant execute on function public.complete_health_profile() to authenticated;
+
+create or replace function public.upsert_health_profile_vitals_lifestyle(
+  p_height_cm numeric default null,
+  p_weight_kg numeric default null,
+  p_sport_frequency text default null,
+  p_smoking_status text default null,
+  p_alcohol_frequency text default null
+)
+returns void
+language plpgsql
+security definer
+set search_path to 'public'
+as $$
+declare
+  v_user_id uuid := auth.uid();
+begin
+  if v_user_id is null then
+    raise exception 'auth required';
+  end if;
+
+  insert into public.patient_health_profile as p (
+    user_id, height_cm, weight_kg, sport_frequency, smoking_status, alcohol_frequency
+  ) values (
+    v_user_id, p_height_cm, p_weight_kg, p_sport_frequency, p_smoking_status, p_alcohol_frequency
+  )
+  on conflict (user_id) do update set
+    height_cm = coalesce(excluded.height_cm, p.height_cm),
+    weight_kg = coalesce(excluded.weight_kg, p.weight_kg),
+    sport_frequency = coalesce(excluded.sport_frequency, p.sport_frequency),
+    smoking_status = coalesce(excluded.smoking_status, p.smoking_status),
+    alcohol_frequency = coalesce(excluded.alcohol_frequency, p.alcohol_frequency);
+end;
+$$;
+
+grant execute on function public.upsert_health_profile_vitals_lifestyle(
+  numeric, numeric, text, text, text
+) to authenticated;
