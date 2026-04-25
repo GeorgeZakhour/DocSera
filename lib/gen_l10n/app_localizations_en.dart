@@ -4224,6 +4224,27 @@ class AppLocalizationsEn extends AppLocalizations {
   String get healthProfile_search_no_results => 'No matches';
 
   @override
+  String get healthProfile_section_vitals => 'Vitals';
+
+  @override
+  String get healthProfile_section_lifestyle => 'Lifestyle';
+
+  @override
+  String get healthProfile_section_allergies => 'Allergies';
+
+  @override
+  String get healthProfile_section_conditions => 'Medical conditions';
+
+  @override
+  String get healthProfile_section_surgeries => 'Surgical history';
+
+  @override
+  String get healthProfile_section_family => 'Family history';
+
+  @override
+  String get healthProfile_section_medications => 'Medications';
+
+  @override
   String get healthProfile_step_allergies_title =>
       'Do you have any allergies or intolerances?';
 

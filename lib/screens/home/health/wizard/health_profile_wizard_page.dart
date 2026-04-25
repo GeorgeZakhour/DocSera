@@ -93,6 +93,31 @@ const _kIconByStep = <IconData>[
   Icons.medication_rounded,
 ];
 
+/// Section title shown in the AppBar for each step.
+String _sectionTitleForStep(AppLocalizations t, int i) {
+  switch (i) {
+    case 0:
+    case 1:
+      return t.healthProfile_section_vitals;
+    case 2:
+    case 3:
+    case 4:
+      return t.healthProfile_section_lifestyle;
+    case 5:
+      return t.healthProfile_section_allergies;
+    case 6:
+      return t.healthProfile_section_conditions;
+    case 7:
+      return t.healthProfile_section_surgeries;
+    case 8:
+      return t.healthProfile_section_family;
+    case 9:
+      return t.healthProfile_section_medications;
+    default:
+      return t.healthProfile_wizard_title;
+  }
+}
+
 class _Body extends StatelessWidget {
   const _Body();
 
@@ -171,9 +196,10 @@ class _Body extends StatelessWidget {
               ),
             ),
             title: Text(
-              t.healthProfile_wizard_title,
-              style: AppTextStyles.getTitle2(context).copyWith(
+              _sectionTitleForStep(t, s.stepIndex),
+              style: AppTextStyles.getText1(context).copyWith(
                 color: AppColors.mainDark,
+                fontWeight: FontWeight.w600,
               ),
             ),
             centerTitle: true,

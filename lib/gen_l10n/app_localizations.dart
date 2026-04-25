@@ -7868,6 +7868,48 @@ abstract class AppLocalizations {
   /// **'No matches'**
   String get healthProfile_search_no_results;
 
+  /// No description provided for @healthProfile_section_vitals.
+  ///
+  /// In en, this message translates to:
+  /// **'Vitals'**
+  String get healthProfile_section_vitals;
+
+  /// No description provided for @healthProfile_section_lifestyle.
+  ///
+  /// In en, this message translates to:
+  /// **'Lifestyle'**
+  String get healthProfile_section_lifestyle;
+
+  /// No description provided for @healthProfile_section_allergies.
+  ///
+  /// In en, this message translates to:
+  /// **'Allergies'**
+  String get healthProfile_section_allergies;
+
+  /// No description provided for @healthProfile_section_conditions.
+  ///
+  /// In en, this message translates to:
+  /// **'Medical conditions'**
+  String get healthProfile_section_conditions;
+
+  /// No description provided for @healthProfile_section_surgeries.
+  ///
+  /// In en, this message translates to:
+  /// **'Surgical history'**
+  String get healthProfile_section_surgeries;
+
+  /// No description provided for @healthProfile_section_family.
+  ///
+  /// In en, this message translates to:
+  /// **'Family history'**
+  String get healthProfile_section_family;
+
+  /// No description provided for @healthProfile_section_medications.
+  ///
+  /// In en, this message translates to:
+  /// **'Medications'**
+  String get healthProfile_section_medications;
+
   /// No description provided for @healthProfile_step_allergies_title.
   ///
   /// In en, this message translates to:

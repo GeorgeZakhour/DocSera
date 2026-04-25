@@ -4175,6 +4175,27 @@ class AppLocalizationsAr extends AppLocalizations {
   String get healthProfile_search_no_results => 'لا توجد نتائج';
 
   @override
+  String get healthProfile_section_vitals => 'العلامات الحيوية';
+
+  @override
+  String get healthProfile_section_lifestyle => 'نمط الحياة';
+
+  @override
+  String get healthProfile_section_allergies => 'الحساسية';
+
+  @override
+  String get healthProfile_section_conditions => 'الحالات الطبية';
+
+  @override
+  String get healthProfile_section_surgeries => 'السوابق الجراحية';
+
+  @override
+  String get healthProfile_section_family => 'التاريخ العائلي';
+
+  @override
+  String get healthProfile_section_medications => 'الأدوية';
+
+  @override
   String get healthProfile_step_allergies_title =>
       'هل لديك حساسية أو عدم تحمل لأي مادة؟';
 
