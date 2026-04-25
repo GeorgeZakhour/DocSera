@@ -4074,4 +4074,7 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get offerFirstVisitOnlyHint =>
       'Only for your first visit with this doctor';
+
+  @override
+  String get healthProfile_skip_step => 'Skip this step';
 }

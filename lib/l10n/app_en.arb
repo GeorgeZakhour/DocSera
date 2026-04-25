@@ -1510,5 +1510,7 @@
   },
   "offerCodeReady": "Code ready",
   "offerNotEligible": "Not eligible",
-  "offerFirstVisitOnlyHint": "Only for your first visit with this doctor"
+  "offerFirstVisitOnlyHint": "Only for your first visit with this doctor",
+
+  "healthProfile_skip_step": "Skip this step"
 }

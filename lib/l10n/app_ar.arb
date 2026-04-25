@@ -1532,5 +1532,7 @@
   },
   "offerCodeReady": "رمز جاهز",
   "offerNotEligible": "غير متاح لك",
-  "offerFirstVisitOnlyHint": "فقط لزيارتك الأولى عند هذا الطبيب"
+  "offerFirstVisitOnlyHint": "فقط لزيارتك الأولى عند هذا الطبيب",
+
+  "healthProfile_skip_step": "تخطّي هذه الخطوة"
 }
