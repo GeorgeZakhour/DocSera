@@ -79,6 +79,20 @@ const _kLottieByStep = <String>[
   'medications',
 ];
 
+/// Material icon shown in the bubble until a real Lottie is provided.
+const _kIconByStep = <IconData>[
+  Icons.height_rounded,
+  Icons.monitor_weight_rounded,
+  Icons.directions_run_rounded,
+  Icons.smoking_rooms_rounded,
+  Icons.local_bar_rounded,
+  Icons.bubble_chart_rounded,
+  Icons.medical_services_rounded,
+  Icons.healing_rounded,
+  Icons.family_restroom_rounded,
+  Icons.medication_rounded,
+];
+
 class _Body extends StatelessWidget {
   const _Body();
 
@@ -147,8 +161,13 @@ class _Body extends StatelessWidget {
                   ? () => Navigator.of(context).pop()
                   : cubit.back,
               icon: Icon(
-                s.stepIndex == 0 ? Icons.close_rounded : Icons.arrow_back_rounded,
+                s.stepIndex == 0
+                    ? Icons.close_rounded
+                    : (Directionality.of(context) == TextDirection.rtl
+                        ? Icons.chevron_right_rounded
+                        : Icons.chevron_left_rounded),
                 color: AppColors.mainDark,
+                size: 24.sp,
               ),
             ),
             title: Text(
@@ -175,6 +194,7 @@ class _Body extends StatelessWidget {
                 padding: EdgeInsets.symmetric(vertical: 12.h),
                 child: WizardLottieHeader(
                   assetName: _kLottieByStep[s.stepIndex],
+                  icon: _kIconByStep[s.stepIndex],
                 ),
               ),
               Expanded(

@@ -5,19 +5,24 @@ import 'package:docsera/app/const.dart';
 
 /// Lottie illustration sitting inside a soft tinted circular bubble.
 ///
-/// The bubble is the design anchor — it remains visible even when the
-/// Lottie JSON is an empty placeholder, and gives real Lotties a halo
-/// to read against the page backdrop.
+/// A meaningful Material [icon] is rendered as a base layer so the bubble
+/// is never visually empty — handy while Lottie placeholders are still
+/// empty stubs. Real Lotties (when added) render on top of the icon and
+/// effectively replace it.
 class WizardLottieHeader extends StatelessWidget {
   final String assetName;
+  final IconData icon;
   final double bubbleSize;
   final double lottieSize;
+  final double iconSize;
 
   const WizardLottieHeader({
     super.key,
     required this.assetName,
+    required this.icon,
     this.bubbleSize = 96,
     this.lottieSize = 64,
+    this.iconSize = 38,
   });
 
   @override
@@ -39,18 +44,25 @@ class WizardLottieHeader extends StatelessWidget {
         ),
       ),
       alignment: Alignment.center,
-      child: SizedBox(
-        width: lottieSize.w,
-        height: lottieSize.w,
-        child: Lottie.asset(
-          'assets/lottie/health_profile/$assetName.json',
-          repeat: true,
-          errorBuilder: (_, error, stack) => Icon(
-            Icons.favorite_rounded,
-            size: (lottieSize * 0.6).w,
+      child: Stack(
+        alignment: Alignment.center,
+        children: [
+          Icon(
+            icon,
+            size: iconSize.w,
             color: AppColors.main,
           ),
-        ),
+          SizedBox(
+            width: lottieSize.w,
+            height: lottieSize.w,
+            child: Lottie.asset(
+              'assets/lottie/health_profile/$assetName.json',
+              repeat: true,
+              // If the asset can't load, just leave the icon visible.
+              errorBuilder: (_, __, ___) => const SizedBox.shrink(),
+            ),
+          ),
+        ],
       ),
     );
   }
