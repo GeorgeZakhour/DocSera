@@ -1528,5 +1528,14 @@
   "@fromCenter": {
     "placeholders": {"centerName": {"type": "String"}}
   },
+  "doctorOffersSectionTitle": "Doctor's offers",
+  "centerOffersSectionTitle": "Offers from {centerName}",
+  "@centerOffersSectionTitle": {
+    "placeholders": {"centerName": {"type": "String"}}
+  },
+  "centerOffersSectionDescription": "Sponsored by the center. Any doctor at this center can honor these on a bill.",
+  "doctorOffersSectionDescription": "Personal offers from this doctor. Apply only when booking with them.",
+  "centerScopeAllDoctors": "All doctors at the center",
+  "centerScopeSelectedDoctors": "Selected doctors",
   "couldNotClaimTryAgain": "Could not claim — try again"
 }

@@ -29,6 +29,11 @@ import '../../utils/full_page_loader.dart';
 
 enum _OverlayToastVariant { success, info }
 
+/// Source classification for the doctor profile's promotions section.
+/// Used to render the right header icon, gradient, title template, and
+/// description for each "Doctor's offers" / "Offers from Center" card.
+enum _PromotionsSectionSource { doctor, center }
+
 /// Shows a floating toast that overlays even on top of modal bottom sheets.
 /// The standard ScaffoldMessenger snackbar is hidden under the sheet, so we
 /// mount a transient OverlayEntry instead.
@@ -844,11 +849,85 @@ class _DoctorProfilePageState extends State<DoctorProfilePage> {
     }
   }
 
+  /// Renders the doctor profile's promotions area. Splits into TWO
+  /// separate Cards when the patient sees both:
+  ///   • "Doctor's offers" — promos owned directly by this doctor
+  ///   • "Offers from <Center>" — center-owned promos where this
+  ///     doctor is eligible (one Card per center, in the rare case
+  ///     the doctor is in multiple centers).
+  ///
+  /// Compared to the old single-section + "From X" inline tag, this
+  /// makes the source structurally obvious and reads better when the
+  /// patient is scanning a long list.
   Widget _buildPromotionsSection(List<Map<String, dynamic>> promotions) {
+    if (promotions.isEmpty) return const SizedBox.shrink();
+
+    final centerOwned = <String, List<Map<String, dynamic>>>{};
+    final doctorOwned = <Map<String, dynamic>>[];
+    for (final p in promotions) {
+      if ((p['owner_type'] as String?) == 'center') {
+        final cn = (p['center_name'] as String?)?.trim();
+        if (cn != null && cn.isNotEmpty) {
+          centerOwned.putIfAbsent(cn, () => []).add(p);
+        } else {
+          // Fallback bucket — center promo without a resolved name
+          centerOwned.putIfAbsent('', () => []).add(p);
+        }
+      } else {
+        doctorOwned.add(p);
+      }
+    }
+
+    final tiles = <Widget>[
+      // Center-owned sections first (more prominent — reasons to book
+      // beyond what this doctor personally offers).
+      for (final entry in centerOwned.entries)
+        Padding(
+          padding: EdgeInsets.only(bottom: 10.h),
+          child: _buildPromotionsSectionCard(
+            promotions: entry.value,
+            source: _PromotionsSectionSource.center,
+            sourceName: entry.key,
+          ),
+        ),
+      if (doctorOwned.isNotEmpty)
+        _buildPromotionsSectionCard(
+          promotions: doctorOwned,
+          source: _PromotionsSectionSource.doctor,
+        ),
+    ];
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: tiles,
+    );
+  }
+
+  Widget _buildPromotionsSectionCard({
+    required List<Map<String, dynamic>> promotions,
+    required _PromotionsSectionSource source,
+    String? sourceName,
+  }) {
     if (promotions.isEmpty) return const SizedBox.shrink();
 
     final l = AppLocalizations.of(context)!;
     final isAr = Localizations.localeOf(context).languageCode == 'ar';
+    final isCenter = source == _PromotionsSectionSource.center;
+
+    final headerTitle = isCenter
+        ? l.centerOffersSectionTitle(sourceName ?? '')
+        : l.doctorOffersSectionTitle;
+    final headerDescription = isCenter
+        ? l.centerOffersSectionDescription
+        : l.doctorOffersSectionDescription;
+    final headerIcon = isCenter
+        ? Icons.local_hospital_rounded
+        : Icons.medical_services_rounded;
+    // A different gradient pair for center vs doctor so the source is
+    // recognizable from the icon chip alone.
+    final headerGradient = isCenter
+        ? const [Color(0xFF00B4B6), AppColors.main]
+        : const [AppColors.main, Color(0xFF00B4B6)];
 
     return Card(
       color: AppColors.background2,
@@ -862,27 +941,44 @@ class _DoctorProfilePageState extends State<DoctorProfilePage> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // Header
+            // Header — icon + title + (when center-owned) the source
+            // name baked into the title via the localized template.
             Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Container(
                   padding: EdgeInsets.all(6.r),
                   decoration: BoxDecoration(
-                    gradient: const LinearGradient(
-                      colors: [AppColors.main, Color(0xFF00B4B6)],
+                    gradient: LinearGradient(
+                      colors: headerGradient,
                       begin: Alignment.topLeft,
                       end: Alignment.bottomRight,
                     ),
                     borderRadius: BorderRadius.circular(8.r),
                   ),
-                  child: Icon(Icons.local_offer_rounded,
-                      color: Colors.white, size: 14.sp),
+                  child: Icon(headerIcon, color: Colors.white, size: 14.sp),
                 ),
-                SizedBox(width: 8.w),
-                Text(
-                  l.offers,
-                  style: AppTextStyles.getTitle1(context)
-                      .copyWith(fontSize: 11.sp),
+                SizedBox(width: 10.w),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        headerTitle,
+                        style: AppTextStyles.getTitle1(context)
+                            .copyWith(fontSize: 11.5.sp),
+                      ),
+                      SizedBox(height: 2.h),
+                      Text(
+                        headerDescription,
+                        style: AppTextStyles.getText3(context).copyWith(
+                          color: Colors.grey[600],
+                          fontSize: 9.5.sp,
+                          height: 1.35,
+                        ),
+                      ),
+                    ],
+                  ),
                 ),
               ],
             ),
@@ -1029,6 +1125,20 @@ class _DoctorProfilePageState extends State<DoctorProfilePage> {
         ),
       ),
     );
+  }
+
+  /// True when the promo row was returned by `get_promotions_for_doctor`
+  /// with `owner_type = 'center'`.
+  bool _isCenterOwned(Map<String, dynamic> promo) =>
+      (promo['owner_type'] as String?) == 'center';
+
+  /// Returns the right "Center-wide" / "Selected doctors" label for a
+  /// center-owned promo. `target_doctor_ids` is empty → all doctors at
+  /// the center can honor it; non-empty → narrowed to that subset.
+  String _centerScopeLabel(Map<String, dynamic> promo, AppLocalizations l) {
+    final raw = promo['target_doctor_ids'];
+    final ids = raw is List ? raw : const <dynamic>[];
+    return ids.isEmpty ? l.centerScopeAllDoctors : l.centerScopeSelectedDoctors;
   }
 
   Widget _buildPromotionItem(
@@ -1299,9 +1409,13 @@ class _DoctorProfilePageState extends State<DoctorProfilePage> {
                         ),
                       ),
                     ],
-                    // Tags row — center-owned badge (if applicable), plus
-                    // existing new-patients / expiry tags.
-                    if ((promo['owner_type'] as String?) == 'center' ||
+                    // Tags row — for center-owned promos, show a SCOPE
+                    // tag (Center-wide / Selected doctors) so the
+                    // patient knows whether the offer applies to any
+                    // doctor here or to a chosen subset. The "From X"
+                    // source info is no longer needed inline — the
+                    // section header above already says it.
+                    if (_isCenterOwned(promo) ||
                         audience == 'new_patients' ||
                         expiryText != null) ...[
                       SizedBox(height: 6.h),
@@ -1309,13 +1423,10 @@ class _DoctorProfilePageState extends State<DoctorProfilePage> {
                         spacing: 6.w,
                         runSpacing: 4.h,
                         children: [
-                          if ((promo['owner_type'] as String?) == 'center')
+                          if (_isCenterOwned(promo))
                             _promoTag(
-                              (promo['center_name'] as String?)?.isNotEmpty ==
-                                      true
-                                  ? l.fromCenter(promo['center_name'] as String)
-                                  : l.fromCenter(''),
-                              AppColors.main,
+                              _centerScopeLabel(promo, l),
+                              const Color(0xFF00B4B6),
                             ),
                           if (audience == 'new_patients')
                             _promoTag(l.newPatientsOnly, Colors.blue),

@@ -7664,6 +7664,42 @@ abstract class AppLocalizations {
   /// **'From {centerName}'**
   String fromCenter(String centerName);
 
+  /// No description provided for @doctorOffersSectionTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Doctor\'s offers'**
+  String get doctorOffersSectionTitle;
+
+  /// No description provided for @centerOffersSectionTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Offers from {centerName}'**
+  String centerOffersSectionTitle(String centerName);
+
+  /// No description provided for @centerOffersSectionDescription.
+  ///
+  /// In en, this message translates to:
+  /// **'Sponsored by the center. Any doctor at this center can honor these on a bill.'**
+  String get centerOffersSectionDescription;
+
+  /// No description provided for @doctorOffersSectionDescription.
+  ///
+  /// In en, this message translates to:
+  /// **'Personal offers from this doctor. Apply only when booking with them.'**
+  String get doctorOffersSectionDescription;
+
+  /// No description provided for @centerScopeAllDoctors.
+  ///
+  /// In en, this message translates to:
+  /// **'All doctors at the center'**
+  String get centerScopeAllDoctors;
+
+  /// No description provided for @centerScopeSelectedDoctors.
+  ///
+  /// In en, this message translates to:
+  /// **'Selected doctors'**
+  String get centerScopeSelectedDoctors;
+
   /// No description provided for @couldNotClaimTryAgain.
   ///
   /// In en, this message translates to:

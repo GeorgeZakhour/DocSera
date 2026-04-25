@@ -4064,5 +4064,27 @@ class AppLocalizationsAr extends AppLocalizations {
   }
 
   @override
+  String get doctorOffersSectionTitle => 'عروض الطبيب';
+
+  @override
+  String centerOffersSectionTitle(String centerName) {
+    return 'عروض من $centerName';
+  }
+
+  @override
+  String get centerOffersSectionDescription =>
+      'مقدّمة من المركز. يمكن لأي طبيب في هذا المركز تطبيقها على فاتورتك.';
+
+  @override
+  String get doctorOffersSectionDescription =>
+      'عروض شخصية من هذا الطبيب. تنطبق عند حجز موعد معه فقط.';
+
+  @override
+  String get centerScopeAllDoctors => 'جميع الأطباء في المركز';
+
+  @override
+  String get centerScopeSelectedDoctors => 'أطباء محددون';
+
+  @override
   String get couldNotClaimTryAgain => 'تعذّر الحصول على العرض — حاول مرة أخرى';
 }

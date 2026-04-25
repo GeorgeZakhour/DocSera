@@ -1547,5 +1547,14 @@
   "@fromCenter": {
     "placeholders": {"centerName": {"type": "String"}}
   },
+  "doctorOffersSectionTitle": "عروض الطبيب",
+  "centerOffersSectionTitle": "عروض من {centerName}",
+  "@centerOffersSectionTitle": {
+    "placeholders": {"centerName": {"type": "String"}}
+  },
+  "centerOffersSectionDescription": "مقدّمة من المركز. يمكن لأي طبيب في هذا المركز تطبيقها على فاتورتك.",
+  "doctorOffersSectionDescription": "عروض شخصية من هذا الطبيب. تنطبق عند حجز موعد معه فقط.",
+  "centerScopeAllDoctors": "جميع الأطباء في المركز",
+  "centerScopeSelectedDoctors": "أطباء محددون",
   "couldNotClaimTryAgain": "تعذّر الحصول على العرض — حاول مرة أخرى"
 }

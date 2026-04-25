@@ -4111,5 +4111,27 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
+  String get doctorOffersSectionTitle => 'Doctor\'s offers';
+
+  @override
+  String centerOffersSectionTitle(String centerName) {
+    return 'Offers from $centerName';
+  }
+
+  @override
+  String get centerOffersSectionDescription =>
+      'Sponsored by the center. Any doctor at this center can honor these on a bill.';
+
+  @override
+  String get doctorOffersSectionDescription =>
+      'Personal offers from this doctor. Apply only when booking with them.';
+
+  @override
+  String get centerScopeAllDoctors => 'All doctors at the center';
+
+  @override
+  String get centerScopeSelectedDoctors => 'Selected doctors';
+
+  @override
   String get couldNotClaimTryAgain => 'Could not claim — try again';
 }
