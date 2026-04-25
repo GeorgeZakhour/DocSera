@@ -4120,7 +4120,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get centerOffersSectionDescription =>
-      'Sponsored by the center. Any doctor at this center can honor these on a bill.';
+      'Sponsored by the center. This offer applies when booking with this doctor.';
 
   @override
   String get doctorOffersSectionDescription =>

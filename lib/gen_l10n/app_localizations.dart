@@ -7679,7 +7679,7 @@ abstract class AppLocalizations {
   /// No description provided for @centerOffersSectionDescription.
   ///
   /// In en, this message translates to:
-  /// **'Sponsored by the center. Any doctor at this center can honor these on a bill.'**
+  /// **'Sponsored by the center. This offer applies when booking with this doctor.'**
   String get centerOffersSectionDescription;
 
   /// No description provided for @doctorOffersSectionDescription.

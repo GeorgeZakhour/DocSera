@@ -4073,7 +4073,7 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get centerOffersSectionDescription =>
-      'مقدّمة من المركز. يمكن لأي طبيب في هذا المركز تطبيقها على فاتورتك.';
+      'مقدّمة من المركز. ينطبق هذا العرض عند حجز موعد مع هذا الطبيب.';
 
   @override
   String get doctorOffersSectionDescription =>

@@ -1552,7 +1552,7 @@
   "@centerOffersSectionTitle": {
     "placeholders": {"centerName": {"type": "String"}}
   },
-  "centerOffersSectionDescription": "مقدّمة من المركز. يمكن لأي طبيب في هذا المركز تطبيقها على فاتورتك.",
+  "centerOffersSectionDescription": "مقدّمة من المركز. ينطبق هذا العرض عند حجز موعد مع هذا الطبيب.",
   "doctorOffersSectionDescription": "عروض شخصية من هذا الطبيب. تنطبق عند حجز موعد معه فقط.",
   "centerScopeAllDoctors": "جميع الأطباء في المركز",
   "centerScopeSelectedDoctors": "أطباء محددون",
