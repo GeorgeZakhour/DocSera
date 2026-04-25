@@ -155,9 +155,9 @@ class _WizardCompletionScreenState extends State<WizardCompletionScreen>
                       ),
                       child: Text(
                         t.healthProfile_completion_cta,
-                        style: TextStyle(
-                          fontSize: 16.sp,
-                          fontWeight: FontWeight.w700,
+                        style: AppTextStyles.getText1(context).copyWith(
+                          color: Colors.white,
+                          fontWeight: FontWeight.bold,
                         ),
                       ),
                     ),
@@ -213,10 +213,9 @@ class _PointsPill extends StatelessWidget {
                   SizedBox(width: 6.w),
                   Text(
                     text,
-                    style: TextStyle(
-                      fontSize: 14.sp,
-                      fontWeight: FontWeight.w700,
+                    style: AppTextStyles.getText1(context).copyWith(
                       color: AppColors.mainDark,
+                      fontWeight: FontWeight.w700,
                     ),
                   ),
                 ],

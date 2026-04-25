@@ -3,6 +3,7 @@ import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:docsera/app/const.dart';
+import 'package:docsera/app/text_styles.dart';
 import 'package:docsera/gen_l10n/app_localizations.dart';
 
 typedef ManualEntryResult = ({String name, String? description});
@@ -66,26 +67,56 @@ class _ManualEntrySheetDialogState extends State<_ManualEntrySheetDialog> {
                 children: [
                   Text(
                     widget.title,
-                    style: TextStyle(
-                      fontSize: 16.sp,
-                      fontWeight: FontWeight.w700,
+                    style: AppTextStyles.getTitle2(context).copyWith(
                       color: AppColors.mainDark,
                     ),
                   ),
                   SizedBox(height: 14.h),
-                  TextField(
+                  TextFormField(
                     controller: _name,
+                    style: AppTextStyles.getText2(context),
                     decoration: InputDecoration(
                       labelText: t.health_manual_entry_name_label,
-                      border: const OutlineInputBorder(),
+                      labelStyle: AppTextStyles.getText2(context).copyWith(
+                        color: Colors.grey,
+                      ),
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(25.r),
+                        borderSide: const BorderSide(color: Colors.grey),
+                      ),
+                      enabledBorder: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(25.r),
+                        borderSide: const BorderSide(color: Colors.grey),
+                      ),
+                      focusedBorder: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(25.r),
+                        borderSide:
+                            const BorderSide(color: AppColors.main, width: 2),
+                      ),
                     ),
                   ),
                   SizedBox(height: 10.h),
-                  TextField(
+                  TextFormField(
                     controller: _desc,
+                    style: AppTextStyles.getText2(context),
                     decoration: InputDecoration(
                       labelText: t.health_manual_entry_desc_label,
-                      border: const OutlineInputBorder(),
+                      labelStyle: AppTextStyles.getText2(context).copyWith(
+                        color: Colors.grey,
+                      ),
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(25.r),
+                        borderSide: const BorderSide(color: Colors.grey),
+                      ),
+                      enabledBorder: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(25.r),
+                        borderSide: const BorderSide(color: Colors.grey),
+                      ),
+                      focusedBorder: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(25.r),
+                        borderSide:
+                            const BorderSide(color: AppColors.main, width: 2),
+                      ),
                     ),
                   ),
                   SizedBox(height: 16.h),
@@ -94,14 +125,35 @@ class _ManualEntrySheetDialogState extends State<_ManualEntrySheetDialog> {
                       Expanded(
                         child: OutlinedButton(
                           onPressed: () => Navigator.pop(context),
-                          child: Text(t.cancel),
+                          style: OutlinedButton.styleFrom(
+                            padding: EdgeInsets.symmetric(vertical: 12.h),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(12.r),
+                            ),
+                            side: BorderSide(
+                              color: AppColors.grayMain.withValues(alpha: 0.5),
+                            ),
+                          ),
+                          child: Text(
+                            t.cancel,
+                            style: AppTextStyles.getText2(context).copyWith(
+                              color: AppColors.grayMain,
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
                         ),
                       ),
                       SizedBox(width: 10.w),
                       Expanded(
-                        child: FilledButton(
-                          style: FilledButton.styleFrom(
+                        child: ElevatedButton(
+                          style: ElevatedButton.styleFrom(
                             backgroundColor: AppColors.main,
+                            foregroundColor: Colors.white,
+                            elevation: 0,
+                            padding: EdgeInsets.symmetric(vertical: 12.h),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(12.r),
+                            ),
                           ),
                           onPressed: () {
                             if (_name.text.trim().isEmpty) return;
@@ -115,7 +167,13 @@ class _ManualEntrySheetDialogState extends State<_ManualEntrySheetDialog> {
                               ),
                             );
                           },
-                          child: Text(t.save),
+                          child: Text(
+                            t.save,
+                            style: AppTextStyles.getText2(context).copyWith(
+                              color: Colors.white,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
                         ),
                       ),
                     ],

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:docsera/app/const.dart';
+import 'package:docsera/app/text_styles.dart';
 
 class SingleSelectOption<T> {
   final T value;
@@ -97,7 +98,10 @@ class _Row<T> extends StatelessWidget {
             Expanded(
               child: Text(
                 option.label,
-                style: TextStyle(fontSize: 14.sp),
+                style: AppTextStyles.getText1(context).copyWith(
+                  color: isSelected ? AppColors.mainDark : AppColors.blackText,
+                  fontWeight: isSelected ? FontWeight.w600 : FontWeight.w500,
+                ),
               ),
             ),
           ],

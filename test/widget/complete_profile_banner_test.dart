@@ -38,16 +38,16 @@ void main() {
     expect(taps, 1);
   });
 
-  testWidgets('tapping anywhere on the card also fires onTap', (tester) async {
-    var taps = 0;
+  testWidgets('shows arrow icon next to Start label', (tester) async {
     await tester.pumpWidget(wrap(CompleteProfileBanner(
       progress: 0.0,
-      onTap: () => taps++,
+      onTap: () {},
     )));
-    await tester.tap(find.byIcon(Icons.favorite_rounded));
-    await tester.pump();
-    // The heart bubble is wrapped in the outer InkWell, so a tap there
-    // should also fire onTap.
-    expect(taps, greaterThanOrEqualTo(1));
+    // RTL is the default in this app's tests; in any direction one of
+    // these arrows should be present alongside the Start label.
+    final hasArrow =
+        find.byIcon(Icons.arrow_forward_rounded).evaluate().isNotEmpty ||
+            find.byIcon(Icons.arrow_back_rounded).evaluate().isNotEmpty;
+    expect(hasArrow, isTrue);
   });
 }

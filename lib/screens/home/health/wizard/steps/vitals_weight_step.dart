@@ -1,10 +1,9 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:docsera/Business_Logic/Health_page/wizard/health_profile_wizard_cubit.dart';
 import 'package:docsera/Business_Logic/Health_page/wizard/health_profile_wizard_state.dart';
 import 'package:docsera/gen_l10n/app_localizations.dart';
+import 'package:docsera/screens/home/health/wizard/widgets/wizard_numeric_field.dart';
 import 'package:docsera/screens/home/health/wizard/widgets/wizard_step_scaffold.dart';
 
 class VitalsWeightStep extends StatefulWidget {
@@ -37,23 +36,12 @@ class _VitalsWeightStepState extends State<VitalsWeightStep> {
     return WizardStepScaffold(
       lottieAssetName: 'vitals_weight',
       title: t.healthProfile_step_weight_title,
-      body: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            t.healthProfile_step_weight_input,
-            style: TextStyle(fontSize: 13.sp, fontWeight: FontWeight.w600),
-          ),
-          SizedBox(height: 8.h),
-          TextField(
-            controller: _ctrl,
-            keyboardType:
-                const TextInputType.numberWithOptions(decimal: false),
-            inputFormatters: [FilteringTextInputFormatter.digitsOnly],
-            onChanged: (v) => cubit.setWeight(int.tryParse(v)),
-            decoration: const InputDecoration(border: OutlineInputBorder()),
-          ),
-        ],
+      body: Center(
+        child: WizardNumericField(
+          controller: _ctrl,
+          label: t.healthProfile_step_weight_input,
+          onChanged: cubit.setWeight,
+        ),
       ),
       onSkip: () {
         cubit.setWeight(null);

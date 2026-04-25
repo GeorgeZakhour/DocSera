@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:docsera/app/const.dart';
+import 'package:docsera/app/text_styles.dart';
 import 'package:docsera/gen_l10n/app_localizations.dart';
 
 class MultiSelectItem {
@@ -63,9 +64,8 @@ class WizardMultiSelectList extends StatelessWidget {
                   SizedBox(width: 8.w),
                   Text(
                     addManualLabel,
-                    style: TextStyle(
+                    style: AppTextStyles.getText1(context).copyWith(
                       color: AppColors.main,
-                      fontSize: 14.sp,
                       fontWeight: FontWeight.w600,
                     ),
                   ),
@@ -127,8 +127,7 @@ class _Row extends StatelessWidget {
                 children: [
                   Text(
                     item.label,
-                    style: TextStyle(
-                      fontSize: 14.sp,
+                    style: AppTextStyles.getText1(context).copyWith(
                       color: AppColors.mainDark,
                       fontWeight: FontWeight.w500,
                     ),
@@ -138,8 +137,7 @@ class _Row extends StatelessWidget {
                       padding: EdgeInsets.only(top: 2.h),
                       child: Text(
                         alreadyTag,
-                        style: TextStyle(
-                          fontSize: 11.sp,
+                        style: AppTextStyles.getText3(context).copyWith(
                           fontStyle: FontStyle.italic,
                           color: AppColors.mainDark.withValues(alpha: 0.7),
                         ),

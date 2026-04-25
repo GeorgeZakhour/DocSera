@@ -7,6 +7,7 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:docsera/Business_Logic/Health_page/wizard/health_profile_wizard_cubit.dart';
 import 'package:docsera/Business_Logic/Health_page/wizard/health_profile_wizard_state.dart';
 import 'package:docsera/app/const.dart';
+import 'package:docsera/app/text_styles.dart';
 import 'package:docsera/gen_l10n/app_localizations.dart';
 import 'package:docsera/services/supabase/repositories/health_profile_repository.dart';
 
@@ -117,9 +118,8 @@ class _Body extends StatelessWidget {
                 child: Text(
                   state.message,
                   textAlign: TextAlign.center,
-                  style: TextStyle(
+                  style: AppTextStyles.getText1(context).copyWith(
                     color: AppColors.grayMain,
-                    fontSize: 14.sp,
                   ),
                 ),
               ),
@@ -153,10 +153,8 @@ class _Body extends StatelessWidget {
             ),
             title: Text(
               t.healthProfile_wizard_title,
-              style: TextStyle(
+              style: AppTextStyles.getTitle2(context).copyWith(
                 color: AppColors.mainDark,
-                fontWeight: FontWeight.w600,
-                fontSize: 15.sp,
               ),
             ),
             centerTitle: true,

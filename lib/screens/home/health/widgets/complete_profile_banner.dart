@@ -4,9 +4,9 @@ import 'package:docsera/app/const.dart';
 import 'package:docsera/app/text_styles.dart';
 import 'package:docsera/gen_l10n/app_localizations.dart';
 
-/// Premium hero card shown at the top of the Health page when the patient
-/// hasn't completed their health profile yet. Tap anywhere on the card or
-/// on the explicit Start button to launch the wizard.
+/// Hero card shown at the top of the Health page when the patient hasn't
+/// completed their health profile yet. Header row (heart + title +
+/// subtitle), then a full-width primary CTA below.
 class CompleteProfileBanner extends StatelessWidget {
   /// Reserved for a future progress indicator. Not rendered in v1.
   final double progress;
@@ -21,66 +21,55 @@ class CompleteProfileBanner extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final t = AppLocalizations.of(context)!;
-    return Material(
-      color: Colors.transparent,
-      child: InkWell(
-        onTap: onTap,
-        borderRadius: BorderRadius.circular(22.r),
-        child: Container(
-          padding: EdgeInsets.fromLTRB(16.w, 14.h, 14.w, 14.h),
-          decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(22.r),
-            gradient: const LinearGradient(
-              begin: Alignment.topLeft,
-              end: Alignment.bottomRight,
-              colors: [
-                Color(0xFFFFFFFF),
-                AppColors.background4,
-              ],
-            ),
-            border: Border.all(
-              color: AppColors.main.withValues(alpha: 0.18),
-            ),
-            boxShadow: [
-              BoxShadow(
-                color: AppColors.mainDark.withValues(alpha: 0.06),
-                blurRadius: 14,
-                offset: const Offset(0, 6),
-              ),
-            ],
-          ),
-          child: Row(
+    return Container(
+      padding: EdgeInsets.fromLTRB(18.w, 18.h, 18.w, 18.h),
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(20.r),
+        gradient: const LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: [
+            Colors.white,
+            AppColors.background4,
+          ],
+        ),
+        border: Border.all(
+          color: AppColors.main.withValues(alpha: 0.18),
+        ),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Row(
             children: [
-              _HeartBubble(),
+              const _HeartBubble(),
               SizedBox(width: 14.w),
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
+                  mainAxisSize: MainAxisSize.min,
                   children: [
                     Text(
                       t.healthProfile_banner_title,
-                      style: AppTextStyles.getTitle1(context).copyWith(
-                        fontSize: 13.5.sp,
+                      style: AppTextStyles.getTitle2(context).copyWith(
                         color: AppColors.mainDark,
-                        fontWeight: FontWeight.w700,
-                        height: 1.2,
+                        height: 1.25,
                       ),
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
                     ),
                     SizedBox(height: 4.h),
                     Row(
-                      mainAxisSize: MainAxisSize.min,
                       children: [
-                        const _PointsPill(),
-                        SizedBox(width: 6.w),
+                        const _PointsBadge(),
+                        SizedBox(width: 8.w),
                         Flexible(
                           child: Text(
                             t.healthProfile_banner_subtitle,
                             maxLines: 1,
                             overflow: TextOverflow.ellipsis,
-                            style: TextStyle(
+                            style: AppTextStyles.getText2(context).copyWith(
                               color: AppColors.grayMain,
-                              fontSize: 11.5.sp,
-                              fontWeight: FontWeight.w500,
                             ),
                           ),
                         ),
@@ -89,17 +78,52 @@ class CompleteProfileBanner extends StatelessWidget {
                   ],
                 ),
               ),
-              SizedBox(width: 8.w),
-              _StartChip(label: t.healthProfile_banner_cta, onTap: onTap),
             ],
           ),
-        ),
+          SizedBox(height: 14.h),
+          SizedBox(
+            width: double.infinity,
+            child: ElevatedButton(
+              onPressed: onTap,
+              style: ElevatedButton.styleFrom(
+                backgroundColor: AppColors.main,
+                foregroundColor: Colors.white,
+                elevation: 0,
+                padding: EdgeInsets.symmetric(vertical: 12.h),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12.r),
+                ),
+              ),
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Text(
+                    t.healthProfile_banner_cta,
+                    style: AppTextStyles.getText2(context).copyWith(
+                      color: Colors.white,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                  SizedBox(width: 6.w),
+                  Icon(
+                    Directionality.of(context) == TextDirection.rtl
+                        ? Icons.arrow_back_rounded
+                        : Icons.arrow_forward_rounded,
+                    color: Colors.white,
+                    size: 16.sp,
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ],
       ),
     );
   }
 }
 
 class _HeartBubble extends StatefulWidget {
+  const _HeartBubble();
   @override
   State<_HeartBubble> createState() => _HeartBubbleState();
 }
@@ -132,13 +156,13 @@ class _HeartBubbleState extends State<_HeartBubble>
         return Transform.scale(
           scale: scale,
           child: Container(
-            width: 46.w,
-            height: 46.w,
+            width: 52.w,
+            height: 52.w,
             decoration: BoxDecoration(
               shape: BoxShape.circle,
               gradient: RadialGradient(
                 colors: [
-                  AppColors.main.withValues(alpha: 0.20),
+                  AppColors.main.withValues(alpha: 0.18),
                   AppColors.main.withValues(alpha: 0.08),
                 ],
               ),
@@ -150,7 +174,7 @@ class _HeartBubbleState extends State<_HeartBubble>
             child: Icon(
               Icons.favorite_rounded,
               color: AppColors.main,
-              size: 22.sp,
+              size: 24.sp,
             ),
           ),
         );
@@ -159,92 +183,30 @@ class _HeartBubbleState extends State<_HeartBubble>
   }
 }
 
-class _PointsPill extends StatelessWidget {
-  const _PointsPill();
+class _PointsBadge extends StatelessWidget {
+  const _PointsBadge();
 
   @override
   Widget build(BuildContext context) {
     return Container(
       padding: EdgeInsets.symmetric(horizontal: 7.w, vertical: 2.h),
       decoration: BoxDecoration(
-        gradient: const LinearGradient(
-          colors: [AppColors.main, AppColors.mainDark],
-        ),
+        color: AppColors.main,
         borderRadius: BorderRadius.circular(99),
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Icon(Icons.add, color: Colors.white, size: 10.sp),
+          Icon(Icons.add, color: Colors.white, size: 11.sp),
           SizedBox(width: 1.w),
           Text(
             '15',
-            style: TextStyle(
+            style: AppTextStyles.getText3(context).copyWith(
               color: Colors.white,
-              fontSize: 11.sp,
               fontWeight: FontWeight.w800,
-              letterSpacing: 0.2,
             ),
           ),
         ],
-      ),
-    );
-  }
-}
-
-class _StartChip extends StatelessWidget {
-  final String label;
-  final VoidCallback onTap;
-  const _StartChip({required this.label, required this.onTap});
-
-  @override
-  Widget build(BuildContext context) {
-    final isRtl = Directionality.of(context) == TextDirection.rtl;
-    return Material(
-      color: Colors.transparent,
-      child: InkWell(
-        onTap: onTap,
-        borderRadius: BorderRadius.circular(99),
-        child: Ink(
-          decoration: BoxDecoration(
-            gradient: const LinearGradient(
-              colors: [AppColors.main, AppColors.mainDark],
-            ),
-            borderRadius: BorderRadius.circular(99),
-            boxShadow: [
-              BoxShadow(
-                color: AppColors.main.withValues(alpha: 0.30),
-                blurRadius: 10,
-                offset: const Offset(0, 4),
-              ),
-            ],
-          ),
-          child: Padding(
-            padding: EdgeInsets.symmetric(horizontal: 14.w, vertical: 9.h),
-            child: Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Text(
-                  label,
-                  style: TextStyle(
-                    color: Colors.white,
-                    fontSize: 12.5.sp,
-                    fontWeight: FontWeight.w700,
-                    letterSpacing: 0.2,
-                  ),
-                ),
-                SizedBox(width: 5.w),
-                Icon(
-                  isRtl
-                      ? Icons.arrow_back_rounded
-                      : Icons.arrow_forward_rounded,
-                  color: Colors.white,
-                  size: 14.sp,
-                ),
-              ],
-            ),
-          ),
-        ),
       ),
     );
   }

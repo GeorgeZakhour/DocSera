@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:docsera/app/const.dart';
+import 'package:docsera/app/text_styles.dart';
 
 /// Outlined "No allergy / No condition / etc." button shown at the bottom
 /// of multi-select wizard sections. Auto-hides via cross-fade + slide when
@@ -50,9 +51,8 @@ class WizardNoDataButton extends StatelessWidget {
                 child: Center(
                   child: Text(
                     label,
-                    style: TextStyle(
+                    style: AppTextStyles.getText1(context).copyWith(
                       color: AppColors.main,
-                      fontSize: 14.sp,
                       fontWeight: FontWeight.w600,
                     ),
                   ),

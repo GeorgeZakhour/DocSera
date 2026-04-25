@@ -1,9 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:docsera/app/const.dart';
+import 'package:docsera/app/text_styles.dart';
 
 /// Refined search input used at the top of multi-select wizard steps.
-/// Soft tinted background, search icon prefix, no hard border.
+/// Matches Docsera's text-field language: pill border, AppTextStyles font.
 class WizardSearchField extends StatelessWidget {
   final ValueChanged<String> onChanged;
   final String hint;
@@ -16,43 +17,42 @@ class WizardSearchField extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      decoration: BoxDecoration(
-        color: AppColors.main.withValues(alpha: 0.05),
-        borderRadius: BorderRadius.circular(12.r),
-        border: Border.all(
-          color: AppColors.main.withValues(alpha: 0.12),
-        ),
+    return TextField(
+      onChanged: onChanged,
+      style: AppTextStyles.getText2(context).copyWith(
+        color: AppColors.mainDark,
       ),
-      padding: EdgeInsetsDirectional.only(start: 12.w, end: 12.w),
-      child: Row(
-        children: [
-          Icon(
-            Icons.search_rounded,
-            color: AppColors.grayMain,
-            size: 18.sp,
-          ),
-          SizedBox(width: 8.w),
-          Expanded(
-            child: TextField(
-              onChanged: onChanged,
-              style: TextStyle(
-                fontSize: 13.5.sp,
-                color: AppColors.mainDark,
-              ),
-              decoration: InputDecoration(
-                hintText: hint,
-                hintStyle: TextStyle(
-                  color: AppColors.grayMain,
-                  fontSize: 13.sp,
-                ),
-                border: InputBorder.none,
-                contentPadding: EdgeInsets.symmetric(vertical: 12.h),
-                isDense: true,
-              ),
-            ),
-          ),
-        ],
+      decoration: InputDecoration(
+        hintText: hint,
+        hintStyle: AppTextStyles.getText2(context).copyWith(
+          color: Colors.grey,
+        ),
+        prefixIcon: Icon(
+          Icons.search_rounded,
+          color: AppColors.grayMain,
+          size: 18.sp,
+        ),
+        prefixIconConstraints: BoxConstraints(
+          minWidth: 38.w,
+          minHeight: 18.sp,
+        ),
+        contentPadding: EdgeInsets.symmetric(
+          horizontal: 12.w,
+          vertical: 10.h,
+        ),
+        isDense: true,
+        border: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(25.r),
+          borderSide: const BorderSide(color: Colors.grey),
+        ),
+        enabledBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(25.r),
+          borderSide: const BorderSide(color: Colors.grey),
+        ),
+        focusedBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(25.r),
+          borderSide: const BorderSide(color: AppColors.main, width: 2),
+        ),
       ),
     );
   }
