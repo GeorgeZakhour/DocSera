@@ -1,5 +1,5 @@
 // lib/Business_Logic/Health_page/wizard/health_profile_wizard_cubit.dart
-import 'package:bloc/bloc.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:docsera/Business_Logic/Health_page/wizard/health_profile_wizard_state.dart';
 import 'package:docsera/services/supabase/repositories/health_profile_repository.dart';
 
@@ -28,6 +28,9 @@ class HealthProfileWizardCubit extends Cubit<HealthProfileWizardState> {
       );
       emit(WizardActive(stepIndex: 0, answers: answers));
     } catch (e) {
+      // Outer guard for unexpected errors in WizardAnswers construction.
+      // fetchOwnProfile() already handles its own errors and returns null,
+      // so this path is reachable only by programming errors (bad casts).
       emit(WizardError(e.toString()));
     }
   }
@@ -88,6 +91,10 @@ class HealthProfileWizardCubit extends Cubit<HealthProfileWizardState> {
       return;
     }
 
+    // The switch above only persists vitals/lifestyle (steps 0..4).
+    // Steps 5..(kWizardTotalInputSteps-1) are record-based and persist via
+    // HealthCubit. If new vitals/lifestyle steps are added, extend the
+    // switch AND update kWizardTotalInputSteps in step.
     if (s.stepIndex >= kWizardTotalInputSteps - 1) {
       emit(s.copyWith(submittingFinal: true));
       try {

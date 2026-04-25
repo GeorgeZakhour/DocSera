@@ -16,6 +16,12 @@ class WizardAnswers extends Equatable {
     this.alcoholFrequency,
   });
 
+  /// Returns a new [WizardAnswers] with any non-null argument replacing the
+  /// corresponding field. Passing null is a **no-op** — the existing value
+  /// is preserved. This is intentional and matches the server-side
+  /// `coalesce(excluded.X, p.X)` partial-save semantics. Clearing fields is
+  /// out of scope for the wizard (fill-forward only); a future "edit health
+  /// profile" surface will need a dedicated clear method.
   WizardAnswers copyWith({
     num? heightCm,
     num? weightKg,
@@ -82,6 +88,9 @@ class WizardCompleted extends HealthProfileWizardState {
   List<Object?> get props => [alreadyAwarded, newBalance];
 }
 
+/// Terminal error state. The cubit has no `retry()` in v1 — the wizard
+/// page should either pop or call `init()` to restart at step 0.
+/// TODO: add a `retry()` that resumes from the failed step.
 class WizardError extends HealthProfileWizardState {
   final String message;
   const WizardError(this.message);
