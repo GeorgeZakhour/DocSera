@@ -1563,5 +1563,7 @@
   "healthProfile_completion_body": "Find all your information in the Health section",
   "healthProfile_completion_alreadyBody": "Already counted earlier — you'll find everything in the Health section",
   "healthProfile_completion_cta": "Got it",
-  "healthProfile_pointsAwarded": "+15 points"
+  "healthProfile_pointsAwarded": "+15 points",
+
+  "healthProfile_points_row_title": "Health profile completed"
 }

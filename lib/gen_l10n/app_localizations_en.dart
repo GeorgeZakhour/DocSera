@@ -4241,4 +4241,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get healthProfile_pointsAwarded => '+15 points';
+
+  @override
+  String get healthProfile_points_row_title => 'Health profile completed';
 }

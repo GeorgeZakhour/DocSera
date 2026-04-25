@@ -4192,4 +4192,7 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get healthProfile_pointsAwarded => '+15 نقطة';
+
+  @override
+  String get healthProfile_points_row_title => 'اكتمل ملفك الصحي';
 }

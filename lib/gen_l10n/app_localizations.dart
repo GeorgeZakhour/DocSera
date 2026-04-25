@@ -7915,6 +7915,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'+15 points'**
   String get healthProfile_pointsAwarded;
+
+  /// No description provided for @healthProfile_points_row_title.
+  ///
+  /// In en, this message translates to:
+  /// **'Health profile completed'**
+  String get healthProfile_points_row_title;
 }
 
 class _AppLocalizationsDelegate

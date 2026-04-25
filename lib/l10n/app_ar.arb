@@ -1585,5 +1585,7 @@
   "healthProfile_completion_body": "ستجد كل معلوماتك في قسم الصحة",
   "healthProfile_completion_alreadyBody": "تم احتسابها سابقاً — ستجد كل شيء في قسم الصحة",
   "healthProfile_completion_cta": "تم",
-  "healthProfile_pointsAwarded": "+15 نقطة"
+  "healthProfile_pointsAwarded": "+15 نقطة",
+
+  "healthProfile_points_row_title": "اكتمل ملفك الصحي"
 }

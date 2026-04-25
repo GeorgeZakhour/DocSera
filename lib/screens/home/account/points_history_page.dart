@@ -329,6 +329,22 @@ class _PointsHistoryPageState extends State<PointsHistoryPage>
     required String doctor,
     required String date,
   }) {
+    final metadata = (item['metadata'] as Map?)?.cast<String, dynamic>() ?? const {};
+    final source = metadata['source'] as String?;
+
+    final String rowTitle;
+    final IconData rowIcon;
+
+    switch (source) {
+      case 'health_profile':
+        rowTitle = AppLocalizations.of(context)!.healthProfile_points_row_title;
+        rowIcon = Icons.favorite_rounded;
+        break;
+      default:
+        rowTitle = AppLocalizations.of(context)!.completedAppointment;
+        rowIcon = Icons.stars;
+    }
+
     return InkWell(
       onTap: () => _showDetails(context, item),
       child: Container(
@@ -347,21 +363,22 @@ class _PointsHistoryPageState extends State<PointsHistoryPage>
         ),
         child: Row(
           children: [
-            Icon(Icons.stars, color: AppColors.main, size: 16.sp),
+            Icon(rowIcon, color: AppColors.main, size: 16.sp),
             SizedBox(width: 12.w),
             Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(AppLocalizations.of(context)!.completedAppointment,
+                  Text(rowTitle,
                       style: AppTextStyles.getText2(context).copyWith(
                           fontWeight: FontWeight.w700,
                           color: AppColors.mainDark)),
                   SizedBox(height: 3.h),
-                  Text(
-                    "${AppLocalizations.of(context)!.withDoctor} $doctor  —  ${AppLocalizations.of(context)!.onDate} $date",
-                    style: AppTextStyles.getText3(context),
-                  ),
+                  if (source != 'health_profile')
+                    Text(
+                      "${AppLocalizations.of(context)!.withDoctor} $doctor  —  ${AppLocalizations.of(context)!.onDate} $date",
+                      style: AppTextStyles.getText3(context),
+                    ),
                 ],
               ),
             ),
