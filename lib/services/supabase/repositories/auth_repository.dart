@@ -36,7 +36,10 @@ class AuthRepository {
   Future<void> sendPhoneOtp(String phone, {bool isLogin = false}) async {
     await _supabase.functions.invoke(
       'send_sms_otp',
-      body: {'phone': phone, 'isLogin': isLogin},
+      body: {
+        'phone': phone,
+        'purpose': isLogin ? 'login' : 'signup_phone_verify',
+      },
     );
   }
 

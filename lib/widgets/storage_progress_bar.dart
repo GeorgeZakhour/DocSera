@@ -16,11 +16,15 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 class StorageProgressBar extends StatelessWidget {
   final bool expanded;
   final VoidCallback onToggle;
+  final VoidCallback? onManageStorage;
+  final VoidCallback? onInfoTap;
 
   const StorageProgressBar({
     super.key,
     required this.expanded,
     required this.onToggle,
+    this.onManageStorage,
+    this.onInfoTap,
   });
 
   Color _barColor(double pct) {
@@ -55,11 +59,61 @@ class StorageProgressBar extends StatelessWidget {
           crossFadeState: expanded
               ? CrossFadeState.showSecond
               : CrossFadeState.showFirst,
-          firstChild: _buildCollapsedPill(context, quota, barColor, pct),
+          firstChild: _buildCollapsedRow(context, quota, barColor, pct),
           secondChild: _buildExpandedCard(
               context, quota, barColor, bgColor, progress, pct),
         );
       },
+    );
+  }
+
+  // ---------------------------------------------------------------------------
+  // Collapsed row: pill + info button
+  // ---------------------------------------------------------------------------
+  Widget _buildCollapsedRow(
+    BuildContext context,
+    StorageQuotaResult quota,
+    Color barColor,
+    double pct,
+  ) {
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        _buildCollapsedPill(context, quota, barColor, pct),
+        if (onInfoTap != null) ...[
+          SizedBox(width: 4.w),
+          _buildGlassInfoButton(context),
+        ],
+      ],
+    );
+  }
+
+  Widget _buildGlassInfoButton(BuildContext context) {
+    return GestureDetector(
+      onTap: onInfoTap,
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(20.r),
+        child: BackdropFilter(
+          filter: ImageFilter.blur(sigmaX: 12, sigmaY: 12),
+          child: Container(
+            width: 28.w,
+            height: 28.w,
+            decoration: BoxDecoration(
+              color: Colors.white.withValues(alpha: 0.75),
+              shape: BoxShape.circle,
+              border: Border.all(
+                color: AppColors.main.withValues(alpha: 0.25),
+                width: 0.5,
+              ),
+            ),
+            child: Icon(
+              Icons.help_outline_rounded,
+              color: AppColors.main,
+              size: 14.sp,
+            ),
+          ),
+        ),
+      ),
     );
   }
 
@@ -243,6 +297,34 @@ class StorageProgressBar extends StatelessWidget {
                     ),
                   ],
                 ),
+
+                // Manage Storage button (when >= 80%)
+                if (pct >= 80 && onManageStorage != null) ...[
+                  SizedBox(height: 8.h),
+                  SizedBox(
+                    width: double.infinity,
+                    height: 30.h,
+                    child: OutlinedButton.icon(
+                      onPressed: onManageStorage,
+                      icon: Icon(Icons.cleaning_services_rounded, size: 12.sp, color: barColor),
+                      label: Text(
+                        l10n?.storageManage ?? 'Manage Storage',
+                        style: AppTextStyles.getText3(context).copyWith(
+                          color: barColor,
+                          fontWeight: FontWeight.w600,
+                          fontSize: 9.sp,
+                        ),
+                      ),
+                      style: OutlinedButton.styleFrom(
+                        side: BorderSide(color: barColor.withValues(alpha: 0.4)),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(8.r),
+                        ),
+                        padding: EdgeInsets.zero,
+                      ),
+                    ),
+                  ),
+                ],
               ],
             ),
           ),

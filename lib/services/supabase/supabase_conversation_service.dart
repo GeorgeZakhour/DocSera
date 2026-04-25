@@ -259,8 +259,14 @@ class ConversationService {
     required File file,
     required String type, // 'image', 'pdf', or 'audio'
     required String storageName,
+    String? displayName,
   }) async {
-    final storagePath = '$conversationId/$storageName';
+    // Sanitize storage name — Supabase rejects non-ASCII characters
+    final sanitizedName = storageName
+        .replaceAll(RegExp(r'[^\w.\-]'), '_')
+        .replaceAll(RegExp(r'_+'), '_');
+    final storagePath = '$conversationId/$sanitizedName';
+    debugPrint('📤 uploadAttachmentFile: type=$type, path=$storagePath');
     var bytes = await file.readAsBytes();
 
     // ----------------------------------------------------------
@@ -313,7 +319,7 @@ class ConversationService {
       'type': type,
       'bucket': 'chat.attachments',
       'paths': [storagePath],
-      'fileName': storageName,
+      'fileName': displayName ?? storageName,
       'fileUrl': null,
       'file_size_bytes': originalSizeBytes,
       if (isEncrypted) 'encrypted': true,

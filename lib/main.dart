@@ -14,6 +14,9 @@ import 'package:docsera/Business_Logic/Documents_page/documents/documents_cubit.
 import 'package:docsera/Business_Logic/Documents_page/notes/notes_cubit.dart';
 import 'package:docsera/Business_Logic/Health_page/patient_switcher_cubit.dart';
 import 'package:docsera/Business_Logic/Storage/storage_quota_cubit.dart';
+import 'package:docsera/Business_Logic/Loyalty/offers/offers_cubit.dart';
+import 'package:docsera/Business_Logic/Loyalty/vouchers/vouchers_cubit.dart';
+import 'package:docsera/Business_Logic/Loyalty/referral/referral_cubit.dart';
 import 'package:docsera/Business_Logic/Main_page/main_screen_cubit.dart';
 import 'package:docsera/Business_Logic/Messages_page/messages_cubit.dart';
 import 'package:docsera/screens/doctors/doctor_profile_page.dart';
@@ -57,6 +60,7 @@ import 'services/supabase/repositories/auth_repository.dart';
 import 'services/supabase/repositories/user_repository.dart';
 import 'services/supabase/repositories/favorites_repository.dart';
 import 'services/supabase/repositories/appointment_repository.dart';
+import 'services/supabase/loyalty/loyalty_service.dart';
 import 'services/encryption/message_encryption_service.dart';
 
 void main() async {
@@ -152,6 +156,9 @@ void main() async {
             ),
           ),
           BlocProvider(create: (_) => StorageQuotaCubit()),
+          BlocProvider(create: (_) => OffersCubit(LoyaltyService())),
+          BlocProvider(create: (_) => VouchersCubit(LoyaltyService())),
+          BlocProvider(create: (_) => ReferralCubit(LoyaltyService())),
 
         ],
         child: BlocListener<AuthCubit, custom_auth.AppAuthState>(

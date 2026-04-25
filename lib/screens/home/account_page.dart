@@ -30,12 +30,17 @@ import '../../Business_Logic/Account_page/user_cubit.dart';
 import '../../Business_Logic/Account_page/user_state.dart';
 import 'package:package_info_plus/package_info_plus.dart';
 import 'account/preferences.dart';
+import 'loyalty/wallet_page.dart';
+import 'loyalty/offers_page.dart';
+import 'loyalty/vouchers_page.dart';
+import 'loyalty/referral_section.dart';
 
 // 🆕 NEW COMPONENTS
 import 'account/widgets/account_banner_card.dart';
 import 'account/widgets/points_card.dart';
 import 'account/widgets/account_section_title.dart';
 import 'account/widgets/account_list_tile.dart';
+import 'account/widgets/loyalty_rewards_banner.dart';
 import 'account/sheets/edit_contact_info_sheet.dart';
 import 'account/sheets/change_password_sheet.dart';
 import 'account/sheets/language_selection_sheet.dart';
@@ -214,10 +219,19 @@ class _AccountScreenState extends State<AccountScreen> {
             children: [
               SizedBox(height: 5.h),
               const AccountBannerCard(),
-              // SizedBox(height: 5.h),
-              // PointsCard(userPoints: state.userPoints, userId: state.userId),
-              // Divider(color: Colors.grey[200], height: 2.h),
 
+              SizedBox(height: 10.h),
+
+              // Loyalty Rewards Banner
+              LoyaltyRewardsBanner(
+                points: state.userPoints,
+                onPointsTap: () => Navigator.push(context, fadePageRoute(const WalletPage())),
+                onOffersTap: () => Navigator.push(context, fadePageRoute(const OffersPage())),
+                onVouchersTap: () => Navigator.push(context, fadePageRoute(const VouchersPage())),
+                onReferralTap: () => Navigator.push(context, fadePageRoute(const ReferralSectionPage())),
+              ),
+
+              const SizedBox(height: 15),
               AccountSectionTitle(title: AppLocalizations.of(context)!.personalInformation),
               Divider(color: Colors.grey[200], height: 2.h),
 

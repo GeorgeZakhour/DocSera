@@ -99,9 +99,10 @@
   "takeNotesTitle": "Take important notes\n about your health",
   "takeNotesDescription": "For example, track symptoms, note mental health concerns, and prepare questions for your practitioners.",
   "addDocument": "Add Document",
+  "fieldRequired": "This field is required",
   "uploadingDocument": "Uploading document...",
-  "documentTooLarge": "The compressed file exceeds 2 MB. Please reduce the number of images or use smaller ones.",
-  "pdfTooLarge": "The PDF file is too large. Please use a file smaller than 2MB.",
+  "documentTooLarge": "The file exceeds the 15 MB limit. Please reduce the number of images or use smaller ones.",
+  "pdfTooLarge": "The PDF file is too large. Maximum file size is 15 MB.",
   "chooseAddDocumentMethod": "Choose a method",
   "createNote": "Create Note",
   "documentDeleted": "Document deleted successfully",
@@ -114,7 +115,7 @@
   "sendMessage": "Send a message",
   "easilySendMessages": "Easily send messages to practitioners",
   "sendMessagesDescription": "Start a conversation with your practitioners. Ask about exam results, request referral letters, and more.",
-  "fileTooLarge": "The total size of images is too large (max 4MB). Please reduce the number or size of images.",
+  "fileTooLarge": "The total size of images is too large (max 15 MB). Please reduce the number or size of images.",
   "chooseAttachmentType": "Send attachment",
 
   "@accountPage================================": "👤 Account Page",
@@ -1137,6 +1138,8 @@
   "downloadFailed": "Failed to download image",
   "imagesDownloadFailed": "Failed to download images",
   "ofText": "of",
+  "imageFromDoctor": "Image from {doctorName}",
+  "pdfFromDoctor": "PDF from {doctorName}",
   "importedFromConversationWith": "Imported from the conversation with {name} on {date}",
   "documentAccessInfo": "Documents you upload here are visible to doctors who have you as a patient. You can manage and delete your own uploads. Files added by doctors appear here as read-only.",
   "notesAccessInfo": "Only you can access and manage your notes securely.",
@@ -1225,6 +1228,7 @@
   "sourceBadgeReport": "Report",
 
   "detailFileFormat": "File format",
+  "detailFileSize": "File size",
   "detailSource": "Source",
   "detailNumberOfPages": "Number of pages",
   "detailVisibility": "Visibility",
@@ -1265,6 +1269,10 @@
   "storageViewAll": "View All Documents",
   "storageManage": "Manage Storage",
   "okGotIt": "OK, Got It",
+  "storageDismiss": "Dismiss",
+  "storageFullUploadBlocked": "Your storage is full. Delete some documents to free up space before uploading.",
+  "storageInfoTitle": "About Your Storage",
+  "storageInfoBody": "This is your account's document storage.\n\n• Storage is shared across your account — documents for you and all your relatives count toward the same limit.\n\n• Only documents you upload are counted. Files added by your doctors do not use your storage.\n\n• You can free up space anytime by deleting documents you no longer need.",
   "fileTooLargeTitle": "This file is too large",
   "fileTooLargeBody": "Maximum file size: {max}MB. Your file: {size}MB.",
   "@fileTooLargeBody": {
@@ -1292,5 +1300,215 @@
   "fileExpired": "File expired",
   "deleteDocumentTitle": "Delete Document",
   "deleteDocumentConfirm": "Are you sure you want to delete",
-  "cannotBeUndone": "This cannot be undone."
+  "cannotBeUndone": "This cannot be undone.",
+  "referralCodeOptional": "Referral code (optional)",
+  "loyaltyRewards": "Loyalty & Rewards",
+  "yourPoints": "Your Points",
+  "myPoints": "My Points",
+  "transactionHistory": "Transaction History",
+  "noTransactionsYet": "No transactions yet",
+  "offers": "Offers",
+  "all": "All",
+  "healthPartners": "Health Partners",
+  "mobileCredit": "Mobile Credit",
+  "noOffersAvailable": "No offers available right now",
+  "offerDetails": "Offer Details",
+  "discount": "discount",
+  "redeemNow": "Redeem Now",
+  "notEnoughPoints": "Not enough points",
+  "confirmRedeem": "Confirm Redemption",
+  "spendPoints": "Spend",
+  "redeemSuccess": "Redeemed!",
+  "yourVoucherCode": "Your voucher code:",
+  "myVouchers": "My Vouchers",
+  "active": "Active",
+  "used": "Used",
+  "expired": "Expired",
+  "noVouchers": "No vouchers",
+  "voucherDetails": "Voucher Details",
+  "codeCopied": "Code copied!",
+  "tapToCopy": "Tap to copy",
+  "status": "Status",
+  "partner": "Partner",
+  "expiresAt": "Expires at",
+  "howToUse": "How to use",
+  "voucherInstructions": "Show this QR code or voucher code to the partner staff. They will scan or enter the code to verify your discount.",
+  "referFriends": "Refer Friends",
+  "yourReferralCode": "Your referral code",
+  "shareWithFriends": "Share with Friends",
+  "totalReferrals": "Referrals",
+  "pointsEarned": "Points Earned",
+  "howItWorks": "How it works",
+  "referStep1": "Share your code with friends",
+  "referStep2": "They sign up using your code and complete their profile",
+  "referStep3": "You both earn points!",
+  "recentReferrals": "Recent Referrals",
+  "referralShareMessage": "Join DocSera and use my referral code {code} when you sign up! We both get free points. Download now: https://docsera.app",
+  "@referralShareMessage": {
+    "placeholders": {
+      "code": {
+        "type": "String"
+      }
+    }
+  },
+  "pending": "Pending",
+  "confirmed": "Confirmed",
+  "megaOffer": "MEGA OFFER",
+  "currency": "SYP",
+  "daysLeft": "{days}d {hours}h left",
+  "@daysLeft": {
+    "placeholders": {
+      "days": {"type": "int"},
+      "hours": {"type": "int"}
+    }
+  },
+  "voucherExpired": "Expired",
+  "earnPointsTitle": "How to earn points",
+  "earnPointsReferral": "Refer a friend: +25 points",
+  "earnPointsAppointment": "Complete an appointment: +10 points",
+  "earnPointsReferred": "Join via referral: +15 points",
+  "pointsValue": "1 point ≈ 500 SYP",
+  "transactionReferral": "Referral reward",
+  "transactionWelcome": "Welcome bonus",
+  "transactionAppointment": "Appointment reward",
+  "transactionRedeemed": "Offer redeemed",
+  "processingNote": "Points are processed within 72 hours",
+  "availableOffers": "Available offers",
+  "validUntil": "Valid until {date}",
+  "@validUntil": {
+    "placeholders": {
+      "date": {"type": "String"}
+    }
+  },
+  "redeemConfirmMessage": "Spend {points} points on this offer?",
+  "@redeemConfirmMessage": {
+    "placeholders": {
+      "points": {"type": "int"}
+    }
+  },
+  "goToVouchers": "View My Vouchers",
+  "referralReward": "You earn 25 points, your friend earns 15!",
+  "noReferralsYet": "No referrals yet. Share your code!",
+  "address": "Address",
+  "freeFirstConsultation": "Free First Consultation",
+  "percentageDiscount": "Discount",
+  "fixedDiscount": "Discount",
+  "freeFollowup": "Free Follow-up Visit",
+  "specialOffer": "Special Offer",
+  "newPatientsOnly": "New Patients Only",
+  "daysRemaining": "days left",
+  "claimOffer": "Claim Offer",
+  "claimOfferDesc": "Claim this offer to receive a voucher code that you can show to the doctor during your visit.",
+  "voucherCode": "Voucher Code",
+  "voucherExpiry": "Valid for 7 days",
+  "showCodeToDoctor": "Show this code to the doctor during your visit",
+  "alreadyClaimed": "You have already claimed this offer",
+  "offerExpired": "This offer has expired",
+  "offerFull": "This offer has reached the maximum number of claims",
+  "claimSuccess": "Offer claimed successfully!",
+  "copyCode": "Copy Code",
+  "codeCopied": "Code copied!",
+
+  "totalEarned": "Earned",
+  "totalSpent": "Spent",
+  "transactionType": "Type",
+  "transactionTime": "Date & Time",
+  "transactionAmount": "Amount",
+  "transactionStatus": "Status",
+  "transactionCompleted": "Completed",
+  "transactionProcessing": "Processing",
+
+  "doctor": "Doctor",
+  "appointmentDate": "Appointment date",
+  "appointmentMarkedDone": "Marked as done",
+  "patientName": "Patient",
+  "forRelative": "For a relative",
+  "referredUser": "Referred user",
+  "offerDetails": "Offer",
+  "redeemedOn": "Redeemed on",
+  "pendingPointsNote": "Points will be added to your wallet within up to 72 hours (review period).",
+  "pendingTimeRemaining": "Time remaining",
+  "hoursRemaining": "{hours}h remaining",
+  "@hoursRemaining": {
+    "placeholders": {
+      "hours": {"type": "int"}
+    }
+  },
+  "pointsAddedToWallet": "Added to wallet",
+  "am": "AM",
+  "pm": "PM",
+  "referralInvitation": "Friend referral",
+  "partnerLabel": "Partner",
+  "voucherLocation": "Your voucher is in the \"My Vouchers\" section",
+  "voucherValidFor": "Valid for {days} days",
+  "@voucherValidFor": {
+    "placeholders": {
+      "days": {"type": "int"}
+    }
+  },
+  "redeemWarningTitle": "Before you redeem",
+  "redeemWarningVoucher": "Your points will be converted into a voucher in \"My Vouchers\"",
+  "redeemWarningValidity": "The voucher is valid for {days} days from the redemption date — don't redeem too early!",
+  "@redeemWarningValidity": {
+    "placeholders": {
+      "days": {"type": "int"}
+    }
+  },
+  "redeemWarningIrreversible": "This action is irreversible — you cannot get your points back once redeemed",
+  "redeemWarningUseIt": "Show the voucher code to the partner when using the offer",
+  "iUnderstandRedeem": "I understand, redeem now",
+  "eventDate": "Event date",
+  "pointsAvailableOn": "Points available on",
+  "voucherExpiresOn": "Voucher expires",
+  "promotionPressHereToClaim": "Press here to claim the offer and get your discount code. Simply telling the doctor verbally is not enough.",
+  "promotionFirstVisitOnly": "This offer is available only for your first visit with this doctor.",
+  "promotionSingleUse": "This offer can be used only once.",
+  "promotionMultiUse": "This offer can be used up to {n} times.",
+  "@promotionMultiUse": {
+    "placeholders": {
+      "n": {"type": "int"}
+    }
+  },
+  "promotionAlreadyUsed": "You have already used this offer.",
+  "promotionMaxClaimsReached": "You have already used this offer the maximum number of times allowed.",
+  "promotionShowCodeAtPayment": "When you visit the doctor, show this code to the receptionist at payment so the discount is applied to your bill automatically.",
+  "yourVoucher": "Your Voucher",
+  "showQrToDoctor": "Show this QR code to the doctor or receptionist during your visit",
+  "validFor": "Valid for",
+  "validWhileOfferActive": "Valid while offer is active",
+  "showAll": "Show all",
+  "voucherUsedNote": "You've already used this code and received the offer from the doctor.",
+  "voucherUsedAt": "Used on",
+  "claimNewCode": "Get a new code",
+  "promotionStillAvailable": "You can still use this promotion again.",
+
+  "health_manual_entry_cta": "Can't find what you're looking for?",
+  "health_manual_entry_button": "Add manually",
+  "health_manual_entry_title": "Add a custom entry",
+  "health_manual_entry_name_label": "Name",
+  "health_manual_entry_name_hint": "Enter the name of the item",
+  "health_manual_entry_desc_label": "Description (optional)",
+  "health_manual_entry_desc_hint": "Add any relevant details",
+  "health_manual_entry_submit": "Continue with this entry",
+  "health_manual_entry_name_required": "Please enter a name",
+  "health_manual_entry_disclaimer": "This entry will be saved for review. A verified version may replace it later.",
+  "health_custom_entry_badge": "Custom entry",
+
+  "voucherUsedNote": "This voucher has already been used. You can claim a new one if the offer allows it.",
+  "voucherUsedAt": "Used on",
+  "promotionStillAvailable": "This offer is still available! You can claim a new voucher code.",
+  "claimNewCode": "Claim New Code",
+
+  "health_verification_status": "Entry Type",
+  "health_verified": "Standard",
+  "health_unverified": "Custom Entry",
+
+  "offerUsedBadge": "Used",
+  "offerUsedTimesBadge": "Used {n}×",
+  "@offerUsedTimesBadge": {
+    "placeholders": {"n": {"type": "int"}}
+  },
+  "offerCodeReady": "Code ready",
+  "offerNotEligible": "Not eligible",
+  "offerFirstVisitOnlyHint": "Only for your first visit with this doctor"
 }

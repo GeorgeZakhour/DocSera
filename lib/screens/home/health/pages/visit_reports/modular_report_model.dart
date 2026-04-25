@@ -33,6 +33,25 @@ class ModularReportSection {
     if (value is Map) return (value as Map).isNotEmpty;
     return true;
   }
+
+  /// True when the server stripped this section's heavy value
+  /// (body_map / image_comparison) to save bandwidth on list queries.
+  bool get isHeavyPlaceholder => value == '__heavy__';
+
+  /// Whether this section type carries heavy data (SVG/base64).
+  bool get isHeavyType => type == 'body_map' || type == 'image_comparison';
+
+  /// Returns a copy with the value replaced by a lightweight placeholder.
+  ModularReportSection withStrippedValue() {
+    return ModularReportSection(
+      type: type,
+      key: key,
+      label: label,
+      value: '__heavy__',
+      config: config,
+      patientVisible: patientVisible,
+    );
+  }
 }
 
 class ModularReport {
@@ -50,6 +69,7 @@ class ModularReport {
   final String? doctorName;
   final String? doctorSpecialty;
   final String? doctorClinic;
+  final String? doctorCity;
   final String? doctorImage;
   final String? doctorGender;
   final String? doctorTitle;
@@ -76,6 +96,7 @@ class ModularReport {
     this.doctorName,
     this.doctorSpecialty,
     this.doctorClinic,
+    this.doctorCity,
     this.doctorImage,
     this.doctorGender,
     this.doctorTitle,
@@ -88,7 +109,41 @@ class ModularReport {
     this.patientPhone,
   });
 
-  factory ModularReport.fromJson(Map<String, dynamic> json) {
+  /// Whether any section has a stripped heavy placeholder that needs lazy-loading.
+  bool get hasHeavySections => sections.any((s) => s.isHeavyPlaceholder);
+
+  /// Returns a copy with updated sections (used when merging lazy-loaded data).
+  ModularReport copyWithSections(List<ModularReportSection> newSections) {
+    return ModularReport(
+      id: id,
+      appointmentId: appointmentId,
+      doctorId: doctorId,
+      patientName: patientName,
+      shareMode: shareMode,
+      patientVisibleSections: patientVisibleSections,
+      sections: newSections,
+      createdAt: createdAt,
+      updatedAt: updatedAt,
+      doctorName: doctorName,
+      doctorSpecialty: doctorSpecialty,
+      doctorClinic: doctorClinic,
+      doctorCity: doctorCity,
+      doctorImage: doctorImage,
+      doctorGender: doctorGender,
+      doctorTitle: doctorTitle,
+      doctorPhones: doctorPhones,
+      doctorMobile: doctorMobile,
+      doctorEmail: doctorEmail,
+      doctorWebsite: doctorWebsite,
+      patientGender: patientGender,
+      patientDob: patientDob,
+      patientPhone: patientPhone,
+    );
+  }
+
+  /// Creates a report from JSON, optionally stripping heavy section values
+  /// client-side (used by direct query fallback to match RPC behavior).
+  factory ModularReport.fromJson(Map<String, dynamic> json, {bool stripHeavy = false}) {
     final sectionsJson = json['sections'] as List<dynamic>? ?? [];
     final visibleKeys = (json['patient_visible_sections'] as List<dynamic>?)
         ?.map((e) => e.toString()).toList();
@@ -99,6 +154,13 @@ class ModularReport {
         .map((e) => ModularReportSection.fromJson(e as Map<String, dynamic>))
         .where((s) => s.hasContent)
         .toList();
+
+    // Client-side stripping for fallback path (mirrors fn_strip_heavy_sections)
+    if (stripHeavy) {
+      parsedSections = parsedSections
+          .map((s) => s.isHeavyType ? s.withStrippedValue() : s)
+          .toList();
+    }
 
     if ((shareMode == 'patient_friendly' || shareMode == 'prescription') && visibleKeys != null) {
       parsedSections = parsedSections.where((s) => visibleKeys.contains(s.key)).toList();
@@ -117,6 +179,7 @@ class ModularReport {
       doctorName: json['doctor_name'],
       doctorSpecialty: json['doctor_specialty'],
       doctorClinic: json['doctor_clinic'],
+      doctorCity: json['doctor_city']?.toString(),
       doctorImage: json['doctor_image'],
       doctorGender: json['doctor_gender'],
       doctorTitle: json['doctor_title'],

@@ -40,6 +40,7 @@ import 'package:docsera/Business_Logic/Storage/storage_quota_cubit.dart';
 import 'package:docsera/Business_Logic/Storage/storage_quota_state.dart';
 import 'package:docsera/widgets/storage_progress_bar.dart';
 import 'package:docsera/widgets/storage_warning_dialog.dart';
+import 'package:docsera/widgets/storage_full_bottom_sheet.dart';
 
 
 extension WidgetKeyExtension on Widget {
@@ -319,6 +320,7 @@ class _DocumentsPageState extends State<DocumentsPage> with AutomaticKeepAliveCl
                 usedPercentage: state.quota.usedPercentage,
                 warning70Shown: state.quota.warning70Shown,
                 warning90Shown: state.quota.warning90Shown,
+                onManageStorage: () => _showStorageFullSheet(autoDismiss: false),
               );
             }
           },
@@ -518,6 +520,13 @@ class _DocumentsPageState extends State<DocumentsPage> with AutomaticKeepAliveCl
                           heroTag: 'mainFab',
                           onPressed: () {
                             if (_selectedTab == 0) {
+                              // Block upload when storage is full
+                              final storageState = context.read<StorageQuotaCubit>().state;
+                              if (storageState is StorageQuotaLoaded &&
+                                  storageState.quota.usedPercentage >= 100) {
+                                _showStorageFullSheet();
+                                return;
+                              }
                               setState(() => _isFabExpanded = !_isFabExpanded);
                             } else {
                               // تبويب الملاحظات: افتح مباشرة صفحة إنشاء ملاحظة
@@ -750,6 +759,8 @@ class _DocumentsPageState extends State<DocumentsPage> with AutomaticKeepAliveCl
             child: StorageProgressBar(
               expanded: _storageExpanded,
               onToggle: () => setState(() => _storageExpanded = !_storageExpanded),
+              onManageStorage: () => _showStorageFullSheet(autoDismiss: false),
+              onInfoTap: () => _showStorageInfoDialog(),
             ),
           ),
       ],
@@ -1079,6 +1090,7 @@ class _DocumentsPageState extends State<DocumentsPage> with AutomaticKeepAliveCl
                     },
                     onDismissed: (_) {
                       context.read<DocumentsCubit>().deleteDocument(document: userDoc, context: context);
+                      context.read<StorageQuotaCubit>().loadStorageUsage();
                     },
                     child: Column(
                       children: [
@@ -1324,6 +1336,110 @@ class _DocumentsPageState extends State<DocumentsPage> with AutomaticKeepAliveCl
   void _showEditOptions(Map<String, dynamic> doc) {
     final UserDocument userDoc = doc['doc'];
     showDocumentOptionsSheet(context, userDoc);
+  }
+
+  void _showStorageInfoDialog() {
+    final l10n = AppLocalizations.of(context)!;
+    showDialog(
+      context: context,
+      builder: (dialogContext) => Dialog(
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(20.r),
+        ),
+        child: Padding(
+          padding: EdgeInsets.symmetric(horizontal: 24.w, vertical: 28.h),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Container(
+                width: 56.w,
+                height: 56.w,
+                decoration: BoxDecoration(
+                  color: AppColors.main.withValues(alpha: 0.12),
+                  shape: BoxShape.circle,
+                ),
+                child: Icon(
+                  Icons.cloud_done_rounded,
+                  color: AppColors.main,
+                  size: 28.sp,
+                ),
+              ),
+              SizedBox(height: 16.h),
+              Text(
+                l10n.storageInfoTitle,
+                style: AppTextStyles.getTitle2(context).copyWith(
+                  color: AppColors.blackText,
+                ),
+                textAlign: TextAlign.center,
+              ),
+              SizedBox(height: 12.h),
+              Text(
+                l10n.storageInfoBody,
+                style: AppTextStyles.getText2(context).copyWith(
+                  color: AppColors.grayMain,
+                  height: 1.5,
+                ),
+                textAlign: TextAlign.start,
+              ),
+              SizedBox(height: 20.h),
+              SizedBox(
+                width: double.infinity,
+                child: TextButton(
+                  onPressed: () => Navigator.of(dialogContext).pop(),
+                  style: TextButton.styleFrom(
+                    padding: EdgeInsets.symmetric(vertical: 12.h),
+                  ),
+                  child: Text(
+                    l10n.okGotIt,
+                    style: AppTextStyles.getText1(context).copyWith(
+                      color: AppColors.main,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  void _showStorageFullSheet({bool autoDismiss = true}) {
+    StorageFullBottomSheet.show(
+      context,
+      autoDismiss: autoDismiss,
+      onDeleteDocument: (docId) async {
+        final client = Supabase.instance.client;
+        // Fetch document pages for storage cleanup
+        final doc = await client
+            .from('documents')
+            .select('pages, user_id')
+            .eq('id', docId)
+            .maybeSingle();
+        if (doc != null) {
+          // Delete storage files
+          final pages = List<String>.from(doc['pages'] ?? []);
+          for (final url in pages) {
+            try {
+              final path = Uri.parse(url).path.split('/storage/v1/object/public/documents/').last;
+              await client.storage.from('documents').remove([path]);
+            } catch (_) {}
+          }
+          // Delete DB record
+          await client.from('documents').delete().eq('id', docId);
+        }
+        // Refresh document list
+        if (mounted) {
+          final switcher = context.read<PatientSwitcherCubit>().state;
+          context.read<DocumentsCubit>().listenToDocuments(
+            context: context,
+            relativeId: switcher.relativeId,
+            forceReload: true,
+          );
+        }
+      },
+    );
   }
 
   void _handleImagePicked(String imagePath) async {

@@ -20,28 +20,16 @@ class NotesCubit extends Cubit<NotesState> {
 
   RealtimeChannel? _notesRealtimeChannel;
   String? _subscribedUserId;
+  String? _currentRelativeId;
 
-  /// Phase 2 (Patient File Hub): honor the Health-page patient switcher.
-  /// Notes are private to the main user in the current schema (the `notes`
-  /// table has no `relative_id` column), so when a relative is selected we
-  /// emit an empty list instead of re-subscribing.  This keeps the Notes
-  /// tab behavior visually consistent with the Documents tab.
+  /// Honor the Health-page patient switcher.
+  /// When a relative is selected, fetch notes scoped to that relative.
+  /// When the main user is selected, fetch notes with no relative_id.
   void listenToNotes(
     BuildContext context, {
     bool forceReload = false,
     String? relativeId,
   }) {
-    // Relative context: notes are user-scoped only — emit empty and bail.
-    if (relativeId != null) {
-      _notesRealtimeChannel?.unsubscribe();
-      _notesRealtimeChannel = null;
-      _subscribedUserId = null;
-      emit(NotesLoaded(const []));
-      return;
-    }
-
-    if (!forceReload && state is NotesLoaded) return;
-
     String? userId;
     final authState = context.read<AuthCubit>().state;
     if (authState is AuthAuthenticated) {
@@ -50,24 +38,28 @@ class NotesCubit extends Cubit<NotesState> {
 
     if (userId == null) return;
 
-    if (_subscribedUserId == userId && _notesRealtimeChannel != null && !forceReload) return;
+    // Check if the context changed (different user or different relative)
+    final contextChanged = _subscribedUserId != userId || _currentRelativeId != relativeId;
+
+    if (!forceReload && !contextChanged && state is NotesLoaded) return;
+    if (!forceReload && !contextChanged && _notesRealtimeChannel != null) return;
 
     _notesRealtimeChannel?.unsubscribe();
     _subscribedUserId = userId;
+    _currentRelativeId = relativeId;
 
     emit(NotesLoading());
 
     _notesRealtimeChannel = _service.subscribeToNotes(userId, () {
-      _fetchNotes(userId!);
+      _fetchNotes(userId!, relativeId: relativeId);
     });
 
-    _fetchNotes(userId);
+    _fetchNotes(userId, relativeId: relativeId);
   }
 
-  void _fetchNotes(String userId) async {
-    // ...
+  void _fetchNotes(String userId, {String? relativeId}) async {
     try {
-      final notes = await _service.fetchNotes(userId);
+      final notes = await _service.fetchNotes(userId, relativeId: relativeId);
       emit(NotesLoaded(notes));
     } catch (e) {
       if (state is NotesLoaded) {
@@ -85,7 +77,7 @@ class NotesCubit extends Cubit<NotesState> {
         emit(NotesError("User not authenticated"));
         return;
       }
-      await _service.addNote(title, content, userId);
+      await _service.addNote(title, content, userId, relativeId: _currentRelativeId);
     } catch (e) {
       emit(NotesError(ErrorHandler.resolve(e, defaultMessage: "فشل إضافة الملاحظة")));
     }
@@ -99,7 +91,7 @@ class NotesCubit extends Cubit<NotesState> {
         return;
       }
       await _service.deleteNote(note.id!, userId);
-      _fetchNotes(userId); // ✅ Force refresh after delete
+      _fetchNotes(userId, relativeId: _currentRelativeId);
     } catch (e) {
       emit(NotesError(ErrorHandler.resolve(e, defaultMessage: "فشل حذف الملاحظة")));
     }

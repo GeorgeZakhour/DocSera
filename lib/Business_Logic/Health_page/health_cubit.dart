@@ -103,6 +103,24 @@ class HealthCubit extends Cubit<HealthState> {
   }
 
   // --------------------------------------------------------------
+  // CREATE CUSTOM MASTER ITEM (manual entry)
+  // --------------------------------------------------------------
+  Future<HealthMasterItem> createCustomMasterItem({
+    required String nameEn,
+    required String nameAr,
+    String? descriptionEn,
+    String? descriptionAr,
+  }) {
+    return service.createCustomMasterItem(
+      category: category,
+      nameEn: nameEn,
+      nameAr: nameAr,
+      descriptionEn: descriptionEn,
+      descriptionAr: descriptionAr,
+    );
+  }
+
+  // --------------------------------------------------------------
   // ADD NEW RECORD
   // --------------------------------------------------------------
 // --------------------------------------------------------------

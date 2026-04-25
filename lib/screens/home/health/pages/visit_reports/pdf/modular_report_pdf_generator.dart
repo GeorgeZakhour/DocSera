@@ -1,3 +1,4 @@
+import 'dart:convert';
 import 'dart:typed_data';
 
 import 'package:docsera/screens/home/health/pages/visit_reports/modular_report_model.dart';
@@ -29,9 +30,12 @@ class ModularReportPdfGenerator {
     final cairoBoldData = await rootBundle.load('assets/fonts/Cairo-Bold.ttf');
     final montRegData =
         await rootBundle.load('assets/fonts/Montserrat-Regular.ttf');
+    final montBoldData =
+        await rootBundle.load('assets/fonts/Montserrat-Bold.ttf');
     final cairoRegular = pw.Font.ttf(cairoRegData);
     final cairoBold = pw.Font.ttf(cairoBoldData);
     final montserratRegular = pw.Font.ttf(montRegData);
+    final montserratBold = pw.Font.ttf(montBoldData);
 
     // ── Logo ──
     pw.SvgImage? logoSvg;
@@ -40,6 +44,44 @@ class ModularReportPdfGenerator {
           await rootBundle.loadString('assets/images/docsera_main.svg');
       logoSvg = pw.SvgImage(svg: svgString);
     } catch (_) {}
+
+    // ── Body map SVGs ──
+    final bodyMapSvgs = <String, String>{};
+    const bodyMapAssets = [
+      'assets/images/body_map/body_front.svg',
+      'assets/images/body_map/body_back.svg',
+      'assets/images/body_map/full_body_anterior_female.svg',
+      'assets/images/body_map/full_body_posterior_female.svg',
+      'assets/images/body_map/head_face.svg',
+      'assets/images/body_map/head_lateral.svg',
+      'assets/images/body_map/head_posterior.svg',
+      'assets/images/body_map/neck_anterior.svg',
+      'assets/images/body_map/hand_palmar.svg',
+      'assets/images/body_map/hand_dorsal.svg',
+      'assets/images/body_map/foot_plantar.svg',
+      'assets/images/body_map/foot_dorsal.svg',
+      'assets/images/body_map/torso_anterior_male.svg',
+      'assets/images/body_map/torso_anterior_female.svg',
+      'assets/images/body_map/torso_posterior.svg',
+      'assets/images/body_map/torso_lateral.svg',
+      'assets/images/body_map/shoulder_anterior.svg',
+      'assets/images/body_map/shoulder_posterior.svg',
+      'assets/images/body_map/arm_anterior.svg',
+      'assets/images/body_map/arm_posterior.svg',
+      'assets/images/body_map/wrist_dorsal.svg',
+      'assets/images/body_map/wrist_palmar.svg',
+      'assets/images/body_map/hip_anterior.svg',
+      'assets/images/body_map/hip_posterior.svg',
+      'assets/images/body_map/knee_anterior.svg',
+      'assets/images/body_map/knee_posterior.svg',
+      'assets/images/body_map/leg_lateral.svg',
+      'assets/images/body_map/leg_medial.svg',
+    ];
+    for (final asset in bodyMapAssets) {
+      try {
+        bodyMapSvgs[asset] = await rootBundle.loadString(asset);
+      } catch (_) {}
+    }
 
     // ── Doctor info ──
     var doctorName = report.doctorName ?? '';
@@ -50,6 +92,7 @@ class ModularReportPdfGenerator {
     }
     final specialty = report.doctorSpecialty ?? '';
     final clinic = report.doctorClinic ?? '';
+    final city = report.doctorCity ?? '';
     final doctorPhone = _extractClinicPhone(report);
     final doctorMobile = _formatMobile((report.doctorMobile ?? '').trim());
     final doctorEmail = (report.doctorEmail ?? '').trim();
@@ -82,6 +125,7 @@ class ModularReportPdfGenerator {
           doctorName: doctorName,
           specialty: specialty,
           clinic: clinic,
+          city: city,
           phone: doctorPhone,
           mobile: doctorMobile,
           email: doctorEmail,
@@ -122,6 +166,8 @@ class ModularReportPdfGenerator {
               cairoRegular: cairoRegular,
               cairoBold: cairoBold,
               montserratRegular: montserratRegular,
+              montserratBold: montserratBold,
+              bodyMapSvgs: bodyMapSvgs,
             );
             if (content == null) return pw.SizedBox();
             return _wrapSection(
@@ -147,6 +193,7 @@ class ModularReportPdfGenerator {
     required String doctorName,
     required String specialty,
     required String clinic,
+    String city = '',
     String phone = '',
     String mobile = '',
     String email = '',
@@ -191,8 +238,9 @@ class ModularReportPdfGenerator {
             pw.Text(_t(specialty),
                 style: pw.TextStyle(
                     font: cairoRegular, fontSize: compact ? 8 : 9, color: _subText)),
-          if (clinic.isNotEmpty)
-            pw.Text(_t(clinic),
+          if (clinic.isNotEmpty || city.isNotEmpty)
+            pw.Text(
+                _t([clinic, city].where((e) => e.isNotEmpty).join(' · ')),
                 style: pw.TextStyle(
                     font: cairoRegular, fontSize: compact ? 7.5 : 8.5, color: _subText)),
           if (contactLine1.isNotEmpty)
@@ -400,6 +448,8 @@ class ModularReportPdfGenerator {
     required pw.Font cairoRegular,
     required pw.Font cairoBold,
     required pw.Font montserratRegular,
+    required pw.Font montserratBold,
+    required Map<String, String> bodyMapSvgs,
   }) {
     if (!section.hasContent) return null;
     switch (section.type) {
@@ -447,20 +497,10 @@ class ModularReportPdfGenerator {
         return _customTable(section.value, cairoBold, cairoRegular);
 
       case 'body_map':
-        return pw.Text(_t('(خريطة الجسم — انظر التطبيق)'),
-            style: pw.TextStyle(
-                font: cairoRegular,
-                fontSize: 9,
-                color: _subText,
-                fontStyle: pw.FontStyle.italic));
+        return _renderBodyMap(section, cairoRegular, cairoBold, montserratBold, bodyMapSvgs);
 
       case 'image_comparison':
-        return pw.Text(_t('(مقارنة الصور — انظر التطبيق)'),
-            style: pw.TextStyle(
-                font: cairoRegular,
-                fontSize: 9,
-                color: _subText,
-                fontStyle: pw.FontStyle.italic));
+        return _renderImageComparison(section, cairoRegular, cairoBold);
 
       case 'attachments':
         return _attachments(section.value, cairoRegular);
@@ -1317,6 +1357,381 @@ class ModularReportPdfGenerator {
                   font: cairoRegular, fontSize: 9, color: _subText,
                 )),
               ),
+            ],
+          ),
+        );
+      }).toList(),
+    );
+  }
+
+  // ── Body Map ──
+
+  static const _diagramTypeToAsset = <String, String>{
+    'full_body_anterior': 'assets/images/body_map/body_front.svg',
+    'full_body_posterior': 'assets/images/body_map/body_back.svg',
+    'full_body_anterior_female': 'assets/images/body_map/full_body_anterior_female.svg',
+    'full_body_posterior_female': 'assets/images/body_map/full_body_posterior_female.svg',
+    'head_face': 'assets/images/body_map/head_face.svg',
+    'head_lateral': 'assets/images/body_map/head_lateral.svg',
+    'head_posterior': 'assets/images/body_map/head_posterior.svg',
+    'neck_anterior': 'assets/images/body_map/neck_anterior.svg',
+    'hand_palmar': 'assets/images/body_map/hand_palmar.svg',
+    'hand_dorsal': 'assets/images/body_map/hand_dorsal.svg',
+    'foot_plantar': 'assets/images/body_map/foot_plantar.svg',
+    'foot_dorsal': 'assets/images/body_map/foot_dorsal.svg',
+    'torso_anterior_male': 'assets/images/body_map/torso_anterior_male.svg',
+    'torso_anterior_female': 'assets/images/body_map/torso_anterior_female.svg',
+    'torso_posterior': 'assets/images/body_map/torso_posterior.svg',
+    'torso_lateral': 'assets/images/body_map/torso_lateral.svg',
+    'shoulder_anterior': 'assets/images/body_map/shoulder_anterior.svg',
+    'shoulder_posterior': 'assets/images/body_map/shoulder_posterior.svg',
+    'arm_anterior': 'assets/images/body_map/arm_anterior.svg',
+    'arm_posterior': 'assets/images/body_map/arm_posterior.svg',
+    'wrist_dorsal': 'assets/images/body_map/wrist_dorsal.svg',
+    'wrist_palmar': 'assets/images/body_map/wrist_palmar.svg',
+    'hip_anterior': 'assets/images/body_map/hip_anterior.svg',
+    'hip_posterior': 'assets/images/body_map/hip_posterior.svg',
+    'knee_anterior': 'assets/images/body_map/knee_anterior.svg',
+    'knee_posterior': 'assets/images/body_map/knee_posterior.svg',
+    'leg_lateral': 'assets/images/body_map/leg_lateral.svg',
+    'leg_medial': 'assets/images/body_map/leg_medial.svg',
+  };
+
+  static const _categoryColors = <String, PdfColor>{
+    'pain': PdfColor.fromInt(0xFFE53935),
+    'lesion': PdfColor.fromInt(0xFFFB8C00),
+    'swelling': PdfColor.fromInt(0xFF1E88E5),
+    'surgical': PdfColor.fromInt(0xFF8E24AA),
+    'other': PdfColor.fromInt(0xFF757575),
+  };
+
+  static pw.Widget _renderBodyMap(
+    ModularReportSection s,
+    pw.Font cairoRegular,
+    pw.Font cairoBold,
+    pw.Font montserratBold,
+    Map<String, String> bodyMapSvgs,
+  ) {
+    if (s.value is! Map) return pw.SizedBox.shrink();
+    final map = s.value as Map;
+    final pins = (map['pins'] as List?)?.whereType<Map>().toList() ?? [];
+    if (pins.isEmpty) return pw.SizedBox.shrink();
+
+    const categoryLabels = <String, String>{
+      'pain': 'ألم',
+      'lesion': 'آفة',
+      'swelling': 'تورم',
+      'surgical': 'جراحي',
+      'other': 'أخرى',
+    };
+
+    // Resolve SVG asset
+    final diagramType = map['diagram_type']?.toString() ?? '';
+    final assetPath = _diagramTypeToAsset[diagramType] ??
+        _diagramTypeToAsset['full_body_anterior']!;
+    final svgString = bodyMapSvgs[assetPath];
+
+    // Render SVG diagram with pin markers
+    pw.Widget? diagramWidget;
+    if (svgString != null) {
+      const svgAspects = <String, double>{
+        'assets/images/body_map/body_front.svg': 2328.0 / 1052.0,
+        'assets/images/body_map/body_back.svg': 2328.0 / 1052.0,
+        'assets/images/body_map/full_body_anterior_female.svg': 2400.0 / 1792.0,
+        'assets/images/body_map/full_body_posterior_female.svg': 2400.0 / 1792.0,
+        'assets/images/body_map/head_face.svg': 1858.0 / 1331.0,
+        'assets/images/body_map/head_lateral.svg': 2210.0 / 1650.0,
+        'assets/images/body_map/head_posterior.svg': 2210.0 / 1650.0,
+        'assets/images/body_map/neck_anterior.svg': 2210.0 / 1650.0,
+        'assets/images/body_map/hand_palmar.svg': 1858.0 / 1331.0,
+        'assets/images/body_map/hand_dorsal.svg': 1858.0 / 1331.0,
+        'assets/images/body_map/foot_plantar.svg': 1858.0 / 1331.0,
+        'assets/images/body_map/foot_dorsal.svg': 1858.0 / 1331.0,
+        'assets/images/body_map/torso_anterior_male.svg': 2210.0 / 1650.0,
+        'assets/images/body_map/torso_anterior_female.svg': 2210.0 / 1650.0,
+        'assets/images/body_map/torso_posterior.svg': 2210.0 / 1650.0,
+        'assets/images/body_map/torso_lateral.svg': 2210.0 / 1650.0,
+        'assets/images/body_map/shoulder_anterior.svg': 2210.0 / 1650.0,
+        'assets/images/body_map/shoulder_posterior.svg': 2210.0 / 1650.0,
+        'assets/images/body_map/arm_anterior.svg': 2210.0 / 1650.0,
+        'assets/images/body_map/arm_posterior.svg': 2210.0 / 1650.0,
+        'assets/images/body_map/wrist_dorsal.svg': 2210.0 / 1650.0,
+        'assets/images/body_map/wrist_palmar.svg': 2210.0 / 1650.0,
+        'assets/images/body_map/hip_anterior.svg': 2400.0 / 1792.0,
+        'assets/images/body_map/hip_posterior.svg': 2400.0 / 1792.0,
+        'assets/images/body_map/knee_anterior.svg': 2400.0 / 1792.0,
+        'assets/images/body_map/knee_posterior.svg': 2400.0 / 1792.0,
+        'assets/images/body_map/leg_lateral.svg': 2400.0 / 1792.0,
+        'assets/images/body_map/leg_medial.svg': 2400.0 / 1792.0,
+      };
+
+      final aspect = svgAspects[assetPath] ?? (2328.0 / 1052.0);
+      const diagramHeight = 280.0;
+      final diagramWidth = diagramHeight / aspect;
+      const pinSize = 12.0;
+      const pinHalf = pinSize / 2;
+
+      final pinMarkers = <pw.Widget>[];
+      for (int i = 0; i < pins.length; i++) {
+        final pin = pins[i];
+        final px = (pin['x'] as num?)?.toDouble() ?? 0.0;
+        final py = (pin['y'] as num?)?.toDouble() ?? 0.0;
+        final cat = pin['category']?.toString() ?? 'other';
+        final color = _categoryColors[cat] ?? _categoryColors['other']!;
+
+        pinMarkers.add(pw.Positioned(
+          left: px * diagramWidth - pinHalf,
+          top: py * diagramHeight - pinHalf,
+          child: pw.Container(
+            width: pinSize,
+            height: pinSize,
+            decoration: pw.BoxDecoration(
+              shape: pw.BoxShape.circle,
+              color: color,
+              border: pw.Border.all(
+                  color: const PdfColor.fromInt(0xFFFFFFFF), width: 1),
+            ),
+            alignment: pw.Alignment.center,
+            child: pw.Text(
+              '${i + 1}',
+              style: pw.TextStyle(
+                font: montserratBold,
+                fontSize: 6,
+                color: const PdfColor.fromInt(0xFFFFFFFF),
+              ),
+            ),
+          ),
+        ));
+      }
+
+      diagramWidget = pw.Center(
+        child: pw.SizedBox(
+          width: diagramWidth,
+          height: diagramHeight,
+          child: pw.Stack(
+            overflow: pw.Overflow.visible,
+            children: [
+              pw.Positioned.fill(
+                child: pw.SvgImage(
+                  svg: svgString,
+                  fit: pw.BoxFit.contain,
+                  colorFilter: const PdfColor.fromInt(0xFF424242),
+                ),
+              ),
+              ...pinMarkers,
+            ],
+          ),
+        ),
+      );
+    }
+
+    // Pin legend table
+    final headers = ['#', 'الفئة', 'التسمية', 'ملاحظة'].reversed.toList();
+    final data = pins.asMap().entries.map((entry) {
+      final pin = entry.value;
+      final cat = pin['category']?.toString() ?? 'other';
+      return [
+        _t(pin['note']?.toString() ?? ''),
+        _t(pin['label']?.toString() ?? ''),
+        _t(categoryLabels[cat] ?? 'أخرى'),
+        _t('${entry.key + 1}'),
+      ];
+    }).toList();
+
+    return pw.Column(
+      crossAxisAlignment: pw.CrossAxisAlignment.start,
+      children: [
+        if (diagramWidget != null) ...[
+          diagramWidget,
+          pw.SizedBox(height: 8),
+        ],
+        pw.TableHelper.fromTextArray(
+          headerStyle: pw.TextStyle(
+              font: cairoBold, fontFallback: [cairoRegular], fontSize: 8),
+          cellStyle: pw.TextStyle(font: cairoRegular, fontSize: 8),
+          headerDecoration: const pw.BoxDecoration(color: _lightTeal),
+          headerAlignment: pw.Alignment.center,
+          cellAlignment: pw.Alignment.center,
+          border: pw.TableBorder.all(
+              color: const PdfColor.fromInt(0xFF9E9E9E), width: 0.5),
+          headers: headers,
+          data: data,
+        ),
+      ],
+    );
+  }
+
+  // ── Image Comparison ──
+
+  static pw.Widget? _pdfImageFromPath(String? url, {double? height}) {
+    if (url == null || url.isEmpty) return null;
+    try {
+      Uint8List bytes;
+      if (url.startsWith('data:')) {
+        final dataStr = url.split(',').last;
+        bytes = base64Decode(dataStr);
+      } else {
+        // Patient app doesn't have local file access like doctor app,
+        // so only data URIs are supported
+        return null;
+      }
+      final pdfImage = pw.MemoryImage(bytes);
+      return pw.Image(pdfImage, height: height ?? 150, fit: pw.BoxFit.contain);
+    } catch (_) {
+      return null;
+    }
+  }
+
+  static pw.Widget _renderImageComparison(
+    ModularReportSection s,
+    pw.Font cairoRegular,
+    pw.Font cairoBold,
+  ) {
+    if (s.value is! Map) return pw.SizedBox.shrink();
+    final map = s.value as Map;
+    final mode = map['mode']?.toString() ?? '';
+    final images =
+        (map['images'] as List?)?.whereType<Map>().toList() ?? [];
+    if (images.isEmpty) return pw.SizedBox.shrink();
+
+    if (mode == 'before_after') {
+      final before =
+          images.where((i) => i['role'] == 'before').firstOrNull;
+      final after =
+          images.where((i) => i['role'] == 'after').firstOrNull;
+
+      return pw.Row(
+        crossAxisAlignment: pw.CrossAxisAlignment.start,
+        children: [
+          if (before != null)
+            pw.Expanded(
+              child: pw.Column(
+                children: [
+                  pw.Text(_t('قبل'),
+                      style: pw.TextStyle(font: cairoBold, fontSize: 9)),
+                  pw.SizedBox(height: 4),
+                  _pdfImageFromPath(before['url']?.toString(),
+                          height: 150) ??
+                      pw.Container(
+                        height: 150,
+                        decoration: pw.BoxDecoration(
+                          border: pw.Border.all(color: PdfColors.grey300),
+                          borderRadius: pw.BorderRadius.circular(4),
+                        ),
+                        child: pw.Center(
+                          child: pw.Text('—',
+                              style: pw.TextStyle(
+                                  font: cairoRegular,
+                                  fontSize: 12,
+                                  color: _subText)),
+                        ),
+                      ),
+                  pw.SizedBox(height: 4),
+                  pw.Text(
+                    _t(before['date']?.toString() ?? ''),
+                    style: pw.TextStyle(
+                        font: cairoRegular, fontSize: 8, color: _subText),
+                  ),
+                  if ((before['note']?.toString() ?? '').isNotEmpty)
+                    pw.Text(
+                      _t(before['note'].toString()),
+                      style: pw.TextStyle(
+                          font: cairoRegular,
+                          fontSize: 7,
+                          color: _subText,
+                          fontStyle: pw.FontStyle.italic),
+                    ),
+                ],
+              ),
+            ),
+          pw.SizedBox(width: 8),
+          if (after != null)
+            pw.Expanded(
+              child: pw.Column(
+                children: [
+                  pw.Text(_t('بعد'),
+                      style: pw.TextStyle(font: cairoBold, fontSize: 9)),
+                  pw.SizedBox(height: 4),
+                  _pdfImageFromPath(after['url']?.toString(),
+                          height: 150) ??
+                      pw.Container(
+                        height: 150,
+                        decoration: pw.BoxDecoration(
+                          border: pw.Border.all(color: PdfColors.grey300),
+                          borderRadius: pw.BorderRadius.circular(4),
+                        ),
+                        child: pw.Center(
+                          child: pw.Text('—',
+                              style: pw.TextStyle(
+                                  font: cairoRegular,
+                                  fontSize: 12,
+                                  color: _subText)),
+                        ),
+                      ),
+                  pw.SizedBox(height: 4),
+                  pw.Text(
+                    _t(after['date']?.toString() ?? ''),
+                    style: pw.TextStyle(
+                        font: cairoRegular, fontSize: 8, color: _subText),
+                  ),
+                  if ((after['note']?.toString() ?? '').isNotEmpty)
+                    pw.Text(
+                      _t(after['note'].toString()),
+                      style: pw.TextStyle(
+                          font: cairoRegular,
+                          fontSize: 7,
+                          color: _subText,
+                          fontStyle: pw.FontStyle.italic),
+                    ),
+                ],
+              ),
+            ),
+        ],
+      );
+    }
+
+    // Progress timeline
+    return pw.Wrap(
+      spacing: 8,
+      runSpacing: 8,
+      children: images.asMap().entries.map((entry) {
+        final img = entry.value;
+        final date = img['date']?.toString() ?? '';
+        final note = img['note']?.toString() ?? '';
+        return pw.Container(
+          width: 120,
+          child: pw.Column(
+            crossAxisAlignment: pw.CrossAxisAlignment.start,
+            children: [
+              _pdfImageFromPath(img['url']?.toString(), height: 100) ??
+                  pw.Container(
+                    height: 100,
+                    decoration: pw.BoxDecoration(
+                      border: pw.Border.all(color: PdfColors.grey300),
+                      borderRadius: pw.BorderRadius.circular(4),
+                    ),
+                    child: pw.Center(
+                      child: pw.Text('${entry.key + 1}',
+                          style: pw.TextStyle(
+                              font: cairoBold,
+                              fontSize: 14,
+                              color: _subText)),
+                    ),
+                  ),
+              pw.SizedBox(height: 2),
+              pw.Text(
+                _t(date),
+                style: pw.TextStyle(font: cairoBold, fontSize: 8),
+              ),
+              if (note.isNotEmpty)
+                pw.Text(
+                  _t(note),
+                  style: pw.TextStyle(
+                      font: cairoRegular,
+                      fontSize: 7,
+                      color: _subText),
+                  maxLines: 2,
+                ),
             ],
           ),
         );

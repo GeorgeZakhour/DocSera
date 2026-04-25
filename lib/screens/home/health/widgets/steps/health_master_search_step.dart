@@ -42,6 +42,9 @@ class HealthMasterSearchStep<T> extends StatefulWidget {
   /// القيمة التي ستستعمل داخل نص الـ Search hint (مثل: الحساسية، العملية...)
   final String searchValue;
 
+  /// Callback for manual entry — when provided, shows the "Can't find it?" CTA
+  final VoidCallback? onManualEntry;
+
   const HealthMasterSearchStep({
     super.key,
     required this.onSearch,
@@ -54,6 +57,7 @@ class HealthMasterSearchStep<T> extends StatefulWidget {
     required this.alreadyAddedText,
     required this.searchValue,
     this.headerText,
+    this.onManualEntry,
   });
 
   @override
@@ -135,35 +139,155 @@ class _HealthMasterSearchStepState<T> extends State<HealthMasterSearchStep<T>> {
           child: _loading
               ? const Center(child: FullPageLoader())
               : _results.isEmpty
-              ? Center(
-            child: Text(
-              widget.emptyResultsText,
-              style: AppTextStyles.getText3(context).copyWith(
-                fontSize: 12.sp,
-                color: AppColors.grayMain,
-              ),
-            ),
-          )
-              : ListView.builder(
-            itemCount: _results.length,
-            itemBuilder: (context, index) {
-              final item = _results[index];
-              final disabled = widget.isDisabled(item);
-
-              return HealthMasterTile(
-                title: widget.getTitle(item, isArabic),
-                subtitle: widget.getSubtitle(item, isArabic),
-                icon: widget.icon,
-                disabled: disabled,
-                selected: false,
-                badgeText:
-                disabled ? widget.alreadyAddedText : null,
-                onTap: disabled ? null : () => widget.onSelect(item),
-              );
-            },
-          ),
+              ? _buildEmptyWithManualEntry(t)
+              : _buildResultsWithManualEntry(isArabic, t),
         ),
       ],
+    );
+  }
+
+  /// Empty state — show message + manual entry CTA
+  Widget _buildEmptyWithManualEntry(AppLocalizations t) {
+    return Center(
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(
+            Icons.search_off_rounded,
+            size: 42.sp,
+            color: AppColors.grayMain.withOpacity(0.4),
+          ),
+          SizedBox(height: 12.h),
+          Text(
+            widget.emptyResultsText,
+            style: AppTextStyles.getText3(context).copyWith(
+              fontSize: 12.sp,
+              color: AppColors.grayMain,
+            ),
+          ),
+          if (widget.onManualEntry != null) ...[
+            SizedBox(height: 24.h),
+            _ManualEntryCTA(onTap: widget.onManualEntry!),
+          ],
+        ],
+      ),
+    );
+  }
+
+  /// Results list with manual entry CTA at the bottom
+  Widget _buildResultsWithManualEntry(bool isArabic, AppLocalizations t) {
+    // Total items = results + (1 for manual entry CTA if enabled)
+    final hasManualEntry = widget.onManualEntry != null;
+    final itemCount = _results.length + (hasManualEntry ? 1 : 0);
+
+    return ListView.builder(
+      itemCount: itemCount,
+      itemBuilder: (context, index) {
+        // Last item = manual entry CTA
+        if (hasManualEntry && index == _results.length) {
+          return Padding(
+            padding: EdgeInsets.only(top: 8.h, bottom: 16.h),
+            child: _ManualEntryCTA(onTap: widget.onManualEntry!),
+          );
+        }
+
+        final item = _results[index];
+        final disabled = widget.isDisabled(item);
+
+        return HealthMasterTile(
+          title: widget.getTitle(item, isArabic),
+          subtitle: widget.getSubtitle(item, isArabic),
+          icon: widget.icon,
+          disabled: disabled,
+          selected: false,
+          badgeText:
+          disabled ? widget.alreadyAddedText : null,
+          onTap: disabled ? null : () => widget.onSelect(item),
+        );
+      },
+    );
+  }
+}
+
+
+/// ----------------------------------------------------------------
+/// MANUAL ENTRY CTA WIDGET
+/// ----------------------------------------------------------------
+class _ManualEntryCTA extends StatelessWidget {
+  final VoidCallback onTap;
+
+  const _ManualEntryCTA({required this.onTap});
+
+  @override
+  Widget build(BuildContext context) {
+    final t = AppLocalizations.of(context)!;
+
+    return Container(
+      margin: EdgeInsets.symmetric(horizontal: 4.w),
+      decoration: BoxDecoration(
+        color: AppColors.main.withOpacity(0.04),
+        borderRadius: BorderRadius.circular(14.r),
+        border: Border.all(
+          color: AppColors.main.withOpacity(0.15),
+          width: 1,
+        ),
+      ),
+      child: Material(
+        color: Colors.transparent,
+        child: InkWell(
+          onTap: onTap,
+          borderRadius: BorderRadius.circular(14.r),
+          child: Padding(
+            padding: EdgeInsets.symmetric(horizontal: 14.w, vertical: 14.h),
+            child: Row(
+              children: [
+                Container(
+                  width: 34.w,
+                  height: 34.w,
+                  decoration: BoxDecoration(
+                    shape: BoxShape.circle,
+                    color: AppColors.main.withOpacity(0.10),
+                  ),
+                  child: Icon(
+                    Icons.edit_note_rounded,
+                    size: 18.sp,
+                    color: AppColors.main,
+                  ),
+                ),
+                SizedBox(width: 12.w),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        t.health_manual_entry_cta,
+                        style: AppTextStyles.getText3(context).copyWith(
+                          fontSize: 11.sp,
+                          color: AppColors.grayMain,
+                        ),
+                      ),
+                      SizedBox(height: 2.h),
+                      Text(
+                        t.health_manual_entry_button,
+                        style: AppTextStyles.getTitle1(context).copyWith(
+                          fontSize: 12.sp,
+                          color: AppColors.main,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                Icon(
+                  Icons.arrow_forward_ios_rounded,
+                  size: 14.sp,
+                  color: AppColors.main.withOpacity(0.5),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
     );
   }
 }

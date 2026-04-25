@@ -3,6 +3,7 @@ import 'package:docsera/Business_Logic/Health_page/health_cubit.dart';
 import 'package:docsera/gen_l10n/app_localizations.dart';
 import 'package:docsera/screens/home/health/models/health_models.dart';
 import 'package:docsera/screens/home/health/services/health_records_service.dart';
+import 'package:docsera/screens/home/health/widgets/steps/health_manual_entry_form.dart';
 import 'package:docsera/screens/home/health/widgets/steps/health_master_search_step.dart';
 import 'package:docsera/screens/home/health/widgets/steps/health_medication_date_step.dart';
 import 'package:docsera/screens/home/health/widgets/steps/health_medication_dosage_step.dart';
@@ -32,15 +33,43 @@ class _AddMedicationBottomSheetState extends State<AddMedicationBottomSheet> {
   String? _dosage;
 
   bool _loadingSave = false;
+  bool _showManualForm = false;
 
   // ------------------------------
   // BACK BUTTON HANDLER
   // ------------------------------
   void _back() {
+    if (_showManualForm) {
+      setState(() => _showManualForm = false);
+      return;
+    }
     if (_step == 1) {
       Navigator.pop(context);
     } else {
       setState(() => _step--);
+    }
+  }
+
+  Future<void> _handleManualSubmit({
+    required String name,
+    String? description,
+  }) async {
+    final cubit = context.read<HealthCubit>();
+    final isArabic = Directionality.of(context) == TextDirection.rtl;
+    try {
+      final masterItem = await cubit.createCustomMasterItem(
+        nameEn: name,
+        nameAr: name,
+        descriptionEn: isArabic ? null : description,
+        descriptionAr: isArabic ? description : null,
+      );
+      setState(() {
+        _selectedMedication = masterItem;
+        _showManualForm = false;
+        _step = 2;
+      });
+    } catch (e) {
+      debugPrint("❌ Error creating custom master item: $e");
     }
   }
 
@@ -92,25 +121,33 @@ class _AddMedicationBottomSheetState extends State<AddMedicationBottomSheet> {
 
       steps: [
         // --------------------------------------------------------
-        // STEP 1 — SEARCH MEDICATION
+        // STEP 1 — SEARCH MEDICATION or MANUAL ENTRY
         // --------------------------------------------------------
-        HealthMasterSearchStep<HealthMasterItem>(
-          onSearch: (q) =>
-              HealthRecordsService().searchMaster("medication", q),
-          getTitle: (item, isAr) => isAr ? item.nameAr : item.nameEn,
-          getSubtitle: (item, isAr) =>
-          isAr ? (item.descriptionAr ?? "") : (item.descriptionEn ?? ""),
-          icon: Icons.medication_rounded,
-          isDisabled: (_) => false,
-          onSelect: (item) {
-            _selectedMedication = item;
-            setState(() => _step = 2);
-          },
-          emptyResultsText: t.medications_no_results,
-          alreadyAddedText: "",
-          searchValue: t.medications_search_value,
-          headerText: t.medications_search_header,
-        ),
+        _showManualForm
+            ? HealthManualEntryForm(
+                icon: Icons.medication_rounded,
+                onSubmit: ({required name, description}) {
+                  _handleManualSubmit(name: name, description: description);
+                },
+              )
+            : HealthMasterSearchStep<HealthMasterItem>(
+                onSearch: (q) =>
+                    HealthRecordsService().searchMaster("medication", q),
+                getTitle: (item, isAr) => isAr ? item.nameAr : item.nameEn,
+                getSubtitle: (item, isAr) =>
+                isAr ? (item.descriptionAr ?? "") : (item.descriptionEn ?? ""),
+                icon: Icons.medication_rounded,
+                isDisabled: (_) => false,
+                onSelect: (item) {
+                  _selectedMedication = item;
+                  setState(() => _step = 2);
+                },
+                emptyResultsText: t.medications_no_results,
+                alreadyAddedText: "",
+                searchValue: t.medications_search_value,
+                headerText: t.medications_search_header,
+                onManualEntry: () => setState(() => _showManualForm = true),
+              ),
 
         // --------------------------------------------------------
         // STEP 2 — FULL DATE PICKER

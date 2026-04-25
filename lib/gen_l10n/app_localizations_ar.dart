@@ -173,9 +173,7 @@ class AppLocalizationsAr extends AppLocalizations {
   }
 
   @override
-  String patientName(Object name) {
-    return 'المريض: $name';
-  }
+  String get patientName => 'المريض';
 
   @override
   String get bookAgain => 'احجز مرة أخرى';
@@ -289,14 +287,18 @@ class AppLocalizationsAr extends AppLocalizations {
   String get addDocument => 'إضافة مستند';
 
   @override
+  String get fieldRequired => 'هذا الحقل مطلوب';
+
+  @override
   String get uploadingDocument => 'جاري رفع المستند...';
 
   @override
   String get documentTooLarge =>
-      'الملف بعد الضغط أكبر من 2 ميغابايت، الرجاء تقليل عدد الصور أو استخدام صور أصغر.';
+      'الملف يتجاوز الحد الأقصى 15 ميغابايت. الرجاء تقليل عدد الصور أو استخدام صور أصغر.';
 
   @override
-  String get pdfTooLarge => 'ملف PDF كبير جداً، الرجاء استخدام ملف أصغر من 2MB';
+  String get pdfTooLarge =>
+      'ملف PDF كبير جداً. الحد الأقصى لحجم الملف هو 15 ميغابايت.';
 
   @override
   String get chooseAddDocumentMethod => 'اختر طريقة إضافة المستند';
@@ -330,7 +332,7 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get fileTooLarge =>
-      'إجمالي حجم الصور كبير جداً (الحد الأقصى 4 ميغابايت). يرجى تقليل عدد الصور أو تصغير حجمها.';
+      'إجمالي حجم الصور كبير جداً (الحد الأقصى 15 ميغابايت). يرجى تقليل عدد الصور أو تصغير حجمها.';
 
   @override
   String get chooseAttachmentType => 'إرسال مرفق';
@@ -1447,9 +1449,7 @@ class AppLocalizationsAr extends AppLocalizations {
   }
 
   @override
-  String appointmentDate(Object date) {
-    return 'التاريخ: $date';
-  }
+  String get appointmentDate => 'تاريخ الموعد';
 
   @override
   String appointmentTime2(Object time) {
@@ -3154,6 +3154,16 @@ class AppLocalizationsAr extends AppLocalizations {
   String get ofText => 'من';
 
   @override
+  String imageFromDoctor(Object doctorName) {
+    return 'صورة من $doctorName';
+  }
+
+  @override
+  String pdfFromDoctor(Object doctorName) {
+    return 'ملف من $doctorName';
+  }
+
+  @override
   String importedFromConversationWith(Object date, Object name) {
     return 'تم الاستيراد من المحادثة مع $name بتاريخ $date';
   }
@@ -3384,6 +3394,9 @@ class AppLocalizationsAr extends AppLocalizations {
   String get detailFileFormat => 'صيغة الملف';
 
   @override
+  String get detailFileSize => 'حجم الملف';
+
+  @override
   String get detailSource => 'المصدر';
 
   @override
@@ -3486,6 +3499,20 @@ class AppLocalizationsAr extends AppLocalizations {
   String get okGotIt => 'حسناً، فهمت';
 
   @override
+  String get storageDismiss => 'تجاهل';
+
+  @override
+  String get storageFullUploadBlocked =>
+      'مساحة التخزين ممتلئة. احذف بعض المستندات لتحرير مساحة قبل الرفع.';
+
+  @override
+  String get storageInfoTitle => 'حول مساحة التخزين';
+
+  @override
+  String get storageInfoBody =>
+      'هذه مساحة تخزين المستندات الخاصة بحسابك.\n\n• مساحة التخزين مشتركة لجميع حسابك — مستندات المستخدم الرئيسي وجميع الأقارب تُحتسب من نفس المساحة.\n\n• يتم احتساب المستندات التي ترفعها أنت فقط. الملفات المضافة من قبل أطبائك لا تستهلك مساحتك.\n\n• يمكنك تحرير مساحة في أي وقت عن طريق حذف المستندات التي لم تعد بحاجة إليها.';
+
+  @override
   String get fileTooLargeTitle => 'هذا الملف كبير جداً';
 
   @override
@@ -3526,4 +3553,479 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get cannotBeUndone => 'لا يمكن التراجع عن هذا الإجراء.';
+
+  @override
+  String get referralCodeOptional => 'رمز الدعوة (اختياري)';
+
+  @override
+  String get loyaltyRewards => 'الولاء والمكافآت';
+
+  @override
+  String get yourPoints => 'نقاطك';
+
+  @override
+  String get myPoints => 'نقاطي';
+
+  @override
+  String get transactionHistory => 'سجل العمليات';
+
+  @override
+  String get noTransactionsYet => 'لا توجد عمليات بعد';
+
+  @override
+  String get offers => 'العروض';
+
+  @override
+  String get all => 'الكل';
+
+  @override
+  String get healthPartners => 'شركاء الصحة';
+
+  @override
+  String get mobileCredit => 'رصيد موبايل';
+
+  @override
+  String get noOffersAvailable => 'لا توجد عروض متاحة حالياً';
+
+  @override
+  String get offerDetails => 'العرض';
+
+  @override
+  String get discount => 'خصم';
+
+  @override
+  String get redeemNow => 'استبدل الآن';
+
+  @override
+  String get notEnoughPoints => 'نقاط غير كافية';
+
+  @override
+  String get confirmRedeem => 'تأكيد الاستبدال';
+
+  @override
+  String get spendPoints => 'إنفاق';
+
+  @override
+  String get redeemSuccess => 'تم الاستبدال!';
+
+  @override
+  String get yourVoucherCode => 'رمز القسيمة الخاص بك:';
+
+  @override
+  String get myVouchers => 'قسائمي';
+
+  @override
+  String get active => 'نشطة';
+
+  @override
+  String get used => 'مستخدمة';
+
+  @override
+  String get expired => 'منتهية';
+
+  @override
+  String get noVouchers => 'لا توجد قسائم';
+
+  @override
+  String get voucherDetails => 'تفاصيل القسيمة';
+
+  @override
+  String get codeCopied => 'تم نسخ الرمز!';
+
+  @override
+  String get tapToCopy => 'انقر للنسخ';
+
+  @override
+  String get status => 'الحالة';
+
+  @override
+  String get partner => 'الشريك';
+
+  @override
+  String get expiresAt => 'تنتهي في';
+
+  @override
+  String get howToUse => 'طريقة الاستخدام';
+
+  @override
+  String get voucherInstructions =>
+      'أظهر رمز QR أو رمز القسيمة لموظف الشريك. سيقوم بمسح أو إدخال الرمز للتحقق من خصمك.';
+
+  @override
+  String get referFriends => 'ادعُ أصدقاءك';
+
+  @override
+  String get yourReferralCode => 'رمز الدعوة الخاص بك';
+
+  @override
+  String get shareWithFriends => 'شارك مع أصدقائك';
+
+  @override
+  String get totalReferrals => 'الدعوات';
+
+  @override
+  String get pointsEarned => 'النقاط المكتسبة';
+
+  @override
+  String get howItWorks => 'كيف تعمل';
+
+  @override
+  String get referStep1 => 'شارك رمزك مع أصدقائك';
+
+  @override
+  String get referStep2 => 'يقومون بالتسجيل باستخدام رمزك وإكمال ملفهم الشخصي';
+
+  @override
+  String get referStep3 => 'تكسبان النقاط معاً!';
+
+  @override
+  String get recentReferrals => 'الدعوات الأخيرة';
+
+  @override
+  String referralShareMessage(String code) {
+    return 'انضم إلى DocSera واستخدم رمز الدعوة $code عند التسجيل! كلانا سيحصل على نقاط مجانية. حمّل الآن: https://docsera.app';
+  }
+
+  @override
+  String get pending => 'قيد المعالجة';
+
+  @override
+  String get confirmed => 'مؤكد';
+
+  @override
+  String get megaOffer => 'عرض ضخم';
+
+  @override
+  String get currency => 'ل.س';
+
+  @override
+  String daysLeft(int days, int hours) {
+    return '$days يوم $hours ساعة متبقية';
+  }
+
+  @override
+  String get voucherExpired => 'منتهية الصلاحية';
+
+  @override
+  String get earnPointsTitle => 'كيف تكسب النقاط';
+
+  @override
+  String get earnPointsReferral => 'ادعُ صديقاً: +25 نقطة';
+
+  @override
+  String get earnPointsAppointment => 'أكمل موعداً: +10 نقاط';
+
+  @override
+  String get earnPointsReferred => 'انضم عبر دعوة: +15 نقطة';
+
+  @override
+  String get pointsValue => '١ نقطة ≈ ٥٠٠ ل.س';
+
+  @override
+  String get transactionReferral => 'مكافأة دعوة صديق';
+
+  @override
+  String get transactionWelcome => 'مكافأة ترحيبية';
+
+  @override
+  String get transactionAppointment => 'مكافأة موعد';
+
+  @override
+  String get transactionRedeemed => 'تم استبدال عرض';
+
+  @override
+  String get processingNote => 'تتم معالجة النقاط خلال 72 ساعة';
+
+  @override
+  String get availableOffers => 'العروض المتاحة';
+
+  @override
+  String validUntil(String date) {
+    return 'صالح حتى $date';
+  }
+
+  @override
+  String redeemConfirmMessage(int points) {
+    return 'إنفاق $points نقطة على هذا العرض؟';
+  }
+
+  @override
+  String get goToVouchers => 'عرض قسائمي';
+
+  @override
+  String get referralReward => 'تكسب 25 نقطة، وصديقك يكسب 15!';
+
+  @override
+  String get noReferralsYet => 'لا توجد دعوات بعد. شارك رمزك!';
+
+  @override
+  String get freeFirstConsultation => 'استشارة أولى مجانية';
+
+  @override
+  String get percentageDiscount => 'خصم';
+
+  @override
+  String get fixedDiscount => 'خصم';
+
+  @override
+  String get freeFollowup => 'زيارة متابعة مجانية';
+
+  @override
+  String get specialOffer => 'عرض خاص';
+
+  @override
+  String get newPatientsOnly => 'للمرضى الجدد فقط';
+
+  @override
+  String get daysRemaining => 'يوم متبقي';
+
+  @override
+  String get claimOffer => 'احصل على العرض';
+
+  @override
+  String get claimOfferDesc =>
+      'احصل على هذا العرض لتحصل على رمز قسيمة يمكنك إظهاره للطبيب أثناء زيارتك.';
+
+  @override
+  String get voucherCode => 'رمز القسيمة';
+
+  @override
+  String get voucherExpiry => 'صالح لمدة 7 أيام';
+
+  @override
+  String get showCodeToDoctor => 'أظهر هذا الرمز للطبيب أثناء زيارتك';
+
+  @override
+  String get alreadyClaimed => 'لقد حصلت على هذا العرض مسبقاً';
+
+  @override
+  String get offerExpired => 'انتهت صلاحية هذا العرض';
+
+  @override
+  String get offerFull => 'وصل هذا العرض للحد الأقصى من المطالبات';
+
+  @override
+  String get claimSuccess => 'تم الحصول على العرض بنجاح!';
+
+  @override
+  String get copyCode => 'نسخ الرمز';
+
+  @override
+  String get totalEarned => 'مكتسبة';
+
+  @override
+  String get totalSpent => 'مستهلكة';
+
+  @override
+  String get transactionType => 'النوع';
+
+  @override
+  String get transactionTime => 'التاريخ والوقت';
+
+  @override
+  String get transactionAmount => 'المبلغ';
+
+  @override
+  String get transactionStatus => 'الحالة';
+
+  @override
+  String get transactionCompleted => 'مكتملة';
+
+  @override
+  String get transactionProcessing => 'قيد المعالجة';
+
+  @override
+  String get appointmentMarkedDone => 'تم تأكيد إتمامه';
+
+  @override
+  String get forRelative => 'لأحد الأقارب';
+
+  @override
+  String get referredUser => 'المستخدم المُحال';
+
+  @override
+  String get redeemedOn => 'تم الاستبدال في';
+
+  @override
+  String get pendingPointsNote =>
+      'ستتم إضافة النقاط إلى محفظتك خلال 72 ساعة كحد أقصى (فترة المراجعة).';
+
+  @override
+  String get pendingTimeRemaining => 'الوقت المتبقي';
+
+  @override
+  String hoursRemaining(int hours) {
+    return '$hours ساعة متبقية';
+  }
+
+  @override
+  String get pointsAddedToWallet => 'تمت الإضافة للمحفظة';
+
+  @override
+  String get am => 'ص';
+
+  @override
+  String get pm => 'م';
+
+  @override
+  String get referralInvitation => 'دعوة صديق';
+
+  @override
+  String get partnerLabel => 'الشريك';
+
+  @override
+  String get voucherLocation => 'قسيمتك موجودة في قسم \"قسائمي\"';
+
+  @override
+  String voucherValidFor(int days) {
+    return 'صالحة لمدة $days يوم';
+  }
+
+  @override
+  String get redeemWarningTitle => 'قبل الاستبدال';
+
+  @override
+  String get redeemWarningVoucher =>
+      'سيتم تحويل نقاطك إلى قسيمة في قسم \"قسائمي\"';
+
+  @override
+  String redeemWarningValidity(int days) {
+    return 'القسيمة صالحة لمدة $days يوم من تاريخ الاستبدال — لا تستبدلها مبكراً!';
+  }
+
+  @override
+  String get redeemWarningIrreversible =>
+      'هذا الإجراء لا يمكن التراجع عنه — لا يمكنك استرداد نقاطك بعد الاستبدال';
+
+  @override
+  String get redeemWarningUseIt => 'أظهر رمز القسيمة للشريك عند استخدام العرض';
+
+  @override
+  String get iUnderstandRedeem => 'فهمت، استبدل الآن';
+
+  @override
+  String get eventDate => 'تاريخ الحدث';
+
+  @override
+  String get pointsAvailableOn => 'النقاط متاحة في';
+
+  @override
+  String get voucherExpiresOn => 'القسيمة تنتهي في';
+
+  @override
+  String get promotionPressHereToClaim =>
+      'اضغط هنا لحجز العرض والحصول على رمز الخصم الخاص بك. لا يكفي إبلاغ الطبيب شفهياً.';
+
+  @override
+  String get promotionFirstVisitOnly =>
+      'هذا العرض متاح فقط لزيارتك الأولى لدى هذا الطبيب.';
+
+  @override
+  String get promotionSingleUse => 'يمكن الاستفادة من هذا العرض مرة واحدة فقط.';
+
+  @override
+  String promotionMultiUse(int n) {
+    return 'يمكن الاستفادة من هذا العرض حتى $n مرات.';
+  }
+
+  @override
+  String get promotionAlreadyUsed => 'لقد استفدت من هذا العرض مسبقاً.';
+
+  @override
+  String get promotionMaxClaimsReached =>
+      'لقد استفدت من هذا العرض الحد الأقصى من المرات المسموح بها.';
+
+  @override
+  String get promotionShowCodeAtPayment =>
+      'عند زيارتك للطبيب، اعرض هذا الرمز لموظف الاستقبال عند الدفع ليتم تطبيق الخصم على فاتورتك تلقائياً.';
+
+  @override
+  String get yourVoucher => 'قسيمتك';
+
+  @override
+  String get showQrToDoctor =>
+      'أظهر رمز QR هذا للطبيب أو موظف الاستقبال أثناء زيارتك';
+
+  @override
+  String get validFor => 'صالح لمدة';
+
+  @override
+  String get validWhileOfferActive => 'صالح طالما العرض فعّال';
+
+  @override
+  String get showAll => 'عرض الكل';
+
+  @override
+  String get voucherUsedNote =>
+      'تم استخدام هذه القسيمة بالفعل. يمكنك الحصول على قسيمة جديدة إذا كان العرض يسمح بذلك.';
+
+  @override
+  String get voucherUsedAt => 'تم الاستخدام في';
+
+  @override
+  String get claimNewCode => 'احصل على رمز جديد';
+
+  @override
+  String get promotionStillAvailable =>
+      'هذا العرض لا يزال متاحاً! يمكنك الحصول على رمز قسيمة جديد.';
+
+  @override
+  String get health_manual_entry_cta => 'لم تجد ما تبحث عنه؟';
+
+  @override
+  String get health_manual_entry_button => 'أضف يدوياً';
+
+  @override
+  String get health_manual_entry_title => 'إضافة عنصر مخصص';
+
+  @override
+  String get health_manual_entry_name_label => 'الاسم';
+
+  @override
+  String get health_manual_entry_name_hint => 'أدخل اسم العنصر';
+
+  @override
+  String get health_manual_entry_desc_label => 'الوصف (اختياري)';
+
+  @override
+  String get health_manual_entry_desc_hint => 'أضف أي تفاصيل ذات صلة';
+
+  @override
+  String get health_manual_entry_submit => 'متابعة بهذا العنصر';
+
+  @override
+  String get health_manual_entry_name_required => 'يرجى إدخال الاسم';
+
+  @override
+  String get health_manual_entry_disclaimer =>
+      'سيتم حفظ هذا العنصر للمراجعة. قد يتم استبداله بنسخة موثقة لاحقاً.';
+
+  @override
+  String get health_custom_entry_badge => 'إدخال مخصص';
+
+  @override
+  String get health_verification_status => 'نوع الإدخال';
+
+  @override
+  String get health_verified => 'قياسي';
+
+  @override
+  String get health_unverified => 'إدخال مخصص';
+
+  @override
+  String get offerUsedBadge => 'مستخدم';
+
+  @override
+  String offerUsedTimesBadge(int n) {
+    return '$n× استخدم';
+  }
+
+  @override
+  String get offerCodeReady => 'رمز جاهز';
+
+  @override
+  String get offerNotEligible => 'غير متاح لك';
+
+  @override
+  String get offerFirstVisitOnlyHint => 'فقط لزيارتك الأولى عند هذا الطبيب';
 }

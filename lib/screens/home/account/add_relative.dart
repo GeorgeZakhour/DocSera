@@ -9,7 +9,6 @@ import 'package:intl/intl.dart';
 import 'package:docsera/gen_l10n/app_localizations.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:docsera/utils/time_utils.dart';
-import 'package:supabase_flutter/supabase_flutter.dart';
 
 
 class AddRelativePage extends StatefulWidget {
@@ -100,18 +99,11 @@ class _AddRelativePageState extends State<AddRelativePage> {
     }
 
     try {
-      // Fallback to account holder's phone/email if relative's are empty
-      final currentUser = Supabase.instance.client.auth.currentUser;
-      final userPhone = currentUser?.phone;
-      final userEmail = currentUser?.email;
-
-      final relativeEmail = emailController.text.trim().isEmpty
-          ? userEmail
-          : emailController.text.trim();
-      final relativePhone = phoneController.text.trim().isEmpty
-          ? userPhone
-          : _formatPhoneNumber(phoneController.text.trim());
-
+      // Leave email/phone NULL when empty — the doctor app falls back to the
+      // account holder's contact info at display time (see DocSera-Pro's
+      // patient_info_section._fetchAccountHolderFallback). Storing the parent's
+      // contact directly on the relative row collides with uniqueness checks in
+      // rpc_add_my_relative.
       await context.read<RelativesCubit>().addRelative({
         'first_name': firstNameController.text.trim(),
         'last_name': lastNameController.text.trim(),
@@ -119,8 +111,12 @@ class _AddRelativePageState extends State<AddRelativePage> {
         'date_of_birth': DocSeraTime.toUtc(DateFormat('dd.MM.yyyy')
             .parse(dateOfBirthController.text))
             .toIso8601String(),
-        'email': relativeEmail,
-        'phone_number': relativePhone,
+        'email': emailController.text.trim().isEmpty
+            ? null
+            : emailController.text.trim(),
+        'phone_number': phoneController.text.trim().isEmpty
+            ? null
+            : _formatPhoneNumber(phoneController.text.trim()),
         'address': {
           'street': streetController.text.trim(),
           'buildingNr': buildingNrController.text.trim(),

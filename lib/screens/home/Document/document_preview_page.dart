@@ -10,10 +10,12 @@ import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:docsera/app/const.dart';
 import 'package:docsera/gen_l10n/app_localizations.dart';
+import 'package:gallery_saver_plus/gallery_saver.dart';
 import 'package:http/http.dart' as http;
 import 'package:path/path.dart' as path;
 import 'package:path_provider/path_provider.dart';
 import 'package:flutter_pdfview/flutter_pdfview.dart';
+import 'package:share_plus/share_plus.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import '../../../utils/full_page_loader.dart';
 import 'document_options_bottom_sheet.dart';
@@ -319,7 +321,7 @@ class _DocumentPreviewPageState extends State<DocumentPreviewPage> {
       MaterialPageRoute(
         builder: (_) => DocumentInfoScreen(
           images: [destFile.path],
-          initialName: 'PDF from ${widget.doctorName ?? local.doctor}',
+          initialName: widget.document.name,
           cameFromMultiPage: false,
           pageCount: 1,
           initialPatientId: widget.document.patientId,
@@ -335,6 +337,188 @@ class _DocumentPreviewPageState extends State<DocumentPreviewPage> {
         await StorageQuotaService().markChatMediaSaved(widget.chatMediaId!);
       } catch (_) {
         // Non-critical — ignore silently.
+      }
+    }
+  }
+
+  /// Show bottom sheet with "Save" and "Add to Documents" for chat files.
+  void _showChatFileOptionsSheet(BuildContext context) {
+    final local = AppLocalizations.of(context)!;
+
+    showModalBottomSheet(
+      context: context,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(25)),
+      ),
+      builder: (ctx) {
+        return Padding(
+          padding: EdgeInsets.symmetric(horizontal: 20.w, vertical: 12.h),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              _buildSheetOption(
+                context: ctx,
+                icon: Icons.save_alt,
+                title: local.save,
+                onTap: () {
+                  Navigator.pop(ctx);
+                  _saveFileToDevice(context);
+                },
+              ),
+              _buildSheetOption(
+                context: ctx,
+                icon: Icons.folder_outlined,
+                title: local.addToDocuments,
+                onTap: () {
+                  Navigator.pop(ctx);
+                  if (isPdf) {
+                    _savePdfToDocuments(context);
+                  } else {
+                    _saveImagesToDocuments(context);
+                  }
+                },
+              ),
+              SizedBox(height: 12.h),
+            ],
+          ),
+        );
+      },
+    );
+  }
+
+  Widget _buildSheetOption({
+    required BuildContext context,
+    required IconData icon,
+    required String title,
+    required VoidCallback onTap,
+  }) {
+    return Column(
+      children: [
+        ListTile(
+          dense: true,
+          minVerticalPadding: 0,
+          contentPadding: EdgeInsets.zero,
+          horizontalTitleGap: 8.w,
+          leading: Icon(icon, color: AppColors.main, size: 18.sp),
+          title: Text(
+            title,
+            style: AppTextStyles.getText3(context).copyWith(
+              color: AppColors.main,
+              fontWeight: FontWeight.bold,
+            ),
+          ),
+          onTap: onTap,
+        ),
+        Divider(height: 1.h, color: Colors.grey[300]),
+      ],
+    );
+  }
+
+  /// Save the file to device — images to gallery, PDFs via share sheet.
+  Future<void> _saveFileToDevice(BuildContext context) async {
+    final local = AppLocalizations.of(context)!;
+    final messenger = ScaffoldMessenger.of(context);
+
+    try {
+      if (isPdf) {
+        File? file = _localPdfFile;
+        if (file == null || !file.existsSync()) {
+          final firstPage = widget.document.pages.isNotEmpty
+              ? widget.document.pages.first
+              : widget.document.previewUrl;
+          file = await _downloadPdf(firstPage);
+        }
+        final box = context.findRenderObject() as RenderBox?;
+        final origin = box != null
+            ? (box.localToGlobal(Offset.zero) & box.size)
+            : Rect.fromCenter(
+                center: Offset(
+                  MediaQuery.of(context).size.width / 2,
+                  MediaQuery.of(context).size.height / 2,
+                ),
+                width: 1,
+                height: 1,
+              );
+        await Share.shareXFiles([XFile(file.path)], sharePositionOrigin: origin);
+      } else {
+        // Save images to gallery
+        for (int i = 0; i < _imageBytes.length; i++) {
+          if (_imageBytes[i].isEmpty) continue;
+          final dir = await getTemporaryDirectory();
+          final ext = widget.document.pages[i].toLowerCase().endsWith('.png') ? 'png' : 'jpg';
+          final file = File('${dir.path}/chat_image_$i.$ext');
+          await file.writeAsBytes(_imageBytes[i]);
+          await GallerySaver.saveImage(file.path);
+        }
+        if (context.mounted) {
+          messenger.showSnackBar(
+            SnackBar(
+              content: Text(local.downloadCompleted),
+              backgroundColor: AppColors.main.withValues(alpha: 0.8),
+            ),
+          );
+        }
+      }
+    } catch (e) {
+      debugPrint('❌ Save failed: $e');
+      if (context.mounted) {
+        messenger.showSnackBar(
+          SnackBar(
+            content: Text(local.downloadFailed),
+            backgroundColor: AppColors.red.withValues(alpha: 0.8),
+          ),
+        );
+      }
+    }
+  }
+
+  /// Save chat images to Documents vault.
+  Future<void> _saveImagesToDocuments(BuildContext context) async {
+    final local = AppLocalizations.of(context)!;
+    final messenger = ScaffoldMessenger.of(context);
+
+    try {
+      final dir = await getTemporaryDirectory();
+      final List<String> paths = [];
+      for (int i = 0; i < _imageBytes.length; i++) {
+        if (_imageBytes[i].isEmpty) continue;
+        final ext = widget.document.pages[i].toLowerCase().endsWith('.png') ? 'png' : 'jpg';
+        final file = File('${dir.path}/chat_img_${i}_${DateTime.now().millisecondsSinceEpoch}.$ext');
+        await file.writeAsBytes(_imageBytes[i]);
+        paths.add(file.path);
+      }
+
+      if (paths.isEmpty || !mounted) return;
+
+      await Navigator.push(
+        context,
+        MaterialPageRoute(
+          builder: (_) => DocumentInfoScreen(
+            images: paths,
+            initialName: local.imageFromDoctor(widget.doctorName ?? local.doctor),
+            cameFromMultiPage: paths.length > 1,
+            pageCount: paths.length,
+            initialPatientId: widget.document.patientId,
+            cameFromConversation: true,
+            conversationDoctorName: widget.doctorName ?? widget.document.conversationDoctorName,
+          ),
+        ),
+      );
+
+      if (widget.chatMediaId != null && widget.chatMediaId!.isNotEmpty) {
+        try {
+          await StorageQuotaService().markChatMediaSaved(widget.chatMediaId!);
+        } catch (_) {}
+      }
+    } catch (e) {
+      debugPrint('❌ Save images to documents failed: $e');
+      if (context.mounted) {
+        messenger.showSnackBar(
+          SnackBar(
+            content: Text(local.uploadFailed),
+            backgroundColor: AppColors.red.withValues(alpha: 0.8),
+          ),
+        );
       }
     }
   }
@@ -363,31 +547,19 @@ class _DocumentPreviewPageState extends State<DocumentPreviewPage> {
             onPressed: () => Navigator.pop(context),
           ),
           actions: widget.showActions ? [
-            // ✅ Task 15: Prominent "Add to Documents" button for PDFs from chat.
-            if (widget.cameFromConversation && isPdf)
+            if (widget.cameFromConversation)
               IconButton(
-                tooltip: AppLocalizations.of(context)!.addToDocuments,
+                tooltip: AppLocalizations.of(context)!.download,
                 icon: const Icon(Icons.save_alt, color: Colors.white),
-                onPressed: () => _savePdfToDocuments(context),
-              ),
-            IconButton(
-              icon: const Icon(Icons.more_vert, color: Colors.white),
-              onPressed: () {
-                final fromConversationButNotSaved =
-                    widget.cameFromConversation && !widget.document.id!.startsWith('doc_');
-
-                if (fromConversationButNotSaved) {
-                  showConversationPdfOptionsSheet(
-                    context,
-                    widget.document,
-                    widget.document.patientId,
-                    widget.doctorName ?? '',
-                  );
-                } else {
+                onPressed: () => _showChatFileOptionsSheet(context),
+              )
+            else
+              IconButton(
+                icon: const Icon(Icons.more_vert, color: Colors.white),
+                onPressed: () {
                   showDocumentOptionsSheet(context, widget.document);
-                }
-              },
-            ),
+                },
+              ),
           ] : null,
           bottom: widget.document.fileType != 'pdf' && !_imagesLoaded
               ? PreferredSize(

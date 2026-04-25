@@ -19,6 +19,7 @@ class SignUpInfo {
   bool termsAccepted = false;
   bool marketingChecked = false;
   String? address;
+  String? referralCode;
 
   /// هل هذا المستخدم قادم من التطبيق الآخر؟ (DocSera Pro للأطباء)
   bool isCrossApp;
@@ -36,5 +37,6 @@ class SignUpInfo {
     this.marketingChecked = false,
     this.address,
     this.isCrossApp = false,
+    this.referralCode,
   });
 }

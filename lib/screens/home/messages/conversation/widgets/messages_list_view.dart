@@ -81,12 +81,15 @@ class MessagesListView extends StatelessWidget {
     return null;
   }
 
-  // Returns true if the given messageId has an entry in expiringMedia.
+  // Returns true if the given messageId has an expired entry in expiringMedia.
+  // Checks the `expired` flag first (if present), otherwise compares `expires_at` to now.
   bool _isExpired(String? messageId) {
     if (messageId == null || expiringMedia.isEmpty) return false;
     for (final item in expiringMedia) {
       if (item['message_id']?.toString() == messageId) {
-        return item['expired'] == true;
+        if (item['expired'] == true) return true;
+        final expiresAt = DateTime.tryParse(item['expires_at']?.toString() ?? '');
+        if (expiresAt != null && expiresAt.isBefore(DateTime.now())) return true;
       }
     }
     return false;
@@ -340,6 +343,7 @@ class MessagesListView extends StatelessWidget {
                               showSenderName: showSenderName,
                               status: msg['status'] as String?,
                               onRetryTap: () => onRetry?.call(msg),
+                              isReadByDoctor: isReadByDoctor,
                             ),
                           if (attachments.isNotEmpty)
                             Padding(
@@ -354,6 +358,7 @@ class MessagesListView extends StatelessWidget {
                                 status: msg['status'] as String?,
                                 onRetryTap: () => onRetry?.call(msg),
                                 messageId: msg['id']?.toString(),
+                                isReadByDoctor: isReadByDoctor,
                               ),
                             ),
                           if (isLastRead) ...[
@@ -408,8 +413,9 @@ class MessagesListView extends StatelessWidget {
     required DateTime? time,
     required bool isArabic,
     required bool showSenderName,
-    String? status, // ✅ New
-    VoidCallback? onRetryTap, // ✅ New
+    String? status,
+    VoidCallback? onRetryTap,
+    bool isReadByDoctor = false,
   }) {
     return ClipRect(
       child: BackdropFilter(
@@ -502,10 +508,8 @@ class MessagesListView extends StatelessWidget {
                                )
                              else
                                Icon(
-                                 Icons.done_all, 
-                                 // TODO: Check read status for color (Blue if read, Grey if sent)
-                                 // For now, simplify to just "Sent" indicator logic or standard checks
-                                 color: AppColors.orange, 
+                                 Icons.done_all,
+                                 color: isReadByDoctor ? AppColors.orange : Colors.white54,
                                  size: 14.sp,
                                ),
                           ],
@@ -598,6 +602,7 @@ class MessagesListView extends StatelessWidget {
     String? status,
     VoidCallback? onRetryTap,
     String? messageId,
+    bool isReadByDoctor = false,
   }) {
     final images = attachments
         .where((a) => (a['type'] ?? a['file_type']) == 'image')
@@ -793,7 +798,7 @@ class MessagesListView extends StatelessWidget {
                         else
                           Icon(
                             Icons.done_all,
-                            color: AppColors.orange,
+                            color: isReadByDoctor ? AppColors.orange : Colors.black38,
                             size: 14.sp,
                           ),
                       ],
@@ -913,7 +918,7 @@ class MessagesListView extends StatelessWidget {
                        else
                          Icon(
                            Icons.done_all,
-                           color: AppColors.orange,
+                           color: isReadByDoctor ? AppColors.orange : Colors.black38,
                            size: 14.sp,
                          ),
                      ],
@@ -1087,7 +1092,7 @@ class MessagesListView extends StatelessWidget {
                         else
                           Icon(
                             Icons.done_all,
-                            color: AppColors.orange,
+                            color: isReadByDoctor ? AppColors.orange : Colors.black38,
                             size: 14.sp,
                           ),
                       ],

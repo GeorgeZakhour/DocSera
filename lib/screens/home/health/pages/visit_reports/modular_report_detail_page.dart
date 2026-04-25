@@ -5,6 +5,7 @@ import 'package:docsera/app/text_styles.dart';
 import 'package:docsera/gen_l10n/app_localizations.dart';
 import 'package:docsera/screens/home/health/pages/visit_reports/modular_report_model.dart';
 import 'package:docsera/screens/home/health/pages/visit_reports/pdf/modular_report_pdf_generator.dart';
+import 'package:docsera/screens/home/health/pages/visit_reports/visit_reports_service.dart';
 import 'package:docsera/screens/home/health/pages/visit_reports/widgets/patient_section_renderers.dart';
 import 'package:docsera/utils/doctor_image_utils.dart';
 import 'package:flutter/material.dart';
@@ -12,7 +13,7 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:pdf/pdf.dart';
 import 'package:printing/printing.dart';
 
-class ModularReportDetailPage extends StatelessWidget {
+class ModularReportDetailPage extends StatefulWidget {
   final ModularReport report;
 
   const ModularReportDetailPage({
@@ -21,10 +22,87 @@ class ModularReportDetailPage extends StatelessWidget {
   });
 
   @override
+  State<ModularReportDetailPage> createState() =>
+      _ModularReportDetailPageState();
+}
+
+class _ModularReportDetailPageState extends State<ModularReportDetailPage> {
+  late ModularReport _report;
+  bool _loadingSections = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _report = widget.report;
+
+    if (_report.sections.isEmpty) {
+      // No sections at all — fetch the full report
+      _loadFullReport();
+    } else if (_report.hasHeavySections) {
+      // Has sections but some are stripped placeholders — lazy-load only those
+      _loadHeavySections();
+    }
+  }
+
+  /// Fetch the entire report (used when list query returned no sections).
+  Future<void> _loadFullReport() async {
+    setState(() => _loadingSections = true);
+    try {
+      final full = await VisitReportsService().fetchFullReport(_report.id);
+      if (full != null && mounted) {
+        setState(() {
+          _report = full;
+          _loadingSections = false;
+        });
+      } else if (mounted) {
+        setState(() => _loadingSections = false);
+      }
+    } catch (_) {
+      if (mounted) setState(() => _loadingSections = false);
+    }
+  }
+
+  /// Fetch only the heavy sections (body_map, image_comparison) and merge them
+  /// into the existing lightweight sections. Non-heavy sections remain visible
+  /// the entire time — only the heavy placeholders show a spinner.
+  Future<void> _loadHeavySections() async {
+    setState(() => _loadingSections = true);
+    try {
+      final heavySections =
+          await VisitReportsService().fetchHeavySections(_report.id);
+      if (heavySections.isEmpty || !mounted) {
+        if (mounted) setState(() => _loadingSections = false);
+        return;
+      }
+
+      // Build a lookup: type → full section from RPC
+      final heavyByType = <String, ModularReportSection>{};
+      for (final s in heavySections) {
+        heavyByType[s.type] = s;
+      }
+
+      // Replace placeholders with real data
+      final merged = _report.sections.map((s) {
+        if (s.isHeavyPlaceholder && heavyByType.containsKey(s.type)) {
+          return heavyByType[s.type]!;
+        }
+        return s;
+      }).toList();
+
+      setState(() {
+        _report = _report.copyWithSections(merged);
+        _loadingSections = false;
+      });
+    } catch (_) {
+      if (mounted) setState(() => _loadingSections = false);
+    }
+  }
+
+  @override
   Widget build(BuildContext context) {
     final t = AppLocalizations.of(context)!;
     final formattedDate =
-        "${report.createdAt.year}-${report.createdAt.month.toString().padLeft(2, '0')}-${report.createdAt.day.toString().padLeft(2, '0')}";
+        "${_report.createdAt.year}-${_report.createdAt.month.toString().padLeft(2, '0')}-${_report.createdAt.day.toString().padLeft(2, '0')}";
 
     return Scaffold(
       backgroundColor: AppColors.background3,
@@ -39,14 +117,29 @@ class ModularReportDetailPage extends StatelessWidget {
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
                     _buildDoctorHeader(context, formattedDate),
-                    if (report.patientName != null &&
-                        report.patientName!.trim().isNotEmpty) ...[
+                    if (_report.patientName != null &&
+                        _report.patientName!.trim().isNotEmpty) ...[
                       SizedBox(height: 10.h),
                       _buildReportMeta(context),
                     ],
                     SizedBox(height: 14.h),
-                    ...report.sections.map(
-                        (section) => PatientSectionRenderers.render(section, context)),
+                    if (_report.sections.isEmpty && _loadingSections)
+                      Padding(
+                        padding: EdgeInsets.symmetric(vertical: 40.h),
+                        child: Center(
+                          child: CircularProgressIndicator(
+                            strokeWidth: 2,
+                            color: AppColors.main,
+                          ),
+                        ),
+                      )
+                    else
+                      ..._report.sections.map((section) {
+                        if (section.isHeavyPlaceholder && _loadingSections) {
+                          return PatientSectionRenderers.renderLoading(section);
+                        }
+                        return PatientSectionRenderers.render(section, context);
+                      }),
                     SizedBox(height: 40.h),
                   ],
                 ),
@@ -104,7 +197,7 @@ class ModularReportDetailPage extends StatelessWidget {
               size: 18.sp,
               color: AppColors.mainDark,
             ),
-            onPressed: () => _printPdf(context),
+            onPressed: _loadingSections ? null : () => _printPdf(context),
           ),
 
           // Share
@@ -117,7 +210,7 @@ class ModularReportDetailPage extends StatelessWidget {
               size: 18.sp,
               color: AppColors.mainDark,
             ),
-            onPressed: () => _sharePdf(context),
+            onPressed: _loadingSections ? null : () => _sharePdf(context),
           ),
         ],
       ),
@@ -130,7 +223,7 @@ class ModularReportDetailPage extends StatelessWidget {
 
   Future<void> _printPdf(BuildContext context) async {
     final bytes = await ModularReportPdfGenerator.generatePdf(
-      report: report,
+      report: _report,
       pageFormat: _pageFormat,
     );
     await Printing.layoutPdf(
@@ -140,10 +233,10 @@ class ModularReportDetailPage extends StatelessWidget {
 
   Future<void> _sharePdf(BuildContext context) async {
     final bytes = await ModularReportPdfGenerator.generatePdf(
-      report: report,
+      report: _report,
       pageFormat: _pageFormat,
     );
-    final patientName = report.patientName ?? 'report';
+    final patientName = _report.patientName ?? 'report';
     await Printing.sharePdf(
       bytes: bytes,
       filename: 'DocSera_Report_$patientName.pdf',
@@ -157,9 +250,9 @@ class ModularReportDetailPage extends StatelessWidget {
   Widget _buildDoctorHeader(BuildContext context, String dateText) {
     final imageResult = resolveDoctorImagePathAndWidget(
       doctor: {
-        'doctor_image': report.doctorImage,
-        'gender': report.doctorGender ?? 'unknown',
-        'title': report.doctorTitle ?? '',
+        'doctor_image': _report.doctorImage,
+        'gender': _report.doctorGender ?? 'unknown',
+        'title': _report.doctorTitle ?? '',
       },
       width: 35,
       height: 35,
@@ -189,16 +282,16 @@ class ModularReportDetailPage extends StatelessWidget {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      report.doctorName ?? '',
+                      _report.doctorName ?? '',
                       style: AppTextStyles.getText1(context).copyWith(
                         fontSize: 14.sp,
                         fontWeight: FontWeight.w700,
                         color: AppColors.mainDark,
                       ),
                     ),
-                    if (report.doctorSpecialty != null)
+                    if (_report.doctorSpecialty != null)
                       Text(
-                        report.doctorSpecialty!,
+                        _report.doctorSpecialty!,
                         style: AppTextStyles.getText3(context).copyWith(
                           fontSize: 11.sp,
                           color: AppColors.textSubColor,
@@ -246,7 +339,7 @@ class ModularReportDetailPage extends StatelessWidget {
               size: 13.sp, color: Colors.grey.shade500),
           SizedBox(width: 4.w),
           Text(
-            report.patientName!,
+            _report.patientName!,
             style: AppTextStyles.getText3(context).copyWith(
               fontSize: 11.sp,
               color: Colors.grey.shade600,
@@ -254,7 +347,7 @@ class ModularReportDetailPage extends StatelessWidget {
           ),
           const Spacer(),
           Text(
-            '#${report.id.length >= 8 ? report.id.substring(0, 8) : report.id}',
+            '#${_report.id.length >= 8 ? _report.id.substring(0, 8) : _report.id}',
             style: TextStyle(
               fontSize: 9.sp,
               color: Colors.grey.shade400,

@@ -1,5 +1,7 @@
 import 'dart:io';
+import 'dart:typed_data';
 import 'package:docsera/Business_Logic/Documents_page/documents/documents_cubit.dart';
+import 'package:docsera/Business_Logic/Storage/storage_quota_cubit.dart';
 import 'package:docsera/app/const.dart';
 import 'package:docsera/app/text_styles.dart';
 import 'package:docsera/models/document.dart';
@@ -13,13 +15,16 @@ import 'package:flutter_svg/svg.dart';
 import 'package:http/http.dart' as http;
 import 'package:intl/intl.dart';
 import 'package:docsera/gen_l10n/app_localizations.dart';
-import 'package:open_file/open_file.dart';
+import 'package:gallery_saver_plus/gallery_saver.dart';
 import 'package:path_provider/path_provider.dart';
+import 'package:share_plus/share_plus.dart';
+import 'package:docsera/services/encryption/message_encryption_service.dart';
 import 'package:pdf/pdf.dart';
 import 'package:pdf/widgets.dart' as pw;
 import 'package:permission_handler/permission_handler.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:docsera/screens/home/Document/document_info_screen.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 void showConversationPdfOptionsSheet(
@@ -265,6 +270,9 @@ void showDocumentOptionsSheet(
                   document: document,
                   onConfirmDelete: () async {
                     await context.read<DocumentsCubit>().deleteDocument(document: document, context: context);
+                    if (context.mounted) {
+                      context.read<StorageQuotaCubit>().loadStorageUsage();
+                    }
                   },
                 );
               },
@@ -305,58 +313,131 @@ Widget _buildOption(BuildContext context, dynamic icon, String title,
 }
 
 Future<bool> _requestStoragePermission() async {
+  if (Platform.isIOS) return true; // iOS uses app sandbox — no permission needed
   if (Platform.isAndroid) {
     if (await Permission.manageExternalStorage.isGranted) return true;
-
     final status = await Permission.manageExternalStorage.request();
     return status.isGranted;
   }
   return false;
 }
 
+/// Downloads bytes for a page reference — uses Supabase storage download for
+/// relative paths and http.get for full URLs.
+Future<Uint8List> _downloadPageBytes(String urlOrPath, String bucket) async {
+  if (urlOrPath.startsWith('http://') || urlOrPath.startsWith('https://')) {
+    // Full URL — extract storage path and download, or fetch directly
+    if (urlOrPath.contains('/storage/v1/object/public/$bucket/')) {
+      final rawPath = urlOrPath.split('/$bucket/').last;
+      final storagePath = Uri.decodeComponent(rawPath);
+      return await Supabase.instance.client.storage
+          .from(bucket)
+          .download(storagePath);
+    }
+    final response = await http.get(Uri.parse(urlOrPath));
+    return response.bodyBytes;
+  }
+  // Relative storage path → download directly
+  return await Supabase.instance.client.storage
+      .from(bucket)
+      .download(urlOrPath);
+}
 
+/// Decrypts bytes if the document is encrypted, otherwise returns as-is.
+Future<Uint8List> _maybeDecrypt(Uint8List bytes, bool encrypted) async {
+  if (!encrypted) return bytes;
+  try {
+    final svc = MessageEncryptionService.instance;
+    await svc.init();
+    final decrypted = svc.decryptBytes(bytes);
+    if (decrypted != null) return decrypted;
+  } catch (e) {
+    debugPrint('⚠️ Decryption failed, using raw bytes: $e');
+  }
+  return bytes;
+}
+
+Rect _shareOrigin(BuildContext context) {
+  final box = context.findRenderObject() as RenderBox?;
+  if (box != null) {
+    return box.localToGlobal(Offset.zero) & box.size;
+  }
+  final size = MediaQuery.of(context).size;
+  return Rect.fromCenter(center: Offset(size.width / 2, size.height / 2), width: 1, height: 1);
+}
 
 Future<void> _downloadDocumentAsPDF(BuildContext context, UserDocument doc) async {
-  final pdf = pw.Document();
+  final origin = _shareOrigin(context);
   final hasPermission = await _requestStoragePermission();
   if (!hasPermission) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text(AppLocalizations.of(context)!.permissionDenied), backgroundColor: AppColors.red.withOpacity(0.8)),
-    );
+    if (context.mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(AppLocalizations.of(context)!.permissionDenied), backgroundColor: AppColors.red.withValues(alpha: 0.8)),
+      );
+    }
     return;
   }
 
-  final dir = Directory('/storage/emulated/0/Download'); // ✅ تعديل مكان التخزين
-  final file = File('${dir.path}/${doc.name}.pdf');
+  try {
+    final tempDir = await getTemporaryDirectory();
+    final safeName = doc.name.replaceAll(RegExp(r'[^\w\s\-.]'), '_');
+    final isPdf = doc.type == 'pdf' ||
+        doc.fileType.toLowerCase().contains('pdf') ||
+        doc.pages.first.toLowerCase().endsWith('.pdf');
 
-  if (doc.type == 'pdf' && doc.pages.length == 1) {
-    final response = await http.get(Uri.parse(doc.pages.first));
-    await file.writeAsBytes(response.bodyBytes);
-  } else {
-    for (String imageUrl in doc.pages) {
-      final response = await http.get(Uri.parse(imageUrl));
-      final imageBytes = response.bodyBytes;
-      final image = pw.MemoryImage(imageBytes);
+    if (isPdf) {
+      // PDF — download, decrypt if needed, share via system share sheet
+      var bytes = await _downloadPageBytes(doc.pages.first, doc.bucket);
+      bytes = await _maybeDecrypt(bytes, doc.encrypted);
+      final file = File('${tempDir.path}/$safeName.pdf');
+      await file.writeAsBytes(bytes);
+      await Share.shareXFiles([XFile(file.path)], sharePositionOrigin: origin);
+    } else if (doc.pages.length == 1) {
+      // Single image — save directly to photo gallery
+      final pageRef = doc.pages.first;
+      final ext = pageRef.toLowerCase().endsWith('.png') ? 'png' : 'jpg';
+      var bytes = await _downloadPageBytes(pageRef, doc.bucket);
+      bytes = await _maybeDecrypt(bytes, doc.encrypted);
+      final file = File('${tempDir.path}/$safeName.$ext');
+      await file.writeAsBytes(bytes);
+      await GallerySaver.saveImage(file.path);
+    } else {
+      // Multiple images — compose into a single PDF and share
+      final pdf = pw.Document();
+      for (String pageRef in doc.pages) {
+        var imageBytes = await _downloadPageBytes(pageRef, doc.bucket);
+        imageBytes = await _maybeDecrypt(imageBytes, doc.encrypted);
+        final image = pw.MemoryImage(imageBytes);
 
-      final decodedImage = await decodeImageFromList(imageBytes);
-      final width = decodedImage.width.toDouble();
-      final height = decodedImage.height.toDouble();
+        final decodedImage = await decodeImageFromList(imageBytes);
+        final width = decodedImage.width.toDouble();
+        final height = decodedImage.height.toDouble();
 
-      pdf.addPage(
-        pw.Page(
-          pageFormat: PdfPageFormat(width, height),
-          build: (context) => pw.Image(image, fit: pw.BoxFit.fill),
-        ),
-      );
+        pdf.addPage(
+          pw.Page(
+            pageFormat: PdfPageFormat(width, height),
+            build: (context) => pw.Image(image, fit: pw.BoxFit.fill),
+          ),
+        );
+      }
+      final file = File('${tempDir.path}/$safeName.pdf');
+      await file.writeAsBytes(await pdf.save());
+      await Share.shareXFiles([XFile(file.path)], sharePositionOrigin: origin);
     }
 
-    await file.writeAsBytes(await pdf.save());
-    await OpenFile.open(file.path);
+    if (context.mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(AppLocalizations.of(context)!.downloadSuccess), backgroundColor: AppColors.main.withValues(alpha: 0.8)),
+      );
+    }
+  } catch (e) {
+    debugPrint('❌ Download failed: $e');
+    if (context.mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(AppLocalizations.of(context)!.uploadFailed), backgroundColor: AppColors.red.withValues(alpha: 0.8)),
+      );
+    }
   }
-
-  ScaffoldMessenger.of(context).showSnackBar(
-    SnackBar(content: Text(AppLocalizations.of(context)!.downloadSuccess), backgroundColor: AppColors.main.withOpacity(0.8)),
-  );
 }
 
 

@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'dart:convert';
+import 'dart:math' as math;
 import 'dart:ui';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:docsera/models/sign_up_info.dart';
@@ -25,6 +26,94 @@ import 'package:docsera/app/text_styles.dart';
 import 'package:docsera/screens/map_results_page.dart';
 
 import '../../utils/full_page_loader.dart';
+
+enum _OverlayToastVariant { success, info }
+
+/// Shows a floating toast that overlays even on top of modal bottom sheets.
+/// The standard ScaffoldMessenger snackbar is hidden under the sheet, so we
+/// mount a transient OverlayEntry instead.
+///
+/// Uses SafeArea so it sits below the notch / Dynamic Island and fades in/out.
+void _showCopiedOverlay(
+  BuildContext context,
+  String message, {
+  _OverlayToastVariant variant = _OverlayToastVariant.success,
+}) {
+  final overlay = Overlay.of(context, rootOverlay: true);
+  late OverlayEntry entry;
+  final fadeController = ValueNotifier<double>(0.0);
+
+  final isInfo = variant == _OverlayToastVariant.info;
+  final bgColor = isInfo ? const Color(0xFFE8A838) : AppColors.main;
+  final iconData = isInfo ? Icons.info_outline_rounded : Icons.check_circle_rounded;
+
+  entry = OverlayEntry(
+    builder: (ctx) {
+      return SafeArea(
+        child: Align(
+          alignment: Alignment.topCenter,
+          child: Padding(
+            padding: EdgeInsets.only(top: 12.h),
+            child: ValueListenableBuilder<double>(
+              valueListenable: fadeController,
+              builder: (_, v, child) => AnimatedOpacity(
+                opacity: v,
+                duration: const Duration(milliseconds: 200),
+                child: child,
+              ),
+              child: Material(
+                color: Colors.transparent,
+                child: Container(
+                  constraints: BoxConstraints(maxWidth: 280.w),
+                  padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 10.h),
+                  decoration: BoxDecoration(
+                    color: bgColor,
+                    borderRadius: BorderRadius.circular(14.r),
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black.withValues(alpha: 0.25),
+                        blurRadius: 20,
+                        offset: const Offset(0, 6),
+                      ),
+                    ],
+                  ),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Icon(iconData, color: Colors.white, size: 16.sp),
+                      SizedBox(width: 8.w),
+                      Flexible(
+                        child: Text(
+                          message,
+                          style: TextStyle(
+                            color: Colors.white,
+                            fontSize: 13.sp,
+                            fontWeight: FontWeight.w600,
+                          ),
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ),
+          ),
+        ),
+      );
+    },
+  );
+  overlay.insert(entry);
+  // Fade-in → hold → fade-out → remove
+  WidgetsBinding.instance.addPostFrameCallback((_) => fadeController.value = 1.0);
+  Future.delayed(const Duration(milliseconds: 1800), () {
+    fadeController.value = 0.0;
+  });
+  Future.delayed(const Duration(milliseconds: 2100), () {
+    if (entry.mounted) entry.remove();
+    fadeController.dispose();
+  });
+}
 
 class DoctorProfilePage extends StatefulWidget {
   final String doctorId; // ✅ Make non-nullable
@@ -59,6 +148,9 @@ class _DoctorProfilePageState extends State<DoctorProfilePage> {
   final Map<String, ImageProvider> _imageCache = {};
   double _buttonTopOffset = 0.0;
   bool _isOpeningImageOverlay = false;
+  List<Map<String, dynamic>> _promotions = [];
+  // promotion_id -> { has_active_voucher, used_count, is_eligible }
+  Map<String, Map<String, dynamic>> _promotionsSummary = {};
 
   void _showImageOverlayWithIndex(List<String> urls, int index) {
     if (_isOpeningImageOverlay) return;
@@ -121,6 +213,7 @@ class _DoctorProfilePageState extends State<DoctorProfilePage> {
     _loadFavoriteStatus();
     _loadDoctorProfile();
     _loadCenterMemberships();
+    _loadPromotions();
 
     WidgetsBinding.instance.addPostFrameCallback((_) {
       setState(() {
@@ -169,6 +262,51 @@ class _DoctorProfilePageState extends State<DoctorProfilePage> {
           (result as List).cast<Map<String, dynamic>>();
       if (mounted && centers.isNotEmpty) {
         setState(() => _centerMemberships = centers);
+      }
+    } catch (_) {}
+  }
+
+  Future<void> _loadPromotions() async {
+    final doctorId = widget.doctorId.trim();
+    if (doctorId.isEmpty) return;
+    try {
+      final response = await Supabase.instance.client
+          .from('doctor_promotions')
+          .select()
+          .eq('doctor_id', doctorId)
+          .eq('is_active', true)
+          .or('end_date.is.null,end_date.gt.${DateTime.now().toUtc().toIso8601String()}');
+
+      if (mounted && response is List && response.isNotEmpty) {
+        final all = List<Map<String, dynamic>>.from(response);
+        // Hide promotions where global max claims is reached
+        final visible = all.where((p) {
+          final maxClaims = p['max_claims'] as int?;
+          final currentClaims = p['current_claims'] as int? ?? 0;
+          if (maxClaims != null && currentClaims >= maxClaims) return false;
+          return true;
+        }).toList();
+        setState(() {
+          _promotions = visible;
+        });
+
+        // Fetch per-patient summary so we can render badges + grayed-out cards.
+        try {
+          final user = Supabase.instance.client.auth.currentUser;
+          if (user != null) {
+            final summary = await Supabase.instance.client
+                .rpc('get_my_promotions_summary', params: {'p_doctor_id': doctorId});
+            if (mounted && summary is List) {
+              final map = <String, Map<String, dynamic>>{};
+              for (final row in summary) {
+                if (row is Map && row['promotion_id'] != null) {
+                  map[row['promotion_id'].toString()] = Map<String, dynamic>.from(row);
+                }
+              }
+              setState(() => _promotionsSummary = map);
+            }
+          }
+        } catch (_) {}
       }
     } catch (_) {}
   }
@@ -699,6 +837,534 @@ class _DoctorProfilePageState extends State<DoctorProfilePage> {
     } else {
       throw 'Could not launch $url';
     }
+  }
+
+  Widget _buildPromotionsSection(List<Map<String, dynamic>> promotions) {
+    if (promotions.isEmpty) return const SizedBox.shrink();
+
+    final l = AppLocalizations.of(context)!;
+    final isAr = Localizations.localeOf(context).languageCode == 'ar';
+
+    return Card(
+      color: AppColors.background2,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(12.r),
+        side: BorderSide(color: AppColors.main.withOpacity(0.2), width: 0.8),
+      ),
+      elevation: 0,
+      child: Padding(
+        padding: EdgeInsets.all(12.r),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // Header
+            Row(
+              children: [
+                Container(
+                  padding: EdgeInsets.all(6.r),
+                  decoration: BoxDecoration(
+                    gradient: const LinearGradient(
+                      colors: [AppColors.main, Color(0xFF00B4B6)],
+                      begin: Alignment.topLeft,
+                      end: Alignment.bottomRight,
+                    ),
+                    borderRadius: BorderRadius.circular(8.r),
+                  ),
+                  child: Icon(Icons.local_offer_rounded,
+                      color: Colors.white, size: 14.sp),
+                ),
+                SizedBox(width: 8.w),
+                Text(
+                  l.offers,
+                  style: AppTextStyles.getTitle1(context)
+                      .copyWith(fontSize: 11.sp),
+                ),
+              ],
+            ),
+            SizedBox(height: 14.h),
+            // Offer items — show max 2, with "show all" if more
+            ...promotions.take(2).map((promo) => Padding(
+              padding: EdgeInsets.only(bottom: 8.h),
+              child: _buildPromotionItem(promo, l, isAr),
+            )),
+            // "Show all" button when more than 2
+            if (promotions.length > 2)
+              Padding(
+                padding: EdgeInsets.only(top: 4.h),
+                child: Center(
+                  child: TextButton.icon(
+                    onPressed: () => _showAllPromotionsSheet(promotions, l, isAr),
+                    icon: Icon(Icons.expand_more_rounded, size: 16.sp, color: AppColors.main),
+                    label: Text(
+                      '${l.showAll} (${promotions.length})',
+                      style: AppTextStyles.getText3(context).copyWith(
+                        color: AppColors.main,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                    style: TextButton.styleFrom(
+                      padding: EdgeInsets.symmetric(horizontal: 12.w, vertical: 4.h),
+                    ),
+                  ),
+                ),
+              ),
+            // Single instruction text at the bottom
+            SizedBox(height: 6.h),
+            Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Icon(Icons.info_outline_rounded, size: 13.sp, color: Colors.grey[400]),
+                SizedBox(width: 4.w),
+                Expanded(
+                  child: Text(
+                    l.promotionPressHereToClaim,
+                    style: AppTextStyles.getText3(context).copyWith(
+                      color: Colors.grey[500],
+                      fontSize: 10.sp,
+                      height: 1.4,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  void _showAllPromotionsSheet(
+    List<dynamic> promotions,
+    AppLocalizations l,
+    bool isAr,
+  ) {
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (ctx) => Container(
+        constraints: BoxConstraints(maxHeight: MediaQuery.of(context).size.height * 0.7),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.vertical(top: Radius.circular(24.r)),
+        ),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            // Handle bar
+            Container(
+              width: 36.w,
+              height: 4.h,
+              margin: EdgeInsets.only(top: 12.h, bottom: 16.h),
+              decoration: BoxDecoration(
+                color: Colors.grey.shade300,
+                borderRadius: BorderRadius.circular(2.r),
+              ),
+            ),
+            // Header
+            Padding(
+              padding: EdgeInsets.symmetric(horizontal: 20.w),
+              child: Row(
+                children: [
+                  Container(
+                    padding: EdgeInsets.all(6.r),
+                    decoration: BoxDecoration(
+                      gradient: const LinearGradient(
+                        colors: [AppColors.main, Color(0xFF00B4B6)],
+                        begin: Alignment.topLeft,
+                        end: Alignment.bottomRight,
+                      ),
+                      borderRadius: BorderRadius.circular(8.r),
+                    ),
+                    child: Icon(Icons.local_offer_rounded, color: Colors.white, size: 14.sp),
+                  ),
+                  SizedBox(width: 8.w),
+                  Text(
+                    '${l.offers} (${promotions.length})',
+                    style: AppTextStyles.getTitle1(context).copyWith(fontSize: 13.sp),
+                  ),
+                ],
+              ),
+            ),
+            SizedBox(height: 12.h),
+            // All promotions list
+            Flexible(
+              child: ListView.separated(
+                padding: EdgeInsets.fromLTRB(20.w, 0, 20.w, 20.h),
+                shrinkWrap: true,
+                itemCount: promotions.length,
+                separatorBuilder: (_, __) => SizedBox(height: 8.h),
+                itemBuilder: (context, index) {
+                  return _buildPromotionItem(promotions[index] as Map<String, dynamic>, l, isAr);
+                },
+              ),
+            ),
+            // Single instruction at bottom
+            Padding(
+              padding: EdgeInsets.fromLTRB(20.w, 0, 20.w, 20.h),
+              child: Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Icon(Icons.info_outline_rounded, size: 13.sp, color: Colors.grey[400]),
+                  SizedBox(width: 4.w),
+                  Expanded(
+                    child: Text(
+                      l.promotionPressHereToClaim,
+                      style: AppTextStyles.getText3(context).copyWith(
+                        color: Colors.grey[500],
+                        fontSize: 10.sp,
+                        height: 1.4,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildPromotionItem(
+    Map<String, dynamic> promo,
+    AppLocalizations l,
+    bool isAr,
+  ) {
+    final offerType = promo['offer_type'] as String? ?? 'custom';
+    final discountValue = (promo['discount_value'] as num?)?.toDouble();
+    final discountType = promo['discount_type'] as String?;
+    final customTitle = promo['custom_title'] as String?;
+    final customTitleAr = promo['custom_title_ar'] as String?;
+    final description = promo['description'] as String?;
+    final descriptionAr = promo['description_ar'] as String?;
+    final audience = promo['audience'] as String? ?? 'all_patients';
+    final maxPerPatient = promo['max_claims_per_patient'] as int?;
+    final endDate = promo['end_date'] as String?;
+    final currency = l.currency;
+
+    // Localized title
+    String title;
+    if (offerType == 'custom') {
+      // Base custom title (from the doctor's text)
+      String baseTitle;
+      if (isAr && customTitleAr != null && customTitleAr.isNotEmpty) {
+        baseTitle = customTitleAr;
+      } else if (customTitle != null && customTitle.isNotEmpty) {
+        baseTitle = customTitle;
+      } else {
+        baseTitle = customTitleAr ?? l.offers;
+      }
+      // Append the discount value if one was set on the custom offer,
+      // otherwise it's just a named perk with no numeric discount.
+      if (discountValue != null && discountValue > 0) {
+        // Use Unicode First Strong Isolate (⁨) + Pop Directional Isolate
+        // (⁩) so the number + currency stays visually grouped regardless of
+        // whether the custom title is English or Arabic. Without this, the
+        // bidi algorithm splits "15000" from "ل.س" in a mixed-direction title.
+        final valuePart = discountType == 'fixed'
+            ? '⁨${discountValue.toInt()} $currency⁩'
+            : '⁨${discountValue.toInt()}%⁩';
+        title = '$baseTitle • $valuePart';
+      } else {
+        title = baseTitle;
+      }
+    } else {
+      switch (offerType) {
+        case 'free_first_consultation':
+          title = l.freeFirstConsultation;
+          break;
+        case 'percentage_discount':
+          title = '${discountValue?.toInt() ?? 0}% ${l.percentageDiscount}';
+          break;
+        case 'fixed_discount':
+          title = '${discountValue?.toInt() ?? 0} $currency ${l.fixedDiscount}';
+          break;
+        case 'free_followup':
+          title = l.freeFollowup;
+          break;
+        default:
+          title = l.specialOffer;
+      }
+    }
+
+    // Description
+    final desc = isAr
+        ? (descriptionAr ?? description)
+        : (description ?? descriptionAr);
+
+    // Icon and color per type
+    IconData icon;
+    Color color;
+    switch (offerType) {
+      case 'free_first_consultation':
+        icon = Icons.medical_services_outlined;
+        color = const Color(0xFF3BB273);
+        break;
+      case 'percentage_discount':
+        icon = Icons.percent_rounded;
+        color = const Color(0xFF5B8DEF);
+        break;
+      case 'fixed_discount':
+        icon = Icons.attach_money_rounded;
+        color = const Color(0xFFE8A838);
+        break;
+      case 'free_followup':
+        icon = Icons.repeat_rounded;
+        color = const Color(0xFF9B59B6);
+        break;
+      default:
+        icon = Icons.auto_awesome_rounded;
+        color = AppColors.main;
+    }
+
+    // Check if limited time
+    String? expiryText;
+    if (endDate != null) {
+      final end = DateTime.tryParse(endDate);
+      if (end != null) {
+        final daysLeft = end.difference(DateTime.now()).inDays;
+        if (daysLeft > 0 && daysLeft <= 30) {
+          expiryText = '$daysLeft ${l.daysRemaining}';
+        }
+      }
+    }
+
+    // Per-item eligibility tag text (short, not the long instruction)
+    String? eligibilityTag;
+    if (offerType == 'free_first_consultation') {
+      eligibilityTag = l.promotionFirstVisitOnly;
+    } else if (maxPerPatient != null && maxPerPatient == 1) {
+      eligibilityTag = l.promotionSingleUse;
+    } else if (maxPerPatient != null && maxPerPatient > 1) {
+      eligibilityTag = l.promotionMultiUse(maxPerPatient);
+    }
+
+    // Summary lookup — per-patient info to drive badges + eligibility
+    final promoId = promo['id']?.toString();
+    final summary = promoId != null ? _promotionsSummary[promoId] : null;
+    final hasActiveVoucher = summary?['has_active_voucher'] == true;
+    final usedCount = (summary?['used_count'] as num?)?.toInt() ?? 0;
+    final isEligible = summary == null ? true : (summary['is_eligible'] == true);
+
+    // Opacity for the whole card when ineligible (Option B visibility)
+    final opacity = isEligible ? 1.0 : 0.55;
+
+    // When the patient has an active (unused) code, the card itself takes on
+    // a stronger visual presence — no badge needed.
+    final bgColor = hasActiveVoucher
+        ? color.withOpacity(0.12)
+        : color.withOpacity(0.05);
+    final borderColor = hasActiveVoucher
+        ? color.withOpacity(0.45)
+        : color.withOpacity(0.15);
+    final borderWidth = hasActiveVoucher ? 1.2 : 1.0;
+
+    return Opacity(
+      opacity: opacity,
+      child: GestureDetector(
+        onTap: () {
+          if (!isEligible) {
+            _showCopiedOverlay(
+              context,
+              l.offerNotEligible,
+              variant: _OverlayToastVariant.info,
+            );
+            return;
+          }
+          _showClaimPromotionDialog(promo, title, desc, color, icon);
+        },
+        child: Container(
+          padding: EdgeInsets.all(12.r),
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(10.r),
+            color: bgColor,
+            border: Border.all(color: borderColor, width: borderWidth),
+            boxShadow: hasActiveVoucher
+                ? [
+                    BoxShadow(
+                      color: color.withOpacity(0.15),
+                      blurRadius: 10,
+                      offset: const Offset(0, 3),
+                    ),
+                  ]
+                : null,
+          ),
+          child: Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              // Icon container with a small check overlay when a code is ready
+              SizedBox(
+                width: 38.r,
+                height: 38.r,
+                child: Stack(
+                  clipBehavior: Clip.none,
+                  children: [
+                    Container(
+                      width: 38.r,
+                      height: 38.r,
+                      decoration: BoxDecoration(
+                        gradient: LinearGradient(
+                          colors: [
+                            color.withOpacity(0.85),
+                            color.withOpacity(0.45),
+                          ],
+                          begin: Alignment.topLeft,
+                          end: Alignment.bottomRight,
+                        ),
+                        borderRadius: BorderRadius.circular(10.r),
+                      ),
+                      child: Icon(icon, color: Colors.white, size: 18.sp),
+                    ),
+                    if (hasActiveVoucher)
+                      Positioned(
+                        top: -2,
+                        right: -2,
+                        child: Container(
+                          width: 14.r,
+                          height: 14.r,
+                          decoration: BoxDecoration(
+                            color: Colors.white,
+                            shape: BoxShape.circle,
+                            boxShadow: [
+                              BoxShadow(
+                                color: Colors.black.withValues(alpha: 0.1),
+                                blurRadius: 3,
+                                offset: const Offset(0, 1),
+                              ),
+                            ],
+                          ),
+                          child: Icon(
+                            Icons.qr_code_rounded,
+                            color: color,
+                            size: 10.sp,
+                          ),
+                        ),
+                      ),
+                  ],
+                ),
+              ),
+              SizedBox(width: 10.w),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Expanded(
+                          child: Text(
+                            title,
+                            style: AppTextStyles.getTitle2(context).copyWith(
+                              fontSize: 11.sp,
+                              fontWeight: FontWeight.w700,
+                            ),
+                          ),
+                        ),
+                        // Only the "used" badge remains — the ready state is
+                        // shown through the card's visual treatment above.
+                        if (usedCount > 0) ...[
+                          SizedBox(width: 6.w),
+                          _OfferStateBadge(
+                            text: l.offerUsedTimesBadge(usedCount),
+                            color: const Color(0xFF3BB273),
+                          ),
+                        ],
+                      ],
+                    ),
+                    // For eligible offers: show the usage-rule tag (single-use / multi-use / first-visit).
+                    // For ineligible offers: show ONLY the reason hint — don't stack two sub-lines.
+                    if (!isEligible) ...[
+                      SizedBox(height: 3.h),
+                      Text(
+                        l.offerFirstVisitOnlyHint,
+                        style: AppTextStyles.getText3(context).copyWith(
+                          color: Colors.grey[500],
+                          fontSize: 9.sp,
+                          fontStyle: FontStyle.italic,
+                        ),
+                      ),
+                    ] else if (eligibilityTag != null) ...[
+                      SizedBox(height: 3.h),
+                      Text(
+                        eligibilityTag,
+                        style: AppTextStyles.getText3(context).copyWith(
+                          color: Colors.grey[500],
+                          fontSize: 9.sp,
+                        ),
+                      ),
+                    ],
+                    if (audience == 'new_patients' || expiryText != null) ...[
+                      SizedBox(height: 6.h),
+                      Wrap(
+                        spacing: 6.w,
+                        runSpacing: 4.h,
+                        children: [
+                          if (audience == 'new_patients')
+                            _promoTag(l.newPatientsOnly, Colors.blue),
+                          if (expiryText != null)
+                            _promoTag(expiryText, Colors.orange),
+                        ],
+                      ),
+                    ],
+                  ],
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  void _showClaimPromotionDialog(
+    Map<String, dynamic> promo,
+    String title,
+    String? description,
+    Color color,
+    IconData icon,
+  ) {
+    final user = Supabase.instance.client.auth.currentUser;
+    if (user == null) {
+      _showLoginPromptDialog();
+      return;
+    }
+
+    final l = AppLocalizations.of(context)!;
+    final promoId = promo['id'] as String;
+
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (ctx) => _ClaimPromotionSheet(
+        promoId: promoId,
+        title: title,
+        description: description,
+        color: color,
+        icon: icon,
+        local: l,
+      ),
+    );
+  }
+
+  Widget _promoTag(String label, Color color) {
+    return Container(
+      padding: EdgeInsets.symmetric(horizontal: 8.w, vertical: 2.h),
+      decoration: BoxDecoration(
+        color: color.withOpacity(0.08),
+        borderRadius: BorderRadius.circular(6.r),
+        border: Border.all(color: color.withOpacity(0.20)),
+      ),
+      child: Text(
+        label,
+        style: TextStyle(
+          fontSize: 9.sp,
+          fontWeight: FontWeight.w600,
+          color: color,
+        ),
+      ),
+    );
   }
 
   Widget _buildPricingSection(List<dynamic> pricingList) {
@@ -2599,6 +3265,10 @@ $deepLink
                         if (_doctorData?['pricing'] != null &&
                             (_doctorData!['pricing'] as List).isNotEmpty)
                           _buildPricingSection(_doctorData!['pricing'] as List),
+                        if (_promotions.isNotEmpty)
+                          SizedBox(height: 10.h),
+                        if (_promotions.isNotEmpty)
+                          _buildPromotionsSection(_promotions),
                         if (profileDescription != null ||
                             (specialties != null && specialties.isNotEmpty))
                           SizedBox(height: 10.h),
@@ -2937,6 +3607,805 @@ class _CustomExpandableServiceTileState extends State<_CustomExpandableServiceTi
             ]
           ],
         ),
+      ),
+    );
+  }
+}
+
+// ─── Claim Promotion Bottom Sheet ───────────────────────────────────────────
+
+class _ClaimPromotionSheet extends StatefulWidget {
+  final String promoId;
+  final String title;
+  final String? description;
+  final Color color;
+  final IconData icon;
+  final AppLocalizations local;
+
+  const _ClaimPromotionSheet({
+    required this.promoId,
+    required this.title,
+    required this.description,
+    required this.color,
+    required this.icon,
+    required this.local,
+  });
+
+  @override
+  State<_ClaimPromotionSheet> createState() => _ClaimPromotionSheetState();
+}
+
+class _ClaimPromotionSheetState extends State<_ClaimPromotionSheet>
+    with TickerProviderStateMixin {
+  // Status from get_my_promotion_status
+  bool _isLoading = true;
+  bool _hasActiveVoucher = false;
+  String? _activeCode;
+  String? _activeExpiresAt;
+  bool _canClaimNew = false;
+  List<Map<String, dynamic>> _usageHistory = [];
+  String? _error;
+
+  // Claim flow
+  bool _isClaiming = false;
+  bool _isNewClaim = false; // true when just claimed a fresh code
+
+  // Animation controllers
+  late AnimationController _celebrationController;
+  late AnimationController _checkController;
+  late AnimationController _codeRevealController;
+  late Animation<double> _checkAnimation;
+  late Animation<double> _codeFadeAnimation;
+
+  @override
+  void initState() {
+    super.initState();
+    _celebrationController = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 2000),
+    );
+    _checkController = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 800),
+    );
+    _codeRevealController = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 600),
+    );
+    _checkAnimation = CurvedAnimation(
+      parent: _checkController,
+      curve: Curves.elasticOut,
+    );
+    _codeFadeAnimation = Tween<double>(begin: 0.0, end: 1.0).animate(
+      CurvedAnimation(parent: _codeRevealController, curve: Curves.easeOut),
+    );
+    _loadStatus();
+  }
+
+  @override
+  void dispose() {
+    _celebrationController.dispose();
+    _checkController.dispose();
+    _codeRevealController.dispose();
+    super.dispose();
+  }
+
+  Future<void> _loadStatus() async {
+    try {
+      final response = await Supabase.instance.client
+          .rpc('get_my_promotion_status', params: {
+        'p_promotion_id': widget.promoId,
+      });
+      final result = response as Map<String, dynamic>;
+      if (result['success'] == true) {
+        setState(() {
+          _hasActiveVoucher = result['has_active_voucher'] == true;
+          if (_hasActiveVoucher && result['active_voucher'] != null) {
+            final av = result['active_voucher'] as Map<String, dynamic>;
+            _activeCode = av['voucher_code'] as String?;
+            _activeExpiresAt = av['expires_at'] as String?;
+          }
+          _canClaimNew = result['can_claim_new'] == true;
+          final history = result['usage_history'];
+          if (history is List) {
+            _usageHistory = List<Map<String, dynamic>>.from(history);
+          }
+          _isLoading = false;
+        });
+        if (_hasActiveVoucher) {
+          _codeRevealController.forward();
+        }
+      } else {
+        setState(() {
+          _error = _mapError(result['error'] as String? ?? 'unknown');
+          _isLoading = false;
+        });
+      }
+    } catch (e) {
+      // Do NOT auto-claim on failure — that would generate a new code silently.
+      // Show an error state instead. Patient must tap the claim button explicitly.
+      setState(() {
+        _error = e.toString();
+        _isLoading = false;
+      });
+    }
+  }
+
+  Future<void> _claim() async {
+    setState(() {
+      _isClaiming = true;
+      _error = null;
+    });
+    try {
+      final response = await Supabase.instance.client
+          .rpc('claim_doctor_promotion', params: {
+        'p_promotion_id': widget.promoId,
+      });
+      final result = response as Map<String, dynamic>;
+      if (result['success'] == true) {
+        setState(() {
+          _activeCode = result['voucher_code'] as String?;
+          _activeExpiresAt = result['expires_at'] as String?;
+          _hasActiveVoucher = true;
+          _canClaimNew = false;
+          _isNewClaim = result['already_claimed'] != true;
+          _isClaiming = false;
+        });
+        if (_isNewClaim) {
+          _celebrationController.forward();
+          await Future.delayed(const Duration(milliseconds: 200));
+          _checkController.forward();
+          await Future.delayed(const Duration(milliseconds: 400));
+        }
+        _codeRevealController.forward();
+      } else {
+        setState(() {
+          _error = _mapError(result['error'] as String? ?? 'unknown');
+          _isClaiming = false;
+        });
+      }
+    } catch (e) {
+      setState(() {
+        _error = e.toString();
+        _isClaiming = false;
+      });
+    }
+  }
+
+  String _mapError(String code) {
+    switch (code) {
+      case 'already_claimed':
+        return widget.local.alreadyClaimed;
+      case 'promotion_expired':
+        return widget.local.offerExpired;
+      case 'promotion_full':
+        return widget.local.offerFull;
+      case 'promotion_not_found':
+        return widget.local.offerExpired;
+      case 'max_claims_per_patient_reached':
+        return widget.local.promotionMaxClaimsReached;
+      case 'not_new_patient':
+        return widget.local.promotionAlreadyUsed;
+      case 'insufficient_points':
+        return widget.local.promotionAlreadyUsed;
+      default:
+        return code;
+    }
+  }
+
+  String _formatDateTime(String isoDate) {
+    final dt = DateTime.tryParse(isoDate);
+    if (dt == null) return isoDate;
+    final syria = DocSeraTime.tryParseToSyria(dt.toIso8601String()) ?? dt;
+    final hour = syria.hour > 12 ? syria.hour - 12 : (syria.hour == 0 ? 12 : syria.hour);
+    final minute = syria.minute.toString().padLeft(2, '0');
+    final period = syria.hour >= 12
+        ? (widget.local.pm)
+        : (widget.local.am);
+    final date = '${syria.day}/${syria.month}/${syria.year}';
+    return '$date - $hour:$minute $period';
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final l = widget.local;
+
+    return Container(
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.vertical(top: Radius.circular(24.r)),
+      ),
+      padding: EdgeInsets.fromLTRB(24.w, 8.h, 24.w, 32.h),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          // Handle bar
+          Container(
+            width: 36.w,
+            height: 4.h,
+            margin: EdgeInsets.only(bottom: 16.h),
+            decoration: BoxDecoration(
+              color: Colors.grey.shade300,
+              borderRadius: BorderRadius.circular(2.r),
+            ),
+          ),
+
+          // ── Loading state ──
+          if (_isLoading) ...[
+            SizedBox(height: 32.h),
+            SizedBox(
+              width: 28.r,
+              height: 28.r,
+              child: CircularProgressIndicator(
+                color: AppColors.main,
+                strokeWidth: 2.5,
+              ),
+            ),
+            SizedBox(height: 16.h),
+            Text(
+              widget.title,
+              style: AppTextStyles.getText2(context).copyWith(color: Colors.grey[500]),
+              textAlign: TextAlign.center,
+            ),
+            SizedBox(height: 32.h),
+          ]
+
+          // ── Error state ──
+          else if (_error != null && !_hasActiveVoucher) ...[
+            _buildHeaderIcon(),
+            SizedBox(height: 12.h),
+            Text(
+              widget.title,
+              style: AppTextStyles.getTitle2(context).copyWith(fontWeight: FontWeight.w700),
+              textAlign: TextAlign.center,
+            ),
+            SizedBox(height: 16.h),
+            // Show usage history banners above the error if any
+            ..._buildUsageHistoryBanners(),
+            Container(
+              width: double.infinity,
+              padding: EdgeInsets.all(14.r),
+              decoration: BoxDecoration(
+                color: const Color(0xFFFFF0F0),
+                borderRadius: BorderRadius.circular(12.r),
+              ),
+              child: Row(
+                children: [
+                  Icon(Icons.error_outline_rounded,
+                      color: const Color(0xFFE53935), size: 18.sp),
+                  SizedBox(width: 10.w),
+                  Expanded(
+                    child: Text(
+                      _error!,
+                      style: AppTextStyles.getText2(context).copyWith(
+                        color: const Color(0xFFB71C1C),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ]
+
+          // ── Active voucher state (code available) ──
+          else if (_hasActiveVoucher && _activeCode != null) ...[
+            Flexible(
+              child: SingleChildScrollView(
+                child: Stack(
+                  alignment: Alignment.topCenter,
+                  children: [
+                    // Confetti (only for brand new claims)
+                    if (_isNewClaim)
+                      AnimatedBuilder(
+                        animation: _celebrationController,
+                        builder: (context, _) {
+                          return CustomPaint(
+                            size: Size(300.w, 300.h),
+                            painter: _ConfettiPainter(
+                              progress: _celebrationController.value,
+                              colors: [
+                                AppColors.main,
+                                const Color(0xFF4CAF50),
+                                const Color(0xFFFF9800),
+                                const Color(0xFF2196F3),
+                                const Color(0xFFE91E63),
+                                AppColors.main.withValues(alpha: 0.6),
+                              ],
+                            ),
+                          );
+                        },
+                      ),
+                    FadeTransition(
+                      opacity: _codeFadeAnimation,
+                      child: Column(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          // Check circle for new, info circle for existing
+                          if (_isNewClaim)
+                            ScaleTransition(
+                              scale: _checkAnimation,
+                              child: Container(
+                                width: 64.r,
+                                height: 64.r,
+                                decoration: BoxDecoration(
+                                  shape: BoxShape.circle,
+                                  gradient: LinearGradient(
+                                    colors: [AppColors.main, AppColors.main.withValues(alpha: 0.8)],
+                                    begin: Alignment.topLeft,
+                                    end: Alignment.bottomRight,
+                                  ),
+                                  boxShadow: [
+                                    BoxShadow(
+                                      color: AppColors.main.withValues(alpha: 0.3),
+                                      blurRadius: 20,
+                                      offset: const Offset(0, 6),
+                                    ),
+                                  ],
+                                ),
+                                child: Icon(Icons.check_rounded, color: Colors.white, size: 32.sp),
+                              ),
+                            )
+                          else
+                            _buildHeaderIcon(),
+                          SizedBox(height: 12.h),
+                          Text(
+                            _isNewClaim ? l.claimSuccess : l.yourVoucher,
+                            style: AppTextStyles.getTitle2(context).copyWith(
+                              color: AppColors.mainDark,
+                              fontWeight: FontWeight.w700,
+                            ),
+                          ),
+                          SizedBox(height: 4.h),
+                          Text(
+                            widget.title,
+                            style: AppTextStyles.getText2(context).copyWith(color: Colors.grey[500]),
+                            textAlign: TextAlign.center,
+                          ),
+                          SizedBox(height: 16.h),
+
+                          // Usage history banners (if multi-use and has past usage)
+                          ..._buildUsageHistoryBanners(),
+
+                          SizedBox(height: 4.h),
+
+                          // QR Code
+                          Container(
+                            padding: EdgeInsets.all(12.w),
+                            decoration: BoxDecoration(
+                              color: Colors.white,
+                              borderRadius: BorderRadius.circular(16.r),
+                              border: Border.all(color: AppColors.main.withValues(alpha: 0.1), width: 2),
+                            ),
+                            child: QrImageView(
+                              data: _activeCode!,
+                              version: QrVersions.auto,
+                              size: 160.w,
+                              foregroundColor: AppColors.mainDark,
+                            ),
+                          ),
+                          SizedBox(height: 16.h),
+
+                          // Voucher code card
+                          _buildCodeCard(_activeCode!, _activeExpiresAt, false),
+                          SizedBox(height: 16.h),
+
+                          // Show to doctor hint
+                          _buildDoctorHint(),
+                          SizedBox(height: 8.h),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ]
+
+          // ── No active voucher but has usage history (used state) ──
+          else if (_usageHistory.isNotEmpty) ...[
+            Flexible(
+              child: SingleChildScrollView(
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    _buildHeaderIcon(),
+                    SizedBox(height: 12.h),
+                    Text(
+                      widget.title,
+                      style: AppTextStyles.getTitle2(context).copyWith(fontWeight: FontWeight.w700),
+                      textAlign: TextAlign.center,
+                    ),
+                    SizedBox(height: 16.h),
+
+                    // Usage history banners
+                    ..._buildUsageHistoryBanners(),
+
+                    // Grayed last-used voucher code
+                    _buildCodeCard(
+                      _usageHistory.first['voucher_code'] as String? ?? '',
+                      null,
+                      true,
+                    ),
+                    SizedBox(height: 8.h),
+                    // Used note
+                    Container(
+                      width: double.infinity,
+                      padding: EdgeInsets.symmetric(horizontal: 12.w, vertical: 8.h),
+                      decoration: BoxDecoration(
+                        color: Colors.grey.shade50,
+                        borderRadius: BorderRadius.circular(10.r),
+                        border: Border.all(color: Colors.grey.shade200),
+                      ),
+                      child: Row(
+                        children: [
+                          Icon(Icons.check_circle_rounded, color: Colors.grey[400], size: 16.sp),
+                          SizedBox(width: 8.w),
+                          Expanded(
+                            child: Text(
+                              l.voucherUsedNote,
+                              style: AppTextStyles.getText3(context).copyWith(
+                                color: Colors.grey[500],
+                                height: 1.4,
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    SizedBox(height: 16.h),
+
+                    // "Claim new code" button if allowed
+                    if (_canClaimNew) ...[
+                      Container(
+                        width: double.infinity,
+                        padding: EdgeInsets.symmetric(horizontal: 12.w, vertical: 8.h),
+                        decoration: BoxDecoration(
+                          color: AppColors.main.withValues(alpha: 0.04),
+                          borderRadius: BorderRadius.circular(10.r),
+                          border: Border.all(color: AppColors.main.withValues(alpha: 0.12)),
+                        ),
+                        child: Text(
+                          l.promotionStillAvailable,
+                          style: AppTextStyles.getText3(context).copyWith(
+                            color: AppColors.main,
+                          ),
+                          textAlign: TextAlign.center,
+                        ),
+                      ),
+                      SizedBox(height: 12.h),
+                      _buildClaimButton(),
+                    ],
+                  ],
+                ),
+              ),
+            ),
+          ]
+
+          // ── Fresh claim prompt (no history, no active voucher) ──
+          else ...[
+            _buildHeaderIcon(),
+            SizedBox(height: 12.h),
+            Text(
+              widget.title,
+              style: AppTextStyles.getTitle2(context).copyWith(fontWeight: FontWeight.w700),
+              textAlign: TextAlign.center,
+            ),
+            if (widget.description != null && widget.description!.isNotEmpty) ...[
+              SizedBox(height: 6.h),
+              Text(
+                widget.description!,
+                style: AppTextStyles.getText3(context).copyWith(
+                  color: Colors.grey[500],
+                  height: 1.4,
+                ),
+                textAlign: TextAlign.center,
+                maxLines: 2,
+                overflow: TextOverflow.ellipsis,
+              ),
+            ],
+            SizedBox(height: 6.h),
+            Divider(color: Colors.grey.shade200, height: 24.h),
+            Text(
+              l.claimOfferDesc,
+              style: AppTextStyles.getText2(context).copyWith(
+                color: Colors.grey[600],
+                height: 1.5,
+              ),
+              textAlign: TextAlign.center,
+            ),
+            SizedBox(height: 20.h),
+            _buildClaimButton(),
+          ],
+        ],
+      ),
+    );
+  }
+
+  Widget _buildHeaderIcon() {
+    return Container(
+      width: 48.r,
+      height: 48.r,
+      decoration: BoxDecoration(
+        color: widget.color.withValues(alpha: 0.08),
+        shape: BoxShape.circle,
+      ),
+      child: Icon(widget.icon, color: widget.color, size: 22.sp),
+    );
+  }
+
+  Widget _buildClaimButton() {
+    return GestureDetector(
+      onTap: _isClaiming ? null : _claim,
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 200),
+        padding: EdgeInsets.symmetric(horizontal: 32.w, vertical: 12.h),
+        decoration: BoxDecoration(
+          color: _isClaiming ? AppColors.main.withValues(alpha: 0.6) : AppColors.main,
+          borderRadius: BorderRadius.circular(12.r),
+          boxShadow: _isClaiming
+              ? []
+              : [
+                  BoxShadow(
+                    color: AppColors.main.withValues(alpha: 0.25),
+                    blurRadius: 12,
+                    offset: const Offset(0, 4),
+                  ),
+                ],
+        ),
+        child: _isClaiming
+            ? SizedBox(
+                width: 20.r,
+                height: 20.r,
+                child: const CircularProgressIndicator(color: Colors.white, strokeWidth: 2),
+              )
+            : Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Icon(Icons.redeem_rounded, color: Colors.white, size: 18.sp),
+                  SizedBox(width: 8.w),
+                  Text(
+                    _usageHistory.isNotEmpty
+                        ? widget.local.claimNewCode
+                        : widget.local.claimOffer,
+                    style: AppTextStyles.getText1(context).copyWith(
+                      color: Colors.white,
+                      fontWeight: FontWeight.w700,
+                    ),
+                  ),
+                ],
+              ),
+      ),
+    );
+  }
+
+  Widget _buildCodeCard(String code, String? expiresAt, bool isUsed) {
+    final l = widget.local;
+    return Container(
+      padding: EdgeInsets.symmetric(horizontal: 24.w, vertical: 12.h),
+      decoration: BoxDecoration(
+        color: isUsed ? Colors.grey.shade100 : AppColors.main.withValues(alpha: 0.05),
+        borderRadius: BorderRadius.circular(14.r),
+        border: Border.all(
+          color: isUsed ? Colors.grey.shade300 : AppColors.main.withValues(alpha: 0.12),
+        ),
+      ),
+      child: Column(
+        children: [
+          Text(
+            l.voucherCode,
+            style: AppTextStyles.getText3(context).copyWith(
+              color: isUsed ? Colors.grey[400] : Colors.grey[500],
+            ),
+          ),
+          SizedBox(height: 4.h),
+          GestureDetector(
+            onTap: () {
+              Clipboard.setData(ClipboardData(text: code));
+              _showCopiedOverlay(context, l.codeCopied);
+            },
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Text(
+                  code,
+                  style: AppTextStyles.getTitle1(context).copyWith(
+                    fontSize: 22.sp,
+                    letterSpacing: 3,
+                    color: isUsed ? Colors.grey[400] : AppColors.mainDark,
+                    decoration: isUsed ? TextDecoration.lineThrough : null,
+                  ),
+                ),
+                SizedBox(width: 10.w),
+                Icon(
+                  Icons.copy_rounded,
+                  size: 16.sp,
+                  color: isUsed
+                      ? Colors.grey[300]
+                      : AppColors.main.withValues(alpha: 0.6),
+                ),
+              ],
+            ),
+          ),
+          if (!isUsed && expiresAt != null) ...[
+            SizedBox(height: 4.h),
+            Builder(builder: (context) {
+              final end = DateTime.tryParse(expiresAt);
+              if (end == null) return const SizedBox.shrink();
+              final daysLeft = end.difference(DateTime.now()).inDays;
+              final text = daysLeft > 0
+                  ? '${l.validFor} $daysLeft ${l.daysRemaining}'
+                  : l.validWhileOfferActive;
+              return Text(
+                text,
+                style: AppTextStyles.getText3(context).copyWith(
+                  color: Colors.grey[400],
+                  fontSize: 10.sp,
+                ),
+              );
+            }),
+          ],
+        ],
+      ),
+    );
+  }
+
+  List<Widget> _buildUsageHistoryBanners() {
+    if (_usageHistory.isEmpty) return [];
+    return _usageHistory.map<Widget>((usage) {
+      final usedAt = usage['used_at'] as String?;
+      final formattedDate = usedAt != null ? _formatDateTime(usedAt) : '';
+      return Container(
+        width: double.infinity,
+        margin: EdgeInsets.only(bottom: 8.h),
+        padding: EdgeInsets.symmetric(horizontal: 12.w, vertical: 8.h),
+        decoration: BoxDecoration(
+          color: const Color(0xFFF5F5F5),
+          borderRadius: BorderRadius.circular(10.r),
+          border: Border.all(color: Colors.grey.shade200),
+        ),
+        child: Row(
+          children: [
+            Icon(Icons.check_circle_rounded, color: const Color(0xFF4CAF50), size: 16.sp),
+            SizedBox(width: 8.w),
+            Expanded(
+              child: Text(
+                '${widget.local.voucherUsedAt} $formattedDate',
+                style: AppTextStyles.getText3(context).copyWith(
+                  color: Colors.grey[600],
+                  fontSize: 11.sp,
+                ),
+              ),
+            ),
+          ],
+        ),
+      );
+    }).toList();
+  }
+
+  Widget _buildDoctorHint() {
+    return Container(
+      padding: EdgeInsets.symmetric(horizontal: 14.w, vertical: 10.h),
+      decoration: BoxDecoration(
+        color: AppColors.main.withValues(alpha: 0.04),
+        borderRadius: BorderRadius.circular(10.r),
+        border: Border.all(color: AppColors.main.withValues(alpha: 0.10)),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(Icons.qr_code_scanner_rounded, size: 16.sp, color: AppColors.main),
+          SizedBox(width: 8.w),
+          Flexible(
+            child: Text(
+              widget.local.showQrToDoctor,
+              style: AppTextStyles.getText3(context).copyWith(
+                color: AppColors.main,
+                fontWeight: FontWeight.w500,
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+/// Confetti particle painter for claim celebration
+class _ConfettiPainter extends CustomPainter {
+  final double progress;
+  final List<Color> colors;
+
+  _ConfettiPainter({required this.progress, required this.colors});
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    if (progress <= 0) return;
+
+    final center = Offset(size.width / 2, size.height / 2);
+    final random = [
+      0.1, 0.3, 0.5, 0.7, 0.9, 0.15, 0.35, 0.55, 0.75, 0.95,
+      0.2, 0.4, 0.6, 0.8, 0.05, 0.25, 0.45, 0.65, 0.85,
+    ];
+
+    for (int i = 0; i < 18; i++) {
+      final angle = (i / 18) * 3.14159 * 2;
+      final distance = 40 + random[i] * 100;
+      final particleProgress = (progress * 2 - random[i]).clamp(0.0, 1.0);
+      final fadeOut = progress > 0.7 ? (1.0 - (progress - 0.7) / 0.3) : 1.0;
+
+      if (particleProgress <= 0) continue;
+
+      final x = center.dx + distance * particleProgress * math.cos(angle);
+      final y = center.dy + distance * particleProgress * math.sin(angle) + 20 * particleProgress * particleProgress;
+
+      final paint = Paint()
+        ..color = colors[i % colors.length].withOpacity(fadeOut * 0.8)
+        ..style = PaintingStyle.fill;
+
+      // Alternate between circles and small rectangles
+      if (i % 3 == 0) {
+        canvas.drawCircle(Offset(x, y), 3 * (1 - particleProgress * 0.3), paint);
+      } else {
+        canvas.save();
+        canvas.translate(x, y);
+        canvas.rotate(angle + progress * 6);
+        canvas.drawRect(
+          Rect.fromCenter(center: Offset.zero, width: 6, height: 3),
+          paint,
+        );
+        canvas.restore();
+      }
+    }
+  }
+
+  @override
+  bool shouldRepaint(_ConfettiPainter oldDelegate) => progress != oldDelegate.progress;
+}
+
+/// Small badge shown on offer cards — "Used", "Used N×", or "Code ready".
+class _OfferStateBadge extends StatelessWidget {
+  final String text;
+  final Color color;
+  final bool dot;
+
+  const _OfferStateBadge({
+    required this.text,
+    required this.color,
+    this.dot = false,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: EdgeInsets.symmetric(horizontal: 6.w, vertical: 2.h),
+      decoration: BoxDecoration(
+        color: color.withValues(alpha: 0.12),
+        borderRadius: BorderRadius.circular(6.r),
+        border: Border.all(color: color.withValues(alpha: 0.35)),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          if (dot) ...[
+            Container(
+              width: 6.r,
+              height: 6.r,
+              decoration: BoxDecoration(
+                color: color,
+                shape: BoxShape.circle,
+              ),
+            ),
+            SizedBox(width: 4.w),
+          ],
+          Text(
+            text,
+            style: TextStyle(
+              fontSize: 8.5.sp,
+              fontWeight: FontWeight.w700,
+              color: color,
+            ),
+          ),
+        ],
       ),
     );
   }

@@ -277,6 +277,13 @@ class _AllergyRecordsList extends StatelessWidget {
                   ? Icons.verified_rounded
                   : Icons.info_outline_rounded,
             ),
+
+            if (!master.isVerified)
+              _tag(
+                t.health_custom_entry_badge,
+                Colors.amber.shade700,
+                icon: Icons.edit_note_rounded,
+              ),
           ],
 
           onTap: () => _openDetails(context, record),
@@ -354,6 +361,8 @@ class _AllergyRecordsList extends StatelessWidget {
           DetailRow(t.addedAt, _format(context, record.createdAt)),
           if (record.updatedAt != null && record.updatedAt != record.createdAt)
             DetailRow(t.updatedAt, _format(context, record.updatedAt)),
+          if (!master.isVerified)
+            DetailRow(t.health_verification_status, t.health_unverified),
         ],
       ),
     );

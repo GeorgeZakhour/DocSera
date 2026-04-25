@@ -14,8 +14,6 @@ class StorageWarningDialog {
   // 70 % warning
   // ---------------------------------------------------------------------------
 
-  /// Shows an informational dialog when storage reaches 70 %.
-  /// Dismissing calls [StorageQuotaCubit.markWarningShown(70)].
   static Future<void> show70Warning(BuildContext context) async {
     final l10n = AppLocalizations.of(context);
     final cubit = context.read<StorageQuotaCubit>();
@@ -24,43 +22,77 @@ class StorageWarningDialog {
       context: context,
       barrierDismissible: false,
       builder: (dialogContext) {
-        return AlertDialog(
+        return Dialog(
           shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(16.r)),
-          title: Row(
-            children: [
-              Icon(Icons.info_outline_rounded,
-                  color: Colors.orange.shade600, size: 22.sp),
-              SizedBox(width: 8.w),
-              Expanded(
-                child: Text(
-                  l10n?.storageWarning70Title ?? 'Storage Getting Full',
-                  style: AppTextStyles.getTitle2(context)
-                      .copyWith(color: AppColors.blackText),
+            borderRadius: BorderRadius.circular(20.r),
+          ),
+          child: Padding(
+            padding: EdgeInsets.symmetric(horizontal: 24.w, vertical: 28.h),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                // Icon
+                Container(
+                  width: 56.w,
+                  height: 56.w,
+                  decoration: BoxDecoration(
+                    color: const Color(0xFFF59E0B).withValues(alpha: 0.12),
+                    shape: BoxShape.circle,
+                  ),
+                  child: Icon(
+                    Icons.cloud_queue_rounded,
+                    color: const Color(0xFFF59E0B),
+                    size: 28.sp,
+                  ),
                 ),
-              ),
-            ],
-          ),
-          content: Text(
-            l10n?.storageWarning70Body ??
-                'You have used 70% of your available storage. '
-                    'Consider removing old or unused files to keep things tidy.',
-            style: AppTextStyles.getText1(context)
-                .copyWith(color: AppColors.textSubColor),
-          ),
-          actions: [
-            TextButton(
-              onPressed: () {
-                Navigator.of(dialogContext).pop();
-                cubit.markWarningShown(70);
-              },
-              child: Text(
-                l10n?.okGotIt ?? 'OK, Got It',
-                style: AppTextStyles.getText1(context)
-                    .copyWith(color: AppColors.main),
-              ),
+                SizedBox(height: 16.h),
+
+                // Title
+                Text(
+                  l10n?.storageWarning70Title ?? 'Storage Getting Full',
+                  style: AppTextStyles.getTitle2(context).copyWith(
+                    color: AppColors.blackText,
+                  ),
+                  textAlign: TextAlign.center,
+                ),
+                SizedBox(height: 10.h),
+
+                // Body
+                Text(
+                  l10n?.storageWarning70Body ??
+                      'You have used 70% of your available storage. '
+                          'Consider removing old or unused files to keep things tidy.',
+                  style: AppTextStyles.getText2(context).copyWith(
+                    color: AppColors.grayMain,
+                    height: 1.5,
+                  ),
+                  textAlign: TextAlign.center,
+                ),
+                SizedBox(height: 24.h),
+
+                // Button
+                SizedBox(
+                  width: double.infinity,
+                  child: TextButton(
+                    onPressed: () {
+                      Navigator.of(dialogContext).pop();
+                      cubit.markWarningShown(70);
+                    },
+                    style: TextButton.styleFrom(
+                      padding: EdgeInsets.symmetric(vertical: 12.h),
+                    ),
+                    child: Text(
+                      l10n?.okGotIt ?? 'OK, Got It',
+                      style: AppTextStyles.getText1(context).copyWith(
+                        color: AppColors.main,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                  ),
+                ),
+              ],
             ),
-          ],
+          ),
         );
       },
     );
@@ -70,8 +102,6 @@ class StorageWarningDialog {
   // 90 % warning
   // ---------------------------------------------------------------------------
 
-  /// Shows an urgent dialog when storage reaches 90 %.
-  /// [onManageStorage] is called when the user taps "Manage Storage".
   static Future<void> show90Warning(
     BuildContext context, {
     VoidCallback? onManageStorage,
@@ -83,61 +113,99 @@ class StorageWarningDialog {
       context: context,
       barrierDismissible: false,
       builder: (dialogContext) {
-        return AlertDialog(
+        return Dialog(
           shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(16.r)),
-          title: Row(
-            children: [
-              Icon(Icons.warning_amber_rounded,
-                  color: Colors.red.shade600, size: 22.sp),
-              SizedBox(width: 8.w),
-              Expanded(
-                child: Text(
-                  l10n?.storageWarning90Title ?? 'Storage Almost Full',
-                  style: AppTextStyles.getTitle2(context)
-                      .copyWith(color: Colors.red.shade700),
+            borderRadius: BorderRadius.circular(20.r),
+          ),
+          child: Padding(
+            padding: EdgeInsets.symmetric(horizontal: 24.w, vertical: 28.h),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                // Icon
+                Container(
+                  width: 56.w,
+                  height: 56.w,
+                  decoration: BoxDecoration(
+                    color: const Color(0xFFEF4444).withValues(alpha: 0.12),
+                    shape: BoxShape.circle,
+                  ),
+                  child: Icon(
+                    Icons.cloud_off_rounded,
+                    color: const Color(0xFFEF4444),
+                    size: 28.sp,
+                  ),
                 ),
-              ),
-            ],
-          ),
-          content: Text(
-            l10n?.storageWarning90Body ??
-                'You have used 90% of your storage. '
-                    'Upload will be blocked when you reach 100%. '
-                    'Delete some documents to free up space.',
-            style: AppTextStyles.getText1(context)
-                .copyWith(color: AppColors.textSubColor),
-          ),
-          actions: [
-            TextButton(
-              onPressed: () {
-                Navigator.of(dialogContext).pop();
-                cubit.markWarningShown(90);
-              },
-              child: Text(
-                'Dismiss',
-                style: AppTextStyles.getText1(context)
-                    .copyWith(color: AppColors.textSubColor),
-              ),
+                SizedBox(height: 16.h),
+
+                // Title
+                Text(
+                  l10n?.storageWarning90Title ?? 'Storage Almost Full',
+                  style: AppTextStyles.getTitle2(context).copyWith(
+                    color: const Color(0xFFEF4444),
+                  ),
+                  textAlign: TextAlign.center,
+                ),
+                SizedBox(height: 10.h),
+
+                // Body
+                Text(
+                  l10n?.storageWarning90Body ??
+                      'You have used 90% of your storage. '
+                          'Upload will be blocked when you reach 100%. '
+                          'Delete some documents to free up space.',
+                  style: AppTextStyles.getText2(context).copyWith(
+                    color: AppColors.grayMain,
+                    height: 1.5,
+                  ),
+                  textAlign: TextAlign.center,
+                ),
+                SizedBox(height: 24.h),
+
+                // Manage Storage button
+                SizedBox(
+                  width: double.infinity,
+                  child: ElevatedButton(
+                    onPressed: () {
+                      Navigator.of(dialogContext).pop();
+                      cubit.markWarningShown(90);
+                      onManageStorage?.call();
+                    },
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: AppColors.main,
+                      elevation: 0,
+                      padding: EdgeInsets.symmetric(vertical: 12.h),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12.r),
+                      ),
+                    ),
+                    child: Text(
+                      l10n?.storageManage ?? 'Manage Storage',
+                      style: AppTextStyles.getText1(context).copyWith(
+                        color: Colors.white,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                  ),
+                ),
+                SizedBox(height: 8.h),
+
+                // Dismiss
+                TextButton(
+                  onPressed: () {
+                    Navigator.of(dialogContext).pop();
+                    cubit.markWarningShown(90);
+                  },
+                  child: Text(
+                    l10n?.storageDismiss ?? 'Dismiss',
+                    style: AppTextStyles.getText2(context).copyWith(
+                      color: AppColors.grayMain,
+                    ),
+                  ),
+                ),
+              ],
             ),
-            ElevatedButton(
-              style: ElevatedButton.styleFrom(
-                backgroundColor: AppColors.main,
-                shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(8.r)),
-              ),
-              onPressed: () {
-                Navigator.of(dialogContext).pop();
-                cubit.markWarningShown(90);
-                onManageStorage?.call();
-              },
-              child: Text(
-                l10n?.storageManage ?? 'Manage Storage',
-                style: AppTextStyles.getText1(context)
-                    .copyWith(color: Colors.white),
-              ),
-            ),
-          ],
+          ),
         );
       },
     );
@@ -147,12 +215,6 @@ class StorageWarningDialog {
   // Auto-check helper
   // ---------------------------------------------------------------------------
 
-  /// Checks the current usage thresholds and shows the appropriate dialog.
-  ///
-  /// - Shows the 90 % dialog first if [usedPercentage] >= 90 and
-  ///   [warning90Shown] is false.
-  /// - Falls back to the 70 % dialog if [usedPercentage] >= 70 and
-  ///   [warning70Shown] is false.
   static Future<void> checkAndShowWarning(
     BuildContext context, {
     required double usedPercentage,
@@ -162,7 +224,7 @@ class StorageWarningDialog {
   }) async {
     if (usedPercentage >= 90 && !warning90Shown) {
       await show90Warning(context, onManageStorage: onManageStorage);
-    } else if (usedPercentage >= 70 && !warning70Shown) {
+    } else if (usedPercentage >= 70 && usedPercentage < 90 && !warning70Shown) {
       await show70Warning(context);
     }
   }

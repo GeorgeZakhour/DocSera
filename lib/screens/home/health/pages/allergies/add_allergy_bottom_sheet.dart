@@ -1,4 +1,5 @@
 import 'package:docsera/screens/home/health/models/health_models.dart';
+import 'package:docsera/screens/home/health/widgets/steps/health_manual_entry_form.dart';
 import 'package:docsera/screens/home/health/widgets/steps/health_master_search_step.dart';
 import 'package:docsera/screens/home/health/widgets/steps/health_options_step.dart';
 import 'package:docsera/screens/home/health/widgets/steps/health_recap_step.dart';
@@ -26,8 +27,16 @@ class _AddAllergyBottomSheetState extends State<AddAllergyBottomSheet> {
 
   bool saving = false;
 
+  /// Whether we're showing the manual entry form instead of search
+  bool _showManualForm = false;
+
   void _next() => setState(() => step++);
   void _back() {
+    if (_showManualForm) {
+      // Return from manual form back to search
+      setState(() => _showManualForm = false);
+      return;
+    }
     if (step == 1) {
       Navigator.pop(context);
     } else {
@@ -55,6 +64,36 @@ class _AddAllergyBottomSheetState extends State<AddAllergyBottomSheet> {
     }
   }
 
+  Future<void> _handleManualSubmit({
+    required String name,
+    String? description,
+  }) async {
+    final cubit = context.read<HealthCubit>();
+    final isArabic = Directionality.of(context) == TextDirection.rtl;
+
+    try {
+      final masterItem = await cubit.createCustomMasterItem(
+        nameEn: isArabic ? name : name,
+        nameAr: isArabic ? name : name,
+        descriptionEn: isArabic ? null : description,
+        descriptionAr: isArabic ? description : null,
+      );
+
+      setState(() {
+        selectedMaster = masterItem;
+        _showManualForm = false;
+      });
+      _next();
+    } catch (e) {
+      debugPrint("❌ Error creating custom master item: $e");
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(e.toString())),
+        );
+      }
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final t = AppLocalizations.of(context)!;
@@ -72,24 +111,37 @@ class _AddAllergyBottomSheetState extends State<AddAllergyBottomSheet> {
         t.addAllergy_step4_title,
       ],
       steps: [
-        /// STEP 1 — SEARCH MASTER
-        HealthMasterSearchStep<HealthMasterItem>(
-          onSearch: (q) => cubit.searchMaster(q),
-          getTitle: (item, isAr) =>
-          isAr && item.nameAr.isNotEmpty ? item.nameAr : item.nameEn,
-          getSubtitle: (item, isAr) =>
-          isAr ? (item.descriptionAr ?? "") : (item.descriptionEn ?? ""),
-          icon: Icons.coronavirus_rounded,
-          isDisabled: (item) => existingIds.contains(item.id),
-          alreadyAddedText: t.already_added,
-          emptyResultsText: t.noResults,
-          searchValue: t.health_allergies_title,
-          headerText: t.addAllergy_step1_desc,
-          onSelect: (item) {
-            selectedMaster = item;
-            _next();
-          },
-        ),
+        /// STEP 1 — SEARCH MASTER or MANUAL ENTRY FORM
+        _showManualForm
+            ? HealthManualEntryForm(
+                icon: Icons.coronavirus_rounded,
+                onSubmit: ({required name, description}) {
+                  _handleManualSubmit(
+                    name: name,
+                    description: description,
+                  );
+                },
+              )
+            : HealthMasterSearchStep<HealthMasterItem>(
+                onSearch: (q) => cubit.searchMaster(q),
+                getTitle: (item, isAr) =>
+                isAr && item.nameAr.isNotEmpty ? item.nameAr : item.nameEn,
+                getSubtitle: (item, isAr) =>
+                isAr ? (item.descriptionAr ?? "") : (item.descriptionEn ?? ""),
+                icon: Icons.coronavirus_rounded,
+                isDisabled: (item) => existingIds.contains(item.id),
+                alreadyAddedText: t.already_added,
+                emptyResultsText: t.noResults,
+                searchValue: t.health_allergies_title,
+                headerText: t.addAllergy_step1_desc,
+                onManualEntry: () {
+                  setState(() => _showManualForm = true);
+                },
+                onSelect: (item) {
+                  selectedMaster = item;
+                  _next();
+                },
+              ),
 
         /// STEP 2 — SEVERITY
         HealthOptionsStep<String>(

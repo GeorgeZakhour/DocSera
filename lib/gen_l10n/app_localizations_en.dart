@@ -174,9 +174,7 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
-  String patientName(Object name) {
-    return 'Patient: $name';
-  }
+  String get patientName => 'Patient';
 
   @override
   String get bookAgain => 'Book again';
@@ -293,15 +291,18 @@ class AppLocalizationsEn extends AppLocalizations {
   String get addDocument => 'Add Document';
 
   @override
+  String get fieldRequired => 'This field is required';
+
+  @override
   String get uploadingDocument => 'Uploading document...';
 
   @override
   String get documentTooLarge =>
-      'The compressed file exceeds 2 MB. Please reduce the number of images or use smaller ones.';
+      'The file exceeds the 15 MB limit. Please reduce the number of images or use smaller ones.';
 
   @override
   String get pdfTooLarge =>
-      'The PDF file is too large. Please use a file smaller than 2MB.';
+      'The PDF file is too large. Maximum file size is 15 MB.';
 
   @override
   String get chooseAddDocumentMethod => 'Choose a method';
@@ -335,7 +336,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get fileTooLarge =>
-      'The total size of images is too large (max 4MB). Please reduce the number or size of images.';
+      'The total size of images is too large (max 15 MB). Please reduce the number or size of images.';
 
   @override
   String get chooseAttachmentType => 'Send attachment';
@@ -1464,9 +1465,7 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
-  String appointmentDate(Object date) {
-    return 'Date: $date';
-  }
+  String get appointmentDate => 'Appointment date';
 
   @override
   String appointmentTime2(Object time) {
@@ -3195,6 +3194,16 @@ class AppLocalizationsEn extends AppLocalizations {
   String get ofText => 'of';
 
   @override
+  String imageFromDoctor(Object doctorName) {
+    return 'Image from $doctorName';
+  }
+
+  @override
+  String pdfFromDoctor(Object doctorName) {
+    return 'PDF from $doctorName';
+  }
+
+  @override
   String importedFromConversationWith(Object date, Object name) {
     return 'Imported from the conversation with $name on $date';
   }
@@ -3426,6 +3435,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get detailFileFormat => 'File format';
 
   @override
+  String get detailFileSize => 'File size';
+
+  @override
   String get detailSource => 'Source';
 
   @override
@@ -3528,6 +3540,20 @@ class AppLocalizationsEn extends AppLocalizations {
   String get okGotIt => 'OK, Got It';
 
   @override
+  String get storageDismiss => 'Dismiss';
+
+  @override
+  String get storageFullUploadBlocked =>
+      'Your storage is full. Delete some documents to free up space before uploading.';
+
+  @override
+  String get storageInfoTitle => 'About Your Storage';
+
+  @override
+  String get storageInfoBody =>
+      'This is your account\'s document storage.\n\n• Storage is shared across your account — documents for you and all your relatives count toward the same limit.\n\n• Only documents you upload are counted. Files added by your doctors do not use your storage.\n\n• You can free up space anytime by deleting documents you no longer need.';
+
+  @override
   String get fileTooLargeTitle => 'This file is too large';
 
   @override
@@ -3568,4 +3594,484 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get cannotBeUndone => 'This cannot be undone.';
+
+  @override
+  String get referralCodeOptional => 'Referral code (optional)';
+
+  @override
+  String get loyaltyRewards => 'Loyalty & Rewards';
+
+  @override
+  String get yourPoints => 'Your Points';
+
+  @override
+  String get myPoints => 'My Points';
+
+  @override
+  String get transactionHistory => 'Transaction History';
+
+  @override
+  String get noTransactionsYet => 'No transactions yet';
+
+  @override
+  String get offers => 'Offers';
+
+  @override
+  String get all => 'All';
+
+  @override
+  String get healthPartners => 'Health Partners';
+
+  @override
+  String get mobileCredit => 'Mobile Credit';
+
+  @override
+  String get noOffersAvailable => 'No offers available right now';
+
+  @override
+  String get offerDetails => 'Offer';
+
+  @override
+  String get discount => 'discount';
+
+  @override
+  String get redeemNow => 'Redeem Now';
+
+  @override
+  String get notEnoughPoints => 'Not enough points';
+
+  @override
+  String get confirmRedeem => 'Confirm Redemption';
+
+  @override
+  String get spendPoints => 'Spend';
+
+  @override
+  String get redeemSuccess => 'Redeemed!';
+
+  @override
+  String get yourVoucherCode => 'Your voucher code:';
+
+  @override
+  String get myVouchers => 'My Vouchers';
+
+  @override
+  String get active => 'Active';
+
+  @override
+  String get used => 'Used';
+
+  @override
+  String get expired => 'Expired';
+
+  @override
+  String get noVouchers => 'No vouchers';
+
+  @override
+  String get voucherDetails => 'Voucher Details';
+
+  @override
+  String get codeCopied => 'Code copied!';
+
+  @override
+  String get tapToCopy => 'Tap to copy';
+
+  @override
+  String get status => 'Status';
+
+  @override
+  String get partner => 'Partner';
+
+  @override
+  String get expiresAt => 'Expires at';
+
+  @override
+  String get howToUse => 'How to use';
+
+  @override
+  String get voucherInstructions =>
+      'Show this QR code or voucher code to the partner staff. They will scan or enter the code to verify your discount.';
+
+  @override
+  String get referFriends => 'Refer Friends';
+
+  @override
+  String get yourReferralCode => 'Your referral code';
+
+  @override
+  String get shareWithFriends => 'Share with Friends';
+
+  @override
+  String get totalReferrals => 'Referrals';
+
+  @override
+  String get pointsEarned => 'Points Earned';
+
+  @override
+  String get howItWorks => 'How it works';
+
+  @override
+  String get referStep1 => 'Share your code with friends';
+
+  @override
+  String get referStep2 =>
+      'They sign up using your code and complete their profile';
+
+  @override
+  String get referStep3 => 'You both earn points!';
+
+  @override
+  String get recentReferrals => 'Recent Referrals';
+
+  @override
+  String referralShareMessage(String code) {
+    return 'Join DocSera and use my referral code $code when you sign up! We both get free points. Download now: https://docsera.app';
+  }
+
+  @override
+  String get pending => 'Pending';
+
+  @override
+  String get confirmed => 'Confirmed';
+
+  @override
+  String get megaOffer => 'MEGA OFFER';
+
+  @override
+  String get currency => 'SYP';
+
+  @override
+  String daysLeft(int days, int hours) {
+    return '${days}d ${hours}h left';
+  }
+
+  @override
+  String get voucherExpired => 'Expired';
+
+  @override
+  String get earnPointsTitle => 'How to earn points';
+
+  @override
+  String get earnPointsReferral => 'Refer a friend: +25 points';
+
+  @override
+  String get earnPointsAppointment => 'Complete an appointment: +10 points';
+
+  @override
+  String get earnPointsReferred => 'Join via referral: +15 points';
+
+  @override
+  String get pointsValue => '1 point ≈ 500 SYP';
+
+  @override
+  String get transactionReferral => 'Referral reward';
+
+  @override
+  String get transactionWelcome => 'Welcome bonus';
+
+  @override
+  String get transactionAppointment => 'Appointment reward';
+
+  @override
+  String get transactionRedeemed => 'Offer redeemed';
+
+  @override
+  String get processingNote => 'Points are processed within 72 hours';
+
+  @override
+  String get availableOffers => 'Available offers';
+
+  @override
+  String validUntil(String date) {
+    return 'Valid until $date';
+  }
+
+  @override
+  String redeemConfirmMessage(int points) {
+    return 'Spend $points points on this offer?';
+  }
+
+  @override
+  String get goToVouchers => 'View My Vouchers';
+
+  @override
+  String get referralReward => 'You earn 25 points, your friend earns 15!';
+
+  @override
+  String get noReferralsYet => 'No referrals yet. Share your code!';
+
+  @override
+  String get freeFirstConsultation => 'Free First Consultation';
+
+  @override
+  String get percentageDiscount => 'Discount';
+
+  @override
+  String get fixedDiscount => 'Discount';
+
+  @override
+  String get freeFollowup => 'Free Follow-up Visit';
+
+  @override
+  String get specialOffer => 'Special Offer';
+
+  @override
+  String get newPatientsOnly => 'New Patients Only';
+
+  @override
+  String get daysRemaining => 'days left';
+
+  @override
+  String get claimOffer => 'Claim Offer';
+
+  @override
+  String get claimOfferDesc =>
+      'Claim this offer to receive a voucher code that you can show to the doctor during your visit.';
+
+  @override
+  String get voucherCode => 'Voucher Code';
+
+  @override
+  String get voucherExpiry => 'Valid for 7 days';
+
+  @override
+  String get showCodeToDoctor =>
+      'Show this code to the doctor during your visit';
+
+  @override
+  String get alreadyClaimed => 'You have already claimed this offer';
+
+  @override
+  String get offerExpired => 'This offer has expired';
+
+  @override
+  String get offerFull => 'This offer has reached the maximum number of claims';
+
+  @override
+  String get claimSuccess => 'Offer claimed successfully!';
+
+  @override
+  String get copyCode => 'Copy Code';
+
+  @override
+  String get totalEarned => 'Earned';
+
+  @override
+  String get totalSpent => 'Spent';
+
+  @override
+  String get transactionType => 'Type';
+
+  @override
+  String get transactionTime => 'Date & Time';
+
+  @override
+  String get transactionAmount => 'Amount';
+
+  @override
+  String get transactionStatus => 'Status';
+
+  @override
+  String get transactionCompleted => 'Completed';
+
+  @override
+  String get transactionProcessing => 'Processing';
+
+  @override
+  String get appointmentMarkedDone => 'Marked as done';
+
+  @override
+  String get forRelative => 'For a relative';
+
+  @override
+  String get referredUser => 'Referred user';
+
+  @override
+  String get redeemedOn => 'Redeemed on';
+
+  @override
+  String get pendingPointsNote =>
+      'Points will be added to your wallet within up to 72 hours (review period).';
+
+  @override
+  String get pendingTimeRemaining => 'Time remaining';
+
+  @override
+  String hoursRemaining(int hours) {
+    return '${hours}h remaining';
+  }
+
+  @override
+  String get pointsAddedToWallet => 'Added to wallet';
+
+  @override
+  String get am => 'AM';
+
+  @override
+  String get pm => 'PM';
+
+  @override
+  String get referralInvitation => 'Friend referral';
+
+  @override
+  String get partnerLabel => 'Partner';
+
+  @override
+  String get voucherLocation =>
+      'Your voucher is in the \"My Vouchers\" section';
+
+  @override
+  String voucherValidFor(int days) {
+    return 'Valid for $days days';
+  }
+
+  @override
+  String get redeemWarningTitle => 'Before you redeem';
+
+  @override
+  String get redeemWarningVoucher =>
+      'Your points will be converted into a voucher in \"My Vouchers\"';
+
+  @override
+  String redeemWarningValidity(int days) {
+    return 'The voucher is valid for $days days from the redemption date — don\'t redeem too early!';
+  }
+
+  @override
+  String get redeemWarningIrreversible =>
+      'This action is irreversible — you cannot get your points back once redeemed';
+
+  @override
+  String get redeemWarningUseIt =>
+      'Show the voucher code to the partner when using the offer';
+
+  @override
+  String get iUnderstandRedeem => 'I understand, redeem now';
+
+  @override
+  String get eventDate => 'Event date';
+
+  @override
+  String get pointsAvailableOn => 'Points available on';
+
+  @override
+  String get voucherExpiresOn => 'Voucher expires';
+
+  @override
+  String get promotionPressHereToClaim =>
+      'Press here to claim the offer and get your discount code. Simply telling the doctor verbally is not enough.';
+
+  @override
+  String get promotionFirstVisitOnly =>
+      'This offer is available only for your first visit with this doctor.';
+
+  @override
+  String get promotionSingleUse => 'This offer can be used only once.';
+
+  @override
+  String promotionMultiUse(int n) {
+    return 'This offer can be used up to $n times.';
+  }
+
+  @override
+  String get promotionAlreadyUsed => 'You have already used this offer.';
+
+  @override
+  String get promotionMaxClaimsReached =>
+      'You have already used this offer the maximum number of times allowed.';
+
+  @override
+  String get promotionShowCodeAtPayment =>
+      'When you visit the doctor, show this code to the receptionist at payment so the discount is applied to your bill automatically.';
+
+  @override
+  String get yourVoucher => 'Your Voucher';
+
+  @override
+  String get showQrToDoctor =>
+      'Show this QR code to the doctor or receptionist during your visit';
+
+  @override
+  String get validFor => 'Valid for';
+
+  @override
+  String get validWhileOfferActive => 'Valid while offer is active';
+
+  @override
+  String get showAll => 'Show all';
+
+  @override
+  String get voucherUsedNote =>
+      'This voucher has already been used. You can claim a new one if the offer allows it.';
+
+  @override
+  String get voucherUsedAt => 'Used on';
+
+  @override
+  String get claimNewCode => 'Claim New Code';
+
+  @override
+  String get promotionStillAvailable =>
+      'This offer is still available! You can claim a new voucher code.';
+
+  @override
+  String get health_manual_entry_cta => 'Can\'t find what you\'re looking for?';
+
+  @override
+  String get health_manual_entry_button => 'Add manually';
+
+  @override
+  String get health_manual_entry_title => 'Add a custom entry';
+
+  @override
+  String get health_manual_entry_name_label => 'Name';
+
+  @override
+  String get health_manual_entry_name_hint => 'Enter the name of the item';
+
+  @override
+  String get health_manual_entry_desc_label => 'Description (optional)';
+
+  @override
+  String get health_manual_entry_desc_hint => 'Add any relevant details';
+
+  @override
+  String get health_manual_entry_submit => 'Continue with this entry';
+
+  @override
+  String get health_manual_entry_name_required => 'Please enter a name';
+
+  @override
+  String get health_manual_entry_disclaimer =>
+      'This entry will be saved for review. A verified version may replace it later.';
+
+  @override
+  String get health_custom_entry_badge => 'Custom entry';
+
+  @override
+  String get health_verification_status => 'Entry Type';
+
+  @override
+  String get health_verified => 'Standard';
+
+  @override
+  String get health_unverified => 'Custom Entry';
+
+  @override
+  String get offerUsedBadge => 'Used';
+
+  @override
+  String offerUsedTimesBadge(int n) {
+    return 'Used $n×';
+  }
+
+  @override
+  String get offerCodeReady => 'Code ready';
+
+  @override
+  String get offerNotEligible => 'Not eligible';
+
+  @override
+  String get offerFirstVisitOnlyHint =>
+      'Only for your first visit with this doctor';
 }

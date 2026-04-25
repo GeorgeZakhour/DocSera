@@ -86,6 +86,86 @@ class VisitReportsService {
     }
   }
 
+  /// Fetch a single report with full section data (including heavy
+  /// body_map/image_comparison values). Used when opening a report detail.
+  Future<ModularReport?> fetchFullReport(String reportId) async {
+    try {
+      final row = await _client
+          .from('reports')
+          .select()
+          .eq('id', reportId)
+          .maybeSingle();
+      if (row == null) return null;
+
+      // Fetch doctor info
+      final doctorId = row['doctor_id']?.toString() ?? '';
+      Map<String, dynamic>? doc;
+      if (doctorId.isNotEmpty) {
+        try {
+          doc = await _client
+              .from('doctors')
+              .select('id, first_name, last_name, specialty, clinic, clinic_address, doctor_image, gender, title, contact_phones, contact_mobile, contact_email, contact_website')
+              .eq('id', doctorId)
+              .maybeSingle();
+        } catch (_) {}
+      }
+
+      final firstName = doc?['first_name']?.toString() ?? '';
+      final lastName = doc?['last_name']?.toString() ?? '';
+      final combined = <String, dynamic>{
+        ...Map<String, dynamic>.from(row),
+        'doctor_name': '$firstName $lastName'.trim(),
+        'doctor_specialty': doc?['specialty'],
+        'doctor_clinic': doc?['clinic'],
+        'doctor_city': _extractCity(doc?['clinic_address']),
+        'doctor_image': doc?['doctor_image'],
+        'doctor_gender': doc?['gender'],
+        'doctor_title': doc?['title'],
+        'doctor_phone': doc?['contact_phones'],
+        'doctor_mobile': doc?['contact_mobile'],
+        'doctor_email': doc?['contact_email'],
+        'doctor_website': doc?['contact_website'],
+      };
+
+      return ModularReport.fromJson(combined);
+    } catch (e) {
+      debugPrint('❌ [fetchFullReport] error: $e');
+      return null;
+    }
+  }
+
+  /// Fetch only heavy sections (body_map, image_comparison) for a single report.
+  /// Used for lazy-loading on the detail page after showing lightweight sections.
+  Future<List<ModularReportSection>> fetchHeavySections(String reportId) async {
+    try {
+      final response = await _client.rpc('rpc_get_heavy_sections', params: {
+        'p_report_id': reportId,
+      });
+
+      List<dynamic> items;
+      if (response is List) {
+        items = response;
+      } else if (response is String) {
+        final decoded = jsonDecode(response);
+        if (decoded is List) {
+          items = decoded;
+        } else {
+          return [];
+        }
+      } else {
+        return [];
+      }
+
+      return items
+          .whereType<Map>()
+          .map((e) => ModularReportSection.fromJson(Map<String, dynamic>.from(e)))
+          .toList();
+    } catch (e) {
+      debugPrint('❌ [fetchHeavySections] error: $e');
+      return [];
+    }
+  }
+
   Future<List<ModularReport>> fetchModularReports({
     required String? userId,
     required String? relativeId,
@@ -180,6 +260,10 @@ class VisitReportsService {
   }) async {
     try {
       // Build the query — fetch reports that are shared with this patient
+      // The RPC (fn_strip_heavy_sections) already strips body_map and
+      // image_comparison values. For the direct-query fallback, we must
+      // include sections so non-heavy sections render instantly.
+      // Heavy sections will be lazy-loaded on the detail page.
       var query = _client
           .from('reports')
           .select('''
@@ -222,7 +306,7 @@ class VisitReportsService {
         try {
           final doctors = await _client
               .from('doctors')
-              .select('id, first_name, last_name, specialty, clinic, doctor_image, gender, title, contact_phones, contact_mobile, contact_email, contact_website')
+              .select('id, first_name, last_name, specialty, clinic, clinic_address, doctor_image, gender, title, contact_phones, contact_mobile, contact_email, contact_website')
               .inFilter('id', doctorIds);
 
           for (final doc in (doctors as List)) {
@@ -251,13 +335,13 @@ class VisitReportsService {
         } else if (userId != null) {
           final user = await _client
               .from('users')
-              .select('gender, date_of_birth, phone')
+              .select('gender, date_of_birth, phone_number')
               .eq('id', userId)
               .maybeSingle();
           if (user != null) {
             patientGender = user['gender']?.toString();
             patientDob = user['date_of_birth']?.toString();
-            patientPhone = user['phone']?.toString();
+            patientPhone = user['phone_number']?.toString();
           }
         }
       } catch (e) {
@@ -277,6 +361,7 @@ class VisitReportsService {
           'doctor_name': doctorName,
           'doctor_specialty': doc?['specialty'],
           'doctor_clinic': doc?['clinic'],
+          'doctor_city': _extractCity(doc?['clinic_address']),
           'doctor_image': doc?['doctor_image'],
           'doctor_gender': doc?['gender'],
           'doctor_title': doc?['title'],
@@ -289,7 +374,8 @@ class VisitReportsService {
           'patient_phone': patientPhone,
         };
 
-        return ModularReport.fromJson(combined);
+        // Strip heavy sections client-side to match the RPC behavior
+        return ModularReport.fromJson(combined, stripHeavy: true);
       }).toList();
 
       debugPrint("✅ [fetchModularReports.DirectQuery] mapped ${reports.length} ModularReport objects");
@@ -299,5 +385,12 @@ class VisitReportsService {
       debugPrint('   stack: ${stack.toString().split('\n').take(5).join('\n')}');
       return [];
     }
+  }
+
+  String _extractCity(dynamic clinicAddress) {
+    if (clinicAddress == null) return '';
+    if (clinicAddress is Map) return clinicAddress['city']?.toString() ?? '';
+    if (clinicAddress is String) return clinicAddress;
+    return '';
   }
 }

@@ -1,3 +1,4 @@
+import 'dart:typed_data';
 import 'package:http/http.dart' as http;
 import 'package:path_provider/path_provider.dart';
 import 'package:path/path.dart' as path;
@@ -29,7 +30,10 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:flutter_svg/svg.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
+import 'package:docsera/services/encryption/message_encryption_service.dart';
 import 'package:docsera/screens/home/Document/document_info_screen.dart';
+import 'package:pdf/pdf.dart';
+import 'package:pdf/widgets.dart' as pw;
 
 import '../../../../utils/full_page_loader.dart';
 
@@ -99,8 +103,8 @@ class _ConversationPageState extends State<ConversationPage> {
       if (mounted && items.isNotEmpty) {
         setState(() => _expiringMedia = items);
       }
-    } catch (_) {
-      // Non-critical — ignore silently.
+    } catch (e) {
+      debugPrint('⚠️ Failed to load expiring media: $e');
     }
   }
 
@@ -144,52 +148,125 @@ class _ConversationPageState extends State<ConversationPage> {
     });
   }
 
+  /// Downloads a single page reference (URL or storage path), decrypting if needed.
+  Future<Uint8List?> _downloadDocPage(String pageRef, String bucket, bool encrypted) async {
+    try {
+      String downloadUrl;
+      if (pageRef.startsWith('http://') || pageRef.startsWith('https://')) {
+        downloadUrl = pageRef;
+      } else {
+        downloadUrl = await Supabase.instance.client.storage
+            .from(bucket)
+            .createSignedUrl(pageRef, 3600);
+      }
+
+      final response = await http.get(Uri.parse(downloadUrl));
+      if (response.statusCode != 200) return null;
+
+      var bytes = response.bodyBytes;
+      if (encrypted) {
+        try {
+          final svc = MessageEncryptionService.instance;
+          await svc.init();
+          final decrypted = svc.decryptBytes(bytes);
+          if (decrypted != null) bytes = decrypted;
+        } catch (e) {
+          debugPrint('⚠️ Decryption failed for page: $e');
+        }
+      }
+      return bytes;
+    } catch (e) {
+      debugPrint('⚠️ Failed to download page $pageRef: $e');
+      return null;
+    }
+  }
+
   Future<void> _downloadAttachedDocument() async {
     try {
       final doc = widget.attachedDocument!;
-      final urlStr = doc.previewUrl;
-      if (urlStr.isEmpty) return;
+      final pages = doc.pages.isNotEmpty ? doc.pages : [doc.previewUrl];
+      if (pages.isEmpty || pages.first.isEmpty) return;
 
-      final url = Uri.parse(urlStr);
-      
-      // Determine extension based on doc type if possible, or existing extension
-      final extension = path.extension(urlStr).toLowerCase(); // Check URL first
-      
-      final isPdf = doc.fileType == 'pdf' || doc.type == 'pdf' || extension == '.pdf' || doc.name.toLowerCase().endsWith('.pdf');
-      
+      final isPdf = doc.fileType == 'pdf' || doc.type == 'pdf' ||
+          path.extension(pages.first).toLowerCase() == '.pdf' ||
+          doc.name.toLowerCase().endsWith('.pdf');
+
       setState(() => _imagesLoadingCount++);
 
-      final response = await http.get(url);
-      if (response.statusCode == 200) {
-        final tempDir = await getTemporaryDirectory();
-        
-        // Use document name, ensuring safe characters if needed, but keeping it readable
-        // Also ensure extension is present
-        String safeName = doc.name.replaceAll(RegExp(r'[^\w\s\u0600-\u06FF\.-]'), ''); // Allow Arabic chars
-        if (safeName.trim().isEmpty) safeName = "document";
-        
-        if (isPdf && !safeName.toLowerCase().endsWith('.pdf')) {
-           safeName += '.pdf';
-        } else if (!isPdf && !safeName.toLowerCase().endsWith('.png') && !safeName.toLowerCase().endsWith('.jpg') && !safeName.toLowerCase().endsWith('.jpeg')) {
-           safeName += '.png'; // Default to png for images if no extension
+      final tempDir = await getTemporaryDirectory();
+      String safeName = doc.name.replaceAll(RegExp(r'[^\w\s\u0600-\u06FF\.-]'), '');
+      if (safeName.trim().isEmpty) safeName = "document";
+
+      if (isPdf || pages.length > 1) {
+        // PDF document or multi-page image document → send as PDF
+        if (!safeName.toLowerCase().endsWith('.pdf')) {
+          safeName += '.pdf';
         }
 
-        final file = File('${tempDir.path}/$safeName');
-        await file.writeAsBytes(response.bodyBytes);
+        if (isPdf) {
+          // Native PDF — download first page directly
+          final bytes = await _downloadDocPage(pages.first, doc.bucket, doc.encrypted);
+          if (bytes == null) {
+            if (mounted) setState(() => _imagesLoadingCount--);
+            return;
+          }
+          final file = File('${tempDir.path}/$safeName');
+          await file.writeAsBytes(bytes);
+          if (mounted) {
+            setState(() {
+              _pendingPdf = file;
+              _imagesLoadingCount--;
+            });
+          }
+        } else {
+          // Multi-page image document → compose into PDF
+          final pdf = pw.Document();
+          for (final pageRef in pages) {
+            final imageBytes = await _downloadDocPage(pageRef, doc.bucket, doc.encrypted);
+            if (imageBytes == null) continue;
 
-        if (mounted) {
-           setState(() {
-             if (isPdf) {
-               _pendingPdf = file;
-             } else {
-               _pendingImages.add(file);
-             }
-             _imagesLoadingCount--;
-           });
+            final image = pw.MemoryImage(imageBytes);
+            final decodedImage = await decodeImageFromList(imageBytes);
+            final w = decodedImage.width.toDouble();
+            final h = decodedImage.height.toDouble();
+
+            pdf.addPage(
+              pw.Page(
+                pageFormat: PdfPageFormat(w, h),
+                build: (_) => pw.Image(image, fit: pw.BoxFit.fill),
+              ),
+            );
+          }
+          final file = File('${tempDir.path}/$safeName');
+          await file.writeAsBytes(await pdf.save());
+          if (mounted) {
+            setState(() {
+              _pendingPdf = file;
+              _imagesLoadingCount--;
+            });
+          }
         }
       } else {
-        if (mounted) setState(() => _imagesLoadingCount--);
-        debugPrint("Failed to download document: ${response.statusCode}");
+        // Single image — send as image
+        if (!safeName.toLowerCase().endsWith('.png') &&
+            !safeName.toLowerCase().endsWith('.jpg') &&
+            !safeName.toLowerCase().endsWith('.jpeg')) {
+          safeName += '.png';
+        }
+
+        final bytes = await _downloadDocPage(pages.first, doc.bucket, doc.encrypted);
+        if (bytes == null) {
+          if (mounted) setState(() => _imagesLoadingCount--);
+          return;
+        }
+        final file = File('${tempDir.path}/$safeName');
+        await file.writeAsBytes(bytes);
+        if (mounted) {
+          setState(() {
+            _pendingImages.add(file);
+            _imagesLoadingCount--;
+          });
+        }
       }
     } catch (e) {
       if (mounted) setState(() => _imagesLoadingCount--);
@@ -350,7 +427,7 @@ class _ConversationPageState extends State<ConversationPage> {
             MaterialPageRoute(
                builder: (_) => DocumentInfoScreen(
                  images: paths,
-                 initialName: "Image from ${widget.doctorName}",
+                 initialName: AppLocalizations.of(context)!.imageFromDoctor(widget.doctorName),
                  cameFromMultiPage: paths.length > 1,
                  pageCount: paths.length,
                  initialPatientId: widget.patientName, // Ideally ID, but check what DocumentInfoScreen expects. 
@@ -433,17 +510,20 @@ class _ConversationPageState extends State<ConversationPage> {
 
   // ✅ Task 16: Build the expiry banner widget.
   Widget _buildExpiryBanner(ConversationState chatState) {
+    final now = DateTime.now();
     DateTime? earliest;
+    int upcomingCount = 0;
     for (final item in _expiringMedia) {
       final dt = DateTime.tryParse(item['expires_at']?.toString() ?? '');
-      if (dt != null && (earliest == null || dt.isBefore(earliest))) {
-        earliest = dt;
+      if (dt != null && dt.isAfter(now)) {
+        upcomingCount++;
+        if (earliest == null || dt.isBefore(earliest)) earliest = dt;
       }
     }
     if (earliest == null) return const SizedBox.shrink();
     return ChatExpiryBanner(
       earliestExpiry: earliest,
-      fileCount: _expiringMedia.length,
+      fileCount: upcomingCount,
       onTap: () => _scrollToFirstExpiringMessage(
         [...chatState.messages, ...chatState.pendingMessages],
       ),

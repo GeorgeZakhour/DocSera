@@ -28,6 +28,7 @@ class RelativesCubit extends Cubit<RelativesState> {
       await loadRelatives(); // 🔁 refresh
     } catch (e) {
       emit(RelativesError(e.toString()));
+      rethrow;
     }
   }
 
