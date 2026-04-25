@@ -4142,4 +4142,59 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get healthProfile_already_in_profile => 'Already in your profile';
+
+  @override
+  String get healthProfile_step_allergies_title =>
+      'Do you have any allergies or intolerances?';
+
+  @override
+  String get healthProfile_step_allergies_subtitle =>
+      'Select all that apply. You can add an allergy if it isn\'t listed.';
+
+  @override
+  String get healthProfile_step_allergies_addCustom => '+ Add an allergy';
+
+  @override
+  String get healthProfile_step_allergies_none => 'No allergy';
+
+  @override
+  String get healthProfile_step_conditions_title =>
+      'Do you have a medical condition?';
+
+  @override
+  String get healthProfile_step_conditions_subtitle =>
+      'Select all that apply. You can add a condition if it isn\'t listed.';
+
+  @override
+  String get healthProfile_step_conditions_addCustom => '+ Add a condition';
+
+  @override
+  String get healthProfile_step_conditions_none => 'No condition';
+
+  @override
+  String get healthProfile_step_surgeries_title => 'Have you had any surgery?';
+
+  @override
+  String get healthProfile_step_surgeries_subtitle =>
+      'Select all that apply. You can add a surgery if it isn\'t listed.';
+
+  @override
+  String get healthProfile_step_surgeries_addCustom => '+ Add a surgery';
+
+  @override
+  String get healthProfile_step_surgeries_none => 'No surgery';
+
+  @override
+  String get healthProfile_step_family_title =>
+      'Are there any conditions in your family?';
+
+  @override
+  String get healthProfile_step_family_subtitle =>
+      'Select biological-family conditions. You can add a condition if it isn\'t listed.';
+
+  @override
+  String get healthProfile_step_family_addCustom => '+ Add a condition';
+
+  @override
+  String get healthProfile_step_family_none => 'No family history';
 }

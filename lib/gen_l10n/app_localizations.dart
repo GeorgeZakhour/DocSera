@@ -7741,6 +7741,102 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Already in your profile'**
   String get healthProfile_already_in_profile;
+
+  /// No description provided for @healthProfile_step_allergies_title.
+  ///
+  /// In en, this message translates to:
+  /// **'Do you have any allergies or intolerances?'**
+  String get healthProfile_step_allergies_title;
+
+  /// No description provided for @healthProfile_step_allergies_subtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Select all that apply. You can add an allergy if it isn\'t listed.'**
+  String get healthProfile_step_allergies_subtitle;
+
+  /// No description provided for @healthProfile_step_allergies_addCustom.
+  ///
+  /// In en, this message translates to:
+  /// **'+ Add an allergy'**
+  String get healthProfile_step_allergies_addCustom;
+
+  /// No description provided for @healthProfile_step_allergies_none.
+  ///
+  /// In en, this message translates to:
+  /// **'No allergy'**
+  String get healthProfile_step_allergies_none;
+
+  /// No description provided for @healthProfile_step_conditions_title.
+  ///
+  /// In en, this message translates to:
+  /// **'Do you have a medical condition?'**
+  String get healthProfile_step_conditions_title;
+
+  /// No description provided for @healthProfile_step_conditions_subtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Select all that apply. You can add a condition if it isn\'t listed.'**
+  String get healthProfile_step_conditions_subtitle;
+
+  /// No description provided for @healthProfile_step_conditions_addCustom.
+  ///
+  /// In en, this message translates to:
+  /// **'+ Add a condition'**
+  String get healthProfile_step_conditions_addCustom;
+
+  /// No description provided for @healthProfile_step_conditions_none.
+  ///
+  /// In en, this message translates to:
+  /// **'No condition'**
+  String get healthProfile_step_conditions_none;
+
+  /// No description provided for @healthProfile_step_surgeries_title.
+  ///
+  /// In en, this message translates to:
+  /// **'Have you had any surgery?'**
+  String get healthProfile_step_surgeries_title;
+
+  /// No description provided for @healthProfile_step_surgeries_subtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Select all that apply. You can add a surgery if it isn\'t listed.'**
+  String get healthProfile_step_surgeries_subtitle;
+
+  /// No description provided for @healthProfile_step_surgeries_addCustom.
+  ///
+  /// In en, this message translates to:
+  /// **'+ Add a surgery'**
+  String get healthProfile_step_surgeries_addCustom;
+
+  /// No description provided for @healthProfile_step_surgeries_none.
+  ///
+  /// In en, this message translates to:
+  /// **'No surgery'**
+  String get healthProfile_step_surgeries_none;
+
+  /// No description provided for @healthProfile_step_family_title.
+  ///
+  /// In en, this message translates to:
+  /// **'Are there any conditions in your family?'**
+  String get healthProfile_step_family_title;
+
+  /// No description provided for @healthProfile_step_family_subtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Select biological-family conditions. You can add a condition if it isn\'t listed.'**
+  String get healthProfile_step_family_subtitle;
+
+  /// No description provided for @healthProfile_step_family_addCustom.
+  ///
+  /// In en, this message translates to:
+  /// **'+ Add a condition'**
+  String get healthProfile_step_family_addCustom;
+
+  /// No description provided for @healthProfile_step_family_none.
+  ///
+  /// In en, this message translates to:
+  /// **'No family history'**
+  String get healthProfile_step_family_none;
 }
 
 class _AppLocalizationsDelegate

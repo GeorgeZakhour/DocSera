@@ -4095,4 +4095,59 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get healthProfile_already_in_profile => 'موجود مسبقاً في ملفك';
+
+  @override
+  String get healthProfile_step_allergies_title =>
+      'هل لديك حساسية أو عدم تحمل لأي مادة؟';
+
+  @override
+  String get healthProfile_step_allergies_subtitle =>
+      'اختر كل ما ينطبق عليك. يمكنك إضافة حساسية إن لم تكن مدرجة.';
+
+  @override
+  String get healthProfile_step_allergies_addCustom => '+ إضافة حساسية';
+
+  @override
+  String get healthProfile_step_allergies_none => 'لا توجد حساسية';
+
+  @override
+  String get healthProfile_step_conditions_title =>
+      'هل تعاني من حالة طبية مزمنة؟';
+
+  @override
+  String get healthProfile_step_conditions_subtitle =>
+      'اختر كل ما ينطبق عليك. يمكنك إضافة حالة إن لم تكن مدرجة.';
+
+  @override
+  String get healthProfile_step_conditions_addCustom => '+ إضافة حالة';
+
+  @override
+  String get healthProfile_step_conditions_none => 'لا توجد حالة';
+
+  @override
+  String get healthProfile_step_surgeries_title => 'هل أجريت أي عملية جراحية؟';
+
+  @override
+  String get healthProfile_step_surgeries_subtitle =>
+      'اختر كل ما ينطبق عليك. يمكنك إضافة عملية إن لم تكن مدرجة.';
+
+  @override
+  String get healthProfile_step_surgeries_addCustom => '+ إضافة عملية';
+
+  @override
+  String get healthProfile_step_surgeries_none => 'لا توجد عمليات جراحية';
+
+  @override
+  String get healthProfile_step_family_title =>
+      'هل توجد أمراض موروثة في عائلتك؟';
+
+  @override
+  String get healthProfile_step_family_subtitle =>
+      'اختر الأمراض الموجودة في عائلتك البيولوجية. يمكنك إضافة حالة إن لم تكن مدرجة.';
+
+  @override
+  String get healthProfile_step_family_addCustom => '+ إضافة حالة';
+
+  @override
+  String get healthProfile_step_family_none => 'لا يوجد تاريخ عائلي';
 }
