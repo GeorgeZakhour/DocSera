@@ -180,9 +180,9 @@ class _PartnerProfileView extends StatelessWidget {
                   child: Container(
                     padding: EdgeInsets.all(16.w),
                     decoration: BoxDecoration(
-                      color: Colors.white.withOpacity(0.72),
+                      color: Colors.white.withOpacity(0.90),
                       border: Border.all(
-                        color: Colors.white.withOpacity(0.45),
+                        color: Colors.white.withOpacity(0.55),
                         width: 1,
                       ),
                     ),
