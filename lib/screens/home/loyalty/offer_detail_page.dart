@@ -17,7 +17,13 @@ import 'partner_profile_page.dart';
 class OfferDetailPage extends StatefulWidget {
   final OfferModel offer;
 
-  const OfferDetailPage({super.key, required this.offer});
+  /// When set, this page was opened from a `PartnerProfilePage` whose
+  /// partner id matches this value. The partner mini-card will then pop
+  /// back to that profile instead of pushing a new instance, preventing
+  /// an infinite stack of alternating profile/offer pages.
+  final String? fromPartnerId;
+
+  const OfferDetailPage({super.key, required this.offer, this.fromPartnerId});
 
   @override
   State<OfferDetailPage> createState() => _OfferDetailPageState();
@@ -219,11 +225,22 @@ class _OfferDetailPageState extends State<OfferDetailPage>
         ? widget.offer.partnerOfferCount - 1
         : 0;
 
+    final cameFromThisPartner =
+        widget.fromPartnerId != null && widget.fromPartnerId == widget.offer.partnerId;
+
     return GestureDetector(
-      onTap: () => Navigator.push(
-        context,
-        fadePageRoute(PartnerProfilePage(partnerId: widget.offer.partnerId!)),
-      ),
+      onTap: () {
+        if (cameFromThisPartner) {
+          // We're already inside that partner's profile in the back stack —
+          // just pop, don't push another instance.
+          Navigator.of(context).maybePop();
+        } else {
+          Navigator.push(
+            context,
+            fadePageRoute(PartnerProfilePage(partnerId: widget.offer.partnerId!)),
+          );
+        }
+      },
       child: Container(
         padding: EdgeInsets.all(12.w),
         decoration: BoxDecoration(

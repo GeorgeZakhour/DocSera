@@ -312,11 +312,27 @@ class LoyaltyService {
       final partnerJson = response['partner'];
       if (partnerJson is! Map<String, dynamic>) return null;
       final offersJson = (response['offers'] as List<dynamic>? ?? const []);
+      // The RPC returns raw offers rows (to_jsonb), which lack the partner_*
+      // context fields that get_available_offers includes via its LEFT JOIN.
+      // Inject the partner context client-side so the resulting OfferModels
+      // have everything OfferDetailPage's partner mini-card expects.
+      final offerCount = offersJson.length;
+      final enrichedOffers = offersJson.map((j) {
+        final m = Map<String, dynamic>.from(j as Map<String, dynamic>);
+        m['partner_name'] = partnerJson['name'];
+        m['partner_name_ar'] = partnerJson['name_ar'];
+        m['partner_logo_url'] = partnerJson['logo_url'];
+        m['partner_address'] = partnerJson['address'];
+        m['partner_address_ar'] = partnerJson['address_ar'];
+        m['partner_brand_color'] = partnerJson['brand_color'];
+        m['partner_type'] = partnerJson['partner_type'];
+        m['partner_cover_url'] = partnerJson['cover_url'];
+        m['partner_offer_count'] = offerCount;
+        return OfferModel.fromJson(m);
+      }).toList(growable: false);
       return (
         partner: PartnerModel.fromJson(partnerJson),
-        offers: offersJson
-            .map((j) => OfferModel.fromJson(j as Map<String, dynamic>))
-            .toList(growable: false),
+        offers: enrichedOffers,
       );
     } catch (e) {
       debugPrint('Error fetching partner profile: $e');

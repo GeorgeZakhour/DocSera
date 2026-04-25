@@ -333,7 +333,10 @@ class _PartnerProfileView extends StatelessWidget {
                 index: i,
                 onTap: () => Navigator.push(
                   context,
-                  fadePageRoute(OfferDetailPage(offer: state.offers[i])),
+                  fadePageRoute(OfferDetailPage(
+                    offer: state.offers[i],
+                    fromPartnerId: state.partner.id,
+                  )),
                 ),
               ),
               childCount: state.offers.length,
