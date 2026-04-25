@@ -4150,4 +4150,18 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get healthProfile_step_family_none => 'لا يوجد تاريخ عائلي';
+
+  @override
+  String get healthProfile_step_medications_title =>
+      'هل تتناول أي دواء بشكل منتظم؟';
+
+  @override
+  String get healthProfile_step_medications_subtitle =>
+      'ابحث باسم الدواء أو المادة الفعّالة — مثلاً: أسبرين أو حمض أسيتيل الساليسيليك.';
+
+  @override
+  String get healthProfile_step_medications_addCustom => '+ إضافة دواء';
+
+  @override
+  String get healthProfile_step_medications_none => 'لا أتناول أي دواء';
 }

@@ -1570,5 +1570,9 @@
   "healthProfile_step_family_title": "هل توجد أمراض موروثة في عائلتك؟",
   "healthProfile_step_family_subtitle": "اختر الأمراض الموجودة في عائلتك البيولوجية. يمكنك إضافة حالة إن لم تكن مدرجة.",
   "healthProfile_step_family_addCustom": "+ إضافة حالة",
-  "healthProfile_step_family_none": "لا يوجد تاريخ عائلي"
+  "healthProfile_step_family_none": "لا يوجد تاريخ عائلي",
+  "healthProfile_step_medications_title": "هل تتناول أي دواء بشكل منتظم؟",
+  "healthProfile_step_medications_subtitle": "ابحث باسم الدواء أو المادة الفعّالة — مثلاً: أسبرين أو حمض أسيتيل الساليسيليك.",
+  "healthProfile_step_medications_addCustom": "+ إضافة دواء",
+  "healthProfile_step_medications_none": "لا أتناول أي دواء"
 }

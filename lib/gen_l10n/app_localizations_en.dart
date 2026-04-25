@@ -4197,4 +4197,18 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get healthProfile_step_family_none => 'No family history';
+
+  @override
+  String get healthProfile_step_medications_title =>
+      'Do you take any medication regularly?';
+
+  @override
+  String get healthProfile_step_medications_subtitle =>
+      'Search by medication name or active ingredient — for example, Aspirin or Acetylsalicylic acid.';
+
+  @override
+  String get healthProfile_step_medications_addCustom => '+ Add a medication';
+
+  @override
+  String get healthProfile_step_medications_none => 'No medication';
 }

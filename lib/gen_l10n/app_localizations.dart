@@ -7837,6 +7837,30 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'No family history'**
   String get healthProfile_step_family_none;
+
+  /// No description provided for @healthProfile_step_medications_title.
+  ///
+  /// In en, this message translates to:
+  /// **'Do you take any medication regularly?'**
+  String get healthProfile_step_medications_title;
+
+  /// No description provided for @healthProfile_step_medications_subtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Search by medication name or active ingredient — for example, Aspirin or Acetylsalicylic acid.'**
+  String get healthProfile_step_medications_subtitle;
+
+  /// No description provided for @healthProfile_step_medications_addCustom.
+  ///
+  /// In en, this message translates to:
+  /// **'+ Add a medication'**
+  String get healthProfile_step_medications_addCustom;
+
+  /// No description provided for @healthProfile_step_medications_none.
+  ///
+  /// In en, this message translates to:
+  /// **'No medication'**
+  String get healthProfile_step_medications_none;
 }
 
 class _AppLocalizationsDelegate
