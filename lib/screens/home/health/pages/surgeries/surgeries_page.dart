@@ -140,17 +140,6 @@ class SurgeriesPage extends StatelessWidget {
                   return Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      /// HEADER
-                      Text(
-                        t.surgeries_header_title,
-                        style: AppTextStyles.getTitle1(context).copyWith(
-                          color: AppColors.mainDark,
-                          fontSize: 14.sp,
-                        ),
-                      ),
-
-                      SizedBox(height: 4.h),
-
                       /// SUBHEADER
                       Text(
                         t.surgeries_header_subtitle,

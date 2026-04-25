@@ -138,17 +138,6 @@ class ChronicDiseasePage extends StatelessWidget {
                   return Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      /// HEADER
-                      Text(
-                        t.chronic_header_title,
-                        style: AppTextStyles.getTitle1(context).copyWith(
-                          color: AppColors.mainDark,
-                          fontSize: 14.sp,
-                        ),
-                      ),
-
-                      SizedBox(height: 4.h),
-
                       /// SUBHEADER
                       Text(
                         t.chronic_header_subtitle,

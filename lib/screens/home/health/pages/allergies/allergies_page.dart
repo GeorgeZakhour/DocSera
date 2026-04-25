@@ -148,16 +148,6 @@ class AllergiesPage extends StatelessWidget {
 
                     children: [
                       Text(
-                        t.allergies_header_title,
-                        style: AppTextStyles.getTitle1(context).copyWith(
-                          color: AppColors.mainDark,
-                          fontSize: 14.sp,
-                        ),
-                      ),
-
-                      SizedBox(height: 4.h),
-
-                      Text(
                         t.allergies_header_subtitle,
                         style: AppTextStyles.getText3(context).copyWith(
                           fontSize: 10.sp,
