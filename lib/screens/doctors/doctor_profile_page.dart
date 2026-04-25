@@ -1461,6 +1461,16 @@ class _DoctorProfilePageState extends State<DoctorProfilePage> {
     final l = AppLocalizations.of(context)!;
     final promoId = promo['id'] as String;
 
+    // For center-owned promos, surface the scope banner inside the
+    // claim sheet too — same UX as the center profile. We don't have
+    // the center's full team list here, so the eligible-practitioners
+    // popup falls back to its count-only display when the user opens
+    // it from this surface.
+    final isCenterOwned = (promo['owner_type'] as String?) == 'center';
+    final centerName = (promo['center_name'] as String?)?.trim() ?? '';
+    final targetIdsRaw = promo['target_doctor_ids'];
+    final isCenterWide = !(targetIdsRaw is List && targetIdsRaw.isNotEmpty);
+
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
@@ -1472,6 +1482,9 @@ class _DoctorProfilePageState extends State<DoctorProfilePage> {
         color: color,
         icon: icon,
         local: l,
+        centerName: isCenterOwned ? centerName : null,
+        isCenterOwned: isCenterOwned,
+        isCenterWide: isCenterWide,
       ),
     );
   }
@@ -3758,11 +3771,18 @@ void showPromotionClaimSheet(
   required String? description,
   required Color color,
   required IconData icon,
+  // Optional center-scope context. Pass these from the center profile
+  // (and from the doctor profile when the promo is center-owned) so
+  // the claim sheet renders a top banner explaining whether the offer
+  // is center-wide or scoped to specific doctors and specialists, plus
+  // an info icon that reveals the eligible practitioners list.
+  String? centerName,
+  bool isCenterOwned = false,
+  bool isCenterWide = true,
+  List<Map<String, dynamic>> eligibleDoctors = const [],
 }) {
   final user = Supabase.instance.client.auth.currentUser;
   if (user == null) {
-    // Match the doctor-profile behavior — a non-authenticated user sees
-    // a gentle nudge to log in rather than a silent no-op.
     showDialog(
       context: context,
       builder: (ctx) => AlertDialog(
@@ -3791,6 +3811,10 @@ void showPromotionClaimSheet(
       color: color,
       icon: icon,
       local: AppLocalizations.of(ctx)!,
+      centerName: centerName,
+      isCenterOwned: isCenterOwned,
+      isCenterWide: isCenterWide,
+      eligibleDoctors: eligibleDoctors,
     ),
   );
 }
@@ -3805,6 +3829,15 @@ class _ClaimPromotionSheet extends StatefulWidget {
   final IconData icon;
   final AppLocalizations local;
 
+  // Center-scope context — drives the optional top banner. When
+  // isCenterOwned is true, the sheet renders a tinted strip just
+  // below the handle with a scope tag (Center-wide vs Selected) and
+  // an info icon that opens the eligible-practitioners popup.
+  final String? centerName;
+  final bool isCenterOwned;
+  final bool isCenterWide;
+  final List<Map<String, dynamic>> eligibleDoctors;
+
   const _ClaimPromotionSheet({
     required this.promoId,
     required this.title,
@@ -3812,6 +3845,10 @@ class _ClaimPromotionSheet extends StatefulWidget {
     required this.color,
     required this.icon,
     required this.local,
+    this.centerName,
+    this.isCenterOwned = false,
+    this.isCenterWide = true,
+    this.eligibleDoctors = const [],
   });
 
   @override
@@ -4012,6 +4049,16 @@ class _ClaimPromotionSheetState extends State<_ClaimPromotionSheet>
               borderRadius: BorderRadius.circular(2.r),
             ),
           ),
+
+          // Center-scope banner — sits at the top of the sheet
+          // (above all states: loading, fresh-claim, active voucher
+          // with QR, used history) so the patient always sees who
+          // can honor this offer regardless of where they are in
+          // the flow. Only rendered for center-owned promos.
+          if (widget.isCenterOwned) ...[
+            _buildCenterScopeBanner(l),
+            SizedBox(height: 14.h),
+          ],
 
           // ── Loading state ──
           if (_isLoading) ...[
@@ -4299,6 +4346,287 @@ class _ClaimPromotionSheetState extends State<_ClaimPromotionSheet>
             SizedBox(height: 20.h),
             _buildClaimButton(),
           ],
+        ],
+      ),
+    );
+  }
+
+  /// Top banner inside the claim sheet — present only for center-owned
+  /// offers. Displays a "From {centerName}" tag, a Center-wide /
+  /// Selected scope chip with an info icon, and (when scoped to
+  /// specific doctors and specialists) an action that opens the
+  /// eligible-practitioners popup.
+  Widget _buildCenterScopeBanner(AppLocalizations l) {
+    final isCenterWide = widget.isCenterWide;
+    // Header line: "From <Center>" — same fromCenter template used on
+    // the doctor profile, so the wording matches across surfaces.
+    final fromLine = (widget.centerName?.trim().isNotEmpty == true)
+        ? l.fromCenter(widget.centerName!.trim())
+        : l.fromCenter('');
+    final scopeLabel = isCenterWide
+        ? l.centerScopeAllDoctors
+        : l.centerScopeSelectedDoctors;
+    const accent = Color(0xFF00B4B6);
+
+    return Container(
+      padding: EdgeInsets.all(10.r),
+      decoration: BoxDecoration(
+        color: accent.withValues(alpha: 0.06),
+        borderRadius: BorderRadius.circular(12.r),
+        border: Border.all(color: accent.withValues(alpha: 0.20), width: 0.8),
+      ),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.center,
+        children: [
+          Container(
+            width: 30.r,
+            height: 30.r,
+            decoration: BoxDecoration(
+              gradient: const LinearGradient(
+                colors: [accent, AppColors.main],
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+              ),
+              borderRadius: BorderRadius.circular(8.r),
+            ),
+            child: Icon(Icons.local_hospital_rounded,
+                color: Colors.white, size: 16.sp),
+          ),
+          SizedBox(width: 10.w),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Text(
+                  fromLine,
+                  style: AppTextStyles.getTitle2(context).copyWith(
+                    fontSize: 11.sp,
+                    fontWeight: FontWeight.w700,
+                    color: AppColors.mainDark,
+                  ),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                ),
+                SizedBox(height: 3.h),
+                // Scope tag — tappable when "Selected" so the patient
+                // can see exactly which doctors and specialists can
+                // honor the offer.
+                isCenterWide
+                    ? _scopeChip(scopeLabel, accent, withInfoIcon: false)
+                    : InkWell(
+                        borderRadius: BorderRadius.circular(6.r),
+                        onTap: () => _showEligiblePractitionersSheet(l),
+                        child: _scopeChip(scopeLabel, accent,
+                            withInfoIcon: true),
+                      ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  /// Pill for the scope tag inside the center-scope banner.
+  /// Optional info icon on the trailing side hints at "tap for more".
+  Widget _scopeChip(String label, Color color,
+      {required bool withInfoIcon}) {
+    return Container(
+      padding: EdgeInsets.symmetric(horizontal: 8.w, vertical: 2.h),
+      decoration: BoxDecoration(
+        color: color.withValues(alpha: 0.10),
+        borderRadius: BorderRadius.circular(6.r),
+        border: Border.all(color: color.withValues(alpha: 0.25)),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Text(
+            label,
+            style: TextStyle(
+              fontSize: 10.sp,
+              fontWeight: FontWeight.w600,
+              color: color,
+            ),
+          ),
+          if (withInfoIcon) ...[
+            SizedBox(width: 4.w),
+            Icon(Icons.info_outline_rounded, size: 12.sp, color: color),
+          ],
+        ],
+      ),
+    );
+  }
+
+  /// Bottom-sheet list of doctors and specialists eligible for the
+  /// active center-scoped offer. Shares the visual language of the
+  /// center profile's eligible-doctors popup so the experience is
+  /// consistent on both surfaces.
+  void _showEligiblePractitionersSheet(AppLocalizations l) {
+    final eligible = widget.eligibleDoctors;
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (ctx) => Container(
+        constraints: BoxConstraints(
+          maxHeight: MediaQuery.of(context).size.height * 0.7,
+        ),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.vertical(top: Radius.circular(24.r)),
+        ),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Container(
+              width: 36.w,
+              height: 4.h,
+              margin: EdgeInsets.only(top: 12.h, bottom: 16.h),
+              decoration: BoxDecoration(
+                color: Colors.grey.shade300,
+                borderRadius: BorderRadius.circular(2.r),
+              ),
+            ),
+            Padding(
+              padding: EdgeInsets.symmetric(horizontal: 20.w),
+              child: Row(
+                children: [
+                  Container(
+                    padding: EdgeInsets.all(6.r),
+                    decoration: BoxDecoration(
+                      gradient: const LinearGradient(
+                        colors: [AppColors.main, Color(0xFF00B4B6)],
+                        begin: Alignment.topLeft,
+                        end: Alignment.bottomRight,
+                      ),
+                      borderRadius: BorderRadius.circular(8.r),
+                    ),
+                    child: Icon(Icons.medical_services_rounded,
+                        color: Colors.white, size: 14.sp),
+                  ),
+                  SizedBox(width: 8.w),
+                  Expanded(
+                    child: Text(
+                      l.selectedDoctorsInfoTitle,
+                      style: AppTextStyles.getTitle1(context)
+                          .copyWith(fontSize: 13.sp),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            SizedBox(height: 8.h),
+            Padding(
+              padding: EdgeInsets.symmetric(horizontal: 20.w),
+              child: Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Icon(Icons.info_outline_rounded,
+                      size: 14.sp, color: Colors.grey[500]),
+                  SizedBox(width: 6.w),
+                  Expanded(
+                    child: Text(
+                      l.selectedDoctorsInfoDescription,
+                      style: AppTextStyles.getText3(context).copyWith(
+                        color: Colors.grey[700],
+                        fontSize: 11.sp,
+                        height: 1.4,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            SizedBox(height: 14.h),
+            Flexible(
+              child: eligible.isEmpty
+                  ? Padding(
+                      padding: EdgeInsets.fromLTRB(20.w, 0, 20.w, 20.h),
+                      child: Text(
+                        '${l.appliesToDoctors}: ${widget.eligibleDoctors.length} ${l.doctorsLowercase}',
+                        style: AppTextStyles.getText3(context).copyWith(
+                          color: Colors.grey[600],
+                        ),
+                      ),
+                    )
+                  : ListView.separated(
+                      padding: EdgeInsets.fromLTRB(20.w, 0, 20.w, 20.h),
+                      shrinkWrap: true,
+                      itemCount: eligible.length,
+                      separatorBuilder: (_, __) => SizedBox(height: 8.h),
+                      itemBuilder: (_, i) =>
+                          _buildEligiblePractitionerRow(eligible[i]),
+                    ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildEligiblePractitionerRow(Map<String, dynamic> doctor) {
+    final imageResult = resolveDoctorImagePathAndWidget(doctor: doctor);
+    final avatarWidget = imageResult.widget;
+    final title = (doctor['title'] as String?)?.trim() ?? '';
+    final firstName = (doctor['first_name'] as String?)?.trim() ?? '';
+    final lastName = (doctor['last_name'] as String?)?.trim() ?? '';
+    final specialty = (doctor['specialty'] as String?)?.trim() ?? '';
+    final fullName = [title, firstName, lastName]
+        .where((s) => s.isNotEmpty)
+        .join(' ')
+        .trim();
+
+    return Container(
+      padding: EdgeInsets.all(10.r),
+      decoration: BoxDecoration(
+        color: AppColors.background2,
+        borderRadius: BorderRadius.circular(12.r),
+        border: Border.all(color: Colors.grey.shade200, width: 0.8),
+      ),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.center,
+        children: [
+          CircleAvatar(
+            radius: 24.r,
+            backgroundColor: AppColors.main.withValues(alpha: 0.10),
+            child: ClipRRect(
+              borderRadius: BorderRadius.circular(24.r),
+              child:
+                  SizedBox(width: 48.r, height: 48.r, child: avatarWidget),
+            ),
+          ),
+          SizedBox(width: 12.w),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Text(
+                  fullName.isEmpty ? '—' : fullName,
+                  style: AppTextStyles.getTitle2(context).copyWith(
+                    fontSize: 12.sp,
+                    fontWeight: FontWeight.w700,
+                  ),
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
+                ),
+                if (specialty.isNotEmpty) ...[
+                  SizedBox(height: 2.h),
+                  Text(
+                    specialty,
+                    style: AppTextStyles.getText3(context).copyWith(
+                      color: AppColors.main,
+                      fontSize: 10.sp,
+                    ),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                ],
+              ],
+            ),
+          ),
         ],
       ),
     );

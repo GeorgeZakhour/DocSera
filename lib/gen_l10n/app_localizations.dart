@@ -7697,26 +7697,32 @@ abstract class AppLocalizations {
   /// No description provided for @centerScopeAllDoctors.
   ///
   /// In en, this message translates to:
-  /// **'All doctors at the center'**
+  /// **'All doctors & specialists at the center'**
   String get centerScopeAllDoctors;
 
   /// No description provided for @centerScopeSelectedDoctors.
   ///
   /// In en, this message translates to:
-  /// **'Selected doctors'**
+  /// **'Selected doctors & specialists'**
   String get centerScopeSelectedDoctors;
 
   /// No description provided for @selectedDoctorsInfoTitle.
   ///
   /// In en, this message translates to:
-  /// **'Eligible doctors'**
+  /// **'Eligible doctors & specialists'**
   String get selectedDoctorsInfoTitle;
 
   /// No description provided for @selectedDoctorsInfoDescription.
   ///
   /// In en, this message translates to:
-  /// **'This offer can only be applied when booking with one of these doctors:'**
+  /// **'This offer can only be applied when booking with one of these doctors or specialists:'**
   String get selectedDoctorsInfoDescription;
+
+  /// No description provided for @ineligibleForOfferToast.
+  ///
+  /// In en, this message translates to:
+  /// **'You\'re not eligible for this offer.'**
+  String get ineligibleForOfferToast;
 
   /// No description provided for @couldNotClaimTryAgain.
   ///

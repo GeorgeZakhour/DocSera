@@ -4083,17 +4083,20 @@ class AppLocalizationsAr extends AppLocalizations {
       'عروض شخصية من هذا الطبيب. تنطبق عند حجز موعد معه فقط.';
 
   @override
-  String get centerScopeAllDoctors => 'جميع الأطباء في المركز';
+  String get centerScopeAllDoctors => 'جميع الأطباء والاختصاصيين في المركز';
 
   @override
-  String get centerScopeSelectedDoctors => 'أطباء محددون';
+  String get centerScopeSelectedDoctors => 'أطباء واختصاصيون محددون';
 
   @override
-  String get selectedDoctorsInfoTitle => 'الأطباء المشمولون';
+  String get selectedDoctorsInfoTitle => 'الأطباء والاختصاصيون المشمولون';
 
   @override
   String get selectedDoctorsInfoDescription =>
-      'ينطبق هذا العرض فقط عند حجز موعد مع أحد هؤلاء الأطباء:';
+      'ينطبق هذا العرض فقط عند حجز موعد مع أحد هؤلاء الأطباء أو الاختصاصيين:';
+
+  @override
+  String get ineligibleForOfferToast => 'أنت غير مؤهل للحصول على هذا العرض.';
 
   @override
   String get couldNotClaimTryAgain => 'تعذّر الحصول على العرض — حاول مرة أخرى';

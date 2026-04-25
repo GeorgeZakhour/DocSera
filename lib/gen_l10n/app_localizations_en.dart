@@ -4131,17 +4131,20 @@ class AppLocalizationsEn extends AppLocalizations {
       'Personal offers from this doctor. Apply only when booking with them.';
 
   @override
-  String get centerScopeAllDoctors => 'All doctors at the center';
+  String get centerScopeAllDoctors => 'All doctors & specialists at the center';
 
   @override
-  String get centerScopeSelectedDoctors => 'Selected doctors';
+  String get centerScopeSelectedDoctors => 'Selected doctors & specialists';
 
   @override
-  String get selectedDoctorsInfoTitle => 'Eligible doctors';
+  String get selectedDoctorsInfoTitle => 'Eligible doctors & specialists';
 
   @override
   String get selectedDoctorsInfoDescription =>
-      'This offer can only be applied when booking with one of these doctors:';
+      'This offer can only be applied when booking with one of these doctors or specialists:';
+
+  @override
+  String get ineligibleForOfferToast => 'You\'re not eligible for this offer.';
 
   @override
   String get couldNotClaimTryAgain => 'Could not claim — try again';

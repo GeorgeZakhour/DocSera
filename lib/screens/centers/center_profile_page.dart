@@ -1103,6 +1103,15 @@ class _CenterProfilePageState extends State<CenterProfilePage> {
     }
 
     final hasActiveVoucher = promo['has_active_voucher'] == true;
+    // is_eligible is added by 20260425130000_public_center_promotions_eligibility.
+    // Anonymous callers see NULL (UI treats unknown as eligible for
+    // visibility); claim guard at backend will catch any edge cases.
+    final isEligible =
+        promo['is_eligible'] == null ? true : promo['is_eligible'] == true;
+    // Gray out the whole card when the patient is not eligible —
+    // matches the doctor profile's behavior so the experience feels
+    // consistent across both surfaces.
+    final cardOpacity = isEligible ? 1.0 : 0.55;
     final bgColor = hasActiveVoucher
         ? color.withValues(alpha: 0.12)
         : color.withValues(alpha: 0.05);
@@ -1111,20 +1120,50 @@ class _CenterProfilePageState extends State<CenterProfilePage> {
         : color.withValues(alpha: 0.15);
     final borderWidth = hasActiveVoucher ? 1.2 : 1.0;
 
-    return GestureDetector(
-      onTap: () {
-        // Reuse the doctor profile's claim sheet — same QR / status /
-        // reuse-on-existing-voucher flow as a doctor-owned promotion.
-        showPromotionClaimSheet(
-          context,
-          promoId: promo['id'] as String,
-          title: title,
-          description: desc,
-          color: color,
-          icon: icon,
-        );
-      },
-      child: Container(
+    // Resolve eligible team-doctor maps for the scope banner inside the
+    // claim sheet. Lets the sheet's info-icon popup render the same
+    // rich list as the badge popup on the card itself, no extra fetch.
+    final eligibleTeam = _resolveEligibleDoctors(promo);
+    final centerName =
+        (_centerData?['name'] as String?)?.trim() ?? '';
+
+    return Opacity(
+      opacity: cardOpacity,
+      child: GestureDetector(
+        onTap: () {
+          if (!isEligible) {
+            // Surface the message *before* the claim sheet opens — the
+            // doctor profile uses an overlay toast for this; the
+            // center profile uses a SnackBar to keep the helper local
+            // (the overlay toast util is private to doctor_profile).
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(
+                content: Text(l.ineligibleForOfferToast),
+                backgroundColor: Colors.redAccent,
+                behavior: SnackBarBehavior.floating,
+                duration: const Duration(seconds: 3),
+              ),
+            );
+            return;
+          }
+          // Reuse the doctor profile's claim sheet. Pass scope info so
+          // the sheet renders a top banner explaining whether the
+          // offer is center-wide or scoped to specific doctors and
+          // specialists, with the same info-icon popup.
+          showPromotionClaimSheet(
+            context,
+            promoId: promo['id'] as String,
+            title: title,
+            description: desc,
+            color: color,
+            icon: icon,
+            centerName: centerName,
+            isCenterOwned: true,
+            isCenterWide: !_isSelectedDoctorsScope(promo),
+            eligibleDoctors: eligibleTeam,
+          );
+        },
+        child: Container(
         padding: EdgeInsets.all(12.r),
         decoration: BoxDecoration(
           borderRadius: BorderRadius.circular(10.r),
@@ -1247,6 +1286,7 @@ class _CenterProfilePageState extends State<CenterProfilePage> {
             ),
           ],
         ),
+      ),
       ),
     );
   }
