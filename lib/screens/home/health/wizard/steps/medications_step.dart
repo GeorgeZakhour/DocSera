@@ -189,7 +189,7 @@ class _BodyState extends State<_Body> {
                             ),
                           ),
                         )
-                      else if (items.isNotEmpty)
+                      else
                         WizardMultiSelectList(
                           items: items,
                           selectedIds: selectedIds,
