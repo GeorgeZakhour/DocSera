@@ -7621,6 +7621,30 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Skip this step'**
   String get healthProfile_skip_step;
+
+  /// No description provided for @healthProfile_step_height_title.
+  ///
+  /// In en, this message translates to:
+  /// **'How tall are you?'**
+  String get healthProfile_step_height_title;
+
+  /// No description provided for @healthProfile_step_height_input.
+  ///
+  /// In en, this message translates to:
+  /// **'Height (cm)'**
+  String get healthProfile_step_height_input;
+
+  /// No description provided for @healthProfile_step_weight_title.
+  ///
+  /// In en, this message translates to:
+  /// **'How much do you weigh?'**
+  String get healthProfile_step_weight_title;
+
+  /// No description provided for @healthProfile_step_weight_input.
+  ///
+  /// In en, this message translates to:
+  /// **'Weight (kg)'**
+  String get healthProfile_step_weight_input;
 }
 
 class _AppLocalizationsDelegate

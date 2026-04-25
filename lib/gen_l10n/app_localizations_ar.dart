@@ -4031,4 +4031,16 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get healthProfile_skip_step => 'تخطّي هذه الخطوة';
+
+  @override
+  String get healthProfile_step_height_title => 'كم طولك؟';
+
+  @override
+  String get healthProfile_step_height_input => 'الطول (سم)';
+
+  @override
+  String get healthProfile_step_weight_title => 'كم وزنك حالياً؟';
+
+  @override
+  String get healthProfile_step_weight_input => 'الوزن (كجم)';
 }

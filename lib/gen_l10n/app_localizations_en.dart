@@ -4077,4 +4077,16 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get healthProfile_skip_step => 'Skip this step';
+
+  @override
+  String get healthProfile_step_height_title => 'How tall are you?';
+
+  @override
+  String get healthProfile_step_height_input => 'Height (cm)';
+
+  @override
+  String get healthProfile_step_weight_title => 'How much do you weigh?';
+
+  @override
+  String get healthProfile_step_weight_input => 'Weight (kg)';
 }
