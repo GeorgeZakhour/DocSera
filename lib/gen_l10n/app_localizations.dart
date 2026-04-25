@@ -8195,7 +8195,7 @@ abstract class AppLocalizations {
   /// No description provided for @viewAllOffersFromPartner.
   ///
   /// In en, this message translates to:
-  /// **'View all offers ({count})'**
+  /// **'View {count} more from this partner'**
   String viewAllOffersFromPartner(int count);
 
   /// No description provided for @aboutPartner.

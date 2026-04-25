@@ -1643,7 +1643,7 @@
   "clinics": "عيادات",
   "featuredPartners": "شركاؤنا المميزون",
   "allOffersTitle": "جميع العروض",
-  "viewAllOffersFromPartner": "عرض جميع العروض ({count})",
+  "viewAllOffersFromPartner": "عرض {count} عرضاً إضافياً من هذا الشريك",
   "aboutPartner": "عن الشريك",
   "partnerBadge": "شريك صحي",
   "noActiveOffersFromPartner": "لا توجد عروض نشطة حاليًا.",

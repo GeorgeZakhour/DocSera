@@ -1631,7 +1631,7 @@
   "@featuredPartners": {},
   "allOffersTitle": "All Offers",
   "@allOffersTitle": {},
-  "viewAllOffersFromPartner": "View all offers ({count})",
+  "viewAllOffersFromPartner": "View {count} more from this partner",
   "@viewAllOffersFromPartner": {
     "placeholders": { "count": { "type": "int" } }
   },

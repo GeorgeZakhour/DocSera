@@ -64,6 +64,9 @@ class _OfferDetailPageState extends State<OfferDetailPage>
           listener: (context, state) {
             if (state is OfferRedeemSuccess) {
               _showSuccessDialog(context, state.voucherCode);
+              // Refresh offers list so currentRedemptions / partner_offer_count
+              // reflect the redemption when the user pops back to OffersPage.
+              context.read<OffersCubit>().loadOffers();
             } else if (state is OfferRedeemError) {
               ScaffoldMessenger.of(context).showSnackBar(
                 SnackBar(
@@ -212,7 +215,9 @@ class _OfferDetailPageState extends State<OfferDetailPage>
     final l = AppLocalizations.of(context)!;
     final locale = Localizations.localeOf(context).languageCode;
     final name = widget.offer.getLocalizedPartnerName(locale) ?? '';
-    final count = widget.offer.partnerOfferCount;
+    final others = widget.offer.partnerOfferCount > 1
+        ? widget.offer.partnerOfferCount - 1
+        : 0;
 
     return GestureDetector(
       onTap: () => Navigator.push(
@@ -264,9 +269,9 @@ class _OfferDetailPageState extends State<OfferDetailPage>
                       color: AppColors.mainDark,
                     ),
                   ),
-                  if (count > 0)
+                  if (others > 0)
                     Text(
-                      l.viewAllOffersFromPartner(count),
+                      l.viewAllOffersFromPartner(others),
                       style: AppTextStyles.getText3(context).copyWith(
                         color: AppColors.main,
                         fontWeight: FontWeight.w600,

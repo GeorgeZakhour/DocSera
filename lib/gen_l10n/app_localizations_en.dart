@@ -4401,7 +4401,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String viewAllOffersFromPartner(int count) {
-    return 'View all offers ($count)';
+    return 'View $count more from this partner';
   }
 
   @override

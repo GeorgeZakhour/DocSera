@@ -4350,7 +4350,7 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String viewAllOffersFromPartner(int count) {
-    return 'عرض جميع العروض ($count)';
+    return 'عرض $count عرضاً إضافياً من هذا الشريك';
   }
 
   @override

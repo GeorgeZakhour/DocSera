@@ -10,19 +10,11 @@ class OffersLoading extends OffersState {}
 
 class OffersLoaded extends OffersState {
   final List<OfferModel> allOffers;
-  final List<OfferModel> partnerOffers;
-  final List<OfferModel> creditOffers;
-  final List<OfferModel> megaOffers;
 
-  OffersLoaded({
-    required this.allOffers,
-    required this.partnerOffers,
-    required this.creditOffers,
-    required this.megaOffers,
-  });
+  OffersLoaded({required this.allOffers});
 
   @override
-  List<Object?> get props => [allOffers, partnerOffers, creditOffers, megaOffers];
+  List<Object?> get props => [allOffers];
 }
 
 class OffersError extends OffersState {

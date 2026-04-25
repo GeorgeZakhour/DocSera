@@ -13,12 +13,7 @@ class OffersCubit extends Cubit<OffersState> {
     try {
       final offers = await _service.getAvailableOffers(category: category);
 
-      emit(OffersLoaded(
-        allOffers: offers,
-        partnerOffers: offers.where((o) => o.category == 'partner').toList(),
-        creditOffers: offers.where((o) => o.category == 'credit').toList(),
-        megaOffers: offers.where((o) => o.isMegaOffer).toList(),
-      ));
+      emit(OffersLoaded(allOffers: offers));
     } catch (e) {
       emit(OffersError('Failed to load offers: $e'));
     }
