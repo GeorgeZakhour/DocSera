@@ -7616,6 +7616,12 @@ abstract class AppLocalizations {
   /// **'Only for your first visit with this doctor'**
   String get offerFirstVisitOnlyHint;
 
+  /// No description provided for @healthProfile_wizard_title.
+  ///
+  /// In en, this message translates to:
+  /// **'Health profile'**
+  String get healthProfile_wizard_title;
+
   /// No description provided for @healthProfile_skip_step.
   ///
   /// In en, this message translates to:

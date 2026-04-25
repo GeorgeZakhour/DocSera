@@ -68,6 +68,7 @@ dependencies:
   pushy_flutter: ^2.0.38
   flutter_local_notifications: ^19.4.0
   timezone: ^0.10.1
+  animations: ^2.0.11
   app_links: ^6.4.0
   qr_flutter: ^4.1.0
   connectivity_plus: ^7.0.0

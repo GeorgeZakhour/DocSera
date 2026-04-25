@@ -4030,6 +4030,9 @@ class AppLocalizationsAr extends AppLocalizations {
   String get offerFirstVisitOnlyHint => 'فقط لزيارتك الأولى عند هذا الطبيب';
 
   @override
+  String get healthProfile_wizard_title => 'الملف الصحي';
+
+  @override
   String get healthProfile_skip_step => 'تخطّي هذه الخطوة';
 
   @override

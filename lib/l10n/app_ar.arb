@@ -1534,6 +1534,7 @@
   "offerNotEligible": "غير متاح لك",
   "offerFirstVisitOnlyHint": "فقط لزيارتك الأولى عند هذا الطبيب",
 
+  "healthProfile_wizard_title": "الملف الصحي",
   "healthProfile_skip_step": "تخطّي هذه الخطوة",
   "healthProfile_step_height_title": "كم طولك؟",
   "healthProfile_step_height_input": "الطول (سم)",

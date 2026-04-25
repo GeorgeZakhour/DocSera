@@ -1512,6 +1512,7 @@
   "offerNotEligible": "Not eligible",
   "offerFirstVisitOnlyHint": "Only for your first visit with this doctor",
 
+  "healthProfile_wizard_title": "Health profile",
   "healthProfile_skip_step": "Skip this step",
   "healthProfile_step_height_title": "How tall are you?",
   "healthProfile_step_height_input": "Height (cm)",
