@@ -1212,18 +1212,32 @@ class _CenterProfilePageState extends State<CenterProfilePage> {
                       ),
                     ),
                   ],
-                  if (audience == 'new_patients' || expiryText != null) ...[
+                  // Scope + audience tags row.
+                  // ALL promos shown on the center profile are
+                  // center-owned, so we always have a scope to show:
+                  // "All doctors at the center" OR "Selected doctors".
+                  SizedBox(height: 6.h),
+                  Wrap(
+                    spacing: 6.w,
+                    runSpacing: 4.h,
+                    children: [
+                      _promoTag(
+                        _centerProfileScopeLabel(promo, l),
+                        const Color(0xFF00B4B6),
+                      ),
+                      if (audience == 'new_patients')
+                        _promoTag(l.newPatientsOnly, Colors.blue),
+                      if (expiryText != null)
+                        _promoTag(expiryText, Colors.orange),
+                    ],
+                  ),
+                  // For "Selected doctors" offers — list the eligible
+                  // doctors so the patient knows who to book with
+                  // (otherwise they may book Dr. Y, claim, then get
+                  // "voucher doesn't apply" at billing).
+                  if (_isSelectedDoctorsScope(promo)) ...[
                     SizedBox(height: 6.h),
-                    Wrap(
-                      spacing: 6.w,
-                      runSpacing: 4.h,
-                      children: [
-                        if (audience == 'new_patients')
-                          _promoTag(l.newPatientsOnly, Colors.blue),
-                        if (expiryText != null)
-                          _promoTag(expiryText, Colors.orange),
-                      ],
-                    ),
+                    _buildEligibleDoctorsLine(promo, l),
                   ],
                 ],
               ),
@@ -1231,6 +1245,107 @@ class _CenterProfilePageState extends State<CenterProfilePage> {
           ],
         ),
       ),
+    );
+  }
+
+  /// All promos on the center profile are center-owned. The scope
+  /// distinguishes "any doctor at the center" from "narrowed to a
+  /// specific doctor list" (via promotion_target_doctors).
+  String _centerProfileScopeLabel(
+    Map<String, dynamic> promo,
+    AppLocalizations l,
+  ) {
+    final raw = promo['target_doctor_ids'];
+    final ids = raw is List ? raw : const <dynamic>[];
+    return ids.isEmpty
+        ? l.centerScopeAllDoctors
+        : l.centerScopeSelectedDoctors;
+  }
+
+  bool _isSelectedDoctorsScope(Map<String, dynamic> promo) {
+    final raw = promo['target_doctor_ids'];
+    return raw is List && raw.isNotEmpty;
+  }
+
+  /// Renders "Valid with: Dr. A, Dr. B" for a selected-doctors offer.
+  /// Names are resolved against `_teamDoctors` (already loaded for the
+  /// Team section), so this needs no extra backend lookup. When a
+  /// target_doctor_id can't be matched (rare — would mean a doctor
+  /// removed from the center after the promo was created), the row
+  /// falls back to showing the count only.
+  Widget _buildEligibleDoctorsLine(
+    Map<String, dynamic> promo,
+    AppLocalizations l,
+  ) {
+    final raw = promo['target_doctor_ids'];
+    final targetIds = raw is List
+        ? raw.map((e) => e.toString()).toSet()
+        : const <String>{};
+    if (targetIds.isEmpty) return const SizedBox.shrink();
+
+    final isAr = Localizations.localeOf(context).languageCode == 'ar';
+    final names = <String>[];
+    for (final d in _teamDoctors) {
+      final id = d['id']?.toString();
+      if (id == null || !targetIds.contains(id)) continue;
+      final title = (d['title'] as String?)?.trim() ?? '';
+      final first = (d['first_name'] as String?)?.trim() ?? '';
+      final last = (d['last_name'] as String?)?.trim() ?? '';
+      // Prefer Arabic name fields when running RTL if the team data
+      // exposes them; otherwise compose from the basic first/last.
+      final firstAr = (d['first_name_ar'] as String?)?.trim() ?? '';
+      final lastAr = (d['last_name_ar'] as String?)?.trim() ?? '';
+      final composed = isAr && (firstAr.isNotEmpty || lastAr.isNotEmpty)
+          ? [title, firstAr, lastAr]
+              .where((s) => s.isNotEmpty)
+              .join(' ')
+              .trim()
+          : [title, first, last]
+              .where((s) => s.isNotEmpty)
+              .join(' ')
+              .trim();
+      if (composed.isNotEmpty) names.add(composed);
+    }
+
+    if (names.isEmpty) {
+      // Fallback — show just the count if we couldn't resolve names.
+      return Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Icon(Icons.person_outline_rounded,
+              size: 12.sp, color: Colors.grey[500]),
+          SizedBox(width: 4.w),
+          Expanded(
+            child: Text(
+              '${l.appliesToDoctors}: ${targetIds.length} ${l.doctorsLowercase}',
+              style: AppTextStyles.getText3(context).copyWith(
+                color: Colors.grey[600],
+                fontSize: 9.5.sp,
+                height: 1.4,
+              ),
+            ),
+          ),
+        ],
+      );
+    }
+
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Icon(Icons.person_outline_rounded,
+            size: 12.sp, color: Colors.grey[500]),
+        SizedBox(width: 4.w),
+        Expanded(
+          child: Text(
+            '${l.appliesToDoctors}: ${names.join('، ')}',
+            style: AppTextStyles.getText3(context).copyWith(
+              color: Colors.grey[600],
+              fontSize: 9.5.sp,
+              height: 1.4,
+            ),
+          ),
+        ),
+      ],
     );
   }
 
