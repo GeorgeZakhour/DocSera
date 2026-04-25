@@ -4086,5 +4086,12 @@ class AppLocalizationsAr extends AppLocalizations {
   String get centerScopeSelectedDoctors => 'أطباء محددون';
 
   @override
+  String get selectedDoctorsInfoTitle => 'الأطباء المشمولون';
+
+  @override
+  String get selectedDoctorsInfoDescription =>
+      'ينطبق هذا العرض فقط عند حجز موعد مع أحد هؤلاء الأطباء:';
+
+  @override
   String get couldNotClaimTryAgain => 'تعذّر الحصول على العرض — حاول مرة أخرى';
 }

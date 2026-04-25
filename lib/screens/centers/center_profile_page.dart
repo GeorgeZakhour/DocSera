@@ -1216,29 +1216,32 @@ class _CenterProfilePageState extends State<CenterProfilePage> {
                   // ALL promos shown on the center profile are
                   // center-owned, so we always have a scope to show:
                   // "All doctors at the center" OR "Selected doctors".
+                  // For the "Selected doctors" case the badge now
+                  // includes a small info button that opens a
+                  // bottom-sheet listing the eligible doctors with
+                  // image, title, name, and specialty.
                   SizedBox(height: 6.h),
                   Wrap(
                     spacing: 6.w,
                     runSpacing: 4.h,
                     children: [
-                      _promoTag(
-                        _centerProfileScopeLabel(promo, l),
-                        const Color(0xFF00B4B6),
-                      ),
+                      _isSelectedDoctorsScope(promo)
+                          ? _SelectedDoctorsScopeTag(
+                              label: _centerProfileScopeLabel(promo, l),
+                              onInfoTap: () =>
+                                  _showEligibleDoctorsSheet(promo, l),
+                              color: const Color(0xFF00B4B6),
+                            )
+                          : _promoTag(
+                              _centerProfileScopeLabel(promo, l),
+                              const Color(0xFF00B4B6),
+                            ),
                       if (audience == 'new_patients')
                         _promoTag(l.newPatientsOnly, Colors.blue),
                       if (expiryText != null)
                         _promoTag(expiryText, Colors.orange),
                     ],
                   ),
-                  // For "Selected doctors" offers — list the eligible
-                  // doctors so the patient knows who to book with
-                  // (otherwise they may book Dr. Y, claim, then get
-                  // "voucher doesn't apply" at billing).
-                  if (_isSelectedDoctorsScope(promo)) ...[
-                    SizedBox(height: 6.h),
-                    _buildEligibleDoctorsLine(promo, l),
-                  ],
                 ],
               ),
             ),
@@ -1267,85 +1270,234 @@ class _CenterProfilePageState extends State<CenterProfilePage> {
     return raw is List && raw.isNotEmpty;
   }
 
-  /// Renders "Valid with: Dr. A, Dr. B" for a selected-doctors offer.
-  /// Names are resolved against `_teamDoctors` (already loaded for the
-  /// Team section), so this needs no extra backend lookup. When a
-  /// target_doctor_id can't be matched (rare — would mean a doctor
-  /// removed from the center after the promo was created), the row
-  /// falls back to showing the count only.
-  Widget _buildEligibleDoctorsLine(
+  /// Resolves a `target_doctor_ids` list into the matching team-doctor
+  /// rows so the eligible-doctors popup can render full doctor cards
+  /// (image + title + name + specialty). Skips ids that don't match
+  /// anyone in the currently loaded team — that only happens if a
+  /// doctor was removed from the center after the promo was created.
+  List<Map<String, dynamic>> _resolveEligibleDoctors(
     Map<String, dynamic> promo,
-    AppLocalizations l,
   ) {
     final raw = promo['target_doctor_ids'];
     final targetIds = raw is List
         ? raw.map((e) => e.toString()).toSet()
         : const <String>{};
-    if (targetIds.isEmpty) return const SizedBox.shrink();
+    if (targetIds.isEmpty) return const [];
+    return _teamDoctors
+        .where((d) =>
+            d['id'] != null && targetIds.contains(d['id'].toString()))
+        .toList(growable: false);
+  }
 
-    final isAr = Localizations.localeOf(context).languageCode == 'ar';
-    final names = <String>[];
-    for (final d in _teamDoctors) {
-      final id = d['id']?.toString();
-      if (id == null || !targetIds.contains(id)) continue;
-      final title = (d['title'] as String?)?.trim() ?? '';
-      final first = (d['first_name'] as String?)?.trim() ?? '';
-      final last = (d['last_name'] as String?)?.trim() ?? '';
-      // Prefer Arabic name fields when running RTL if the team data
-      // exposes them; otherwise compose from the basic first/last.
-      final firstAr = (d['first_name_ar'] as String?)?.trim() ?? '';
-      final lastAr = (d['last_name_ar'] as String?)?.trim() ?? '';
-      final composed = isAr && (firstAr.isNotEmpty || lastAr.isNotEmpty)
-          ? [title, firstAr, lastAr]
-              .where((s) => s.isNotEmpty)
-              .join(' ')
-              .trim()
-          : [title, first, last]
-              .where((s) => s.isNotEmpty)
-              .join(' ')
-              .trim();
-      if (composed.isNotEmpty) names.add(composed);
-    }
+  /// Bottom-sheet popup for the "Selected doctors" badge's info button.
+  /// Header: localized title + short explanation. Body: scrollable list
+  /// of full doctor rows (avatar, title + name, specialty), tappable to
+  /// jump to that doctor's profile.
+  void _showEligibleDoctorsSheet(
+    Map<String, dynamic> promo,
+    AppLocalizations l,
+  ) {
+    final eligible = _resolveEligibleDoctors(promo);
 
-    if (names.isEmpty) {
-      // Fallback — show just the count if we couldn't resolve names.
-      return Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Icon(Icons.person_outline_rounded,
-              size: 12.sp, color: Colors.grey[500]),
-          SizedBox(width: 4.w),
-          Expanded(
-            child: Text(
-              '${l.appliesToDoctors}: ${targetIds.length} ${l.doctorsLowercase}',
-              style: AppTextStyles.getText3(context).copyWith(
-                color: Colors.grey[600],
-                fontSize: 9.5.sp,
-                height: 1.4,
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (ctx) => Container(
+        constraints: BoxConstraints(
+          maxHeight: MediaQuery.of(context).size.height * 0.7,
+        ),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.vertical(top: Radius.circular(24.r)),
+        ),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Container(
+              width: 36.w,
+              height: 4.h,
+              margin: EdgeInsets.only(top: 12.h, bottom: 16.h),
+              decoration: BoxDecoration(
+                color: Colors.grey.shade300,
+                borderRadius: BorderRadius.circular(2.r),
               ),
             ),
-          ),
-        ],
-      );
-    }
-
-    return Row(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Icon(Icons.person_outline_rounded,
-            size: 12.sp, color: Colors.grey[500]),
-        SizedBox(width: 4.w),
-        Expanded(
-          child: Text(
-            '${l.appliesToDoctors}: ${names.join('، ')}',
-            style: AppTextStyles.getText3(context).copyWith(
-              color: Colors.grey[600],
-              fontSize: 9.5.sp,
-              height: 1.4,
+            Padding(
+              padding: EdgeInsets.symmetric(horizontal: 20.w),
+              child: Row(
+                children: [
+                  Container(
+                    padding: EdgeInsets.all(6.r),
+                    decoration: BoxDecoration(
+                      gradient: const LinearGradient(
+                        colors: [AppColors.main, Color(0xFF00B4B6)],
+                        begin: Alignment.topLeft,
+                        end: Alignment.bottomRight,
+                      ),
+                      borderRadius: BorderRadius.circular(8.r),
+                    ),
+                    child: Icon(Icons.medical_services_rounded,
+                        color: Colors.white, size: 14.sp),
+                  ),
+                  SizedBox(width: 8.w),
+                  Expanded(
+                    child: Text(
+                      l.selectedDoctorsInfoTitle,
+                      style: AppTextStyles.getTitle1(context)
+                          .copyWith(fontSize: 13.sp),
+                    ),
+                  ),
+                ],
+              ),
             ),
-          ),
+            SizedBox(height: 8.h),
+            // Short explanation
+            Padding(
+              padding: EdgeInsets.symmetric(horizontal: 20.w),
+              child: Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Icon(Icons.info_outline_rounded,
+                      size: 14.sp, color: Colors.grey[500]),
+                  SizedBox(width: 6.w),
+                  Expanded(
+                    child: Text(
+                      l.selectedDoctorsInfoDescription,
+                      style: AppTextStyles.getText3(context).copyWith(
+                        color: Colors.grey[700],
+                        fontSize: 11.sp,
+                        height: 1.4,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            SizedBox(height: 14.h),
+            // Eligible doctors list — falls back to a placeholder when
+            // none of the target ids resolve against the current team.
+            Flexible(
+              child: eligible.isEmpty
+                  ? Padding(
+                      padding: EdgeInsets.fromLTRB(20.w, 0, 20.w, 20.h),
+                      child: Text(
+                        '${l.appliesToDoctors}: ${(promo['target_doctor_ids'] as List?)?.length ?? 0} ${l.doctorsLowercase}',
+                        style: AppTextStyles.getText3(context).copyWith(
+                          color: Colors.grey[600],
+                        ),
+                      ),
+                    )
+                  : ListView.separated(
+                      padding: EdgeInsets.fromLTRB(20.w, 0, 20.w, 20.h),
+                      shrinkWrap: true,
+                      itemCount: eligible.length,
+                      separatorBuilder: (_, __) => SizedBox(height: 8.h),
+                      itemBuilder: (_, i) =>
+                          _buildEligibleDoctorRow(eligible[i]),
+                    ),
+            ),
+          ],
         ),
-      ],
+      ),
+    );
+  }
+
+  /// One row in the eligible-doctors popup — avatar + title/name +
+  /// specialty. Tapping jumps to the doctor's profile.
+  Widget _buildEligibleDoctorRow(Map<String, dynamic> doctor) {
+    final imageResult = resolveDoctorImagePathAndWidget(doctor: doctor);
+    final avatarWidget = imageResult.widget;
+    final title = (doctor['title'] as String?)?.trim() ?? '';
+    final firstName = (doctor['first_name'] as String?)?.trim() ?? '';
+    final lastName = (doctor['last_name'] as String?)?.trim() ?? '';
+    final specialty = (doctor['specialty'] as String?)?.trim() ?? '';
+    final doctorId = (doctor['id'] as String?)?.trim() ?? '';
+    final fullName = [title, firstName, lastName]
+        .where((s) => s.isNotEmpty)
+        .join(' ')
+        .trim();
+
+    return InkWell(
+      borderRadius: BorderRadius.circular(12.r),
+      onTap: doctorId.isEmpty
+          ? null
+          : () {
+              Navigator.pop(context); // close the sheet first
+              if (widget.fromDoctorId == doctorId) {
+                Navigator.pop(context);
+              } else if (widget.fromProfile) {
+                Navigator.pushReplacement(
+                  context,
+                  fadePageRoute(DoctorProfilePage(
+                      doctorId: doctorId, fromProfile: true)),
+                );
+              } else {
+                Navigator.push(
+                  context,
+                  fadePageRoute(DoctorProfilePage(
+                      doctorId: doctorId, fromProfile: true)),
+                );
+              }
+            },
+      child: Container(
+        padding: EdgeInsets.all(10.r),
+        decoration: BoxDecoration(
+          color: AppColors.background2,
+          borderRadius: BorderRadius.circular(12.r),
+          border:
+              Border.all(color: Colors.grey.shade200, width: 0.8),
+        ),
+        child: Row(
+          crossAxisAlignment: CrossAxisAlignment.center,
+          children: [
+            CircleAvatar(
+              radius: 24.r,
+              backgroundColor: AppColors.main.withValues(alpha: 0.10),
+              child: ClipRRect(
+                borderRadius: BorderRadius.circular(24.r),
+                child: SizedBox(
+                  width: 48.r,
+                  height: 48.r,
+                  child: avatarWidget,
+                ),
+              ),
+            ),
+            SizedBox(width: 12.w),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Text(
+                    fullName.isEmpty ? '—' : fullName,
+                    style: AppTextStyles.getTitle2(context).copyWith(
+                      fontSize: 12.sp,
+                      fontWeight: FontWeight.w700,
+                    ),
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                  if (specialty.isNotEmpty) ...[
+                    SizedBox(height: 2.h),
+                    Text(
+                      specialty,
+                      style: AppTextStyles.getText3(context).copyWith(
+                        color: AppColors.main,
+                        fontSize: 10.sp,
+                      ),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                  ],
+                ],
+              ),
+            ),
+            Icon(Icons.chevron_right_rounded,
+                size: 18.sp, color: Colors.grey[400]),
+          ],
+        ),
+      ),
     );
   }
 
@@ -3022,6 +3174,59 @@ class _CustomExpandableServiceTileState extends State<_CustomExpandableServiceTi
                 ),
               ),
             ]
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+/// Pill-shaped badge that mirrors `_promoTag`'s look but ALSO carries
+/// a small info button on the trailing side. Tapping the info button
+/// opens a popup explaining the "Selected doctors" scope.
+class _SelectedDoctorsScopeTag extends StatelessWidget {
+  final String label;
+  final VoidCallback onInfoTap;
+  final Color color;
+
+  const _SelectedDoctorsScopeTag({
+    required this.label,
+    required this.onInfoTap,
+    required this.color,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    // Wrap the whole pill in InkWell so the info icon's tappable area
+    // extends into the surrounding badge — easier to hit than a 14px
+    // dot and signals affordance more clearly.
+    return InkWell(
+      onTap: onInfoTap,
+      borderRadius: BorderRadius.circular(6.r),
+      child: Container(
+        padding: EdgeInsets.symmetric(horizontal: 8.w, vertical: 2.h),
+        decoration: BoxDecoration(
+          color: color.withValues(alpha: 0.08),
+          borderRadius: BorderRadius.circular(6.r),
+          border: Border.all(color: color.withValues(alpha: 0.20)),
+        ),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Text(
+              label,
+              style: TextStyle(
+                fontSize: 9.sp,
+                fontWeight: FontWeight.w600,
+                color: color,
+              ),
+            ),
+            SizedBox(width: 4.w),
+            Icon(
+              Icons.info_outline_rounded,
+              size: 12.sp,
+              color: color,
+            ),
           ],
         ),
       ),

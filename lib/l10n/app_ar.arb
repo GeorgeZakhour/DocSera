@@ -1556,5 +1556,7 @@
   "doctorOffersSectionDescription": "عروض شخصية من هذا الطبيب. تنطبق عند حجز موعد معه فقط.",
   "centerScopeAllDoctors": "جميع الأطباء في المركز",
   "centerScopeSelectedDoctors": "أطباء محددون",
+  "selectedDoctorsInfoTitle": "الأطباء المشمولون",
+  "selectedDoctorsInfoDescription": "ينطبق هذا العرض فقط عند حجز موعد مع أحد هؤلاء الأطباء:",
   "couldNotClaimTryAgain": "تعذّر الحصول على العرض — حاول مرة أخرى"
 }

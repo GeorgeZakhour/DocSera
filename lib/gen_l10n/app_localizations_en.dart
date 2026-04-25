@@ -4133,5 +4133,12 @@ class AppLocalizationsEn extends AppLocalizations {
   String get centerScopeSelectedDoctors => 'Selected doctors';
 
   @override
+  String get selectedDoctorsInfoTitle => 'Eligible doctors';
+
+  @override
+  String get selectedDoctorsInfoDescription =>
+      'This offer can only be applied when booking with one of these doctors:';
+
+  @override
   String get couldNotClaimTryAgain => 'Could not claim — try again';
 }

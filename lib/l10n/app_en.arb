@@ -1537,5 +1537,7 @@
   "doctorOffersSectionDescription": "Personal offers from this doctor. Apply only when booking with them.",
   "centerScopeAllDoctors": "All doctors at the center",
   "centerScopeSelectedDoctors": "Selected doctors",
+  "selectedDoctorsInfoTitle": "Eligible doctors",
+  "selectedDoctorsInfoDescription": "This offer can only be applied when booking with one of these doctors:",
   "couldNotClaimTryAgain": "Could not claim — try again"
 }

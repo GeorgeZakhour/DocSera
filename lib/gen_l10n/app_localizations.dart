@@ -7700,6 +7700,18 @@ abstract class AppLocalizations {
   /// **'Selected doctors'**
   String get centerScopeSelectedDoctors;
 
+  /// No description provided for @selectedDoctorsInfoTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Eligible doctors'**
+  String get selectedDoctorsInfoTitle;
+
+  /// No description provided for @selectedDoctorsInfoDescription.
+  ///
+  /// In en, this message translates to:
+  /// **'This offer can only be applied when booking with one of these doctors:'**
+  String get selectedDoctorsInfoDescription;
+
   /// No description provided for @couldNotClaimTryAgain.
   ///
   /// In en, this message translates to:
