@@ -20,12 +20,17 @@ class MultiSelectItem {
 /// Multi-select list rendering items with checkbox rows + a trailing
 /// "+ Add manual entry" affordance. Existing-records-first ordering is
 /// the caller's responsibility — pass them at the top of [items].
+///
+/// Optional [onEditChecked] surfaces a small pencil icon next to checked
+/// items, letting the user add optional details (severity / year) after
+/// the fact without leaving the wizard step.
 class WizardMultiSelectList extends StatelessWidget {
   final List<MultiSelectItem> items;
   final Set<String> selectedIds;
   final void Function(MultiSelectItem item, bool checked) onToggle;
   final VoidCallback onAddManual;
   final String addManualLabel;
+  final void Function(MultiSelectItem item)? onEditChecked;
 
   const WizardMultiSelectList({
     super.key,
@@ -34,6 +39,7 @@ class WizardMultiSelectList extends StatelessWidget {
     required this.onToggle,
     required this.onAddManual,
     required this.addManualLabel,
+    this.onEditChecked,
   });
 
   @override
@@ -53,6 +59,9 @@ class WizardMultiSelectList extends StatelessWidget {
               isLast: i == items.length - 1,
               onChanged: (v) => onToggle(items[i], v),
               alreadyTag: t.healthProfile_already_in_profile,
+              onEdit: onEditChecked == null
+                  ? null
+                  : () => onEditChecked!(items[i]),
             ),
           InkWell(
             onTap: onAddManual,
@@ -85,12 +94,14 @@ class _Row extends StatelessWidget {
   final bool isLast;
   final ValueChanged<bool> onChanged;
   final String alreadyTag;
+  final VoidCallback? onEdit;
   const _Row({
     required this.item,
     required this.checked,
     required this.isLast,
     required this.onChanged,
     required this.alreadyTag,
+    required this.onEdit,
   });
 
   @override
@@ -146,6 +157,22 @@ class _Row extends StatelessWidget {
                 ],
               ),
             ),
+            if (checked && onEdit != null)
+              Material(
+                color: Colors.transparent,
+                child: InkWell(
+                  onTap: onEdit,
+                  customBorder: const CircleBorder(),
+                  child: Padding(
+                    padding: EdgeInsets.all(6.w),
+                    child: Icon(
+                      Icons.edit_outlined,
+                      size: 16.sp,
+                      color: AppColors.main,
+                    ),
+                  ),
+                ),
+              ),
           ],
         ),
       ),

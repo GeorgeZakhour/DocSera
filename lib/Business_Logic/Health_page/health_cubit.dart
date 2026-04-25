@@ -184,6 +184,37 @@ class HealthCubit extends Cubit<HealthState> {
   }
 
   // --------------------------------------------------------------
+  // UPDATE RECORD (optional severity / start_date / notes)
+  // --------------------------------------------------------------
+  Future<void> updateRecord({
+    required String recordId,
+    String? severity,
+    bool setSeverity = false,
+    DateTime? startDate,
+    bool setStartDate = false,
+    String? notes,
+    bool setNotes = false,
+    required bool isArabicNotes,
+  }) async {
+    try {
+      await service.updateRecord(
+        id: recordId,
+        severity: severity,
+        setSeverity: setSeverity,
+        startDate: startDate,
+        setStartDate: setStartDate,
+        notes: notes,
+        setNotes: setNotes,
+        isArabicNotes: isArabicNotes,
+      );
+      await loadRecords();
+    } catch (e) {
+      debugPrint("❌ Error in updateRecord: $e");
+      emit(state.copyWith(errorMessage: e.toString()));
+    }
+  }
+
+  // --------------------------------------------------------------
   // NO ITEMS DECLARED
   // --------------------------------------------------------------
   void setNoItemsDeclared(bool v) {

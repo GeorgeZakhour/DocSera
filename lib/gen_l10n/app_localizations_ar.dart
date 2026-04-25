@@ -4249,6 +4249,13 @@ class AppLocalizationsAr extends AppLocalizations {
   String get healthProfile_bmi_explanation => 'يُحسب تلقائياً من طولك ووزنك.';
 
   @override
+  String get healthProfile_optional_details_subtitle =>
+      'أضف الشدة والسنة إذا رغبت — كلاهما اختياري.';
+
+  @override
+  String get healthProfile_edit_optional => 'إضافة تفاصيل';
+
+  @override
   String get healthProfile_step_allergies_title =>
       'هل لديك حساسية أو عدم تحمل لأي مادة؟';
 

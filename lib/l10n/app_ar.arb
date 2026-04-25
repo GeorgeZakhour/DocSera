@@ -1609,6 +1609,8 @@
   "healthProfile_no_entry_confirmed": "بدون مدخلات — تم التأكيد",
   "healthProfile_change": "تغيير",
   "healthProfile_bmi_explanation": "يُحسب تلقائياً من طولك ووزنك.",
+  "healthProfile_optional_details_subtitle": "أضف الشدة والسنة إذا رغبت — كلاهما اختياري.",
+  "healthProfile_edit_optional": "إضافة تفاصيل",
   "healthProfile_step_allergies_title": "هل لديك حساسية أو عدم تحمل لأي مادة؟",
   "healthProfile_step_allergies_subtitle": "اختر كل ما ينطبق عليك. يمكنك إضافة حساسية إن لم تكن مدرجة.",
   "healthProfile_step_allergies_addCustom": "+ إضافة حساسية",

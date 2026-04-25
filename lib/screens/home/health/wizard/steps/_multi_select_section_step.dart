@@ -13,6 +13,7 @@ import 'package:docsera/screens/home/health/services/health_records_service.dart
 import 'package:docsera/screens/home/health/wizard/widgets/wizard_manual_entry_sheet.dart';
 import 'package:docsera/screens/home/health/wizard/widgets/wizard_multi_select_list.dart';
 import 'package:docsera/screens/home/health/wizard/widgets/wizard_no_data_button.dart';
+import 'package:docsera/screens/home/health/wizard/widgets/wizard_record_edit_sheet.dart';
 import 'package:docsera/screens/home/health/wizard/widgets/wizard_search_field.dart';
 import 'package:docsera/screens/home/health/wizard/widgets/wizard_step_scaffold.dart';
 
@@ -198,6 +199,33 @@ class _BodyState extends State<_Body> {
     }
   }
 
+  Future<void> _onEditChecked(MultiSelectItem item) async {
+    final cubit = context.read<HealthCubit>();
+    HealthRecord? record;
+    for (final r in cubit.state.records) {
+      if (r.master.id == item.id) {
+        record = r;
+        break;
+      }
+    }
+    if (record == null) return;
+    final result = await showWizardRecordEditSheet(
+      context,
+      itemLabel: item.label,
+      record: record,
+    );
+    if (result == null || !mounted) return;
+    final isAr = Directionality.of(context) == TextDirection.rtl;
+    await cubit.updateRecord(
+      recordId: record.id,
+      severity: result.severity,
+      setSeverity: result.setSeverity,
+      startDate: result.year == null ? null : DateTime(result.year!, 1, 1),
+      setStartDate: result.setYear,
+      isArabicNotes: isAr,
+    );
+  }
+
   Future<void> _onAddManual() async {
     final result = await showWizardManualEntrySheet(
       context,
@@ -336,6 +364,7 @@ class _BodyState extends State<_Body> {
                                 selectedIds: selectedIds,
                                 onToggle: _onToggle,
                                 onAddManual: _onAddManual,
+                                onEditChecked: _onEditChecked,
                                 addManualLabel: widget.addCustomLabel,
                               ),
                             SizedBox(height: 16.h),

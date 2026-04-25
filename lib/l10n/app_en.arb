@@ -1590,6 +1590,8 @@
   "healthProfile_no_entry_confirmed": "No entries — confirmed",
   "healthProfile_change": "Change",
   "healthProfile_bmi_explanation": "Calculated automatically from your height and weight.",
+  "healthProfile_optional_details_subtitle": "Add severity and year if you want — both are optional.",
+  "healthProfile_edit_optional": "Add details",
   "healthProfile_step_allergies_title": "Do you have any allergies or intolerances?",
   "healthProfile_step_allergies_subtitle": "Select all that apply. You can add an allergy if it isn't listed.",
   "healthProfile_step_allergies_addCustom": "+ Add an allergy",

@@ -166,6 +166,41 @@ class HealthRecordsService {
   }
 
   // ------------------------------------------------------------------
+  // UPDATE RECORD (severity / start_date / notes — all optional)
+  // ------------------------------------------------------------------
+  /// Updates a single `patient_medical_records` row. Pass [setSeverity] /
+  /// [setStartDate] = true with a null value to explicitly clear the
+  /// field (vs. omitting which leaves it untouched).
+  Future<void> updateRecord({
+    required String id,
+    String? severity,
+    bool setSeverity = false,
+    DateTime? startDate,
+    bool setStartDate = false,
+    String? notes,
+    bool setNotes = false,
+    required bool isArabicNotes,
+  }) async {
+    final updates = <String, dynamic>{
+      'updated_at': DateTime.now().toIso8601String(),
+    };
+    if (setSeverity) {
+      updates['severity'] = severity;
+    }
+    if (setStartDate) {
+      updates['start_date'] = startDate?.toIso8601String();
+    }
+    if (setNotes) {
+      updates['notes_en'] = isArabicNotes ? null : notes;
+      updates['notes_ar'] = isArabicNotes ? notes : null;
+    }
+    await _client
+        .from('patient_medical_records')
+        .update(updates)
+        .eq('id', id);
+  }
+
+  // ------------------------------------------------------------------
   // CREATE CUSTOM MASTER ITEM (for manual entry)
   // ------------------------------------------------------------------
   Future<HealthMasterItem> createCustomMasterItem({

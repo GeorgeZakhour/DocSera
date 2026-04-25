@@ -8012,6 +8012,18 @@ abstract class AppLocalizations {
   /// **'Calculated automatically from your height and weight.'**
   String get healthProfile_bmi_explanation;
 
+  /// No description provided for @healthProfile_optional_details_subtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Add severity and year if you want — both are optional.'**
+  String get healthProfile_optional_details_subtitle;
+
+  /// No description provided for @healthProfile_edit_optional.
+  ///
+  /// In en, this message translates to:
+  /// **'Add details'**
+  String get healthProfile_edit_optional;
+
   /// No description provided for @healthProfile_step_allergies_title.
   ///
   /// In en, this message translates to:

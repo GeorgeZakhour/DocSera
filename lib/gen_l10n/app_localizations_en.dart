@@ -4299,6 +4299,13 @@ class AppLocalizationsEn extends AppLocalizations {
       'Calculated automatically from your height and weight.';
 
   @override
+  String get healthProfile_optional_details_subtitle =>
+      'Add severity and year if you want — both are optional.';
+
+  @override
+  String get healthProfile_edit_optional => 'Add details';
+
+  @override
   String get healthProfile_step_allergies_title =>
       'Do you have any allergies or intolerances?';
 
