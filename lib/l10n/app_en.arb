@@ -1552,5 +1552,11 @@
   "healthProfile_step_medications_title": "Do you take any medication regularly?",
   "healthProfile_step_medications_subtitle": "Search by medication name or active ingredient — for example, Aspirin or Acetylsalicylic acid.",
   "healthProfile_step_medications_addCustom": "+ Add a medication",
-  "healthProfile_step_medications_none": "No medication"
+  "healthProfile_step_medications_none": "No medication",
+
+  "healthProfile_completion_title": "Your health profile is complete",
+  "healthProfile_completion_body": "Find all your information in the Health section",
+  "healthProfile_completion_alreadyBody": "Already counted earlier — you'll find everything in the Health section",
+  "healthProfile_completion_cta": "Got it",
+  "healthProfile_pointsAwarded": "+15 points"
 }

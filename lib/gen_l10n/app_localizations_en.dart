@@ -4211,4 +4211,22 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get healthProfile_step_medications_none => 'No medication';
+
+  @override
+  String get healthProfile_completion_title =>
+      'Your health profile is complete';
+
+  @override
+  String get healthProfile_completion_body =>
+      'Find all your information in the Health section';
+
+  @override
+  String get healthProfile_completion_alreadyBody =>
+      'Already counted earlier — you\'ll find everything in the Health section';
+
+  @override
+  String get healthProfile_completion_cta => 'Got it';
+
+  @override
+  String get healthProfile_pointsAwarded => '+15 points';
 }

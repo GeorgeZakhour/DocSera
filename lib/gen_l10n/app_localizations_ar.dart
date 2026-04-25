@@ -4164,4 +4164,20 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get healthProfile_step_medications_none => 'لا أتناول أي دواء';
+
+  @override
+  String get healthProfile_completion_title => 'اكتمل ملفك الصحي';
+
+  @override
+  String get healthProfile_completion_body => 'ستجد كل معلوماتك في قسم الصحة';
+
+  @override
+  String get healthProfile_completion_alreadyBody =>
+      'تم احتسابها سابقاً — ستجد كل شيء في قسم الصحة';
+
+  @override
+  String get healthProfile_completion_cta => 'تم';
+
+  @override
+  String get healthProfile_pointsAwarded => '+15 نقطة';
 }

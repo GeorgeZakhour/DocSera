@@ -1574,5 +1574,11 @@
   "healthProfile_step_medications_title": "هل تتناول أي دواء بشكل منتظم؟",
   "healthProfile_step_medications_subtitle": "ابحث باسم الدواء أو المادة الفعّالة — مثلاً: أسبرين أو حمض أسيتيل الساليسيليك.",
   "healthProfile_step_medications_addCustom": "+ إضافة دواء",
-  "healthProfile_step_medications_none": "لا أتناول أي دواء"
+  "healthProfile_step_medications_none": "لا أتناول أي دواء",
+
+  "healthProfile_completion_title": "اكتمل ملفك الصحي",
+  "healthProfile_completion_body": "ستجد كل معلوماتك في قسم الصحة",
+  "healthProfile_completion_alreadyBody": "تم احتسابها سابقاً — ستجد كل شيء في قسم الصحة",
+  "healthProfile_completion_cta": "تم",
+  "healthProfile_pointsAwarded": "+15 نقطة"
 }

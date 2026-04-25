@@ -7861,6 +7861,36 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'No medication'**
   String get healthProfile_step_medications_none;
+
+  /// No description provided for @healthProfile_completion_title.
+  ///
+  /// In en, this message translates to:
+  /// **'Your health profile is complete'**
+  String get healthProfile_completion_title;
+
+  /// No description provided for @healthProfile_completion_body.
+  ///
+  /// In en, this message translates to:
+  /// **'Find all your information in the Health section'**
+  String get healthProfile_completion_body;
+
+  /// No description provided for @healthProfile_completion_alreadyBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Already counted earlier — you\'ll find everything in the Health section'**
+  String get healthProfile_completion_alreadyBody;
+
+  /// No description provided for @healthProfile_completion_cta.
+  ///
+  /// In en, this message translates to:
+  /// **'Got it'**
+  String get healthProfile_completion_cta;
+
+  /// No description provided for @healthProfile_pointsAwarded.
+  ///
+  /// In en, this message translates to:
+  /// **'+15 points'**
+  String get healthProfile_pointsAwarded;
 }
 
 class _AppLocalizationsDelegate
