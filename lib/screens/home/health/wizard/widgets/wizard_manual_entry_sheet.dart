@@ -76,7 +76,7 @@ class _ManualEntrySheetDialogState extends State<_ManualEntrySheetDialog> {
                   TextField(
                     controller: _name,
                     decoration: InputDecoration(
-                      labelText: t.health_manual_entry_title,
+                      labelText: t.health_manual_entry_name_label,
                       border: const OutlineInputBorder(),
                     ),
                   ),
@@ -84,7 +84,7 @@ class _ManualEntrySheetDialogState extends State<_ManualEntrySheetDialog> {
                   TextField(
                     controller: _desc,
                     decoration: InputDecoration(
-                      labelText: t.description,
+                      labelText: t.health_manual_entry_desc_label,
                       border: const OutlineInputBorder(),
                     ),
                   ),
