@@ -12,6 +12,10 @@ class OfferModel {
   final String? partnerLogoUrl;
   final String? partnerAddress;
   final String? partnerAddressAr;
+  final String? partnerBrandColor;
+  final String? partnerType;
+  final String? partnerCoverUrl;
+  final int partnerOfferCount;
   final String? discountType;
   final double? discountValue;
   final int? maxRedemptions;
@@ -36,6 +40,10 @@ class OfferModel {
     this.partnerLogoUrl,
     this.partnerAddress,
     this.partnerAddressAr,
+    this.partnerBrandColor,
+    this.partnerType,
+    this.partnerCoverUrl,
+    this.partnerOfferCount = 0,
     this.discountType,
     this.discountValue,
     this.maxRedemptions,
@@ -62,6 +70,10 @@ class OfferModel {
       partnerLogoUrl: json['partner_logo_url'] as String?,
       partnerAddress: json['partner_address'] as String?,
       partnerAddressAr: json['partner_address_ar'] as String?,
+      partnerBrandColor: json['partner_brand_color'] as String?,
+      partnerType: json['partner_type'] as String?,
+      partnerCoverUrl: json['partner_cover_url'] as String?,
+      partnerOfferCount: (json['partner_offer_count'] as int?) ?? 0,
       discountType: json['discount_type'] as String?,
       discountValue: (json['discount_value'] as num?)?.toDouble(),
       maxRedemptions: json['max_redemptions'] as int?,
@@ -95,4 +107,7 @@ class OfferModel {
   }
 
   bool get isSoldOut => maxRedemptions != null && currentRedemptions >= maxRedemptions!;
+
+  int? get remainingRedemptions =>
+      maxRedemptions == null ? null : (maxRedemptions! - currentRedemptions);
 }
