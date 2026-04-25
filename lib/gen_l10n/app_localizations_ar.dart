@@ -4169,6 +4169,12 @@ class AppLocalizationsAr extends AppLocalizations {
   String get healthProfile_already_in_profile => 'موجود مسبقاً في ملفك';
 
   @override
+  String get healthProfile_search_hint => 'ابحث';
+
+  @override
+  String get healthProfile_search_no_results => 'لا توجد نتائج';
+
+  @override
   String get healthProfile_step_allergies_title =>
       'هل لديك حساسية أو عدم تحمل لأي مادة؟';
 

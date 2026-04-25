@@ -1564,6 +1564,8 @@
   "healthProfile_smoking_occasional": "Yes, occasionally",
   "healthProfile_smoking_daily": "Yes, daily",
   "healthProfile_already_in_profile": "Already in your profile",
+  "healthProfile_search_hint": "Search",
+  "healthProfile_search_no_results": "No matches",
   "healthProfile_step_allergies_title": "Do you have any allergies or intolerances?",
   "healthProfile_step_allergies_subtitle": "Select all that apply. You can add an allergy if it isn't listed.",
   "healthProfile_step_allergies_addCustom": "+ Add an allergy",

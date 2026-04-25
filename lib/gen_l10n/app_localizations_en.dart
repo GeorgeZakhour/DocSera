@@ -4218,6 +4218,12 @@ class AppLocalizationsEn extends AppLocalizations {
   String get healthProfile_already_in_profile => 'Already in your profile';
 
   @override
+  String get healthProfile_search_hint => 'Search';
+
+  @override
+  String get healthProfile_search_no_results => 'No matches';
+
+  @override
   String get healthProfile_step_allergies_title =>
       'Do you have any allergies or intolerances?';
 

@@ -1583,6 +1583,8 @@
   "healthProfile_smoking_occasional": "نعم، أحيانًا",
   "healthProfile_smoking_daily": "نعم، يوميًا",
   "healthProfile_already_in_profile": "موجود مسبقاً في ملفك",
+  "healthProfile_search_hint": "ابحث",
+  "healthProfile_search_no_results": "لا توجد نتائج",
   "healthProfile_step_allergies_title": "هل لديك حساسية أو عدم تحمل لأي مادة؟",
   "healthProfile_step_allergies_subtitle": "اختر كل ما ينطبق عليك. يمكنك إضافة حساسية إن لم تكن مدرجة.",
   "healthProfile_step_allergies_addCustom": "+ إضافة حساسية",

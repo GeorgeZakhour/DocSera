@@ -7856,6 +7856,18 @@ abstract class AppLocalizations {
   /// **'Already in your profile'**
   String get healthProfile_already_in_profile;
 
+  /// No description provided for @healthProfile_search_hint.
+  ///
+  /// In en, this message translates to:
+  /// **'Search'**
+  String get healthProfile_search_hint;
+
+  /// No description provided for @healthProfile_search_no_results.
+  ///
+  /// In en, this message translates to:
+  /// **'No matches'**
+  String get healthProfile_search_no_results;
+
   /// No description provided for @healthProfile_step_allergies_title.
   ///
   /// In en, this message translates to:
