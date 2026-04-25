@@ -10,6 +10,9 @@ import 'package:docsera/Business_Logic/Loyalty/offers/offers_cubit.dart';
 import 'package:docsera/Business_Logic/Loyalty/offers/offers_state.dart';
 import 'package:docsera/Business_Logic/Account_page/user_cubit.dart';
 import 'package:docsera/Business_Logic/Account_page/user_state.dart';
+import 'package:docsera/utils/color_utils.dart';
+import 'package:docsera/utils/page_transitions.dart';
+import 'partner_profile_page.dart';
 
 class OfferDetailPage extends StatefulWidget {
   final OfferModel offer;
@@ -51,21 +54,12 @@ class _OfferDetailPageState extends State<OfferDetailPage>
   @override
   Widget build(BuildContext context) {
     final locale = Localizations.localeOf(context).languageCode;
+    final brand = colorFromHex(widget.offer.partnerBrandColor, fallback: AppColors.main);
 
     return AnnotatedRegion<SystemUiOverlayStyle>(
       value: SystemUiOverlayStyle.light,
       child: Scaffold(
         backgroundColor: const Color(0xFFF7F8FA),
-        appBar: AppBar(
-          backgroundColor: const Color(0xFF007E80),
-          elevation: 0,
-          systemOverlayStyle: SystemUiOverlayStyle.light,
-          iconTheme: const IconThemeData(color: Colors.white),
-          title: Text(
-            AppLocalizations.of(context)!.offerDetails,
-            style: AppTextStyles.getTitle1(context).copyWith(color: Colors.white),
-          ),
-        ),
         body: BlocListener<OffersCubit, OffersState>(
           listener: (context, state) {
             if (state is OfferRedeemSuccess) {
@@ -85,168 +79,206 @@ class _OfferDetailPageState extends State<OfferDetailPage>
             position: _slideAnimation,
             child: FadeTransition(
               opacity: _fadeAnimation,
-              child: SingleChildScrollView(
-                padding: EdgeInsets.all(20.w),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    // Header card
-                    _buildHeaderCard(context, locale),
-                    SizedBox(height: 16.h),
-
-                    // Description
-                    if (widget.offer.getLocalizedDescription(locale) != null)
-                      _buildDescriptionCard(context, locale),
-
-                    // Discount info
-                    if (widget.offer.discountValue != null) ...[
-                      SizedBox(height: 16.h),
-                      _buildDiscountCard(context),
-                    ],
-
-                    SizedBox(height: 24.h),
-
-                    // Redeem section
-                    _buildRedeemSection(context),
-                  ],
-                ),
-              ),
-            ),
-          ),
-        ),
-      ),
-    );
-  }
-
-  Widget _buildHeaderCard(BuildContext context, String locale) {
-    return Container(
-      width: double.infinity,
-      padding: EdgeInsets.all(20.w),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(18.r),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.04),
-            blurRadius: 10,
-            offset: const Offset(0, 3),
-          ),
-        ],
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          // Mega badge
-          if (widget.offer.isMegaOffer)
-            Container(
-              margin: EdgeInsets.only(bottom: 12.h),
-              padding: EdgeInsets.symmetric(horizontal: 12.w, vertical: 5.h),
-              decoration: BoxDecoration(
-                gradient: const LinearGradient(
-                  colors: [Color(0xFFFF8F00), Color(0xFFFFB300)],
-                ),
-                borderRadius: BorderRadius.circular(8.r),
-              ),
-              child: Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Icon(Icons.local_fire_department_rounded, size: 14.sp, color: Colors.white),
-                  SizedBox(width: 4.w),
-                  Text(
-                    AppLocalizations.of(context)!.megaOffer,
-                    style: TextStyle(
-                      fontSize: 11.sp,
-                      fontWeight: FontWeight.w800,
-                      color: Colors.white,
+              child: CustomScrollView(
+                slivers: [
+                  SliverAppBar(
+                    expandedHeight: 220.h,
+                    pinned: true,
+                    backgroundColor: brand,
+                    iconTheme: const IconThemeData(color: Colors.white),
+                    flexibleSpace: FlexibleSpaceBar(
+                      background: Stack(
+                        fit: StackFit.expand,
+                        children: [
+                          if (widget.offer.imageUrl != null)
+                            Image.network(
+                              widget.offer.imageUrl!,
+                              fit: BoxFit.cover,
+                              errorBuilder: (_, __, ___) => _heroFallback(brand),
+                            )
+                          else
+                            _heroFallback(brand),
+                          Container(
+                            decoration: BoxDecoration(
+                              gradient: LinearGradient(
+                                begin: Alignment.topCenter,
+                                end: Alignment.bottomCenter,
+                                colors: [
+                                  Colors.black.withOpacity(0.05),
+                                  Colors.black.withOpacity(0.55),
+                                ],
+                              ),
+                            ),
+                          ),
+                          if (widget.offer.isMegaOffer)
+                            PositionedDirectional(
+                              top: kToolbarHeight + 8.h,
+                              start: 16.w,
+                              child: Container(
+                                padding: EdgeInsets.symmetric(horizontal: 10.w, vertical: 4.h),
+                                decoration: BoxDecoration(
+                                  color: const Color(0xFFFF8F00),
+                                  borderRadius: BorderRadius.circular(6.r),
+                                ),
+                                child: Row(
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: [
+                                    Icon(Icons.local_fire_department_rounded,
+                                        size: 12.sp, color: Colors.white),
+                                    SizedBox(width: 4.w),
+                                    Text(
+                                      AppLocalizations.of(context)!.megaOffer,
+                                      style: TextStyle(
+                                        fontSize: 10.sp,
+                                        fontWeight: FontWeight.w800,
+                                        color: Colors.white,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            ),
+                          PositionedDirectional(
+                            bottom: 16.h,
+                            start: 16.w,
+                            end: 16.w,
+                            child: Text(
+                              widget.offer.getLocalizedTitle(locale),
+                              maxLines: 2,
+                              overflow: TextOverflow.ellipsis,
+                              style: TextStyle(
+                                color: Colors.white,
+                                fontSize: 22.sp,
+                                fontWeight: FontWeight.w800,
+                                height: 1.2,
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                  SliverToBoxAdapter(
+                    child: Padding(
+                      padding: EdgeInsets.all(16.w),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          if (widget.offer.partnerId != null) _buildPartnerMiniCard(context),
+                          if (widget.offer.getLocalizedDescription(locale) != null) ...[
+                            SizedBox(height: 16.h),
+                            _buildDescriptionCard(context, locale),
+                          ],
+                          if (widget.offer.discountValue != null) ...[
+                            SizedBox(height: 16.h),
+                            _buildDiscountCard(context),
+                          ],
+                          SizedBox(height: 24.h),
+                          _buildRedeemSection(context),
+                          SizedBox(height: 24.h),
+                        ],
+                      ),
                     ),
                   ),
                 ],
               ),
             ),
-
-          // Logo + Title
-          Row(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              if (widget.offer.partnerLogoUrl != null)
-                Container(
-                  width: 56.w,
-                  height: 56.w,
-                  margin: EdgeInsetsDirectional.only(end: 14.w),
-                  decoration: BoxDecoration(
-                    borderRadius: BorderRadius.circular(14.r),
-                    color: AppColors.main.withOpacity(0.05),
-                  ),
-                  child: ClipRRect(
-                    borderRadius: BorderRadius.circular(14.r),
-                    child: Image.network(
-                      widget.offer.partnerLogoUrl!,
-                      fit: BoxFit.cover,
-                      errorBuilder: (_, __, ___) => Icon(
-                        Icons.local_offer_rounded,
-                        color: AppColors.main,
-                        size: 24.sp,
-                      ),
-                    ),
-                  ),
-                ),
-              Expanded(
-                child: Text(
-                  widget.offer.getLocalizedTitle(locale),
-                  style: AppTextStyles.getTitle1(context).copyWith(
-                    fontSize: 20.sp,
-                    fontWeight: FontWeight.w800,
-                    height: 1.3,
-                  ),
-                ),
-              ),
-            ],
           ),
-          SizedBox(height: 14.h),
-
-          // Partner info
-          if (widget.offer.getLocalizedPartnerName(locale) != null)
-            _buildInfoRow(
-              Icons.store_rounded,
-              widget.offer.getLocalizedPartnerName(locale)!,
-              AppColors.main,
-            ),
-
-          if (widget.offer.getLocalizedPartnerAddress(locale) != null) ...[
-            SizedBox(height: 8.h),
-            _buildInfoRow(
-              Icons.location_on_rounded,
-              widget.offer.getLocalizedPartnerAddress(locale)!,
-              const Color(0xFF4CAF50),
-            ),
-          ],
-        ],
+        ),
       ),
     );
   }
 
-  Widget _buildInfoRow(IconData icon, String text, Color color) {
-    return Row(
-      children: [
-        Container(
-          padding: EdgeInsets.all(6.w),
-          decoration: BoxDecoration(
-            color: color.withOpacity(0.08),
-            borderRadius: BorderRadius.circular(8.r),
+  Widget _heroFallback(Color brand) => Container(
+        decoration: BoxDecoration(
+          gradient: LinearGradient(
+            colors: [brand, brand.withOpacity(0.75)],
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
           ),
-          child: Icon(icon, size: 14.sp, color: color),
         ),
-        SizedBox(width: 10.w),
-        Expanded(
-          child: Text(
-            text,
-            style: AppTextStyles.getText2(context).copyWith(
-              color: Colors.grey[700],
-              fontWeight: FontWeight.w500,
+        child: Center(
+          child: Icon(
+            widget.offer.category == 'credit'
+                ? Icons.phone_android_rounded
+                : Icons.local_offer_rounded,
+            color: Colors.white.withOpacity(0.35),
+            size: 80.sp,
+          ),
+        ),
+      );
+
+  Widget _buildPartnerMiniCard(BuildContext context) {
+    final l = AppLocalizations.of(context)!;
+    final locale = Localizations.localeOf(context).languageCode;
+    final name = widget.offer.getLocalizedPartnerName(locale) ?? '';
+    final count = widget.offer.partnerOfferCount;
+
+    return GestureDetector(
+      onTap: () => Navigator.push(
+        context,
+        fadePageRoute(PartnerProfilePage(partnerId: widget.offer.partnerId!)),
+      ),
+      child: Container(
+        padding: EdgeInsets.all(12.w),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(14.r),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withOpacity(0.04),
+              blurRadius: 8,
+              offset: const Offset(0, 2),
             ),
-          ),
+          ],
         ),
-      ],
+        child: Row(
+          children: [
+            Container(
+              width: 44.w,
+              height: 44.w,
+              decoration: BoxDecoration(
+                color: AppColors.main.withOpacity(0.06),
+                shape: BoxShape.circle,
+              ),
+              child: ClipOval(
+                child: widget.offer.partnerLogoUrl != null
+                    ? Image.network(
+                        widget.offer.partnerLogoUrl!,
+                        fit: BoxFit.cover,
+                        errorBuilder: (_, __, ___) =>
+                            Icon(Icons.store_rounded, color: AppColors.main),
+                      )
+                    : Icon(Icons.store_rounded, color: AppColors.main),
+              ),
+            ),
+            SizedBox(width: 12.w),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    name,
+                    style: AppTextStyles.getText2(context).copyWith(
+                      fontWeight: FontWeight.w700,
+                      color: AppColors.mainDark,
+                    ),
+                  ),
+                  if (count > 0)
+                    Text(
+                      l.viewAllOffersFromPartner(count),
+                      style: AppTextStyles.getText3(context).copyWith(
+                        color: AppColors.main,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                ],
+              ),
+            ),
+            Icon(Icons.chevron_right_rounded, color: AppColors.main, size: 22.sp),
+          ],
+        ),
+      ),
     );
   }
 
