@@ -1,3 +1,5 @@
+import 'package:docsera/Business_Logic/Account_page/profile/account_profile_cubit.dart';
+import 'package:docsera/Business_Logic/Account_page/profile/account_profile_state.dart';
 import 'package:docsera/Business_Logic/Authentication/auth_cubit.dart';
 import 'package:docsera/Business_Logic/Authentication/auth_state.dart';
 import 'package:docsera/Business_Logic/Messages_page/messages_cubit.dart';
@@ -510,13 +512,7 @@ class _CustomBottomNavigationBarState extends State<CustomBottomNavigationBar>
                   AppLocalizations.of(context)!.appointments,
                   1,
                   22.h),
-              _buildNavItem(
-                'assets/icons/health.svg',
-                'assets/icons/health-on.svg',
-                AppLocalizations.of(context)!.health_tab,
-                2,
-                22.h,
-              ),
+              _buildHealthNavItem(context),
               _buildMessagesNavItem(context),
               _buildNavItem(
                 isLoggedIn
@@ -535,6 +531,48 @@ class _CustomBottomNavigationBarState extends State<CustomBottomNavigationBar>
           ),
         ),
       ),
+    );
+  }
+
+  BottomNavigationBarItem _buildHealthNavItem(BuildContext context) {
+    final isSelected = _currentIndex == 2;
+
+    final state = context.watch<AccountProfileCubit>().state;
+    final showDot = state is AccountProfileLoaded
+        && state.healthProfileCompletedAt == null;
+
+    return BottomNavigationBarItem(
+      icon: SizedBox(
+        height: 22.h,
+        width: 22.h,
+        child: Stack(
+          clipBehavior: Clip.none,
+          alignment: Alignment.center,
+          children: [
+            SvgPicture.asset(
+              isSelected
+                  ? 'assets/icons/health-on.svg'
+                  : 'assets/icons/health.svg',
+              color: isSelected ? AppColors.main : Colors.black,
+              height: 22.h,
+            ),
+            if (showDot)
+              Positioned(
+                top: -2,
+                right: -4,
+                child: Container(
+                  width: 8.w,
+                  height: 8.w,
+                  decoration: const BoxDecoration(
+                    color: Colors.red,
+                    shape: BoxShape.circle,
+                  ),
+                ),
+              ),
+          ],
+        ),
+      ),
+      label: AppLocalizations.of(context)!.health_tab,
     );
   }
 
