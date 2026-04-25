@@ -45,19 +45,20 @@ class ChronicDiseasePage extends StatelessWidget {
         },
         child: Scaffold(
           extendBody: true,
-          backgroundColor: AppColors.background2,
+          backgroundColor: AppColors.background,
 
           appBar: AppBar(
-            backgroundColor: AppColors.main,
+            backgroundColor: AppColors.background,
+            surfaceTintColor: Colors.transparent,
             elevation: 0,
-            iconTheme: const IconThemeData(color: Colors.white),
+            iconTheme: const IconThemeData(color: AppColors.mainDark),
             title: Text(
               t.health_chronic_title,
-              style: AppTextStyles.getTitle1(context).copyWith(
-                color: Colors.white,
-                fontSize: 12.sp,
+              style: AppTextStyles.getTitle2(context).copyWith(
+                color: AppColors.mainDark,
               ),
             ),
+            centerTitle: true,
           ),
 
           floatingActionButton: BlocBuilder<HealthCubit, HealthState>(
