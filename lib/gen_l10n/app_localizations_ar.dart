@@ -3719,6 +3719,9 @@ class AppLocalizationsAr extends AppLocalizations {
   String get earnPointsReferred => 'انضم عبر دعوة: +15 نقطة';
 
   @override
+  String get earnPointsHealthProfile => '+15 — أكمل ملفك الصحي (مرة واحدة فقط)';
+
+  @override
   String get pointsValue => '١ نقطة ≈ ٥٠٠ ل.س';
 
   @override

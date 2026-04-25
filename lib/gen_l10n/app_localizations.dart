@@ -7046,6 +7046,12 @@ abstract class AppLocalizations {
   /// **'Join via referral: +15 points'**
   String get earnPointsReferred;
 
+  /// No description provided for @earnPointsHealthProfile.
+  ///
+  /// In en, this message translates to:
+  /// **'+15 — Complete your health profile (one-time)'**
+  String get earnPointsHealthProfile;
+
   /// No description provided for @pointsValue.
   ///
   /// In en, this message translates to:

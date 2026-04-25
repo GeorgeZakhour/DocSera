@@ -95,6 +95,8 @@ class _PointsBalanceHeaderState extends State<PointsBalanceHeader>
             _earnRow(context, Icons.calendar_today_rounded, AppLocalizations.of(context)!.earnPointsAppointment, const Color(0xFF4CAF50)),
             SizedBox(height: 12.h),
             _earnRow(context, Icons.card_giftcard_rounded, AppLocalizations.of(context)!.earnPointsReferred, const Color(0xFFFF9800)),
+            SizedBox(height: 12.h),
+            _earnRow(context, Icons.favorite_rounded, AppLocalizations.of(context)!.earnPointsHealthProfile, AppColors.main),
             SizedBox(height: 20.h),
             Container(
               width: double.infinity,

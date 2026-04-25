@@ -3761,6 +3761,10 @@ class AppLocalizationsEn extends AppLocalizations {
   String get earnPointsReferred => 'Join via referral: +15 points';
 
   @override
+  String get earnPointsHealthProfile =>
+      '+15 — Complete your health profile (one-time)';
+
+  @override
   String get pointsValue => '1 point ≈ 500 SYP';
 
   @override
