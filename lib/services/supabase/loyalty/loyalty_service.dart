@@ -3,6 +3,7 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:docsera/models/offer_model.dart';
 import 'package:docsera/models/voucher_model.dart';
 import 'package:docsera/models/referral_model.dart';
+import 'package:docsera/models/promotion.dart';
 
 class LoyaltyService {
   final SupabaseClient _client = Supabase.instance.client;
@@ -174,6 +175,50 @@ class LoyaltyService {
     } catch (e) {
       debugPrint('Error fetching doctor promotions: $e');
       return [];
+    }
+  }
+
+  /// Returns active center-owned promotions for the public-facing
+  /// center profile page (worldwide-readable RPC).
+  Future<List<Promotion>> getPublicCenterPromotions(String centerId) async {
+    try {
+      final response = await _client.rpc(
+        'get_public_center_promotions',
+        params: {'p_center_id': centerId},
+      );
+      if (response is List) {
+        return response
+            .map((j) => Promotion.fromJson(j as Map<String, dynamic>))
+            .toList(growable: false);
+      }
+      return const [];
+    } catch (e) {
+      debugPrint('Error fetching public center promotions: $e');
+      return const [];
+    }
+  }
+
+  /// Returns the union of (a) the doctor's own active doctor-owned
+  /// promotions and (b) eligible center-owned promotions where this
+  /// doctor is a member (and either center-wide or specifically
+  /// targeted). Each row carries `ownerType` so the UI can render
+  /// per-source styling.
+  Future<List<Promotion>> getPromotionsForDoctor(String doctorId) async {
+    try {
+      final response = await _client.rpc(
+        'get_promotions_for_doctor',
+        params: {'p_doctor_id': doctorId},
+      );
+      // RPC returns jsonb (an array of objects). Normalize to a Dart list.
+      if (response is List) {
+        return response
+            .map((j) => Promotion.fromJson(j as Map<String, dynamic>))
+            .toList(growable: false);
+      }
+      return const [];
+    } catch (e) {
+      debugPrint('Error fetching promotions for doctor: $e');
+      return const [];
     }
   }
 
