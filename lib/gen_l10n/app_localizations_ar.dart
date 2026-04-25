@@ -4169,6 +4169,15 @@ class AppLocalizationsAr extends AppLocalizations {
   String get healthProfile_step_medications_none => 'لا أتناول أي دواء';
 
   @override
+  String get healthProfile_banner_title => 'أكمل ملفك الصحي';
+
+  @override
+  String get healthProfile_banner_subtitle => 'اكسب +15 نقطة';
+
+  @override
+  String get healthProfile_banner_cta => 'ابدأ';
+
+  @override
   String get healthProfile_completion_title => 'اكتمل ملفك الصحي';
 
   @override

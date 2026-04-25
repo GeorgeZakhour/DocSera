@@ -4216,6 +4216,15 @@ class AppLocalizationsEn extends AppLocalizations {
   String get healthProfile_step_medications_none => 'No medication';
 
   @override
+  String get healthProfile_banner_title => 'Complete your health profile';
+
+  @override
+  String get healthProfile_banner_subtitle => 'Earn +15 points';
+
+  @override
+  String get healthProfile_banner_cta => 'Start';
+
+  @override
   String get healthProfile_completion_title =>
       'Your health profile is complete';
 

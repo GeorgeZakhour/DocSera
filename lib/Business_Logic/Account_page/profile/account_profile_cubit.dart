@@ -43,6 +43,19 @@ class AccountProfileCubit extends Cubit<AccountProfileState> {
       final email = data['email']?.toString() ?? '';
       final isEmailVerified = data['email_verified'] == true;
 
+      DateTime? healthProfileCompletedAt;
+      try {
+        final completedRes = await _supabase
+            .from('users')
+            .select('health_profile_completed_at')
+            .eq('id', user.id)
+            .maybeSingle();
+        final raw = completedRes?['health_profile_completed_at'] as String?;
+        if (raw != null) healthProfileCompletedAt = DateTime.parse(raw);
+      } catch (_) {
+        // Non-fatal: banner just shows for this load if the query fails.
+      }
+
       emit(
         AccountProfileLoaded(
           userId: user.id,
@@ -60,6 +73,7 @@ class AccountProfileCubit extends Cubit<AccountProfileState> {
           gender: data['gender'],
           dateOfBirth: data['date_of_birth'],
           address: (data['address'] as Map?)?.cast<String, dynamic>(),
+          healthProfileCompletedAt: healthProfileCompletedAt,
         ),
       );
     } catch (e) {

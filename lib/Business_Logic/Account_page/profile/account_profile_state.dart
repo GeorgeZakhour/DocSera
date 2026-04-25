@@ -27,6 +27,7 @@ class AccountProfileLoaded extends AccountProfileState {
   final String? gender;
   final String? dateOfBirth;
   final Map<String, dynamic>? address;
+  final DateTime? healthProfileCompletedAt;
 
   const AccountProfileLoaded({
     required this.userId,
@@ -43,6 +44,7 @@ class AccountProfileLoaded extends AccountProfileState {
     this.gender,
     this.dateOfBirth,
     this.address,
+    this.healthProfileCompletedAt,
   });
 
   @override
@@ -58,6 +60,7 @@ class AccountProfileLoaded extends AccountProfileState {
     gender,
     dateOfBirth,
     address,
+    healthProfileCompletedAt,
   ];
 
   AccountProfileLoaded copyWith({
@@ -70,6 +73,7 @@ class AccountProfileLoaded extends AccountProfileState {
     String? gender,
     String? dateOfBirth,
     Map<String, dynamic>? address,
+    DateTime? healthProfileCompletedAt,
   }) {
     final newFirst = firstName ?? this.firstName;
     final newLast = lastName ?? this.lastName;
@@ -89,6 +93,8 @@ class AccountProfileLoaded extends AccountProfileState {
       gender: gender ?? this.gender,
       dateOfBirth: dateOfBirth ?? this.dateOfBirth,
       address: address ?? this.address,
+      healthProfileCompletedAt:
+          healthProfileCompletedAt ?? this.healthProfileCompletedAt,
     );
   }
 }

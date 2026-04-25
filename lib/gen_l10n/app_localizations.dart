@@ -7868,6 +7868,24 @@ abstract class AppLocalizations {
   /// **'No medication'**
   String get healthProfile_step_medications_none;
 
+  /// No description provided for @healthProfile_banner_title.
+  ///
+  /// In en, this message translates to:
+  /// **'Complete your health profile'**
+  String get healthProfile_banner_title;
+
+  /// No description provided for @healthProfile_banner_subtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Earn +15 points'**
+  String get healthProfile_banner_subtitle;
+
+  /// No description provided for @healthProfile_banner_cta.
+  ///
+  /// In en, this message translates to:
+  /// **'Start'**
+  String get healthProfile_banner_cta;
+
   /// No description provided for @healthProfile_completion_title.
   ///
   /// In en, this message translates to:

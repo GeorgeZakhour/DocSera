@@ -1577,6 +1577,10 @@
   "healthProfile_step_medications_addCustom": "+ إضافة دواء",
   "healthProfile_step_medications_none": "لا أتناول أي دواء",
 
+  "healthProfile_banner_title": "أكمل ملفك الصحي",
+  "healthProfile_banner_subtitle": "اكسب +15 نقطة",
+  "healthProfile_banner_cta": "ابدأ",
+
   "healthProfile_completion_title": "اكتمل ملفك الصحي",
   "healthProfile_completion_body": "ستجد كل معلوماتك في قسم الصحة",
   "healthProfile_completion_alreadyBody": "تم احتسابها سابقاً — ستجد كل شيء في قسم الصحة",

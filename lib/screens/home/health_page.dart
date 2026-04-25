@@ -10,6 +10,10 @@ import 'package:docsera/app/text_styles.dart';
 import 'package:docsera/gen_l10n/app_localizations.dart';
 import 'package:docsera/screens/home/account/add_relative.dart';
 import 'package:docsera/screens/home/documents_page.dart';
+import 'package:docsera/screens/home/health/widgets/complete_profile_banner.dart';
+import 'package:docsera/screens/home/health/wizard/health_profile_wizard_page.dart';
+import 'package:docsera/services/supabase/repositories/health_profile_repository.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:docsera/screens/home/health/pages/allergies/allergies_page.dart';
 import 'package:docsera/screens/home/health/pages/chronic/chronic_diseases_page.dart';
 import 'package:docsera/screens/home/health/pages/family/family_history_page.dart';
@@ -126,6 +130,32 @@ class _HealthAuthenticatedViewState extends State<HealthAuthenticatedView> {
                     SizedBox(height: 10.h),
                     _buildPatientGlassSwitcher(context),
                     SizedBox(height: 20.h),
+
+                    BlocBuilder<AccountProfileCubit, AccountProfileState>(
+                      builder: (context, state) {
+                        if (state is! AccountProfileLoaded) return const SizedBox.shrink();
+                        if (state.healthProfileCompletedAt != null) return const SizedBox.shrink();
+                        return Padding(
+                          padding: EdgeInsets.only(bottom: 14.h),
+                          child: CompleteProfileBanner(
+                            progress: 0.0, // decorative-only in v1
+                            onTap: () {
+                              Navigator.of(context).push(
+                                MaterialPageRoute(
+                                  builder: (_) => HealthProfileWizardPage(
+                                    repo: HealthProfileRepository(),
+                                    userId: Supabase.instance.client.auth.currentUser!.id,
+                                  ),
+                                ),
+                              ).then((_) {
+                                // Refresh on return so banner hides if completion happened.
+                                context.read<AccountProfileCubit>().loadProfile();
+                              });
+                            },
+                          ),
+                        );
+                      },
+                    ),
 
                     _buildSectionTitle(
                       context,

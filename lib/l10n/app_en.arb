@@ -1555,6 +1555,10 @@
   "healthProfile_step_medications_addCustom": "+ Add a medication",
   "healthProfile_step_medications_none": "No medication",
 
+  "healthProfile_banner_title": "Complete your health profile",
+  "healthProfile_banner_subtitle": "Earn +15 points",
+  "healthProfile_banner_cta": "Start",
+
   "healthProfile_completion_title": "Your health profile is complete",
   "healthProfile_completion_body": "Find all your information in the Health section",
   "healthProfile_completion_alreadyBody": "Already counted earlier — you'll find everything in the Health section",
