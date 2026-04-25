@@ -4196,6 +4196,41 @@ class AppLocalizationsAr extends AppLocalizations {
   String get healthProfile_section_medications => 'الأدوية';
 
   @override
+  String get healthProfile_vitals_card_title => 'العلامات الحيوية';
+
+  @override
+  String get healthProfile_vitals_card_desc => 'الطول والوزن ومؤشر كتلة الجسم';
+
+  @override
+  String get healthProfile_lifestyle_card_title => 'نمط الحياة';
+
+  @override
+  String get healthProfile_lifestyle_card_desc => 'الرياضة والتدخين والكحول';
+
+  @override
+  String get healthProfile_view_no_data =>
+      'لا توجد بيانات بعد — أكمل ملفك الصحي لتعبئة هذا القسم.';
+
+  @override
+  String get healthProfile_view_complete_button => 'أكمل الآن';
+
+  @override
+  String get healthProfile_view_update => 'تحديث';
+
+  @override
+  String get healthProfile_view_bmi_label => 'مؤشر كتلة الجسم';
+
+  @override
+  String get healthProfile_points_inline_title => 'اكسب 15 نقطة';
+
+  @override
+  String get healthProfile_points_inline_subtitle =>
+      'أكمل ملفك الصحي — مكافأة لمرة واحدة';
+
+  @override
+  String get healthProfile_points_inline_cta => 'ابدأ';
+
+  @override
   String get healthProfile_step_allergies_title =>
       'هل لديك حساسية أو عدم تحمل لأي مادة؟';
 

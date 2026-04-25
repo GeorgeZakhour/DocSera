@@ -17,11 +17,13 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:docsera/screens/home/health/pages/allergies/allergies_page.dart';
 import 'package:docsera/screens/home/health/pages/chronic/chronic_diseases_page.dart';
 import 'package:docsera/screens/home/health/pages/family/family_history_page.dart';
+import 'package:docsera/screens/home/health/pages/lifestyle/lifestyle_view_page.dart';
 import 'package:docsera/screens/home/health/pages/medications/medications_page.dart';
 import 'package:docsera/screens/home/health/pages/other/other_records_page.dart';
 import 'package:docsera/screens/home/health/pages/surgeries/surgeries_page.dart';
 import 'package:docsera/screens/home/health/pages/vaccinations/vaccinations_page.dart';
 import 'package:docsera/screens/home/health/pages/visit_reports/visit_reports_page.dart';
+import 'package:docsera/screens/home/health/pages/vitals/vitals_view_page.dart';
 import 'package:docsera/utils/full_page_loader.dart';
 import 'package:docsera/utils/page_transitions.dart';
 import 'package:flutter/material.dart';
@@ -532,6 +534,22 @@ class _HealthAuthenticatedViewState extends State<HealthAuthenticatedView> {
       return;
     }
 
+    if (category.id == "vitals") {
+      Navigator.push(
+        context,
+        fadePageRoute(const VitalsViewPage()),
+      );
+      return;
+    }
+
+    if (category.id == "lifestyle") {
+      Navigator.push(
+        context,
+        fadePageRoute(const LifestyleViewPage()),
+      );
+      return;
+    }
+
     if (category.id == "allergies") {
       Navigator.push(
         context,
@@ -625,6 +643,18 @@ class _HealthAuthenticatedViewState extends State<HealthAuthenticatedView> {
 
   List<_HealthCategory> _buildHealthSummary(AppLocalizations t) {
     return [
+      _HealthCategory(
+        id: "vitals",
+        title: t.healthProfile_vitals_card_title,
+        description: t.healthProfile_vitals_card_desc,
+        icon: Icons.monitor_heart_rounded,
+      ),
+      _HealthCategory(
+        id: "lifestyle",
+        title: t.healthProfile_lifestyle_card_title,
+        description: t.healthProfile_lifestyle_card_desc,
+        icon: Icons.directions_run_rounded,
+      ),
       _HealthCategory(
         id: "allergies",
         title: t.health_allergies_title,

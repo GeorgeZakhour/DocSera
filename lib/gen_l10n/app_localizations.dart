@@ -7910,6 +7910,72 @@ abstract class AppLocalizations {
   /// **'Medications'**
   String get healthProfile_section_medications;
 
+  /// No description provided for @healthProfile_vitals_card_title.
+  ///
+  /// In en, this message translates to:
+  /// **'Vitals'**
+  String get healthProfile_vitals_card_title;
+
+  /// No description provided for @healthProfile_vitals_card_desc.
+  ///
+  /// In en, this message translates to:
+  /// **'Height, weight and BMI'**
+  String get healthProfile_vitals_card_desc;
+
+  /// No description provided for @healthProfile_lifestyle_card_title.
+  ///
+  /// In en, this message translates to:
+  /// **'Lifestyle'**
+  String get healthProfile_lifestyle_card_title;
+
+  /// No description provided for @healthProfile_lifestyle_card_desc.
+  ///
+  /// In en, this message translates to:
+  /// **'Sport, smoking and alcohol'**
+  String get healthProfile_lifestyle_card_desc;
+
+  /// No description provided for @healthProfile_view_no_data.
+  ///
+  /// In en, this message translates to:
+  /// **'No data yet — complete your health profile to fill this section.'**
+  String get healthProfile_view_no_data;
+
+  /// No description provided for @healthProfile_view_complete_button.
+  ///
+  /// In en, this message translates to:
+  /// **'Complete now'**
+  String get healthProfile_view_complete_button;
+
+  /// No description provided for @healthProfile_view_update.
+  ///
+  /// In en, this message translates to:
+  /// **'Update'**
+  String get healthProfile_view_update;
+
+  /// No description provided for @healthProfile_view_bmi_label.
+  ///
+  /// In en, this message translates to:
+  /// **'BMI'**
+  String get healthProfile_view_bmi_label;
+
+  /// No description provided for @healthProfile_points_inline_title.
+  ///
+  /// In en, this message translates to:
+  /// **'Earn 15 points'**
+  String get healthProfile_points_inline_title;
+
+  /// No description provided for @healthProfile_points_inline_subtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Complete your health profile — one-time bonus'**
+  String get healthProfile_points_inline_subtitle;
+
+  /// No description provided for @healthProfile_points_inline_cta.
+  ///
+  /// In en, this message translates to:
+  /// **'Start'**
+  String get healthProfile_points_inline_cta;
+
   /// No description provided for @healthProfile_step_allergies_title.
   ///
   /// In en, this message translates to:

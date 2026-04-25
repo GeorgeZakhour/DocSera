@@ -9,6 +9,7 @@ import 'package:intl/intl.dart';
 import '../../../Business_Logic/Account_page/points_history/points_history_cubit.dart';
 import '../../../Business_Logic/Account_page/points_history/points_history_state.dart';
 import '../../../utils/full_page_loader.dart';
+import '../health/widgets/health_profile_compact_cta.dart';
 
 
 class PointsHistoryPage extends StatefulWidget {
@@ -186,7 +187,16 @@ class _PointsHistoryPageState extends State<PointsHistoryPage>
                     
                         // Space under header
                         SliverToBoxAdapter(child: SizedBox(height: 6.h)),
-                    
+
+                        // Health profile inline CTA — only renders when
+                        // the user hasn't completed the wizard yet.
+                        SliverToBoxAdapter(
+                          child: Padding(
+                            padding: EdgeInsets.fromLTRB(16.w, 8.h, 16.w, 4.h),
+                            child: const HealthProfileCompactCta(),
+                          ),
+                        ),
+
                         // LIST
                         SliverList(
                           delegate: SliverChildBuilderDelegate(

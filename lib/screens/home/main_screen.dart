@@ -14,6 +14,7 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:docsera/gen_l10n/app_localizations.dart';
 import 'package:docsera/screens/centers/center_profile_page.dart';
 import 'package:docsera/screens/doctors/appointment/select_patient_page.dart';
+import 'package:docsera/screens/home/health/widgets/health_profile_compact_cta.dart';
 import 'package:docsera/screens/doctors/auth/doctor_identification_page.dart';
 import 'package:docsera/screens/doctors/doctor_profile_page.dart';
 import 'package:docsera/utils/page_transitions.dart';
@@ -628,6 +629,14 @@ class _MainScreenState extends State<MainScreen> with AutomaticKeepAliveClientMi
 
 
 
+
+                // Health profile compact CTA — self-hides when completed
+                // or when there's no auth session.
+                if (isLoggedIn)
+                  Padding(
+                    padding: EdgeInsets.fromLTRB(16.w, 4.h, 16.w, 16.h),
+                    child: const HealthProfileCompactCta(),
+                  ),
 
                 // ✅ **"My Practitioners" يظهر فقط إذا كان المستخدم مسجّل الدخول**
                 isLoggedIn && favoriteDoctors.isNotEmpty ? _buildMyPractitionersSection(isLoggedIn, favoriteDoctors) : const SizedBox(),

@@ -4245,6 +4245,41 @@ class AppLocalizationsEn extends AppLocalizations {
   String get healthProfile_section_medications => 'Medications';
 
   @override
+  String get healthProfile_vitals_card_title => 'Vitals';
+
+  @override
+  String get healthProfile_vitals_card_desc => 'Height, weight and BMI';
+
+  @override
+  String get healthProfile_lifestyle_card_title => 'Lifestyle';
+
+  @override
+  String get healthProfile_lifestyle_card_desc => 'Sport, smoking and alcohol';
+
+  @override
+  String get healthProfile_view_no_data =>
+      'No data yet — complete your health profile to fill this section.';
+
+  @override
+  String get healthProfile_view_complete_button => 'Complete now';
+
+  @override
+  String get healthProfile_view_update => 'Update';
+
+  @override
+  String get healthProfile_view_bmi_label => 'BMI';
+
+  @override
+  String get healthProfile_points_inline_title => 'Earn 15 points';
+
+  @override
+  String get healthProfile_points_inline_subtitle =>
+      'Complete your health profile — one-time bonus';
+
+  @override
+  String get healthProfile_points_inline_cta => 'Start';
+
+  @override
   String get healthProfile_step_allergies_title =>
       'Do you have any allergies or intolerances?';
 
