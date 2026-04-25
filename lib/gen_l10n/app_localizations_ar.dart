@@ -4028,4 +4028,41 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get offerFirstVisitOnlyHint => 'فقط لزيارتك الأولى عند هذا الطبيب';
+
+  @override
+  String get promotions => 'العروض';
+
+  @override
+  String get claim => 'احصل عليه';
+
+  @override
+  String get claimed => 'تم الحصول عليه';
+
+  @override
+  String get validWithAnyDoctorAtCenter => 'صالح مع أي طبيب في هذا المركز';
+
+  @override
+  String validWithSelectedDoctorsLine(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'أطباء محددين',
+      one: 'طبيب محدد',
+    );
+    return 'صالح مع $count $_temp0';
+  }
+
+  @override
+  String get appliesToDoctors => 'ينطبق على';
+
+  @override
+  String get doctorsLowercase => 'أطباء';
+
+  @override
+  String fromCenter(String centerName) {
+    return 'من $centerName';
+  }
+
+  @override
+  String get couldNotClaimTryAgain => 'تعذّر الحصول على العرض — حاول مرة أخرى';
 }

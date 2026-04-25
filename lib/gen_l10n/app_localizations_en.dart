@@ -4074,4 +4074,42 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get offerFirstVisitOnlyHint =>
       'Only for your first visit with this doctor';
+
+  @override
+  String get promotions => 'Promotions';
+
+  @override
+  String get claim => 'Claim';
+
+  @override
+  String get claimed => 'Claimed';
+
+  @override
+  String get validWithAnyDoctorAtCenter =>
+      'Valid with any doctor at this center';
+
+  @override
+  String validWithSelectedDoctorsLine(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'doctors',
+      one: 'doctor',
+    );
+    return 'Valid with $count selected $_temp0';
+  }
+
+  @override
+  String get appliesToDoctors => 'Applies to';
+
+  @override
+  String get doctorsLowercase => 'doctors';
+
+  @override
+  String fromCenter(String centerName) {
+    return 'From $centerName';
+  }
+
+  @override
+  String get couldNotClaimTryAgain => 'Could not claim — try again';
 }

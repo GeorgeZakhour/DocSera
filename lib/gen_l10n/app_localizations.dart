@@ -7615,6 +7615,60 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Only for your first visit with this doctor'**
   String get offerFirstVisitOnlyHint;
+
+  /// Section title on center and doctor profile pages
+  ///
+  /// In en, this message translates to:
+  /// **'Promotions'**
+  String get promotions;
+
+  /// No description provided for @claim.
+  ///
+  /// In en, this message translates to:
+  /// **'Claim'**
+  String get claim;
+
+  /// No description provided for @claimed.
+  ///
+  /// In en, this message translates to:
+  /// **'Claimed'**
+  String get claimed;
+
+  /// No description provided for @validWithAnyDoctorAtCenter.
+  ///
+  /// In en, this message translates to:
+  /// **'Valid with any doctor at this center'**
+  String get validWithAnyDoctorAtCenter;
+
+  /// No description provided for @validWithSelectedDoctorsLine.
+  ///
+  /// In en, this message translates to:
+  /// **'Valid with {count} selected {count, plural, =1{doctor} other{doctors}}'**
+  String validWithSelectedDoctorsLine(int count);
+
+  /// No description provided for @appliesToDoctors.
+  ///
+  /// In en, this message translates to:
+  /// **'Applies to'**
+  String get appliesToDoctors;
+
+  /// No description provided for @doctorsLowercase.
+  ///
+  /// In en, this message translates to:
+  /// **'doctors'**
+  String get doctorsLowercase;
+
+  /// No description provided for @fromCenter.
+  ///
+  /// In en, this message translates to:
+  /// **'From {centerName}'**
+  String fromCenter(String centerName);
+
+  /// No description provided for @couldNotClaimTryAgain.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not claim — try again'**
+  String get couldNotClaimTryAgain;
 }
 
 class _AppLocalizationsDelegate

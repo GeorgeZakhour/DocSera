@@ -1510,5 +1510,23 @@
   },
   "offerCodeReady": "Code ready",
   "offerNotEligible": "Not eligible",
-  "offerFirstVisitOnlyHint": "Only for your first visit with this doctor"
+  "offerFirstVisitOnlyHint": "Only for your first visit with this doctor",
+  "promotions": "Promotions",
+  "@promotions": {
+    "description": "Section title on center and doctor profile pages"
+  },
+  "claim": "Claim",
+  "claimed": "Claimed",
+  "validWithAnyDoctorAtCenter": "Valid with any doctor at this center",
+  "validWithSelectedDoctorsLine": "Valid with {count} selected {count, plural, =1{doctor} other{doctors}}",
+  "@validWithSelectedDoctorsLine": {
+    "placeholders": {"count": {"type": "int"}}
+  },
+  "appliesToDoctors": "Applies to",
+  "doctorsLowercase": "doctors",
+  "fromCenter": "From {centerName}",
+  "@fromCenter": {
+    "placeholders": {"centerName": {"type": "String"}}
+  },
+  "couldNotClaimTryAgain": "Could not claim — try again"
 }

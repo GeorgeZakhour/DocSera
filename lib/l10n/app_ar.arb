@@ -1532,5 +1532,20 @@
   },
   "offerCodeReady": "رمز جاهز",
   "offerNotEligible": "غير متاح لك",
-  "offerFirstVisitOnlyHint": "فقط لزيارتك الأولى عند هذا الطبيب"
+  "offerFirstVisitOnlyHint": "فقط لزيارتك الأولى عند هذا الطبيب",
+  "promotions": "العروض",
+  "claim": "احصل عليه",
+  "claimed": "تم الحصول عليه",
+  "validWithAnyDoctorAtCenter": "صالح مع أي طبيب في هذا المركز",
+  "validWithSelectedDoctorsLine": "صالح مع {count} {count, plural, =1{طبيب محدد} other{أطباء محددين}}",
+  "@validWithSelectedDoctorsLine": {
+    "placeholders": {"count": {"type": "int"}}
+  },
+  "appliesToDoctors": "ينطبق على",
+  "doctorsLowercase": "أطباء",
+  "fromCenter": "من {centerName}",
+  "@fromCenter": {
+    "placeholders": {"centerName": {"type": "String"}}
+  },
+  "couldNotClaimTryAgain": "تعذّر الحصول على العرض — حاول مرة أخرى"
 }
