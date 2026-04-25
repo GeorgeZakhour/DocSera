@@ -77,11 +77,20 @@ begin
     raise exception 'auth required';
   end if;
 
+  if p_height_cm is not null and (p_height_cm < 50 or p_height_cm > 300) then
+    raise exception 'height_cm out of range (50-300)';
+  end if;
+  if p_weight_kg is not null and (p_weight_kg < 10 or p_weight_kg > 500) then
+    raise exception 'weight_kg out of range (10-500)';
+  end if;
+
   insert into public.patient_health_profile as p (
     user_id, height_cm, weight_kg, sport_frequency, smoking_status, alcohol_frequency
   ) values (
     v_user_id, p_height_cm, p_weight_kg, p_sport_frequency, p_smoking_status, p_alcohol_frequency
   )
+  -- NULL arg = "don't overwrite" (wizard partial-save semantics).
+  -- To explicitly clear a field, a separate RPC is required.
   on conflict (user_id) do update set
     height_cm = coalesce(excluded.height_cm, p.height_cm),
     weight_kg = coalesce(excluded.weight_kg, p.weight_kg),
