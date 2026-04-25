@@ -24,6 +24,8 @@ create table public.patient_health_profile (
     foreign key (user_id) references public.users(id) on delete cascade
 );
 
+alter table public.patient_health_profile enable row level security;
+
 create or replace function public.set_updated_at_health_profile()
 returns trigger
 language plpgsql
