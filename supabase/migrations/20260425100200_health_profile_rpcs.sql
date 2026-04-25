@@ -42,8 +42,9 @@ begin
     where id = v_user_id
     returning points into v_new_balance;
 
-  insert into public.points_history (user_id, points, description)
-    values (v_user_id, 15, 'Health profile completed');
+  insert into public.points_history (user_id, points, description, metadata, processed)
+    values (v_user_id, 15, 'Health profile completed',
+            jsonb_build_object('source', 'health_profile'), true);
 
   return jsonb_build_object(
     'already_awarded', false,
