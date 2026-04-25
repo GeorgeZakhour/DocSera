@@ -1553,5 +1553,6 @@
   "healthProfile_smoking_never": "أبدًا",
   "healthProfile_smoking_former": "مستخدم سابق",
   "healthProfile_smoking_occasional": "نعم، أحيانًا",
-  "healthProfile_smoking_daily": "نعم، يوميًا"
+  "healthProfile_smoking_daily": "نعم، يوميًا",
+  "healthProfile_already_in_profile": "موجود مسبقاً في ملفك"
 }

@@ -1531,5 +1531,6 @@
   "healthProfile_smoking_never": "Never",
   "healthProfile_smoking_former": "Former user",
   "healthProfile_smoking_occasional": "Yes, occasionally",
-  "healthProfile_smoking_daily": "Yes, daily"
+  "healthProfile_smoking_daily": "Yes, daily",
+  "healthProfile_already_in_profile": "Already in your profile"
 }

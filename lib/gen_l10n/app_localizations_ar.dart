@@ -4092,4 +4092,7 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get healthProfile_smoking_daily => 'نعم، يوميًا';
+
+  @override
+  String get healthProfile_already_in_profile => 'موجود مسبقاً في ملفك';
 }

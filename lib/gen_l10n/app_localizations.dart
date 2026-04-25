@@ -7735,6 +7735,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Yes, daily'**
   String get healthProfile_smoking_daily;
+
+  /// No description provided for @healthProfile_already_in_profile.
+  ///
+  /// In en, this message translates to:
+  /// **'Already in your profile'**
+  String get healthProfile_already_in_profile;
 }
 
 class _AppLocalizationsDelegate

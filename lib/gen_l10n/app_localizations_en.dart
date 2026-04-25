@@ -4139,4 +4139,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get healthProfile_smoking_daily => 'Yes, daily';
+
+  @override
+  String get healthProfile_already_in_profile => 'Already in your profile';
 }
