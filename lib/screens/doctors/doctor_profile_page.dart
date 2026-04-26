@@ -1278,7 +1278,13 @@ class _DoctorProfilePageState extends State<DoctorProfilePage> {
     final summary = promoId != null ? _promotionsSummary[promoId] : null;
     final hasActiveVoucher = summary?['has_active_voucher'] == true;
     final usedCount = (summary?['used_count'] as num?)?.toInt() ?? 0;
-    final isEligible = summary == null ? true : (summary['is_eligible'] == true);
+    final isEligibleRaw = summary == null ? true : (summary['is_eligible'] == true);
+    // Archived offers reach the patient ONLY when they hold a valid
+    // code (the RPC enforces that). The card stays tappable so they
+    // can open the sheet and read their voucher again — eligibility
+    // gating doesn't apply, since they aren't claiming a new code.
+    final isArchived = promo['is_archived'] == true;
+    final isEligible = isArchived ? true : isEligibleRaw;
 
     // Opacity for the whole card when ineligible (Option B visibility)
     final opacity = isEligible ? 1.0 : 0.55;
@@ -1435,20 +1441,26 @@ class _DoctorProfilePageState extends State<DoctorProfilePage> {
                     // section header above already says it.
                     if (_isCenterOwned(promo) ||
                         audience == 'new_patients' ||
-                        expiryText != null) ...[
+                        expiryText != null ||
+                        isArchived) ...[
                       SizedBox(height: 6.h),
                       Wrap(
                         spacing: 6.w,
                         runSpacing: 4.h,
                         children: [
+                          if (isArchived)
+                            _promoTag(
+                              '${l.archivedOfferTag} • ${l.archivedOfferStillRedeemable}',
+                              const Color(0xFFE69500),
+                            ),
                           if (_isCenterOwned(promo))
                             _promoTag(
                               _centerScopeLabel(promo, l),
                               const Color(0xFF00B4B6),
                             ),
-                          if (audience == 'new_patients')
+                          if (audience == 'new_patients' && !isArchived)
                             _promoTag(l.newPatientsOnly, Colors.blue),
-                          if (expiryText != null)
+                          if (expiryText != null && !isArchived)
                             _promoTag(expiryText, Colors.orange),
                         ],
                       ),
@@ -3881,6 +3893,11 @@ class _ClaimPromotionSheetState extends State<_ClaimPromotionSheet>
   String? _activeCode;
   String? _activeExpiresAt;
   bool _canClaimNew = false;
+  // True when the offer was archived by the doctor / center, but the
+  // patient still holds a valid code on it. The sheet stays usable —
+  // they can see and redeem their code — but new claims are off and
+  // we surface a banner so they understand the situation.
+  bool _isArchived = false;
   List<Map<String, dynamic>> _usageHistory = [];
   String? _error;
 
@@ -3944,6 +3961,7 @@ class _ClaimPromotionSheetState extends State<_ClaimPromotionSheet>
             _activeExpiresAt = av['expires_at'] as String?;
           }
           _canClaimNew = result['can_claim_new'] == true;
+          _isArchived = result['is_archived'] == true;
           final history = result['usage_history'];
           if (history is List) {
             _usageHistory = List<Map<String, dynamic>>.from(history);
@@ -4075,6 +4093,18 @@ class _ClaimPromotionSheetState extends State<_ClaimPromotionSheet>
           // the flow. Only rendered for center-owned promos.
           if (widget.isCenterOwned) ...[
             _buildCenterScopeBanner(l),
+            SizedBox(height: 14.h),
+          ],
+
+          // Archived banner — only shown after the status load
+          // resolves and only when the offer was archived. Sits
+          // above the voucher card so the patient sees the context
+          // before their code: "this is no longer offered, but
+          // your code still works." We don't render during the
+          // loading state; the banner needs the resolved
+          // is_archived flag.
+          if (!_isLoading && _isArchived) ...[
+            _buildArchivedBanner(l),
             SizedBox(height: 14.h),
           ],
 
@@ -4438,6 +4468,65 @@ class _ClaimPromotionSheetState extends State<_ClaimPromotionSheet>
                         child: _scopeChip(scopeLabel, accent,
                             withInfoIcon: true),
                       ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  /// Banner shown when the patient opens an archived offer they
+  /// still hold a valid code on. Communicates two things:
+  /// (1) the offer itself is retired so they can't claim a new one;
+  /// (2) the code they already have is still good. The amber palette
+  /// is the same we use for "expiring soon" cues elsewhere — caution,
+  /// not danger.
+  Widget _buildArchivedBanner(AppLocalizations l) {
+    const accent = Color(0xFFE69500);
+    return Container(
+      width: double.infinity,
+      padding: EdgeInsets.all(12.r),
+      decoration: BoxDecoration(
+        color: accent.withValues(alpha: 0.08),
+        borderRadius: BorderRadius.circular(12.r),
+        border: Border.all(color: accent.withValues(alpha: 0.30), width: 0.8),
+      ),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Container(
+            width: 30.r,
+            height: 30.r,
+            decoration: BoxDecoration(
+              color: accent.withValues(alpha: 0.18),
+              borderRadius: BorderRadius.circular(8.r),
+            ),
+            child: Icon(Icons.history_rounded, color: accent, size: 16.sp),
+          ),
+          SizedBox(width: 10.w),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Text(
+                  l.archivedOfferBannerTitle,
+                  style: AppTextStyles.getTitle2(context).copyWith(
+                    fontSize: 11.sp,
+                    fontWeight: FontWeight.w700,
+                    color: AppColors.mainDark,
+                  ),
+                ),
+                SizedBox(height: 3.h),
+                Text(
+                  l.archivedOfferBannerDescription,
+                  style: AppTextStyles.getText3(context).copyWith(
+                    fontSize: 10.sp,
+                    color: Colors.grey[700],
+                    height: 1.4,
+                  ),
+                ),
               ],
             ),
           ),

@@ -7514,6 +7514,30 @@ abstract class AppLocalizations {
   /// **'Offers may change or be discontinued at the practitioner\'s discretion. Use your code before its expiry to make sure it\'s honored.'**
   String get promotionAvailabilityNote;
 
+  /// No description provided for @archivedOfferTag.
+  ///
+  /// In en, this message translates to:
+  /// **'Archived'**
+  String get archivedOfferTag;
+
+  /// No description provided for @archivedOfferStillRedeemable.
+  ///
+  /// In en, this message translates to:
+  /// **'Your code is still valid'**
+  String get archivedOfferStillRedeemable;
+
+  /// No description provided for @archivedOfferBannerTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'This offer is no longer available'**
+  String get archivedOfferBannerTitle;
+
+  /// No description provided for @archivedOfferBannerDescription.
+  ///
+  /// In en, this message translates to:
+  /// **'The doctor or center has retired this promotion. Your previously-claimed code is still valid — show it on your next visit before it expires.'**
+  String get archivedOfferBannerDescription;
+
   /// No description provided for @promotionFirstVisitOnly.
   ///
   /// In en, this message translates to:

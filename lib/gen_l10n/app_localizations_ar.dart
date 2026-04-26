@@ -3976,6 +3976,19 @@ class AppLocalizationsAr extends AppLocalizations {
       'قد يتم تعديل العروض أو إيقافها من قِبل الطبيب أو الاختصاصي. استخدم رمزك قبل انتهاء صلاحيته لضمان قبوله.';
 
   @override
+  String get archivedOfferTag => 'مؤرشف';
+
+  @override
+  String get archivedOfferStillRedeemable => 'رمزك ما زال صالحاً';
+
+  @override
+  String get archivedOfferBannerTitle => 'هذا العرض لم يعد متاحاً';
+
+  @override
+  String get archivedOfferBannerDescription =>
+      'أوقف الطبيب أو المركز هذا العرض. الرمز الذي حصلت عليه سابقاً ما زال صالحاً — اعرضه في زيارتك القادمة قبل انتهاء صلاحيته.';
+
+  @override
   String get promotionFirstVisitOnly =>
       'هذا العرض متاح فقط لزيارتك الأولى لدى هذا الطبيب.';
 

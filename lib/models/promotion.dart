@@ -37,6 +37,13 @@ class Promotion {
   final DateTime? endDate;
   final bool isFeatured;
 
+  /// True for offers that the doctor or center has archived. The patient
+  /// only ever sees an archived offer if they hold a still-valid claim
+  /// on it — so the UI should treat the card as "your code is still
+  /// good" (greyed, but tappable to surface the voucher code) rather
+  /// than as a normal active offer.
+  final bool isArchived;
+
   const Promotion({
     required this.id,
     this.doctorId,
@@ -55,6 +62,7 @@ class Promotion {
     this.pointsCost,
     this.endDate,
     this.isFeatured = false,
+    this.isArchived = false,
   });
 
   /// 'doctor' | 'center_wide' | 'center_selected'.
@@ -88,6 +96,7 @@ class Promotion {
           ? DateTime.tryParse(json['end_date'] as String)
           : null,
       isFeatured: json['is_featured'] as bool? ?? false,
+      isArchived: json['is_archived'] as bool? ?? false,
     );
   }
 }

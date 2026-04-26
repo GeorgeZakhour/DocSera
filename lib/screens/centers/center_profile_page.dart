@@ -1126,8 +1126,13 @@ class _CenterProfilePageState extends State<CenterProfilePage> {
     // is_eligible is added by 20260425130000_public_center_promotions_eligibility.
     // Anonymous callers see NULL (UI treats unknown as eligible for
     // visibility); claim guard at backend will catch any edge cases.
-    final isEligible =
+    final isEligibleRaw =
         promo['is_eligible'] == null ? true : promo['is_eligible'] == true;
+    // Archived rows reach the patient ONLY when they hold a valid
+    // claim (the RPC enforces it). The card stays tappable so they
+    // can re-open the sheet and read their existing voucher.
+    final isArchived = promo['is_archived'] == true;
+    final isEligible = isArchived ? true : isEligibleRaw;
     // Gray out the whole card when the patient is not eligible —
     // matches the doctor profile's behavior so the experience feels
     // consistent across both surfaces.
@@ -1284,6 +1289,11 @@ class _CenterProfilePageState extends State<CenterProfilePage> {
                     spacing: 6.w,
                     runSpacing: 4.h,
                     children: [
+                      if (isArchived)
+                        _promoTag(
+                          '${l.archivedOfferTag} • ${l.archivedOfferStillRedeemable}',
+                          const Color(0xFFE69500),
+                        ),
                       _isSelectedDoctorsScope(promo)
                           ? _SelectedDoctorsScopeTag(
                               label: _centerProfileScopeLabel(promo, l),
@@ -1295,9 +1305,9 @@ class _CenterProfilePageState extends State<CenterProfilePage> {
                               _centerProfileScopeLabel(promo, l),
                               const Color(0xFF00B4B6),
                             ),
-                      if (audience == 'new_patients')
+                      if (audience == 'new_patients' && !isArchived)
                         _promoTag(l.newPatientsOnly, Colors.blue),
-                      if (expiryText != null)
+                      if (expiryText != null && !isArchived)
                         _promoTag(expiryText, Colors.orange),
                     ],
                   ),
