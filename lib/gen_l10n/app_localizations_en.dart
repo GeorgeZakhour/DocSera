@@ -4028,7 +4028,8 @@ class AppLocalizationsEn extends AppLocalizations {
   String get archivedOfferStillRedeemable => 'Your code is still valid';
 
   @override
-  String get archivedOfferBannerTitle => 'This offer is no longer available';
+  String get archivedOfferBannerTitle =>
+      'This offer is no longer available to others';
 
   @override
   String archivedOfferBannerDescriptionWithExpiry(String expiry) {

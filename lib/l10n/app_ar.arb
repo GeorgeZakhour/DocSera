@@ -1507,7 +1507,7 @@
   "promotionAvailabilityNote": "قد يتم تعديل العروض أو إيقافها من قِبل الطبيب أو الاختصاصي. استخدم رمزك قبل انتهاء صلاحيته لضمان قبوله.",
   "archivedOfferTag": "لم يعد متاحاً",
   "archivedOfferStillRedeemable": "رمزك ما زال صالحاً",
-  "archivedOfferBannerTitle": "هذا العرض لم يعد متاحاً",
+  "archivedOfferBannerTitle": "هذا العرض لم يعد متاحاً للآخرين",
   "archivedOfferBannerDescriptionWithExpiry": "أوقف الطبيب أو المركز هذا العرض. وبما أنك حصلت على الرمز مسبقاً، يبقى صالحاً حتى {expiry}. اعرضه في زيارتك القادمة قبل انتهاء صلاحيته.\n\nملاحظة: يحق للطبيب أو المركز سحب أي رمز متى شاء، لذا يُفضّل استخدامه في أقرب وقت.",
   "@archivedOfferBannerDescriptionWithExpiry": {
     "placeholders": {"expiry": {"type": "String"}}

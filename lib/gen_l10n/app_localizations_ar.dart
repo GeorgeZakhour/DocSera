@@ -3982,7 +3982,7 @@ class AppLocalizationsAr extends AppLocalizations {
   String get archivedOfferStillRedeemable => 'رمزك ما زال صالحاً';
 
   @override
-  String get archivedOfferBannerTitle => 'هذا العرض لم يعد متاحاً';
+  String get archivedOfferBannerTitle => 'هذا العرض لم يعد متاحاً للآخرين';
 
   @override
   String archivedOfferBannerDescriptionWithExpiry(String expiry) {

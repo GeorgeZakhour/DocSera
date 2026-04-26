@@ -7529,7 +7529,7 @@ abstract class AppLocalizations {
   /// No description provided for @archivedOfferBannerTitle.
   ///
   /// In en, this message translates to:
-  /// **'This offer is no longer available'**
+  /// **'This offer is no longer available to others'**
   String get archivedOfferBannerTitle;
 
   /// No description provided for @archivedOfferBannerDescriptionWithExpiry.
