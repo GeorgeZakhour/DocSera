@@ -1009,7 +1009,10 @@ class _DoctorProfilePageState extends State<DoctorProfilePage> {
                   ),
                 ),
               ),
-            // Single instruction text at the bottom
+            // Two-line instruction at the bottom: how to claim + a
+            // small disclosure that offers can change at the
+            // practitioner's discretion (so a claimed code may not
+            // always be honored if the offer is later invalidated).
             SizedBox(height: 6.h),
             Row(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -1017,13 +1020,28 @@ class _DoctorProfilePageState extends State<DoctorProfilePage> {
                 Icon(Icons.info_outline_rounded, size: 13.sp, color: Colors.grey[400]),
                 SizedBox(width: 4.w),
                 Expanded(
-                  child: Text(
-                    l.promotionPressHereToClaim,
-                    style: AppTextStyles.getText3(context).copyWith(
-                      color: Colors.grey[500],
-                      fontSize: 10.sp,
-                      height: 1.4,
-                    ),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        l.promotionPressHereToClaim,
+                        style: AppTextStyles.getText3(context).copyWith(
+                          color: Colors.grey[500],
+                          fontSize: 10.sp,
+                          height: 1.4,
+                        ),
+                      ),
+                      SizedBox(height: 4.h),
+                      Text(
+                        l.promotionAvailabilityNote,
+                        style: AppTextStyles.getText3(context).copyWith(
+                          color: Colors.grey[500],
+                          fontSize: 9.5.sp,
+                          height: 1.4,
+                          fontStyle: FontStyle.italic,
+                        ),
+                      ),
+                    ],
                   ),
                 ),
               ],

@@ -3755,7 +3755,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get earnPointsReferral => 'Refer a friend: +25 points';
 
   @override
-  String get earnPointsAppointment => 'Complete an appointment: +10 points';
+  String get earnPointsAppointment => 'Complete an appointment: +5 points';
 
   @override
   String get earnPointsReferred => 'Join via referral: +15 points';
@@ -3766,6 +3766,58 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get pointsValue => '1 point ≈ 500 SYP';
+
+  @override
+  String get earnBannerTitle => 'How can I earn points?';
+
+  @override
+  String get earnBannerSubtitle => 'Tap to discover all the ways';
+
+  @override
+  String get earnSheetSubtitle =>
+      'Use DocSera the way that suits you — and rack up points along the way.';
+
+  @override
+  String get earnSourceReferralName => 'Refer a friend';
+
+  @override
+  String get earnSourceReferralDesc =>
+      'Share your code. The moment a friend downloads DocSera and uses your code at sign-up, you earn.';
+
+  @override
+  String get earnSourceAppointmentName => 'Complete an appointment';
+
+  @override
+  String get earnSourceAppointmentDesc =>
+      'Book through the DocSera app, then earn once the doctor marks the visit as done.';
+
+  @override
+  String get earnSourceReferredName => 'Join via referral';
+
+  @override
+  String get earnSourceReferredDesc =>
+      'One-time welcome bonus when you sign up using a friend\'s invite code.';
+
+  @override
+  String get earnSourceHealthProfileName => 'Complete your health profile';
+
+  @override
+  String get earnSourceHealthProfileDesc =>
+      'A quick wellness setup. Earned once, kept forever.';
+
+  @override
+  String earnPointsBadge(int points) {
+    return '+$points pts';
+  }
+
+  @override
+  String get earnSheetGotIt => 'Got it';
+
+  @override
+  String get earnSheetOneTime => 'One-time';
+
+  @override
+  String get earnSheetRecurring => 'Each time';
 
   @override
   String get transactionReferral => 'Referral reward';
@@ -3964,6 +4016,10 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get promotionPressHereToClaim =>
       'Press here to claim the offer and get your discount code. Simply telling the doctor verbally is not enough.';
+
+  @override
+  String get promotionAvailabilityNote =>
+      'Offers may change or be discontinued at the practitioner\'s discretion. Use your code before its expiry to make sure it\'s honored.';
 
   @override
   String get promotionFirstVisitOnly =>
@@ -4273,11 +4329,12 @@ class AppLocalizationsEn extends AppLocalizations {
   String get healthProfile_view_bmi_label => 'BMI';
 
   @override
-  String get healthProfile_points_inline_title => 'Earn 15 points';
+  String get healthProfile_points_inline_title =>
+      'Complete your health profile';
 
   @override
   String get healthProfile_points_inline_subtitle =>
-      'Complete your health profile — one-time bonus';
+      'Earn +15 points — one-time bonus';
 
   @override
   String get healthProfile_points_inline_cta => 'Start';

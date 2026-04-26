@@ -882,6 +882,11 @@ class _CenterProfilePageState extends State<CenterProfilePage> {
                   ),
                 ),
               ),
+            // Instruction + availability disclosure (same pair as
+            // the doctor profile). Tells the patient how to claim
+            // and quietly notes that offers may change at the
+            // practitioner's discretion, so a claimed code can become
+            // unavailable if the offer is later invalidated.
             SizedBox(height: 6.h),
             Row(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -890,13 +895,28 @@ class _CenterProfilePageState extends State<CenterProfilePage> {
                     size: 13.sp, color: Colors.grey[400]),
                 SizedBox(width: 4.w),
                 Expanded(
-                  child: Text(
-                    l.promotionPressHereToClaim,
-                    style: AppTextStyles.getText3(context).copyWith(
-                      color: Colors.grey[500],
-                      fontSize: 10.sp,
-                      height: 1.4,
-                    ),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        l.promotionPressHereToClaim,
+                        style: AppTextStyles.getText3(context).copyWith(
+                          color: Colors.grey[500],
+                          fontSize: 10.sp,
+                          height: 1.4,
+                        ),
+                      ),
+                      SizedBox(height: 4.h),
+                      Text(
+                        l.promotionAvailabilityNote,
+                        style: AppTextStyles.getText3(context).copyWith(
+                          color: Colors.grey[500],
+                          fontSize: 9.5.sp,
+                          height: 1.4,
+                          fontStyle: FontStyle.italic,
+                        ),
+                      ),
+                    ],
                   ),
                 ),
               ],

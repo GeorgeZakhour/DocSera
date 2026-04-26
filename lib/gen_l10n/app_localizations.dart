@@ -7037,7 +7037,7 @@ abstract class AppLocalizations {
   /// No description provided for @earnPointsAppointment.
   ///
   /// In en, this message translates to:
-  /// **'Complete an appointment: +10 points'**
+  /// **'Complete an appointment: +5 points'**
   String get earnPointsAppointment;
 
   /// No description provided for @earnPointsReferred.
@@ -7057,6 +7057,96 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'1 point ≈ 500 SYP'**
   String get pointsValue;
+
+  /// No description provided for @earnBannerTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'How can I earn points?'**
+  String get earnBannerTitle;
+
+  /// No description provided for @earnBannerSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Tap to discover all the ways'**
+  String get earnBannerSubtitle;
+
+  /// No description provided for @earnSheetSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Use DocSera the way that suits you — and rack up points along the way.'**
+  String get earnSheetSubtitle;
+
+  /// No description provided for @earnSourceReferralName.
+  ///
+  /// In en, this message translates to:
+  /// **'Refer a friend'**
+  String get earnSourceReferralName;
+
+  /// No description provided for @earnSourceReferralDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Share your code. The moment a friend downloads DocSera and uses your code at sign-up, you earn.'**
+  String get earnSourceReferralDesc;
+
+  /// No description provided for @earnSourceAppointmentName.
+  ///
+  /// In en, this message translates to:
+  /// **'Complete an appointment'**
+  String get earnSourceAppointmentName;
+
+  /// No description provided for @earnSourceAppointmentDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Book through the DocSera app, then earn once the doctor marks the visit as done.'**
+  String get earnSourceAppointmentDesc;
+
+  /// No description provided for @earnSourceReferredName.
+  ///
+  /// In en, this message translates to:
+  /// **'Join via referral'**
+  String get earnSourceReferredName;
+
+  /// No description provided for @earnSourceReferredDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'One-time welcome bonus when you sign up using a friend\'s invite code.'**
+  String get earnSourceReferredDesc;
+
+  /// No description provided for @earnSourceHealthProfileName.
+  ///
+  /// In en, this message translates to:
+  /// **'Complete your health profile'**
+  String get earnSourceHealthProfileName;
+
+  /// No description provided for @earnSourceHealthProfileDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'A quick wellness setup. Earned once, kept forever.'**
+  String get earnSourceHealthProfileDesc;
+
+  /// No description provided for @earnPointsBadge.
+  ///
+  /// In en, this message translates to:
+  /// **'+{points} pts'**
+  String earnPointsBadge(int points);
+
+  /// No description provided for @earnSheetGotIt.
+  ///
+  /// In en, this message translates to:
+  /// **'Got it'**
+  String get earnSheetGotIt;
+
+  /// No description provided for @earnSheetOneTime.
+  ///
+  /// In en, this message translates to:
+  /// **'One-time'**
+  String get earnSheetOneTime;
+
+  /// No description provided for @earnSheetRecurring.
+  ///
+  /// In en, this message translates to:
+  /// **'Each time'**
+  String get earnSheetRecurring;
 
   /// No description provided for @transactionReferral.
   ///
@@ -7417,6 +7507,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Press here to claim the offer and get your discount code. Simply telling the doctor verbally is not enough.'**
   String get promotionPressHereToClaim;
+
+  /// No description provided for @promotionAvailabilityNote.
+  ///
+  /// In en, this message translates to:
+  /// **'Offers may change or be discontinued at the practitioner\'s discretion. Use your code before its expiry to make sure it\'s honored.'**
+  String get promotionAvailabilityNote;
 
   /// No description provided for @promotionFirstVisitOnly.
   ///
@@ -7967,13 +8063,13 @@ abstract class AppLocalizations {
   /// No description provided for @healthProfile_points_inline_title.
   ///
   /// In en, this message translates to:
-  /// **'Earn 15 points'**
+  /// **'Complete your health profile'**
   String get healthProfile_points_inline_title;
 
   /// No description provided for @healthProfile_points_inline_subtitle.
   ///
   /// In en, this message translates to:
-  /// **'Complete your health profile — one-time bonus'**
+  /// **'Earn +15 points — one-time bonus'**
   String get healthProfile_points_inline_subtitle;
 
   /// No description provided for @healthProfile_points_inline_cta.

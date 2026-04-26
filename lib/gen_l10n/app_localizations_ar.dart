@@ -3713,7 +3713,7 @@ class AppLocalizationsAr extends AppLocalizations {
   String get earnPointsReferral => 'ادعُ صديقاً: +25 نقطة';
 
   @override
-  String get earnPointsAppointment => 'أكمل موعداً: +10 نقاط';
+  String get earnPointsAppointment => 'أكمل موعداً: +5 نقاط';
 
   @override
   String get earnPointsReferred => 'انضم عبر دعوة: +15 نقطة';
@@ -3723,6 +3723,58 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get pointsValue => '١ نقطة ≈ ٥٠٠ ل.س';
+
+  @override
+  String get earnBannerTitle => 'كيف أكسب النقاط؟';
+
+  @override
+  String get earnBannerSubtitle => 'اضغط لاكتشاف كل الطرق';
+
+  @override
+  String get earnSheetSubtitle =>
+      'استخدم دوكسيرا بالطريقة التي تناسبك — وستجمع النقاط على الطريق.';
+
+  @override
+  String get earnSourceReferralName => 'ادعُ صديقاً';
+
+  @override
+  String get earnSourceReferralDesc =>
+      'شارك رمز الدعوة. بمجرد أن يُنزّل صديقك تطبيق دوكسيرا ويستخدم رمزك عند التسجيل، تكسب نقاطك.';
+
+  @override
+  String get earnSourceAppointmentName => 'أكمل موعداً';
+
+  @override
+  String get earnSourceAppointmentDesc =>
+      'احجز عبر تطبيق دوكسيرا، وتُمنح النقاط عندما يؤكد الطبيب إتمام الزيارة.';
+
+  @override
+  String get earnSourceReferredName => 'انضم عبر دعوة';
+
+  @override
+  String get earnSourceReferredDesc =>
+      'مكافأة ترحيبية لمرة واحدة عند تسجيلك باستخدام رمز دعوة من صديق.';
+
+  @override
+  String get earnSourceHealthProfileName => 'أكمل ملفك الصحي';
+
+  @override
+  String get earnSourceHealthProfileDesc =>
+      'إعداد سريع لمعلوماتك الصحية. تُكتسب مرة واحدة وتبقى للأبد.';
+
+  @override
+  String earnPointsBadge(int points) {
+    return '+$points نقطة';
+  }
+
+  @override
+  String get earnSheetGotIt => 'حسناً';
+
+  @override
+  String get earnSheetOneTime => 'لمرة واحدة';
+
+  @override
+  String get earnSheetRecurring => 'في كل مرة';
 
   @override
   String get transactionReferral => 'مكافأة دعوة صديق';
@@ -3918,6 +3970,10 @@ class AppLocalizationsAr extends AppLocalizations {
   @override
   String get promotionPressHereToClaim =>
       'اضغط هنا لحجز العرض والحصول على رمز الخصم الخاص بك. لا يكفي إبلاغ الطبيب شفهياً.';
+
+  @override
+  String get promotionAvailabilityNote =>
+      'قد يتم تعديل العروض أو إيقافها من قِبل الطبيب أو الاختصاصي. استخدم رمزك قبل انتهاء صلاحيته لضمان قبوله.';
 
   @override
   String get promotionFirstVisitOnly =>
@@ -4224,11 +4280,11 @@ class AppLocalizationsAr extends AppLocalizations {
   String get healthProfile_view_bmi_label => 'مؤشر كتلة الجسم';
 
   @override
-  String get healthProfile_points_inline_title => 'اكسب 15 نقطة';
+  String get healthProfile_points_inline_title => 'أكمل ملفك الصحي';
 
   @override
   String get healthProfile_points_inline_subtitle =>
-      'أكمل ملفك الصحي — مكافأة لمرة واحدة';
+      'اكسب +15 نقطة — مكافأة لمرة واحدة';
 
   @override
   String get healthProfile_points_inline_cta => 'ابدأ';
