@@ -4483,12 +4483,27 @@ class _ClaimPromotionSheetState extends State<_ClaimPromotionSheet>
 
   /// Banner shown when the patient opens an archived offer they
   /// still hold a valid code on. Communicates two things:
-  /// (1) the offer itself is retired so they can't claim a new one;
-  /// (2) the code they already have is still good. The amber palette
-  /// is the same we use for "expiring soon" cues elsewhere — caution,
-  /// not danger.
+  /// (1) the doctor or center has disabled the offer, so they can't
+  ///     claim a new code;
+  /// (2) the code they already have still works.
+  ///
+  /// The body adapts to the voucher's `expires_at`:
+  ///   • set    → "valid until {date}"
+  ///   • NULL   → "no fixed expiration date"
+  /// NULL happens when the original offer had no end_date — the
+  /// claim inherits NULL and verify-voucher accepts it indefinitely.
   Widget _buildArchivedBanner(AppLocalizations l) {
     const accent = Color(0xFFE69500);
+
+    final expiryDt = _activeExpiresAt != null
+        ? DateTime.tryParse(_activeExpiresAt!)
+        : null;
+    final hasExpiry = expiryDt != null;
+    final expiryFormatted = hasExpiry ? _formatShortDate(expiryDt) : '';
+    final body = hasExpiry
+        ? l.archivedOfferBannerDescriptionWithExpiry(expiryFormatted)
+        : l.archivedOfferBannerDescriptionNoExpiry;
+
     return Container(
       width: double.infinity,
       padding: EdgeInsets.all(12.r),
@@ -4525,7 +4540,7 @@ class _ClaimPromotionSheetState extends State<_ClaimPromotionSheet>
                 ),
                 SizedBox(height: 3.h),
                 Text(
-                  l.archivedOfferBannerDescription,
+                  body,
                   style: AppTextStyles.getText3(context).copyWith(
                     fontSize: 10.sp,
                     color: Colors.grey[700],
@@ -4538,6 +4553,16 @@ class _ClaimPromotionSheetState extends State<_ClaimPromotionSheet>
         ],
       ),
     );
+  }
+
+  /// Date-only render for the archived banner (no time component
+  /// — the patient doesn't need hour/minute precision when the
+  /// expiry is days or weeks away). Uses Syria timezone via the
+  /// same helper as _formatDateTime so it matches the rest of the
+  /// app.
+  String _formatShortDate(DateTime dt) {
+    final syria = DocSeraTime.tryParseToSyria(dt.toIso8601String()) ?? dt;
+    return '${syria.day}/${syria.month}/${syria.year}';
   }
 
   /// Pill for the scope tag inside the center-scope banner.

@@ -4022,7 +4022,7 @@ class AppLocalizationsEn extends AppLocalizations {
       'Offers may change or be discontinued at the practitioner\'s discretion. Use your code before its expiry to make sure it\'s honored.';
 
   @override
-  String get archivedOfferTag => 'Archived';
+  String get archivedOfferTag => 'No longer offered';
 
   @override
   String get archivedOfferStillRedeemable => 'Your code is still valid';
@@ -4031,8 +4031,13 @@ class AppLocalizationsEn extends AppLocalizations {
   String get archivedOfferBannerTitle => 'This offer is no longer available';
 
   @override
-  String get archivedOfferBannerDescription =>
-      'The doctor or center has retired this promotion. Your previously-claimed code is still valid — show it on your next visit before it expires.';
+  String archivedOfferBannerDescriptionWithExpiry(String expiry) {
+    return 'The doctor or center has disabled this offer. Since you claimed it earlier, your code is still valid until $expiry. Show it on your next visit before it expires.';
+  }
+
+  @override
+  String get archivedOfferBannerDescriptionNoExpiry =>
+      'The doctor or center has disabled this offer. Since you claimed it earlier, your code is still valid and has no fixed expiration date — show it on your next visit.';
 
   @override
   String get promotionFirstVisitOnly =>

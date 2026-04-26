@@ -7517,7 +7517,7 @@ abstract class AppLocalizations {
   /// No description provided for @archivedOfferTag.
   ///
   /// In en, this message translates to:
-  /// **'Archived'**
+  /// **'No longer offered'**
   String get archivedOfferTag;
 
   /// No description provided for @archivedOfferStillRedeemable.
@@ -7532,11 +7532,17 @@ abstract class AppLocalizations {
   /// **'This offer is no longer available'**
   String get archivedOfferBannerTitle;
 
-  /// No description provided for @archivedOfferBannerDescription.
+  /// No description provided for @archivedOfferBannerDescriptionWithExpiry.
   ///
   /// In en, this message translates to:
-  /// **'The doctor or center has retired this promotion. Your previously-claimed code is still valid — show it on your next visit before it expires.'**
-  String get archivedOfferBannerDescription;
+  /// **'The doctor or center has disabled this offer. Since you claimed it earlier, your code is still valid until {expiry}. Show it on your next visit before it expires.'**
+  String archivedOfferBannerDescriptionWithExpiry(String expiry);
+
+  /// No description provided for @archivedOfferBannerDescriptionNoExpiry.
+  ///
+  /// In en, this message translates to:
+  /// **'The doctor or center has disabled this offer. Since you claimed it earlier, your code is still valid and has no fixed expiration date — show it on your next visit.'**
+  String get archivedOfferBannerDescriptionNoExpiry;
 
   /// No description provided for @promotionFirstVisitOnly.
   ///
