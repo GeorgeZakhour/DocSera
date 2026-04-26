@@ -4032,12 +4032,12 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String archivedOfferBannerDescriptionWithExpiry(String expiry) {
-    return 'The doctor or center has disabled this offer. Since you claimed it earlier, your code is still valid until $expiry. Show it on your next visit before it expires.';
+    return 'The doctor or center has disabled this offer. Since you claimed it earlier, your code is still valid until $expiry. Show it on your next visit before it expires.\n\nNote: the doctor or center can withdraw any code at their discretion, so it\'s best to use it soon.';
   }
 
   @override
   String get archivedOfferBannerDescriptionNoExpiry =>
-      'The doctor or center has disabled this offer. Since you claimed it earlier, your code is still valid and has no fixed expiration date — show it on your next visit.';
+      'The doctor or center has disabled this offer. Since you claimed it earlier, your code is still valid and has no fixed expiration date — show it on your next visit.\n\nNote: the doctor or center can withdraw any code at their discretion, so it\'s best to use it soon.';
 
   @override
   String get promotionFirstVisitOnly =>

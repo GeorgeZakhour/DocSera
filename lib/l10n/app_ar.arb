@@ -1508,11 +1508,11 @@
   "archivedOfferTag": "لم يعد متاحاً",
   "archivedOfferStillRedeemable": "رمزك ما زال صالحاً",
   "archivedOfferBannerTitle": "هذا العرض لم يعد متاحاً",
-  "archivedOfferBannerDescriptionWithExpiry": "أوقف الطبيب أو المركز هذا العرض. وبما أنك حصلت على الرمز مسبقاً، يبقى صالحاً حتى {expiry}. اعرضه في زيارتك القادمة قبل انتهاء صلاحيته.",
+  "archivedOfferBannerDescriptionWithExpiry": "أوقف الطبيب أو المركز هذا العرض. وبما أنك حصلت على الرمز مسبقاً، يبقى صالحاً حتى {expiry}. اعرضه في زيارتك القادمة قبل انتهاء صلاحيته.\n\nملاحظة: يحق للطبيب أو المركز سحب أي رمز متى شاء، لذا يُفضّل استخدامه في أقرب وقت.",
   "@archivedOfferBannerDescriptionWithExpiry": {
     "placeholders": {"expiry": {"type": "String"}}
   },
-  "archivedOfferBannerDescriptionNoExpiry": "أوقف الطبيب أو المركز هذا العرض. وبما أنك حصلت على الرمز مسبقاً، يبقى صالحاً وليس له تاريخ انتهاء محدد — اعرضه في زيارتك القادمة.",
+  "archivedOfferBannerDescriptionNoExpiry": "أوقف الطبيب أو المركز هذا العرض. وبما أنك حصلت على الرمز مسبقاً، يبقى صالحاً وليس له تاريخ انتهاء محدد — اعرضه في زيارتك القادمة.\n\nملاحظة: يحق للطبيب أو المركز سحب أي رمز متى شاء، لذا يُفضّل استخدامه في أقرب وقت.",
   "promotionFirstVisitOnly": "هذا العرض متاح فقط لزيارتك الأولى لدى هذا الطبيب.",
   "promotionSingleUse": "يمكن الاستفادة من هذا العرض مرة واحدة فقط.",
   "promotionMultiUse": "يمكن الاستفادة من هذا العرض حتى {n} مرات.",

@@ -1486,11 +1486,11 @@
   "archivedOfferTag": "No longer offered",
   "archivedOfferStillRedeemable": "Your code is still valid",
   "archivedOfferBannerTitle": "This offer is no longer available",
-  "archivedOfferBannerDescriptionWithExpiry": "The doctor or center has disabled this offer. Since you claimed it earlier, your code is still valid until {expiry}. Show it on your next visit before it expires.",
+  "archivedOfferBannerDescriptionWithExpiry": "The doctor or center has disabled this offer. Since you claimed it earlier, your code is still valid until {expiry}. Show it on your next visit before it expires.\n\nNote: the doctor or center can withdraw any code at their discretion, so it's best to use it soon.",
   "@archivedOfferBannerDescriptionWithExpiry": {
     "placeholders": {"expiry": {"type": "String"}}
   },
-  "archivedOfferBannerDescriptionNoExpiry": "The doctor or center has disabled this offer. Since you claimed it earlier, your code is still valid and has no fixed expiration date — show it on your next visit.",
+  "archivedOfferBannerDescriptionNoExpiry": "The doctor or center has disabled this offer. Since you claimed it earlier, your code is still valid and has no fixed expiration date — show it on your next visit.\n\nNote: the doctor or center can withdraw any code at their discretion, so it's best to use it soon.",
   "promotionFirstVisitOnly": "This offer is available only for your first visit with this doctor.",
   "promotionSingleUse": "This offer can be used only once.",
   "promotionMultiUse": "This offer can be used up to {n} times.",
