@@ -60,7 +60,11 @@ class _CenterProfilePageState extends State<CenterProfilePage> {
         );
         // Hide promotions that have hit their global cap — matches the
         // doctor profile's filtering so the two UIs behave consistently.
+        // Exception: archived offers only reach this caller when they
+        // already hold a still-valid claim, so the cap is irrelevant —
+        // we must not strip their existing voucher away.
         final visible = all.where((p) {
+          if (p['is_archived'] == true) return true;
           final maxClaims = p['max_claims'] as int?;
           final currentClaims = p['current_claims'] as int? ?? 0;
           if (maxClaims != null && currentClaims >= maxClaims) return false;

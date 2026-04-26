@@ -289,8 +289,13 @@ class _DoctorProfilePageState extends State<DoctorProfilePage> {
         final all = List<Map<String, dynamic>>.from(
           response.map((e) => Map<String, dynamic>.from(e as Map)),
         );
-        // Hide promotions where global max claims is reached
+        // Hide promotions where global max claims is reached, EXCEPT
+        // for archived offers — those only reach this caller when
+        // they hold a still-valid claim, and "max claims reached"
+        // shouldn't take their existing voucher away. (The RPC
+        // already returns archived rows for claim-holders only.)
         final visible = all.where((p) {
+          if (p['is_archived'] == true) return true;
           final maxClaims = p['max_claims'] as int?;
           final currentClaims = p['current_claims'] as int? ?? 0;
           if (maxClaims != null && currentClaims >= maxClaims) return false;
