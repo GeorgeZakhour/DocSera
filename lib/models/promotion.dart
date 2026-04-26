@@ -35,6 +35,7 @@ class Promotion {
   final String? discountType;
   final int? pointsCost;
   final DateTime? endDate;
+  final bool isFeatured;
 
   const Promotion({
     required this.id,
@@ -53,6 +54,7 @@ class Promotion {
     this.discountType,
     this.pointsCost,
     this.endDate,
+    this.isFeatured = false,
   });
 
   /// 'doctor' | 'center_wide' | 'center_selected'.
@@ -85,6 +87,7 @@ class Promotion {
       endDate: json['end_date'] != null
           ? DateTime.tryParse(json['end_date'] as String)
           : null,
+      isFeatured: json['is_featured'] as bool? ?? false,
     );
   }
 }
