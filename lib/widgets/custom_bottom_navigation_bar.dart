@@ -2,6 +2,7 @@ import 'package:docsera/Business_Logic/Account_page/profile/account_profile_cubi
 import 'package:docsera/Business_Logic/Account_page/profile/account_profile_state.dart';
 import 'package:docsera/Business_Logic/Authentication/auth_cubit.dart';
 import 'package:docsera/Business_Logic/Authentication/auth_state.dart';
+import 'package:docsera/Business_Logic/Loyalty/unread_gifts/unread_gifts_cubit.dart';
 import 'package:docsera/Business_Logic/Messages_page/messages_cubit.dart';
 import 'package:docsera/Business_Logic/Messages_page/messages_state.dart';
 import 'package:docsera/app/text_styles.dart';
@@ -514,19 +515,7 @@ class _CustomBottomNavigationBarState extends State<CustomBottomNavigationBar>
                   22.h),
               _buildHealthNavItem(context),
               _buildMessagesNavItem(context),
-              _buildNavItem(
-                isLoggedIn
-                    ? 'assets/icons/account.svg'
-                    : 'assets/icons/login.svg',
-                isLoggedIn
-                    ? 'assets/icons/account-on.svg'
-                    : 'assets/icons/login-on.svg',
-                isLoggedIn
-                    ? AppLocalizations.of(context)!.account
-                    : AppLocalizations.of(context)!.logIn,
-                4,
-                isLoggedIn ? 22.h : 17.h,
-              ),
+              _buildAccountNavItem(context, isLoggedIn),
             ],
           ),
         ),
@@ -636,6 +625,67 @@ class _CustomBottomNavigationBarState extends State<CustomBottomNavigationBar>
         ),
       ),
       label: AppLocalizations.of(context)!.messages,
+    );
+  }
+
+  BottomNavigationBarItem _buildAccountNavItem(BuildContext context, bool isLoggedIn) {
+    final unreadCount = context.watch<UnreadGiftsCubit>().state;
+    final isSelected = _currentIndex == 4;
+    final double iconHeight = isLoggedIn ? 22.h : 17.h;
+    final String iconPath = isLoggedIn
+        ? (isSelected ? 'assets/icons/account-on.svg' : 'assets/icons/account.svg')
+        : (isSelected ? 'assets/icons/login-on.svg' : 'assets/icons/login.svg');
+
+    return BottomNavigationBarItem(
+      icon: SizedBox(
+        height: 22.h,
+        width: 22.h,
+        child: Stack(
+          clipBehavior: Clip.none,
+          alignment: Alignment.center,
+          children: [
+            SvgPicture.asset(
+              iconPath,
+              color: isSelected ? AppColors.main : Colors.black,
+              height: iconHeight,
+            ),
+            if (unreadCount > 0)
+              Positioned(
+                top: -4,
+                right: -8,
+                child: AnimatedOpacity(
+                  opacity: unreadCount > 0 ? 1.0 : 0.0,
+                  duration: const Duration(milliseconds: 250),
+                  curve: Curves.easeInOut,
+                  child: Container(
+                    padding: const EdgeInsets.all(1.5),
+                    decoration: const BoxDecoration(
+                      color: Colors.red,
+                      shape: BoxShape.circle,
+                    ),
+                    constraints: BoxConstraints(
+                      minWidth: 12.w,
+                      minHeight: 12.w,
+                    ),
+                    child: Center(
+                      child: Text(
+                        unreadCount.toString(),
+                        style: TextStyle(
+                          color: Colors.white,
+                          fontSize: 8.sp,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+          ],
+        ),
+      ),
+      label: isLoggedIn
+          ? AppLocalizations.of(context)!.account
+          : AppLocalizations.of(context)!.logIn,
     );
   }
 

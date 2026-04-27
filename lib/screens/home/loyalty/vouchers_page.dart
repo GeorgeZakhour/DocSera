@@ -10,6 +10,7 @@ import 'package:docsera/app/text_styles.dart';
 import 'package:docsera/gen_l10n/app_localizations.dart';
 import 'package:docsera/Business_Logic/Loyalty/vouchers/vouchers_cubit.dart';
 import 'package:docsera/Business_Logic/Loyalty/vouchers/vouchers_state.dart';
+import 'package:docsera/Business_Logic/Loyalty/unread_gifts/unread_gifts_cubit.dart';
 import 'package:docsera/models/gift.dart';
 import 'package:docsera/utils/page_transitions.dart';
 import 'voucher_detail_page.dart';
@@ -195,6 +196,9 @@ class _VouchersPageState extends State<VouchersPage>
   }
 
   void _showGiftDetail(BuildContext context, Gift gift) {
+    // Mark this gift as viewed — decrements the bottom-nav badge.
+    context.read<UnreadGiftsCubit>().markViewed([gift.claimId]);
+
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,

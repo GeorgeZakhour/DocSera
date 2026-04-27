@@ -24,6 +24,8 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:docsera/gen_l10n/app_localizations.dart';
 import 'package:docsera/app/text_styles.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:docsera/Business_Logic/Loyalty/unread_gifts/unread_gifts_cubit.dart';
 
 // ✅ استيراد صفحة نتائج الخرائط
 import 'package:docsera/screens/map_results_page.dart';
@@ -345,6 +347,12 @@ class _DoctorProfilePageState extends State<DoctorProfilePage> {
         setState(() {
           _personalGifts = mine;
         });
+        // Mark all gifts from this doctor as viewed — decrements the bottom-nav badge.
+        if (mine.isNotEmpty) {
+          context.read<UnreadGiftsCubit>().markViewed(
+                mine.map((g) => g.claimId).toList(),
+              );
+        }
       }
     } catch (_) {
       // Non-critical — silently ignore gift load failures

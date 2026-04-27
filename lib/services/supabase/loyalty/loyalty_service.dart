@@ -245,7 +245,7 @@ class LoyaltyService {
 
       final response = await _client
           .from('doctor_promotion_claims')
-          .select('*, doctor_promotions!inner(offer_type, custom_title, custom_title_ar, description, description_ar, discount_value, doctors!inner(name_en, name_ar))')
+          .select('*, doctor_promotions!inner(offer_type, custom_title, custom_title_ar, description, description_ar, discount_value, discount_type, doctors!inner(name_en, name_ar))')
           .eq('patient_id', userId)
           .order('claimed_at', ascending: false);
 
@@ -276,7 +276,8 @@ class LoyaltyService {
           offerDescription: promo['description'] as String?,
           offerDescriptionAr: promo['description_ar'] as String?,
           offerCategory: 'doctor_promotion',
-          discountType: offerType.contains('percentage') ? 'percentage' : 'fixed',
+          discountType: (promo['discount_type'] as String?) ??
+              (offerType.contains('percentage') ? 'percentage' : 'fixed'),
           discountValue: (promo['discount_value'] as num?)?.toDouble(),
           partnerName: doctor['name_en'] as String?,
           partnerNameAr: doctor['name_ar'] as String?,
@@ -285,6 +286,31 @@ class LoyaltyService {
     } catch (e) {
       debugPrint('Error fetching doctor promotion claims: $e');
       return [];
+    }
+  }
+
+  /// Returns the count of gift sends the patient hasn't viewed yet.
+  /// Drives the unread-gift badge on the bottom nav.
+  Future<int> countMyUnreadGifts() async {
+    try {
+      final response = await _client.rpc('count_my_unread_gifts');
+      return (response as num?)?.toInt() ?? 0;
+    } catch (e) {
+      debugPrint('Error counting unread gifts: $e');
+      return 0;
+    }
+  }
+
+  /// Bulk-marks the supplied claim ids as viewed for the calling patient.
+  /// Idempotent — already-viewed rows are unchanged.
+  Future<void> markGiftsViewed(List<String> claimIds) async {
+    if (claimIds.isEmpty) return;
+    try {
+      await _client.rpc('mark_gifts_viewed', params: {
+        'p_claim_ids': claimIds,
+      });
+    } catch (e) {
+      debugPrint('Error marking gifts viewed: $e');
     }
   }
 

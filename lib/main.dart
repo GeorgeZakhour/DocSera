@@ -17,6 +17,7 @@ import 'package:docsera/Business_Logic/Storage/storage_quota_cubit.dart';
 import 'package:docsera/Business_Logic/Loyalty/offers/offers_cubit.dart';
 import 'package:docsera/Business_Logic/Loyalty/vouchers/vouchers_cubit.dart';
 import 'package:docsera/Business_Logic/Loyalty/referral/referral_cubit.dart';
+import 'package:docsera/Business_Logic/Loyalty/unread_gifts/unread_gifts_cubit.dart';
 import 'package:docsera/Business_Logic/Main_page/main_screen_cubit.dart';
 import 'package:docsera/Business_Logic/Messages_page/messages_cubit.dart';
 import 'package:docsera/screens/doctors/doctor_profile_page.dart';
@@ -159,6 +160,7 @@ void main() async {
           BlocProvider(create: (_) => OffersCubit(LoyaltyService())),
           BlocProvider(create: (_) => VouchersCubit(LoyaltyService())),
           BlocProvider(create: (_) => ReferralCubit(LoyaltyService())),
+          BlocProvider(create: (_) => UnreadGiftsCubit(LoyaltyService())..refresh()),
 
         ],
         child: BlocListener<AuthCubit, custom_auth.AppAuthState>(
@@ -375,8 +377,13 @@ class _MyAppState extends State<MyApp> {
                 highlightColor: AppColors.main.withOpacity(0.05),
                 splashFactory: InkRipple.splashFactory,
 
-                /// ✅ Use responsive font family based on the selected language
+                /// ✅ Use responsive font family based on the selected language,
+                /// with the other script's font as fallback so Arabic strings in
+                /// English mode (and vice versa) still render in the correct face.
                 fontFamily: _locale.languageCode == 'ar' ? 'Cairo' : 'Montserrat',
+                fontFamilyFallback: _locale.languageCode == 'ar'
+                    ? const ['Montserrat']
+                    : const ['Cairo'],
 
                 popupMenuTheme: PopupMenuThemeData(
                   color: Colors.white.withOpacity(0.95),
@@ -386,6 +393,9 @@ class _MyAppState extends State<MyApp> {
                   textStyle: TextStyle(
                     fontSize: 12.sp,
                     fontFamily: _locale.languageCode == 'ar' ? 'Cairo' : 'Montserrat',
+                    fontFamilyFallback: _locale.languageCode == 'ar'
+                        ? const ['Montserrat']
+                        : const ['Cairo'],
                     color: Colors.black87,
                   ),
                   elevation: 4,
