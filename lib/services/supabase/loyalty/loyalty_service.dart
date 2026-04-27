@@ -1,5 +1,6 @@
 import 'package:flutter/foundation.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
+import 'package:docsera/models/gift.dart';
 import 'package:docsera/models/offer_model.dart';
 import 'package:docsera/models/voucher_model.dart';
 import 'package:docsera/models/referral_model.dart';
@@ -283,6 +284,24 @@ class LoyaltyService {
       }).toList();
     } catch (e) {
       debugPrint('Error fetching doctor promotion claims: $e');
+      return [];
+    }
+  }
+
+  /// Fetches all personal-targeted gifts the current patient has received,
+  /// joined to the gift-send audit row for the doctor's message and insight type.
+  /// Calls the [get_my_gifts] RPC on the server.
+  Future<List<Gift>> getMyGifts() async {
+    try {
+      final response = await _client.rpc('get_my_gifts');
+      if (response is List) {
+        return response
+            .map((e) => Gift.fromJson(e as Map<String, dynamic>))
+            .toList();
+      }
+      return [];
+    } catch (e) {
+      debugPrint('Error fetching gifts: $e');
       return [];
     }
   }

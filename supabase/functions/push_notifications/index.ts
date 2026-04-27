@@ -383,8 +383,8 @@ serve(async (req) => {
 
       targetUserIds = [record.patient_id];
       targetApp = "docsera";
-      title = `🎁 ${doctorName} sent you something`;
-      body = "A small gift from your doctor — tap to view";
+      title = `🎁 هدية من ${doctorName}`;
+      body = "اضغط لعرض هديتك من طبيبك";
       payloadData = `voucher:${record.claim_id}`;
     }
 
