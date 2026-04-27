@@ -4557,4 +4557,35 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get personalGiftExpired => 'Expired';
+
+  @override
+  String get voucherPageGiftsSection => 'Gifts from your doctors';
+
+  @override
+  String get voucherPageGiftStatusClaimed => 'Active';
+
+  @override
+  String get voucherPageGiftStatusUsed => 'Redeemed';
+
+  @override
+  String get voucherPageGiftStatusExpired => 'Expired';
+
+  @override
+  String voucherPageGiftSentBy(String name) {
+    return 'Sent by Dr. $name';
+  }
+
+  @override
+  String voucherPageGiftSentOn(String date) {
+    return 'Received on $date';
+  }
+
+  @override
+  String get voucherPageGiftDetailTitle => 'Your gift';
+
+  @override
+  String get voucherPageGiftClose => 'Close';
+
+  @override
+  String get voucherPageGiftDoctorMessageHeading => 'Your doctor\'s message';
 }

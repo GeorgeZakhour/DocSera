@@ -1705,5 +1705,33 @@
   "personalGiftRedeemed": "تم الاستخدام",
   "@personalGiftRedeemed": {},
   "personalGiftExpired": "انتهت الصلاحية",
-  "@personalGiftExpired": {}
+  "@personalGiftExpired": {},
+
+  "@voucherPageGifts================================": "🎁 Voucher Page — Doctor Gifts Section",
+  "voucherPageGiftsSection": "هدايا من الأطباء",
+  "@voucherPageGiftsSection": {},
+  "voucherPageGiftStatusClaimed": "نشطة",
+  "@voucherPageGiftStatusClaimed": {},
+  "voucherPageGiftStatusUsed": "تم الاستخدام",
+  "@voucherPageGiftStatusUsed": {},
+  "voucherPageGiftStatusExpired": "منتهية",
+  "@voucherPageGiftStatusExpired": {},
+  "voucherPageGiftSentBy": "أرسلها د. {name}",
+  "@voucherPageGiftSentBy": {
+    "placeholders": {
+      "name": { "type": "String" }
+    }
+  },
+  "voucherPageGiftSentOn": "تم الاستلام في {date}",
+  "@voucherPageGiftSentOn": {
+    "placeholders": {
+      "date": { "type": "String" }
+    }
+  },
+  "voucherPageGiftDetailTitle": "هديتك",
+  "@voucherPageGiftDetailTitle": {},
+  "voucherPageGiftClose": "إغلاق",
+  "@voucherPageGiftClose": {},
+  "voucherPageGiftDoctorMessageHeading": "رسالة طبيبك",
+  "@voucherPageGiftDoctorMessageHeading": {}
 }

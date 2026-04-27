@@ -8461,6 +8461,60 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Expired'**
   String get personalGiftExpired;
+
+  /// No description provided for @voucherPageGiftsSection.
+  ///
+  /// In en, this message translates to:
+  /// **'Gifts from your doctors'**
+  String get voucherPageGiftsSection;
+
+  /// No description provided for @voucherPageGiftStatusClaimed.
+  ///
+  /// In en, this message translates to:
+  /// **'Active'**
+  String get voucherPageGiftStatusClaimed;
+
+  /// No description provided for @voucherPageGiftStatusUsed.
+  ///
+  /// In en, this message translates to:
+  /// **'Redeemed'**
+  String get voucherPageGiftStatusUsed;
+
+  /// No description provided for @voucherPageGiftStatusExpired.
+  ///
+  /// In en, this message translates to:
+  /// **'Expired'**
+  String get voucherPageGiftStatusExpired;
+
+  /// No description provided for @voucherPageGiftSentBy.
+  ///
+  /// In en, this message translates to:
+  /// **'Sent by Dr. {name}'**
+  String voucherPageGiftSentBy(String name);
+
+  /// No description provided for @voucherPageGiftSentOn.
+  ///
+  /// In en, this message translates to:
+  /// **'Received on {date}'**
+  String voucherPageGiftSentOn(String date);
+
+  /// No description provided for @voucherPageGiftDetailTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Your gift'**
+  String get voucherPageGiftDetailTitle;
+
+  /// No description provided for @voucherPageGiftClose.
+  ///
+  /// In en, this message translates to:
+  /// **'Close'**
+  String get voucherPageGiftClose;
+
+  /// No description provided for @voucherPageGiftDoctorMessageHeading.
+  ///
+  /// In en, this message translates to:
+  /// **'Your doctor\'s message'**
+  String get voucherPageGiftDoctorMessageHeading;
 }
 
 class _AppLocalizationsDelegate

@@ -1704,5 +1704,33 @@
   "personalGiftRedeemed": "Redeemed",
   "@personalGiftRedeemed": {},
   "personalGiftExpired": "Expired",
-  "@personalGiftExpired": {}
+  "@personalGiftExpired": {},
+
+  "@voucherPageGifts================================": "🎁 Voucher Page — Doctor Gifts Section",
+  "voucherPageGiftsSection": "Gifts from your doctors",
+  "@voucherPageGiftsSection": {},
+  "voucherPageGiftStatusClaimed": "Active",
+  "@voucherPageGiftStatusClaimed": {},
+  "voucherPageGiftStatusUsed": "Redeemed",
+  "@voucherPageGiftStatusUsed": {},
+  "voucherPageGiftStatusExpired": "Expired",
+  "@voucherPageGiftStatusExpired": {},
+  "voucherPageGiftSentBy": "Sent by Dr. {name}",
+  "@voucherPageGiftSentBy": {
+    "placeholders": {
+      "name": { "type": "String" }
+    }
+  },
+  "voucherPageGiftSentOn": "Received on {date}",
+  "@voucherPageGiftSentOn": {
+    "placeholders": {
+      "date": { "type": "String" }
+    }
+  },
+  "voucherPageGiftDetailTitle": "Your gift",
+  "@voucherPageGiftDetailTitle": {},
+  "voucherPageGiftClose": "Close",
+  "@voucherPageGiftClose": {},
+  "voucherPageGiftDoctorMessageHeading": "Your doctor's message",
+  "@voucherPageGiftDoctorMessageHeading": {}
 }

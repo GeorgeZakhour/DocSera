@@ -4502,4 +4502,35 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get personalGiftExpired => 'انتهت الصلاحية';
+
+  @override
+  String get voucherPageGiftsSection => 'هدايا من الأطباء';
+
+  @override
+  String get voucherPageGiftStatusClaimed => 'نشطة';
+
+  @override
+  String get voucherPageGiftStatusUsed => 'تم الاستخدام';
+
+  @override
+  String get voucherPageGiftStatusExpired => 'منتهية';
+
+  @override
+  String voucherPageGiftSentBy(String name) {
+    return 'أرسلها د. $name';
+  }
+
+  @override
+  String voucherPageGiftSentOn(String date) {
+    return 'تم الاستلام في $date';
+  }
+
+  @override
+  String get voucherPageGiftDetailTitle => 'هديتك';
+
+  @override
+  String get voucherPageGiftClose => 'إغلاق';
+
+  @override
+  String get voucherPageGiftDoctorMessageHeading => 'رسالة طبيبك';
 }

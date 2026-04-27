@@ -1,4 +1,5 @@
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:docsera/models/gift.dart';
 import 'package:docsera/services/supabase/loyalty/loyalty_service.dart';
 import 'vouchers_state.dart';
 
@@ -11,7 +12,7 @@ class VouchersCubit extends Cubit<VouchersState> {
     emit(VouchersLoading());
 
     try {
-      // Fetch both partner vouchers and doctor promotion claims
+      // Fetch partner vouchers, doctor promotion claims, and personal gifts
       final results = await Future.wait([
         _service.getUserVouchers(),
         _service.getMyDoctorPromotionClaims(),
@@ -19,10 +20,19 @@ class VouchersCubit extends Cubit<VouchersState> {
 
       final allVouchers = [...results[0], ...results[1]];
 
+      // Gifts are fetched separately so a failure doesn't break voucher rendering
+      List<Gift> gifts = [];
+      try {
+        gifts = await _service.getMyGifts();
+      } catch (_) {
+        gifts = [];
+      }
+
       emit(VouchersLoaded(
         active: allVouchers.where((v) => v.isActive).toList(),
         used: allVouchers.where((v) => v.isUsed).toList(),
         expired: allVouchers.where((v) => v.isExpired).toList(),
+        gifts: gifts,
       ));
     } catch (e) {
       emit(VouchersError('Failed to load vouchers: $e'));
