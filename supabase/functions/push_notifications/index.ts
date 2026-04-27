@@ -364,6 +364,30 @@ serve(async (req) => {
       }
     }
 
+    // ===============================================================
+    // 🎁 CASE: Gift sent (INSERT on 'patient_gift_sends', channel='in_app')
+    // ===============================================================
+    else if (table === "patient_gift_sends") {
+      if (type !== 'INSERT' || record.channel !== 'in_app' || !record.patient_id) {
+        return new Response("Skipped non-in-app gift", { status: 200 });
+      }
+
+      const { data: doctorRow } = await supabase
+        .from("doctors")
+        .select("first_name, last_name")
+        .eq("id", record.doctor_id)
+        .single();
+      const doctorName = doctorRow
+        ? `${doctorRow.first_name ?? ''} ${doctorRow.last_name ?? ''}`.trim()
+        : 'Your doctor';
+
+      targetUserIds = [record.patient_id];
+      targetApp = "docsera";
+      title = `🎁 ${doctorName} sent you something`;
+      body = "A small gift from your doctor — tap to view";
+      payloadData = `voucher:${record.claim_id}`;
+    }
+
     // fallback
     else {
         return new Response(`Table ${table} not handled`, { status: 200 });
