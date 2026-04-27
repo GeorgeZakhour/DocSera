@@ -4526,4 +4526,35 @@ class AppLocalizationsEn extends AppLocalizations {
   String xLeft(int count) {
     return '$count left';
   }
+
+  @override
+  String personalGiftHeader(String doctorName) {
+    return 'Personal gift from $doctorName';
+  }
+
+  @override
+  String get personalGiftMessage => 'Your doctor\'s message';
+
+  @override
+  String get personalGiftVoucherCode => 'Voucher code';
+
+  @override
+  String personalGiftValidUntil(String date) {
+    return 'Valid until $date';
+  }
+
+  @override
+  String get personalGiftNoExpiry => 'No fixed expiry';
+
+  @override
+  String get personalGiftCopied => 'Code copied';
+
+  @override
+  String get personalGiftTapToCopy => 'Tap to copy';
+
+  @override
+  String get personalGiftRedeemed => 'Redeemed';
+
+  @override
+  String get personalGiftExpired => 'Expired';
 }

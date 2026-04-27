@@ -1686,5 +1686,24 @@
   "partnerBadge": "شريك صحي",
   "noActiveOffersFromPartner": "لا توجد عروض نشطة حاليًا.",
   "partnerUnavailable": "الشريك غير متاح",
-  "xLeft": "متبقّي {count}"
+  "xLeft": "متبقّي {count}",
+
+  "personalGiftHeader": "هدية شخصية من {doctorName}",
+  "@personalGiftHeader": { "placeholders": { "doctorName": { "type": "String" } } },
+  "personalGiftMessage": "رسالة طبيبك",
+  "@personalGiftMessage": {},
+  "personalGiftVoucherCode": "رمز القسيمة",
+  "@personalGiftVoucherCode": {},
+  "personalGiftValidUntil": "صالحة حتى {date}",
+  "@personalGiftValidUntil": { "placeholders": { "date": { "type": "String" } } },
+  "personalGiftNoExpiry": "بدون تاريخ انتهاء محدد",
+  "@personalGiftNoExpiry": {},
+  "personalGiftCopied": "تم النسخ",
+  "@personalGiftCopied": {},
+  "personalGiftTapToCopy": "اضغط للنسخ",
+  "@personalGiftTapToCopy": {},
+  "personalGiftRedeemed": "تم الاستخدام",
+  "@personalGiftRedeemed": {},
+  "personalGiftExpired": "انتهت الصلاحية",
+  "@personalGiftExpired": {}
 }

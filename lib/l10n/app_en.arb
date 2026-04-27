@@ -1684,5 +1684,25 @@
   "xLeft": "{count} left",
   "@xLeft": {
     "placeholders": { "count": { "type": "int" } }
-  }
+  },
+
+  "@personalGifts================================": "🎁 Personal Gifts",
+  "personalGiftHeader": "Personal gift from {doctorName}",
+  "@personalGiftHeader": { "placeholders": { "doctorName": { "type": "String" } } },
+  "personalGiftMessage": "Your doctor's message",
+  "@personalGiftMessage": {},
+  "personalGiftVoucherCode": "Voucher code",
+  "@personalGiftVoucherCode": {},
+  "personalGiftValidUntil": "Valid until {date}",
+  "@personalGiftValidUntil": { "placeholders": { "date": { "type": "String" } } },
+  "personalGiftNoExpiry": "No fixed expiry",
+  "@personalGiftNoExpiry": {},
+  "personalGiftCopied": "Code copied",
+  "@personalGiftCopied": {},
+  "personalGiftTapToCopy": "Tap to copy",
+  "@personalGiftTapToCopy": {},
+  "personalGiftRedeemed": "Redeemed",
+  "@personalGiftRedeemed": {},
+  "personalGiftExpired": "Expired",
+  "@personalGiftExpired": {}
 }

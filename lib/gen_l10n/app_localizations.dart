@@ -8407,6 +8407,60 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'{count} left'**
   String xLeft(int count);
+
+  /// No description provided for @personalGiftHeader.
+  ///
+  /// In en, this message translates to:
+  /// **'Personal gift from {doctorName}'**
+  String personalGiftHeader(String doctorName);
+
+  /// No description provided for @personalGiftMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'Your doctor\'s message'**
+  String get personalGiftMessage;
+
+  /// No description provided for @personalGiftVoucherCode.
+  ///
+  /// In en, this message translates to:
+  /// **'Voucher code'**
+  String get personalGiftVoucherCode;
+
+  /// No description provided for @personalGiftValidUntil.
+  ///
+  /// In en, this message translates to:
+  /// **'Valid until {date}'**
+  String personalGiftValidUntil(String date);
+
+  /// No description provided for @personalGiftNoExpiry.
+  ///
+  /// In en, this message translates to:
+  /// **'No fixed expiry'**
+  String get personalGiftNoExpiry;
+
+  /// No description provided for @personalGiftCopied.
+  ///
+  /// In en, this message translates to:
+  /// **'Code copied'**
+  String get personalGiftCopied;
+
+  /// No description provided for @personalGiftTapToCopy.
+  ///
+  /// In en, this message translates to:
+  /// **'Tap to copy'**
+  String get personalGiftTapToCopy;
+
+  /// No description provided for @personalGiftRedeemed.
+  ///
+  /// In en, this message translates to:
+  /// **'Redeemed'**
+  String get personalGiftRedeemed;
+
+  /// No description provided for @personalGiftExpired.
+  ///
+  /// In en, this message translates to:
+  /// **'Expired'**
+  String get personalGiftExpired;
 }
 
 class _AppLocalizationsDelegate

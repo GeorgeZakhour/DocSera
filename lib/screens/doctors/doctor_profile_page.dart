@@ -3,8 +3,11 @@ import 'dart:convert';
 import 'dart:math' as math;
 import 'dart:ui';
 import 'package:cached_network_image/cached_network_image.dart';
+import 'package:docsera/models/gift.dart';
 import 'package:docsera/models/sign_up_info.dart';
+import 'package:intl/intl.dart' show DateFormat;
 import 'package:docsera/screens/auth/login/login_page.dart';
+import 'package:docsera/services/supabase/loyalty/loyalty_service.dart';
 import 'package:docsera/screens/auth/sign_up/sign_up_phone.dart';
 import 'package:docsera/screens/centers/center_profile_page.dart';
 import 'package:docsera/screens/doctors/appointment/select_patient_page.dart';
@@ -157,6 +160,9 @@ class _DoctorProfilePageState extends State<DoctorProfilePage> {
   // promotion_id -> { has_active_voucher, used_count, is_eligible }
   Map<String, Map<String, dynamic>> _promotionsSummary = {};
 
+  // Personal gifts sent by this doctor to the logged-in patient
+  List<Gift> _personalGifts = const [];
+
   void _showImageOverlayWithIndex(List<String> urls, int index) {
     if (_isOpeningImageOverlay) return;
     _isOpeningImageOverlay = true;
@@ -219,6 +225,7 @@ class _DoctorProfilePageState extends State<DoctorProfilePage> {
     _loadDoctorProfile();
     _loadCenterMemberships();
     _loadPromotions();
+    _loadGifts();
 
     WidgetsBinding.instance.addPostFrameCallback((_) {
       setState(() {
@@ -324,6 +331,24 @@ class _DoctorProfilePageState extends State<DoctorProfilePage> {
         } catch (_) {}
       }
     } catch (_) {}
+  }
+
+  Future<void> _loadGifts() async {
+    final doctorId = widget.doctorId.trim();
+    if (doctorId.isEmpty) return;
+    // Only load gifts for authenticated patients
+    if (Supabase.instance.client.auth.currentUser == null) return;
+    try {
+      final all = await LoyaltyService().getMyGifts();
+      final mine = all.where((g) => g.doctorId == doctorId).toList();
+      if (mounted) {
+        setState(() {
+          _personalGifts = mine;
+        });
+      }
+    } catch (_) {
+      // Non-critical — silently ignore gift load failures
+    }
   }
 
   void _onScroll() {
@@ -3429,6 +3454,18 @@ $deepLink
                       children: [
 
                         SizedBox(height: 25.h),
+
+                        // ── Personal gift cards (above all other content) ──
+                        if (_personalGifts.isNotEmpty) ...[
+                          ..._personalGifts.map(
+                            (gift) => Padding(
+                              padding: EdgeInsets.only(bottom: 12.h),
+                              child: _PersonalGiftCard(gift: gift),
+                            ),
+                          ),
+                          SizedBox(height: 4.h),
+                        ],
+
                         // Promotions surfaced FIRST so the "reason to
                         // book" signal lands above other content.
                         // Includes both the doctor's own promos and any
@@ -5054,6 +5091,419 @@ class _OfferStateBadge extends StatelessWidget {
             ),
           ),
         ],
+      ),
+    );
+  }
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Personal gift card — shown at the top of a doctor's profile when the
+// logged-in patient has received a personal gift from that doctor.
+// ─────────────────────────────────────────────────────────────────────────────
+
+class _PersonalGiftCard extends StatelessWidget {
+  final Gift gift;
+
+  const _PersonalGiftCard({required this.gift});
+
+  // ── helpers ──────────────────────────────────────────────────────────────
+
+  bool get _isUsed => gift.status == 'used';
+  bool get _isExpired {
+    if (gift.status == 'expired') return true;
+    if (gift.expiresAt != null && gift.expiresAt!.isBefore(DateTime.now())) {
+      return true;
+    }
+    return false;
+  }
+
+  bool get _isActive => !_isUsed && !_isExpired;
+
+  String _formatDate(DateTime dt, String locale) {
+    return DateFormat('dd/MM/yyyy', locale).format(dt.toLocal());
+  }
+
+  String _discountBadge() {
+    final val = gift.discountValue;
+    final type = gift.discountType;
+    if (val == null) return '';
+    if (type == 'percentage') {
+      return '${val.toStringAsFixed(0)}% OFF';
+    }
+    return '${val.toStringAsFixed(0)} OFF';
+  }
+
+  String _offerTitle(bool isAr) {
+    if (isAr && gift.customTitleAr != null && gift.customTitleAr!.isNotEmpty) {
+      return gift.customTitleAr!;
+    }
+    if (!isAr && gift.customTitle != null && gift.customTitle!.isNotEmpty) {
+      return gift.customTitle!;
+    }
+    return gift.offerType;
+  }
+
+  // ── build ─────────────────────────────────────────────────────────────────
+
+  @override
+  Widget build(BuildContext context) {
+    final l = AppLocalizations.of(context)!;
+    final locale = Localizations.localeOf(context).languageCode;
+    final isAr = locale == 'ar';
+
+    final muted = _isUsed || _isExpired;
+
+    final cardOpacity = muted ? 0.60 : 1.0;
+    final headerColors = muted
+        ? [const Color(0xFF9E9E9E), const Color(0xFFBDBDBD)]
+        : [AppColors.main, const Color(0xFF00BCD4)];
+    final surfaceColor = muted ? const Color(0xFFEEEEEE) : AppColors.background3;
+
+    final discountBadge = _discountBadge();
+    final offerTitle = _offerTitle(isAr);
+    final expiryText = gift.expiresAt != null
+        ? l.personalGiftValidUntil(_formatDate(gift.expiresAt!, locale))
+        : l.personalGiftNoExpiry;
+
+    return Opacity(
+      opacity: cardOpacity,
+      child: Container(
+        decoration: BoxDecoration(
+          color: surfaceColor,
+          borderRadius: BorderRadius.circular(18.r),
+          border: Border.all(
+            color: muted
+                ? Colors.grey.withValues(alpha: 0.25)
+                : AppColors.main.withValues(alpha: 0.20),
+            width: 1.2,
+          ),
+          boxShadow: muted
+              ? []
+              : [
+                  BoxShadow(
+                    color: AppColors.main.withValues(alpha: 0.12),
+                    blurRadius: 18,
+                    offset: const Offset(0, 6),
+                  ),
+                ],
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            // ── Header band ────────────────────────────────────────────────
+            Container(
+              padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 12.h),
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  begin: Alignment.centerLeft,
+                  end: Alignment.centerRight,
+                  colors: headerColors,
+                ),
+                borderRadius: BorderRadius.vertical(top: Radius.circular(18.r)),
+              ),
+              child: Row(
+                children: [
+                  Text('🎁', style: TextStyle(fontSize: 20.sp)),
+                  SizedBox(width: 8.w),
+                  Expanded(
+                    child: Text(
+                      l.personalGiftHeader(gift.doctorName),
+                      style: TextStyle(
+                        color: Colors.white,
+                        fontSize: 14.sp,
+                        fontWeight: FontWeight.w700,
+                      ),
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                  ),
+                  // Status stamp
+                  if (_isUsed)
+                    _GiftStatusStamp(label: l.personalGiftRedeemed, color: const Color(0xFF757575))
+                  else if (_isExpired)
+                    _GiftStatusStamp(label: l.personalGiftExpired, color: const Color(0xFFBF360C)),
+                ],
+              ),
+            ),
+
+            // ── Body ───────────────────────────────────────────────────────
+            Padding(
+              padding: EdgeInsets.all(16.w),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  // Offer title + discount badge row
+                  Row(
+                    crossAxisAlignment: CrossAxisAlignment.center,
+                    children: [
+                      Expanded(
+                        child: Text(
+                          offerTitle,
+                          style: TextStyle(
+                            fontSize: 15.sp,
+                            fontWeight: FontWeight.w700,
+                            color: muted ? Colors.grey[600] : AppColors.mainDark,
+                          ),
+                        ),
+                      ),
+                      if (discountBadge.isNotEmpty) ...[
+                        SizedBox(width: 8.w),
+                        Container(
+                          padding: EdgeInsets.symmetric(horizontal: 10.w, vertical: 4.h),
+                          decoration: BoxDecoration(
+                            color: muted
+                                ? Colors.grey.withValues(alpha: 0.15)
+                                : AppColors.main.withValues(alpha: 0.12),
+                            borderRadius: BorderRadius.circular(20.r),
+                            border: Border.all(
+                              color: muted
+                                  ? Colors.grey.withValues(alpha: 0.30)
+                                  : AppColors.main.withValues(alpha: 0.35),
+                            ),
+                          ),
+                          child: Text(
+                            discountBadge,
+                            style: TextStyle(
+                              fontSize: 11.sp,
+                              fontWeight: FontWeight.w800,
+                              color: muted ? Colors.grey[600] : AppColors.main,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ],
+                  ),
+
+                  // Doctor's personal message
+                  if (gift.message != null && gift.message!.isNotEmpty) ...[
+                    SizedBox(height: 12.h),
+                    Text(
+                      l.personalGiftMessage,
+                      style: TextStyle(
+                        fontSize: 11.sp,
+                        fontWeight: FontWeight.w600,
+                        color: Colors.grey[500],
+                        letterSpacing: 0.4,
+                      ),
+                    ),
+                    SizedBox(height: 6.h),
+                    IntrinsicHeight(
+                      child: Row(
+                        crossAxisAlignment: CrossAxisAlignment.stretch,
+                        children: [
+                          Container(
+                            width: 3.w,
+                            decoration: BoxDecoration(
+                              color: AppColors.main,
+                              borderRadius: BorderRadius.circular(4.r),
+                            ),
+                          ),
+                          SizedBox(width: 10.w),
+                          Expanded(
+                            child: Text(
+                              gift.message!,
+                              style: TextStyle(
+                                fontSize: 13.sp,
+                                fontStyle: FontStyle.italic,
+                                color: muted ? Colors.grey[500] : AppColors.mainDark.withValues(alpha: 0.85),
+                                height: 1.5,
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+
+                  // Voucher code + tap to copy
+                  if (_isActive) ...[
+                    SizedBox(height: 14.h),
+                    Text(
+                      l.personalGiftVoucherCode,
+                      style: TextStyle(
+                        fontSize: 11.sp,
+                        fontWeight: FontWeight.w600,
+                        color: Colors.grey[500],
+                        letterSpacing: 0.4,
+                      ),
+                    ),
+                    SizedBox(height: 6.h),
+                    _GiftCodeRow(
+                      code: gift.voucherCode,
+                      tapToCopyLabel: l.personalGiftTapToCopy,
+                      copiedLabel: l.personalGiftCopied,
+                    ),
+                  ],
+
+                  // QR code (active gifts only)
+                  if (_isActive) ...[
+                    SizedBox(height: 16.h),
+                    Center(
+                      child: Container(
+                        padding: EdgeInsets.all(12.w),
+                        decoration: BoxDecoration(
+                          color: Colors.white,
+                          borderRadius: BorderRadius.circular(14.r),
+                          border: Border.all(
+                            color: AppColors.main.withValues(alpha: 0.15),
+                            width: 1.2,
+                          ),
+                          boxShadow: [
+                            BoxShadow(
+                              color: AppColors.main.withValues(alpha: 0.08),
+                              blurRadius: 12,
+                              offset: const Offset(0, 4),
+                            ),
+                          ],
+                        ),
+                        child: QrImageView(
+                          data: gift.voucherCode,
+                          version: QrVersions.auto,
+                          size: 150.w,
+                          gapless: true,
+                          eyeStyle: const QrEyeStyle(
+                            eyeShape: QrEyeShape.square,
+                            color: AppColors.mainDark,
+                          ),
+                          dataModuleStyle: const QrDataModuleStyle(
+                            dataModuleShape: QrDataModuleShape.square,
+                            color: AppColors.mainDark,
+                          ),
+                        ),
+                      ),
+                    ),
+                  ],
+
+                  // Expiry / redemption date
+                  SizedBox(height: 12.h),
+                  Row(
+                    children: [
+                      Icon(
+                        _isUsed
+                            ? Icons.check_circle_outline_rounded
+                            : (_isExpired
+                                ? Icons.timer_off_outlined
+                                : Icons.calendar_today_outlined),
+                        size: 13.sp,
+                        color: Colors.grey[400],
+                      ),
+                      SizedBox(width: 5.w),
+                      Text(
+                        _isUsed && gift.usedAt != null
+                            ? '${l.personalGiftRedeemed}: ${_formatDate(gift.usedAt!, locale)}'
+                            : expiryText,
+                        style: TextStyle(
+                          fontSize: 11.sp,
+                          color: Colors.grey[500],
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+// ── Status stamp badge ────────────────────────────────────────────────────────
+
+class _GiftStatusStamp extends StatelessWidget {
+  final String label;
+  final Color color;
+
+  const _GiftStatusStamp({required this.label, required this.color});
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: EdgeInsets.symmetric(horizontal: 8.w, vertical: 4.h),
+      decoration: BoxDecoration(
+        color: Colors.white.withValues(alpha: 0.20),
+        borderRadius: BorderRadius.circular(8.r),
+        border: Border.all(color: Colors.white.withValues(alpha: 0.50)),
+      ),
+      child: Text(
+        label,
+        style: TextStyle(
+          fontSize: 10.sp,
+          fontWeight: FontWeight.w700,
+          color: Colors.white,
+        ),
+      ),
+    );
+  }
+}
+
+// ── Tappable voucher code row for gift cards ──────────────────────────────────
+
+class _GiftCodeRow extends StatelessWidget {
+  final String code;
+  final String tapToCopyLabel;
+  final String copiedLabel;
+
+  const _GiftCodeRow({
+    required this.code,
+    required this.tapToCopyLabel,
+    required this.copiedLabel,
+  });
+
+  void _copy(BuildContext context) {
+    HapticFeedback.selectionClick();
+    Clipboard.setData(ClipboardData(text: code));
+    _showCopiedOverlay(context, copiedLabel);
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTap: () => _copy(context),
+      child: Container(
+        padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 12.h),
+        decoration: BoxDecoration(
+          gradient: LinearGradient(
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+            colors: [
+              AppColors.main.withValues(alpha: 0.08),
+              AppColors.background4,
+            ],
+          ),
+          borderRadius: BorderRadius.circular(12.r),
+          border: Border.all(
+            color: AppColors.main.withValues(alpha: 0.25),
+            width: 1.0,
+          ),
+        ),
+        child: Row(
+          children: [
+            Expanded(
+              child: Text(
+                code,
+                style: TextStyle(
+                  fontSize: 15.sp,
+                  fontWeight: FontWeight.w800,
+                  letterSpacing: 2.0,
+                  color: AppColors.mainDark,
+                ),
+              ),
+            ),
+            SizedBox(width: 8.w),
+            Icon(Icons.copy_rounded, size: 16.sp, color: AppColors.main),
+            SizedBox(width: 4.w),
+            Text(
+              tapToCopyLabel,
+              style: TextStyle(
+                fontSize: 11.sp,
+                color: AppColors.main,
+                fontWeight: FontWeight.w500,
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }

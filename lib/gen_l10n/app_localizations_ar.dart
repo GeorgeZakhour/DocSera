@@ -4471,4 +4471,35 @@ class AppLocalizationsAr extends AppLocalizations {
   String xLeft(int count) {
     return 'متبقّي $count';
   }
+
+  @override
+  String personalGiftHeader(String doctorName) {
+    return 'هدية شخصية من $doctorName';
+  }
+
+  @override
+  String get personalGiftMessage => 'رسالة طبيبك';
+
+  @override
+  String get personalGiftVoucherCode => 'رمز القسيمة';
+
+  @override
+  String personalGiftValidUntil(String date) {
+    return 'صالحة حتى $date';
+  }
+
+  @override
+  String get personalGiftNoExpiry => 'بدون تاريخ انتهاء محدد';
+
+  @override
+  String get personalGiftCopied => 'تم النسخ';
+
+  @override
+  String get personalGiftTapToCopy => 'اضغط للنسخ';
+
+  @override
+  String get personalGiftRedeemed => 'تم الاستخدام';
+
+  @override
+  String get personalGiftExpired => 'انتهت الصلاحية';
 }
