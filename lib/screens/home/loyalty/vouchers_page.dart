@@ -87,36 +87,59 @@ class _VouchersPageState extends State<VouchersPage>
                       SliverToBoxAdapter(
                         child: Padding(
                           padding: EdgeInsets.fromLTRB(16.w, 14.h, 16.w, 6.h),
-                          child: Row(
-                            children: [
-                              Expanded(
-                                child: _VoucherStatChip(
-                                  icon: Icons.confirmation_number_rounded,
-                                  label: l.active,
-                                  count: state.active.length,
-                                  color: AppColors.main,
+                          child: Builder(builder: (context) {
+                            // Fold gifts into each count so the totals
+                            // reflect both partner/promo vouchers AND
+                            // doctor gifts in one unified view.
+                            final now = DateTime.now();
+                            final giftActiveCount = state.gifts
+                                .where((g) =>
+                                    g.status == 'claimed' &&
+                                    (g.expiresAt == null ||
+                                        g.expiresAt!.isAfter(now)))
+                                .length;
+                            final giftUsedCount = state.gifts
+                                .where((g) => g.status == 'used')
+                                .length;
+                            final giftExpiredCount = state.gifts
+                                .where((g) =>
+                                    g.status == 'expired' ||
+                                    (g.expiresAt != null &&
+                                        g.expiresAt!.isBefore(now) &&
+                                        g.status == 'claimed'))
+                                .length;
+
+                            return Row(
+                              children: [
+                                Expanded(
+                                  child: _VoucherStatChip(
+                                    icon: Icons.confirmation_number_rounded,
+                                    label: l.active,
+                                    count: state.active.length + giftActiveCount,
+                                    color: AppColors.main,
+                                  ),
                                 ),
-                              ),
-                              SizedBox(width: 8.w),
-                              Expanded(
-                                child: _VoucherStatChip(
-                                  icon: Icons.check_circle_rounded,
-                                  label: l.used,
-                                  count: state.used.length,
-                                  color: const Color(0xFF4CAF50),
+                                SizedBox(width: 8.w),
+                                Expanded(
+                                  child: _VoucherStatChip(
+                                    icon: Icons.check_circle_rounded,
+                                    label: l.used,
+                                    count: state.used.length + giftUsedCount,
+                                    color: const Color(0xFF4CAF50),
+                                  ),
                                 ),
-                              ),
-                              SizedBox(width: 8.w),
-                              Expanded(
-                                child: _VoucherStatChip(
-                                  icon: Icons.timer_off_rounded,
-                                  label: l.expired,
-                                  count: state.expired.length,
-                                  color: Colors.grey.shade500,
+                                SizedBox(width: 8.w),
+                                Expanded(
+                                  child: _VoucherStatChip(
+                                    icon: Icons.timer_off_rounded,
+                                    label: l.expired,
+                                    count: state.expired.length + giftExpiredCount,
+                                    color: Colors.grey.shade500,
+                                  ),
                                 ),
-                              ),
-                            ],
-                          ),
+                              ],
+                            );
+                          }),
                         ),
                       ),
                   ];
@@ -251,15 +274,33 @@ class _HeroHeader extends StatelessWidget {
         Positioned(
           bottom: 78.h,
           right: 24.w,
-          child: _TicketBubble(
-            width: 76.r,
-            height: 54.r,
-            rotation: -0.18,
-            iconSize: 26.sp,
-            fillOpacity: 0.12,
-            borderOpacity: 0.22,
-            iconOpacity: 0.90,
-            withShadow: true,
+          // Badge mirrors the bottom-nav badge — same UnreadGiftsCubit source.
+          // NOTE: v1 only counts unread gifts; partner vouchers don't track
+          // an "unread" timestamp yet. Broaden the count source in v2.
+          child: BlocBuilder<UnreadGiftsCubit, int>(
+            builder: (ctx, unreadCount) => Badge(
+              isLabelVisible: unreadCount > 0,
+              label: Text(
+                '$unreadCount',
+                style: const TextStyle(
+                  fontSize: 10,
+                  fontWeight: FontWeight.w800,
+                  color: Colors.white,
+                ),
+              ),
+              backgroundColor: Colors.red,
+              offset: const Offset(4, -4),
+              child: _TicketBubble(
+                width: 76.r,
+                height: 54.r,
+                rotation: -0.18,
+                iconSize: 26.sp,
+                fillOpacity: 0.12,
+                borderOpacity: 0.22,
+                iconOpacity: 0.90,
+                withShadow: true,
+              ),
+            ),
           ),
         ),
         Positioned(
@@ -810,16 +851,24 @@ class _GiftCard extends StatelessWidget {
           behavior: HitTestBehavior.opaque,
           child: Container(
             decoration: BoxDecoration(
-              color: Colors.white,
+              // Subtle pale rose gradient — one focal point (the discount
+              // badge) pops; the card itself stays calm and receipt-like.
+              gradient: const LinearGradient(
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+                colors: [Colors.white, Color(0xFFFFF1F5)],
+              ),
               borderRadius: BorderRadius.circular(18.r),
               border: Border.all(
-                color: color.withValues(alpha: isMuted ? 0.15 : 0.25),
+                color: const Color(0xFFEC4899).withValues(alpha: 0.18),
+                width: 0.8,
               ),
-              boxShadow: [
+              boxShadow: const [
+                // Neutral shadow — not pink-tinted so the card stays calm.
                 BoxShadow(
-                  color: color.withValues(alpha: isMuted ? 0.06 : 0.14),
-                  blurRadius: 14,
-                  offset: const Offset(0, 5),
+                  color: Color(0x0A000000), // black ~4%
+                  blurRadius: 12,
+                  offset: Offset(0, 4),
                 ),
               ],
             ),
@@ -1105,26 +1154,32 @@ class _GiftCodeChip extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    // Neutral chip — no pink gradient here; let the discount badge be loud.
     return Container(
       padding: EdgeInsets.symmetric(horizontal: 8.w, vertical: 3.h),
       decoration: BoxDecoration(
-        color: color.withValues(alpha: 0.08),
+        color: const Color(0xFFF3F4F6), // light grey, theme-neutral
         borderRadius: BorderRadius.circular(6.r),
-        border: Border.all(color: color.withValues(alpha: 0.20), width: 0.7),
+        border: Border.all(
+          color: Colors.grey.withValues(alpha: 0.25),
+          width: 0.7,
+        ),
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Icon(Icons.qr_code_2_rounded, size: 10.sp, color: color),
+          Icon(Icons.qr_code_2_rounded,
+              size: 10.sp, color: Colors.grey.shade600),
           SizedBox(width: 3.w),
           Flexible(
             child: Text(
               code,
               style: TextStyle(
                 fontSize: 9.5.sp,
-                color: color,
+                color: Colors.grey.shade700,
                 fontWeight: FontWeight.w800,
                 letterSpacing: 1.2,
+                fontFamily: 'monospace',
               ),
               maxLines: 1,
               overflow: TextOverflow.ellipsis,
@@ -1194,15 +1249,16 @@ class _GiftOrbsPainter extends CustomPainter {
       canvas.drawCircle(center, radius, paint);
     }
 
+    // Kept very faint so the discount badge remains the only pop.
     orb(
       Offset(size.width * 0.08, size.height * 0.5),
       size.width * 0.22,
-      color.withValues(alpha: muted ? 0.08 : 0.22),
+      color.withValues(alpha: muted ? 0.04 : 0.09),
     );
     orb(
       Offset(size.width * 0.88, size.height * 0.2),
       size.width * 0.20,
-      AppColors.background4.withValues(alpha: 0.6),
+      AppColors.background4.withValues(alpha: 0.25),
     );
   }
 
@@ -1302,23 +1358,19 @@ class _GiftDetailSheet extends StatelessWidget {
           borderRadius: BorderRadius.vertical(top: Radius.circular(28.r)),
           child: Stack(
             children: [
-              // Glass backdrop
+              // Sheet surface — solid white so content reads cleanly.
+              // The backdrop blur at low sigma keeps edges soft without
+              // darkening the sheet body (was sigmaX:20 + heavy dim before).
               Positioned.fill(
                 child: BackdropFilter(
-                  filter: ImageFilter.blur(sigmaX: 20, sigmaY: 20),
+                  filter: ImageFilter.blur(sigmaX: 14, sigmaY: 14),
                   child: Container(
-                    decoration: BoxDecoration(
-                      gradient: LinearGradient(
-                        begin: Alignment.topLeft,
-                        end: Alignment.bottomRight,
-                        colors: [
-                          Colors.white.withValues(alpha: 0.96),
-                          color.withValues(alpha: 0.05),
-                        ],
-                      ),
-                    ),
+                    color: Colors.white.withValues(alpha: 0.35),
                   ),
                 ),
+              ),
+              Positioned.fill(
+                child: Container(color: Colors.white),
               ),
               // Content
               SingleChildScrollView(
@@ -1471,17 +1523,22 @@ class _GiftDetailSheet extends StatelessWidget {
                               width: double.infinity,
                               padding: EdgeInsets.all(14.w),
                               decoration: BoxDecoration(
-                                color: color.withValues(alpha: 0.06),
+                                // Very subtle tint, nearly white so text
+                                // reads at full contrast on the white sheet.
+                                color: const Color(0xFFFFF9FB),
                                 borderRadius: BorderRadius.circular(14.r),
-                                border: Border(
-                                  left: BorderSide(color: color, width: 3.5),
+                                border: const Border(
+                                  left: BorderSide(
+                                    color: Color(0xFFEC4899),
+                                    width: 3,
+                                  ),
                                 ),
                               ),
                               child: Text(
                                 gift.message!,
                                 style: AppTextStyles.getText2(context).copyWith(
-                                  color: AppColors.mainDark
-                                      .withValues(alpha: 0.82),
+                                  // Full contrast on white — easy to read.
+                                  color: Colors.black87,
                                   height: 1.55,
                                   fontStyle: FontStyle.italic,
                                 ),
@@ -1509,19 +1566,21 @@ class _GiftDetailSheet extends StatelessWidget {
                           if (isActive) ...[
                             Center(
                               child: Container(
-                                padding: EdgeInsets.all(12.w),
+                                // White background guaranteed for QR scanning
+                                // — scanners need full contrast.
+                                padding: EdgeInsets.all(16.w),
                                 decoration: BoxDecoration(
                                   color: Colors.white,
-                                  borderRadius: BorderRadius.circular(18.r),
+                                  borderRadius: BorderRadius.circular(14.r),
                                   border: Border.all(
-                                    color: color.withValues(alpha: 0.20),
-                                    width: 1.2,
+                                    color: Colors.grey.withValues(alpha: 0.18),
+                                    width: 1,
                                   ),
-                                  boxShadow: [
+                                  boxShadow: const [
                                     BoxShadow(
-                                      color: color.withValues(alpha: 0.12),
+                                      color: Color(0x12000000),
                                       blurRadius: 16,
-                                      offset: const Offset(0, 6),
+                                      offset: Offset(0, 6),
                                     ),
                                   ],
                                 ),
@@ -1530,6 +1589,7 @@ class _GiftDetailSheet extends StatelessWidget {
                                   version: QrVersions.auto,
                                   size: 160.w,
                                   gapless: true,
+                                  backgroundColor: Colors.white,
                                   eyeStyle: const QrEyeStyle(
                                     eyeShape: QrEyeShape.square,
                                     color: AppColors.mainDark,
@@ -1549,19 +1609,22 @@ class _GiftDetailSheet extends StatelessWidget {
                                   padding: EdgeInsets.symmetric(
                                       horizontal: 22.w, vertical: 14.h),
                                   decoration: BoxDecoration(
-                                    gradient: LinearGradient(
-                                      begin: Alignment.topLeft,
-                                      end: Alignment.bottomRight,
-                                      colors: [
-                                        color.withValues(alpha: 0.10),
-                                        AppColors.background4,
-                                      ],
-                                    ),
+                                    // Neutral white chip — no pink gradient.
+                                    // The discount pill above is the only
+                                    // celebratory element.
+                                    color: const Color(0xFFF9FAFB),
                                     borderRadius:
                                         BorderRadius.circular(14.r),
                                     border: Border.all(
-                                      color: color.withValues(alpha: 0.28),
+                                      color: Colors.grey.withValues(alpha: 0.25),
                                     ),
+                                    boxShadow: const [
+                                      BoxShadow(
+                                        color: Color(0x08000000),
+                                        blurRadius: 8,
+                                        offset: Offset(0, 2),
+                                      ),
+                                    ],
                                   ),
                                   child: Row(
                                     mainAxisSize: MainAxisSize.min,
@@ -1573,6 +1636,7 @@ class _GiftDetailSheet extends StatelessWidget {
                                           fontWeight: FontWeight.w900,
                                           color: AppColors.mainDark,
                                           letterSpacing: 3,
+                                          fontFamily: 'monospace',
                                         ),
                                       ),
                                       SizedBox(width: 12.w),
