@@ -207,14 +207,30 @@ class _VouchersPageState extends State<VouchersPage>
     );
   }
 
+  /// Derives the effective display status for a gift, client-side.
+  /// A claimed gift whose expires_at has passed is effectively expired —
+  /// even if the DB row hasn't been flipped yet by a background job.
+  String _resolveGiftStatus(Gift g) {
+    if (g.status == 'claimed' &&
+        g.expiresAt != null &&
+        g.expiresAt!.isBefore(DateTime.now())) {
+      return 'expired';
+    }
+    return g.status;
+  }
+
   List<Gift> _giftsForKind(List<Gift> gifts, _EmptyKind kind) {
     switch (kind) {
       case _EmptyKind.active:
-        return gifts.where((g) => g.status == 'claimed').toList();
+        return gifts
+            .where((g) => _resolveGiftStatus(g) == 'claimed')
+            .toList();
       case _EmptyKind.used:
-        return gifts.where((g) => g.status == 'used').toList();
+        return gifts.where((g) => _resolveGiftStatus(g) == 'used').toList();
       case _EmptyKind.expired:
-        return gifts.where((g) => g.status == 'expired').toList();
+        return gifts
+            .where((g) => _resolveGiftStatus(g) == 'expired')
+            .toList();
     }
   }
 
@@ -779,8 +795,20 @@ class _GiftCard extends StatelessWidget {
     required this.onTap,
   });
 
+  /// Derives the effective display status client-side.
+  /// A claimed gift whose expires_at has passed is treated as expired
+  /// even if the DB row hasn't been flipped yet by a background job.
+  String get _resolvedStatus {
+    if (gift.status == 'claimed' &&
+        gift.expiresAt != null &&
+        gift.expiresAt!.isBefore(DateTime.now())) {
+      return 'expired';
+    }
+    return gift.status;
+  }
+
   Color get _statusColor {
-    switch (gift.status) {
+    switch (_resolvedStatus) {
       case 'used':
         return const Color(0xFF4CAF50);
       case 'expired':
@@ -791,7 +819,7 @@ class _GiftCard extends StatelessWidget {
   }
 
   IconData get _statusIcon {
-    switch (gift.status) {
+    switch (_resolvedStatus) {
       case 'used':
         return Icons.check_circle_rounded;
       case 'expired':
@@ -802,7 +830,7 @@ class _GiftCard extends StatelessWidget {
   }
 
   String _statusLabel(AppLocalizations l) {
-    switch (gift.status) {
+    switch (_resolvedStatus) {
       case 'used':
         return l.voucherPageGiftStatusUsed;
       case 'expired':
@@ -826,7 +854,7 @@ class _GiftCard extends StatelessWidget {
     final l = AppLocalizations.of(context)!;
     final locale = Localizations.localeOf(context).languageCode;
     final color = _statusColor;
-    final isMuted = gift.status != 'claimed';
+    final isMuted = _resolvedStatus != 'claimed';
     final title = locale == 'ar'
         ? (gift.customTitleAr ?? gift.customTitle ?? gift.offerType)
         : (gift.customTitle ?? gift.offerType);
