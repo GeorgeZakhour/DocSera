@@ -80,7 +80,14 @@ class VoucherModel {
     return partnerAddress ?? '';
   }
 
-  bool get isActive => status == 'active';
+  // Mutually exclusive: a voucher is used, expired, or active — never two
+  // of those at once. `used` wins (the patient already redeemed it before
+  // it could expire); otherwise expiry is decided by either an explicit
+  // 'expired' status or an expires_at in the past.
   bool get isUsed => status == 'used';
-  bool get isExpired => status == 'expired' || DateTime.parse(expiresAt).isBefore(DateTime.now());
+  bool get isExpired =>
+      !isUsed &&
+      (status == 'expired' ||
+          DateTime.parse(expiresAt).isBefore(DateTime.now()));
+  bool get isActive => !isUsed && !isExpired;
 }

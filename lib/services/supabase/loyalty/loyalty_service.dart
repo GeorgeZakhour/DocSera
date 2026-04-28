@@ -236,6 +236,16 @@ class LoyaltyService {
     }
   }
 
+  /// Builds "د. ريم منصور" from {title, first_name, last_name}. Returns
+  /// an empty string when the row is missing — callers fall back to
+  /// the localized partner placeholder.
+  String _composeDoctorName(Map<String, dynamic> doctor) {
+    final title = (doctor['title'] as String?)?.trim() ?? '';
+    final first = (doctor['first_name'] as String?)?.trim() ?? '';
+    final last = (doctor['last_name'] as String?)?.trim() ?? '';
+    return [title, first, last].where((p) => p.isNotEmpty).join(' ');
+  }
+
   /// Fetches the current user's doctor promotion claims with promotion details.
   /// Maps them to VoucherModel-compatible format for display in the vouchers page.
   Future<List<VoucherModel>> getMyDoctorPromotionClaims() async {
@@ -245,12 +255,21 @@ class LoyaltyService {
 
       final response = await _client
           .from('doctor_promotion_claims')
-          .select('*, doctor_promotions!inner(offer_type, custom_title, custom_title_ar, description, description_ar, discount_value, discount_type, doctors!inner(name_en, name_ar))')
+          .select('*, doctor_promotions!inner(offer_type, audience, custom_title, custom_title_ar, description, description_ar, discount_value, discount_type, doctors!inner(title, first_name, last_name))')
           .eq('patient_id', userId)
           .order('claimed_at', ascending: false);
 
       final List<dynamic> data = response as List<dynamic>;
-      return data.map((json) {
+      return data
+          .where((json) {
+            // Personal-targeted gifts are rendered through the dedicated
+            // gift card path (getMyGifts). Excluding them here avoids
+            // double-counting in the active/used/expired chips and the
+            // duplicated rows in the list.
+            final promo = json['doctor_promotions'] as Map<String, dynamic>? ?? {};
+            return promo['audience'] != 'personal_targeted';
+          })
+          .map((json) {
         final promo = json['doctor_promotions'] as Map<String, dynamic>? ?? {};
         final doctor = promo['doctors'] as Map<String, dynamic>? ?? {};
         final offerType = promo['offer_type'] as String? ?? 'custom';
@@ -279,8 +298,8 @@ class LoyaltyService {
           discountType: (promo['discount_type'] as String?) ??
               (offerType.contains('percentage') ? 'percentage' : 'fixed'),
           discountValue: (promo['discount_value'] as num?)?.toDouble(),
-          partnerName: doctor['name_en'] as String?,
-          partnerNameAr: doctor['name_ar'] as String?,
+          partnerName: _composeDoctorName(doctor),
+          partnerNameAr: _composeDoctorName(doctor),
         );
       }).toList();
     } catch (e) {
