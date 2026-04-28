@@ -71,6 +71,9 @@ class FavoritesRepository {
 
       // 2. We don't know initially which IDs are doctors and which are centers.
       // Easiest approach: Query both tables simultaneously using `inFilter`
+      // Relationship query — favorites already represent the patient's
+      // chosen doctors/centers, so keep on doctors so a previously-favorited
+      // doctor remains visible even if their profile becomes incomplete.
       final doctorFuture = _supabase.from('doctors').select('*').inFilter('id', favIds);
       final centerFuture = _supabase.from('centers').select('*').inFilter('id', favIds);
 

@@ -263,6 +263,9 @@ class _AppointmentDetailsPageState extends State<AppointmentDetailsPage> {
       DateTime.parse(_appt['timestamp'].toString()).toUtc();
 
   Future<int> _fetchCancellationDeadlineHours(String doctorId) async {
+    // Relationship query — keep on doctors so an existing appointment can
+    // still resolve its cancellation policy even if the doctor's profile
+    // becomes incomplete after the booking was made.
     final row = await Supabase.instance.client
         .from('doctors')
         .select('cancellation_deadline_hours')
@@ -306,6 +309,7 @@ class _AppointmentDetailsPageState extends State<AppointmentDetailsPage> {
   void _showRescheduleAppointmentSheet(BuildContext context) async {
     // --------- Helpers ---------
     Future<int> fetchCancellationDeadlineHours(String doctorId) async {
+      // Relationship query — see _fetchCancellationDeadlineHours above.
       final row = await Supabase.instance.client
           .from('doctors')
           .select('cancellation_deadline_hours')

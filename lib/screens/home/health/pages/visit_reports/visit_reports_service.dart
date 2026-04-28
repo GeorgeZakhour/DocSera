@@ -102,6 +102,9 @@ class VisitReportsService {
       Map<String, dynamic>? doc;
       if (doctorId.isNotEmpty) {
         try {
+          // Relationship query — visit reports are historical records, so
+          // keep on doctors to resolve doctor info even if the profile became
+          // incomplete after the visit was logged.
           doc = await _client
               .from('doctors')
               .select('id, first_name, last_name, specialty, clinic, clinic_address, doctor_image, gender, title, contact_phones, contact_mobile, contact_email, contact_website')
@@ -304,6 +307,9 @@ class VisitReportsService {
       Map<String, Map<String, dynamic>> doctorMap = {};
       if (doctorIds.isNotEmpty) {
         try {
+          // Relationship query — modular reports describe past visits, so
+          // keep on doctors so doctor info still resolves for incomplete
+          // profiles after the report was generated.
           final doctors = await _client
               .from('doctors')
               .select('id, first_name, last_name, specialty, clinic, clinic_address, doctor_image, gender, title, contact_phones, contact_mobile, contact_email, contact_website')

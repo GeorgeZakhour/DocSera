@@ -192,6 +192,11 @@ class _SelectPatientPageState extends State<SelectPatientPage> {
 
   Future<void> _fetchLatestDoctorImage() async {
     try {
+      // Relationship query — keep on doctors so doctor image still resolves
+      // in the reschedule flow even if the doctor's profile became incomplete
+      // after the appointment was created. New-booking flows reach this
+      // screen via discovery (public_doctors), so the doctor is guaranteed
+      // present in both views in that path.
       final response = await Supabase.instance.client
           .from('doctors')
           .select('doctor_image')
