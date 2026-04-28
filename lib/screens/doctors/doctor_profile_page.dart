@@ -252,8 +252,10 @@ class _DoctorProfilePageState extends State<DoctorProfilePage> {
     }
 
     // 2️⃣ fetch واحد فقط (authoritative)
+    // Discovery query — public_doctors view hides incomplete profiles from
+    // patients who don't already have a relationship with this doctor.
     final response = await Supabase.instance.client
-        .from('doctors')
+        .from('public_doctors')
         .select()
         .eq('id', doctorId)
         .maybeSingle();

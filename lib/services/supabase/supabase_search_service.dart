@@ -14,8 +14,10 @@ class SupabaseSearchService {
       }) async {
     if (query.trim().isEmpty) return [];
     try {
+      // Discovery query — public_doctors view filters out profiles whose
+      // required sections are incomplete.
       final List data = await _client
-          .from('doctors')
+          .from('public_doctors')
           .select('*')
           .limit(limit);
 

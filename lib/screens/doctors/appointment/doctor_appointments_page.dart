@@ -67,8 +67,10 @@ class _DoctorAppointmentsPageState extends State<DoctorAppointmentsPage> {
     if (doctorId.isEmpty) return;
 
     try {
+      // Discovery query — booking entry can't surface doctors whose
+      // required profile sections are incomplete.
       final data = await Supabase.instance.client
-          .from('doctors')
+          .from('public_doctors')
           .select('appointment_scheduling_mode')
           .eq('id', doctorId)
           .maybeSingle();

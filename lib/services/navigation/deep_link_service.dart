@@ -69,8 +69,10 @@ class DeepLinkService {
 
   Future<void> _resolveDoctorByPublicToken(String token) async {
     try {
+      // Discovery query — deep links to incomplete profiles fall through
+      // to the not-found path via public_doctors filtering.
       final res = await _supabase
-          .from('doctors')
+          .from('public_doctors')
           .select('id')
           .eq('public_token', token)
           .maybeSingle();

@@ -38,8 +38,10 @@ class SupabaseCenterService {
       if (doctorIds.isEmpty) return [];
 
       // 3. Fetch doctor profiles
+      // Discovery query — center listings hide doctors whose required
+      // profile sections are incomplete.
       final List docs = await _client
-          .from('doctors')
+          .from('public_doctors')
           .select('*')
           .inFilter('id', doctorIds);
 

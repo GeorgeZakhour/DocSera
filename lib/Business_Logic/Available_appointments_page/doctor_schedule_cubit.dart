@@ -60,8 +60,10 @@ class DoctorScheduleCubit extends Cubit<DoctorScheduleState> {
       final supabase = Supabase.instance.client;
 
       // نقرأ إعدادين فقط: نمط الجدولة + مدى الرؤية
+      // Discovery query — patients can't open the booking schedule for a
+      // doctor whose required profile sections are incomplete.
       final docRow = await supabase
-          .from('doctors')
+          .from('public_doctors')
           .select('appointment_scheduling_mode, max_visibility_days, min_booking_lead_minutes')
           .eq('id', doctorId)
           .maybeSingle();
