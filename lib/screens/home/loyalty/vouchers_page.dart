@@ -469,10 +469,38 @@ class _GlassTabBar extends StatelessWidget {
     return Tab(
       height: 38.h,
       child: Center(
-        child: Text(
-          '$label ($count)',
-          maxLines: 1,
-          overflow: TextOverflow.ellipsis,
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Flexible(
+              child: Text(
+                label,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+              ),
+            ),
+            SizedBox(width: 6.w),
+            Container(
+              constraints: BoxConstraints(minWidth: 18.w),
+              height: 18.w,
+              padding: EdgeInsets.symmetric(horizontal: 5.w),
+              alignment: Alignment.center,
+              decoration: BoxDecoration(
+                color: AppColors.mainDark.withValues(alpha: 0.65),
+                shape: BoxShape.rectangle,
+                borderRadius: BorderRadius.circular(99),
+              ),
+              child: Text(
+                '$count',
+                style: TextStyle(
+                  color: Colors.white,
+                  fontSize: 10.5.sp,
+                  fontWeight: FontWeight.w800,
+                  height: 1,
+                ),
+              ),
+            ),
+          ],
         ),
       ),
     );
