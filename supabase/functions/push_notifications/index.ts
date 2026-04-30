@@ -372,19 +372,22 @@ serve(async (req) => {
         return new Response("Skipped non-in-app gift", { status: 200 });
       }
 
+      // The doctors table stores names in English only; we just prepend
+      // the Arabic honorific so the line reads naturally in Arabic.
       const { data: doctorRow } = await supabase
         .from("doctors")
         .select("first_name, last_name")
         .eq("id", record.doctor_id)
         .single();
-      const doctorName = doctorRow
+      const fullName = doctorRow
         ? `${doctorRow.first_name ?? ''} ${doctorRow.last_name ?? ''}`.trim()
-        : 'Your doctor';
+        : '';
+      const namePart = fullName.length > 0 ? `د. ${fullName}` : 'طبيبك';
 
       targetUserIds = [record.patient_id];
       targetApp = "docsera";
-      title = `🎁 هدية من ${doctorName}`;
-      body = "اضغط لعرض هديتك من طبيبك";
+      title = `🎁 هدية من ${namePart}`;
+      body = "هدية شخصية بانتظارك في محفظتك — اضغط للعرض.";
       payloadData = `voucher:${record.claim_id}`;
     }
 

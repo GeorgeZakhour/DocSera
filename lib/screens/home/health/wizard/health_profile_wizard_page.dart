@@ -6,6 +6,7 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 
 import 'package:docsera/Business_Logic/Health_page/wizard/health_profile_wizard_cubit.dart';
 import 'package:docsera/Business_Logic/Health_page/wizard/health_profile_wizard_state.dart';
+import 'package:docsera/Business_Logic/Health_page/patient_switcher_cubit.dart';
 import 'package:docsera/app/const.dart';
 import 'package:docsera/app/text_styles.dart';
 import 'package:docsera/gen_l10n/app_localizations.dart';
@@ -251,6 +252,7 @@ class _Body extends StatelessWidget {
             surfaceTintColor: Colors.transparent,
             elevation: 0,
             scrolledUnderElevation: 0,
+            toolbarHeight: 64.h,
             leading: IconButton(
               onPressed: s.stepIndex == 0
                   ? () => Navigator.of(context).pop()
@@ -263,12 +265,12 @@ class _Body extends StatelessWidget {
                 size: s.stepIndex == 0 ? 24.sp : 18.sp,
               ),
             ),
-            title: Text(
-              _sectionTitleForStep(t, s.stepIndex),
-              style: AppTextStyles.getText1(context).copyWith(
-                color: AppColors.mainDark,
-                fontWeight: FontWeight.w600,
-              ),
+            // Two-line title: section name on top, a small name pill
+            // below carrying the main user's first name + avatar dot.
+            // This communicates ownership ("this is your profile") without
+            // any explicit "for X" copy — just by surfacing the name.
+            title: _WizardTitle(
+              sectionTitle: _sectionTitleForStep(t, s.stepIndex),
             ),
             centerTitle: true,
             bottom: PreferredSize(
@@ -311,6 +313,111 @@ class _Body extends StatelessWidget {
           ),
         );
       },
+    );
+  }
+}
+
+/// AppBar title for the wizard. Renders the current section title and,
+/// just beneath it, a small name pill for the main user — a soft signal
+/// that the profile being filled belongs to the account holder, without
+/// any explicit "this is for X" copy.
+class _WizardTitle extends StatelessWidget {
+  final String sectionTitle;
+  const _WizardTitle({required this.sectionTitle});
+
+  String _firstName(String full) {
+    final trimmed = full.trim();
+    if (trimmed.isEmpty) return '';
+    return trimmed.split(RegExp(r'\s+')).first;
+  }
+
+  String _initials(String full) {
+    final parts =
+        full.trim().split(RegExp(r'\s+')).where((p) => p.isNotEmpty).toList();
+    if (parts.isEmpty) return '·';
+    if (parts.length == 1) return parts.first.characters.first.toUpperCase();
+    return (parts.first.characters.first + parts.last.characters.first)
+        .toUpperCase();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final fullName = context.select<PatientSwitcherCubit, String>(
+      (c) => c.state.mainUserName,
+    );
+    final firstName = _firstName(fullName);
+
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      crossAxisAlignment: CrossAxisAlignment.center,
+      children: [
+        Text(
+          sectionTitle,
+          style: AppTextStyles.getText1(context).copyWith(
+            color: AppColors.mainDark,
+            fontWeight: FontWeight.w700,
+            height: 1.2,
+          ),
+          maxLines: 1,
+          overflow: TextOverflow.ellipsis,
+        ),
+        if (firstName.isNotEmpty) ...[
+          SizedBox(height: 3.h),
+          Container(
+            padding: EdgeInsets.fromLTRB(4.w, 2.h, 8.w, 2.h),
+            decoration: BoxDecoration(
+              color: AppColors.main.withValues(alpha: 0.08),
+              borderRadius: BorderRadius.circular(99),
+              border: Border.all(
+                color: AppColors.main.withValues(alpha: 0.20),
+                width: 0.6,
+              ),
+            ),
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Container(
+                  width: 14.w,
+                  height: 14.w,
+                  alignment: Alignment.center,
+                  decoration: const BoxDecoration(
+                    shape: BoxShape.circle,
+                    gradient: LinearGradient(
+                      begin: Alignment.topLeft,
+                      end: Alignment.bottomRight,
+                      colors: [AppColors.main, AppColors.mainDark],
+                    ),
+                  ),
+                  child: Text(
+                    _initials(fullName),
+                    style: TextStyle(
+                      color: Colors.white,
+                      fontWeight: FontWeight.w800,
+                      fontSize: 7.5.sp,
+                      height: 1,
+                    ),
+                  ),
+                ),
+                SizedBox(width: 5.w),
+                ConstrainedBox(
+                  constraints: BoxConstraints(maxWidth: 140.w),
+                  child: Text(
+                    firstName,
+                    style: TextStyle(
+                      color: AppColors.mainDark,
+                      fontWeight: FontWeight.w700,
+                      fontSize: 9.5.sp,
+                      letterSpacing: 0.2,
+                    ),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ],
     );
   }
 }

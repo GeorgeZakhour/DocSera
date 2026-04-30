@@ -13,6 +13,7 @@ import 'package:docsera/Business_Logic/Account_page/user_state.dart';
 import 'package:docsera/utils/color_utils.dart';
 import 'package:docsera/utils/page_transitions.dart';
 import 'partner_profile_page.dart';
+import 'vouchers_page.dart';
 
 class OfferDetailPage extends StatefulWidget {
   final OfferModel offer;
@@ -132,7 +133,7 @@ class _OfferDetailPageState extends State<OfferDetailPage>
                                 child: Row(
                                   mainAxisSize: MainAxisSize.min,
                                   children: [
-                                    Icon(Icons.local_fire_department_rounded,
+                                    Icon(Icons.electric_bolt_rounded,
                                         size: 12.sp, color: Colors.white),
                                     SizedBox(width: 4.w),
                                     Text(
@@ -733,8 +734,13 @@ class _OfferDetailPageState extends State<OfferDetailPage>
                 width: double.infinity,
                 child: ElevatedButton(
                   onPressed: () {
-                    Navigator.pop(context);
-                    Navigator.pop(context);
+                    // Dismiss the success dialog and the offer detail
+                    // page, then push the My Vouchers page so the freshly
+                    // claimed voucher lands the user on the right screen.
+                    Navigator.of(context).pop();
+                    Navigator.of(context).pushReplacement(
+                      fadePageRoute(const VouchersPage()),
+                    );
                   },
                   style: ElevatedButton.styleFrom(
                     backgroundColor: AppColors.main,

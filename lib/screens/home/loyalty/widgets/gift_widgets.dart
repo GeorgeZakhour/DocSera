@@ -8,9 +8,8 @@ import 'package:docsera/app/const.dart';
 import 'package:docsera/app/text_styles.dart';
 import 'package:docsera/gen_l10n/app_localizations.dart';
 import 'package:docsera/models/gift.dart';
+import 'package:docsera/utils/overlay_toast.dart';
 
-/// Opens the [GiftDetailSheet] for [gift] using the same modal config the
-/// vouchers page uses (transparent backdrop, dim barrier, scrollable).
 void showGiftDetailSheet(BuildContext context, Gift gift) {
   showModalBottomSheet(
     context: context,
@@ -27,9 +26,6 @@ class GiftCard extends StatelessWidget {
   final Gift gift;
   final int index;
   final VoidCallback onTap;
-  /// Outer padding around the card. Defaults to the wallet list's
-  /// 16.w / 5.h gutter; pass [EdgeInsets.zero] when the parent already
-  /// owns horizontal padding (e.g. doctor profile content column).
   final EdgeInsetsGeometry? padding;
 
   const GiftCard({
@@ -40,9 +36,6 @@ class GiftCard extends StatelessWidget {
     this.padding,
   });
 
-  /// Derives the effective display status client-side.
-  /// A claimed gift whose expires_at has passed is treated as expired
-  /// even if the DB row hasn't been flipped yet by a background job.
   String get _resolvedStatus {
     if (gift.status == 'claimed' &&
         gift.expiresAt != null &&
@@ -59,7 +52,7 @@ class GiftCard extends StatelessWidget {
       case 'expired':
         return Colors.grey;
       default:
-        return const Color(0xFFE91E8C);
+        return AppColors.giftAccent;
     }
   }
 
@@ -124,22 +117,19 @@ class GiftCard extends StatelessWidget {
           behavior: HitTestBehavior.opaque,
           child: Container(
             decoration: BoxDecoration(
-              // Subtle pale rose gradient — one focal point (the discount
-              // badge) pops; the card itself stays calm and receipt-like.
               gradient: const LinearGradient(
                 begin: Alignment.topLeft,
                 end: Alignment.bottomRight,
-                colors: [Colors.white, Color(0xFFFFF1F5)],
+                colors: [Colors.white, Color(0xFFFFF6EC)],
               ),
               borderRadius: BorderRadius.circular(18.r),
               border: Border.all(
-                color: const Color(0xFFEC4899).withValues(alpha: 0.18),
+                color: AppColors.giftAccent.withValues(alpha: 0.18),
                 width: 0.8,
               ),
               boxShadow: const [
-                // Neutral shadow — not pink-tinted so the card stays calm.
                 BoxShadow(
-                  color: Color(0x0A000000), // black ~4%
+                  color: Color(0x0A000000),
                   blurRadius: 12,
                   offset: Offset(0, 4),
                 ),
@@ -147,7 +137,6 @@ class GiftCard extends StatelessWidget {
             ),
             child: Stack(
               children: [
-                // Soft orb backdrop
                 Positioned.fill(
                   child: ClipRRect(
                     borderRadius: BorderRadius.circular(18.r),
@@ -157,7 +146,6 @@ class GiftCard extends StatelessWidget {
                     ),
                   ),
                 ),
-                // Glass blur
                 Positioned.fill(
                   child: ClipRRect(
                     borderRadius: BorderRadius.circular(18.r),
@@ -167,7 +155,6 @@ class GiftCard extends StatelessWidget {
                     ),
                   ),
                 ),
-                // Accent rail
                 PositionedDirectional(
                   start: 0,
                   top: 14.h,
@@ -187,7 +174,6 @@ class GiftCard extends StatelessWidget {
                     ),
                   ),
                 ),
-                // Content
                 Padding(
                   padding: EdgeInsets.fromLTRB(14.w, 12.h, 14.w, 12.h),
                   child: Row(
@@ -279,7 +265,6 @@ class GiftCard extends StatelessWidget {
                   ),
                 ),
 
-                // Muted diagonal stamp
                 if (isMuted)
                   Positioned.fill(
                     child: IgnorePointer(
@@ -313,10 +298,55 @@ class GiftCard extends StatelessWidget {
                       ),
                     ),
                   ),
+
+                // Unread dot — visible only on un-opened claimed gifts.
+                // Sits at the top-trailing corner of the card so it's
+                // unmissable but doesn't fight the discount badge.
+                if (gift.isUnread && _resolvedStatus == 'claimed')
+                  PositionedDirectional(
+                    top: 8.h,
+                    end: 8.w,
+                    child: _GiftUnreadDot(color: color),
+                  ),
               ],
             ),
           ),
         ),
+      ),
+    );
+  }
+}
+
+// ─── Unread dot ──────────────────────────────────────────────────────────
+
+class _GiftUnreadDot extends StatelessWidget {
+  final Color color;
+  const _GiftUnreadDot({required this.color});
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: 11.r,
+      height: 11.r,
+      decoration: BoxDecoration(
+        shape: BoxShape.circle,
+        gradient: LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: [
+            Color.lerp(color, Colors.white, 0.20) ?? color,
+            color,
+          ],
+        ),
+        border: Border.all(color: Colors.white, width: 1.5),
+        boxShadow: [
+          BoxShadow(
+            color: color.withValues(alpha: 0.45),
+            blurRadius: 6,
+            spreadRadius: 0.5,
+            offset: const Offset(0, 1),
+          ),
+        ],
       ),
     );
   }
@@ -328,29 +358,31 @@ class _GiftDoctorAvatar extends StatelessWidget {
   final String? imageUrl;
   final Color color;
   final IconData icon;
+  final double? size;
 
   const _GiftDoctorAvatar({
     required this.imageUrl,
     required this.color,
     required this.icon,
+    this.size,
   });
 
   @override
   Widget build(BuildContext context) {
-    final size = 46.w;
+    final s = size ?? 46.w;
     if (imageUrl != null && imageUrl!.isNotEmpty) {
       return ClipRRect(
-        borderRadius: BorderRadius.circular(size / 2),
+        borderRadius: BorderRadius.circular(s / 2),
         child: Image.network(
           imageUrl!,
-          width: size,
-          height: size,
+          width: s,
+          height: s,
           fit: BoxFit.cover,
-          errorBuilder: (_, __, ___) => _placeholder(size, color, icon),
+          errorBuilder: (_, __, ___) => _placeholder(s, color, icon),
         ),
       );
     }
-    return _placeholder(size, color, icon);
+    return _placeholder(s, color, icon);
   }
 
   Widget _placeholder(double size, Color color, IconData icon) {
@@ -364,13 +396,13 @@ class _GiftDoctorAvatar extends StatelessWidget {
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
           colors: [
-            color.withValues(alpha: 0.20),
+            color.withValues(alpha: 0.22),
             color.withValues(alpha: 0.07),
           ],
         ),
         border: Border.all(color: color.withValues(alpha: 0.30), width: 1),
       ),
-      child: Icon(icon, size: 22.sp, color: color),
+      child: Icon(icon, size: size * 0.48, color: color),
     );
   }
 }
@@ -427,11 +459,10 @@ class _GiftCodeChip extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    // Neutral chip — no pink gradient here; let the discount badge be loud.
     return Container(
       padding: EdgeInsets.symmetric(horizontal: 8.w, vertical: 3.h),
       decoration: BoxDecoration(
-        color: const Color(0xFFF3F4F6), // light grey, theme-neutral
+        color: const Color(0xFFF3F4F6),
         borderRadius: BorderRadius.circular(6.r),
         border: Border.all(
           color: Colors.grey.withValues(alpha: 0.25),
@@ -474,13 +505,14 @@ class _GiftDiscountBadge extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final lighter = Color.lerp(color, Colors.white, 0.30) ?? color;
     return Container(
       padding: EdgeInsets.symmetric(horizontal: 8.w, vertical: 4.h),
       decoration: BoxDecoration(
         gradient: LinearGradient(
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
-          colors: [color, AppColors.mainDark],
+          colors: [lighter, color],
         ),
         borderRadius: BorderRadius.circular(99),
         boxShadow: [
@@ -522,7 +554,6 @@ class _GiftOrbsPainter extends CustomPainter {
       canvas.drawCircle(center, radius, paint);
     }
 
-    // Kept very faint so the discount badge remains the only pop.
     orb(
       Offset(size.width * 0.08, size.height * 0.5),
       size.width * 0.22,
@@ -541,25 +572,42 @@ class _GiftOrbsPainter extends CustomPainter {
 }
 
 // ─── Gift detail bottom sheet ─────────────────────────────────────────────
+//
+// Composition is intentionally sibling-but-distinct from VoucherDetailPage's
+// ticket hero: same perforated two-section card and dashed seam, but the
+// top section is a "letter from the doctor" — avatar overlapping a warm
+// orange ribbon with a "from Dr. X" tagline, then title, status, discount,
+// and a quoted personal-message card framing the doctor's words. The
+// bottom ticket section holds the QR + tappable code. Below the ticket
+// sit the description (if any), an expiry chip, and the close button.
 
 class GiftDetailSheet extends StatelessWidget {
   final Gift gift;
 
   const GiftDetailSheet({super.key, required this.gift});
 
+  String get _resolvedStatus {
+    if (gift.status == 'claimed' &&
+        gift.expiresAt != null &&
+        gift.expiresAt!.isBefore(DateTime.now())) {
+      return 'expired';
+    }
+    return gift.status;
+  }
+
   Color get _statusColor {
-    switch (gift.status) {
+    switch (_resolvedStatus) {
       case 'used':
         return const Color(0xFF4CAF50);
       case 'expired':
         return Colors.grey;
       default:
-        return const Color(0xFFE91E8C);
+        return AppColors.giftAccent;
     }
   }
 
   String _statusLabel(AppLocalizations l) {
-    switch (gift.status) {
+    switch (_resolvedStatus) {
       case 'used':
         return l.voucherPageGiftStatusUsed;
       case 'expired':
@@ -570,7 +618,7 @@ class GiftDetailSheet extends StatelessWidget {
   }
 
   IconData get _statusIcon {
-    switch (gift.status) {
+    switch (_resolvedStatus) {
       case 'used':
         return Icons.check_circle_rounded;
       case 'expired':
@@ -583,15 +631,9 @@ class GiftDetailSheet extends StatelessWidget {
   void _copyCode(BuildContext context) {
     HapticFeedback.selectionClick();
     Clipboard.setData(ClipboardData(text: gift.voucherCode));
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text(AppLocalizations.of(context)!.personalGiftCopied),
-        behavior: SnackBarBehavior.floating,
-        shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(10.r)),
-        backgroundColor: const Color(0xFFE91E8C),
-        duration: const Duration(seconds: 2),
-      ),
+    showOverlayToast(
+      context,
+      AppLocalizations.of(context)!.personalGiftCopied,
     );
   }
 
@@ -600,7 +642,7 @@ class GiftDetailSheet extends StatelessWidget {
     final l = AppLocalizations.of(context)!;
     final locale = Localizations.localeOf(context).languageCode;
     final color = _statusColor;
-    final isActive = gift.status == 'claimed';
+    final isActive = _resolvedStatus == 'claimed';
 
     final title = locale == 'ar'
         ? (gift.customTitleAr ?? gift.customTitle ?? gift.offerType)
@@ -622,393 +664,98 @@ class GiftDetailSheet extends StatelessWidget {
     }
 
     return DraggableScrollableSheet(
-      initialChildSize: 0.88,
+      initialChildSize: 0.92,
       minChildSize: 0.55,
-      maxChildSize: 0.95,
+      maxChildSize: 0.96,
       expand: false,
       builder: (context, scrollController) {
         return ClipRRect(
           borderRadius: BorderRadius.vertical(top: Radius.circular(28.r)),
           child: Stack(
             children: [
-              // Sheet surface — solid white so content reads cleanly.
-              // The backdrop blur at low sigma keeps edges soft without
-              // darkening the sheet body (was sigmaX:20 + heavy dim before).
               Positioned.fill(
-                child: BackdropFilter(
-                  filter: ImageFilter.blur(sigmaX: 14, sigmaY: 14),
-                  child: Container(
-                    color: Colors.white.withValues(alpha: 0.35),
+                child: Container(
+                  decoration: const BoxDecoration(
+                    gradient: LinearGradient(
+                      begin: Alignment.topCenter,
+                      end: Alignment.bottomCenter,
+                      colors: [Color(0xFFFFF6EC), Colors.white],
+                    ),
                   ),
                 ),
               ),
-              Positioned.fill(
-                child: Container(color: Colors.white),
-              ),
-              // Content
               SingleChildScrollView(
                 controller: scrollController,
                 physics: const BouncingScrollPhysics(),
+                padding: EdgeInsets.fromLTRB(16.w, 0, 16.w, 24.h),
                 child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.center,
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
-                    // Drag handle
                     SizedBox(height: 12.h),
-                    Container(
-                      width: 40.w,
-                      height: 4.h,
-                      decoration: BoxDecoration(
-                        color: Colors.grey[300],
-                        borderRadius: BorderRadius.circular(99),
+                    Center(
+                      child: Container(
+                        width: 40.w,
+                        height: 4.h,
+                        decoration: BoxDecoration(
+                          color: Colors.grey[300],
+                          borderRadius: BorderRadius.circular(99),
+                        ),
                       ),
                     ),
-                    SizedBox(height: 20.h),
+                    SizedBox(height: 16.h),
 
-                    // Doctor avatar + name
-                    _GiftDoctorAvatar(
-                      imageUrl: gift.doctorImage,
+                    _GiftTicketHero(
+                      gift: gift,
                       color: color,
-                      icon: _statusIcon,
-                    ),
-                    SizedBox(height: 10.h),
-                    Text(
-                      l.voucherPageGiftSentBy(gift.doctorName),
-                      style: AppTextStyles.getText2(context).copyWith(
-                        color: AppColors.mainDark.withValues(alpha: 0.75),
-                        fontWeight: FontWeight.w700,
-                      ),
-                      textAlign: TextAlign.center,
-                    ),
-                    SizedBox(height: 4.h),
-                    Text(
-                      l.voucherPageGiftDetailTitle,
-                      style: AppTextStyles.getTitle1(context).copyWith(
-                        color: AppColors.mainDark,
-                        fontWeight: FontWeight.w900,
-                      ),
-                      textAlign: TextAlign.center,
+                      isActive: isActive,
+                      title: title,
+                      discountText: discountText,
+                      statusLabel: _statusLabel(l),
+                      statusIcon: _statusIcon,
+                      onCopyCode: () => _copyCode(context),
                     ),
 
-                    SizedBox(height: 14.h),
-
-                    // Status pill
-                    Container(
-                      padding: EdgeInsets.symmetric(
-                          horizontal: 14.w, vertical: 7.h),
-                      decoration: BoxDecoration(
-                        color: color.withValues(alpha: 0.10),
-                        borderRadius: BorderRadius.circular(99),
-                        border: Border.all(
-                            color: color.withValues(alpha: 0.30), width: 0.8),
+                    if (gift.message != null && gift.message!.isNotEmpty) ...[
+                      SizedBox(height: 14.h),
+                      _PersonalMessageCard(
+                        message: gift.message!,
+                        color: color,
                       ),
-                      child: Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          Icon(_statusIcon, size: 13.sp, color: color),
-                          SizedBox(width: 6.w),
-                          Text(
-                            _statusLabel(l),
-                            style: TextStyle(
-                              fontSize: 11.sp,
-                              fontWeight: FontWeight.w800,
-                              color: color,
-                              letterSpacing: 0.4,
-                            ),
+                    ],
+
+                    if (description != null && description.isNotEmpty) ...[
+                      SizedBox(height: 12.h),
+                      _DescriptionCard(text: description, color: color),
+                    ],
+
+                    SizedBox(height: 12.h),
+                    _GiftExpiryChip(
+                      label: l.personalGiftValidUntil(expiryText),
+                    ),
+
+                    SizedBox(height: 22.h),
+                    SizedBox(
+                      width: double.infinity,
+                      child: TextButton(
+                        onPressed: () => Navigator.pop(context),
+                        style: TextButton.styleFrom(
+                          padding: EdgeInsets.symmetric(vertical: 14.h),
+                          backgroundColor:
+                              AppColors.mainDark.withValues(alpha: 0.07),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(14.r),
                           ),
-                        ],
+                        ),
+                        child: Text(
+                          l.voucherPageGiftClose,
+                          style: AppTextStyles.getText1(context).copyWith(
+                            color: AppColors.mainDark,
+                            fontWeight: FontWeight.w800,
+                          ),
+                        ),
                       ),
                     ),
-
-                    SizedBox(height: 20.h),
-
-                    Padding(
-                      padding: EdgeInsets.symmetric(horizontal: 20.w),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          // Offer title + discount
-                          Center(
-                            child: Text(
-                              title,
-                              style: AppTextStyles.getTitle2(context).copyWith(
-                                color: AppColors.mainDark,
-                                fontWeight: FontWeight.w800,
-                                height: 1.3,
-                              ),
-                              textAlign: TextAlign.center,
-                            ),
-                          ),
-                          if (discountText.isNotEmpty) ...[
-                            SizedBox(height: 10.h),
-                            Center(
-                              child: Container(
-                                padding: EdgeInsets.symmetric(
-                                    horizontal: 18.w, vertical: 8.h),
-                                decoration: BoxDecoration(
-                                  gradient: LinearGradient(
-                                    begin: Alignment.topLeft,
-                                    end: Alignment.bottomRight,
-                                    colors: [color, AppColors.mainDark],
-                                  ),
-                                  borderRadius: BorderRadius.circular(99),
-                                  boxShadow: [
-                                    BoxShadow(
-                                      color: color.withValues(alpha: 0.30),
-                                      blurRadius: 12,
-                                      offset: const Offset(0, 4),
-                                    ),
-                                  ],
-                                ),
-                                child: Row(
-                                  mainAxisSize: MainAxisSize.min,
-                                  children: [
-                                    Icon(Icons.local_offer_rounded,
-                                        size: 14.sp, color: Colors.white),
-                                    SizedBox(width: 6.w),
-                                    Text(
-                                      discountText,
-                                      style: TextStyle(
-                                        fontSize: 15.sp,
-                                        fontWeight: FontWeight.w900,
-                                        color: Colors.white,
-                                        letterSpacing: 0.5,
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                              ),
-                            ),
-                          ],
-
-                          // Doctor's personal message
-                          if (gift.message != null &&
-                              gift.message!.isNotEmpty) ...[
-                            SizedBox(height: 20.h),
-                            Text(
-                              l.voucherPageGiftDoctorMessageHeading,
-                              style: AppTextStyles.getText2(context).copyWith(
-                                color: AppColors.mainDark,
-                                fontWeight: FontWeight.w800,
-                              ),
-                            ),
-                            SizedBox(height: 8.h),
-                            Container(
-                              width: double.infinity,
-                              padding: EdgeInsets.all(14.w),
-                              decoration: BoxDecoration(
-                                // Very subtle tint, nearly white so text
-                                // reads at full contrast on the white sheet.
-                                color: const Color(0xFFFFF9FB),
-                                borderRadius: BorderRadius.circular(14.r),
-                                border: const Border(
-                                  left: BorderSide(
-                                    color: Color(0xFFEC4899),
-                                    width: 3,
-                                  ),
-                                ),
-                              ),
-                              child: Text(
-                                gift.message!,
-                                style: AppTextStyles.getText2(context).copyWith(
-                                  // Full contrast on white — easy to read.
-                                  color: Colors.black87,
-                                  height: 1.55,
-                                  fontStyle: FontStyle.italic,
-                                ),
-                              ),
-                            ),
-                          ],
-
-                          // Description
-                          if (description != null &&
-                              description.isNotEmpty) ...[
-                            SizedBox(height: 14.h),
-                            Text(
-                              description,
-                              style: AppTextStyles.getText2(context).copyWith(
-                                color: AppColors.mainDark
-                                    .withValues(alpha: 0.70),
-                                height: 1.5,
-                              ),
-                            ),
-                          ],
-
-                          SizedBox(height: 20.h),
-
-                          // QR + code (active gifts only)
-                          if (isActive) ...[
-                            Center(
-                              child: Container(
-                                // White background guaranteed for QR scanning
-                                // — scanners need full contrast.
-                                padding: EdgeInsets.all(16.w),
-                                decoration: BoxDecoration(
-                                  color: Colors.white,
-                                  borderRadius: BorderRadius.circular(14.r),
-                                  border: Border.all(
-                                    color: Colors.grey.withValues(alpha: 0.18),
-                                    width: 1,
-                                  ),
-                                  boxShadow: const [
-                                    BoxShadow(
-                                      color: Color(0x12000000),
-                                      blurRadius: 16,
-                                      offset: Offset(0, 6),
-                                    ),
-                                  ],
-                                ),
-                                child: QrImageView(
-                                  data: gift.voucherCode,
-                                  version: QrVersions.auto,
-                                  size: 160.w,
-                                  gapless: true,
-                                  backgroundColor: Colors.white,
-                                  eyeStyle: const QrEyeStyle(
-                                    eyeShape: QrEyeShape.square,
-                                    color: AppColors.mainDark,
-                                  ),
-                                  dataModuleStyle: const QrDataModuleStyle(
-                                    dataModuleShape: QrDataModuleShape.square,
-                                    color: AppColors.mainDark,
-                                  ),
-                                ),
-                              ),
-                            ),
-                            SizedBox(height: 14.h),
-                            GestureDetector(
-                              onTap: () => _copyCode(context),
-                              child: Center(
-                                child: Container(
-                                  padding: EdgeInsets.symmetric(
-                                      horizontal: 22.w, vertical: 14.h),
-                                  decoration: BoxDecoration(
-                                    // Neutral white chip — no pink gradient.
-                                    // The discount pill above is the only
-                                    // celebratory element.
-                                    color: const Color(0xFFF9FAFB),
-                                    borderRadius:
-                                        BorderRadius.circular(14.r),
-                                    border: Border.all(
-                                      color: Colors.grey.withValues(alpha: 0.25),
-                                    ),
-                                    boxShadow: const [
-                                      BoxShadow(
-                                        color: Color(0x08000000),
-                                        blurRadius: 8,
-                                        offset: Offset(0, 2),
-                                      ),
-                                    ],
-                                  ),
-                                  child: Row(
-                                    mainAxisSize: MainAxisSize.min,
-                                    children: [
-                                      Text(
-                                        gift.voucherCode,
-                                        style: TextStyle(
-                                          fontSize: 20.sp,
-                                          fontWeight: FontWeight.w900,
-                                          color: AppColors.mainDark,
-                                          letterSpacing: 3,
-                                          fontFamily: 'monospace',
-                                        ),
-                                      ),
-                                      SizedBox(width: 12.w),
-                                      Container(
-                                        width: 26.w,
-                                        height: 26.w,
-                                        alignment: Alignment.center,
-                                        decoration: BoxDecoration(
-                                          color: color,
-                                          shape: BoxShape.circle,
-                                        ),
-                                        child: Icon(Icons.copy_rounded,
-                                            size: 12.sp,
-                                            color: Colors.white),
-                                      ),
-                                    ],
-                                  ),
-                                ),
-                              ),
-                            ),
-                            SizedBox(height: 6.h),
-                            Center(
-                              child: Text(
-                                l.personalGiftTapToCopy,
-                                style: AppTextStyles.getText3(context).copyWith(
-                                  color: AppColors.mainDark
-                                      .withValues(alpha: 0.50),
-                                  fontWeight: FontWeight.w500,
-                                ),
-                              ),
-                            ),
-                          ],
-
-                          SizedBox(height: 14.h),
-
-                          // Expiry info row
-                          Container(
-                            padding: EdgeInsets.all(12.w),
-                            decoration: BoxDecoration(
-                              color: const Color(0xFFFF9800)
-                                  .withValues(alpha: 0.07),
-                              borderRadius: BorderRadius.circular(12.r),
-                              border: Border.all(
-                                color: const Color(0xFFFF9800)
-                                    .withValues(alpha: 0.22),
-                              ),
-                            ),
-                            child: Row(
-                              children: [
-                                Icon(Icons.calendar_today_rounded,
-                                    size: 14.sp,
-                                    color: const Color(0xFFE07000)),
-                                SizedBox(width: 8.w),
-                                Expanded(
-                                  child: Text(
-                                    l.personalGiftValidUntil(expiryText),
-                                    style: AppTextStyles.getText2(context)
-                                        .copyWith(
-                                      color: const Color(0xFFB85400),
-                                      fontWeight: FontWeight.w700,
-                                    ),
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
-
-                          SizedBox(height: 28.h),
-
-                          // Close button
-                          SizedBox(
-                            width: double.infinity,
-                            child: TextButton(
-                              onPressed: () => Navigator.pop(context),
-                              style: TextButton.styleFrom(
-                                padding:
-                                    EdgeInsets.symmetric(vertical: 14.h),
-                                backgroundColor: AppColors.mainDark
-                                    .withValues(alpha: 0.07),
-                                shape: RoundedRectangleBorder(
-                                  borderRadius:
-                                      BorderRadius.circular(14.r),
-                                ),
-                              ),
-                              child: Text(
-                                l.voucherPageGiftClose,
-                                style: AppTextStyles.getText1(context)
-                                    .copyWith(
-                                  color: AppColors.mainDark,
-                                  fontWeight: FontWeight.w800,
-                                ),
-                              ),
-                            ),
-                          ),
-
-                          SizedBox(height: 24.h),
-                        ],
-                      ),
-                    ),
+                    SizedBox(height: 8.h),
                   ],
                 ),
               ),
@@ -1016,6 +763,715 @@ class GiftDetailSheet extends StatelessWidget {
           ),
         );
       },
+    );
+  }
+}
+
+// ─── Gift ticket hero (perforated two-section card) ──────────────────────
+
+class _GiftTicketHero extends StatelessWidget {
+  final Gift gift;
+  final Color color;
+  final bool isActive;
+  final String title;
+  final String discountText;
+  final String statusLabel;
+  final IconData statusIcon;
+  final VoidCallback onCopyCode;
+
+  const _GiftTicketHero({
+    required this.gift,
+    required this.color,
+    required this.isActive,
+    required this.title,
+    required this.discountText,
+    required this.statusLabel,
+    required this.statusIcon,
+    required this.onCopyCode,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final l = AppLocalizations.of(context)!;
+    final notchY = 240.h;
+
+    return Container(
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(24.r),
+        boxShadow: [
+          BoxShadow(
+            color: color.withValues(alpha: 0.18),
+            blurRadius: 28,
+            offset: const Offset(0, 14),
+          ),
+          const BoxShadow(
+            color: Color(0x0F000000),
+            blurRadius: 6,
+            offset: Offset(0, 2),
+          ),
+        ],
+      ),
+      child: ClipPath(
+        clipper: _TicketClipper(
+          notchY: notchY,
+          notchRadius: 12.r,
+          borderRadius: 24.r,
+        ),
+        child: Stack(
+          children: [
+            const Positioned.fill(child: _GiftTicketBackdrop()),
+            Positioned.fill(
+              child: BackdropFilter(
+                filter: ImageFilter.blur(sigmaX: 22, sigmaY: 22),
+                child: const SizedBox.shrink(),
+              ),
+            ),
+            SizedBox(
+              width: double.infinity,
+              child: Container(
+                decoration: BoxDecoration(
+                  gradient: LinearGradient(
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
+                    colors: [
+                      Colors.white.withValues(alpha: 0.92),
+                      AppColors.giftAccent.withValues(alpha: 0.06),
+                    ],
+                  ),
+                  border: Border.all(
+                    color: Colors.white.withValues(alpha: 0.65),
+                    width: 1.2,
+                  ),
+                ),
+                padding: EdgeInsets.fromLTRB(20.w, 0, 20.w, 22.h),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.center,
+                  children: [
+                    _GiftRibbonHeader(
+                      gift: gift,
+                      color: color,
+                      statusIcon: statusIcon,
+                    ),
+                    SizedBox(height: 14.h),
+
+                    _GiftStatusPill(
+                      label: statusLabel,
+                      icon: statusIcon,
+                      color: color,
+                    ),
+                    SizedBox(height: 12.h),
+
+                    Text(
+                      title,
+                      style: AppTextStyles.getTitle1(context).copyWith(
+                        color: AppColors.mainDark,
+                        fontWeight: FontWeight.w900,
+                        height: 1.25,
+                      ),
+                      textAlign: TextAlign.center,
+                    ),
+
+                    if (discountText.isNotEmpty) ...[
+                      SizedBox(height: 12.h),
+                      _GiftDiscountChipLarge(
+                        value: discountText,
+                        color: color,
+                      ),
+                    ],
+
+                    SizedBox(height: 28.h),
+
+                    if (isActive) ...[
+                      SizedBox(height: 8.h),
+                      _GiftQrCard(code: gift.voucherCode),
+                      SizedBox(height: 14.h),
+                      _GiftCodeRow(
+                        code: gift.voucherCode,
+                        color: color,
+                        onTap: onCopyCode,
+                      ),
+                      SizedBox(height: 6.h),
+                      Text(
+                        l.personalGiftTapToCopy,
+                        style: AppTextStyles.getText3(context).copyWith(
+                          color: AppColors.mainDark.withValues(alpha: 0.55),
+                          fontWeight: FontWeight.w500,
+                        ),
+                      ),
+                    ] else ...[
+                      SizedBox(height: 8.h),
+                      _GiftMutedNotice(
+                        label: statusLabel,
+                        icon: statusIcon,
+                        color: color,
+                      ),
+                    ],
+                  ],
+                ),
+              ),
+            ),
+
+            Positioned(
+              left: 18.w,
+              right: 18.w,
+              top: notchY - 0.5,
+              child: const _DashedHorizontalLine(),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _GiftRibbonHeader extends StatelessWidget {
+  final Gift gift;
+  final Color color;
+  final IconData statusIcon;
+
+  const _GiftRibbonHeader({
+    required this.gift,
+    required this.color,
+    required this.statusIcon,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final l = AppLocalizations.of(context)!;
+    return Padding(
+      padding: EdgeInsets.only(bottom: 32.h),
+      child: Stack(
+        clipBehavior: Clip.none,
+        alignment: Alignment.topCenter,
+        children: [
+          Container(
+            padding: EdgeInsets.fromLTRB(20.w, 14.h, 20.w, 36.h),
+          decoration: BoxDecoration(
+            gradient: const LinearGradient(
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+              colors: [AppColors.giftAccentLight, AppColors.giftAccent],
+            ),
+            borderRadius: BorderRadius.only(
+              bottomLeft: Radius.circular(20.r),
+              bottomRight: Radius.circular(20.r),
+            ),
+          ),
+          child: Column(
+            children: [
+              Text(
+                l.voucherPageGiftDetailTitle,
+                style: TextStyle(
+                  color: Colors.white.withValues(alpha: 0.92),
+                  fontSize: 11.sp,
+                  fontWeight: FontWeight.w700,
+                  letterSpacing: 1.4,
+                ),
+              ),
+              SizedBox(height: 4.h),
+              Text(
+                l.voucherPageGiftSentBy(gift.doctorName),
+                style: TextStyle(
+                  color: Colors.white,
+                  fontSize: 13.sp,
+                  fontWeight: FontWeight.w800,
+                ),
+                textAlign: TextAlign.center,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+              ),
+            ],
+          ),
+        ),
+        Positioned(
+          bottom: -32.h,
+          child: Container(
+            padding: EdgeInsets.all(3.w),
+            decoration: const BoxDecoration(
+              color: Colors.white,
+              shape: BoxShape.circle,
+            ),
+            child: _GiftDoctorAvatar(
+              imageUrl: gift.doctorImage,
+              color: color,
+              icon: statusIcon,
+              size: 64.w,
+            ),
+          ),
+        ),
+        ],
+      ),
+    );
+  }
+}
+
+class _GiftDiscountChipLarge extends StatelessWidget {
+  final String value;
+  final Color color;
+  const _GiftDiscountChipLarge({required this.value, required this.color});
+
+  @override
+  Widget build(BuildContext context) {
+    final lighter = Color.lerp(color, Colors.white, 0.30) ?? color;
+    return Container(
+      padding: EdgeInsets.symmetric(horizontal: 18.w, vertical: 8.h),
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: [lighter, color],
+        ),
+        borderRadius: BorderRadius.circular(99),
+        boxShadow: [
+          BoxShadow(
+            color: color.withValues(alpha: 0.30),
+            blurRadius: 12,
+            offset: const Offset(0, 4),
+          ),
+        ],
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(Icons.local_offer_rounded, size: 14.sp, color: Colors.white),
+          SizedBox(width: 6.w),
+          Text(
+            value,
+            style: TextStyle(
+              fontSize: 15.sp,
+              fontWeight: FontWeight.w900,
+              color: Colors.white,
+              letterSpacing: 0.5,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _GiftQrCard extends StatelessWidget {
+  final String code;
+  const _GiftQrCard({required this.code});
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: EdgeInsets.all(12.w),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(18.r),
+        border: Border.all(
+          color: AppColors.giftAccent.withValues(alpha: 0.18),
+          width: 1.2,
+        ),
+        boxShadow: [
+          BoxShadow(
+            color: AppColors.giftAccent.withValues(alpha: 0.10),
+            blurRadius: 14,
+            offset: const Offset(0, 6),
+          ),
+        ],
+      ),
+      child: QrImageView(
+        data: code,
+        version: QrVersions.auto,
+        size: 168.w,
+        gapless: true,
+        backgroundColor: Colors.white,
+        eyeStyle: const QrEyeStyle(
+          eyeShape: QrEyeShape.square,
+          color: AppColors.mainDark,
+        ),
+        dataModuleStyle: const QrDataModuleStyle(
+          dataModuleShape: QrDataModuleShape.square,
+          color: AppColors.mainDark,
+        ),
+      ),
+    );
+  }
+}
+
+class _GiftCodeRow extends StatelessWidget {
+  final String code;
+  final Color color;
+  final VoidCallback onTap;
+
+  const _GiftCodeRow({
+    required this.code,
+    required this.color,
+    required this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return InkWell(
+      onTap: onTap,
+      borderRadius: BorderRadius.circular(14.r),
+      child: Container(
+        padding: EdgeInsets.symmetric(horizontal: 22.w, vertical: 14.h),
+        decoration: BoxDecoration(
+          gradient: LinearGradient(
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+            colors: [
+              color.withValues(alpha: 0.10),
+              const Color(0xFFFFF6EC),
+            ],
+          ),
+          borderRadius: BorderRadius.circular(14.r),
+          border: Border.all(color: color.withValues(alpha: 0.25)),
+        ),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Text(
+              code,
+              style: TextStyle(
+                fontSize: 22.sp,
+                fontWeight: FontWeight.w900,
+                color: AppColors.mainDark,
+                letterSpacing: 3,
+                fontFamily: 'monospace',
+              ),
+            ),
+            SizedBox(width: 12.w),
+            Container(
+              width: 26.w,
+              height: 26.w,
+              alignment: Alignment.center,
+              decoration: BoxDecoration(
+                color: color,
+                shape: BoxShape.circle,
+              ),
+              child: Icon(Icons.copy_rounded,
+                  size: 13.sp, color: Colors.white),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _GiftMutedNotice extends StatelessWidget {
+  final String label;
+  final IconData icon;
+  final Color color;
+
+  const _GiftMutedNotice({
+    required this.label,
+    required this.icon,
+    required this.color,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: EdgeInsets.symmetric(horizontal: 18.w, vertical: 16.h),
+      decoration: BoxDecoration(
+        color: color.withValues(alpha: 0.08),
+        borderRadius: BorderRadius.circular(14.r),
+        border: Border.all(color: color.withValues(alpha: 0.25)),
+      ),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Icon(icon, color: color, size: 18.sp),
+          SizedBox(width: 8.w),
+          Text(
+            label,
+            style: AppTextStyles.getText1(context).copyWith(
+              color: color,
+              fontWeight: FontWeight.w800,
+              letterSpacing: 0.4,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _GiftTicketBackdrop extends StatelessWidget {
+  const _GiftTicketBackdrop();
+
+  @override
+  Widget build(BuildContext context) {
+    return DecoratedBox(
+      decoration: const BoxDecoration(color: Colors.white),
+      child: CustomPaint(
+        painter: _GiftHeroOrbsPainter(),
+        child: const SizedBox.expand(),
+      ),
+    );
+  }
+}
+
+class _GiftHeroOrbsPainter extends CustomPainter {
+  @override
+  void paint(Canvas canvas, Size size) {
+    void orb(Offset center, double radius, Color color) {
+      final paint = Paint()
+        ..shader = RadialGradient(
+          colors: [color, color.withValues(alpha: 0.0)],
+        ).createShader(Rect.fromCircle(center: center, radius: radius));
+      canvas.drawCircle(center, radius, paint);
+    }
+
+    orb(
+      Offset(size.width * 0.15, size.height * 0.10),
+      size.width * 0.55,
+      AppColors.giftAccent.withValues(alpha: 0.32),
+    );
+    orb(
+      Offset(size.width * 0.85, size.height * 0.08),
+      size.width * 0.45,
+      AppColors.giftAccentLight.withValues(alpha: 0.28),
+    );
+    orb(
+      Offset(size.width * 0.50, size.height * 0.95),
+      size.width * 0.65,
+      AppColors.giftAccent.withValues(alpha: 0.10),
+    );
+    orb(
+      Offset(size.width * 0.92, size.height * 0.78),
+      size.width * 0.30,
+      AppColors.yellow.withValues(alpha: 0.10),
+    );
+  }
+
+  @override
+  bool shouldRepaint(covariant _GiftHeroOrbsPainter oldDelegate) => false;
+}
+
+class _TicketClipper extends CustomClipper<Path> {
+  final double notchY;
+  final double notchRadius;
+  final double borderRadius;
+
+  _TicketClipper({
+    required this.notchY,
+    required this.notchRadius,
+    required this.borderRadius,
+  });
+
+  @override
+  Path getClip(Size size) {
+    final r = borderRadius;
+    final n = notchRadius;
+    final y = notchY;
+
+    final path = Path()
+      ..moveTo(r, 0)
+      ..lineTo(size.width - r, 0)
+      ..arcToPoint(Offset(size.width, r), radius: Radius.circular(r))
+      ..lineTo(size.width, y - n)
+      ..arcToPoint(Offset(size.width, y + n),
+          radius: Radius.circular(n), clockwise: false)
+      ..lineTo(size.width, size.height - r)
+      ..arcToPoint(Offset(size.width - r, size.height),
+          radius: Radius.circular(r))
+      ..lineTo(r, size.height)
+      ..arcToPoint(Offset(0, size.height - r), radius: Radius.circular(r))
+      ..lineTo(0, y + n)
+      ..arcToPoint(Offset(0, y - n),
+          radius: Radius.circular(n), clockwise: false)
+      ..lineTo(0, r)
+      ..arcToPoint(Offset(r, 0), radius: Radius.circular(r))
+      ..close();
+    return path;
+  }
+
+  @override
+  bool shouldReclip(covariant _TicketClipper oldClipper) =>
+      oldClipper.notchY != notchY ||
+      oldClipper.notchRadius != notchRadius ||
+      oldClipper.borderRadius != borderRadius;
+}
+
+class _DashedHorizontalLine extends StatelessWidget {
+  const _DashedHorizontalLine();
+
+  @override
+  Widget build(BuildContext context) {
+    return SizedBox(
+      height: 1.5,
+      child: LayoutBuilder(
+        builder: (context, constraints) {
+          const dashWidth = 5.0;
+          const dashSpace = 4.0;
+          final count =
+              (constraints.maxWidth / (dashWidth + dashSpace)).floor();
+          return Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: List.generate(
+              count,
+              (_) => SizedBox(
+                width: dashWidth,
+                height: 1.5,
+                child: DecoratedBox(
+                  decoration: BoxDecoration(
+                    color: AppColors.grayMain.withValues(alpha: 0.35),
+                    borderRadius: BorderRadius.circular(1),
+                  ),
+                ),
+              ),
+            ),
+          );
+        },
+      ),
+    );
+  }
+}
+
+// ─── Personal message card ───────────────────────────────────────────────
+
+class _PersonalMessageCard extends StatelessWidget {
+  final String message;
+  final Color color;
+  const _PersonalMessageCard({required this.message, required this.color});
+
+  @override
+  Widget build(BuildContext context) {
+    final l = AppLocalizations.of(context)!;
+    return ClipRRect(
+      borderRadius: BorderRadius.circular(18.r),
+      child: Stack(
+        children: [
+          Positioned.fill(
+            child: BackdropFilter(
+              filter: ImageFilter.blur(sigmaX: 14, sigmaY: 14),
+              child: const SizedBox.shrink(),
+            ),
+          ),
+          Container(
+            decoration: BoxDecoration(
+              color: Colors.white.withValues(alpha: 0.85),
+              borderRadius: BorderRadius.circular(18.r),
+              border: Border.all(
+                color: color.withValues(alpha: 0.18),
+              ),
+              boxShadow: const [
+                BoxShadow(
+                  color: Color(0x0F000000),
+                  blurRadius: 12,
+                  offset: Offset(0, 4),
+                ),
+              ],
+            ),
+            padding: EdgeInsets.fromLTRB(16.w, 14.h, 16.w, 16.h),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  children: [
+                    Container(
+                      width: 28.w,
+                      height: 28.w,
+                      alignment: Alignment.center,
+                      decoration: BoxDecoration(
+                        gradient: LinearGradient(
+                          begin: Alignment.topLeft,
+                          end: Alignment.bottomRight,
+                          colors: [
+                            color.withValues(alpha: 0.22),
+                            color.withValues(alpha: 0.06),
+                          ],
+                        ),
+                        shape: BoxShape.circle,
+                        border: Border.all(
+                          color: color.withValues(alpha: 0.25),
+                          width: 0.8,
+                        ),
+                      ),
+                      child: Icon(Icons.format_quote_rounded,
+                          size: 14.sp, color: color),
+                    ),
+                    SizedBox(width: 10.w),
+                    Text(
+                      l.voucherPageGiftDoctorMessageHeading,
+                      style: AppTextStyles.getText1(context).copyWith(
+                        color: AppColors.mainDark,
+                        fontWeight: FontWeight.w800,
+                      ),
+                    ),
+                  ],
+                ),
+                SizedBox(height: 10.h),
+                Text(
+                  '“$message”',
+                  style: AppTextStyles.getText2(context).copyWith(
+                    color: Colors.black87,
+                    height: 1.55,
+                    fontStyle: FontStyle.italic,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _DescriptionCard extends StatelessWidget {
+  final String text;
+  final Color color;
+  const _DescriptionCard({required this.text, required this.color});
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: EdgeInsets.all(14.w),
+      decoration: BoxDecoration(
+        color: Colors.white.withValues(alpha: 0.7),
+        borderRadius: BorderRadius.circular(14.r),
+        border: Border.all(color: color.withValues(alpha: 0.14)),
+      ),
+      child: Text(
+        text,
+        style: AppTextStyles.getText2(context).copyWith(
+          color: AppColors.mainDark.withValues(alpha: 0.78),
+          height: 1.5,
+        ),
+      ),
+    );
+  }
+}
+
+class _GiftExpiryChip extends StatelessWidget {
+  final String label;
+  const _GiftExpiryChip({required this.label});
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: EdgeInsets.all(12.w),
+      decoration: BoxDecoration(
+        color: const Color(0xFFFF9800).withValues(alpha: 0.07),
+        borderRadius: BorderRadius.circular(12.r),
+        border: Border.all(
+          color: const Color(0xFFFF9800).withValues(alpha: 0.22),
+        ),
+      ),
+      child: Row(
+        children: [
+          Icon(Icons.calendar_today_rounded,
+              size: 14.sp, color: const Color(0xFFE07000)),
+          SizedBox(width: 8.w),
+          Expanded(
+            child: Text(
+              label,
+              style: AppTextStyles.getText2(context).copyWith(
+                color: const Color(0xFFB85400),
+                fontWeight: FontWeight.w700,
+              ),
+            ),
+          ),
+        ],
+      ),
     );
   }
 }

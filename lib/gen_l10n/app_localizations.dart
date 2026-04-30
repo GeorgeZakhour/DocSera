@@ -8462,10 +8462,58 @@ abstract class AppLocalizations {
   /// **'Expired'**
   String get personalGiftExpired;
 
+  /// No description provided for @personalGiftsSectionTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Personal gifts'**
+  String get personalGiftsSectionTitle;
+
+  /// No description provided for @personalGiftsSectionDescription.
+  ///
+  /// In en, this message translates to:
+  /// **'Gifts sent to you personally by this doctor. Tap to view the QR code and details.'**
+  String get personalGiftsSectionDescription;
+
+  /// No description provided for @giftAnnouncementTitleSingle.
+  ///
+  /// In en, this message translates to:
+  /// **'You have a gift!'**
+  String get giftAnnouncementTitleSingle;
+
+  /// No description provided for @giftAnnouncementTitleMulti.
+  ///
+  /// In en, this message translates to:
+  /// **'{count} gifts for you!'**
+  String giftAnnouncementTitleMulti(int count);
+
+  /// No description provided for @giftAnnouncementBodySingle.
+  ///
+  /// In en, this message translates to:
+  /// **'{doctorName} sent you a personal gift. Open your wallet to view the code.'**
+  String giftAnnouncementBodySingle(String doctorName);
+
+  /// No description provided for @giftAnnouncementBodyMulti.
+  ///
+  /// In en, this message translates to:
+  /// **'Your doctors and specialists sent you personal gifts. Open your wallet to view them.'**
+  String get giftAnnouncementBodyMulti;
+
+  /// No description provided for @giftAnnouncementViewButton.
+  ///
+  /// In en, this message translates to:
+  /// **'Open wallet'**
+  String get giftAnnouncementViewButton;
+
+  /// No description provided for @giftAnnouncementLaterButton.
+  ///
+  /// In en, this message translates to:
+  /// **'Later'**
+  String get giftAnnouncementLaterButton;
+
   /// No description provided for @voucherPageGiftsSection.
   ///
   /// In en, this message translates to:
-  /// **'Gifts from your doctors'**
+  /// **'Gifts from doctors and specialists'**
   String get voucherPageGiftsSection;
 
   /// No description provided for @voucherPageGiftStatusClaimed.
@@ -8489,7 +8537,7 @@ abstract class AppLocalizations {
   /// No description provided for @voucherPageGiftSentBy.
   ///
   /// In en, this message translates to:
-  /// **'Sent by Dr. {name}'**
+  /// **'Sent by {name}'**
   String voucherPageGiftSentBy(String name);
 
   /// No description provided for @voucherPageGiftSentOn.

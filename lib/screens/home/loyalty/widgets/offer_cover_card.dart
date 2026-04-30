@@ -200,7 +200,7 @@ class OfferCoverCard extends StatelessWidget {
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Icon(Icons.local_fire_department_rounded, size: 12.sp, color: Colors.white),
+          Icon(Icons.electric_bolt_rounded, size: 12.sp, color: Colors.white),
           SizedBox(width: 4.w),
           Text(
             text,

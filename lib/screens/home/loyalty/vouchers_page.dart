@@ -30,6 +30,10 @@ class _VouchersPageState extends State<VouchersPage>
     super.initState();
     _tabController = TabController(length: 3, vsync: this);
     context.read<VouchersCubit>().loadVouchers();
+    // Page-open acknowledgement — clears the loyalty-banner badge
+    // even before the patient taps any specific card. Per-card dots
+    // stay correct because is_unread is read per-row in the API.
+    context.read<UnreadGiftsCubit>().acknowledgeAll();
   }
 
   @override
@@ -490,13 +494,22 @@ class _GlassTabBar extends StatelessWidget {
                 shape: BoxShape.rectangle,
                 borderRadius: BorderRadius.circular(99),
               ),
-              child: Text(
-                '$count',
-                style: TextStyle(
-                  color: Colors.white,
-                  fontSize: 10.5.sp,
-                  fontWeight: FontWeight.w800,
-                  height: 1,
+              // FittedBox centers the rendered glyph regardless of
+              // font ascent/descent metrics — `Text + height: 1`
+              // alone leaves digits sitting near the top of the
+              // line box, not the visual centre of the pill.
+              child: FittedBox(
+                fit: BoxFit.scaleDown,
+                child: Text(
+                  '$count',
+                  textAlign: TextAlign.center,
+                  style: TextStyle(
+                    color: Colors.white,
+                    fontSize: 10.5.sp,
+                    fontWeight: FontWeight.w800,
+                    height: 1.0,
+                    leadingDistribution: TextLeadingDistribution.even,
+                  ),
                 ),
               ),
             ),
@@ -651,12 +664,12 @@ class _GiftsSectionHeader extends StatelessWidget {
               gradient: const LinearGradient(
                 begin: Alignment.topLeft,
                 end: Alignment.bottomRight,
-                colors: [Color(0xFFFF6B9D), Color(0xFFE91E8C)],
+                colors: [AppColors.giftAccentLight, AppColors.giftAccent],
               ),
               shape: BoxShape.circle,
               boxShadow: [
                 BoxShadow(
-                  color: const Color(0xFFE91E8C).withValues(alpha: 0.30),
+                  color: AppColors.giftAccent.withValues(alpha: 0.30),
                   blurRadius: 8,
                   offset: const Offset(0, 3),
                 ),

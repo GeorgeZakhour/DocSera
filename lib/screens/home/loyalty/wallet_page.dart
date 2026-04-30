@@ -8,6 +8,7 @@ import 'package:docsera/gen_l10n/app_localizations.dart';
 import 'package:docsera/Business_Logic/Account_page/user_cubit.dart';
 import 'package:docsera/Business_Logic/Account_page/user_state.dart';
 import 'package:docsera/services/supabase/loyalty/loyalty_service.dart';
+import 'widgets/earn_points_banner.dart';
 import 'widgets/transaction_tile.dart';
 
 class WalletPage extends StatefulWidget {
@@ -217,11 +218,21 @@ class _WalletPageState extends State<WalletPage>
                     ),
                   ),
 
+                  // Earn-points info banner — taps open a glassy sheet
+                  // explaining every way to earn.
+                  if (!_loading && _transactions.isNotEmpty)
+                    SliverToBoxAdapter(
+                      child: Padding(
+                        padding: EdgeInsets.fromLTRB(16.w, 14.h, 16.w, 0),
+                        child: const EarnPointsBanner(),
+                      ),
+                    ),
+
                   // Quick stats row
                   if (!_loading && _transactions.isNotEmpty)
                     SliverToBoxAdapter(
                       child: Padding(
-                        padding: EdgeInsets.fromLTRB(16.w, 16.h, 16.w, 0),
+                        padding: EdgeInsets.fromLTRB(16.w, 10.h, 16.w, 0),
                         child: Row(
                           children: [
                             Expanded(

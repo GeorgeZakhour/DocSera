@@ -20,4 +20,12 @@ class UnreadGiftsCubit extends Cubit<int> {
     await _service.markGiftsViewed(claimIds);
     await refresh();
   }
+
+  /// Marks every unread gift for the calling patient as viewed —
+  /// drops the count to 0 immediately. Called when the patient
+  /// opens the vouchers page so the loyalty-banner badge clears.
+  Future<void> acknowledgeAll() async {
+    await _service.acknowledgeAllGifts();
+    await refresh();
+  }
 }

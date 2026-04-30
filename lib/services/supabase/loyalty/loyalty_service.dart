@@ -333,6 +333,18 @@ class LoyaltyService {
     }
   }
 
+  /// Marks ALL of the patient's still-unread gifts as viewed in one
+  /// shot. Used when the patient opens the vouchers page so the
+  /// loyalty-banner badge clears immediately. Per-card unread dots
+  /// remain accurate — they read the same viewed_by_patient_at flag.
+  Future<void> acknowledgeAllGifts() async {
+    try {
+      await _client.rpc('acknowledge_all_my_gifts');
+    } catch (e) {
+      debugPrint('Error acknowledging all gifts: $e');
+    }
+  }
+
   /// Fetches all personal-targeted gifts the current patient has received,
   /// joined to the gift-send audit row for the doctor's message and insight type.
   /// Calls the [get_my_gifts] RPC on the server.

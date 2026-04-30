@@ -4559,7 +4559,37 @@ class AppLocalizationsEn extends AppLocalizations {
   String get personalGiftExpired => 'Expired';
 
   @override
-  String get voucherPageGiftsSection => 'Gifts from your doctors';
+  String get personalGiftsSectionTitle => 'Personal gifts';
+
+  @override
+  String get personalGiftsSectionDescription =>
+      'Gifts sent to you personally by this doctor. Tap to view the QR code and details.';
+
+  @override
+  String get giftAnnouncementTitleSingle => 'You have a gift!';
+
+  @override
+  String giftAnnouncementTitleMulti(int count) {
+    return '$count gifts for you!';
+  }
+
+  @override
+  String giftAnnouncementBodySingle(String doctorName) {
+    return '$doctorName sent you a personal gift. Open your wallet to view the code.';
+  }
+
+  @override
+  String get giftAnnouncementBodyMulti =>
+      'Your doctors and specialists sent you personal gifts. Open your wallet to view them.';
+
+  @override
+  String get giftAnnouncementViewButton => 'Open wallet';
+
+  @override
+  String get giftAnnouncementLaterButton => 'Later';
+
+  @override
+  String get voucherPageGiftsSection => 'Gifts from doctors and specialists';
 
   @override
   String get voucherPageGiftStatusClaimed => 'Active';
@@ -4572,7 +4602,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String voucherPageGiftSentBy(String name) {
-    return 'Sent by Dr. $name';
+    return 'Sent by $name';
   }
 
   @override

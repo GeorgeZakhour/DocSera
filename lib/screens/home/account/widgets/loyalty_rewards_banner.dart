@@ -1,7 +1,9 @@
 import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:docsera/Business_Logic/Loyalty/unread_gifts/unread_gifts_cubit.dart';
 import 'package:docsera/app/const.dart';
 import 'package:docsera/app/text_styles.dart';
 import 'package:docsera/gen_l10n/app_localizations.dart';
@@ -153,12 +155,36 @@ class _LoyaltyRewardsBannerState extends State<LoyaltyRewardsBanner>
                   ),
                   SizedBox(width: 8.w),
                   Expanded(
-                    child: _GlassTile(
-                      icon: Icons.confirmation_number_rounded,
-                      label: l.myVouchers,
-                      onTap: widget.onVouchersTap,
-                      delay: 2,
-                      entryController: _entryController,
+                    child: BlocBuilder<UnreadGiftsCubit, int>(
+                      builder: (ctx, unreadCount) {
+                        final tile = _GlassTile(
+                          icon: Icons.confirmation_number_rounded,
+                          label: l.myVouchers,
+                          onTap: widget.onVouchersTap,
+                          delay: 2,
+                          entryController: _entryController,
+                        );
+                        if (unreadCount <= 0) return tile;
+                        // Overlay the badge bubble in a non-clipping
+                        // Stack OUTSIDE the tile. `StackFit.passthrough`
+                        // keeps the tight horizontal constraint from
+                        // the surrounding Expanded — without it the
+                        // Stack would default to loose, and the tile
+                        // would shrink to its intrinsic content width
+                        // (visibly smaller than its siblings).
+                        return Stack(
+                          clipBehavior: Clip.none,
+                          fit: StackFit.passthrough,
+                          children: [
+                            tile,
+                            PositionedDirectional(
+                              top: -5.h,
+                              end: -5.w,
+                              child: _CountBubble(count: unreadCount),
+                            ),
+                          ],
+                        );
+                      },
                     ),
                   ),
                   SizedBox(width: 8.w),
@@ -394,6 +420,48 @@ class _GlassTileState extends State<_GlassTile>
               ),
             ),
           ),
+        ),
+      ),
+    );
+  }
+}
+
+/// Small orange-glass count chip used as a badge overlay on the
+/// vouchers tile. Caps display at "+9" so the chip stays compact.
+class _CountBubble extends StatelessWidget {
+  final int count;
+  const _CountBubble({required this.count});
+
+  @override
+  Widget build(BuildContext context) {
+    final label = count > 9 ? '+9' : '$count';
+    return Container(
+      constraints: BoxConstraints(minWidth: 16.r, minHeight: 16.r),
+      padding: EdgeInsets.symmetric(horizontal: 4.w, vertical: 1.h),
+      alignment: Alignment.center,
+      decoration: BoxDecoration(
+        gradient: const LinearGradient(
+          colors: [Color(0xFFF2A65A), Color(0xFFE07A1F)],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+        ),
+        borderRadius: BorderRadius.circular(99),
+        border: Border.all(color: Colors.white, width: 1.4),
+        boxShadow: [
+          BoxShadow(
+            color: const Color(0xFFE07A1F).withValues(alpha: 0.40),
+            blurRadius: 6,
+            offset: const Offset(0, 2),
+          ),
+        ],
+      ),
+      child: Text(
+        label,
+        style: TextStyle(
+          color: Colors.white,
+          fontSize: 9.sp,
+          fontWeight: FontWeight.w900,
+          letterSpacing: 0.2,
         ),
       ),
     );

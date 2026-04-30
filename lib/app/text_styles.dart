@@ -11,6 +11,9 @@ class AppTextStyles {
       fontSize: isArabic ? fontSize.sp : (fontSize * 0.90).sp, // ✅ تصغير الخط الإنجليزي بنسبة 15%
       fontWeight: fontWeight,
       fontFamily: isArabic ? 'Cairo' : 'Montserrat',
+      fontFamilyFallback: isArabic
+          ? const ['Montserrat']
+          : const ['Cairo'],
     );
   }
 

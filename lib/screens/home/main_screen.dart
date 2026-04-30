@@ -20,6 +20,7 @@ import 'package:docsera/screens/doctors/doctor_profile_page.dart';
 import 'package:docsera/utils/page_transitions.dart';
 import 'package:flutter/material.dart';
 import 'package:docsera/app/const.dart';
+import 'package:docsera/widgets/gift_announcement_dialog.dart';
 import 'package:docsera/widgets/main_screen_widgets.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
@@ -72,6 +73,18 @@ class _MainScreenState extends State<MainScreen> with AutomaticKeepAliveClientMi
     });
     _bannerColorsReady = _bannersLoadedOnce; // ✅ إذا كانت محمّلة سابقًا، لا تعيد تحميلها
     context.read<MainScreenCubit>().loadMainScreen(context);
+
+    // After the first frame, check whether the patient has any new
+    // personal gifts that haven't been celebrated yet. The dialog only
+    // shows when there's a delta vs SharedPreferences, so this is a
+    // no-op on subsequent app launches unless a new gift arrived.
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      final auth = context.read<AuthCubit>().state;
+      if (auth is AuthAuthenticated) {
+        maybeShowGiftAnnouncement(context);
+      }
+    });
   }
 
   @override
@@ -634,7 +647,7 @@ class _MainScreenState extends State<MainScreen> with AutomaticKeepAliveClientMi
                 // or when there's no auth session.
                 if (isLoggedIn)
                   Padding(
-                    padding: EdgeInsets.fromLTRB(16.w, 4.h, 16.w, 16.h),
+                    padding: EdgeInsets.fromLTRB(16.w, 0, 16.w, 14.h),
                     child: const HealthProfileCompactCta(),
                   ),
 

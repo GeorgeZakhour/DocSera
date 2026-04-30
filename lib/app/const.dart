@@ -24,6 +24,13 @@ class AppColors {
   static const Color grayMain = Color(0xFF74A0A2);  // Black text for buttons
   static const Color blackText = Colors.black;  // Black text for buttons
   static const Color textSubColor = Colors.black54; // Subtext color for descriptions
+
+  // Personal-gift channel tokens — warm cognac, used wherever gifts appear.
+  static const Color giftAccent      = Color(0xFFE07A1F);
+  static const Color giftAccentLight = Color(0xFFF2A65A);
+  static const Color giftSurface     = Color(0x12E07A1F); // ~7%
+  static const Color giftBorder      = Color(0x2EE07A1F); // ~18%
+  static const Color giftOnAccent    = Colors.white;
 }
 
 // Define other constants if needed

@@ -19,6 +19,9 @@ class Gift {
   final String? descriptionAr;
   final double? discountValue;
   final String? discountType;
+  /// True until the patient opens this gift's detail sheet for the
+  /// first time. Drives the small "new" dot on the gift card.
+  final bool isUnread;
 
   const Gift({
     required this.claimId,
@@ -41,6 +44,7 @@ class Gift {
     this.descriptionAr,
     this.discountValue,
     this.discountType,
+    this.isUnread = false,
   });
 
   factory Gift.fromJson(Map<String, dynamic> j) => Gift(
@@ -68,5 +72,6 @@ class Gift {
         descriptionAr: j['description_ar'] as String?,
         discountValue: (j['discount_value'] as num?)?.toDouble(),
         discountType: j['discount_type'] as String?,
+        isUnread: (j['is_unread'] as bool?) ?? false,
       );
 }

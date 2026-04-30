@@ -4504,7 +4504,37 @@ class AppLocalizationsAr extends AppLocalizations {
   String get personalGiftExpired => 'انتهت الصلاحية';
 
   @override
-  String get voucherPageGiftsSection => 'هدايا من الأطباء';
+  String get personalGiftsSectionTitle => 'هدايا شخصية';
+
+  @override
+  String get personalGiftsSectionDescription =>
+      'هدايا أرسلها لك هذا الطبيب شخصياً. اضغط لعرض رمز QR والتفاصيل.';
+
+  @override
+  String get giftAnnouncementTitleSingle => 'لديك هدية!';
+
+  @override
+  String giftAnnouncementTitleMulti(int count) {
+    return '$count هدايا في انتظارك!';
+  }
+
+  @override
+  String giftAnnouncementBodySingle(String doctorName) {
+    return 'أرسل لك $doctorName هدية شخصية. افتح محفظتك لعرض الرمز.';
+  }
+
+  @override
+  String get giftAnnouncementBodyMulti =>
+      'أرسل لك أطباؤك واختصاصيوك هدايا شخصية. افتح محفظتك لعرضها.';
+
+  @override
+  String get giftAnnouncementViewButton => 'فتح المحفظة';
+
+  @override
+  String get giftAnnouncementLaterButton => 'لاحقاً';
+
+  @override
+  String get voucherPageGiftsSection => 'هدايا من الأطباء والاختصاصيين';
 
   @override
   String get voucherPageGiftStatusClaimed => 'نشطة';
@@ -4517,7 +4547,7 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String voucherPageGiftSentBy(String name) {
-    return 'أرسلها د. $name';
+    return 'أرسلها $name';
   }
 
   @override

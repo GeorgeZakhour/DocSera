@@ -133,28 +133,39 @@ class _HealthAuthenticatedViewState extends State<HealthAuthenticatedView> {
                     _buildPatientGlassSwitcher(context),
                     SizedBox(height: 20.h),
 
-                    BlocBuilder<AccountProfileCubit, AccountProfileState>(
-                      builder: (context, state) {
-                        if (state is! AccountProfileLoaded) return const SizedBox.shrink();
-                        if (state.healthProfileCompletedAt != null) return const SizedBox.shrink();
-                        return Padding(
-                          padding: EdgeInsets.only(bottom: 14.h),
-                          child: CompleteProfileBanner(
-                            progress: 0.0, // decorative-only in v1
-                            onTap: () {
-                              Navigator.of(context).push(
-                                MaterialPageRoute(
-                                  builder: (_) => HealthProfileWizardPage(
-                                    repo: HealthProfileRepository(),
-                                    userId: Supabase.instance.client.auth.currentUser!.id,
-                                  ),
-                                ),
-                              ).then((_) {
-                                // Refresh on return so banner hides if completion happened.
-                                context.read<AccountProfileCubit>().loadProfile();
-                              });
-                            },
-                          ),
+                    // Health profile is a single-record concept tied to the
+                    // logged-in account, not to relatives. Hide the banner
+                    // whenever the patient switcher has a relative selected
+                    // — the relative has no profile of their own to complete.
+                    BlocBuilder<PatientSwitcherCubit, PatientSwitcherState>(
+                      builder: (context, switcher) {
+                        if (switcher.relativeId != null) {
+                          return const SizedBox.shrink();
+                        }
+                        return BlocBuilder<AccountProfileCubit, AccountProfileState>(
+                          builder: (context, state) {
+                            if (state is! AccountProfileLoaded) return const SizedBox.shrink();
+                            if (state.healthProfileCompletedAt != null) return const SizedBox.shrink();
+                            return Padding(
+                              padding: EdgeInsets.only(bottom: 14.h),
+                              child: CompleteProfileBanner(
+                                progress: 0.0, // decorative-only in v1
+                                onTap: () {
+                                  Navigator.of(context).push(
+                                    MaterialPageRoute(
+                                      builder: (_) => HealthProfileWizardPage(
+                                        repo: HealthProfileRepository(),
+                                        userId: Supabase.instance.client.auth.currentUser!.id,
+                                      ),
+                                    ),
+                                  ).then((_) {
+                                    // Refresh on return so banner hides if completion happened.
+                                    context.read<AccountProfileCubit>().loadProfile();
+                                  });
+                                },
+                              ),
+                            );
+                          },
                         );
                       },
                     ),
@@ -462,7 +473,7 @@ class _HealthAuthenticatedViewState extends State<HealthAuthenticatedView> {
           title,
           style: AppTextStyles.getTitle1(context).copyWith(
             fontSize: 15.sp,
-            color: AppColors.orange,
+            color: AppColors.orangeText,
             fontWeight: FontWeight.bold,
           ),
         ),

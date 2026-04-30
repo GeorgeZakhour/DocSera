@@ -246,7 +246,7 @@ class _OffersPageState extends State<OffersPage> {
             padding: EdgeInsets.fromLTRB(16.w, 12.h, 16.w, 6.h),
             child: Row(
               children: [
-                Icon(Icons.local_fire_department_rounded,
+                Icon(Icons.electric_bolt_rounded,
                     size: 18.sp, color: const Color(0xFFFF8F00)),
                 SizedBox(width: 6.w),
                 Text(
@@ -434,7 +434,7 @@ class _MegaCarouselCard extends StatelessWidget {
                   child: Row(
                     mainAxisSize: MainAxisSize.min,
                     children: [
-                      Icon(Icons.local_fire_department_rounded,
+                      Icon(Icons.electric_bolt_rounded,
                           size: 12.sp, color: Colors.white),
                       SizedBox(width: 4.w),
                       Text(

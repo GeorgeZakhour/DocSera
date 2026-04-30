@@ -136,12 +136,17 @@ class _TransactionTileState extends State<TransactionTile>
   // ─── Type detection ────────────────────────────────────────
 
   _TxType get _type {
+    final metaSource = _metadata['source'] as String?;
+    if (metaSource == 'health_profile') return _TxType.healthProfile;
+
     final metaType = _metadata['type'] as String?;
     if (metaType == 'referral') return _TxType.referral;
     if (metaType == 'welcome_referral') return _TxType.welcome;
     if (metaType == 'redeem') return _TxType.redeem;
+    if (metaType == 'health_profile') return _TxType.healthProfile;
 
     final desc = _description.toLowerCase();
+    if (desc.contains('health profile')) return _TxType.healthProfile;
     if (desc.contains('referral') && desc.contains('new user')) return _TxType.referral;
     if (desc.contains('welcome') || desc.contains('joined via')) return _TxType.welcome;
     if (desc.contains('appointment') || desc.contains('done') || desc.contains('completed')) return _TxType.appointment;
@@ -157,6 +162,8 @@ class _TransactionTileState extends State<TransactionTile>
         return l.transactionWelcome;
       case _TxType.appointment:
         return l.transactionAppointment;
+      case _TxType.healthProfile:
+        return l.healthProfile_points_row_title;
       case _TxType.redeem:
         return l.transactionRedeemed;
       case _TxType.earned:
@@ -174,6 +181,8 @@ class _TransactionTileState extends State<TransactionTile>
         return l.transactionWelcome;
       case _TxType.appointment:
         return l.appointments;
+      case _TxType.healthProfile:
+        return l.healthProfile_wizard_title;
       case _TxType.redeem:
         return l.offers;
       case _TxType.earned:
@@ -191,6 +200,8 @@ class _TransactionTileState extends State<TransactionTile>
         return Icons.card_giftcard_rounded;
       case _TxType.appointment:
         return Icons.calendar_today_rounded;
+      case _TxType.healthProfile:
+        return Icons.favorite_rounded;
       case _TxType.redeem:
         return Icons.shopping_bag_rounded;
       case _TxType.earned:
@@ -206,6 +217,8 @@ class _TransactionTileState extends State<TransactionTile>
     switch (_type) {
       case _TxType.appointment:
         return const Color(0xFF4CAF50);
+      case _TxType.healthProfile:
+        return const Color(0xFFE91E63);
       default:
         return AppColors.main;
     }
@@ -545,6 +558,8 @@ class _TransactionTileState extends State<TransactionTile>
     switch (_type) {
       case _TxType.appointment:
         return _appointmentDetails(context, l);
+      case _TxType.healthProfile:
+        return _healthProfileDetails(context, l);
       case _TxType.referral:
         return _referralDetails(context, l);
       case _TxType.welcome:
@@ -613,6 +628,36 @@ class _TransactionTileState extends State<TransactionTile>
     if (rows.isNotEmpty) {
       rows.add(Divider(color: Colors.grey.withOpacity(0.15), height: 16.h));
     }
+    return rows;
+  }
+
+  // ── Health profile ──
+
+  List<Widget> _healthProfileDetails(BuildContext context, AppLocalizations l) {
+    final rows = <Widget>[];
+    final color = const Color(0xFFE91E63);
+
+    rows.add(_detailRow(
+      context,
+      Icons.health_and_safety_rounded,
+      l.healthProfile_wizard_title,
+      l.healthProfile_completion_body,
+      color,
+    ));
+    rows.add(SizedBox(height: 6.h));
+
+    if (_eventDate != null) {
+      rows.add(_detailRow(
+        context,
+        Icons.done_all_rounded,
+        l.eventDate,
+        _formatDateTime(context, _eventDate!),
+        const Color(0xFF4CAF50),
+      ));
+      rows.add(SizedBox(height: 6.h));
+    }
+
+    rows.add(Divider(color: Colors.grey.withOpacity(0.15), height: 16.h));
     return rows;
   }
 
@@ -819,7 +864,7 @@ class _TransactionTileState extends State<TransactionTile>
   }
 }
 
-enum _TxType { appointment, referral, welcome, redeem, earned, spent }
+enum _TxType { appointment, healthProfile, referral, welcome, redeem, earned, spent }
 
 class _DashedBorderPainter extends CustomPainter {
   final Color color;
