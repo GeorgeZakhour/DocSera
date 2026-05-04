@@ -148,12 +148,15 @@ class AccountSecurityService {
       // ✅ Update Biometric Storage if enabled
       final prefs = await SharedPreferences.getInstance();
       if (prefs.getBool('enableFaceID') == true) {
-        // We need the password to re-save credentials.
-        // Option 1: Ask user for password (too much friction)
-        // Option 2: Read old password from storage (if exists) and re-save with new email
-        final oldPassword = prefs.getString('userPassword');
-        if (oldPassword != null) {
-          await BiometricStorage.saveCredentials(email: email, password: oldPassword);
+        // Read existing credentials from the secure store (which already
+        // handles legacy SharedPreferences migration) and re-save with the
+        // new email. Plaintext password is NEVER read from prefs anymore.
+        final existing = await BiometricStorage.getCredentials();
+        if (existing != null && existing['password'] != null) {
+          await BiometricStorage.saveCredentials(
+            email: email,
+            password: existing['password']!,
+          );
         }
       }
     } catch (e) {

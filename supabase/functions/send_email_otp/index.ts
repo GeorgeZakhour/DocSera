@@ -25,6 +25,33 @@ serve(async (req) => {
     );
 
     // ------------------------------------------------------------
+    // Per-IP rate limit (anti-abuse / anti-enumeration). Caps OTP requests
+    // from a single IP at 30/hour. Phone/email-level limits already exist;
+    // this is the complementary limit for IPs rotating identifiers.
+    // ------------------------------------------------------------
+    const fwdHeader =
+      req.headers.get("x-forwarded-for") ||
+      req.headers.get("cf-connecting-ip") ||
+      "";
+    const ip = fwdHeader.split(",")[0].trim();
+    const { data: ipOk, error: ipErr } = await supabase.rpc(
+      "rpc_check_otp_ip_rate",
+      { p_email: email, p_ip: ip }
+    );
+    if (ipErr) {
+      console.error("[Security] IP rate-limit RPC error:", ipErr);
+      // Fail open — don't lock out users on internal errors.
+    } else if (ipOk === false) {
+      return new Response(
+        JSON.stringify({
+          error: "OTP_TOO_FREQUENT",
+          message: "Too many requests from this network. Please try again later.",
+        }),
+        { status: 429, headers: { "Content-Type": "application/json" } }
+      );
+    }
+
+    // ------------------------------------------------------------
     // 0️⃣ Security Check: Verify email belongs to DocSera user
     // ------------------------------------------------------------
     console.log(`[Debug] Checking existence for email: ${email}`);

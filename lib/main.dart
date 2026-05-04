@@ -63,8 +63,16 @@ import 'services/supabase/repositories/favorites_repository.dart';
 import 'services/supabase/repositories/appointment_repository.dart';
 import 'services/supabase/loyalty/loyalty_service.dart';
 import 'services/encryption/message_encryption_service.dart';
+import 'services/observability/sentry_init.dart';
+import 'services/analytics/analytics_service.dart';
+import 'services/analytics/analytics_navigator_observer.dart';
+import 'services/analytics/analytics_event_catalog.dart';
 
 void main() async {
+  await SentryInit.run(_bootstrap);
+}
+
+Future<void> _bootstrap() async {
   WidgetsFlutterBinding.ensureInitialized();
   tz.initializeTimeZones(); // 👈 مهم جداً لمرة واحدة فقط
 
@@ -105,6 +113,12 @@ void main() async {
   // ✅ تحميل اللغة المحفوظة مسبقًا
   final savedLocale = await getSavedLocale();
 
+
+  // Initialize analytics (anonymous-then-identified). user_id attached later
+  // via Analytics.identify() in the AuthCubit listener below.
+  await Analytics.instance.init(
+    initialUserId: client.auth.currentUser?.id,
+  );
 
   SystemChrome.setEnabledSystemUIMode(SystemUiMode.edgeToEdge);
   SystemChrome.setSystemUIOverlayStyle(
@@ -174,6 +188,8 @@ void main() async {
           },
           listener: (context, state) async {
             if (state is custom_auth.AuthAuthenticated) {
+              Analytics.instance.identify(state.user.id);
+              Analytics.instance.track(Events.loginCompleted, {});
               // 🔹 هذه تُستدعى مرة واحدة فقط
               // 🔹 Load Critical User Data Only (Lazy load the rest)
               // ✅ Initialize message encryption on login (MUST await before loading data)
@@ -345,6 +361,7 @@ class _MyAppState extends State<MyApp> {
                 );
               },
               navigatorKey: _navKey,
+              navigatorObservers: [AnalyticsNavigatorObserver()],
               debugShowCheckedModeBanner: false,
               theme: ThemeData(
 

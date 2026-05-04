@@ -20,6 +20,8 @@ import 'package:flutter_quill/flutter_quill.dart' as quill;
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:qr_flutter/qr_flutter.dart';
 import 'package:share_plus/share_plus.dart';
+import 'package:docsera/services/analytics/analytics_service.dart';
+import 'package:docsera/services/analytics/analytics_event_catalog.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:docsera/gen_l10n/app_localizations.dart';
@@ -132,6 +134,12 @@ class _DoctorProfilePageState extends State<DoctorProfilePage> {
     _scrollController.addListener(_onScroll);
 
     _userId = Supabase.instance.client.auth.currentUser?.id;
+
+    if (widget.doctorId.trim().isNotEmpty) {
+      Analytics.instance.track(Events.doctorProfileViewed, {
+        'doctor_id': widget.doctorId.trim(),
+      });
+    }
 
     debugPrint("🩺 DoctorProfilePage INIT - doctorId: ${widget.doctorId}");
     if (widget.doctor != null && widget.doctor!.isNotEmpty) {
@@ -312,6 +320,9 @@ class _DoctorProfilePageState extends State<DoctorProfilePage> {
 
   /// 🔹 Open phone dialer when clicking the phone number
   void _makePhoneCall(String phoneNumber) async {
+    Analytics.instance.track(Events.doctorPhoneClicked, {
+      'doctor_id': widget.doctorId.trim(),
+    });
     final Uri phoneUri = Uri.parse("tel:$phoneNumber");
     if (await canLaunchUrl(phoneUri)) {
       await launchUrl(phoneUri);
@@ -319,6 +330,9 @@ class _DoctorProfilePageState extends State<DoctorProfilePage> {
   }
 
   void _sendEmail(String email) async {
+    Analytics.instance.track(Events.doctorEmailClicked, {
+      'doctor_id': widget.doctorId.trim(),
+    });
     final Uri emailLaunchUri = Uri(
       scheme: 'mailto',
       path: email,
@@ -3146,6 +3160,10 @@ class _DoctorProfilePageState extends State<DoctorProfilePage> {
       setState(() {
         _isFavorite = res;
       });
+      Analytics.instance.track(
+        res ? Events.doctorFavorited : Events.doctorUnfavorited,
+        {'doctor_id': widget.doctorId.trim()},
+      );
     }
   }
 
@@ -3376,7 +3394,12 @@ class _DoctorProfilePageState extends State<DoctorProfilePage> {
     final deepLink = 'docsera://doctor/$token';
 
     final doctorName =
-    "${_doctorData?['title'] ?? ''} ${_doctorData?['first_name'] ?? ''} ${_doctorData?['last_name'] ?? ''}"
+    [
+                _doctorData?['title'] ?? '',
+                _doctorData?['first_name'] ?? '',
+                _doctorData?['middle_name'] ?? '',
+                _doctorData?['last_name'] ?? '',
+              ].map((s) => s.toString().trim()).where((s) => s.isNotEmpty).join(' ')
         .trim();
 
     final specialty =
@@ -3400,6 +3423,10 @@ $deepLink
 
     // 🔴 الحل هنا
     final box = context.findRenderObject() as RenderBox?;
+
+    Analytics.instance.track(Events.doctorShareClicked, {
+      'doctor_id': widget.doctorId.trim(),
+    });
 
     Share.share(
       text,
@@ -3599,7 +3626,12 @@ $deepLink
                   title: Opacity(
                     opacity: _showAppBar ? 1.0 : 0.0,
                     child: Text(
-                      "${_doctorData?['title'] ?? ''} ${_doctorData?['first_name'] ?? ''} ${_doctorData?['last_name'] ?? ''}".trim(),
+                      [
+                _doctorData?['title'] ?? '',
+                _doctorData?['first_name'] ?? '',
+                _doctorData?['middle_name'] ?? '',
+                _doctorData?['last_name'] ?? '',
+              ].map((s) => s.toString().trim()).where((s) => s.isNotEmpty).join(' ').trim(),
                       style: AppTextStyles.getTitle2(context).copyWith(color: AppColors.whiteText),
                     ),
                   ),
@@ -3634,7 +3666,12 @@ $deepLink
                           ),
                           SizedBox(height: 10.h),
                           Text(
-                            "${_doctorData?['title'] ?? ''} ${_doctorData?['first_name'] ?? ''} ${_doctorData?['last_name'] ?? ''}".trim(),
+                            [
+                _doctorData?['title'] ?? '',
+                _doctorData?['first_name'] ?? '',
+                _doctorData?['middle_name'] ?? '',
+                _doctorData?['last_name'] ?? '',
+              ].map((s) => s.toString().trim()).where((s) => s.isNotEmpty).join(' ').trim(),
                             style: AppTextStyles.getTitle2(context)
                                 .copyWith(color: AppColors.whiteText),
                           ),
@@ -4946,9 +4983,10 @@ class _ClaimPromotionSheetState extends State<_ClaimPromotionSheet>
     final avatarWidget = imageResult.widget;
     final title = (doctor['title'] as String?)?.trim() ?? '';
     final firstName = (doctor['first_name'] as String?)?.trim() ?? '';
+    final middleName = (doctor['middle_name'] as String?)?.trim() ?? '';
     final lastName = (doctor['last_name'] as String?)?.trim() ?? '';
     final specialty = (doctor['specialty'] as String?)?.trim() ?? '';
-    final fullName = [title, firstName, lastName]
+    final fullName = [title, firstName, middleName, lastName]
         .where((s) => s.isNotEmpty)
         .join(' ')
         .trim();

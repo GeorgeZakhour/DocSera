@@ -13,6 +13,8 @@ import 'package:docsera/gen_l10n/app_localizations.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:intl/intl.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
+import 'package:docsera/services/analytics/analytics_service.dart';
+import 'package:docsera/services/analytics/analytics_event_catalog.dart';
 
 import '../../../widgets/base_scaffold.dart';
 
@@ -251,6 +253,13 @@ class _ConfirmationPageState extends State<ConfirmationPage> {
       );
 
 
+      Analytics.instance.track(Events.bookingConfirmed, {
+        'doctor_id': widget.appointmentDetails.doctorId,
+        'appointment_id': appointmentId.toString(),
+        if (reasonId != null) 'reason_id': reasonId,
+        'patient_kind': widget.appointmentDetails.isRelative ? 'relative' : 'self',
+      });
+
       // 📦 بيانات التنقّل (للعرض فقط)
       final navPayload = {
         'doctorId': widget.appointmentDetails.doctorId,
@@ -294,9 +303,13 @@ class _ConfirmationPageState extends State<ConfirmationPage> {
         );
       }
     } catch (e) {
-      final msg =
-      e.toString().toLowerCase().contains('duplicate') ||
-          e.toString().toLowerCase().contains('unique')
+      final lower = e.toString().toLowerCase();
+      final isDuplicate = lower.contains('duplicate') || lower.contains('unique');
+      Analytics.instance.track(Events.bookingFailed, {
+        'doctor_id': widget.appointmentDetails.doctorId,
+        'error_code': isDuplicate ? 'slot_already_booked' : 'rpc_error',
+      });
+      final msg = isDuplicate
           ? AppLocalizations.of(context)!.slotAlreadyBooked
           : '${AppLocalizations.of(context)!.errorBookingAppointment}: $e';
 

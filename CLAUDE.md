@@ -121,6 +121,23 @@ supabase/
 - `OfflineBanner` widget displays when disconnected
 - Custom `_SyriaClient` applies 30-second HTTP timeout for slow networks
 
+### Crash reporting (Sentry)
+- Wrapped via `SentryInit.run(...)` in `main.dart` (lib/services/observability/sentry_init.dart)
+- DSN loaded at build time from `dart_defines/sentry.json` (gitignored — see `dart_defines/sentry.example.json` for the shape)
+- Healthtech-safe defaults: `sendDefaultPii: false`, screenshots/view-hierarchy capture disabled, `beforeSend` strips request/response bodies and PII fields
+- If `SENTRY_DSN` is empty, Sentry is fully disabled (no-op) — safe to ship without it
+
+**Rebuilding Xcode config after editing `dart_defines/sentry.json`:**
+```bash
+flutter build ios --config-only --dart-define-from-file=dart_defines/sentry.json
+```
+Then build/run from Xcode normally — the DSN is now baked into `ios/Flutter/Generated.xcconfig` until the next `flutter clean`.
+
+For Android Studio / `flutter run` from terminal:
+```bash
+flutter run --dart-define-from-file=dart_defines/sentry.json
+```
+
 ## Supabase Backend (Shared with DocSera-Pro)
 
 ### Key Tables
@@ -139,9 +156,32 @@ supabase/
 - `trg_handle_new_message` — updates conversation metadata on new messages
 - `trg_award_points_after_done` — loyalty points after completed appointments
 
+### Security conventions (post-2026-05-04 internal review)
+
+- **Never log PII or auth material.** Phone, email, OTP code, password, JWT, Pushy token, session token must never appear in `print` / `debugPrint` / Sentry breadcrumbs. When debugging is necessary, log lengths or boolean outcomes only, gated on `kDebugMode`.
+- **Plaintext credentials in `SharedPreferences` are forbidden.** Use `flutter_secure_storage` (via `BiometricStorage` for biometric flows or `SecureStorageService` for raw keys). `SharedPreferences` is for non-sensitive UI state only.
+- **Every new `SECURITY DEFINER` function must include `SET search_path = public, pg_temp`** at function definition time. This prevents schema-injection attacks. The audit migration `20260504160000_secdef_search_path_hardening.sql` retroactively pinned all existing functions.
+- **Inputs from external sources (deep links, RPC payloads) must be validated for length and charset** before reaching the database. The deep-link handler caps tokens at 64 chars and `[A-Za-z0-9_-]`.
+- See [docs/launch/05-security-review.md](docs/launch/05-security-review.md) for the full audit and findings.
+
 ### Row-Level Security
-- Most tables have RLS enabled — always respect and maintain RLS policies
-- 6 tables still pending RLS (documents, notes, otp, and others)
+- All public tables have RLS enabled and forced — always respect and maintain RLS policies
+- OTP / secret / audit tables (`login_otps`, `email_otp`, `_secrets`, `doctor_storage_usage`, `manual_patients_phone_audit`, plus the `*_otps` / `*_rate_limits` family) have RLS on with **zero policies by design** — they are accessed only by edge functions and `SECURITY DEFINER` RPCs running as `service_role`. Never grant `anon`/`authenticated` access or add permissive policies to these.
+
+### Applying migrations on self-hosted Supabase
+The Supabase CLI is not used in this setup. Migrations run directly via `psql` inside the `supabase-db` container on the VPS:
+
+```bash
+# Copy migration to the VPS
+scp -P 2203 supabase/migrations/<file>.sql george@94.252.183.77:/tmp/migration.sql
+
+# Apply as supabase_admin (superuser — works for both postgres- and supabase_admin-owned tables)
+ssh -p 2203 george@94.252.183.77 \
+  "docker cp /tmp/migration.sql supabase-db:/tmp/migration.sql && \
+   docker exec -i supabase-db psql -U supabase_admin -d postgres -v ON_ERROR_STOP=1 -f /tmp/migration.sql"
+```
+
+Use `-U supabase_admin` whenever the migration touches RLS, ownership, or `supabase_admin`-owned tables (`_secrets`, `doctor_storage_usage`, `manual_patients_phone_audit`). `-U postgres` is fine for everything else but `supabase_admin` works universally.
 
 ## Testing
 

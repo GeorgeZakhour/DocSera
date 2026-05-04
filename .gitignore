@@ -123,3 +123,10 @@ ios_backup_mac_mini/
 
 # Git worktrees (ephemeral, never tracked)
 .worktrees/
+
+# Build-time secrets (Sentry DSN etc.) — committed file is *.example.json only
+dart_defines/*.json
+!dart_defines/*.example.json
+
+# Build symbol files (per-build directories) — needed for symbolication, NOT secret
+build/symbols/

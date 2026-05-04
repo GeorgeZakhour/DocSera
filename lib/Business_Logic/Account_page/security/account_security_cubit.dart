@@ -1,5 +1,6 @@
 import 'dart:io';
 
+import 'package:flutter/foundation.dart';
 import 'package:docsera/services/biometrics/biometric_storage.dart';
 import 'package:docsera/services/supabase/user/account_security_service.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -216,15 +217,16 @@ class AccountSecurityCubit extends Cubit<AccountSecurityState> {
       await prefs.setBool('enableFaceID', enable);
       await prefs.setString('biometricType', biometricType);
 
-      // ✅ Fix: If enabling, ensure we have credentials stored for BiometricStorage
+      // ✅ Fix: If enabling, ensure credentials are mirrored into the secure
+      // store. We never read plaintext password from SharedPreferences anymore
+      // (it shouldn't be there for new installs). For legacy installs, the
+      // migration is handled inside BiometricStorage.getCredentials() itself.
       if (enable) {
-        final savedEmail = prefs.getString('userEmail');
-        final savedPassword = prefs.getString('userPassword');
-        if (savedEmail != null && savedPassword != null) {
-          await BiometricStorage.saveCredentials(
-            email: savedEmail,
-            password: savedPassword,
-          );
+        final creds = await BiometricStorage.getCredentials();
+        if (creds == null) {
+          // No credentials available — biometric will be useless until the
+          // user logs in once with their password to populate the store.
+          debugPrint('⚠️ Biometric enabled but no credentials in secure store yet');
         }
       }
 

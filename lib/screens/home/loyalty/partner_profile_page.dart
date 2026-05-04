@@ -15,6 +15,8 @@ import 'package:docsera/utils/color_utils.dart';
 import 'package:docsera/utils/page_transitions.dart';
 import 'offer_detail_page.dart';
 import 'widgets/offer_cover_card.dart';
+import 'package:docsera/services/analytics/analytics_service.dart';
+import 'package:docsera/services/analytics/analytics_event_catalog.dart';
 
 class PartnerProfilePage extends StatelessWidget {
   final String partnerId;
@@ -23,6 +25,9 @@ class PartnerProfilePage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    Analytics.instance.track(Events.partnerProfileViewed, {
+      'partner_id': partnerId,
+    });
     return BlocProvider(
       create: (_) => PartnerCubit(LoyaltyService())..load(partnerId),
       child: const _PartnerProfileView(),

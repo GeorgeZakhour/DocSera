@@ -473,7 +473,15 @@ class _SearchAdvancedPageState extends State<SearchAdvancedPage> {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
-            "${doctor['title'] ?? ''} ${doctor['first_name'] ?? ''} ${doctor['last_name'] ?? ''}".trim(),
+            [
+              doctor['title'] ?? '',
+              doctor['first_name'] ?? '',
+              doctor['middle_name'] ?? '',
+              doctor['last_name'] ?? '',
+            ]
+                .map((s) => s.toString().trim())
+                .where((s) => s.isNotEmpty)
+                .join(' '),
             style: AppTextStyles.getText2(context).copyWith(
               fontWeight: FontWeight.bold,
               color: AppColors.mainDark,
@@ -538,7 +546,12 @@ class _SearchAdvancedPageState extends State<SearchAdvancedPage> {
             fadePageRoute(
               SelectPatientForMessagePage(
                 doctorId: doctor['id'],
-                doctorName: "${doctor['title'] ?? ''} ${doctor['first_name'] ?? ''} ${doctor['last_name'] ?? ''}".trim(),
+                doctorName: [
+                  doctor['title'] ?? '',
+                  doctor['first_name'] ?? '',
+                  doctor['middle_name'] ?? '',
+                  doctor['last_name'] ?? '',
+                ].map((s) => s.toString().trim()).where((s) => s.isNotEmpty).join(' '),
                 doctorGender: doctor['gender'],
                 doctorTitle: doctor['title'],
                 specialty: doctor['specialty'],

@@ -12,6 +12,7 @@ import 'package:docsera/app/const.dart';
 import 'package:docsera/widgets/custom_bottom_navigation_bar.dart';
 import 'dart:convert'; // For utf8 encoding
 import 'dart:math';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:docsera/widgets/base_scaffold.dart';
@@ -461,7 +462,7 @@ class _LogInPageState extends State<LogInPage> with SingleTickerProviderStateMix
         throw Exception("account_disabled");
       }
 
-      debugPrint("📨 [AUTH EMAIL] الإيميل المستخدم لتسجيل الدخول: $email");
+      // Don't log the email — it's PII. Outcome will be logged below.
 
       // ---------------------------------------------------------------------
       // 3️⃣ Supabase Auth (password check)
@@ -493,14 +494,20 @@ class _LogInPageState extends State<LogInPage> with SingleTickerProviderStateMix
       debugPrint("✅ [LOGIN SUCCESS] User ID: $userId");
 
       // ---------------------------------------------------------------------
-      // 4️⃣ Persist minimal auth data (biometric-only)
+      // 4️⃣ Persist minimal auth data (NO plaintext password — biometric
+      //    credentials live in flutter_secure_storage via BiometricStorage)
       // ---------------------------------------------------------------------
       await prefs.setBool('isLoggedIn', true);
       await prefs.setString('userId', userId);
       await prefs.setString('userEmail', email);
-      await prefs.setString('userPassword', password); // biometric only
 
-      debugPrint("💾 [SHARED PREFS] Auth data saved");
+      // Defense-in-depth: scrub any legacy plaintext password that may have
+      // been persisted by older builds before the security review.
+      if (prefs.containsKey('userPassword')) {
+        await prefs.remove('userPassword');
+      }
+
+      if (kDebugMode) debugPrint("💾 [SHARED PREFS] Auth data saved");
 
       // ---------------------------------------------------------------------
       // 5️⃣ POST-AUTH security state (RLS-safe, auth.uid())
@@ -732,23 +739,24 @@ class _LogInPageState extends State<LogInPage> with SingleTickerProviderStateMix
               // Replaces the previous phone-OTP daily login. The OTP
               // path is reserved for verification moments (signup,
               // password reset, contact change, new-device step-up).
+              // Field design intentionally mirrors the email tab —
+              // no prefix icon, label-as-hint, start-aligned text.
               TextFormField(
                 controller: _phoneController,
                 focusNode: _phoneFocus,
                 keyboardType: TextInputType.phone,
-                textDirection: TextDirection.ltr,
-                textAlign: TextAlign.left,
+                textDirection: detectTextDirection(_phoneController.text),
+                textAlign: getTextAlign(context),
                 style: TextStyle(fontSize: 14.sp),
                 inputFormatters: [
                   FilteringTextInputFormatter.digitsOnly,
                   LengthLimitingTextInputFormatter(10),
                 ],
                 decoration: InputDecoration(
-                  prefixIcon: const Icon(Icons.phone_android, color: Colors.grey),
                   labelText: AppLocalizations.of(context)!.phoneNumber,
-                  hintText: '09XXXXXXXX',
-                  hintStyle: TextStyle(fontSize: 14.sp, color: Colors.grey.withOpacity(0.5)),
+                  hintText: AppLocalizations.of(context)!.phoneNumber,
                   labelStyle: AppTextStyles.getText2(context).copyWith(color: Colors.grey),
+                  hintStyle: AppTextStyles.getText2(context).copyWith(color: Colors.grey.withOpacity(0.5)),
                   border: OutlineInputBorder(borderRadius: BorderRadius.circular(15.r)),
                 ),
                 onChanged: (val) {
@@ -759,22 +767,24 @@ class _LogInPageState extends State<LogInPage> with SingleTickerProviderStateMix
                   });
                 },
               ),
-              SizedBox(height: 12.h),
+              SizedBox(height: 15.h),
               TextFormField(
                 controller: _passwordController,
                 focusNode: _passwordFocus,
                 obscureText: !isPasswordVisible,
+                textDirection: detectTextDirection(_passwordController.text),
+                textAlign: getTextAlign(context),
                 style: TextStyle(fontSize: 14.sp),
                 decoration: InputDecoration(
-                  prefixIcon: const Icon(Icons.lock_outline, color: Colors.grey),
                   labelText: AppLocalizations.of(context)!.password,
+                  hintText: AppLocalizations.of(context)!.password,
                   labelStyle: AppTextStyles.getText2(context).copyWith(color: Colors.grey),
+                  hintStyle: AppTextStyles.getText2(context).copyWith(color: Colors.grey.withOpacity(0.5)),
                   border: OutlineInputBorder(borderRadius: BorderRadius.circular(15.r)),
                   suffixIcon: IconButton(
                     icon: Icon(
                       isPasswordVisible ? Icons.visibility : Icons.visibility_off,
-                      color: Colors.grey,
-                      size: 20.sp,
+                      size: 16.sp,
                     ),
                     onPressed: () => setState(
                         () => isPasswordVisible = !isPasswordVisible),
@@ -790,6 +800,42 @@ class _LogInPageState extends State<LogInPage> with SingleTickerProviderStateMix
                 onFieldSubmitted: (_) {
                   if (isValid && !isLoading) _logInUserWithPhonePassword();
                 },
+              ),
+
+              if (errorMessage != null) SizedBox(height: 10.h),
+              if (errorMessage != null)
+                Text(
+                  errorMessage!,
+                  style: AppTextStyles.getText2(context).copyWith(color: AppColors.red),
+                ),
+
+              SizedBox(height: 5.h),
+              Align(
+                alignment: AlignmentDirectional.centerStart,
+                child: Padding(
+                  padding: EdgeInsets.symmetric(horizontal: 10.sp),
+                  child: TextButton(
+                    onPressed: () {
+                      Navigator.push(
+                        context,
+                        fadePageRoute(const ForgotPasswordPage()),
+                      );
+                    },
+                    style: TextButton.styleFrom(
+                      padding: EdgeInsets.zero,
+                      minimumSize: const Size(0, 0),
+                      tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                      overlayColor: Colors.transparent,
+                    ),
+                    child: Text(
+                      AppLocalizations.of(context)!.forgotPassword,
+                      style: AppTextStyles.getText3(context).copyWith(
+                        color: AppColors.mainDark,
+                        fontWeight: FontWeight.w500,
+                      ),
+                    ),
+                  ),
+                ),
               ),
               SizedBox(height: 15.h),
               ElevatedButton(

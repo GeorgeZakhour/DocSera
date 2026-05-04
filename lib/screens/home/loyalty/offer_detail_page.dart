@@ -14,6 +14,8 @@ import 'package:docsera/utils/color_utils.dart';
 import 'package:docsera/utils/page_transitions.dart';
 import 'partner_profile_page.dart';
 import 'vouchers_page.dart';
+import 'package:docsera/services/analytics/analytics_service.dart';
+import 'package:docsera/services/analytics/analytics_event_catalog.dart';
 
 class OfferDetailPage extends StatefulWidget {
   final OfferModel offer;
@@ -39,6 +41,10 @@ class _OfferDetailPageState extends State<OfferDetailPage>
   @override
   void initState() {
     super.initState();
+    Analytics.instance.track(Events.offerClicked, {
+      'offer_id': widget.offer.id,
+      if (widget.offer.partnerId != null) 'partner_id': widget.offer.partnerId,
+    });
     _controller = AnimationController(
       vsync: this,
       duration: const Duration(milliseconds: 600),

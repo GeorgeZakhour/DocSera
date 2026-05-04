@@ -20,7 +20,9 @@ class SupabaseOTPService {
         'expires_at': expiresAt.toIso8601String(),
       });
 
-      debugPrint('📱 OTP sent to phone: $phoneNumber, Code: $otp');
+      // Never log the OTP code or the phone number — both are PII / auth
+      // material. Even debugPrint can leak in attached debug sessions.
+      if (kDebugMode) debugPrint('📱 OTP sent (length=${otp.length})');
       return otp;
     } catch (e) {
       throw Exception('Failed to send OTP to phone: $e');

@@ -14,6 +14,8 @@ import 'package:docsera/services/supabase/supabase_search_service.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:docsera/services/supabase/repositories/favorites_repository.dart';
+import 'package:docsera/services/analytics/analytics_service.dart';
+import 'package:docsera/services/analytics/analytics_event_catalog.dart';
 
 import 'home/messages/message_select_patient.dart';
 
@@ -57,6 +59,7 @@ class _SearchPageState extends State<SearchPage> {
   void initState() {
     super.initState();
     _userId = Supabase.instance.client.auth.currentUser?.id;
+    Analytics.instance.track(Events.searchStarted, {'source': widget.mode});
     /// ✅ **إعطاء التركيز لحقل البحث فور تحميل الصفحة**
     Future.delayed(Duration.zero, () {
       _focusNode.requestFocus();
@@ -399,7 +402,15 @@ class _SearchPageState extends State<SearchPage> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    "${doctor['title']} ${doctor['first_name']} ${doctor['last_name']}".trim(),
+                    [
+                      doctor['title'] ?? '',
+                      doctor['first_name'] ?? '',
+                      doctor['middle_name'] ?? '',
+                      doctor['last_name'] ?? '',
+                    ]
+                        .map((s) => s.toString().trim())
+                        .where((s) => s.isNotEmpty)
+                        .join(' '),
                     style: AppTextStyles.getText2(context).copyWith(
                       fontWeight: FontWeight.bold,
                       color: AppColors.mainDark,
@@ -451,8 +462,15 @@ class _SearchPageState extends State<SearchPage> {
                   Navigator.push(context, fadePageRoute(
                     SelectPatientForMessagePage(
                       doctorId: doctor['id'],
-                      doctorName:
-                      "${doctor['title']} ${doctor['first_name']} ${doctor['last_name']}",
+                      doctorName: [
+                        doctor['title'] ?? '',
+                        doctor['first_name'] ?? '',
+                        doctor['middle_name'] ?? '',
+                        doctor['last_name'] ?? '',
+                      ]
+                          .map((s) => s.toString().trim())
+                          .where((s) => s.isNotEmpty)
+                          .join(' '),
                       doctorGender: doctor['gender'],
                       doctorTitle: doctor['title'],
                       specialty: doctor['specialty'],

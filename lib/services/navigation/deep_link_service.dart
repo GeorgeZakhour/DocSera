@@ -60,7 +60,15 @@ class DeepLinkService {
     }
 
     if (doctorToken == null || doctorToken.isEmpty) {
-      log('⚠️ Ignored deep link: $uri');
+      log('⚠️ Ignored deep link');
+      return;
+    }
+    // Defense: bound length and charset before issuing a DB query. public_token
+    // values in the database are short alphanumeric IDs; anything else is a
+    // malicious or malformed link.
+    if (doctorToken.length > 64 ||
+        !RegExp(r'^[A-Za-z0-9_\-]+$').hasMatch(doctorToken)) {
+      log('⚠️ Rejected deep link with invalid token shape');
       return;
     }
 

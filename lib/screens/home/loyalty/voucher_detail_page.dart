@@ -8,6 +8,8 @@ import 'package:docsera/app/text_styles.dart';
 import 'package:docsera/gen_l10n/app_localizations.dart';
 import 'package:docsera/models/voucher_model.dart';
 import 'package:intl/intl.dart' show DateFormat;
+import 'package:docsera/services/analytics/analytics_service.dart';
+import 'package:docsera/services/analytics/analytics_event_catalog.dart';
 
 /// Detail page for a single voucher.
 ///
@@ -35,6 +37,9 @@ class _VoucherDetailPageState extends State<VoucherDetailPage>
   @override
   void initState() {
     super.initState();
+    Analytics.instance.track(Events.voucherViewed, {
+      'voucher_id': widget.voucher.id,
+    });
     _controller = AnimationController(
       vsync: this,
       duration: const Duration(milliseconds: 950),

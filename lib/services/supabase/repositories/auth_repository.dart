@@ -15,15 +15,14 @@ class AuthRepository {
 
   /// ✅ التحقق مما إذا كان رقم الهاتف موجود مسبقًا في Supabase
   Future<bool> isPhoneNumberExists(String phoneNumber) async {
-    debugPrint("📞 Checking if phone number exists: $phoneNumber");
-
     final response = await _supabase.rpc(
       'rpc_check_phone_exists',
       params: {'p_phone': phoneNumber},
     );
 
     final exists = response == true;
-    debugPrint("📊 Matching phone: ${exists ? "FOUND" : "NOT FOUND"}");
+    // Don't log the phone number — it's PII. Outcome only, debug-only.
+    if (kDebugMode) debugPrint("📊 phone-exists check: ${exists ? "FOUND" : "NOT FOUND"}");
 
     return exists;
   }

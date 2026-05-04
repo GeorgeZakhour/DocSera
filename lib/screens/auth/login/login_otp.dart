@@ -12,6 +12,8 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 import '../../../app/const.dart';
 import 'package:docsera/gen_l10n/app_localizations.dart';
 import 'package:device_info_plus/device_info_plus.dart';
+import 'package:docsera/services/analytics/analytics_service.dart';
+import 'package:docsera/services/analytics/analytics_event_catalog.dart';
 
 import '../../../utils/full_page_loader.dart';
 
@@ -73,6 +75,12 @@ class _LoginOTPPageState extends State<LoginOTPPage> {
       isLoading = true;
     });
 
+    final channel = widget.email != null ? 'email' : 'phone';
+    Analytics.instance.track(Events.otpRequested, {
+      'channel': channel,
+      'context': 'login',
+    });
+
     try {
 
       if (widget.email != null) {
@@ -110,6 +118,11 @@ class _LoginOTPPageState extends State<LoginOTPPage> {
       setState(() {
         isLoading = false;
       });
+      Analytics.instance.track(Events.otpFailed, {
+        'channel': channel,
+        'context': 'login_send',
+        'error_code': 'send_error',
+      });
 
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
@@ -128,6 +141,7 @@ class _LoginOTPPageState extends State<LoginOTPPage> {
 
   Future<void> _validateCode() async {
     setState(() => isLoading = true);
+    final channel = widget.email != null ? 'email' : 'phone';
 
     try {
       final deviceId = await getDeviceId();
@@ -143,7 +157,7 @@ class _LoginOTPPageState extends State<LoginOTPPage> {
             'p_purpose': 'signup_email_verify', // Reusing ownership check
           },
         );
-        
+
         // 2. Trust Device (Since this is a login verification)
         await Supabase.instance.client.rpc(
           'trust_current_device',
@@ -165,6 +179,10 @@ class _LoginOTPPageState extends State<LoginOTPPage> {
           throw Exception('invalid_otp');
         }
       }
+      Analytics.instance.track(Events.otpVerified, {
+        'channel': channel,
+        'context': 'login',
+      });
 
       Navigator.pushAndRemoveUntil(
         context,
@@ -172,6 +190,11 @@ class _LoginOTPPageState extends State<LoginOTPPage> {
             (_) => false,
       );
     } catch (_) {
+      Analytics.instance.track(Events.otpFailed, {
+        'channel': channel,
+        'context': 'login_verify',
+        'error_code': 'invalid_otp',
+      });
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text(AppLocalizations.of(context)!.invalidCode),

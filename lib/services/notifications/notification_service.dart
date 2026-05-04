@@ -1,5 +1,6 @@
 // lib/services/notifications/notification_service.dart
 import 'dart:io';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:timezone/timezone.dart' as tz;
@@ -97,7 +98,8 @@ class NotificationService {
     try {
       // تسجيل الجهاز والحصول على التوكن
       final token = await Pushy.register();
-      debugPrint('✅ Pushy Registration Success: $token');
+      // Don't log the device token — it's a credential that can be used to push to this device.
+      if (kDebugMode) debugPrint('✅ Pushy Registration Success (token length=${token.length})');
       _pushyDeviceToken = token;
 
       // بانر داخل التطبيق على iOS (اختياري)
@@ -126,7 +128,7 @@ class NotificationService {
       'app': 'docsera',
     }, onConflict: 'user_id,token,app');
     
-    debugPrint('✅ Pushy Token saved to Supabase for user: $userId');
+    if (kDebugMode) debugPrint('✅ Pushy Token saved to Supabase');
   }
 
   Future<void> deleteToken() async {
@@ -140,7 +142,7 @@ class NotificationService {
           .eq('token', token)
           .eq('app', 'docsera');
 
-      debugPrint('🗑️ Pushy Token deleted from Supabase: $token');
+      if (kDebugMode) debugPrint('🗑️ Pushy Token deleted from Supabase');
       _pushyDeviceToken = null;
     } catch (e) {
       debugPrint('❌ Error deleting Pushy token: $e');

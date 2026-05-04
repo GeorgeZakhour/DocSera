@@ -64,8 +64,14 @@ class SupabaseSearchService {
 
       if (members.isEmpty) return directDocs;
 
+      // Specialists are clinicians too — patients booking should see
+      // them in search results just like doctors. Only secretaries
+      // are excluded.
       final relatedDoctorIds = members
-          .where((m) => m['role'] == 'owner' || m['role'] == 'doctor')
+          .where((m) =>
+              m['role'] == 'owner' ||
+              m['role'] == 'doctor' ||
+              m['role'] == 'specialist')
           .map((m) => m['doctor_id'] ?? m['user_id'])
           .where((id) => id != null)
           .cast<String>()

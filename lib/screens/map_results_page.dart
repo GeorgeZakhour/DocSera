@@ -609,8 +609,12 @@ class _DoctorCard extends StatelessWidget {
     final imageResult = resolveDoctorImagePathAndWidget(doctor: doctor);
     final imageProvider = imageResult.imageProvider;
 
-    final name =
-    "${doctor['title'] ?? ''} ${doctor['first_name'] ?? ''} ${doctor['last_name'] ?? ''}".trim();
+    final name = [
+      doctor['title'] ?? '',
+      doctor['first_name'] ?? '',
+      doctor['middle_name'] ?? '',
+      doctor['last_name'] ?? '',
+    ].map((s) => s.toString().trim()).where((s) => s.isNotEmpty).join(' ');
     final specialty = (doctor['specialty'] ?? '').toString();
     final address = _address(doctor);
     final details = _addressDetails(doctor);

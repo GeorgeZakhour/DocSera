@@ -1,0 +1,4 @@
+{
+  "SENTRY_DSN": "https://<public-key>@oXXXXX.ingest.de.sentry.io/XXXXX",
+  "SENTRY_TEST": ""
+}
