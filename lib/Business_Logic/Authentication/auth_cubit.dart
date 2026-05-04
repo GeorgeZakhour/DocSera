@@ -41,9 +41,7 @@ class AuthCubit extends Cubit<AppAuthState> {
     final session = _supabase.auth.currentSession;
     final user = session?.user;
     if (user != null) {
-      emit(AuthAuthenticated(user));
-      await _persistLogin(user.id);
-      onRealtimeStart?.call(user);
+      await _resolveAuthState(user);
     } else {
       emit(AuthUnauthenticated());
       await _clearLogin();
@@ -79,11 +77,7 @@ class AuthCubit extends Cubit<AppAuthState> {
       case AuthChangeEvent.signedIn:
       case AuthChangeEvent.tokenRefreshed:
         if (user != null) {
-          emit(AuthAuthenticated(user));
-          await _persistLogin(user.id);
-
-          // 🔁 إعادة تشغيل realtime (حل InvalidJWTToken)
-          onRealtimeStart?.call(user);
+          await _resolveAuthState(user);
         }
         break;
 
@@ -97,8 +91,7 @@ class AuthCubit extends Cubit<AppAuthState> {
       case AuthChangeEvent.passwordRecovery:
       case AuthChangeEvent.userUpdated:
         if (user != null) {
-          emit(AuthAuthenticated(user));
-          await _persistLogin(user.id);
+          await _resolveAuthState(user);
         }
         break;
 
@@ -165,6 +158,50 @@ class AuthCubit extends Cubit<AppAuthState> {
   // ---------------------------------------------------------------------------
   // HELPERS
   // ---------------------------------------------------------------------------
+
+  /// Decides whether a Supabase session is "real enough" to be treated
+  /// as authenticated. A bare auth.users row isn't enough — the
+  /// patient app needs a matching `public.users` profile to function.
+  /// Otherwise UserCubit and friends sit forever on shimmer skeletons.
+  ///
+  /// Orphan-session causes we've seen in this codebase:
+  ///   * cross-app verify-and-signOut whose tokens lingered in
+  ///     storage past the signOut call,
+  ///   * an interrupted signup where atomic rollback wiped the profile
+  ///     row but the device kept its session,
+  ///   * an admin-deleted profile while the user's auth row stayed,
+  ///   * any future bug that lands the app in the same shape.
+  ///
+  /// We probe the `users` table for a row matching auth.uid(). RLS
+  /// permits each user to read their own row. If not found (or the
+  /// query errors), we sign out and treat as unauthenticated so the
+  /// user lands on /login and can re-authenticate cleanly.
+  Future<void> _resolveAuthState(User user) async {
+    bool profileExists = false;
+    try {
+      final row = await _supabase
+          .from('users')
+          .select('id')
+          .eq('id', user.id)
+          .maybeSingle();
+      profileExists = row != null;
+    } catch (_) {
+      profileExists = false;
+    }
+
+    if (!profileExists) {
+      try { await _supabase.auth.signOut(); } catch (_) { /* ignore */ }
+      onRealtimeStop?.call();
+      emit(AuthUnauthenticated());
+      await _clearLogin();
+      return;
+    }
+
+    emit(AuthAuthenticated(user));
+    await _persistLogin(user.id);
+    onRealtimeStart?.call(user);
+  }
+
   Future<void> _persistLogin(String userId) async {
     await _prefs.setBool('isLoggedIn', true);
     await _prefs.setString('userId', userId);

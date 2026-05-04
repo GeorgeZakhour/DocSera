@@ -70,13 +70,27 @@ class _LogInPageState extends State<LogInPage> with SingleTickerProviderStateMix
     super.initState();
     _shakeController = AnimationController(vsync: this, duration: const Duration(milliseconds: 400));
     _supabaseUserService = context.read<SupabaseUserService>();
-    _inputController = TextEditingController(text: widget.preFilledInput);
-    
+
+    // Auto-route to the phone tab when the pre-filled value is a
+    // local-format phone (`09…`) rather than an email — typical case
+    // is the duplicate-phone dialog routing the user to login with
+    // their phone pre-filled.
+    final preFilled = widget.preFilledInput ?? '';
+    final looksLikePhone = RegExp(r'^09\d{0,8}$').hasMatch(preFilled);
+    if (looksLikePhone) {
+      _isPhoneMode = true;
+      _phoneController.text = preFilled;
+      _inputController = TextEditingController();
+    } else {
+      _isPhoneMode = false;
+      _inputController = TextEditingController(text: preFilled);
+    }
+
     _phoneFocus = FocusNode();
     _inputFocus = FocusNode();
     _passwordFocus = FocusNode();
 
-    isValid = widget.preFilledInput != null && widget.preFilledInput!.isNotEmpty;
+    isValid = preFilled.isNotEmpty;
     _checkBiometricReadiness();
     PackageInfo.fromPlatform().then((info) {
       if (mounted) {
@@ -630,14 +644,35 @@ class _LogInPageState extends State<LogInPage> with SingleTickerProviderStateMix
 
       if (!authenticated) return;
 
-      // ✅ Autofill credentials (EMAIL + PASSWORD)
+      // Detect a phone-signed-up account: biometrics for those was
+      // saved with the synthetic email shim (00963…@phone.docsera.app).
+      // Don't expose that internal identifier in the email field —
+      // strip it back to the local phone (09…) and route through the
+      // phone-tab login flow instead.
+      final syntheticMatch = RegExp(
+        r'^00963(\d{9})@phone\.docsera\.app$',
+      ).firstMatch(email);
+
+      if (syntheticMatch != null) {
+        final localPhone = '0${syntheticMatch.group(1)}';
+        setState(() {
+          _isPhoneMode = true;
+          _phoneController.text = localPhone;
+          _passwordController.text = password;
+          _inputController.text = '';
+          isValid = true;
+        });
+        await _logInUserWithPhonePassword();
+        return;
+      }
+
+      // Real email — autofill the email tab.
       setState(() {
+        _isPhoneMode = false;
         _inputController.text = email;
         _passwordController.text = password;
         isValid = true;
       });
-
-      // 🔁 Continue normal login flow
       await _logInUser();
     } catch (e) {
       debugPrint("❌ Biometric authentication error: $e");

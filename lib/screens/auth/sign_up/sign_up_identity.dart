@@ -9,6 +9,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import '../../../app/const.dart';
 import 'package:docsera/screens/auth/sign_up/recap_info.dart';
+import 'package:docsera/screens/auth/sign_up/terms_of_use_page.dart';
 import 'package:docsera/gen_l10n/app_localizations.dart';
 import 'package:docsera/screens/auth/sign_up/create_password.dart';
 
@@ -255,14 +256,21 @@ class _SignUpSecondPageState extends State<SignUpSecondPage> {
               ElevatedButton(
                 onPressed: isFormValid
                     ? () {
-                  // Both paths now go through CreatePasswordPage. The
-                  // phone path used to skip it (OTP-only daily login),
-                  // but the server now requires a real password —
-                  // daily login becomes signInWithPassword({phone,
-                  // password}), no per-login OTP.
+                  // Cross-app users already proved ownership of an
+                  // existing password on the welcome-back screen
+                  // (`CrossAppOptionsPage`), and that password is
+                  // already saved on signUpInfo. Sending them through
+                  // CreatePasswordPage again would either ask for a
+                  // password they don't need to set OR silently
+                  // overwrite the one they just verified — both bad.
+                  // Skip straight to terms in that case.
+                  final hasPassword =
+                      (widget.signUpInfo.password ?? '').isNotEmpty;
                   Navigator.push(
                     context,
-                    fadePageRoute(CreatePasswordPage(signUpInfo: widget.signUpInfo)),
+                    fadePageRoute(hasPassword
+                        ? TermsOfUsePage(signUpInfo: widget.signUpInfo)
+                        : CreatePasswordPage(signUpInfo: widget.signUpInfo)),
                   );
                 }
                     : null, // ❌ تعطيل الزر إذا لم يكن الإدخال صحيحًا

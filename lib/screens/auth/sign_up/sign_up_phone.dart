@@ -1,6 +1,8 @@
 import 'package:docsera/app/text_styles.dart';
+import 'package:docsera/screens/auth/login/login_page.dart';
 import 'package:docsera/screens/auth/sign_up/cross_app_options.dart';
 import 'package:docsera/screens/auth/sign_up/sign_up_identity.dart';
+import 'package:shimmer/shimmer.dart';
 import 'package:docsera/utils/page_transitions.dart';
 import 'package:docsera/utils/text_direction_utils.dart';
 import 'package:docsera/widgets/base_scaffold.dart';
@@ -195,69 +197,117 @@ class _SignUpFirstPageState extends State<SignUpFirstPage> {
 
   /// **📌 نافذة تنبيه عند اكتشاف رقم مكرر**
   void _showDuplicateDialog(BuildContext context) {
+    final local = AppLocalizations.of(context)!;
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final localPhone = _phoneController.text.trim();
     showDialog(
       context: context,
-      builder: (context) {
-        return AlertDialog(
-          title: Text(
-            AppLocalizations.of(context)!.phoneAlreadyRegistered,
-            style: AppTextStyles.getTitle2(context),
-            textAlign: TextAlign.center, // ✅ توسيط العنوان
+      barrierColor: Colors.black54,
+      builder: (dialogCtx) {
+        return Dialog(
+          backgroundColor: isDark
+              ? const Color(0xFF1F2A33)
+              : Colors.white,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(20.r),
           ),
-          content: Text(
-            AppLocalizations.of(context)!.phoneAlreadyRegisteredContent,
-            style: AppTextStyles.getText2(context),
-            textAlign: TextAlign.center, // ✅ توسيط المحتوى
-          ),
-          actionsAlignment: MainAxisAlignment.center, // ✅ توسيط الأزرار
-          actions: [
-            Column(
-              mainAxisSize: MainAxisSize.min, // ✅ منع تمدد العمود
-              crossAxisAlignment: CrossAxisAlignment.center, // ✅ توسيط الأزرار
+          insetPadding: EdgeInsets.symmetric(horizontal: 32.w),
+          child: Padding(
+            padding: EdgeInsets.fromLTRB(20.w, 24.h, 20.w, 16.h),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
               children: [
-                ElevatedButton(
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: AppColors.main,
-                    elevation: 0, // ✅ جعل الارتفاع 0
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12.r)),
-                    minimumSize: Size(double.infinity, 45.h), // ✅ تمديد الزر ليملأ العرض
+                Container(
+                  padding: EdgeInsets.all(14.w),
+                  decoration: BoxDecoration(
+                    color: AppColors.main.withValues(alpha: 0.10),
+                    shape: BoxShape.circle,
                   ),
-                  onPressed: () {
-                    Navigator.pop(context);
-                    Navigator.pushReplacement(
-                      context,
-                      fadePageRoute(SignUpFirstPage(signUpInfo: widget.signUpInfo)),
-                    );
-                  },
-                  child: Text(
-                    AppLocalizations.of(context)!.loginWithPhone,
-                    style: AppTextStyles.getText2(context).copyWith(color: AppColors.whiteText),
+                  child: Icon(
+                    Icons.phone_iphone_rounded,
+                    color: AppColors.main,
+                    size: 28.sp,
                   ),
                 ),
-                TextButton(
-                  onPressed: () {
-                    Navigator.pop(context);
-                    setState(() {
-                      _phoneController.clear();
-                      hasInput = false;
-                      isValid = false;
-                    });
-                  },
-                  style: TextButton.styleFrom(
-                    padding: EdgeInsets.symmetric(vertical: 10.h),
-                    minimumSize: Size(double.infinity, 45.h), // ✅ تمديد الزر ليملأ العرض
+                SizedBox(height: 14.h),
+                Text(
+                  local.phoneAlreadyRegistered,
+                  style: AppTextStyles.getTitle2(context).copyWith(
+                    fontWeight: FontWeight.bold,
                   ),
-                  child: Text(
-                    AppLocalizations.of(context)!.edit,
-                    style: AppTextStyles.getText2(context).copyWith(
-                      color: AppColors.main,
-                      fontWeight: FontWeight.bold,
+                  textAlign: TextAlign.center,
+                ),
+                SizedBox(height: 8.h),
+                Text(
+                  local.phoneAlreadyRegisteredContent,
+                  style: AppTextStyles.getText2(context).copyWith(
+                    color: isDark
+                        ? Colors.white70
+                        : Colors.black.withValues(alpha: 0.6),
+                  ),
+                  textAlign: TextAlign.center,
+                ),
+                SizedBox(height: 20.h),
+                SizedBox(
+                  width: double.infinity,
+                  height: 46.h,
+                  child: ElevatedButton(
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: AppColors.main,
+                      foregroundColor: Colors.white,
+                      elevation: 0,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(14.r),
+                      ),
+                    ),
+                    onPressed: () {
+                      Navigator.pop(dialogCtx);
+                      // Pre-fill the user's phone on the login page
+                      // and route to the phone tab.
+                      Navigator.pushReplacement(
+                        context,
+                        fadePageRoute(LogInPage(preFilledInput: localPhone)),
+                      );
+                    },
+                    child: Text(
+                      local.loginWithPhone,
+                      style: AppTextStyles.getText2(context).copyWith(
+                        color: Colors.white,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                  ),
+                ),
+                SizedBox(height: 6.h),
+                SizedBox(
+                  width: double.infinity,
+                  height: 44.h,
+                  child: TextButton(
+                    onPressed: () {
+                      Navigator.pop(dialogCtx);
+                      setState(() {
+                        _phoneController.clear();
+                        hasInput = false;
+                        isValid = false;
+                      });
+                    },
+                    style: TextButton.styleFrom(
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(14.r),
+                      ),
+                    ),
+                    child: Text(
+                      local.edit,
+                      style: AppTextStyles.getText2(context).copyWith(
+                        color: AppColors.main,
+                        fontWeight: FontWeight.w600,
+                      ),
                     ),
                   ),
                 ),
               ],
             ),
-          ],
+          ),
         );
       },
     );
@@ -440,7 +490,25 @@ class _SignUpFirstPageState extends State<SignUpFirstPage> {
                 ),
                 SizedBox(height: 20.h),
                 if (_otpVerifying)
-                  const Center(child: CircularProgressIndicator())
+                  // Subtle teal shimmer pill while we verify the OTP —
+                  // replaces the default Material purple spinner with
+                  // something that matches the brand and stays out of
+                  // the user's way.
+                  Center(
+                    child: Shimmer.fromColors(
+                      baseColor: AppColors.main.withOpacity(0.25),
+                      highlightColor: AppColors.main.withOpacity(0.7),
+                      period: const Duration(milliseconds: 1100),
+                      child: Container(
+                        width: 160.w,
+                        height: 6.h,
+                        decoration: BoxDecoration(
+                          color: AppColors.main,
+                          borderRadius: BorderRadius.circular(3.r),
+                        ),
+                      ),
+                    ),
+                  ),
               ],
 
 
