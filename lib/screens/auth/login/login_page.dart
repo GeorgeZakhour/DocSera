@@ -159,15 +159,22 @@ class _LogInPageState extends State<LogInPage> with SingleTickerProviderStateMix
       final deviceId = await getDeviceId();
 
       if (!trustedDevices.contains(deviceId)) {
-        // 2FA step-up. The patient app uses email OTP for step-up;
-        // for a phone-only account the OTP screen falls back to SMS
-        // when no email is on file (handled inside LoginOTPPage).
+        // 2FA step-up. Prefer email when there's a real one on file
+        // (cheaper, more reliable than SMS in Syria). Fall back to
+        // SMS for phone-only patients. Don't pass empty strings —
+        // LoginOTPPage branches on null vs non-null and would route
+        // to email + fail with `send_email_otp` if we passed `''`.
+        final realEmail =
+            (securityState['email'] as String?)?.trim() ?? '';
+        final realPhone =
+            (securityState['phone_number'] as String?)?.trim() ?? phone;
         if (!mounted) return;
         Navigator.push(
           context,
           MaterialPageRoute(
             builder: (_) => LoginOTPPage(
-              email: securityState['email']?.toString() ?? '',
+              email: realEmail.isNotEmpty ? realEmail : null,
+              phoneNumber: realEmail.isEmpty ? realPhone : null,
             ),
           ),
         );
