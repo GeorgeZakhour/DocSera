@@ -8,7 +8,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import '../../../app/const.dart';
-import 'package:docsera/screens/auth/sign_up/terms_of_use_page.dart';
 import 'package:docsera/screens/auth/sign_up/recap_info.dart';
 import 'package:docsera/gen_l10n/app_localizations.dart';
 import 'package:docsera/screens/auth/sign_up/create_password.dart';
@@ -256,19 +255,15 @@ class _SignUpSecondPageState extends State<SignUpSecondPage> {
               ElevatedButton(
                 onPressed: isFormValid
                     ? () {
-                  if (widget.signUpInfo.authMethod == AuthMethod.phoneOtp) {
-                    // Path A: Go to Terms -> Marketing -> Recap
-                    Navigator.push(
-                      context,
-                      fadePageRoute(TermsOfUsePage(signUpInfo: widget.signUpInfo)),
-                    );
-                  } else {
-                    // Path B: Go to Create Password -> Terms -> Marketing -> Recap
-                    Navigator.push(
-                      context,
-                      fadePageRoute(CreatePasswordPage(signUpInfo: widget.signUpInfo)),
-                    );
-                  }
+                  // Both paths now go through CreatePasswordPage. The
+                  // phone path used to skip it (OTP-only daily login),
+                  // but the server now requires a real password —
+                  // daily login becomes signInWithPassword({phone,
+                  // password}), no per-login OTP.
+                  Navigator.push(
+                    context,
+                    fadePageRoute(CreatePasswordPage(signUpInfo: widget.signUpInfo)),
+                  );
                 }
                     : null, // ❌ تعطيل الزر إذا لم يكن الإدخال صحيحًا
                 style: ElevatedButton.styleFrom(

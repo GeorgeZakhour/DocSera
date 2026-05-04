@@ -69,14 +69,32 @@ class RecapPage extends StatelessWidget {
     }
   }
 
+  /// Phone-path registration. Single atomic edge-function call:
+  /// `phone_otp_signup` creates the auth.users row (phone + bcrypted
+  /// password) AND inserts the public.users profile row in one shot.
+  /// If the profile insert fails, the auth user is rolled back, so
+  /// the wizard never leaves an orphan account behind.
   Future<void> _registerWithPhoneOtp(BuildContext context) async {
+    if (signUpInfo.password == null || signUpInfo.password!.length < 8) {
+      // Defensive: phone signup now requires a password too.
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(AppLocalizations.of(context)!.registrationFailed)),
+        );
+      }
+      return;
+    }
+
     try {
       final res = await Supabase.instance.client.functions.invoke(
         'phone_otp_signup',
         body: {
           'phone': signUpInfo.phoneNumber!,
           'otp_code': signUpInfo.otpCode!,
+          'password': signUpInfo.password!,
           'app': 'docsera',
+          'patient_signup': true,
+          'profile': _buildPatientProfileBody(),
         },
       );
 
@@ -88,9 +106,26 @@ class RecapPage extends StatelessWidget {
         await Supabase.instance.client.auth.setSession(refreshToken);
       }
 
-      await _finalizeUserRecord(context, userId);
+      await _postSignupSetup(context, userId);
+    } on FunctionException catch (e) {
+      final details = e.details;
+      String error = '';
+      if (details is Map) {
+        error = details['error']?.toString() ?? '';
+      } else if (details is String) {
+        if (details.contains('already_registered_same_app')) error = 'already_registered_same_app';
+        if (details.contains('cross_app_existing')) error = 'cross_app_existing';
+      }
+      if (!context.mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(
+          error.isNotEmpty
+              ? '${AppLocalizations.of(context)!.registrationFailed} ($error)'
+              : '${AppLocalizations.of(context)!.registrationFailed}: ${e.details}',
+        )),
+      );
     } catch (e) {
-      debugPrint('❌ Phone OTP Registration failed: $e');
+      debugPrint('❌ Phone Registration failed: $e');
       if (!context.mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text('${AppLocalizations.of(context)!.registrationFailed}: $e')),
@@ -98,12 +133,11 @@ class RecapPage extends StatelessWidget {
     }
   }
 
-  Future<void> _finalizeUserRecord(BuildContext context, String userId) async {
-    // -------------------------------------------------------------------
-    // 2️⃣ إدخال صف المستخدم في جدول users
-    // -------------------------------------------------------------------
-    final userData = {
-      'id': userId,
+  /// Builds the profile payload that the edge function inserts into
+  /// `public.users`. Mirrors the column set the client used to send
+  /// directly via UserRepository.addUser.
+  Map<String, dynamic> _buildPatientProfileBody() {
+    return {
       'first_name': signUpInfo.firstName ?? '',
       'last_name': signUpInfo.lastName ?? '',
       'email': signUpInfo.email ?? '',
@@ -117,12 +151,17 @@ class RecapPage extends StatelessWidget {
       'two_factor_auth_enabled': false,
       'trusted_devices': [],
     };
+  }
 
+  /// Post-signup local setup: trust this device, claim referral, write
+  /// SharedPreferences, navigate. The `users` row insert used to live
+  /// here as well — it now happens server-side as part of the atomic
+  /// signup edge function.
+  Future<void> _postSignupSetup(BuildContext context, String userId) async {
     if (!context.mounted) return;
-    await context.read<SupabaseUserService>().addUser(userData);
 
     // -------------------------------------------------------------------
-    // 3️⃣ إضافة الجهاز الحالي عبر RPC (Security Definer)
+    // إضافة الجهاز الحالي عبر RPC (Security Definer)
     // -------------------------------------------------------------------
     final deviceId = await _getDeviceId();
     await Supabase.instance.client.rpc(
@@ -194,6 +233,8 @@ class RecapPage extends StatelessWidget {
             'email': signUpInfo.email!,
             'password': password,
             'app': 'docsera',
+            'patient_signup': true,
+            'profile': _buildPatientProfileBody(),
           },
         );
         body = res.data as Map<String, dynamic>;
@@ -234,7 +275,7 @@ class RecapPage extends StatelessWidget {
         throw Exception('Auth session not established');
       }
 
-      await _finalizeUserRecord(context, userId);
+      await _postSignupSetup(context, userId);
     } catch (e, s) {
       debugPrint('❌ Registration failed: $e');
       debugPrintStack(stackTrace: s);

@@ -139,6 +139,37 @@ class AuthRepository {
     return await _supabase.auth.signInWithPassword(email: email, password: password);
   }
 
+  /// 🆕 Phone + password daily login.
+  ///
+  /// Self-hosted Supabase commonly disables the phone provider, so
+  /// `signInWithPassword({phone, password})` fails. We sign in via the
+  /// synthetic email instead — the same identifier the signup flow
+  /// stamped on auth.users.email. Daily login from here is identical
+  /// to email-password login, except the user typed a phone.
+  Future<AuthResponse> signInWithPhonePassword({
+    required String phone,
+    required String password,
+  }) async {
+    final normalized = _normalizePhone(phone);
+    final syntheticEmail = '$normalized@phone.docsera.app';
+    return await _supabase.auth.signInWithPassword(
+      email: syntheticEmail,
+      password: password,
+    );
+  }
+
+  String _normalizePhone(String input) {
+    var p = input.trim();
+    if (p.startsWith('+963')) p = '00963${p.substring(4)}';
+    else if (p.startsWith('09')) p = '00963${p.substring(1)}';
+    else if (p.startsWith('9') && !p.startsWith('00963') && !p.startsWith('963')) {
+      p = '00963$p';
+    } else if (p.startsWith('963')) {
+      p = '00$p';
+    }
+    return p;
+  }
+
   /// ✅ تسجيل الخروج
   Future<void> signOut() async {
     try {

@@ -41,8 +41,11 @@ class SupabaseUserService {
   Future<AuthResponse> phoneOtpSignup({required String phone, required String code}) =>
       auth.phoneOtpSignup(phone: phone, code: code);
 
-  Future<AuthResponse> signInWithPassword({required String email, required String password}) => 
+  Future<AuthResponse> signInWithPassword({required String email, required String password}) =>
       auth.signInWithPassword(email: email, password: password);
+
+  Future<AuthResponse> signInWithPhonePassword({required String phone, required String password}) =>
+      auth.signInWithPhonePassword(phone: phone, password: password);
 
   Future<void> signOut() => auth.signOut();
 

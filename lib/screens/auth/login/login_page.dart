@@ -58,26 +58,12 @@ class _LogInPageState extends State<LogInPage> with SingleTickerProviderStateMix
   // ── Dual Mode State ──
   bool _isPhoneMode = true; 
   final TextEditingController _phoneController = TextEditingController();
-  final List<TextEditingController> _otpControllers = List.generate(6, (_) => TextEditingController());
-  final List<FocusNode> _otpFocusNodes = List.generate(6, (_) => FocusNode());
   late final FocusNode _phoneFocus;
   late final FocusNode _inputFocus;
   late final FocusNode _passwordFocus;
-  bool _phoneOtpSent = false;
-  bool _phoneOtpSending = false;
-
-  // ── OTP Resend Timer ──
-  Timer? _resendTimer;
-  int _resendSeconds = 60;
-  bool _canResend = false;
 
   final RegExp _phoneRegex = RegExp(r'^09\d{8}$');
 
-  String get _maskedPhone {
-    final p = _phoneController.text.trim();
-    if (p.length >= 10) return '\u202A${p.substring(0, 2)}*****${p.substring(p.length - 3)}\u202C';
-    return '\u202A$p\u202C';
-  }
 
   @override
   void initState() {
@@ -108,110 +94,88 @@ class _LogInPageState extends State<LogInPage> with SingleTickerProviderStateMix
     _inputFocus.dispose();
     _passwordFocus.dispose();
     _shakeController.dispose();
-    _resendTimer?.cancel();
-    for (final c in _otpControllers) { c.dispose(); }
-    for (final f in _otpFocusNodes) { f.dispose(); }
     super.dispose();
   }
 
-  Future<void> _sendPhoneOtp() async {
-    final phone = _phoneController.text.trim();
-    if (!_phoneRegex.hasMatch(phone)) return;
-    
-    setState(() { _phoneOtpSending = true; errorMessage = null; });
-    try {
-      final formatted = getFormattedPhoneNumber(phone);
-      await _supabaseUserService.sendPhoneOtp(formatted, isLogin: true);
-      setState(() { _phoneOtpSent = true; _phoneOtpSending = false; });
-      _startResendTimer();
-      Future.delayed(const Duration(milliseconds: 300), () {
-        if (mounted) _otpFocusNodes[0].requestFocus();
-      });
-    } catch (e) {
-      debugPrint("OTP Send error: $e");
-      setState(() {
-        _phoneOtpSending = false;
-        errorMessage = AppLocalizations.of(context)!.errorGenericLogin;
-      });
-    }
-  }
-
-  void _startResendTimer() {
-    _resendTimer?.cancel();
-    setState(() { _resendSeconds = 60; _canResend = false; });
-    _resendTimer = Timer.periodic(const Duration(seconds: 1), (timer) {
-      if (_resendSeconds == 0) {
-        timer.cancel();
-        if (mounted) setState(() => _canResend = true);
-      } else {
-        if (mounted) setState(() => _resendSeconds--);
-      }
-    });
-  }
-
-  void _resendPhoneOtp() {
-    for (final c in _otpControllers) { c.clear(); }
-    _sendPhoneOtp();
-  }
-
-  void _changePhoneNumber() {
-    _resendTimer?.cancel();
-    for (final c in _otpControllers) { c.clear(); }
-    setState(() {
-      _phoneOtpSent = false;
-      _canResend = false;
-      _resendSeconds = 60;
-      errorMessage = null;
-    });
-    Future.delayed(const Duration(milliseconds: 100), () {
-      if (mounted) _phoneFocus.requestFocus();
-    });
-  }
-
-  Future<void> _submitPhoneOtp() async {
-    final phone = getFormattedPhoneNumber(_phoneController.text.trim());
-    final code = _otpControllers.map((c) => c.text).join();
-    if (code.length != 6) return;
-    
+  /// Phone + password daily login. Mirrors [_logInUser] (email path)
+  /// except the auth call uses the synthetic-email shim hidden inside
+  /// [signInWithPhonePassword]. Post-auth security (2FA / new device)
+  /// is identical — the user goes through [LoginOTPPage] when the
+  /// device isn't trusted yet.
+  Future<void> _logInUserWithPhonePassword() async {
     setState(() { isLoading = true; errorMessage = null; });
-    try {
-      final response = await _supabaseUserService.phoneOtpLogin(phone, code);
-      final supabaseUser = response.user;
-      if (supabaseUser == null) throw Exception("Login failed");
 
+    try {
+      final phone = getFormattedPhoneNumber(_phoneController.text.trim());
+      final password = _passwordController.text.trim();
+
+      // 1. Auth via synthetic email shim
+      final response = await _supabaseUserService.signInWithPhonePassword(
+        phone: phone,
+        password: password,
+      );
+      final supabaseUser = response.user;
+      if (supabaseUser == null) {
+        throw Exception("wrong password");
+      }
+      final userId = supabaseUser.id;
+
+      // 2. Persist for biometrics / quick relaunch
       final prefs = await SharedPreferences.getInstance();
+      final isEnabled = await BiometricStorage.isEnabled();
+      if (isEnabled) {
+        // Biometric storage is keyed on email today. We use the
+        // synthetic email so a future biometric login replays the
+        // exact same shim.
+        await BiometricStorage.saveCredentials(
+          email: '$phone@phone.docsera.app'
+              .replaceAll('+', '00')
+              .toLowerCase(),
+          password: password,
+        );
+      }
       await prefs.setBool('isLoggedIn', true);
-      await prefs.setString('userId', supabaseUser.id);
-      
+      await prefs.setString('userId', userId);
+      await prefs.setString('userPhone', phone);
+
+      // 3. Same post-auth security flow as the email path
+      final securityState = await _supabaseUserService.getMySecurityState();
+      final List trustedDevices =
+          (securityState['trusted_devices'] as List?) ?? [];
+      final deviceId = await getDeviceId();
+
+      if (!trustedDevices.contains(deviceId)) {
+        // 2FA step-up. The patient app uses email OTP for step-up;
+        // for a phone-only account the OTP screen falls back to SMS
+        // when no email is on file (handled inside LoginOTPPage).
+        if (!mounted) return;
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (_) => LoginOTPPage(
+              email: securityState['email']?.toString() ?? '',
+            ),
+          ),
+        );
+        return;
+      }
+
       if (!mounted) return;
       context.read<UserCubit>().loadUserData(context: context);
-
       Navigator.pushAndRemoveUntil(
         context,
         fadePageRoute(CustomBottomNavigationBar()),
             (_) => false,
       );
-    } catch (e) {
-      debugPrint("OTP Verify error: $e");
+    } on AuthException catch (_) {
       setState(() => errorMessage = AppLocalizations.of(context)!.logInFailed);
       _shakeController.forward(from: 0);
-      for(final c in _otpControllers) { c.clear(); }
-      Future.delayed(const Duration(milliseconds: 100), () {
-        if (mounted) _otpFocusNodes[0].requestFocus();
-      });
+    } catch (e) {
+      debugPrint("Phone+password login error: $e");
+      setState(() => errorMessage = AppLocalizations.of(context)!.logInFailed);
+      _shakeController.forward(from: 0);
     } finally {
       if (mounted) setState(() => isLoading = false);
-    }
-  }
-
-  void _onPhoneOtpFieldChanged(String value, int index) {
-    if (value.length == 1 && index < 5) {
-      _otpFocusNodes[index + 1].requestFocus();
-    } else if (value.isEmpty && index > 0) {
-      _otpFocusNodes[index - 1].requestFocus();
-    }
-    if (index == 5 && value.length == 1) {
-      _submitPhoneOtp();
     }
   }
 
@@ -681,10 +645,13 @@ class _LogInPageState extends State<LogInPage> with SingleTickerProviderStateMix
             SizedBox(height: 20.h),
 
             if (_isPhoneMode) ...[
+              // ── Phone + password daily login ───────────────────
+              // Replaces the previous phone-OTP daily login. The OTP
+              // path is reserved for verification moments (signup,
+              // password reset, contact change, new-device step-up).
               TextFormField(
                 controller: _phoneController,
                 focusNode: _phoneFocus,
-                enabled: !_phoneOtpSent,
                 keyboardType: TextInputType.phone,
                 textDirection: TextDirection.ltr,
                 textAlign: TextAlign.left,
@@ -703,154 +670,70 @@ class _LogInPageState extends State<LogInPage> with SingleTickerProviderStateMix
                 ),
                 onChanged: (val) {
                   setState(() {
-                    isValid = _phoneRegex.hasMatch(val);
+                    isValid = _phoneRegex.hasMatch(val) &&
+                        _passwordController.text.isNotEmpty;
                     errorMessage = null;
                   });
                 },
               ),
+              SizedBox(height: 12.h),
+              TextFormField(
+                controller: _passwordController,
+                focusNode: _passwordFocus,
+                obscureText: !isPasswordVisible,
+                style: TextStyle(fontSize: 14.sp),
+                decoration: InputDecoration(
+                  prefixIcon: const Icon(Icons.lock_outline, color: Colors.grey),
+                  labelText: AppLocalizations.of(context)!.password,
+                  labelStyle: AppTextStyles.getText2(context).copyWith(color: Colors.grey),
+                  border: OutlineInputBorder(borderRadius: BorderRadius.circular(15.r)),
+                  suffixIcon: IconButton(
+                    icon: Icon(
+                      isPasswordVisible ? Icons.visibility : Icons.visibility_off,
+                      color: Colors.grey,
+                      size: 20.sp,
+                    ),
+                    onPressed: () => setState(
+                        () => isPasswordVisible = !isPasswordVisible),
+                  ),
+                ),
+                onChanged: (val) {
+                  setState(() {
+                    isValid = _phoneRegex.hasMatch(_phoneController.text.trim()) &&
+                        val.isNotEmpty;
+                    errorMessage = null;
+                  });
+                },
+                onFieldSubmitted: (_) {
+                  if (isValid && !isLoading) _logInUserWithPhonePassword();
+                },
+              ),
               SizedBox(height: 15.h),
-
-              if (!_phoneOtpSent)
-                ElevatedButton(
-                  onPressed: _phoneOtpSending || !isValid ? null : _sendPhoneOtp,
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: isValid ? AppColors.main : Colors.grey,
-                    padding: EdgeInsets.symmetric(vertical: 14.h),
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(15.r)),
-                    minimumSize: Size(double.infinity, 50.h),
-                  ),
-                  child: _phoneOtpSending
-                      ? SizedBox(
-                          height: 15.h,
-                          width: 15.w,
-                          child: const CircularProgressIndicator(color: Colors.white, strokeWidth: 2),
-                        )
-                      : Text(
-                          AppLocalizations.of(context)!.sendOtp,
-                          style: AppTextStyles.getText2(context).copyWith(color: Colors.white),
-                        ),
+              ElevatedButton(
+                onPressed: isLoading || !isValid
+                    ? null
+                    : () {
+                        FocusScope.of(context).unfocus();
+                        _logInUserWithPhonePassword();
+                      },
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: isValid ? AppColors.main : Colors.grey,
+                  padding: EdgeInsets.symmetric(vertical: 14.h),
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(15.r)),
+                  minimumSize: Size(double.infinity, 50.h),
                 ),
-
-              if (_phoneOtpSent) ...[
-                Center(
-                  child: Text(
-                    '${AppLocalizations.of(context)!.otpSentToPhone}\n$_maskedPhone',
-                    style: TextStyle(fontSize: 12.sp, color: AppColors.mainDark, fontWeight: FontWeight.bold, height: 1.4),
-                    textAlign: TextAlign.center,
-                  ),
-                ),
-                SizedBox(height: 15.h),
-                AnimatedBuilder(
-                  animation: _shakeController,
-                  builder: (context, child) {
-                    final offset = sin(_shakeController.value * 3 * 3.14159) * 8;
-                    return Transform.translate(
-                      offset: Offset(offset, 0),
-                      child: child,
-                    );
-                  },
-                  child: Directionality(
-                    textDirection: TextDirection.ltr,
-                    child: Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: List.generate(6, (i) {
-                      return Padding(
-                        padding: EdgeInsets.symmetric(horizontal: 4.w),
-                        child: SizedBox(
-                          width: 40.w,
-                          child: TextField(
-                            controller: _otpControllers[i],
-                            focusNode: _otpFocusNodes[i],
-                            autofillHints: const [AutofillHints.oneTimeCode],
-                            maxLength: 1,
-                            keyboardType: TextInputType.number,
-                            textAlign: TextAlign.center,
-                            style: TextStyle(fontSize: 18.sp, fontWeight: FontWeight.bold),
-                            decoration: InputDecoration(
-                              counterText: '',
-                              filled: true,
-                              fillColor: Colors.grey.withOpacity(0.1),
-                              contentPadding: EdgeInsets.symmetric(vertical: 10.h),
-                              border: OutlineInputBorder(
-                                borderRadius: BorderRadius.circular(10.r),
-                                borderSide: BorderSide(color: AppColors.mainDark.withOpacity(0.2)),
-                              ),
-                              focusedBorder: OutlineInputBorder(
-                                borderRadius: BorderRadius.circular(10.r),
-                                borderSide: const BorderSide(color: AppColors.mainDark, width: 2),
-                              ),
-                            ),
-                            onChanged: (val) => _onPhoneOtpFieldChanged(val, i),
-                            inputFormatters: [FilteringTextInputFormatter.digitsOnly],
-                          ),
-                        ),
-                      );
-                    }),
-                  ),
-                ),
-                ),
-                SizedBox(height: 10.h),
-
-                // ── Resend OTP + Change Number ──
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    GestureDetector(
-                      onTap: _canResend ? _resendPhoneOtp : null,
-                      child: Text(
-                        _canResend
-                            ? AppLocalizations.of(context)!.didntReceiveCode
-                            : '${AppLocalizations.of(context)!.didntReceiveCode} $_resendSeconds${AppLocalizations.of(context)!.seconds}',
-                        style: TextStyle(
-                          fontSize: 10.sp,
-                          color: _canResend ? AppColors.mainDark : Colors.grey,
-                          decoration: _canResend ? TextDecoration.underline : TextDecoration.none,
-                          decorationColor: AppColors.mainDark,
-                        ),
+                child: isLoading
+                    ? SizedBox(
+                        height: 15.h,
+                        width: 15.w,
+                        child: const CircularProgressIndicator(color: Colors.white, strokeWidth: 2),
+                      )
+                    : Text(
+                        AppLocalizations.of(context)!.logIn,
+                        style: AppTextStyles.getText2(context).copyWith(color: Colors.white),
                       ),
-                    ),
-                    Text(' | ', style: TextStyle(color: Colors.grey, fontSize: 10.sp)),
-                    GestureDetector(
-                      onTap: _changePhoneNumber,
-                      child: Text(
-                        AppLocalizations.of(context)!.changeNumber,
-                        style: TextStyle(
-                          fontSize: 10.sp,
-                          color: AppColors.mainDark,
-                          decoration: TextDecoration.underline,
-                          decorationColor: AppColors.mainDark,
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-                SizedBox(height: 12.h),
+              ),
 
-                ElevatedButton(
-                  onPressed: isLoading
-                      ? null
-                      : () {
-                    FocusScope.of(context).unfocus();
-                    Future.delayed(const Duration(milliseconds: 100), _submitPhoneOtp);
-                  },
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: AppColors.mainDark,
-                    padding: EdgeInsets.symmetric(vertical: 14.h),
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(15.r)),
-                    minimumSize: Size(double.infinity, 50.h),
-                  ),
-                  child: isLoading
-                      ? SizedBox(
-                    width: 15.w,
-                    height: 15.h,
-                    child: const CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
-                  )
-                      : Text(
-                    AppLocalizations.of(context)!.logIn,
-                    style: TextStyle(fontSize: 14.sp, color: Colors.white, fontWeight: FontWeight.bold),
-                  ),
-                ),
-              ],
             ] else ...[
               // 🟢 Email Input
               TextFormField(
