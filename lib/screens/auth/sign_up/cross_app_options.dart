@@ -2,9 +2,12 @@ import 'package:docsera/app/const.dart';
 import 'package:docsera/app/text_styles.dart';
 import 'package:docsera/models/sign_up_info.dart';
 import 'package:docsera/gen_l10n/app_localizations.dart';
+import 'package:docsera/screens/auth/sign_up/sign_up_email.dart';
 import 'package:docsera/screens/auth/sign_up/sign_up_phone.dart';
+import 'package:docsera/services/supabase/user/supabase_user_service.dart';
 import 'package:docsera/utils/page_transitions.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:docsera/widgets/base_scaffold.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
@@ -122,6 +125,14 @@ class _CrossAppOptionsPageState extends State<CrossAppOptionsPage> {
     ));
   }
 
+  /// True when this page was reached via the phone signup path
+  /// (no email collected yet) rather than the email path. The two
+  /// paths verify the existing cross-app password differently:
+  ///   * email path → cross_app_signup edge function (email-keyed)
+  ///   * phone path → signInWithPassword via the synthetic-email shim
+  bool get _isPhonePath =>
+      widget.signUpInfo.authMethod == AuthMethod.phoneOtp;
+
   Future<void> _submitExisting() async {
     final local = AppLocalizations.of(context)!;
     final pass = _passwordController.text.trim();
@@ -132,27 +143,50 @@ class _CrossAppOptionsPageState extends State<CrossAppOptionsPage> {
 
     setState(() => _isLoading = true);
     try {
-      // Verify the existing password via cross_app_signup edge function
-      await Supabase.instance.client.functions.invoke(
-        'cross_app_signup',
-        body: {
-          'email': widget.signUpInfo.email,
-          'password': pass,
-          'app': 'docsera',
-        },
-      );
-
-      // Sign out — session will be re-established during final registration in RecapPage
-      await Supabase.instance.client.auth.signOut();
-
-      // Proceed to the next step (Phone → Identity → Terms → Recap)
-      widget.signUpInfo.password = pass;
-      if (mounted) {
-        Navigator.push(
-          context,
-          fadePageRoute(SignUpFirstPage(signUpInfo: widget.signUpInfo)),
+      if (_isPhonePath) {
+        // Phone cross-app: verify by signing in via synthetic email
+        // shim. If the password matches the user's existing Pro
+        // account, we're good — sign back out and continue the
+        // wizard. Recap will re-sign-in atomically.
+        try {
+          await context.read<SupabaseUserService>().signInWithPhonePassword(
+                phone: widget.signUpInfo.phoneNumber!,
+                password: pass,
+              );
+          await Supabase.instance.client.auth.signOut();
+        } on AuthException {
+          _showSnack(local.wrongPassword);
+          setState(() => _isLoading = false);
+          return;
+        }
+      } else {
+        // Email cross-app: cross_app_signup verifies the password
+        // and refuses with `wrong_password` when it doesn't match.
+        await Supabase.instance.client.functions.invoke(
+          'cross_app_signup',
+          body: {
+            'email': widget.signUpInfo.email,
+            'password': pass,
+            'app': 'docsera',
+          },
         );
+        await Supabase.instance.client.auth.signOut();
       }
+
+      widget.signUpInfo.password = pass;
+      if (!mounted) return;
+
+      // Phone path → continue to optional email then identity.
+      // Email path → continue to mandatory phone then identity.
+      Navigator.push(
+        context,
+        fadePageRoute(_isPhonePath
+            ? EnterEmailPage(
+                signUpInfo: widget.signUpInfo,
+                isOptional: true,
+              )
+            : SignUpFirstPage(signUpInfo: widget.signUpInfo)),
+      );
     } catch (e) {
       if (e.toString().contains('wrong_password')) {
         _showSnack(local.wrongPassword);
@@ -185,42 +219,44 @@ class _CrossAppOptionsPageState extends State<CrossAppOptionsPage> {
 
     setState(() => _isLoading = true);
     try {
-      // 1. Verify identity by trying to sign in with the old password
+      // 1. Verify identity by signing in with the old password
       try {
-        await Supabase.instance.client.auth.signInWithPassword(
-          email: widget.signUpInfo.email!,
-          password: oldPass,
-        );
+        if (_isPhonePath) {
+          await context.read<SupabaseUserService>().signInWithPhonePassword(
+                phone: widget.signUpInfo.phoneNumber!,
+                password: oldPass,
+              );
+        } else {
+          await Supabase.instance.client.auth.signInWithPassword(
+            email: widget.signUpInfo.email!,
+            password: oldPass,
+          );
+        }
       } catch (e) {
         _showSnack(local.wrongPassword);
         setState(() => _isLoading = false);
         return;
       }
-      
-      // 2. Change password
+
+      // 2. Change password (works on the same auth.users row regardless
+      //    of which identifier the user signed in with).
       await Supabase.instance.client.auth.updateUser(UserAttributes(password: newPass));
 
-      // 3. Call cross_app_signup with the new password to ensure consistency
-      await Supabase.instance.client.functions.invoke(
-        'cross_app_signup',
-        body: {
-          'email': widget.signUpInfo.email,
-          'password': newPass,
-          'app': 'docsera',
-        },
-      );
-
-      // Sign out — session will be re-established during final registration in RecapPage
+      // 3. Sign out so Recap can re-establish the session atomically
       await Supabase.instance.client.auth.signOut();
 
       widget.signUpInfo.password = newPass;
 
-      if (mounted) {
-        Navigator.push(
-          context,
-          fadePageRoute(SignUpFirstPage(signUpInfo: widget.signUpInfo)),
-        );
-      }
+      if (!mounted) return;
+      Navigator.push(
+        context,
+        fadePageRoute(_isPhonePath
+            ? EnterEmailPage(
+                signUpInfo: widget.signUpInfo,
+                isOptional: true,
+              )
+            : SignUpFirstPage(signUpInfo: widget.signUpInfo)),
+      );
     } catch (e) {
       _showSnack(local.errorUpdatingProfile);
     } finally {

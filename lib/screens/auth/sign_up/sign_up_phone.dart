@@ -1,4 +1,5 @@
 import 'package:docsera/app/text_styles.dart';
+import 'package:docsera/screens/auth/sign_up/cross_app_options.dart';
 import 'package:docsera/screens/auth/sign_up/sign_up_identity.dart';
 import 'package:docsera/utils/page_transitions.dart';
 import 'package:docsera/utils/text_direction_utils.dart';
@@ -66,22 +67,23 @@ class _SignUpFirstPageState extends State<SignUpFirstPage> {
     final formattedPhone = getFormattedPhoneNumber();
 
     try {
-      // Check the app-specific `users` table via RPC because of RLS restrictions
-      // This allows cross-app phone reuse while preventing intra-app duplication.
-      final exists = await Supabase.instance.client.rpc(
-        'rpc_check_phone_exists',
-        params: {'p_phone': formattedPhone},
-      );
+      // Cross-app aware lookup. Mirrors what the email step does:
+      //   * already a patient → block as duplicate
+      //   * exists only in DocSera Pro → flag cross-app, continue
+      //     to OTP, then route to CrossAppOptionsPage post-verify
+      //   * not found → proceed with fresh signup
+      final ctx = await context
+          .read<SupabaseUserService>()
+          .checkPhoneContext(formattedPhone);
 
-      final bool isAvailable = exists != true;
-
-      if (!isAvailable) {
+      if (ctx == 'in_docsera' || ctx == 'in_both') {
         setState(() => isChecking = false);
         _showDuplicateDialog(context);
         return;
       }
 
-      // ✅ حفظ البيانات (Check availability first, then SEND OTP)
+      widget.signUpInfo.isCrossApp = ctx == 'in_docsera_pro';
+
       setState(() => isChecking = false);
       _sendOtp();
     } catch (e) {
@@ -135,7 +137,16 @@ class _SignUpFirstPageState extends State<SignUpFirstPage> {
         // Proceed to next step
         if (!mounted) return;
         
-        if (widget.signUpInfo.authMethod == AuthMethod.phoneOtp) {
+        if (widget.signUpInfo.authMethod == AuthMethod.phoneOtp &&
+            widget.signUpInfo.isCrossApp) {
+          // Phone-first cross-app: phone exists in DocSera Pro. Show
+          // welcome-back page so the user can prove ownership of the
+          // existing password (or set a new shared one).
+          Navigator.push(
+            context,
+            fadePageRoute(CrossAppOptionsPage(signUpInfo: widget.signUpInfo)),
+          );
+        } else if (widget.signUpInfo.authMethod == AuthMethod.phoneOtp) {
           // Path A: Go to Optional Email
           Navigator.push(
             context,

@@ -171,6 +171,18 @@ class AuthRepository {
     return (res as String?) ?? 'not_found';
   }
 
+  /// Cross-app phone presence check (mirror of `checkEmailContext`).
+  /// Returns 'not_found' / 'in_docsera' / 'in_docsera_pro' / 'in_both'.
+  /// Used by the phone signup wizard to surface a welcome-back screen
+  /// when the phone already exists in the other app.
+  Future<String> checkPhoneContext(String phone) async {
+    final res = await _supabase.rpc(
+      'check_phone_context',
+      params: {'p_phone': phone},
+    );
+    return (res as String?) ?? 'not_found';
+  }
+
   String _normalizePhone(String input) {
     var p = input.trim();
     if (p.startsWith('+963')) p = '00963${p.substring(4)}';

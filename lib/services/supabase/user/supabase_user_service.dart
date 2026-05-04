@@ -50,6 +50,9 @@ class SupabaseUserService {
   Future<String> checkPasswordStatus(String identifier) =>
       auth.checkPasswordStatus(identifier);
 
+  Future<String> checkPhoneContext(String phone) =>
+      auth.checkPhoneContext(phone);
+
   Future<void> signOut() => auth.signOut();
 
   User? getCurrentUser() => auth.getCurrentUser();
