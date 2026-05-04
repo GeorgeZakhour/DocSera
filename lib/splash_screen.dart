@@ -1,5 +1,5 @@
 import 'package:docsera/app/text_styles.dart';
-import 'package:docsera/screens/auth/login/login_start.dart';
+import 'package:docsera/screens/auth/login/login_page.dart';
 import 'package:docsera/utils/custom_clippers.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -11,6 +11,8 @@ import 'Business_Logic/Authentication/auth_cubit.dart';
 import 'Business_Logic/Authentication/auth_state.dart';
 import 'app/const.dart';
 import 'package:package_info_plus/package_info_plus.dart';
+import 'services/app_config/app_config_service.dart';
+import 'screens/misc/force_update_screen.dart';
 
 class SplashScreen extends StatefulWidget {
   const SplashScreen({super.key});
@@ -131,6 +133,22 @@ class _SplashScreenState extends State<SplashScreen> with TickerProviderStateMix
     await Future.delayed(const Duration(milliseconds: 800));
     await _waitForAuthReady();
 
+    if (!mounted) return;
+    final updateCheck = await AppConfigService.instance.check();
+    if (updateCheck.forceUpdate) {
+      if (!mounted) return;
+      Navigator.of(context).pushReplacement(
+        MaterialPageRoute(
+          builder: (_) => ForceUpdateScreen(
+            storeUrl: updateCheck.storeUrl,
+            messageEn: updateCheck.messageEn,
+            messageAr: updateCheck.messageAr,
+          ),
+        ),
+      );
+      return;
+    }
+
     final authCubit = context.read<AuthCubit>();
     final state = authCubit.state;
     final biometricRequired = await _isBiometricRequired();
@@ -141,9 +159,7 @@ class _SplashScreenState extends State<SplashScreen> with TickerProviderStateMix
       if (!mounted) return;
       Navigator.of(context).pushReplacement(
         MaterialPageRoute(
-          builder: (_) => LoginPage(
-            backgroundHeightAnimation: _backgroundHeightAnimation,
-          ),
+          builder: (_) => const LogInPage(),
         ),
       );
     }

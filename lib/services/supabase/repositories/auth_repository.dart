@@ -91,24 +91,9 @@ class AuthRepository {
     }
   }
 
-  /// 🚪 تسجيل الدخول برقم الهاتف ورمز OTP السرياليتل
-  Future<AuthResponse> phoneOtpLogin(String phone, String code) async {
-    final response = await _supabase.functions.invoke(
-      'phone_otp_login',
-      body: {
-        'phone': phone,
-        'code': code,
-        'app': 'docsera',
-      },
-    );
-    final data = response.data;
-    if (data['error'] != null) {
-      throw Exception(data['error']);
-    }
-    return await _supabase.auth.setSession(
-      data['refresh_token'],
-    );
-  }
+  // phoneOtpLogin: removed in Phase D cleanup. Daily login is now
+  // phone+password via signInWithPhonePassword (synthetic-email
+  // shim). The phone_otp_login edge function is being decommissioned.
 
   /// 🆕 إنشاء حساب للمريض برقم الهاتف عن طريق Edge Function
   Future<AuthResponse> phoneOtpSignup({

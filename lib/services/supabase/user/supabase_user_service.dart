@@ -35,8 +35,7 @@ class SupabaseUserService {
   Future<bool> verifyEmailOtp(String email, String code) =>
       auth.verifyEmailOtp(email, code);
 
-  Future<AuthResponse> phoneOtpLogin(String phone, String code) =>
-      auth.phoneOtpLogin(phone, code);
+  // phoneOtpLogin removed — see AuthRepository note.
 
   Future<AuthResponse> phoneOtpSignup({required String phone, required String code}) =>
       auth.phoneOtpSignup(phone: phone, code: code);
