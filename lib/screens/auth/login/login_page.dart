@@ -168,8 +168,11 @@ class _LogInPageState extends State<LogInPage> with SingleTickerProviderStateMix
             (_) => false,
       );
     } on AuthException catch (_) {
-      setState(() => errorMessage = AppLocalizations.of(context)!.logInFailed);
-      _shakeController.forward(from: 0);
+      // Could be a real wrong password OR a legacy phone-OTP-only
+      // account that never set one. Ask the server which it is so we
+      // can route the user straight to forgot-password instead of
+      // dead-ending them at "wrong password".
+      await _handleAuthFailureForLegacy(_phoneController.text.trim());
     } catch (e) {
       debugPrint("Phone+password login error: $e");
       setState(() => errorMessage = AppLocalizations.of(context)!.logInFailed);
@@ -177,6 +180,39 @@ class _LogInPageState extends State<LogInPage> with SingleTickerProviderStateMix
     } finally {
       if (mounted) setState(() => isLoading = false);
     }
+  }
+
+  /// Differentiates "wrong password" from "this user pre-dates the
+  /// password requirement and has never set one". Legacy users go
+  /// directly to the forgot-password screen with a friendly nudge;
+  /// genuine wrong passwords get the usual error.
+  Future<void> _handleAuthFailureForLegacy(String identifier) async {
+    String status = 'has_password';
+    try {
+      status = await _supabaseUserService.checkPasswordStatus(identifier);
+    } catch (_) {
+      // Fall through to plain wrong-password handling — better than
+      // blocking the user on a backend hiccup.
+    }
+
+    if (!mounted) return;
+
+    if (status == 'legacy_no_password') {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(AppLocalizations.of(context)!.legacyAccountSetPasswordPrompt),
+          duration: const Duration(seconds: 4),
+        ),
+      );
+      Navigator.push(
+        context,
+        fadePageRoute(const ForgotPasswordPage()),
+      );
+      return;
+    }
+
+    setState(() => errorMessage = AppLocalizations.of(context)!.logInFailed);
+    _shakeController.forward(from: 0);
   }
 
   Widget _buildModeToggle() {
@@ -534,7 +570,12 @@ class _LogInPageState extends State<LogInPage> with SingleTickerProviderStateMix
       if (errorStr.contains('wrong password') ||
           errorStr.contains('invalid login credentials') ||
           errorStr.contains('invalid email or password')) {
-        message = AppLocalizations.of(context)!.errorWrongPassword;
+        // Could be a real wrong password OR a legacy phone-OTP-only
+        // user trying to log in via email. Ask the server. If legacy,
+        // route to forgot-password with a friendly nudge instead of
+        // dead-ending them on "wrong password".
+        await _handleAuthFailureForLegacy(_inputController.text.trim());
+        return;
       } else if (errorStr.contains('account_disabled')) {
         message = AppLocalizations.of(context)!.accountDisabled;
       } else if (errorStr.contains('user not found') ||

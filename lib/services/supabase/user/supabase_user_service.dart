@@ -47,6 +47,9 @@ class SupabaseUserService {
   Future<AuthResponse> signInWithPhonePassword({required String phone, required String password}) =>
       auth.signInWithPhonePassword(phone: phone, password: password);
 
+  Future<String> checkPasswordStatus(String identifier) =>
+      auth.checkPasswordStatus(identifier);
+
   Future<void> signOut() => auth.signOut();
 
   User? getCurrentUser() => auth.getCurrentUser();

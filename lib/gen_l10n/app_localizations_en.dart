@@ -1631,6 +1631,10 @@ class AppLocalizationsEn extends AppLocalizations {
       'كلمة المرور غير صحيحة، يرجى المحاولة مجددًا.';
 
   @override
+  String get legacyAccountSetPasswordPrompt =>
+      'We\'ve updated DocSera\'s sign-in. Please set a password to continue — we\'ll send you a verification code.';
+
+  @override
   String get errorGenericLogin =>
       'فشل تسجيل الدخول، تحقق من البيانات وحاول مرة أخرى.';
 

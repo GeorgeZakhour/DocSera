@@ -545,6 +545,7 @@
   "logInFailed": "Login failed. Please check your credentials and try again.",
   "errorUserNotFound": "لا يوجد حساب بهذا البريد أو الرقم.",
   "errorWrongPassword": "كلمة المرور غير صحيحة، يرجى المحاولة مجددًا.",
+  "legacyAccountSetPasswordPrompt": "We've updated DocSera's sign-in. Please set a password to continue — we'll send you a verification code.",
   "errorGenericLogin": "فشل تسجيل الدخول، تحقق من البيانات وحاول مرة أخرى.",
   "authenticating": "Authenticating...",
   "createAnAccount": "Create an account",

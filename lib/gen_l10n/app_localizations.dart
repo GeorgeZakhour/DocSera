@@ -3104,6 +3104,12 @@ abstract class AppLocalizations {
   /// **'كلمة المرور غير صحيحة، يرجى المحاولة مجددًا.'**
   String get errorWrongPassword;
 
+  /// No description provided for @legacyAccountSetPasswordPrompt.
+  ///
+  /// In en, this message translates to:
+  /// **'We\'ve updated DocSera\'s sign-in. Please set a password to continue — we\'ll send you a verification code.'**
+  String get legacyAccountSetPasswordPrompt;
+
   /// No description provided for @errorGenericLogin.
   ///
   /// In en, this message translates to:

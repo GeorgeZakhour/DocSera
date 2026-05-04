@@ -158,6 +158,19 @@ class AuthRepository {
     );
   }
 
+  /// Returns one of:
+  ///   * 'not_found'         — no auth.users row matches
+  ///   * 'has_password'      — user has a real password (can log in)
+  ///   * 'legacy_no_password'— pre-update phone-OTP user; needs to set
+  ///                           a password via forgot-password
+  Future<String> checkPasswordStatus(String identifier) async {
+    final res = await _supabase.rpc(
+      'check_password_status',
+      params: {'p_identifier': identifier},
+    );
+    return (res as String?) ?? 'not_found';
+  }
+
   String _normalizePhone(String input) {
     var p = input.trim();
     if (p.startsWith('+963')) p = '00963${p.substring(4)}';
