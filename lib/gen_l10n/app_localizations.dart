@@ -3296,6 +3296,54 @@ abstract class AppLocalizations {
   /// **'I have read and accepted the Terms of Use'**
   String get acceptTerms;
 
+  /// No description provided for @acceptPrivacyPolicy.
+  ///
+  /// In en, this message translates to:
+  /// **'I have read and accepted the Privacy Policy'**
+  String get acceptPrivacyPolicy;
+
+  /// No description provided for @acceptMedicalDisclaimer.
+  ///
+  /// In en, this message translates to:
+  /// **'I have read and accepted the Medical Disclaimer'**
+  String get acceptMedicalDisclaimer;
+
+  /// No description provided for @medicalDisclaimer.
+  ///
+  /// In en, this message translates to:
+  /// **'Medical Disclaimer'**
+  String get medicalDisclaimer;
+
+  /// No description provided for @termsOfUseDescriptionV2.
+  ///
+  /// In en, this message translates to:
+  /// **'To create a DocSera account, please review and accept the following documents.'**
+  String get termsOfUseDescriptionV2;
+
+  /// No description provided for @pleaseAcceptAllDocuments.
+  ///
+  /// In en, this message translates to:
+  /// **'Please accept all required documents to continue.'**
+  String get pleaseAcceptAllDocuments;
+
+  /// No description provided for @legalDocsUpdatedTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Updated legal documents'**
+  String get legalDocsUpdatedTitle;
+
+  /// No description provided for @legalDocsUpdatedBody.
+  ///
+  /// In en, this message translates to:
+  /// **'We\'ve updated our legal documents. Please review and accept the new versions to keep using DocSera.'**
+  String get legalDocsUpdatedBody;
+
+  /// No description provided for @reviewAndAccept.
+  ///
+  /// In en, this message translates to:
+  /// **'Review and accept'**
+  String get reviewAndAccept;
+
   /// No description provided for @dataProcessingInfo.
   ///
   /// In en, this message translates to:

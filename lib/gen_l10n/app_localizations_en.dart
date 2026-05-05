@@ -1736,6 +1736,35 @@ class AppLocalizationsEn extends AppLocalizations {
   String get acceptTerms => 'I have read and accepted the Terms of Use';
 
   @override
+  String get acceptPrivacyPolicy =>
+      'I have read and accepted the Privacy Policy';
+
+  @override
+  String get acceptMedicalDisclaimer =>
+      'I have read and accepted the Medical Disclaimer';
+
+  @override
+  String get medicalDisclaimer => 'Medical Disclaimer';
+
+  @override
+  String get termsOfUseDescriptionV2 =>
+      'To create a DocSera account, please review and accept the following documents.';
+
+  @override
+  String get pleaseAcceptAllDocuments =>
+      'Please accept all required documents to continue.';
+
+  @override
+  String get legalDocsUpdatedTitle => 'Updated legal documents';
+
+  @override
+  String get legalDocsUpdatedBody =>
+      'We\'ve updated our legal documents. Please review and accept the new versions to keep using DocSera.';
+
+  @override
+  String get reviewAndAccept => 'Review and accept';
+
+  @override
   String get dataProcessingInfo =>
       'You can find more information on data processing in our ';
 

@@ -2,8 +2,8 @@
 
 Living doc — updated after each completed step. Score is a subjective launch-readiness rating out of 10, where 10 = "I would put my own family on this app."
 
-**Current score: 9.05 / 10**
-**Last updated:** 2026-05-04
+**Current score: 9.2 / 10**
+**Last updated:** 2026-05-05
 
 ## Done
 
@@ -14,6 +14,7 @@ Living doc — updated after each completed step. Score is a subjective launch-r
 | 3 | Crash reporting (Sentry) | [03-crash-reporting.md](03-crash-reporting.md) | 8.6 |
 | 4 | Analytics — full system (backend tables + RBAC + ingestion/admin RPCs + Flutter SDK with offline queue + 86-event catalog + critical-path instrumentation + complete docs) | [04-analytics.md](04-analytics.md), [04a](04a-event-taxonomy.md), [04b](04b-admin-rpcs.md), [04c](04c-rbac-roles.md), [04d](04d-sample-queries.md) | 8.9 |
 | 5 | Internal security review — 2 Critical + 3 High + 4 of 5 Medium fixes applied; cert-pinning deliberately deferred with documented rationale; build script with obfuscation; weekly cleanup cron; per-IP OTP rate limit; URL scrubber in Sentry | [05-security-review.md](05-security-review.md), [05a-pentest-brief.md](05a-pentest-brief.md), [06-ministry-license-playbook.md](06-ministry-license-playbook.md) | 9.05 |
+| 6 | Legal documents — Privacy Policy v2.0, Terms of Use v2.0, Medical Disclaimer v1.0 (new standalone), Report Abuse v1.1, all AR+EN, deployed live; deletion lifecycle (3-tier model + daily cron); consent-tracking DB + Flutter service; permission cleanup (QUERY_ALL_PACKAGES, MANAGE_EXTERNAL_STORAGE, iOS Location-Always all removed); in-app UI wiring (signup 3 checkboxes, settings 4 items, splash re-consent gate, locale-aware URLs) | [07-legal-documents.md](07-legal-documents.md) | 9.2 |
 
 ## Pending — in priority order
 

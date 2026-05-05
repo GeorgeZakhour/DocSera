@@ -13,6 +13,7 @@ import 'app/const.dart';
 import 'package:package_info_plus/package_info_plus.dart';
 import 'services/app_config/app_config_service.dart';
 import 'screens/misc/force_update_screen.dart';
+import 'widgets/legal_reconsent_gate.dart';
 
 class SplashScreen extends StatefulWidget {
   const SplashScreen({super.key});
@@ -177,7 +178,7 @@ class _SplashScreenState extends State<SplashScreen> with TickerProviderStateMix
 
           return FadeTransition(
             opacity: curvedAnimation,
-            child: CustomBottomNavigationBar(),
+            child: LegalReconsentGate(child: CustomBottomNavigationBar()),
           );
         },
       ),

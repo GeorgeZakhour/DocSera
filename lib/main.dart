@@ -67,6 +67,8 @@ import 'services/observability/sentry_init.dart';
 import 'services/analytics/analytics_service.dart';
 import 'services/analytics/analytics_navigator_observer.dart';
 import 'services/analytics/analytics_event_catalog.dart';
+import 'services/legal/legal_consent_service.dart';
+import 'dart:convert';
 
 void main() async {
   await SentryInit.run(_bootstrap);
@@ -190,6 +192,10 @@ Future<void> _bootstrap() async {
             if (state is custom_auth.AuthAuthenticated) {
               Analytics.instance.identify(state.user.id);
               Analytics.instance.track(Events.loginCompleted, {});
+
+              // Replay any consents staged by the signup flow before auth.uid()
+              // existed. Idempotent — the RPC ignores duplicates.
+              unawaited(_replayPendingLegalConsents());
               // 🔹 هذه تُستدعى مرة واحدة فقط
               // 🔹 Load Critical User Data Only (Lazy load the rest)
               // ✅ Initialize message encryption on login (MUST await before loading data)
@@ -214,6 +220,26 @@ Future<void> _bootstrap() async {
       ),
     ),
   );
+}
+
+/// Replays any legal-consent acceptances that the signup flow staged in
+/// SharedPreferences before the user was authenticated. Safe to call any time
+/// — no-ops when nothing pending; the RPC dedupes on (user_id, doc, version).
+Future<void> _replayPendingLegalConsents() async {
+  try {
+    final prefs = await SharedPreferences.getInstance();
+    final raw = prefs.getString('pending_legal_consents');
+    if (raw == null || raw.isEmpty) return;
+    final decoded = jsonDecode(raw);
+    if (decoded is! Map) return;
+    final byCode = <String, String>{};
+    decoded.forEach((k, v) {
+      if (k is String && v is String) byCode[k] = v;
+    });
+    if (byCode.isEmpty) return;
+    await LegalConsentService.instance.recordConsentForAll(byCode);
+    await prefs.remove('pending_legal_consents');
+  } catch (_) {/* best-effort; will retry on next auth event */}
 }
 
 Future<String> getSavedLocale() async {

@@ -1715,6 +1715,33 @@ class AppLocalizationsAr extends AppLocalizations {
   String get acceptTerms => 'لقد قرأت ووافقت على شروط الاستخدام';
 
   @override
+  String get acceptPrivacyPolicy => 'لقد قرأت ووافقت على سياسة الخصوصية';
+
+  @override
+  String get acceptMedicalDisclaimer => 'لقد قرأت ووافقت على الإقرار الطبي';
+
+  @override
+  String get medicalDisclaimer => 'الإقرار الطبي';
+
+  @override
+  String get termsOfUseDescriptionV2 =>
+      'لإنشاء حساب في دوكسيرا، يرجى مراجعة المستندات التالية والموافقة عليها.';
+
+  @override
+  String get pleaseAcceptAllDocuments =>
+      'يرجى الموافقة على جميع المستندات المطلوبة للمتابعة.';
+
+  @override
+  String get legalDocsUpdatedTitle => 'تحديث المستندات القانونية';
+
+  @override
+  String get legalDocsUpdatedBody =>
+      'قمنا بتحديث مستنداتنا القانونية. يرجى مراجعة النسخ الجديدة والموافقة عليها لمتابعة استخدام دوكسيرا.';
+
+  @override
+  String get reviewAndAccept => 'مراجعة وموافقة';
+
+  @override
   String get dataProcessingInfo =>
       'يمكنك العثور على مزيد من المعلومات حول معالجة البيانات في ';
 
