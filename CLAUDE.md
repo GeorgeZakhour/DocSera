@@ -183,6 +183,23 @@ ssh -p 2203 george@94.252.183.77 \
 
 Use `-U supabase_admin` whenever the migration touches RLS, ownership, or `supabase_admin`-owned tables (`_secrets`, `doctor_storage_usage`, `manual_patients_phone_audit`). `-U postgres` is fine for everything else but `supabase_admin` works universally.
 
+## Working safely with multiple agents (loss-prevention)
+
+**Always commit and push launch-prep work as soon as a step is complete.** On 2026-05-05 a parallel agent's `git reset` + working-tree clean wiped ~20 file modifications spanning multiple roadmap steps. The work was recovered from a dangling commit, but it was a near-miss — `git gc` would have made it permanent.
+
+The convention going forward:
+
+- After completing any roadmap step (`docs/launch/<NN>-*.md`), commit immediately:
+  ```bash
+  git add -A
+  git commit -m "feat(launch): step N — <summary>"
+  git push origin main
+  ```
+- For mid-step checkpoints (migration applied, file rewritten, fix verified), prefer a WIP commit over holding modifications.
+- If you must hold WIP across a context switch, at minimum: `git stash --include-untracked -m "<descriptive>"`.
+- Never trust that work in the working tree is safe — only the commit + remote push is durable.
+- Secrets in `dart_defines/sentry.json` are gitignored; pushing is safe.
+
 ## Testing
 
 - **Framework**: `flutter_test` + `bloc_test` + `mocktail`
