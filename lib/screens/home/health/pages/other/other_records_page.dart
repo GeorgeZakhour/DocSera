@@ -232,9 +232,7 @@ class _OtherRecordsList extends StatelessWidget {
             break;
         }
 
-        final year = record.startDate != null
-            ? record.startDate!.year.toString()
-            : null;
+        final year = record.startDate?.year.toString();
 
         return HealthRecordCard(
           icon: Icons.monitor_heart_rounded,

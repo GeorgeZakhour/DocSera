@@ -223,10 +223,10 @@ class _SearchAdvancedPageState extends State<SearchAdvancedPage> {
         _searchService.searchCenters(q.toLowerCase()),
       ]);
 
-      final List<Map<String, dynamic>> doctorMatches = results[0] as List<Map<String, dynamic>>;
+      final List<Map<String, dynamic>> doctorMatches = results[0];
       final List<Map<String, dynamic>> centerMatches = widget.mode == "message"
           ? <Map<String, dynamic>>[]
-          : results[1] as List<Map<String, dynamic>>;
+          : results[1];
 
       final List<_SpecialtyOption> localSpecs = _buildLocalSpecialties(AppLocalizations.of(context)!);
       final specMatches = localSpecs

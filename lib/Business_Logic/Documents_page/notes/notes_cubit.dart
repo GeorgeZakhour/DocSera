@@ -90,7 +90,7 @@ class NotesCubit extends Cubit<NotesState> {
         emit(NotesError("User not authenticated"));
         return;
       }
-      await _service.deleteNote(note.id!, userId);
+      await _service.deleteNote(note.id, userId);
       _fetchNotes(userId, relativeId: _currentRelativeId);
     } catch (e) {
       emit(NotesError(ErrorHandler.resolve(e, defaultMessage: "فشل حذف الملاحظة")));

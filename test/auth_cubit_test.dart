@@ -27,7 +27,7 @@ void main() {
     when(() => mockSupabase.auth).thenReturn(mockAuth);
     
     // Mock initialization flow
-    when(() => mockAuth.onAuthStateChange).thenAnswer((_) => Stream.empty());
+    when(() => mockAuth.onAuthStateChange).thenAnswer((_) => const Stream.empty());
     when(() => mockAuth.currentSession).thenReturn(null);
     
     // AuthCubit initialization triggers async storage checks

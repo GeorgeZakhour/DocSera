@@ -58,7 +58,7 @@ class _WebViewPageState extends State<WebViewPage> {
 
             // Loading Indicator
             if (_isLoading)
-              Center(
+              const Center(
                 child: CircularProgressIndicator(
                   color: AppColors.main,
                 ),
@@ -77,7 +77,7 @@ class _WebViewPageState extends State<WebViewPage> {
                   decoration: BoxDecoration(
                     color: Colors.white.withValues(alpha: 0.8),
                     shape: BoxShape.circle,
-                    boxShadow: [
+                    boxShadow: const [
                       BoxShadow(
                         color: Colors.black26,
                         blurRadius: 4,

@@ -47,7 +47,7 @@ class AttachmentsPreviewBar extends StatelessWidget {
                 ),
                 child: Row(
                   children: [
-                     SizedBox(
+                     const SizedBox(
                         width: 20, height: 20,
                         child: CircularProgressIndicator(strokeWidth: 2, color: AppColors.main),
                      ),
@@ -107,7 +107,7 @@ class AttachmentsPreviewBar extends StatelessWidget {
 
     /// IMAGES Preview
     final totalCount = files.length + loadingCount;
-    final displayLimit = 4; // Max visible images before overflow
+    const displayLimit = 4; // Max visible images before overflow
 
     List<Widget> items = [];
 

@@ -49,7 +49,7 @@ class PatientSectionRenderers {
       title: label,
       child: Padding(
         padding: EdgeInsets.symmetric(vertical: 24.h),
-        child: Center(
+        child: const Center(
           child: CircularProgressIndicator(
             strokeWidth: 2,
             color: AppColors.main,
@@ -944,7 +944,7 @@ class PatientSectionRenderers {
         placeholder: (_, __) => Container(
           height: height ?? 150,
           color: Colors.grey.shade200,
-          child: Center(
+          child: const Center(
             child: CircularProgressIndicator(
               strokeWidth: 2,
               color: AppColors.main,

@@ -4,6 +4,7 @@
 ///
 /// Vendored from https://pub.dev/packages/arabic_reshaper (MIT license).
 /// Simplified: only core shaping + Lam-Alef ligatures. No harakat, no tatweel.
+library;
 
 // ── Constants ──
 const int _isolated = 0;

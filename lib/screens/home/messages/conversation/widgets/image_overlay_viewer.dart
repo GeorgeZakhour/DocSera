@@ -59,8 +59,8 @@ class _ImageOverlayViewerState extends State<ImageOverlayViewer> {
   TransformationController();
   Offset _doubleTapPosition = Offset.zero;
 
-  bool _isProcessingAddToDocument = false;
-  bool _isProcessingSave = false;
+  final bool _isProcessingAddToDocument = false;
+  final bool _isProcessingSave = false;
 
   /// ✅ Phase 2C: Decrypted image bytes
   List<Uint8List?>? _decryptedBytes;

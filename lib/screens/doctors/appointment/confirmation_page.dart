@@ -21,7 +21,7 @@ class AppointmentConfirmedPage extends StatelessWidget {
   const AppointmentConfirmedPage({super.key, required this.appointment});
 
   /// إضافة إلى التقويم: نستخدم اللحظة المطلقة من timestamp (محلي الجهاز) ومدة قابلة للتخصيص
-  void _addToCalendar(BuildContext context, {int clinicOffsetMinutes = 180}) {
+  void _addToCalendar(BuildContext context) {
     final appt = appointment;
 
     // 1) نقرأ الـ timestamp ونحوله لتوقيت سوريا

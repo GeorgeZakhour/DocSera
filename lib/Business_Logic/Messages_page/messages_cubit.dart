@@ -403,8 +403,11 @@ class MessagesCubit extends Cubit<MessagesState> {
       // Determine last message text for preview
       String lastMsgPreview = message;
       if (lastMsgPreview.isEmpty && attachments.isNotEmpty) {
-          if (attachments.first['type'] == 'pdf') lastMsgPreview = '📄 PDF';
-          else lastMsgPreview = '📷 Image';
+          if (attachments.first['type'] == 'pdf') {
+            lastMsgPreview = '📄 PDF';
+          } else {
+            lastMsgPreview = '📷 Image';
+          }
       }
 
       await _supabase.from('messages').insert({

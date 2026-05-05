@@ -41,7 +41,7 @@ void main() {
         when(() => mockPrefs.getString('pastAppointments')).thenReturn(null);
         when(() => mockUserService.getUserAppointments('user-1')).thenAnswer((_) async => mockAppointments);
         when(() => mockUserService.saveCachedData(any(), any())).thenAnswer((_) async {});
-        when(() => mockUserService.listenToUserAppointments('user-1')).thenAnswer((_) => Stream.empty());
+        when(() => mockUserService.listenToUserAppointments('user-1')).thenAnswer((_) => const Stream.empty());
 
         return cubit;
       },

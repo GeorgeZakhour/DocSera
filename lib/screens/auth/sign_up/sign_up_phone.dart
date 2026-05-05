@@ -7,7 +7,6 @@ import 'package:docsera/utils/page_transitions.dart';
 import 'package:docsera/utils/text_direction_utils.dart';
 import 'package:docsera/widgets/base_scaffold.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import '../../../app/const.dart';
 import '../../../models/sign_up_info.dart';
@@ -433,7 +432,7 @@ class _SignUpFirstPageState extends State<SignUpFirstPage> {
                     decoration: InputDecoration(
                       hintText: AppLocalizations.of(context)!.referralCodeOptional,
                       hintStyle: AppTextStyles.getText2(context).copyWith(color: Colors.grey),
-                      prefixIcon: Icon(Icons.card_giftcard, color: AppColors.main),
+                      prefixIcon: const Icon(Icons.card_giftcard, color: AppColors.main),
                       border: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(25.r),
                         borderSide: const BorderSide(color: Colors.grey),

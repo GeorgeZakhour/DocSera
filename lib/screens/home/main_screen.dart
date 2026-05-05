@@ -32,7 +32,6 @@ import 'package:docsera/Business_Logic/Home_Cards/home_cards_cubit.dart';
 import 'package:docsera/Business_Logic/Home_Cards/home_cards_state.dart';
 import 'package:docsera/services/supabase/home_cards/supabase_home_card_service.dart';
 import 'package:docsera/models/home_card_model.dart';
-import 'package:docsera/models/home_card_model.dart';
 import 'package:docsera/screens/misc/webview_page.dart';
 
 import '../../models/sign_up_info.dart';

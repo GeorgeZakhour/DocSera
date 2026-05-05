@@ -554,8 +554,9 @@ class _CenterProfilePageState extends State<CenterProfilePage> {
                       SizedBox(height: 60.h),
                       GestureDetector(
                         onTap: () {
-                          if (imageUrl.startsWith('http'))
+                          if (imageUrl.startsWith('http')) {
                             _showImageOverlayWithIndex([imageUrl], 0);
+                          }
                         },
                         child: CircleAvatar(
                           backgroundColor: AppColors.main.withValues(alpha: 0.3),
@@ -2414,9 +2415,9 @@ class _CenterProfilePageState extends State<CenterProfilePage> {
     final l = AppLocalizations.of(context)!;
     final isArabic = Localizations.localeOf(context).languageCode == 'ar';
     Map<String, dynamic> hours = {};
-    if (openingHours is Map)
+    if (openingHours is Map) {
       hours = Map<String, dynamic>.from(openingHours);
-    else if (openingHours is String) {
+    } else if (openingHours is String) {
       try {
         hours = Map<String, dynamic>.from(jsonDecode(openingHours));
       } catch (_) {}
@@ -2971,8 +2972,9 @@ class _CenterProfilePageState extends State<CenterProfilePage> {
           onTap: () async {
             final uri =
                 Uri.parse(url.startsWith('http') ? url : 'https://$url');
-            if (await canLaunchUrl(uri))
+            if (await canLaunchUrl(uri)) {
               launchUrl(uri, mode: LaunchMode.externalApplication);
+            }
           },
           child: Padding(
             padding: EdgeInsets.only(bottom: 8.h),

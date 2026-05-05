@@ -1790,7 +1790,7 @@ class _DoctorProfilePageState extends State<DoctorProfilePage> {
     if (pricingList.isEmpty) return const SizedBox.shrink();
 
     final validItems = pricingList
-        .where((e) => e is Map)
+        .whereType<Map>()
         .map((e) => Map<String, dynamic>.from(e))
         .toList();
     if (validItems.isEmpty) return const SizedBox.shrink();
@@ -4393,7 +4393,7 @@ class _ClaimPromotionSheetState extends State<_ClaimPromotionSheet>
             SizedBox(
               width: 28.r,
               height: 28.r,
-              child: CircularProgressIndicator(
+              child: const CircularProgressIndicator(
                 color: AppColors.main,
                 strokeWidth: 2.5,
               ),

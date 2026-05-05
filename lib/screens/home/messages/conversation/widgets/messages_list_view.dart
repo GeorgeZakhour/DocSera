@@ -680,7 +680,7 @@ class MessagesListView extends StatelessWidget {
                     }
                   }
 
-                  if (url == null || url.trim().isEmpty) return;
+                  if (url.trim().isEmpty) return;
 
                   final userDoc = UserDocument(
                     id: '',

@@ -635,7 +635,7 @@ class _TransactionTileState extends State<TransactionTile>
 
   List<Widget> _healthProfileDetails(BuildContext context, AppLocalizations l) {
     final rows = <Widget>[];
-    final color = const Color(0xFFE91E63);
+    const color = Color(0xFFE91E63);
 
     rows.add(_detailRow(
       context,

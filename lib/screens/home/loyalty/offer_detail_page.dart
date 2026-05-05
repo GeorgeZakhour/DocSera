@@ -276,9 +276,9 @@ class _OfferDetailPageState extends State<OfferDetailPage>
                         widget.offer.partnerLogoUrl!,
                         fit: BoxFit.cover,
                         errorBuilder: (_, __, ___) =>
-                            Icon(Icons.store_rounded, color: AppColors.main),
+                            const Icon(Icons.store_rounded, color: AppColors.main),
                       )
-                    : Icon(Icons.store_rounded, color: AppColors.main),
+                    : const Icon(Icons.store_rounded, color: AppColors.main),
               ),
             ),
             SizedBox(width: 12.w),
@@ -544,8 +544,8 @@ class _OfferDetailPageState extends State<OfferDetailPage>
             // Warning icon
             Container(
               padding: EdgeInsets.all(14.w),
-              decoration: BoxDecoration(
-                color: const Color(0xFFFFF3E0),
+              decoration: const BoxDecoration(
+                color: Color(0xFFFFF3E0),
                 shape: BoxShape.circle,
               ),
               child: Icon(Icons.info_outline_rounded, size: 30.sp, color: const Color(0xFFFF9800)),

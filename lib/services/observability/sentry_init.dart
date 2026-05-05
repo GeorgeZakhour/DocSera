@@ -67,9 +67,7 @@ class SentryInit {
 
   static FutureOr<SentryEvent?> _scrub(SentryEvent event, Hint hint) {
     // Drop user PII fields — we'll only keep an opaque user id elsewhere if set.
-    final scrubbedUser = event.user == null
-        ? null
-        : event.user!.copyWith(
+    final scrubbedUser = event.user?.copyWith(
             email: null,
             ipAddress: null,
             name: null,

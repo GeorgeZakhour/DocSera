@@ -345,9 +345,7 @@ class Analytics with WidgetsBindingObserver {
           'user_id'     : _userId,
           'started_at'  : session.startedAt.toIso8601String(),
           'ended_at'    : session.endedAt?.toIso8601String(),
-          'duration_ms' : session.endedAt == null
-              ? null
-              : session.endedAt!.difference(session.startedAt).inMilliseconds,
+          'duration_ms' : session.endedAt?.difference(session.startedAt).inMilliseconds,
           'event_count' : session.eventCount,
           'screen_count': session.screenCount,
           'app_version' : _appVersion,

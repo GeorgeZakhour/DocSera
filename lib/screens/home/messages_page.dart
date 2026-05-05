@@ -289,7 +289,7 @@ import 'package:docsera/utils/doctor_image_utils.dart';
                   if (isExpanded) {
                     _expandedDoctorIds.remove(doctorId);
                   } else {
-                    _expandedDoctorIds.add(doctorId!);
+                    _expandedDoctorIds.add(doctorId);
                   }
                 });
               },

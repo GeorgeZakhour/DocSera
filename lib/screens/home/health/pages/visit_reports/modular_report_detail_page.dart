@@ -126,7 +126,7 @@ class _ModularReportDetailPageState extends State<ModularReportDetailPage> {
                     if (_report.sections.isEmpty && _loadingSections)
                       Padding(
                         padding: EdgeInsets.symmetric(vertical: 40.h),
-                        child: Center(
+                        child: const Center(
                           child: CircularProgressIndicator(
                             strokeWidth: 2,
                             color: AppColors.main,

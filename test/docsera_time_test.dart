@@ -1,8 +1,5 @@
-import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:docsera/utils/time_utils.dart';
-import 'package:timezone/data/latest.dart' as tzdata;
-import 'package:flutter_localizations/flutter_localizations.dart';
 
 void main() {
   setUpAll(() {
