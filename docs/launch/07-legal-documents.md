@@ -13,10 +13,12 @@ Four legal documents, in Arabic and English, hosted at `docsera.app`. They're th
 
 | Document | URL | Version | Effective | Length |
 |---|---|---|---|---|
-| **Privacy Policy** (سياسة الخصوصية) | https://docsera.app/privacy-policy/ | 2.0 | 2026-05-05 | 397 lines |
-| **Terms of Use** (شروط الاستخدام) | https://docsera.app/terms-of-service/ | 2.0 | 2026-05-05 | 331 lines |
+| **Privacy Policy** (سياسة الخصوصية) | https://docsera.app/privacy-policy/ | 1.0 | 2026-05-05 | 397 lines |
+| **Terms of Use** (شروط الاستخدام) | https://docsera.app/terms-of-service/ | 1.0 | 2026-05-05 | 331 lines |
 | **Medical Disclaimer** (الإقرار الطبي) | https://docsera.app/medical-disclaimer/ | 1.0 | 2026-05-05 | 233 lines (NEW) |
-| **Report Abuse** (الإبلاغ عن محتوى مخالف) | https://docsera.app/report-illicit-content/ | 1.1 | 2026-05-05 | refreshed |
+| **Report Abuse** (الإبلاغ عن محتوى مخالف) | https://docsera.app/report-illicit-content/ | 1.0 | 2026-05-05 | refreshed |
+
+> **Pre-launch baseline.** All four documents start at v1.0 since the app hasn't shipped to users yet. Earlier drafts during testing reached v2.0 / v1.1 but were reset to v1.0 on 2026-05-05 to give the public a clean version history. Future bumps follow the rules in the "v2.1 watch-list" further down this doc.
 
 All four are bilingual AR/EN with a language toggle and the existing visual style. Source files in `~/development/docsera-landing/public/<doc>/index.html`.
 
@@ -27,10 +29,10 @@ All four are bilingual AR/EN with a language toggle and the existing visual styl
 ```json
 {
   "documents": [
-    { "code": "privacy_policy",     "version": "2.0", "effective_date": "2026-05-05", "requires_consent": true,  "url": "..." },
-    { "code": "terms_of_service",   "version": "2.0", "effective_date": "2026-05-05", "requires_consent": true,  "url": "..." },
+    { "code": "privacy_policy",     "version": "1.0", "effective_date": "2026-05-05", "requires_consent": true,  "url": "..." },
+    { "code": "terms_of_service",   "version": "1.0", "effective_date": "2026-05-05", "requires_consent": true,  "url": "..." },
     { "code": "medical_disclaimer", "version": "1.0", "effective_date": "2026-05-05", "requires_consent": true,  "url": "..." },
-    { "code": "report_illicit_content", "version": "1.1", "effective_date": "2026-05-05", "requires_consent": false, "url": "..." }
+    { "code": "report_illicit_content", "version": "1.0", "effective_date": "2026-05-05", "requires_consent": false, "url": "..." }
   ]
 }
 ```
