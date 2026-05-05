@@ -25,7 +25,11 @@ plugins {
     // Gradle, so subprojects silently pull a stale Kotlin plugin and fail
     // with the BaseVariant decoration error on a clean CI checkout.
     // Versions match what `flutter create` generates for Flutter 3.32.7.
-    id "com.android.application" version "8.7.3" apply false
+    // AGP 8.9.1 (above Flutter 3.32.7's scaffold default of 8.7.3) is required
+    // by transitive `androidx.core:core-ktx:1.18.0`, which one of our deps pulls
+    // in. The 8.9.1 hosts Kotlin 2.1.0 cleanly (BaseVariant already gone in
+    // KGP 2.1, so that earlier failure mode does not return).
+    id "com.android.application" version "8.9.1" apply false
     id "org.jetbrains.kotlin.android" version "2.1.0" apply false
     id "com.google.gms.google-services" version "4.4.2" apply false
 }
