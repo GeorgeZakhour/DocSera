@@ -23,6 +23,7 @@ Operator-focused docs for everything done in preparation for the public launch o
 | — | Lint cleanup sweep (1068 → 275 analyzer issues, silent RTL bug caught and fixed) | ✅ Done | 9.42 / 10 |
 | — | iOS pbxproj cleanup (11 spurious xcframework refs removed; CI iOS gate strict) | ✅ Done | 9.43 / 10 |
 | — | Untranslated Arabic — 33 new l10n keys + 2 security fixes (OTP debug-leak gated, dead Doctor ID widget removed) | ✅ Done | 9.45 / 10 |
+| 10 | [Performance pass — 4 setState/N+1 antipatterns fixed on hot screens](10-perf-pass.md) | ✅ Done | 9.55 / 10 |
 | — | [Full roadmap & score progression](roadmap.md) | Living doc | — |
 
 ## How to use these docs
