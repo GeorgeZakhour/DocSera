@@ -221,14 +221,46 @@ GitHub Actions is on the free tier (2,000 minute-units/month) and the user is **
 **Rules for any agent working in this repo:**
 
 1. **Never re-add Android or iOS build jobs to `ci.yml`.** They live in `build.yml` for a reason. The math: at the user's pace, every-push iOS builds exhaust the free tier in <2 weeks. The split saves ~50 min/push.
-2. **Don't trigger the manual `Build` workflow speculatively.** Each full run costs ~58 min-units. Trigger it only when the user asks, or when there's a concrete reason (a native dep was added, an Android/iOS config file was touched, a release tag is going out).
-3. **Native build failures on `main` are not normally caught by `ci.yml`.** That is by design. When the user pushes Dart-only changes, analyze + tests are sufficient; the build workflow is the final gate before a release or when verifying a native-touching change.
-4. **How to suggest the user trigger a build** (in priority order):
-   - GitHub UI: Actions → "Build (Android + iOS)" → "Run workflow"
-   - CLI: `gh workflow run build.yml` (or `-f android=false` / `-f ios=false` to save minutes)
-   - Tag push: `git tag v1.0.0 && git push --tags` (auto-triggers both)
-5. **When a CI failure surfaces a native bug** (the build workflow is red), fix it but don't add per-push gating "to catch it earlier." The signal-to-noise of per-push native builds isn't worth the cost.
-6. **Free-tier headroom**: ~250 pushes/month on `ci.yml`, ~25 full builds/month on `build.yml`, before exhaustion. Watch usage at github.com/settings/billing if approaching limits.
+2. **Native build failures on `main` are not normally caught by `ci.yml`.** That is by design. When the user pushes Dart-only changes, analyze + tests are sufficient; the build workflow is the final gate before a release or when verifying a native-touching change.
+3. **When a CI failure surfaces a native bug** (the build workflow is red), fix it but don't add per-push gating "to catch it earlier." The signal-to-noise of per-push native builds isn't worth the cost.
+4. **Free-tier headroom**: ~250 pushes/month on `ci.yml`, ~25 full builds/month on `build.yml`, before exhaustion. Watch usage at github.com/settings/billing if approaching limits.
+
+### When to PROACTIVELY suggest running the Build workflow
+
+The user does NOT remember to run builds — agents must suggest it whenever the change risks breaking the native build. Trigger this suggestion immediately after committing if any of the following is true:
+
+| Triggering change | Why a build is needed |
+|---|---|
+| Edit to anything under `ios/**` | Xcode project, Info.plist, Podfile, AppDelegate, entitlements, AssetCatalog — any of these can break iOS without breaking analyze/tests |
+| Edit to anything under `android/**` | Gradle config, AndroidManifest, MainActivity, Kotlin/Java sources, NDK, signing config |
+| Edit to `pubspec.yaml` (deps added/upgraded/removed) | New native plugins or version bumps can fail Pod install or Gradle resolution |
+| Edit to `.github/workflows/build.yml` itself | Workflow change must be verified by running the workflow |
+| Edit to `analysis_options.yaml`, `dart_defines/*` | Build-time configuration that's not exercised by analyze/tests |
+| Touching `MessageEncryptionService` or other plugin-channel code | Platform-channel surface changes can compile-fail on one platform |
+| **Before tagging a release** (any `v*` tag) | Tag push triggers `build.yml` automatically, but agents should still suggest a pre-tag dry run |
+| Before merging a PR that contains any of the above | Manual build run from the PR branch is the gate |
+
+How the suggestion should sound (terse, with the exact command):
+
+> "You touched `ios/Runner.xcodeproj/project.pbxproj` — recommend running the build workflow before relying on this commit:
+> ```
+> gh workflow run build.yml
+> ```
+> (Or via UI: Actions → Build (Android + iOS) → Run workflow.)"
+
+If only one platform is affected (e.g. only `android/**` changed), suggest the targeted form to save minutes:
+
+> ```
+> gh workflow run build.yml -f ios=false
+> ```
+
+### When NOT to suggest a build
+
+- Pure Dart/Flutter changes under `lib/` (UI, logic, tests, l10n) — analyze + tests cover these
+- Doc changes (`docs/**`, `*.md`)
+- Test-only changes (`test/**`)
+- Asset-only additions (`assets/images/**`) unless they trigger an asset catalog regeneration on iOS
+- Pure CI config changes to `ci.yml` (analyze + tests will run on the next push anyway)
 
 See [docs/launch/08-ci-github-actions.md](docs/launch/08-ci-github-actions.md) for the full design rationale and history.
 
