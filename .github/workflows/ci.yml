@@ -95,8 +95,17 @@ jobs:
       - name: Generate localizations
         run: flutter gen-l10n
 
-      - name: Run tests
-        run: flutter test --reporter=compact
+      - name: Run tests with coverage
+        run: flutter test --coverage --reporter=compact
+
+      - name: Upload coverage artifact
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: coverage-lcov
+          path: coverage/lcov.info
+          retention-days: 7
+          if-no-files-found: warn
 
   # ---------------------------------------------------------------------------
   # 3. Android build — verifies the app compiles end-to-end for Android.
