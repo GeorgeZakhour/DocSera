@@ -140,19 +140,19 @@ Realistic expectation: 2 focused days, 4 if interrupted. The biggest time-sink i
 
 Status as of 2026-05-05.
 
-**Tests: 60 → 302 (+242 net, 1 skipped).** Distribution by layer:
+**Tests: 60 → 367 (+307 net, 1 skipped).** Distribution by layer:
 
 | Layer | Files | Tests | Notes |
 |---|---|---|---|
 | Infrastructure | `test/_helpers/{fixtures,pump_app,tz_init}.dart` | — | Foundation reused by every other test |
-| Models | `test/models/*.dart` (12 files) | ~70 | Message, UserDocument, Conversation, Note, AppointmentDetails, PatientProfile, BannerModel + ContentSection, OfferModel, VoucherModel, PartnerModel, Gift, Promotion (doctor + center), PopupBannerModel, ReferralModel + ReferralInfo, SignUpInfo, HomeCardModel — all round-trips, optional-field tolerance, type coercion |
-| Utilities | `test/utils/*.dart` (7 files) | ~50 | ErrorHandler branch coverage, text-direction (RTL/LTR), getTextAlign with locale, **deep-link validator security tripwire**, ColorFromHex, getDoctorImage variants, SharedPrefsService boolean+JSON, DocSeraTime parsing/UTC round-trips/no-DST stability |
-| Cubits | `test/*_cubit*.dart` (8 files) | ~75 | AuthCubit, UserCubit, AppointmentsCubit + extended (loadAppointments edge cases, updateSelectedTab, logout, setAppointmentsFromStream), NotesCubit, DocumentsCubit, ConversationCubit (sendMessage optimistic + retry), HealthProfileWizardCubit, PartnerCubit |
+| Models | `test/models/*.dart` (16 files) | ~75 | Message, UserDocument, Conversation, Note, AppointmentDetails, PatientProfile, BannerModel + ContentSection, OfferModel, VoucherModel, PartnerModel, Gift, Promotion (doctor + center), PopupBannerModel, ReferralModel + ReferralInfo, SignUpInfo, HomeCardModel — all round-trips, optional-field tolerance, type coercion |
+| Utilities | `test/utils/*.dart` (7 files) | ~58 | ErrorHandler branch coverage, text-direction (RTL/LTR), getTextAlign with locale, **deep-link validator security tripwire**, ColorFromHex, getDoctorImage variants, SharedPrefsService boolean+JSON, DocSeraTime parsing/UTC round-trips/no-DST stability |
+| Cubits | `test/*_cubit*.dart` (12 files) | ~110 | AuthCubit, UserCubit + extended (logout preserves biometric prefs while clearing PII), AppointmentsCubit + extended, NotesCubit, DocumentsCubit, ConversationCubit (sendMessage + retry + sendMediaMessage), MessagesCubit (state shape), BannersCubit, HealthProfileWizardCubit, PartnerCubit, OffersCubit (load + redeem), VouchersCubit (active/used/expired partitioning + merge) |
 | Encryption | `test/services/encryption/message_encryption_test.dart` | 21 | **Privacy-claim guard** — text round-trip (ASCII/Arabic/emoji/multi-line), random-IV semantic security, legacy plain-text passthrough, garbage-payload fail-soft, **WRONG-KEY tamper detection** (must not return original plaintext), bytes round-trip + null-on-too-short, singleton lifecycle |
-| Services | `test/services/supabase/...` | 5 | Facade-delegation tests for SupabaseUserService → AuthRepository / UserRepository / FavoritesRepository / AppointmentRepository |
-| Widget | `test/widget/*.dart` (7 files) | ~30 | OfflineBanner (offline icon, online transition, EN+AR), wizard widgets (progress bar, multi-select, no-data button), complete-profile banner, loyalty widgets (partner bubble, offer cover card), wifi icons smoke |
-| Integration | `test/integration/*.dart` (7 files) | ~40 | **Auth funnel** (signIn failure paths, signOut, signUp), **booking funnel** (AppointmentDetails state machine + appointments-list refresh), **messaging funnel** (encrypted-text round-trip including Arabic, ConversationCubit transports ENC: payload through service unchanged, tampered ciphertext rejected), **document upload funnel** (encrypted bytes prepend IV, decrypt round-trip, wrong-key fail-soft, delete clears DB row + storage pages), **notes RLS contract**, **documents RLS contract**, **deep-link** (URI parsing, validator integration with hostile inputs) |
-| Loyalty | `test/loyalty/*.dart` | 11 | PartnerCubit, partner profile, offer cover card, partner bubble |
+| Services | `test/services/...` | 7 | SupabaseUserService facade delegation, AuthRepository signInWithPassword + AuthException rethrow |
+| Widget | `test/widget/*.dart` (9 files) | ~46 | OfflineBanner (offline icon, online transition, EN+AR), wizard widgets, complete-profile banner, loyalty widgets, wifi icons smoke, **InsightVisuals icon/color/label registry**, ChatExpiryBanner (future / urgent / RTL / onTap-wired) |
+| Integration | `test/integration/*.dart` (9 files) | ~50 | **Auth funnel** (signIn paths, signOut clears prefs, signUp), **booking funnel** (AppointmentDetails state machine + list refresh), **messaging funnel** (encrypted-text Arabic round-trip, ENC: passthrough, tamper rejection), **document upload** (IV prepend, decrypt round-trip, wrong-key fail-soft, delete clears DB row + storage), **notes RLS** + **documents RLS** contracts, **deep-link** (URI parsing + hostile input rejection), **consent flow** (version-comparison contract: no-change / required / non-required / brand-new doc), **deletion lifecycle** (signOut hook, biometric prefs deliberately preserved, analytics event names stable) |
+| Loyalty | `test/loyalty/*.dart` (5 files) | ~22 | PartnerCubit, partner profile, offer cover card, partner bubble, OffersCubit, VouchersCubit |
 
 **CI:** `flutter test --coverage` runs on every push and PR. `coverage/lcov.info` uploaded as a downloadable artifact (7-day retention).
 
@@ -174,6 +174,8 @@ These weren't done because they need infrastructure work that doesn't pay off un
 - **Coverage trend gate in CI** — once we have a baseline lcov number, gate PRs on a >2-point regression rather than an absolute threshold.
 - **Reconsent dialog widget test** — `_ReconsentDialog` is currently a private widget; testing it requires either making it public or rendering the gate around a fake policy version.
 - **Real-DB integration tests** — currently all integration tests use mocked services. A separate suite that hits a throwaway test schema would catch RLS regressions on the database side, but adds CI complexity (test DB lifecycle, isolation, cleanup).
+- **AuthRepository RPC paths** — `SupabaseClient.rpc` returns a `PostgrestFilterBuilder` rather than a `Future`, so testing the rpc-shaped methods (`isPhoneNumberExists`, `getLoginInfoByEmailOrPhone`, etc.) through mocktail requires a far heavier mock surface. The auth-funnel integration tests cover the equivalent behaviors via the mockable GoTrue surface.
+- **MessagesCubit load path** — `loadMessages` reads `BuildContext.read<AuthCubit>()` and uses chained `.from().select().eq()` query builders, which mock poorly in unit tests. Covered indirectly via the messaging-funnel integration test through ConversationCubit and the encryption service.
 
 ## Score impact
 
