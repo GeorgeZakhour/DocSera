@@ -2,9 +2,29 @@
 
 **Date:** 2026-05-05
 **Score impact:** 9.2 → 9.3
-**Workflow:** `.github/workflows/ci.yml`
+**Workflows:**
+- `.github/workflows/ci.yml` — analyze + tests on every push/PR
+- `.github/workflows/build.yml` — Android + iOS builds, manual or tag-triggered only
 
 > Note: this doc is numbered 08 because it covers what the launch roadmap calls Step 7 (CI). The roadmap reordered after we inserted "Comprehensive test strategy" as a separate Step 8. The `08-` prefix follows file-creation order and is fine as-is — the roadmap is the canonical step counter.
+
+## Two-workflow split (free-tier discipline)
+
+The original setup ran analyze + tests + Android build + iOS build on every push, costing **~66 minute-units per push** (the iOS macOS-runner job alone burns 50 due to the 10× multiplier). At a few pushes per day that exhausts the GitHub free tier (2,000 min/month) within 1–2 weeks of active development.
+
+The split:
+
+| Workflow | Trigger | Cost per run | Effect |
+|---|---|---|---|
+| `ci.yml` | Every push to `main`, every PR | ~8 min-units (analyze 3 + tests 5, both Linux) | Fast feedback; ~250 pushes/month free |
+| `build.yml` | Manual button OR `v*` tag push | ~58 min-units (Android 8 + iOS 50) | Verify before release; ~25 full builds/month free |
+
+**How to trigger a build:**
+- GitHub UI → **Actions** → **Build (Android + iOS)** → **Run workflow** button (top-right). Optionally toggle Android or iOS off to save minutes if you only need one.
+- CLI: `gh workflow run build.yml` (uses defaults — both platforms)
+- Tag push: `git tag v1.0.0 && git push --tags` triggers both builds automatically
+
+**Why this is safe:** native build failures rarely happen without an analyzer or test failure preceding them. The cases we've actually seen on this project (RTL bug, FLUTTER_ROOT path leak, NDK heap, Jetifier OOM) were all things the per-push gate revealed *after* analyze and tests were already passing — but they reproduce just as well when triggered manually before a release. The strict per-push iOS gate from Step 9b is preserved as a strict gate on `build.yml`; you just decide *when* to spend the minutes on it.
 
 ## What this gives you
 

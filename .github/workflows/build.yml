@@ -1,0 +1,133 @@
+# =============================================================================
+# DocSera Patient App — Manual Build Workflow
+# =============================================================================
+# Runs Android and/or iOS debug builds on demand. NOT triggered by every push —
+# that's `ci.yml` (analyze + test only).
+#
+# How to trigger:
+#   1. GitHub UI: Actions → "Build (Android + iOS)" → "Run workflow" button.
+#      Optionally toggle android/ios off if you only need one platform.
+#   2. CLI: `gh workflow run build.yml`  (or with -f flags below)
+#   3. Tag push: `git tag v1.0.0 && git push --tags` runs both builds.
+#
+# Cost per full run (both platforms):
+#   - Android build: ~8 min Linux (1× multiplier) = 8 min-units
+#   - iOS build:     ~5 min macOS (10× multiplier) = 50 min-units
+#   - Total: ~58 min-units.
+#
+# Free tier budget for manual triggers:
+#   - 2,000 min/mo - (~250 pushes × 8 min for ci.yml) = breakdown depends on
+#     how often you push. With ~2 pushes/day (60/mo × 8 min = 480 min for ci),
+#     that leaves ~1,520 min for manual builds → ~26 full builds/month.
+#
+# Why we don't build per-push:
+#   - Build failures rarely happen without analyzer/test failure first.
+#   - Manual triggers force "I actually want to verify this" intent rather
+#     than wasting CI on speculative gates.
+# =============================================================================
+
+name: Build (Android + iOS)
+
+on:
+  workflow_dispatch:
+    inputs:
+      android:
+        description: 'Build Android APK'
+        type: boolean
+        default: true
+      ios:
+        description: 'Build iOS (simulator)'
+        type: boolean
+        default: true
+  # Tag pushes (e.g. v1.0.0) always build both — release-time verification.
+  push:
+    tags:
+      - 'v*'
+
+concurrency:
+  group: build-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  FLUTTER_VERSION: '3.32.7'
+  FLUTTER_CHANNEL: 'stable'
+
+jobs:
+  # ---------------------------------------------------------------------------
+  # Android debug APK — produces a downloadable artifact.
+  # Skipped if the workflow_dispatch input `android: false`.
+  # ---------------------------------------------------------------------------
+  build-android:
+    name: Build Android (debug)
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    if: github.event_name != 'workflow_dispatch' || inputs.android
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up JDK 17
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'temurin'
+          java-version: '17'
+
+      - uses: subosito/flutter-action@v2
+        with:
+          flutter-version: ${{ env.FLUTTER_VERSION }}
+          channel: ${{ env.FLUTTER_CHANNEL }}
+          cache: true
+
+      - name: Install dependencies
+        run: flutter pub get
+
+      - name: Generate localizations
+        run: flutter gen-l10n
+
+      - name: Build debug APK
+        run: flutter build apk --debug
+
+      - name: Upload APK artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: docsera-debug-apk
+          path: build/app/outputs/flutter-apk/app-debug.apk
+          # Manual builds are intentional — keep artifacts a bit longer (3 days)
+          # so the developer has time to download and test on a real device.
+          retention-days: 3
+          if-no-files-found: warn
+
+  # ---------------------------------------------------------------------------
+  # iOS simulator build. See ci.yml header for why this is simulator-only.
+  # Skipped if the workflow_dispatch input `ios: false`.
+  # ---------------------------------------------------------------------------
+  build-ios:
+    name: Build iOS (simulator)
+    runs-on: macos-latest
+    timeout-minutes: 30
+    if: github.event_name != 'workflow_dispatch' || inputs.ios
+    steps:
+      - uses: actions/checkout@v4
+
+      # Pin Xcode to the newest stable. connectivity_plus 7.x uses
+      # NWPath.isUltraConstrained which only exists in iOS 17.4+ SDK
+      # (Xcode 15.4+); GitHub's default `xcode-select` on macos-latest
+      # can point at an older one.
+      - name: Select latest stable Xcode
+        uses: maxim-lobanov/setup-xcode@v1
+        with:
+          xcode-version: latest-stable
+
+      - uses: subosito/flutter-action@v2
+        with:
+          flutter-version: ${{ env.FLUTTER_VERSION }}
+          channel: ${{ env.FLUTTER_CHANNEL }}
+          cache: true
+
+      - name: Install dependencies
+        run: flutter pub get
+
+      - name: Generate localizations
+        run: flutter gen-l10n
+
+      - name: Build iOS (simulator)
+        run: flutter build ios --debug --simulator

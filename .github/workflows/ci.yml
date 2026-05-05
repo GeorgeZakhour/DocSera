@@ -1,23 +1,23 @@
 # =============================================================================
-# DocSera Patient App — Continuous Integration
+# DocSera Patient App — Continuous Integration (Cheap Path)
 # =============================================================================
-# Runs on every push to main and on every pull request. Validates the code
-# never reaches a broken state in main: static analysis, unit/widget tests,
-# and end-to-end builds for both Android and iOS.
+# Runs on every push to main and every PR. Validates code never reaches a
+# broken state: static analysis + unit/widget test suite. Deliberately does
+# NOT build Android or iOS — those are gated behind the manual `Build` workflow
+# (.github/workflows/build.yml) so the free-tier minute budget isn't burned
+# on every commit.
 #
-# What is NOT in this workflow:
-#   - Code signing (no production certs in CI)
-#   - Store uploads (manual via local build script — see scripts/build_release.sh)
-#   - Sentry symbol uploads (handled at local build time)
-#   - Database migrations (applied manually on the VPS — see CLAUDE.md)
+# Cost per push: ~8 minute-units (Linux 1× multiplier).
+# Free tier (2,000 min/mo) → ~250 pushes/month before exhaustion.
 #
-# Tuning notes:
-#   - Flutter version is pinned to match the developer environment
-#     (ios/Flutter/Generated.xcconfig). Bump intentionally, not implicitly.
-#   - Builds use --debug to keep CI minutes low; production builds happen
-#     locally via scripts/build_release.sh with --release --obfuscate.
-#   - dart_defines/sentry.json is gitignored and absent in CI; --dart-define
-#     is therefore omitted. Sentry stays disabled in CI builds (safe default).
+# Why not build here:
+#   - Native Android/iOS builds rarely break in ways the Dart analyzer + tests
+#     don't already catch. When they do, the manual `Build` workflow surfaces
+#     it before merge or release.
+#   - macOS minutes have a 10× multiplier — the iOS job alone burns ~50
+#     minute-units per push, eating 75% of the free-tier budget.
+#   - We can run the manual workflow on demand from the Actions UI when we
+#     specifically want a fresh APK or to verify iOS toolchain changes.
 # =============================================================================
 
 name: CI
@@ -64,17 +64,13 @@ jobs:
 
       # CI fails only on actual errors (code that would break compilation
       # or produce undefined behavior). Warnings and infos are surfaced in
-      # the log but don't fail the build — a dedicated lint-cleanup sweep
-      # is tracked as its own roadmap item, and forcing CI green on it
-      # before that sweep would block every commit indefinitely.
+      # the log but don't fail the build — analysis_options.yaml already
+      # demotes architectural-only lints (Step 9).
       - name: Analyze (lib only — production code)
         run: flutter analyze --no-fatal-infos --no-fatal-warnings lib/
 
   # ---------------------------------------------------------------------------
-  # 2. Tests — runs the unit + widget test suite.
-  #    Files under test/_pending_rewrite/ are renamed *_DISABLED.dart and
-  #    skipped by Flutter's *_test.dart discovery. They will be reauthored as
-  #    part of Step 8 (testing strategy).
+  # 2. Tests — runs the full unit + widget + integration suite (367 tests).
   # ---------------------------------------------------------------------------
   test:
     name: Tests
@@ -104,97 +100,5 @@ jobs:
         with:
           name: coverage-lcov
           path: coverage/lcov.info
-          retention-days: 7
+          retention-days: 3
           if-no-files-found: warn
-
-  # ---------------------------------------------------------------------------
-  # 3. Android build — verifies the app compiles end-to-end for Android.
-  #    Debug build, no signing required; we only confirm the build succeeds.
-  # ---------------------------------------------------------------------------
-  build-android:
-    name: Build Android (debug)
-    runs-on: ubuntu-latest
-    timeout-minutes: 25
-    needs: [analyze, test]
-    steps:
-      - uses: actions/checkout@v4
-
-      - name: Set up JDK 17
-        uses: actions/setup-java@v4
-        with:
-          distribution: 'temurin'
-          java-version: '17'
-
-      - uses: subosito/flutter-action@v2
-        with:
-          flutter-version: ${{ env.FLUTTER_VERSION }}
-          channel: ${{ env.FLUTTER_CHANNEL }}
-          cache: true
-
-      - name: Install dependencies
-        run: flutter pub get
-
-      - name: Generate localizations
-        run: flutter gen-l10n
-
-      - name: Build debug APK
-        run: flutter build apk --debug
-
-      - name: Upload APK artifact
-        uses: actions/upload-artifact@v4
-        with:
-          name: docsera-debug-apk
-          path: build/app/outputs/flutter-apk/app-debug.apk
-          retention-days: 7
-          if-no-files-found: warn
-
-  # ---------------------------------------------------------------------------
-  # 4. iOS build — runs on a macOS runner; verifies the app compiles for iOS.
-  #
-  #    We build for the iOS Simulator (--simulator) rather than for device.
-  #    Reasoning: a device build requires Flutter to assemble Release/
-  #    XCFrameworks (App.xcframework, Flutter.xcframework) and even with
-  #    --no-codesign that pipeline still expects a development team /
-  #    provisioning context that we don't have on a fresh CI checkout.
-  #    A simulator build runs on the macOS host's CPU, needs zero signing,
-  #    and still exercises the entire iOS toolchain (Swift compiler, Pods,
-  #    asset catalog, Info.plist, our l10n). That's exactly the verification
-  #    we want from CI. Real device signing happens locally via
-  #    scripts/build_release.sh.
-  # ---------------------------------------------------------------------------
-  build-ios:
-    name: Build iOS (simulator)
-    runs-on: macos-latest
-    timeout-minutes: 30
-    needs: [analyze, test]
-    # iOS CI is now a real gate (Step 9b — 2026-05-05).
-    # The 4 spurious PBXFileReference entries that previously pointed at
-    # Flutter/Release/{App,Flutter}.xcframework have been removed from
-    # ios/Runner.xcodeproj/project.pbxproj. Verified building cleanly on
-    # both macOS Simulator and a real-device Xcode build (no-codesign).
-    steps:
-      - uses: actions/checkout@v4
-
-      # Pin Xcode to the newest stable. connectivity_plus 7.x uses
-      # NWPath.isUltraConstrained which only exists in iOS 17.4+ SDK
-      # (Xcode 15.4+); GitHub's default `xcode-select` on macos-latest
-      # can point at an older one.
-      - name: Select latest stable Xcode
-        uses: maxim-lobanov/setup-xcode@v1
-        with:
-          xcode-version: latest-stable
-
-      - uses: subosito/flutter-action@v2
-        with:
-          flutter-version: ${{ env.FLUTTER_VERSION }}
-          channel: ${{ env.FLUTTER_CHANNEL }}
-          cache: true
-
-      - name: Install dependencies
-        run: flutter pub get
-
-      - name: Generate localizations
-        run: flutter gen-l10n
-
-      - name: Build iOS (simulator)
-        run: flutter build ios --debug --simulator
