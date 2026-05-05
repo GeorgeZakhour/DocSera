@@ -27,11 +27,11 @@ class _TermsOfUsePageState extends State<TermsOfUsePage> {
   bool _acceptMedical = false;
   bool _showError = false;
 
-  // Versions match dart_defines/legal versions.json on docsera.app and the
-  // documents we shipped on 2026-05-05. Re-bump these alongside any document
-  // text change so the audit trail records the right version.
-  static const _versionPrivacy  = '2.0';
-  static const _versionTerms    = '2.0';
+  // Versions match the manifest at docsera.app/legal/versions.json.
+  // Pre-launch baseline: every document is at v1.0. Bump these alongside any
+  // document text change so the audit trail records the right version.
+  static const _versionPrivacy  = '1.0';
+  static const _versionTerms    = '1.0';
   static const _versionMedical  = '1.0';
 
   bool get _allAccepted => _acceptTerms && _acceptPrivacy && _acceptMedical;
