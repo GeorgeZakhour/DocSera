@@ -1,5 +1,6 @@
 import 'dart:io';
 import 'dart:typed_data';
+import 'dart:ui' as ui show TextDirection;
 import 'package:syncfusion_flutter_pdf/pdf.dart' as syncfusion;
 import 'package:pdfx/pdfx.dart' as pdfx;
 import 'package:http/http.dart' as http;
@@ -705,7 +706,7 @@ class _DocumentsPageState extends State<DocumentsPage> with AutomaticKeepAliveCl
     final notesState = context.watch<NotesCubit>().state;
     final hasNotes = notesState is NotesLoaded && notesState.notes.isNotEmpty;
 
-    final isRTL = Directionality.of(context) == TextDirection.RTL;
+    final isRTL = Directionality.of(context) == ui.TextDirection.rtl;
 
     return Stack(
       children: [
@@ -956,7 +957,7 @@ class _DocumentsPageState extends State<DocumentsPage> with AutomaticKeepAliveCl
   Widget _buildListView(List<Map<String, dynamic>> displayDocs) {
     final filteredDocs = _filterDocuments(displayDocs);
     final groupedDocs = _groupDocumentsByYear(filteredDocs);
-    final isRTL = Directionality.of(context) == TextDirection.RTL;
+    final isRTL = Directionality.of(context) == ui.TextDirection.rtl;
 
     return CustomScrollView(
       physics: const BouncingScrollPhysics(),
@@ -1607,7 +1608,7 @@ class _DocumentsPageState extends State<DocumentsPage> with AutomaticKeepAliveCl
   }
 
   Widget _buildNoteListTile(Note note) {
-    final isArabic = Directionality.of(context) == TextDirection.RTL;
+    final isArabic = Directionality.of(context) == ui.TextDirection.rtl;
 
     return InkWell(
       onTap: () {
@@ -1681,7 +1682,7 @@ class _DocumentsPageState extends State<DocumentsPage> with AutomaticKeepAliveCl
   }
 
   Widget _buildNoteCard(Note note) {
-    final isArabic = Directionality.of(context) == TextDirection.RTL;
+    final isArabic = Directionality.of(context) == ui.TextDirection.rtl;
 
     return Stack(
       children: [
@@ -2264,7 +2265,7 @@ class _DocumentGridItemState extends State<DocumentGridItem> {
     final doc = widget.doc;
     final isPdf = doc['type'] == 'pdf' || doc['name'].toString().toLowerCase().endsWith('.pdf');
     final UserDocument userDoc = doc['doc'];
-    final isRTL = Directionality.of(context) == TextDirection.RTL;
+    final isRTL = Directionality.of(context) == ui.TextDirection.rtl;
 
     return InkWell(
       onTap: widget.onTap,
