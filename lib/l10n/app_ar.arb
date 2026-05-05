@@ -1758,5 +1758,107 @@
   "voucherPageGiftClose": "إغلاق",
   "@voucherPageGiftClose": {},
   "voucherPageGiftDoctorMessageHeading": "رسالة طبيبك",
-  "@voucherPageGiftDoctorMessageHeading": {}
+  "@voucherPageGiftDoctorMessageHeading": {},
+
+  "commonError": "خطأ",
+  "@commonError": {},
+  "commonErrorWithMessage": "خطأ: {message}",
+  "@commonErrorWithMessage": {
+    "placeholders": {
+      "message": { "type": "String" }
+    }
+  },
+  "commonUnexpectedError": "حدث خطأ غير متوقع",
+  "@commonUnexpectedError": {},
+  "commonLogoutFailed": "فشل تسجيل الخروج: {error}",
+  "@commonLogoutFailed": {
+    "placeholders": {
+      "error": { "type": "String" }
+    }
+  },
+  "commonDebugMode": "وضع التصحيح",
+  "@commonDebugMode": {},
+
+  "appointmentMissingId": "معرّف الموعد مفقود",
+  "@appointmentMissingId": {},
+
+  "chatMaxImagesError": "الحد الأقصى {count} صور.",
+  "@chatMaxImagesError": {
+    "placeholders": {
+      "count": { "type": "int" }
+    }
+  },
+  "chatImageLimitReached": "تم بلوغ الحد الأقصى. يُسمح فقط بـ {count} صور.",
+  "@chatImageLimitReached": {
+    "placeholders": {
+      "count": { "type": "int" }
+    }
+  },
+  "chatMicPermissionTitle": "إذن الميكروفون",
+  "@chatMicPermissionTitle": {},
+  "chatMicPermissionBody": "يرجى تفعيل إذن الميكروفون من الإعدادات لإرسال الرسائل الصوتية.",
+  "@chatMicPermissionBody": {},
+  "chatLoadingPdf": "جاري تحميل الملف...",
+  "@chatLoadingPdf": {},
+
+  "doctorProfileMissingId": "معرّف الطبيب مفقود. لا يمكن تحميل الملف الشخصي.",
+  "@doctorProfileMissingId": {},
+  "doctorCreatePasswordSaveContinue": "حفظ ومتابعة",
+  "@doctorCreatePasswordSaveContinue": {},
+  "doctorDashboardYourAppointments": "مواعيدك",
+  "@doctorDashboardYourAppointments": {},
+  "doctorDashboardNoAppointmentsAvailable": "لا توجد مواعيد متاحة",
+  "@doctorDashboardNoAppointmentsAvailable": {},
+  "doctorAptChooseSlotType": "اختر نوع الموعد",
+  "@doctorAptChooseSlotType": {},
+  "doctorAptSingleOrMultiple": "موعد واحد أو متعدد",
+  "@doctorAptSingleOrMultiple": {},
+  "doctorAptSingleOrMultipleSubtitle": "إضافة موعد أو عدة مواعيد للأيام المحددة.",
+  "@doctorAptSingleOrMultipleSubtitle": {},
+  "doctorAptRotationBased": "مواعيد تكرارية",
+  "@doctorAptRotationBased": {},
+  "doctorAptRotationBasedSubtitle": "تحديد مواعيد أسبوعية متكررة بنطاق زمني مخصص.",
+  "@doctorAptRotationBasedSubtitle": {},
+  "doctorAptSelectDatesTimes": "اختر التواريخ والأوقات",
+  "@doctorAptSelectDatesTimes": {},
+  "doctorAptSelectDays": "اختر الأيام",
+  "@doctorAptSelectDays": {},
+  "doctorAptSelectTimeSlots": "اختر الفترات الزمنية",
+  "@doctorAptSelectTimeSlots": {},
+  "doctorAptAddSlots": "إضافة مواعيد",
+  "@doctorAptAddSlots": {},
+  "doctorAptDefineRotation": "تعريف التكرار",
+  "@doctorAptDefineRotation": {},
+  "doctorAptStartTime": "البداية: {time}",
+  "@doctorAptStartTime": {
+    "placeholders": {
+      "time": { "type": "String" }
+    }
+  },
+  "doctorAptEndTime": "النهاية: {time}",
+  "@doctorAptEndTime": {
+    "placeholders": {
+      "time": { "type": "String" }
+    }
+  },
+  "doctorAptSaveRotation": "حفظ التكرار",
+  "@doctorAptSaveRotation": {},
+  "doctorAptAvailableSlots": "المواعيد المتاحة",
+  "@doctorAptAvailableSlots": {},
+  "doctorAptNoAppointmentsForDay": "لا توجد مواعيد لهذا اليوم.",
+  "@doctorAptNoAppointmentsForDay": {},
+  "doctorRegSpecialties": "التخصصات",
+  "@doctorRegSpecialties": {},
+  "doctorRegProfileDescription": "وصف الملف الشخصي",
+  "@doctorRegProfileDescription": {},
+  "doctorRegOpeningHours": "ساعات العمل",
+  "@doctorRegOpeningHours": {},
+  "doctorRegLanguages": "اللغات",
+  "@doctorRegLanguages": {},
+  "doctorMessagesNone": "لا توجد رسائل",
+  "@doctorMessagesNone": {},
+  "doctorPatientProfileTitle": "ملف المريض",
+  "@doctorPatientProfileTitle": {},
+  "doctorPatientNotFound": "لم يتم العثور على المريض",
+  "@doctorPatientNotFound": {}
 }

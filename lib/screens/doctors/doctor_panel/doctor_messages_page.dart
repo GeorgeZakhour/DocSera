@@ -52,7 +52,7 @@ class DoctorMessagesPage extends StatelessWidget {
           } else if (state is DoctorMessagesLoaded) {
             final conversations = state.conversations;
             if (conversations.isEmpty) {
-              return const Center(child: Text('No Message'));
+              return Center(child: Text(AppLocalizations.of(context)!.doctorMessagesNone));
             }
 
             final grouped = <int, List<Conversation>>{};

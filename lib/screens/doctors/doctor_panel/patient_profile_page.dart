@@ -1,4 +1,5 @@
 import 'package:docsera/app/const.dart';
+import 'package:docsera/gen_l10n/app_localizations.dart';
 import 'package:docsera/widgets/base_scaffold.dart';
 import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
@@ -14,7 +15,7 @@ class PatientProfilePage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return BaseScaffold(
-      title: const Text("Patient Profile", style: TextStyle(color: AppColors.whiteText, fontSize: 16, fontWeight: FontWeight.bold)),
+      title: Text(AppLocalizations.of(context)!.doctorPatientProfileTitle, style: const TextStyle(color: AppColors.whiteText, fontSize: 16, fontWeight: FontWeight.bold)),
       child: FutureBuilder(
         future: Supabase.instance.client
             .from('patients')
@@ -24,7 +25,7 @@ class PatientProfilePage extends StatelessWidget {
             .maybeSingle(),
         builder: (context, snapshot) {
           if (!snapshot.hasData) return const Center(child: FullPageLoader());
-          if (snapshot.data == null) return const Center(child: Text('Patient not found'));
+          if (snapshot.data == null) return Center(child: Text(AppLocalizations.of(context)!.doctorPatientNotFound));
 
           var data = snapshot.data as Map<String, dynamic>;
           List visits = data['visits'] ?? [];

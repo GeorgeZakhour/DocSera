@@ -4594,4 +4594,131 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get voucherPageGiftDoctorMessageHeading => 'رسالة طبيبك';
+
+  @override
+  String get commonError => 'خطأ';
+
+  @override
+  String commonErrorWithMessage(String message) {
+    return 'خطأ: $message';
+  }
+
+  @override
+  String get commonUnexpectedError => 'حدث خطأ غير متوقع';
+
+  @override
+  String commonLogoutFailed(String error) {
+    return 'فشل تسجيل الخروج: $error';
+  }
+
+  @override
+  String get commonDebugMode => 'وضع التصحيح';
+
+  @override
+  String get appointmentMissingId => 'معرّف الموعد مفقود';
+
+  @override
+  String chatMaxImagesError(int count) {
+    return 'الحد الأقصى $count صور.';
+  }
+
+  @override
+  String chatImageLimitReached(int count) {
+    return 'تم بلوغ الحد الأقصى. يُسمح فقط بـ $count صور.';
+  }
+
+  @override
+  String get chatMicPermissionTitle => 'إذن الميكروفون';
+
+  @override
+  String get chatMicPermissionBody =>
+      'يرجى تفعيل إذن الميكروفون من الإعدادات لإرسال الرسائل الصوتية.';
+
+  @override
+  String get chatLoadingPdf => 'جاري تحميل الملف...';
+
+  @override
+  String get doctorProfileMissingId =>
+      'معرّف الطبيب مفقود. لا يمكن تحميل الملف الشخصي.';
+
+  @override
+  String get doctorCreatePasswordSaveContinue => 'حفظ ومتابعة';
+
+  @override
+  String get doctorDashboardYourAppointments => 'مواعيدك';
+
+  @override
+  String get doctorDashboardNoAppointmentsAvailable => 'لا توجد مواعيد متاحة';
+
+  @override
+  String get doctorAptChooseSlotType => 'اختر نوع الموعد';
+
+  @override
+  String get doctorAptSingleOrMultiple => 'موعد واحد أو متعدد';
+
+  @override
+  String get doctorAptSingleOrMultipleSubtitle =>
+      'إضافة موعد أو عدة مواعيد للأيام المحددة.';
+
+  @override
+  String get doctorAptRotationBased => 'مواعيد تكرارية';
+
+  @override
+  String get doctorAptRotationBasedSubtitle =>
+      'تحديد مواعيد أسبوعية متكررة بنطاق زمني مخصص.';
+
+  @override
+  String get doctorAptSelectDatesTimes => 'اختر التواريخ والأوقات';
+
+  @override
+  String get doctorAptSelectDays => 'اختر الأيام';
+
+  @override
+  String get doctorAptSelectTimeSlots => 'اختر الفترات الزمنية';
+
+  @override
+  String get doctorAptAddSlots => 'إضافة مواعيد';
+
+  @override
+  String get doctorAptDefineRotation => 'تعريف التكرار';
+
+  @override
+  String doctorAptStartTime(String time) {
+    return 'البداية: $time';
+  }
+
+  @override
+  String doctorAptEndTime(String time) {
+    return 'النهاية: $time';
+  }
+
+  @override
+  String get doctorAptSaveRotation => 'حفظ التكرار';
+
+  @override
+  String get doctorAptAvailableSlots => 'المواعيد المتاحة';
+
+  @override
+  String get doctorAptNoAppointmentsForDay => 'لا توجد مواعيد لهذا اليوم.';
+
+  @override
+  String get doctorRegSpecialties => 'التخصصات';
+
+  @override
+  String get doctorRegProfileDescription => 'وصف الملف الشخصي';
+
+  @override
+  String get doctorRegOpeningHours => 'ساعات العمل';
+
+  @override
+  String get doctorRegLanguages => 'اللغات';
+
+  @override
+  String get doctorMessagesNone => 'لا توجد رسائل';
+
+  @override
+  String get doctorPatientProfileTitle => 'ملف المريض';
+
+  @override
+  String get doctorPatientNotFound => 'لم يتم العثور على المريض';
 }

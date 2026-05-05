@@ -999,7 +999,7 @@ class _AppointmentDetailsPageState extends State<AppointmentDetailsPage> {
       }) async {
     if (appointmentId.trim().isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Missing appointment id')),
+        SnackBar(content: Text(AppLocalizations.of(context)!.appointmentMissingId)),
       );
       return;
     }
@@ -1282,7 +1282,7 @@ class _AppointmentDetailsPageState extends State<AppointmentDetailsPage> {
       debugPrint("❌ Remove attachment error: $e");
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text("Error: $e")),
+          SnackBar(content: Text(AppLocalizations.of(context)!.commonErrorWithMessage('$e'))),
         );
       }
     }

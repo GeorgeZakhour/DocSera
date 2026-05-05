@@ -99,7 +99,7 @@ class AppointmentConfirmedPage extends StatelessWidget {
 
     return [];
   }
-  Widget _attachmentTile(Map<String, dynamic> att) {
+  Widget _attachmentTile(BuildContext context, Map<String, dynamic> att) {
     final name = att['name'] ?? 'Document';
     final type = att['file_type'] ?? '';
     final uploadDate = att['uploaded_at']?.toString().substring(0, 10) ?? '';
@@ -152,7 +152,7 @@ class AppointmentConfirmedPage extends StatelessWidget {
             onPressed: () {
               _openAttachment(att);
             },
-            child: const Text("View", style: TextStyle(color: AppColors.main)),
+            child: Text(AppLocalizations.of(context)!.view, style: const TextStyle(color: AppColors.main)),
           ),
         ],
       ),
@@ -435,7 +435,7 @@ class AppointmentConfirmedPage extends StatelessWidget {
                       ),
                     ),
                     const SizedBox(height: 8),
-                    ...attachments.map((att) => _attachmentTile(att)),
+                    ...attachments.map((att) => _attachmentTile(context, att)),
                   ],
                 ),
 

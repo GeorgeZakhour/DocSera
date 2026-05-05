@@ -115,7 +115,7 @@ class _CustomBottomNavigationBarState extends State<CustomBottomNavigationBar>
       );
     } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Failed to log out: $e')),
+        SnackBar(content: Text(AppLocalizations.of(context)!.commonLogoutFailed('$e'))),
       );
     }
   }

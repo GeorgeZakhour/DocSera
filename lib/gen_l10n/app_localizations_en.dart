@@ -4651,4 +4651,132 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get voucherPageGiftDoctorMessageHeading => 'Your doctor\'s message';
+
+  @override
+  String get commonError => 'Error';
+
+  @override
+  String commonErrorWithMessage(String message) {
+    return 'Error: $message';
+  }
+
+  @override
+  String get commonUnexpectedError => 'Unexpected error';
+
+  @override
+  String commonLogoutFailed(String error) {
+    return 'Failed to log out: $error';
+  }
+
+  @override
+  String get commonDebugMode => 'Debug Mode';
+
+  @override
+  String get appointmentMissingId => 'Missing appointment id';
+
+  @override
+  String chatMaxImagesError(int count) {
+    return 'Maximum $count images allowed.';
+  }
+
+  @override
+  String chatImageLimitReached(int count) {
+    return 'Limit reached. Only $count images allowed.';
+  }
+
+  @override
+  String get chatMicPermissionTitle => 'Microphone Permission';
+
+  @override
+  String get chatMicPermissionBody =>
+      'Please enable microphone access in settings to send voice messages.';
+
+  @override
+  String get chatLoadingPdf => 'Loading PDF...';
+
+  @override
+  String get doctorProfileMissingId =>
+      'Doctor ID is missing. Cannot load profile.';
+
+  @override
+  String get doctorCreatePasswordSaveContinue => 'Save & Continue';
+
+  @override
+  String get doctorDashboardYourAppointments => 'Your Appointments';
+
+  @override
+  String get doctorDashboardNoAppointmentsAvailable =>
+      'No appointments available';
+
+  @override
+  String get doctorAptChooseSlotType => 'Choose Slot Type';
+
+  @override
+  String get doctorAptSingleOrMultiple => 'Single or Multiple Slots';
+
+  @override
+  String get doctorAptSingleOrMultipleSubtitle =>
+      'Add one or multiple free slots for selected days.';
+
+  @override
+  String get doctorAptRotationBased => 'Rotation-based Slots';
+
+  @override
+  String get doctorAptRotationBasedSubtitle =>
+      'Define weekly repeated slots with a custom time range.';
+
+  @override
+  String get doctorAptSelectDatesTimes => 'Select Dates & Times';
+
+  @override
+  String get doctorAptSelectDays => 'Select Days';
+
+  @override
+  String get doctorAptSelectTimeSlots => 'Select Time Slots';
+
+  @override
+  String get doctorAptAddSlots => 'Add Slots';
+
+  @override
+  String get doctorAptDefineRotation => 'Define Rotation';
+
+  @override
+  String doctorAptStartTime(String time) {
+    return 'Start: $time';
+  }
+
+  @override
+  String doctorAptEndTime(String time) {
+    return 'End: $time';
+  }
+
+  @override
+  String get doctorAptSaveRotation => 'Save Rotation';
+
+  @override
+  String get doctorAptAvailableSlots => 'Available Slots';
+
+  @override
+  String get doctorAptNoAppointmentsForDay => 'No appointments for this day.';
+
+  @override
+  String get doctorRegSpecialties => 'Specialties';
+
+  @override
+  String get doctorRegProfileDescription => 'Profile Description';
+
+  @override
+  String get doctorRegOpeningHours => 'Opening Hours';
+
+  @override
+  String get doctorRegLanguages => 'Languages';
+
+  @override
+  String get doctorMessagesNone => 'No Message';
+
+  @override
+  String get doctorPatientProfileTitle => 'Patient Profile';
+
+  @override
+  String get doctorPatientNotFound => 'Patient not found';
 }

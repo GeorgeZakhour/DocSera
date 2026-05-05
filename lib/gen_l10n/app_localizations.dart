@@ -8617,6 +8617,228 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Your doctor\'s message'**
   String get voucherPageGiftDoctorMessageHeading;
+
+  /// No description provided for @commonError.
+  ///
+  /// In en, this message translates to:
+  /// **'Error'**
+  String get commonError;
+
+  /// No description provided for @commonErrorWithMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'Error: {message}'**
+  String commonErrorWithMessage(String message);
+
+  /// No description provided for @commonUnexpectedError.
+  ///
+  /// In en, this message translates to:
+  /// **'Unexpected error'**
+  String get commonUnexpectedError;
+
+  /// No description provided for @commonLogoutFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Failed to log out: {error}'**
+  String commonLogoutFailed(String error);
+
+  /// No description provided for @commonDebugMode.
+  ///
+  /// In en, this message translates to:
+  /// **'Debug Mode'**
+  String get commonDebugMode;
+
+  /// No description provided for @appointmentMissingId.
+  ///
+  /// In en, this message translates to:
+  /// **'Missing appointment id'**
+  String get appointmentMissingId;
+
+  /// No description provided for @chatMaxImagesError.
+  ///
+  /// In en, this message translates to:
+  /// **'Maximum {count} images allowed.'**
+  String chatMaxImagesError(int count);
+
+  /// No description provided for @chatImageLimitReached.
+  ///
+  /// In en, this message translates to:
+  /// **'Limit reached. Only {count} images allowed.'**
+  String chatImageLimitReached(int count);
+
+  /// No description provided for @chatMicPermissionTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Microphone Permission'**
+  String get chatMicPermissionTitle;
+
+  /// No description provided for @chatMicPermissionBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Please enable microphone access in settings to send voice messages.'**
+  String get chatMicPermissionBody;
+
+  /// No description provided for @chatLoadingPdf.
+  ///
+  /// In en, this message translates to:
+  /// **'Loading PDF...'**
+  String get chatLoadingPdf;
+
+  /// No description provided for @doctorProfileMissingId.
+  ///
+  /// In en, this message translates to:
+  /// **'Doctor ID is missing. Cannot load profile.'**
+  String get doctorProfileMissingId;
+
+  /// No description provided for @doctorCreatePasswordSaveContinue.
+  ///
+  /// In en, this message translates to:
+  /// **'Save & Continue'**
+  String get doctorCreatePasswordSaveContinue;
+
+  /// No description provided for @doctorDashboardYourAppointments.
+  ///
+  /// In en, this message translates to:
+  /// **'Your Appointments'**
+  String get doctorDashboardYourAppointments;
+
+  /// No description provided for @doctorDashboardNoAppointmentsAvailable.
+  ///
+  /// In en, this message translates to:
+  /// **'No appointments available'**
+  String get doctorDashboardNoAppointmentsAvailable;
+
+  /// No description provided for @doctorAptChooseSlotType.
+  ///
+  /// In en, this message translates to:
+  /// **'Choose Slot Type'**
+  String get doctorAptChooseSlotType;
+
+  /// No description provided for @doctorAptSingleOrMultiple.
+  ///
+  /// In en, this message translates to:
+  /// **'Single or Multiple Slots'**
+  String get doctorAptSingleOrMultiple;
+
+  /// No description provided for @doctorAptSingleOrMultipleSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Add one or multiple free slots for selected days.'**
+  String get doctorAptSingleOrMultipleSubtitle;
+
+  /// No description provided for @doctorAptRotationBased.
+  ///
+  /// In en, this message translates to:
+  /// **'Rotation-based Slots'**
+  String get doctorAptRotationBased;
+
+  /// No description provided for @doctorAptRotationBasedSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Define weekly repeated slots with a custom time range.'**
+  String get doctorAptRotationBasedSubtitle;
+
+  /// No description provided for @doctorAptSelectDatesTimes.
+  ///
+  /// In en, this message translates to:
+  /// **'Select Dates & Times'**
+  String get doctorAptSelectDatesTimes;
+
+  /// No description provided for @doctorAptSelectDays.
+  ///
+  /// In en, this message translates to:
+  /// **'Select Days'**
+  String get doctorAptSelectDays;
+
+  /// No description provided for @doctorAptSelectTimeSlots.
+  ///
+  /// In en, this message translates to:
+  /// **'Select Time Slots'**
+  String get doctorAptSelectTimeSlots;
+
+  /// No description provided for @doctorAptAddSlots.
+  ///
+  /// In en, this message translates to:
+  /// **'Add Slots'**
+  String get doctorAptAddSlots;
+
+  /// No description provided for @doctorAptDefineRotation.
+  ///
+  /// In en, this message translates to:
+  /// **'Define Rotation'**
+  String get doctorAptDefineRotation;
+
+  /// No description provided for @doctorAptStartTime.
+  ///
+  /// In en, this message translates to:
+  /// **'Start: {time}'**
+  String doctorAptStartTime(String time);
+
+  /// No description provided for @doctorAptEndTime.
+  ///
+  /// In en, this message translates to:
+  /// **'End: {time}'**
+  String doctorAptEndTime(String time);
+
+  /// No description provided for @doctorAptSaveRotation.
+  ///
+  /// In en, this message translates to:
+  /// **'Save Rotation'**
+  String get doctorAptSaveRotation;
+
+  /// No description provided for @doctorAptAvailableSlots.
+  ///
+  /// In en, this message translates to:
+  /// **'Available Slots'**
+  String get doctorAptAvailableSlots;
+
+  /// No description provided for @doctorAptNoAppointmentsForDay.
+  ///
+  /// In en, this message translates to:
+  /// **'No appointments for this day.'**
+  String get doctorAptNoAppointmentsForDay;
+
+  /// No description provided for @doctorRegSpecialties.
+  ///
+  /// In en, this message translates to:
+  /// **'Specialties'**
+  String get doctorRegSpecialties;
+
+  /// No description provided for @doctorRegProfileDescription.
+  ///
+  /// In en, this message translates to:
+  /// **'Profile Description'**
+  String get doctorRegProfileDescription;
+
+  /// No description provided for @doctorRegOpeningHours.
+  ///
+  /// In en, this message translates to:
+  /// **'Opening Hours'**
+  String get doctorRegOpeningHours;
+
+  /// No description provided for @doctorRegLanguages.
+  ///
+  /// In en, this message translates to:
+  /// **'Languages'**
+  String get doctorRegLanguages;
+
+  /// No description provided for @doctorMessagesNone.
+  ///
+  /// In en, this message translates to:
+  /// **'No Message'**
+  String get doctorMessagesNone;
+
+  /// No description provided for @doctorPatientProfileTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Patient Profile'**
+  String get doctorPatientProfileTitle;
+
+  /// No description provided for @doctorPatientNotFound.
+  ///
+  /// In en, this message translates to:
+  /// **'Patient not found'**
+  String get doctorPatientNotFound;
 }
 
 class _AppLocalizationsDelegate

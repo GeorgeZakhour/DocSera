@@ -1757,5 +1757,107 @@
   "voucherPageGiftClose": "Close",
   "@voucherPageGiftClose": {},
   "voucherPageGiftDoctorMessageHeading": "Your doctor's message",
-  "@voucherPageGiftDoctorMessageHeading": {}
+  "@voucherPageGiftDoctorMessageHeading": {},
+
+  "commonError": "Error",
+  "@commonError": {},
+  "commonErrorWithMessage": "Error: {message}",
+  "@commonErrorWithMessage": {
+    "placeholders": {
+      "message": { "type": "String" }
+    }
+  },
+  "commonUnexpectedError": "Unexpected error",
+  "@commonUnexpectedError": {},
+  "commonLogoutFailed": "Failed to log out: {error}",
+  "@commonLogoutFailed": {
+    "placeholders": {
+      "error": { "type": "String" }
+    }
+  },
+  "commonDebugMode": "Debug Mode",
+  "@commonDebugMode": {},
+
+  "appointmentMissingId": "Missing appointment id",
+  "@appointmentMissingId": {},
+
+  "chatMaxImagesError": "Maximum {count} images allowed.",
+  "@chatMaxImagesError": {
+    "placeholders": {
+      "count": { "type": "int" }
+    }
+  },
+  "chatImageLimitReached": "Limit reached. Only {count} images allowed.",
+  "@chatImageLimitReached": {
+    "placeholders": {
+      "count": { "type": "int" }
+    }
+  },
+  "chatMicPermissionTitle": "Microphone Permission",
+  "@chatMicPermissionTitle": {},
+  "chatMicPermissionBody": "Please enable microphone access in settings to send voice messages.",
+  "@chatMicPermissionBody": {},
+  "chatLoadingPdf": "Loading PDF...",
+  "@chatLoadingPdf": {},
+
+  "doctorProfileMissingId": "Doctor ID is missing. Cannot load profile.",
+  "@doctorProfileMissingId": {},
+  "doctorCreatePasswordSaveContinue": "Save & Continue",
+  "@doctorCreatePasswordSaveContinue": {},
+  "doctorDashboardYourAppointments": "Your Appointments",
+  "@doctorDashboardYourAppointments": {},
+  "doctorDashboardNoAppointmentsAvailable": "No appointments available",
+  "@doctorDashboardNoAppointmentsAvailable": {},
+  "doctorAptChooseSlotType": "Choose Slot Type",
+  "@doctorAptChooseSlotType": {},
+  "doctorAptSingleOrMultiple": "Single or Multiple Slots",
+  "@doctorAptSingleOrMultiple": {},
+  "doctorAptSingleOrMultipleSubtitle": "Add one or multiple free slots for selected days.",
+  "@doctorAptSingleOrMultipleSubtitle": {},
+  "doctorAptRotationBased": "Rotation-based Slots",
+  "@doctorAptRotationBased": {},
+  "doctorAptRotationBasedSubtitle": "Define weekly repeated slots with a custom time range.",
+  "@doctorAptRotationBasedSubtitle": {},
+  "doctorAptSelectDatesTimes": "Select Dates & Times",
+  "@doctorAptSelectDatesTimes": {},
+  "doctorAptSelectDays": "Select Days",
+  "@doctorAptSelectDays": {},
+  "doctorAptSelectTimeSlots": "Select Time Slots",
+  "@doctorAptSelectTimeSlots": {},
+  "doctorAptAddSlots": "Add Slots",
+  "@doctorAptAddSlots": {},
+  "doctorAptDefineRotation": "Define Rotation",
+  "@doctorAptDefineRotation": {},
+  "doctorAptStartTime": "Start: {time}",
+  "@doctorAptStartTime": {
+    "placeholders": {
+      "time": { "type": "String" }
+    }
+  },
+  "doctorAptEndTime": "End: {time}",
+  "@doctorAptEndTime": {
+    "placeholders": {
+      "time": { "type": "String" }
+    }
+  },
+  "doctorAptSaveRotation": "Save Rotation",
+  "@doctorAptSaveRotation": {},
+  "doctorAptAvailableSlots": "Available Slots",
+  "@doctorAptAvailableSlots": {},
+  "doctorAptNoAppointmentsForDay": "No appointments for this day.",
+  "@doctorAptNoAppointmentsForDay": {},
+  "doctorRegSpecialties": "Specialties",
+  "@doctorRegSpecialties": {},
+  "doctorRegProfileDescription": "Profile Description",
+  "@doctorRegProfileDescription": {},
+  "doctorRegOpeningHours": "Opening Hours",
+  "@doctorRegOpeningHours": {},
+  "doctorRegLanguages": "Languages",
+  "@doctorRegLanguages": {},
+  "doctorMessagesNone": "No Message",
+  "@doctorMessagesNone": {},
+  "doctorPatientProfileTitle": "Patient Profile",
+  "@doctorPatientProfileTitle": {},
+  "doctorPatientNotFound": "Patient not found",
+  "@doctorPatientNotFound": {}
 }

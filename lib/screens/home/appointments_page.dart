@@ -112,10 +112,13 @@ import 'package:docsera/gen_l10n/app_localizations.dart';
                       return _buildAppointmentsView(context, state);
                     } else if (state is AppointmentsError) {
                       return Center(
-                        child: Text("Error: ${state.message}", style: const TextStyle(color: Colors.red)),
+                        child: Text(
+                          AppLocalizations.of(context)!.commonErrorWithMessage(state.message),
+                          style: const TextStyle(color: Colors.red),
+                        ),
                       );
                     }
-                    return const Center(child: Text("Unexpected error"));
+                    return Center(child: Text(AppLocalizations.of(context)!.commonUnexpectedError));
                   },
                 ),
               ),

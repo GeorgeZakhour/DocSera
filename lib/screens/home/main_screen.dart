@@ -456,7 +456,7 @@ class _MainScreenState extends State<MainScreen> with AutomaticKeepAliveClientMi
                else if (state is MainScreenError) {
                 return Center(child: Text(state.message, style: const TextStyle(color: AppColors.red)));
               }
-              return const Center(child: Text("Unexpected error"));
+              return Center(child: Text(AppLocalizations.of(context)!.commonUnexpectedError));
             },
           ),
         );

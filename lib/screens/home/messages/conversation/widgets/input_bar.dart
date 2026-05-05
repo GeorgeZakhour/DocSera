@@ -5,6 +5,7 @@ import 'dart:ui';
 import 'package:docsera/app/const.dart';
 import 'package:docsera/app/text_styles.dart';
 import 'package:docsera/services/voice_recorder_service.dart';
+import 'package:docsera/gen_l10n/app_localizations.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:permission_handler/permission_handler.dart';
@@ -147,14 +148,17 @@ class _InputBarState extends State<InputBar> with TickerProviderStateMixin {
      showDialog(
        context: context,
        builder: (context) => AlertDialog(
-         title: const Text("Microphone Permission"),
-         content: const Text("Please enable microphone access in settings to send voice messages."),
+         title: Text(AppLocalizations.of(context)!.chatMicPermissionTitle),
+         content: Text(AppLocalizations.of(context)!.chatMicPermissionBody),
          actions: [
-           TextButton(onPressed: () => Navigator.pop(context), child: const Text("OK")),
+           TextButton(
+             onPressed: () => Navigator.pop(context),
+             child: Text(AppLocalizations.of(context)!.ok),
+           ),
            TextButton(onPressed: () {
              Navigator.pop(context);
              openAppSettings();
-           }, child: const Text("Settings")),
+           }, child: Text(AppLocalizations.of(context)!.settings)),
          ],
        ),
      );

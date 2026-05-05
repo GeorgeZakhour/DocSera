@@ -313,7 +313,13 @@ class _ConversationPageState extends State<ConversationPage> {
     const int maxImages = 8;
     if (_pendingImages.length >= maxImages) {
        ScaffoldMessenger.of(context).showSnackBar(
-         const SnackBar(content: Text("Maximum 8 images allowed.", style: TextStyle(color: Colors.white)), backgroundColor: Colors.red),
+         SnackBar(
+           content: Text(
+             AppLocalizations.of(context)!.chatMaxImagesError(maxImages),
+             style: const TextStyle(color: Colors.white),
+           ),
+           backgroundColor: Colors.red,
+         ),
        );
        return;
     }
@@ -333,7 +339,13 @@ class _ConversationPageState extends State<ConversationPage> {
        final allowed = maxImages - _pendingImages.length;
        newFiles = newFiles.take(allowed).toList();
        ScaffoldMessenger.of(context).showSnackBar(
-         const SnackBar(content: Text("Limit reached. Only 8 images allowed.", style: TextStyle(color: Colors.white)), backgroundColor: Colors.orange),
+         SnackBar(
+           content: Text(
+             AppLocalizations.of(context)!.chatImageLimitReached(maxImages),
+             style: const TextStyle(color: Colors.white),
+           ),
+           backgroundColor: Colors.orange,
+         ),
        );
     }
 

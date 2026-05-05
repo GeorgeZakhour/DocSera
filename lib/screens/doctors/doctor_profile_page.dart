@@ -3470,8 +3470,8 @@ $deepLink
     if (widget.doctorId.isEmpty) {
       debugPrint("❌ ERROR: doctorId is unexpectedly empty inside DoctorProfilePage");
       return Scaffold(
-        appBar: AppBar(title: const Text("Error")),
-        body: const Center(child: Text("Doctor ID is missing. Cannot load profile.")),
+        appBar: AppBar(title: Text(AppLocalizations.of(context)!.commonError)),
+        body: Center(child: Text(AppLocalizations.of(context)!.doctorProfileMissingId)),
       );
     }
 
@@ -3585,7 +3585,6 @@ $deepLink
       backgroundColor: AppColors.background4,
       body: Stack(
         children: [
-          Text("Doctor ID: ${widget.doctorId ?? 'No ID'}"),
           (_doctorData == null || _doctorData!.isEmpty)
               ? const Center(child: FullPageLoader())
               : CustomScrollView(

@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'dart:io';
+import 'package:flutter/foundation.dart' show kDebugMode;
 import 'package:docsera/Business_Logic/Account_page/danger/account_danger_cubit.dart';
 
 import 'package:docsera/Business_Logic/Account_page/profile/account_profile_cubit.dart';
@@ -796,15 +797,21 @@ class _AuthenticatedAccountView extends StatelessWidget {
           s is AccountOtpSent || s is AccountOtpVerified,
           listener: (context, s) {
             if (s is AccountOtpSent) {
-              ScaffoldMessenger.of(context)
-                ..hideCurrentSnackBar()
-                ..showSnackBar(
-                  SnackBar(
-                    duration: const Duration(seconds: 20),
-                    backgroundColor: AppColors.mainDark,
-                    content: Text('OTP: ${s.otp}'),
-                  ),
-                );
+              // Debug-only OTP leak. In production the user receives the
+              // OTP via the configured channel (SMS/email) and enters it
+              // themselves — showing it in-app would be a security regression
+              // (see CLAUDE.md "Never log PII or auth material").
+              if (kDebugMode) {
+                ScaffoldMessenger.of(context)
+                  ..hideCurrentSnackBar()
+                  ..showSnackBar(
+                    SnackBar(
+                      duration: const Duration(seconds: 20),
+                      backgroundColor: AppColors.mainDark,
+                      content: Text('OTP: ${s.otp}'),
+                    ),
+                  );
+              }
             }
 
             if (s is AccountOtpVerified) {

@@ -1,3 +1,4 @@
+import 'package:docsera/gen_l10n/app_localizations.dart';
 import 'package:docsera/screens/doctors/doctor_panel/doctor_dashboard.dart';
 import 'package:docsera/utils/time_utils.dart';
 import 'package:docsera/utils/page_transitions.dart';
@@ -199,7 +200,7 @@ class _DoctorRegistrationPageState extends State<DoctorRegistrationPage> {
         );
       } catch (e) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text("Error: $e")),
+          SnackBar(content: Text(AppLocalizations.of(context)!.commonErrorWithMessage('$e'))),
         );
       }
     }
@@ -312,7 +313,7 @@ class _DoctorRegistrationPageState extends State<DoctorRegistrationPage> {
 
 
                 // Specialties (Multiple)
-                const Text("Specialties", style: TextStyle(fontWeight: FontWeight.bold)),
+                Text(AppLocalizations.of(context)!.doctorRegSpecialties, style: const TextStyle(fontWeight: FontWeight.bold)),
                 const SizedBox(height: 5),
 
                 Wrap(
@@ -348,7 +349,7 @@ class _DoctorRegistrationPageState extends State<DoctorRegistrationPage> {
 
                 const SizedBox(height: 16),
 
-                const Text("Address", style: TextStyle(fontWeight: FontWeight.bold)),
+                Text(AppLocalizations.of(context)!.address, style: const TextStyle(fontWeight: FontWeight.bold)),
                 const SizedBox(height: 8),
 
                 TextField(controller: _streetController, decoration: _inputDecoration("Street")),
@@ -380,7 +381,7 @@ class _DoctorRegistrationPageState extends State<DoctorRegistrationPage> {
                 ),
                 const SizedBox(height: 16),
 // Opening Hours Section
-                const Text("Profile Description", style: TextStyle(fontWeight: FontWeight.bold)),
+                Text(AppLocalizations.of(context)!.doctorRegProfileDescription, style: const TextStyle(fontWeight: FontWeight.bold)),
                 const SizedBox(height: 8),
                 TextField(
                   controller: _profileDescriptionController,
@@ -390,7 +391,7 @@ class _DoctorRegistrationPageState extends State<DoctorRegistrationPage> {
                 const SizedBox(height: 16),
 
 // Opening Hours Section
-                const Text("Opening Hours", style: TextStyle(fontWeight: FontWeight.bold)),
+                Text(AppLocalizations.of(context)!.doctorRegOpeningHours, style: const TextStyle(fontWeight: FontWeight.bold)),
                 const SizedBox(height: 8),
 
                 Column(
@@ -437,7 +438,7 @@ class _DoctorRegistrationPageState extends State<DoctorRegistrationPage> {
                 ),
                 // Languages Selection Section
                 const SizedBox(height: 16),
-                const Text("Languages", style: TextStyle(fontWeight: FontWeight.bold)),
+                Text(AppLocalizations.of(context)!.doctorRegLanguages, style: const TextStyle(fontWeight: FontWeight.bold)),
                 const SizedBox(height: 16),
 
 // Dropdown for Languages
@@ -505,7 +506,7 @@ class _DoctorRegistrationPageState extends State<DoctorRegistrationPage> {
                       padding: const EdgeInsets.symmetric(vertical: 14),
                       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(25)),
                     ),
-                    child: const Text("Register", style: TextStyle(color: Colors.white, fontSize: 16)),
+                    child: Text(AppLocalizations.of(context)!.register, style: const TextStyle(color: Colors.white, fontSize: 16)),
                   ),
                 ),
 

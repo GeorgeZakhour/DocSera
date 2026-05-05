@@ -1,3 +1,4 @@
+import 'package:docsera/gen_l10n/app_localizations.dart';
 import 'package:docsera/utils/doctor_image_utils.dart';
 import 'package:docsera/widgets/custom_bottom_navigation_bar.dart';
 import 'package:flutter/material.dart';
@@ -46,7 +47,7 @@ class DoctorDrawer extends StatelessWidget {
 
           ListTile(
             leading: const Icon(Icons.logout, color: AppColors.red),
-            title: const Text("Log Out", style: TextStyle(color: AppColors.red)),
+            title: Text(AppLocalizations.of(context)!.logOut, style: const TextStyle(color: AppColors.red)),
             onTap: () async {
               SharedPreferences prefs = await SharedPreferences.getInstance();
               await prefs.remove('doctorId'); // Clear saved doctor ID

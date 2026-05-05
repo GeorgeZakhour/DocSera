@@ -1,3 +1,4 @@
+import 'package:docsera/gen_l10n/app_localizations.dart';
 import 'package:docsera/screens/doctors/doctor_panel/doctor_dashboard.dart';
 import 'package:docsera/utils/time_utils.dart';
 import 'package:docsera/utils/page_transitions.dart';
@@ -93,7 +94,7 @@ class _DoctorCreatePasswordPageState extends State<DoctorCreatePasswordPage> {
             ElevatedButton(
               onPressed: _isPasswordValid ? _savePassword : null,
               style: ElevatedButton.styleFrom(backgroundColor: AppColors.main),
-              child: const Text("Save & Continue"),
+              child: Text(AppLocalizations.of(context)!.doctorCreatePasswordSaveContinue),
             ),
           ],
         ),

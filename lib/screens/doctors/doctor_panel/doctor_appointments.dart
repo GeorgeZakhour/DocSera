@@ -1,3 +1,4 @@
+import 'package:docsera/gen_l10n/app_localizations.dart';
 import 'package:docsera/screens/doctors/doctor_panel/doctor_drawer.dart';
 import 'package:flutter/material.dart';
 import 'package:docsera/app/const.dart';
@@ -150,15 +151,15 @@ class _DoctorAppointmentsState extends State<DoctorAppointments> {
       context: context,
       builder: (BuildContext context) {
         return AlertDialog(
-          title: const Text("Choose Slot Type", style: TextStyle(fontWeight: FontWeight.bold)),
+          title: Text(AppLocalizations.of(context)!.doctorAptChooseSlotType, style: const TextStyle(fontWeight: FontWeight.bold)),
           content: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
               /// **🔹 Single or Multiple Slots**
               ListTile(
                 leading: const Icon(Icons.date_range, color: AppColors.main),
-                title: const Text("Single or Multiple Slots"),
-                subtitle: const Text("Add one or multiple free slots for selected days."),
+                title: Text(AppLocalizations.of(context)!.doctorAptSingleOrMultiple),
+                subtitle: Text(AppLocalizations.of(context)!.doctorAptSingleOrMultipleSubtitle),
                 onTap: () {
                   Navigator.pop(context);
                   _showSingleMultipleSlotDialog();
@@ -170,8 +171,8 @@ class _DoctorAppointmentsState extends State<DoctorAppointments> {
               /// **🔹 Rotation-based Slots**
               ListTile(
                 leading: const Icon(Icons.repeat, color: AppColors.main),
-                title: const Text("Rotation-based Slots"),
-                subtitle: const Text("Define weekly repeated slots with a custom time range."),
+                title: Text(AppLocalizations.of(context)!.doctorAptRotationBased),
+                subtitle: Text(AppLocalizations.of(context)!.doctorAptRotationBasedSubtitle),
                 onTap: () {
                   Navigator.pop(context);
                   _showRotationSlotDialog();
@@ -195,14 +196,14 @@ class _DoctorAppointmentsState extends State<DoctorAppointments> {
         return StatefulBuilder(
           builder: (context, setState) {
             return AlertDialog(
-              title: const Text("Select Dates & Times", style: TextStyle(fontWeight: FontWeight.bold)),
+              title: Text(AppLocalizations.of(context)!.doctorAptSelectDatesTimes, style: const TextStyle(fontWeight: FontWeight.bold)),
               content: Column(
                 mainAxisSize: MainAxisSize.min,
                 children: [
                   /// **🔹 Date Selection**
                   ElevatedButton.icon(
                     icon: const Icon(Icons.calendar_today),
-                    label: const Text("Select Days"),
+                    label: Text(AppLocalizations.of(context)!.doctorAptSelectDays),
                     onPressed: () async {
                       DateTime? pickedDate = await showDatePicker(
                         context: context,
@@ -238,7 +239,7 @@ class _DoctorAppointmentsState extends State<DoctorAppointments> {
                   /// **🔹 Time Selection**
                   ElevatedButton.icon(
                     icon: const Icon(Icons.access_time),
-                    label: const Text("Select Time Slots"),
+                    label: Text(AppLocalizations.of(context)!.doctorAptSelectTimeSlots),
                     onPressed: () async {
                       TimeOfDay? pickedTime = await showTimePicker(
                         context: context,
@@ -272,14 +273,14 @@ class _DoctorAppointmentsState extends State<DoctorAppointments> {
               actions: [
                 TextButton(
                   onPressed: () => Navigator.pop(context),
-                  child: const Text("Cancel"),
+                  child: Text(AppLocalizations.of(context)!.cancel),
                 ),
                 ElevatedButton(
                   onPressed: () {
                     _addMultipleSlots(selectedDates, selectedTimes);
                     Navigator.pop(context);
                   },
-                  child: const Text("Add Slots"),
+                  child: Text(AppLocalizations.of(context)!.doctorAptAddSlots),
                 ),
               ],
             );
@@ -382,7 +383,7 @@ class _DoctorAppointmentsState extends State<DoctorAppointments> {
         return StatefulBuilder(
           builder: (context, setState) {
             return AlertDialog(
-              title: const Text("Define Rotation", style: TextStyle(fontWeight: FontWeight.bold)),
+              title: Text(AppLocalizations.of(context)!.doctorAptDefineRotation, style: const TextStyle(fontWeight: FontWeight.bold)),
               content: Column(
                 mainAxisSize: MainAxisSize.min,
                 children: [
@@ -412,7 +413,7 @@ class _DoctorAppointmentsState extends State<DoctorAppointments> {
                         });
                       }
                     },
-                    child: Text("Start: ${startTime.format(context)}"),
+                    child: Text(AppLocalizations.of(context)!.doctorAptStartTime(startTime.format(context))),
                   ),
 
                   ElevatedButton(
@@ -427,7 +428,7 @@ class _DoctorAppointmentsState extends State<DoctorAppointments> {
                         });
                       }
                     },
-                    child: Text("End: ${endTime.format(context)}"),
+                    child: Text(AppLocalizations.of(context)!.doctorAptEndTime(endTime.format(context))),
                   ),
                 ],
               ),
@@ -435,14 +436,14 @@ class _DoctorAppointmentsState extends State<DoctorAppointments> {
               actions: [
                 TextButton(
                   onPressed: () => Navigator.pop(context),
-                  child: const Text("Cancel"),
+                  child: Text(AppLocalizations.of(context)!.cancel),
                 ),
                 ElevatedButton(
                   onPressed: () {
                     // Implement Firestore saving logic here
                     Navigator.pop(context);
                   },
-                  child: const Text("Save Rotation"),
+                  child: Text(AppLocalizations.of(context)!.doctorAptSaveRotation),
                 ),
               ],
             );
@@ -539,7 +540,7 @@ class _DoctorAppointmentsState extends State<DoctorAppointments> {
                     size: 15,
                     color: _showFreeSlots ? Colors.white : AppColors.main.withValues(alpha: 0.5), // ✅ Change color when active
                   ),
-                  label: Text("Available Slots",
+                  label: Text(AppLocalizations.of(context)!.doctorAptAvailableSlots,
                     style: TextStyle(
                       color: _showFreeSlots ? Colors.white : AppColors.main.withValues(alpha: 0.5), // ✅ Match icon color
                       fontSize: 10,
@@ -661,9 +662,9 @@ class _DoctorAppointmentsState extends State<DoctorAppointments> {
         Expanded(
           child: _appointmentsByDay.containsKey(_formatDate(_selectedDay))
               ? _buildListForDate(_formatDate(_selectedDay))
-              : const Padding(
-            padding: EdgeInsets.all(20),
-            child: Text("No appointments for this day."),
+              : Padding(
+            padding: const EdgeInsets.all(20),
+            child: Text(AppLocalizations.of(context)!.doctorAptNoAppointmentsForDay),
           ),
         ),
       ],
@@ -673,8 +674,8 @@ class _DoctorAppointmentsState extends State<DoctorAppointments> {
   /// **📃 List View (Grouped by Day)**
   Widget _buildListView() {
     if (_appointmentsByDay.isEmpty) {
-      return const Center(
-        child: Text("No appointments available", style: TextStyle(fontSize: 16)),
+      return Center(
+        child: Text(AppLocalizations.of(context)!.doctorDashboardNoAppointmentsAvailable, style: const TextStyle(fontSize: 16)),
       );
     }
 

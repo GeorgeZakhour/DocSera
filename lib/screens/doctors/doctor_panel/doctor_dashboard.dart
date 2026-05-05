@@ -1,3 +1,4 @@
+import 'package:docsera/gen_l10n/app_localizations.dart';
 import 'package:docsera/screens/doctors/doctor_panel/doctor_drawer.dart';
 import 'package:docsera/utils/doctor_image_utils.dart';
 import 'package:docsera/utils/time_utils.dart';
@@ -261,10 +262,10 @@ class _DoctorDashboardState extends State<DoctorDashboard> {
               ),
             ),
             const SizedBox(height: 20),
-            const Text("Your Appointments", style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+            Text(AppLocalizations.of(context)!.doctorDashboardYourAppointments, style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
             Expanded(
               child: appointments.isEmpty
-                  ? const Center(child: Text("No appointments available"))
+                  ? Center(child: Text(AppLocalizations.of(context)!.doctorDashboardNoAppointmentsAvailable))
                   : ListView.builder(
                 itemCount: appointments.length,
                 itemBuilder: (context, index) {

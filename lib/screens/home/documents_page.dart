@@ -401,7 +401,7 @@ class _DocumentsPageState extends State<DocumentsPage> with AutomaticKeepAliveCl
                           final documents = state.documents.where((e) => e.previewUrl.isNotEmpty).toList();
                           return _buildDocumentsContent(documents);
                         }
-                        return const Center(child: Text("Unexpected error"));
+                        return Center(child: Text(AppLocalizations.of(context)!.commonUnexpectedError));
                       },
                     ),
                   ),
@@ -1535,7 +1535,7 @@ class _DocumentsPageState extends State<DocumentsPage> with AutomaticKeepAliveCl
             ),
           );
         }
-        return const Center(child: Text("Unexpected error"));
+        return Center(child: Text(AppLocalizations.of(context)!.commonUnexpectedError));
       },
     );
   }
