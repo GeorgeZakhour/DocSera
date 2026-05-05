@@ -27,12 +27,10 @@ dependencies:
   fl_chart: ^0.70.2
   flutter_svg: ^2.0.17
   path_drawing: ^1.0.1
-  svg_path_parser: ^1.0.0
   flutter_screenutil: ^5.9.3
   shimmer: ^3.0.0
   flutter_bloc: ^9.1.0
   equatable: ^2.0.5
-  flutter_launcher_icons: ^0.14.3
   local_auth: ^2.3.0
   lottie: ^3.1.2
   flutter_secure_storage: ^9.2.4
@@ -51,18 +49,14 @@ dependencies:
   flutter_quill: ^11.0.0
   flutter_quill_extensions: ^11.0.0
   flutter_keyboard_visibility: ^6.0.0
-  signature: ^6.0.0
   flutter_pdfview: ^1.4.0+1
   gallery_saver_plus: ^3.2.4
   cached_network_image: ^3.4.1
   transparent_image: ^2.0.0
   package_info_plus: ^8.3.0
   sentry_flutter: ^8.10.0
-  flutter_native_splash: ^2.4.6
   flutter_image_compress: ^2.4.0
   supabase_flutter: ^2.9.1
-  unicode: ^0.3.1
-  diacritic: ^0.1.6
   latlong2: ^0.9.1
   device_info_plus: ^11.1.0
   geolocator: ^14.0.2
@@ -83,7 +77,10 @@ dev_dependencies:
   flutter_test:
     sdk: flutter
   flutter_lints: ^3.0.0
+  # Build-time tooling — invoked via `dart run`, not imported.
+  # Lives in dev_dependencies so it doesn't ship in production app code.
   flutter_native_splash: ^2.4.6
+  flutter_launcher_icons: ^0.14.3
   bloc_test: ^10.0.0
   mocktail: ^1.0.4
 
