@@ -3,7 +3,6 @@ import 'package:docsera/utils/page_transitions.dart';
 import 'package:docsera/utils/text_direction_utils.dart';
 import 'package:docsera/widgets/base_scaffold.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import '../../../app/const.dart';
 import '../../../app/text_styles.dart';
@@ -175,7 +174,7 @@ class _CreatePasswordPageState extends State<CreatePasswordPage> {
             // Progress Bar
             LinearProgressIndicator(
               value: 0.65,
-              backgroundColor: AppColors.main.withOpacity(0.1),
+              backgroundColor: AppColors.main.withValues(alpha: 0.1),
               valueColor: const AlwaysStoppedAnimation<Color>(AppColors.main),
               minHeight: 4,
             ),

@@ -213,15 +213,15 @@ class _HealthAuthenticatedViewState extends State<HealthAuthenticatedView> {
                 width: double.infinity,
                 padding: EdgeInsets.symmetric(horizontal: 14.w, vertical: 12.h),
                 decoration: BoxDecoration(
-                  color: AppColors.background.withOpacity(0.18),
+                  color: AppColors.background.withValues(alpha: 0.18),
                   borderRadius: BorderRadius.circular(18.r),
                   border: Border.all(
-                    color: AppColors.main.withOpacity(0.35),
+                    color: AppColors.main.withValues(alpha: 0.35),
                     width: 0.8,
                   ),
                   boxShadow: [
                     BoxShadow(
-                      color: Colors.black.withOpacity(0.05),
+                      color: Colors.black.withValues(alpha: 0.05),
                       blurRadius: 8,
                       offset: const Offset(0, 3),
                     )
@@ -251,14 +251,14 @@ class _HealthAuthenticatedViewState extends State<HealthAuthenticatedView> {
                       height: 34.w,
                       decoration: BoxDecoration(
                         shape: BoxShape.circle,
-                        color: Colors.white.withOpacity(0.4),
+                        color: Colors.white.withValues(alpha: 0.4),
                         border: Border.all(
-                          color: AppColors.main.withOpacity(0.45),
+                          color: AppColors.main.withValues(alpha: 0.45),
                           width: 0.8,
                         ),
                         boxShadow: [
                           BoxShadow(
-                            color: Colors.black.withOpacity(0.08),
+                            color: Colors.black.withValues(alpha: 0.08),
                             blurRadius: 6,
                             offset: const Offset(0, 2),
                           ),
@@ -287,7 +287,7 @@ class _HealthAuthenticatedViewState extends State<HealthAuthenticatedView> {
 
     showDialog(
       context: pageContext,
-      barrierColor: Colors.black.withOpacity(0.35),
+      barrierColor: Colors.black.withValues(alpha: 0.35),
       builder: (dialogContext) {
         return Center(
           child: Material(
@@ -407,7 +407,7 @@ class _HealthAuthenticatedViewState extends State<HealthAuthenticatedView> {
         width: double.infinity,
         padding: EdgeInsets.symmetric(horizontal: 12.w, vertical: 10.h),
         decoration: BoxDecoration(
-          color: selected ? AppColors.main.withOpacity(0.10) : null,
+          color: selected ? AppColors.main.withValues(alpha: 0.10) : null,
           borderRadius: BorderRadius.circular(12.r),
         ),
         child: Row(
@@ -778,7 +778,7 @@ class HealthLoggedOutView extends StatelessWidget {
                   t.health_loggedOut_description,
                   textAlign: TextAlign.center,
                   style: AppTextStyles.getText2(context).copyWith(
-                    color: Colors.white.withOpacity(0.85),
+                    color: Colors.white.withValues(alpha: 0.85),
                   ),
                 ),
 
@@ -846,12 +846,12 @@ class _HealthCategoryCard extends StatelessWidget {
       onTap: onTap,
       child: Container(
         decoration: BoxDecoration(
-          color: Colors.white.withOpacity(0.97),
+          color: Colors.white.withValues(alpha: 0.97),
           borderRadius: BorderRadius.circular(18.r),
-          border: Border.all(color: AppColors.main.withOpacity(0.08)),
+          border: Border.all(color: AppColors.main.withValues(alpha: 0.08)),
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withOpacity(0.05),
+              color: Colors.black.withValues(alpha: 0.05),
               blurRadius: 9,
               offset: const Offset(0, 4),
             )
@@ -869,7 +869,7 @@ class _HealthCategoryCard extends StatelessWidget {
                 height: 30.w,
                 decoration: BoxDecoration(
                   shape: BoxShape.circle,
-                  color: AppColors.main.withOpacity(0.10),
+                  color: AppColors.main.withValues(alpha: 0.10),
                 ),
                 child: Icon(category.icon,
                     size: 18.sp, color: AppColors.mainDark),
@@ -912,7 +912,7 @@ class _HealthCategoryCard extends StatelessWidget {
               child: Icon(
                 Icons.arrow_forward_ios_rounded,
                 size: 12.sp,
-                color: AppColors.mainDark.withOpacity(0.6),
+                color: AppColors.mainDark.withValues(alpha: 0.6),
               ),
             ),
           ],
@@ -967,7 +967,7 @@ class HealthSectionPlaceholderPage extends StatelessWidget {
                   height: 44.w,
                   decoration: BoxDecoration(
                     shape: BoxShape.circle,
-                    color: AppColors.main.withOpacity(0.12),
+                    color: AppColors.main.withValues(alpha: 0.12),
                   ),
                   child: Icon(icon,
                       size: 24.sp, color: AppColors.mainDark),

@@ -43,7 +43,7 @@ class PopupBannerDialog extends StatelessWidget {
             borderRadius: BorderRadius.circular(20.r),
             boxShadow: [
               BoxShadow(
-                color: Colors.black.withOpacity(0.15),
+                color: Colors.black.withValues(alpha: 0.15),
                 blurRadius: 20,
                 offset: const Offset(0, 10),
               ),
@@ -151,7 +151,7 @@ class PopupBannerDialog extends StatelessWidget {
                   right: lang == 'en' ? 10.w : null,
                   left: lang == 'ar' ? 10.w : null,
                   child: Material(
-                    color: Colors.black.withOpacity(0.05), // Lighter background for cleaner look on white/image
+                    color: Colors.black.withValues(alpha: 0.05), // Lighter background for cleaner look on white/image
                     shape: const CircleBorder(),
                     child: InkWell(
                       customBorder: const CircleBorder(),

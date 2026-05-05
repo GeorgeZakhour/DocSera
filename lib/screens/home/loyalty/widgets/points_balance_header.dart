@@ -102,9 +102,9 @@ class _PointsBalanceHeaderState extends State<PointsBalanceHeader>
               width: double.infinity,
               padding: EdgeInsets.symmetric(vertical: 12.h, horizontal: 16.w),
               decoration: BoxDecoration(
-                color: AppColors.main.withOpacity(0.06),
+                color: AppColors.main.withValues(alpha: 0.06),
                 borderRadius: BorderRadius.circular(12.r),
-                border: Border.all(color: AppColors.main.withOpacity(0.15)),
+                border: Border.all(color: AppColors.main.withValues(alpha: 0.15)),
               ),
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.center,
@@ -131,7 +131,7 @@ class _PointsBalanceHeaderState extends State<PointsBalanceHeader>
     return Container(
       padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 12.h),
       decoration: BoxDecoration(
-        color: color.withOpacity(0.06),
+        color: color.withValues(alpha: 0.06),
         borderRadius: BorderRadius.circular(12.r),
       ),
       child: Row(
@@ -139,7 +139,7 @@ class _PointsBalanceHeaderState extends State<PointsBalanceHeader>
           Container(
             padding: EdgeInsets.all(8.w),
             decoration: BoxDecoration(
-              color: color.withOpacity(0.12),
+              color: color.withValues(alpha: 0.12),
               borderRadius: BorderRadius.circular(10.r),
             ),
             child: Icon(icon, color: color, size: 20.sp),
@@ -175,7 +175,7 @@ class _PointsBalanceHeaderState extends State<PointsBalanceHeader>
               borderRadius: BorderRadius.vertical(bottom: Radius.circular(28.r)),
               boxShadow: [
                 BoxShadow(
-                  color: AppColors.main.withOpacity(0.3),
+                  color: AppColors.main.withValues(alpha: 0.3),
                   blurRadius: 16,
                   offset: const Offset(0, 6),
                 ),
@@ -189,7 +189,7 @@ class _PointsBalanceHeaderState extends State<PointsBalanceHeader>
                     Text(
                       AppLocalizations.of(context)!.yourPoints,
                       style: AppTextStyles.getText1(context).copyWith(
-                        color: Colors.white.withOpacity(0.85),
+                        color: Colors.white.withValues(alpha: 0.85),
                         fontWeight: FontWeight.w500,
                       ),
                     ),
@@ -200,13 +200,13 @@ class _PointsBalanceHeaderState extends State<PointsBalanceHeader>
                       child: Container(
                         padding: EdgeInsets.all(4.w),
                         decoration: BoxDecoration(
-                          color: Colors.white.withOpacity(0.2),
+                          color: Colors.white.withValues(alpha: 0.2),
                           shape: BoxShape.circle,
                         ),
                         child: Icon(
                           Icons.info_outline_rounded,
                           size: 14.sp,
-                          color: Colors.white.withOpacity(0.9),
+                          color: Colors.white.withValues(alpha: 0.9),
                         ),
                       ),
                     ),
@@ -230,7 +230,7 @@ class _PointsBalanceHeaderState extends State<PointsBalanceHeader>
                 Text(
                   AppLocalizations.of(context)!.points,
                   style: AppTextStyles.getText2(context).copyWith(
-                    color: Colors.white.withOpacity(0.7),
+                    color: Colors.white.withValues(alpha: 0.7),
                     letterSpacing: 1,
                   ),
                 ),

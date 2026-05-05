@@ -95,7 +95,7 @@ class HealthOptionsStep<T> extends StatelessWidget {
                 side: BorderSide(
                   color: isSelected
                       ? AppColors.main
-                      : AppColors.main.withOpacity(0.35),
+                      : AppColors.main.withValues(alpha: 0.35),
                 ),
               ),
               onSelected: (_) => onSelect(entry.key),

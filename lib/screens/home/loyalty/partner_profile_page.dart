@@ -151,7 +151,7 @@ class _PartnerProfileView extends StatelessWidget {
                               begin: Alignment.topCenter,
                               end: Alignment.bottomCenter,
                               colors: [
-                                Colors.black.withOpacity(0.28),
+                                Colors.black.withValues(alpha: 0.28),
                                 Colors.transparent,
                               ],
                             ),
@@ -172,7 +172,7 @@ class _PartnerProfileView extends StatelessWidget {
                 borderRadius: BorderRadius.circular(18.r),
                 boxShadow: [
                   BoxShadow(
-                    color: Colors.black.withOpacity(0.12),
+                    color: Colors.black.withValues(alpha: 0.12),
                     blurRadius: 18,
                     offset: const Offset(0, 6),
                   ),
@@ -185,9 +185,9 @@ class _PartnerProfileView extends StatelessWidget {
                   child: Container(
                     padding: EdgeInsets.all(16.w),
                     decoration: BoxDecoration(
-                      color: Colors.white.withOpacity(0.96),
+                      color: Colors.white.withValues(alpha: 0.96),
                       border: Border.all(
-                        color: Colors.white.withOpacity(0.65),
+                        color: Colors.white.withValues(alpha: 0.65),
                         width: 1,
                       ),
                     ),
@@ -199,7 +199,7 @@ class _PartnerProfileView extends StatelessWidget {
                     decoration: BoxDecoration(
                       shape: BoxShape.circle,
                       border: Border.all(color: brand, width: 2),
-                      color: brand.withOpacity(0.06),
+                      color: brand.withValues(alpha: 0.06),
                     ),
                     padding: EdgeInsets.all(3.w),
                     child: ClipOval(
@@ -229,7 +229,7 @@ class _PartnerProfileView extends StatelessWidget {
                         Container(
                           padding: EdgeInsets.symmetric(horizontal: 8.w, vertical: 3.h),
                           decoration: BoxDecoration(
-                            color: brand.withOpacity(0.10),
+                            color: brand.withValues(alpha: 0.10),
                             borderRadius: BorderRadius.circular(6.r),
                           ),
                           child: Text(
@@ -292,7 +292,7 @@ class _PartnerProfileView extends StatelessWidget {
                       borderRadius: BorderRadius.circular(14.r),
                       boxShadow: [
                         BoxShadow(
-                          color: Colors.black.withOpacity(0.03),
+                          color: Colors.black.withValues(alpha: 0.03),
                           blurRadius: 6,
                           offset: const Offset(0, 2),
                         ),
@@ -356,7 +356,7 @@ class _PartnerProfileView extends StatelessWidget {
           top: MediaQuery.of(context).padding.top + 8.h,
           start: 8.w,
           child: Material(
-            color: Colors.black.withOpacity(0.32),
+            color: Colors.black.withValues(alpha: 0.32),
             shape: const CircleBorder(),
             child: InkWell(
               customBorder: const CircleBorder(),
@@ -380,7 +380,7 @@ class _PartnerProfileView extends StatelessWidget {
     return Container(
       decoration: BoxDecoration(
         gradient: LinearGradient(
-          colors: [brand, brand.withOpacity(0.75)],
+          colors: [brand, brand.withValues(alpha: 0.75)],
           begin: Alignment.topCenter,
           end: Alignment.bottomCenter,
         ),

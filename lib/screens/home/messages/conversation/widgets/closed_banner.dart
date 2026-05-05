@@ -23,7 +23,7 @@ class ClosedBanner extends StatelessWidget {
         filter: ImageFilter.blur(sigmaX: 12, sigmaY: 12),
         child: Container(
           width: double.infinity,
-          color: AppColors.main.withOpacity(0.5),
+          color: AppColors.main.withValues(alpha: 0.5),
           padding: EdgeInsets.symmetric(horizontal: 20.w, vertical: 10.h),
           child: Row(
             children: [

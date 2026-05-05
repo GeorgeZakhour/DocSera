@@ -276,7 +276,7 @@ class _CustomBottomNavigationBarState extends State<CustomBottomNavigationBar>
           context: context,
           barrierDismissible: true,
           barrierLabel: "exit",
-          barrierColor: Colors.black.withOpacity(0.5),
+          barrierColor: Colors.black.withValues(alpha: 0.5),
           pageBuilder: (context, animation, secondaryAnimation) {
             return SafeArea(
               child: Builder(
@@ -360,7 +360,7 @@ class _CustomBottomNavigationBarState extends State<CustomBottomNavigationBar>
           appBar: _currentIndex == 2
               ? null
               : AppBar(
-            backgroundColor: AppColors.main.withOpacity(1),
+            backgroundColor: AppColors.main.withValues(alpha: 1),
             surfaceTintColor: Colors.transparent,
             shadowColor: Colors.transparent,
             elevation: 0,

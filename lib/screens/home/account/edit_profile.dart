@@ -115,7 +115,7 @@ class _EditProfilePageState extends State<EditProfilePage> {
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
         content: Text(AppLocalizations.of(context)!.updateSuccess),
-        backgroundColor: AppColors.main.withOpacity(0.7),
+        backgroundColor: AppColors.main.withValues(alpha: 0.7),
       ),
     );
 
@@ -467,9 +467,9 @@ class _EditProfilePageState extends State<EditProfilePage> {
     return Container(
       padding: EdgeInsets.symmetric(horizontal: 12.w, vertical: 16.h),
       decoration: BoxDecoration(
-        color: AppColors.main.withOpacity(0.1),
+        color: AppColors.main.withValues(alpha: 0.1),
         borderRadius: BorderRadius.circular(8.r),
-        border: Border.all(color: AppColors.main.withOpacity(0.7)),
+        border: Border.all(color: AppColors.main.withValues(alpha: 0.7)),
       ),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -537,11 +537,11 @@ class _EditProfilePageState extends State<EditProfilePage> {
           ),
           errorBorder: OutlineInputBorder(
             borderRadius: BorderRadius.circular(25.r),
-            borderSide: BorderSide(color: AppColors.red.withOpacity(0.5), width: 1),
+            borderSide: BorderSide(color: AppColors.red.withValues(alpha: 0.5), width: 1),
           ),
           focusedErrorBorder: OutlineInputBorder(
             borderRadius: BorderRadius.circular(25.r),
-            borderSide: BorderSide(color: AppColors.main.withOpacity(0.5), width: 1),
+            borderSide: BorderSide(color: AppColors.main.withValues(alpha: 0.5), width: 1),
           ),
 
           suffixIcon: controller.text.isEmpty
@@ -634,11 +634,11 @@ class _EditProfilePageState extends State<EditProfilePage> {
         ),
         errorBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(25.r),
-          borderSide: BorderSide(color: AppColors.red.withOpacity(0.5), width: 1),
+          borderSide: BorderSide(color: AppColors.red.withValues(alpha: 0.5), width: 1),
         ),
         focusedErrorBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(25.r),
-          borderSide: BorderSide(color: AppColors.main.withOpacity(0.5), width: 1),
+          borderSide: BorderSide(color: AppColors.main.withValues(alpha: 0.5), width: 1),
         ),
       ),
       onChanged: (value) {
@@ -696,14 +696,14 @@ class _EditProfilePageState extends State<EditProfilePage> {
         ),
         errorBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(25.r),
-          borderSide: BorderSide(color: AppColors.red.withOpacity(0.5), width: 1),
+          borderSide: BorderSide(color: AppColors.red.withValues(alpha: 0.5), width: 1),
         ),
         focusedErrorBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(25.r),
-          borderSide: BorderSide(color: AppColors.main.withOpacity(0.5), width: 1),
+          borderSide: BorderSide(color: AppColors.main.withValues(alpha: 0.5), width: 1),
         ),
       ),
-      dropdownColor: Colors.white.withOpacity(0.95),
+      dropdownColor: Colors.white.withValues(alpha: 0.95),
       isExpanded: true,
       borderRadius: BorderRadius.circular(15.r),
       menuMaxHeight: 250.h,
@@ -755,11 +755,11 @@ class _EditProfilePageState extends State<EditProfilePage> {
             ),
             errorBorder: OutlineInputBorder(
               borderRadius: BorderRadius.circular(25.r),
-              borderSide: BorderSide(color: AppColors.red.withOpacity(0.5), width: 1),
+              borderSide: BorderSide(color: AppColors.red.withValues(alpha: 0.5), width: 1),
             ),
             focusedErrorBorder: OutlineInputBorder(
               borderRadius: BorderRadius.circular(25.r),
-              borderSide: BorderSide(color: AppColors.main.withOpacity(0.5), width: 1),
+              borderSide: BorderSide(color: AppColors.main.withValues(alpha: 0.5), width: 1),
             ),
           ),
           validator: (value) {

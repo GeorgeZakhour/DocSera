@@ -265,8 +265,8 @@ class _ModularReportDetailPageState extends State<ModularReportDetailPage> {
         child: Container(
           padding: EdgeInsets.all(14.w),
           decoration: BoxDecoration(
-            color: Colors.white.withOpacity(0.55),
-            border: Border.all(color: AppColors.main.withOpacity(0.22)),
+            color: Colors.white.withValues(alpha: 0.55),
+            border: Border.all(color: AppColors.main.withValues(alpha: 0.22)),
             borderRadius: BorderRadius.circular(22.r),
           ),
           child: Row(
@@ -274,7 +274,7 @@ class _ModularReportDetailPageState extends State<ModularReportDetailPage> {
               CircleAvatar(
                 radius: 24.r,
                 backgroundImage: imageResult.imageProvider,
-                backgroundColor: AppColors.main.withOpacity(0.1),
+                backgroundColor: AppColors.main.withValues(alpha: 0.1),
               ),
               SizedBox(width: 12.w),
               Expanded(
@@ -303,7 +303,7 @@ class _ModularReportDetailPageState extends State<ModularReportDetailPage> {
                         Icon(
                           Icons.calendar_today_rounded,
                           size: 11.sp,
-                          color: AppColors.mainDark.withOpacity(0.7),
+                          color: AppColors.mainDark.withValues(alpha: 0.7),
                         ),
                         SizedBox(width: 5.w),
                         Text(

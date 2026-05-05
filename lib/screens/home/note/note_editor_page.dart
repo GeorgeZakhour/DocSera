@@ -308,7 +308,7 @@ class _NoteEditorPageState extends State<NoteEditorPage> {
                             ),
                             Divider(
                                 height: 20.h,
-                                color: AppColors.grayMain.withOpacity(0.5)),
+                                color: AppColors.grayMain.withValues(alpha: 0.5)),
                             // ===== Toolbar =====
                             Row(
                               crossAxisAlignment: CrossAxisAlignment.start,
@@ -318,16 +318,16 @@ class _NoteEditorPageState extends State<NoteEditorPage> {
                                     width: double.infinity,
                                     decoration: BoxDecoration(
                                       color:
-                                          AppColors.main.withOpacity(0.1),
+                                          AppColors.main.withValues(alpha: 0.1),
                                       borderRadius:
                                           BorderRadius.circular(25.r),
                                     ),
                                     child: Theme(
                                       data: Theme.of(context).copyWith(
                                         canvasColor:
-                                            Colors.white.withOpacity(0.95),
+                                            Colors.white.withValues(alpha: 0.95),
                                         cardColor:
-                                            Colors.white.withOpacity(0.95), dialogTheme: DialogThemeData(backgroundColor: Colors.white.withOpacity(0.95)),
+                                            Colors.white.withValues(alpha: 0.95), dialogTheme: DialogThemeData(backgroundColor: Colors.white.withValues(alpha: 0.95)),
                                       ),
                                       child: QuillSimpleToolbar(
                                         controller: _contentController,

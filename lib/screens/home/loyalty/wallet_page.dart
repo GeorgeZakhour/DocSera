@@ -144,7 +144,7 @@ class _WalletPageState extends State<WalletPage>
                                 height: 120.r,
                                 decoration: BoxDecoration(
                                   shape: BoxShape.circle,
-                                  color: Colors.white.withOpacity(0.06),
+                                  color: Colors.white.withValues(alpha: 0.06),
                                 ),
                               ),
                             ),
@@ -156,7 +156,7 @@ class _WalletPageState extends State<WalletPage>
                                 height: 80.r,
                                 decoration: BoxDecoration(
                                   shape: BoxShape.circle,
-                                  color: Colors.white.withOpacity(0.04),
+                                  color: Colors.white.withValues(alpha: 0.04),
                                 ),
                               ),
                             ),
@@ -168,7 +168,7 @@ class _WalletPageState extends State<WalletPage>
                                 height: 50.r,
                                 decoration: BoxDecoration(
                                   shape: BoxShape.circle,
-                                  color: Colors.white.withOpacity(0.03),
+                                  color: Colors.white.withValues(alpha: 0.03),
                                 ),
                               ),
                             ),
@@ -182,7 +182,7 @@ class _WalletPageState extends State<WalletPage>
                                   Container(
                                     padding: EdgeInsets.all(14.r),
                                     decoration: BoxDecoration(
-                                      color: Colors.white.withOpacity(0.12),
+                                      color: Colors.white.withValues(alpha: 0.12),
                                       shape: BoxShape.circle,
                                     ),
                                     child: Icon(
@@ -205,7 +205,7 @@ class _WalletPageState extends State<WalletPage>
                                   Text(
                                     l.points,
                                     style: AppTextStyles.getText2(context).copyWith(
-                                      color: Colors.white.withOpacity(0.75),
+                                      color: Colors.white.withValues(alpha: 0.75),
                                       fontWeight: FontWeight.w500,
                                     ),
                                   ),
@@ -345,13 +345,13 @@ class _WalletPageState extends State<WalletPage>
             Container(
               padding: EdgeInsets.all(24.w),
               decoration: BoxDecoration(
-                color: AppColors.main.withOpacity(0.06),
+                color: AppColors.main.withValues(alpha: 0.06),
                 shape: BoxShape.circle,
               ),
               child: Icon(
                 Icons.receipt_long_rounded,
                 size: 48.sp,
-                color: AppColors.main.withOpacity(0.4),
+                color: AppColors.main.withValues(alpha: 0.4),
               ),
             ),
             SizedBox(height: 20.h),
@@ -391,7 +391,7 @@ class _StatMiniCard extends StatelessWidget {
         borderRadius: BorderRadius.circular(14.r),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.03),
+            color: Colors.black.withValues(alpha: 0.03),
             blurRadius: 8,
             offset: const Offset(0, 2),
           ),
@@ -402,7 +402,7 @@ class _StatMiniCard extends StatelessWidget {
           Container(
             padding: EdgeInsets.all(8.r),
             decoration: BoxDecoration(
-              color: color.withOpacity(0.08),
+              color: color.withValues(alpha: 0.08),
               borderRadius: BorderRadius.circular(10.r),
             ),
             child: Icon(icon, color: color, size: 16.sp),
@@ -463,15 +463,15 @@ class _FilterChip extends StatelessWidget {
         duration: const Duration(milliseconds: 200),
         padding: EdgeInsets.symmetric(horizontal: 14.w, vertical: 7.h),
         decoration: BoxDecoration(
-          color: isSelected ? chipColor.withOpacity(0.12) : Colors.white,
+          color: isSelected ? chipColor.withValues(alpha: 0.12) : Colors.white,
           borderRadius: BorderRadius.circular(20.r),
           border: Border.all(
-            color: isSelected ? chipColor.withOpacity(0.3) : Colors.grey.withOpacity(0.2),
+            color: isSelected ? chipColor.withValues(alpha: 0.3) : Colors.grey.withValues(alpha: 0.2),
           ),
           boxShadow: isSelected
               ? [
                   BoxShadow(
-                    color: chipColor.withOpacity(0.08),
+                    color: chipColor.withValues(alpha: 0.08),
                     blurRadius: 8,
                     offset: const Offset(0, 2),
                   ),

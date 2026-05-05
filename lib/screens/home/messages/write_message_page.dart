@@ -297,7 +297,7 @@ class _WriteMessagePageState extends State<WriteMessagePage> {
           Container(
             padding: EdgeInsets.all(12.r),
             decoration: BoxDecoration(
-              color: onTap == null ? Colors.grey.shade200 : AppColors.main.withOpacity(0.1),
+              color: onTap == null ? Colors.grey.shade200 : AppColors.main.withValues(alpha: 0.1),
               shape: BoxShape.circle,
             ),
             child: SvgPicture.asset(
@@ -336,8 +336,8 @@ class _WriteMessagePageState extends State<WriteMessagePage> {
             width: double.infinity,
             padding: EdgeInsets.symmetric(horizontal: 12.w, vertical: 10.h),
             decoration: BoxDecoration(
-              color: Colors.white.withOpacity(0.3),
-              border: Border.all(color: AppColors.main.withOpacity(0.4)),
+              color: Colors.white.withValues(alpha: 0.3),
+              border: Border.all(color: AppColors.main.withValues(alpha: 0.4)),
               borderRadius: BorderRadius.circular(12.r),
             ),
             child: child,
@@ -405,7 +405,7 @@ class _WriteMessagePageState extends State<WriteMessagePage> {
                       decoration: BoxDecoration(
                         border: Border.all(color: Colors.grey.shade300, width: 0.5),
                         borderRadius: BorderRadius.circular(6.r),
-                        color: AppColors.main.withOpacity(0.15),
+                        color: AppColors.main.withValues(alpha: 0.15),
                       ),
                       alignment: Alignment.center,
                       child: Text(
@@ -511,7 +511,7 @@ class _WriteMessagePageState extends State<WriteMessagePage> {
       title: Row(
         children: [
           CircleAvatar(
-            backgroundColor: AppColors.background2.withOpacity(0.3),
+            backgroundColor: AppColors.background2.withValues(alpha: 0.3),
             radius: 18.r,
             child: ClipRRect(
               borderRadius: BorderRadius.circular(50),
@@ -537,7 +537,7 @@ class _WriteMessagePageState extends State<WriteMessagePage> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Container(
-                  color: AppColors.main.withOpacity(0.6),
+                  color: AppColors.main.withValues(alpha: 0.6),
                   child: Padding(
                     padding: EdgeInsets.all(8.w),
                     child: Row(
@@ -759,7 +759,7 @@ class _WriteMessagePageState extends State<WriteMessagePage> {
                   BackdropFilter(
                     filter: ImageFilter.blur(sigmaX: 12, sigmaY: 12),
                     child: Container(
-                      color: AppColors.grayMain.withOpacity(0.4), // خلفية فاتحة مضببة
+                      color: AppColors.grayMain.withValues(alpha: 0.4), // خلفية فاتحة مضببة
                     ),
                   ),
 
@@ -818,7 +818,7 @@ class _WriteMessagePageState extends State<WriteMessagePage> {
                             filter: ImageFilter.blur(sigmaX: 15, sigmaY: 10),
                             child: CircleAvatar(
                               radius: 28.r,
-                              backgroundColor: AppColors.grayMain.withOpacity(0.4),
+                              backgroundColor: AppColors.grayMain.withValues(alpha: 0.4),
                               child: Icon(Icons.delete, color: Colors.white, size: 22.sp),
                             ),
                           ),
@@ -839,7 +839,7 @@ class _WriteMessagePageState extends State<WriteMessagePage> {
                         height: 30.r,
                         decoration: BoxDecoration(
                           shape: BoxShape.circle,
-                          color: AppColors.grayMain.withOpacity(0.7),
+                          color: AppColors.grayMain.withValues(alpha: 0.7),
                         ),
                         child: Center(
                           child: Icon(Icons.close, color: AppColors.whiteText, size: 18.sp),

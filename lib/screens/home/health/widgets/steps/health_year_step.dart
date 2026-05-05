@@ -91,7 +91,7 @@ class HealthYearStep extends StatelessWidget {
               borderSide: const BorderSide(color: AppColors.main, width: 2),
             ),
           ),
-          dropdownColor: Colors.white.withOpacity(0.95),
+          dropdownColor: Colors.white.withValues(alpha: 0.95),
           borderRadius: BorderRadius.circular(15.r),
           isExpanded: true,
           icon: Icon(
@@ -137,7 +137,7 @@ class HealthYearStep extends StatelessWidget {
             decoration: BoxDecoration(
               color: selectedYear != null || skippable
                   ? AppColors.main
-                  : AppColors.main.withOpacity(0.35),
+                  : AppColors.main.withValues(alpha: 0.35),
               borderRadius: BorderRadius.circular(24.r),
             ),
             child: Center(

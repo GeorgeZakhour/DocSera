@@ -184,7 +184,7 @@ class _CenterProfilePageState extends State<CenterProfilePage> {
     if (user == null) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          backgroundColor: AppColors.red.withOpacity(0.8),
+          backgroundColor: AppColors.red.withValues(alpha: 0.8),
           content: Text(AppLocalizations.of(context)!.loginFirst),
         ),
       );
@@ -304,9 +304,9 @@ class _CenterProfilePageState extends State<CenterProfilePage> {
           margin: EdgeInsets.all(16.w),
           padding: EdgeInsets.all(20.w),
           decoration: BoxDecoration(
-            color: AppColors.background2.withOpacity(0.92),
+            color: AppColors.background2.withValues(alpha: 0.92),
             borderRadius: BorderRadius.circular(28.r),
-            border: Border.all(color: AppColors.main.withOpacity(0.25)),
+            border: Border.all(color: AppColors.main.withValues(alpha: 0.25)),
           ),
           child: Column(mainAxisSize: MainAxisSize.min, children: [
             Container(
@@ -344,7 +344,7 @@ class _CenterProfilePageState extends State<CenterProfilePage> {
                     Clipboard.setData(ClipboardData(text: deepLink));
                     Navigator.pop(context);
                     ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-                        backgroundColor: AppColors.main.withOpacity(0.8),
+                        backgroundColor: AppColors.main.withValues(alpha: 0.8),
                         content: Text(l.linkCopied)));
                   },
                 ),
@@ -372,7 +372,7 @@ class _CenterProfilePageState extends State<CenterProfilePage> {
         behavior: HitTestBehavior.translucent,
         onTap: _hideImageOverlay,
         child: Container(
-          color: Colors.black.withOpacity(0.85),
+          color: Colors.black.withValues(alpha: 0.85),
           child: SafeArea(
             child: Column(
               children: [
@@ -393,7 +393,7 @@ class _CenterProfilePageState extends State<CenterProfilePage> {
                             child: Container(
                               padding: EdgeInsets.symmetric(horizontal: 4.w),
                               decoration: BoxDecoration(
-                                color: Colors.white.withOpacity(0.1),
+                                color: Colors.white.withValues(alpha: 0.1),
                                 borderRadius: BorderRadius.circular(24.r),
                               ),
                               child: IconButton(
@@ -549,7 +549,7 @@ class _CenterProfilePageState extends State<CenterProfilePage> {
                   background: Stack(fit: StackFit.expand, children: [
                     Image.asset('assets/images/doctor_header_pattern.webp',
                         fit: BoxFit.cover),
-                    Container(color: AppColors.background2.withOpacity(0.15)),
+                    Container(color: AppColors.background2.withValues(alpha: 0.15)),
                     Column(mainAxisAlignment: MainAxisAlignment.center, children: [
                       SizedBox(height: 60.h),
                       GestureDetector(
@@ -558,7 +558,7 @@ class _CenterProfilePageState extends State<CenterProfilePage> {
                             _showImageOverlayWithIndex([imageUrl], 0);
                         },
                         child: CircleAvatar(
-                          backgroundColor: AppColors.main.withOpacity(0.3),
+                          backgroundColor: AppColors.main.withValues(alpha: 0.3),
                           radius: 40.r,
                           child: ClipRRect(
                             borderRadius: BorderRadius.circular(50.r),
@@ -770,7 +770,7 @@ class _CenterProfilePageState extends State<CenterProfilePage> {
           children: [
             CircleAvatar(
               radius: 35.r,
-              backgroundColor: AppColors.main.withOpacity(0.1),
+              backgroundColor: AppColors.main.withValues(alpha: 0.1),
               child: ClipRRect(
                   borderRadius: BorderRadius.circular(35.r),
                   child:
@@ -788,7 +788,7 @@ class _CenterProfilePageState extends State<CenterProfilePage> {
             Container(
               padding: EdgeInsets.symmetric(horizontal: 8.w, vertical: 3.h),
               decoration: BoxDecoration(
-                color: AppColors.main.withOpacity(0.1),
+                color: AppColors.main.withValues(alpha: 0.1),
                 borderRadius: BorderRadius.circular(8.r),
               ),
               child: Text(
@@ -1780,7 +1780,7 @@ class _CenterProfilePageState extends State<CenterProfilePage> {
                         if (index == 3 && extraCount > 0)
                           Container(
                             decoration: BoxDecoration(
-                              color: Colors.black.withOpacity(0.4),
+                              color: Colors.black.withValues(alpha: 0.4),
                               borderRadius: BorderRadius.circular(8.r),
                             ),
                             child: Center(
@@ -1877,7 +1877,7 @@ class _CenterProfilePageState extends State<CenterProfilePage> {
           children: specialties
               .map((s) => Container(
                     decoration: BoxDecoration(
-                        color: AppColors.main.withOpacity(0.12),
+                        color: AppColors.main.withValues(alpha: 0.12),
                         borderRadius: BorderRadius.circular(20.r)),
                     padding:
                         EdgeInsets.symmetric(horizontal: 12.w, vertical: 6.h),
@@ -2393,9 +2393,9 @@ class _CenterProfilePageState extends State<CenterProfilePage> {
       child: Container(
         padding: EdgeInsets.symmetric(horizontal: 12.w, vertical: 8.h),
         decoration: BoxDecoration(
-          color: AppColors.main.withOpacity(0.08),
+          color: AppColors.main.withValues(alpha: 0.08),
           borderRadius: BorderRadius.circular(10.r),
-          border: Border.all(color: AppColors.main.withOpacity(0.2)),
+          border: Border.all(color: AppColors.main.withValues(alpha: 0.2)),
         ),
         child: Row(children: [
           Icon(icon, size: 14.sp, color: AppColors.mainDark),
@@ -2895,10 +2895,10 @@ class _CenterProfilePageState extends State<CenterProfilePage> {
           children: insurance
               .map((i) => Container(
                     decoration: BoxDecoration(
-                        color: Colors.green.withOpacity(0.1),
+                        color: Colors.green.withValues(alpha: 0.1),
                         borderRadius: BorderRadius.circular(20.r),
                         border:
-                            Border.all(color: Colors.green.withOpacity(0.3))),
+                            Border.all(color: Colors.green.withValues(alpha: 0.3))),
                     padding:
                         EdgeInsets.symmetric(horizontal: 12.w, vertical: 6.h),
                     child: Text(i,
@@ -2924,7 +2924,7 @@ class _CenterProfilePageState extends State<CenterProfilePage> {
           children: facilities
               .map((f) => Container(
                     decoration: BoxDecoration(
-                        color: AppColors.main.withOpacity(0.08),
+                        color: AppColors.main.withValues(alpha: 0.08),
                         borderRadius: BorderRadius.circular(20.r)),
                     padding:
                         EdgeInsets.symmetric(horizontal: 12.w, vertical: 6.h),

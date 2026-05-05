@@ -45,7 +45,7 @@ class OfferCoverCard extends StatelessWidget {
             borderRadius: BorderRadius.circular(18.r),
             boxShadow: [
               BoxShadow(
-                color: Colors.black.withOpacity(0.05),
+                color: Colors.black.withValues(alpha: 0.05),
                 blurRadius: 10,
                 offset: const Offset(0, 4),
               ),
@@ -69,7 +69,7 @@ class OfferCoverCard extends StatelessWidget {
                             end: Alignment.bottomCenter,
                             colors: [
                               Colors.transparent,
-                              Colors.black.withOpacity(0.35),
+                              Colors.black.withValues(alpha: 0.35),
                             ],
                           ),
                         ),
@@ -171,7 +171,7 @@ class OfferCoverCard extends StatelessWidget {
     return Container(
       decoration: BoxDecoration(
         gradient: LinearGradient(
-          colors: [brand, brand.withOpacity(0.7)],
+          colors: [brand, brand.withValues(alpha: 0.7)],
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
         ),
@@ -181,7 +181,7 @@ class OfferCoverCard extends StatelessWidget {
           offer.category == 'credit'
               ? Icons.phone_android_rounded
               : Icons.local_offer_rounded,
-          color: Colors.white.withOpacity(0.4),
+          color: Colors.white.withValues(alpha: 0.4),
           size: 56.sp,
         ),
       ),
@@ -220,7 +220,7 @@ class OfferCoverCard extends StatelessWidget {
     return Container(
       padding: EdgeInsets.symmetric(horizontal: 8.w, vertical: 3.h),
       decoration: BoxDecoration(
-        color: const Color(0xFFE53935).withOpacity(0.92),
+        color: const Color(0xFFE53935).withValues(alpha: 0.92),
         borderRadius: BorderRadius.circular(6.r),
       ),
       child: Text(
@@ -239,7 +239,7 @@ class OfferCoverCard extends StatelessWidget {
       padding: EdgeInsets.symmetric(horizontal: 12.w, vertical: 8.h),
       decoration: BoxDecoration(
         gradient: LinearGradient(
-          colors: [AppColors.main.withOpacity(0.10), AppColors.main.withOpacity(0.04)],
+          colors: [AppColors.main.withValues(alpha: 0.10), AppColors.main.withValues(alpha: 0.04)],
         ),
         borderRadius: BorderRadius.circular(12.r),
       ),

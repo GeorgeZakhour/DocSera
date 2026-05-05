@@ -6,7 +6,6 @@ import 'package:docsera/gen_l10n/app_localizations.dart';
 import 'package:docsera/screens/home/health/models/health_models.dart';
 import 'package:docsera/screens/home/health/widgets/health_delete_confirm_dialog.dart';
 import 'package:docsera/screens/home/health/widgets/health_empty_view.dart';
-import 'package:docsera/screens/home/health/widgets/health_no_items_view.dart';
 import 'package:docsera/screens/home/health/widgets/health_record_card.dart';
 import 'package:docsera/screens/home/health/widgets/health_record_details_dialog.dart';
 import 'package:docsera/screens/home/health/widgets/health_record_options_menu.dart';
@@ -170,7 +169,7 @@ class OtherRecordsPage extends StatelessWidget {
       context: context,
       backgroundColor: Colors.transparent,
       isScrollControlled: true,
-      barrierColor: Colors.black.withOpacity(0.3),
+      barrierColor: Colors.black.withValues(alpha: 0.3),
       builder: (_) {
         return BlocProvider.value(
           value: cubit,
@@ -279,7 +278,7 @@ class _OtherRecordsList extends StatelessWidget {
     return Container(
       padding: EdgeInsets.symmetric(horizontal: 8.w, vertical: 3.h),
       decoration: BoxDecoration(
-        color: color.withOpacity(0.12),
+        color: color.withValues(alpha: 0.12),
         borderRadius: BorderRadius.circular(20.r),
       ),
       child: Row(

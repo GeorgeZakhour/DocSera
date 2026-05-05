@@ -48,7 +48,7 @@ class AttachmentsBubble extends StatelessWidget {
                     onTap: onOpenGrid,
                     child: Container(
                       decoration: BoxDecoration(
-                        color: AppColors.main.withOpacity(0.1),
+                        color: AppColors.main.withValues(alpha: 0.1),
                         borderRadius: BorderRadius.circular(8.r),
                       ),
                       child: Center(

@@ -172,7 +172,7 @@ class _OffersPageState extends State<OffersPage> {
                         Container(
                           padding: EdgeInsets.all(10.r),
                           decoration: BoxDecoration(
-                            color: Colors.white.withOpacity(0.12),
+                            color: Colors.white.withValues(alpha: 0.12),
                             shape: BoxShape.circle,
                           ),
                           child: Icon(Icons.stars_rounded,
@@ -190,7 +190,7 @@ class _OffersPageState extends State<OffersPage> {
                         Text(
                           l.browseOffersWithPoints,
                           style: AppTextStyles.getText3(context)
-                              .copyWith(color: Colors.white.withOpacity(0.8)),
+                              .copyWith(color: Colors.white.withValues(alpha: 0.8)),
                         ),
                       ],
                     );
@@ -209,7 +209,7 @@ class _OffersPageState extends State<OffersPage> {
         height: size,
         decoration: BoxDecoration(
           shape: BoxShape.circle,
-          color: Colors.white.withOpacity(opacity),
+          color: Colors.white.withValues(alpha: opacity),
         ),
       );
 
@@ -391,7 +391,7 @@ class _MegaCarouselCard extends StatelessWidget {
           borderRadius: BorderRadius.circular(18.r),
           boxShadow: [
             BoxShadow(
-              color: brand.withOpacity(0.20),
+              color: brand.withValues(alpha: 0.20),
               blurRadius: 12,
               offset: const Offset(0, 4),
             ),
@@ -416,8 +416,8 @@ class _MegaCarouselCard extends StatelessWidget {
                     begin: Alignment.topCenter,
                     end: Alignment.bottomCenter,
                     colors: [
-                      Colors.black.withOpacity(0.05),
-                      Colors.black.withOpacity(0.55),
+                      Colors.black.withValues(alpha: 0.05),
+                      Colors.black.withValues(alpha: 0.55),
                     ],
                   ),
                 ),
@@ -478,7 +478,7 @@ class _MegaCarouselCard extends StatelessWidget {
                               maxLines: 1,
                               overflow: TextOverflow.ellipsis,
                               style: TextStyle(
-                                color: Colors.white.withOpacity(0.85),
+                                color: Colors.white.withValues(alpha: 0.85),
                                 fontSize: 11.sp,
                               ),
                             ),
@@ -486,7 +486,7 @@ class _MegaCarouselCard extends StatelessWidget {
                         Container(
                           padding: EdgeInsets.symmetric(horizontal: 8.w, vertical: 3.h),
                           decoration: BoxDecoration(
-                            color: Colors.white.withOpacity(0.22),
+                            color: Colors.white.withValues(alpha: 0.22),
                             borderRadius: BorderRadius.circular(8.r),
                           ),
                           child: Row(
@@ -520,7 +520,7 @@ class _MegaCarouselCard extends StatelessWidget {
   Widget _gradient(Color brand) => Container(
         decoration: BoxDecoration(
           gradient: LinearGradient(
-            colors: [brand, brand.withOpacity(0.7)],
+            colors: [brand, brand.withValues(alpha: 0.7)],
             begin: Alignment.topLeft,
             end: Alignment.bottomRight,
           ),

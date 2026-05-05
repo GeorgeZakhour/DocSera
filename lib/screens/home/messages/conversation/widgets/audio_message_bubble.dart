@@ -85,7 +85,7 @@ class _AudioMessageBubbleState extends State<AudioMessageBubble> {
        padding: EdgeInsets.symmetric(horizontal: 14.w, vertical: 12.h),
        constraints: BoxConstraints(minWidth: 160.w),
        decoration: BoxDecoration(
-         color: widget.isUser ? AppColors.mainDark.withOpacity(0.9) : AppColors.grayMain.withOpacity(0.25),
+         color: widget.isUser ? AppColors.mainDark.withValues(alpha: 0.9) : AppColors.grayMain.withValues(alpha: 0.25),
          borderRadius: BorderRadius.only(
             topLeft: Radius.circular(16.r),
             topRight: Radius.circular(16.r),
@@ -101,7 +101,7 @@ class _AudioMessageBubbleState extends State<AudioMessageBubble> {
                  child: Container(
                    padding: EdgeInsets.all(8.r),
                    decoration: BoxDecoration(
-                     color: widget.isUser ? Colors.white.withOpacity(0.2) : Colors.white.withOpacity(0.6),
+                     color: widget.isUser ? Colors.white.withValues(alpha: 0.2) : Colors.white.withValues(alpha: 0.6),
                      shape: BoxShape.circle,
                    ),
                    child: Icon(
@@ -154,7 +154,7 @@ class AudioBubbleShimmer extends StatelessWidget {
       padding: EdgeInsets.symmetric(horizontal: 14.w, vertical: 12.h),
       constraints: BoxConstraints(minWidth: 160.w),
       decoration: BoxDecoration(
-        color: isUser ? AppColors.mainDark.withOpacity(0.9) : AppColors.grayMain.withOpacity(0.25),
+        color: isUser ? AppColors.mainDark.withValues(alpha: 0.9) : AppColors.grayMain.withValues(alpha: 0.25),
         borderRadius: BorderRadius.only(
           topLeft: Radius.circular(16.r),
           topRight: Radius.circular(16.r),

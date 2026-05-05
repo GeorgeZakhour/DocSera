@@ -33,7 +33,6 @@ import 'package:docsera/Business_Logic/Home_Cards/home_cards_state.dart';
 import 'package:docsera/services/supabase/home_cards/supabase_home_card_service.dart';
 import 'package:docsera/models/home_card_model.dart';
 import 'package:docsera/models/home_card_model.dart';
-import 'package:url_launcher/url_launcher.dart'; // Add url_launcher to pubspec.yaml if not present
 import 'package:docsera/screens/misc/webview_page.dart';
 
 import '../../models/sign_up_info.dart';
@@ -181,7 +180,7 @@ class _MainScreenState extends State<MainScreen> with AutomaticKeepAliveClientMi
           children: [
             CircleAvatar(
               radius: 30,
-              backgroundColor: AppColors.main.withOpacity(0.2),
+              backgroundColor: AppColors.main.withValues(alpha: 0.2),
               backgroundImage: centerImageProvider,
             ),
             SizedBox(height: 6.h),
@@ -223,7 +222,7 @@ class _MainScreenState extends State<MainScreen> with AutomaticKeepAliveClientMi
             children: [
               ListTile(
                 leading: CircleAvatar(
-                  backgroundColor: AppColors.main.withOpacity(0.1),
+                  backgroundColor: AppColors.main.withValues(alpha: 0.1),
                   backgroundImage: imageProvider,
                 ),
 
@@ -291,7 +290,7 @@ class _MainScreenState extends State<MainScreen> with AutomaticKeepAliveClientMi
           children: [
             CircleAvatar(
               radius: 30,
-              backgroundColor: AppColors.main.withOpacity(0.2),
+              backgroundColor: AppColors.main.withValues(alpha: 0.2),
               backgroundImage: doctorImageProvider,
             ),
             SizedBox(height: 6.h),
@@ -333,7 +332,7 @@ class _MainScreenState extends State<MainScreen> with AutomaticKeepAliveClientMi
             children: [
               ListTile(
                 leading: CircleAvatar(
-                  backgroundColor: AppColors.main.withOpacity(0.1),
+                  backgroundColor: AppColors.main.withValues(alpha: 0.1),
                   backgroundImage: imageProvider,
                 ),
 

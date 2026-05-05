@@ -2,9 +2,7 @@ import 'dart:io';
 
 import 'package:docsera/app/const.dart';
 import 'package:docsera/screens/auth/sign_up/WelcomePage.dart';
-import 'package:docsera/services/supabase/user/supabase_user_service.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:docsera/widgets/base_scaffold.dart';
 import 'package:docsera/utils/page_transitions.dart';
@@ -213,7 +211,7 @@ class RecapPage extends StatelessWidget {
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
         content: Text(AppLocalizations.of(context)!.registrationSuccess),
-        backgroundColor: AppColors.main.withOpacity(0.9),
+        backgroundColor: AppColors.main.withValues(alpha: 0.9),
       ),
     );
   }

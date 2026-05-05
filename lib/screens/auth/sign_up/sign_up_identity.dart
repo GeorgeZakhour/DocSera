@@ -1,6 +1,5 @@
 import 'package:docsera/app/text_styles.dart';
 import 'package:docsera/models/sign_up_info.dart';
-import 'package:docsera/screens/auth/sign_up/sign_up_email.dart';
 import 'package:docsera/utils/page_transitions.dart';
 import 'package:docsera/utils/text_direction_utils.dart';
 import 'package:docsera/widgets/base_scaffold.dart';
@@ -8,7 +7,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import '../../../app/const.dart';
-import 'package:docsera/screens/auth/sign_up/recap_info.dart';
 import 'package:docsera/screens/auth/sign_up/terms_of_use_page.dart';
 import 'package:docsera/gen_l10n/app_localizations.dart';
 import 'package:docsera/screens/auth/sign_up/create_password.dart';
@@ -246,7 +244,7 @@ class _SignUpSecondPageState extends State<SignUpSecondPage> {
               // Progress Line
               LinearProgressIndicator(
                 value: 0.35,
-                backgroundColor: AppColors.main.withOpacity(0.1),
+                backgroundColor: AppColors.main.withValues(alpha: 0.1),
                 valueColor: const AlwaysStoppedAnimation<Color>(AppColors.main),
                 minHeight: 4,
               ),
@@ -384,7 +382,7 @@ class _SignUpSecondPageState extends State<SignUpSecondPage> {
           borderSide: const BorderSide(color: AppColors.main, width: 2),
         ),
       ),
-      dropdownColor: Colors.white.withOpacity(0.95), // ✅ لون خلفية القائمة المنسدلة
+      dropdownColor: Colors.white.withValues(alpha: 0.95), // ✅ لون خلفية القائمة المنسدلة
       isExpanded: true, // ✅ جعل القائمة أصغر من عرض الحقل
       borderRadius: BorderRadius.circular(15.r), // ✅ زوايا دائرية للقائمة
       menuMaxHeight: 250.h, // ✅ منع القائمة من أن تصبح طويلة جدًا

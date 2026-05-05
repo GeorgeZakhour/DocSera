@@ -143,7 +143,7 @@ class AppointmentCancelledPage extends StatelessWidget {
                       padding: EdgeInsets.symmetric(
                           vertical: 10.h, horizontal: 16.w),
                       decoration: BoxDecoration(
-                        color: AppColors.mainDark.withOpacity(0.9),
+                        color: AppColors.mainDark.withValues(alpha: 0.9),
                         borderRadius: BorderRadius.vertical(
                             top: Radius.circular(12.r)),
                       ),
@@ -197,7 +197,7 @@ class AppointmentCancelledPage extends StatelessWidget {
                             CircleAvatar(
                               radius: 22.r,
                               backgroundColor:
-                              AppColors.main.withOpacity(0.2),
+                              AppColors.main.withValues(alpha: 0.2),
                               backgroundImage: imageProvider,
                             ),
                             SizedBox(width: 12.w),

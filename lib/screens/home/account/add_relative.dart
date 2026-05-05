@@ -130,7 +130,7 @@ class _AddRelativePageState extends State<AddRelativePage> {
         SnackBar(
           content:
           Text(AppLocalizations.of(context)!.relativeAddedSuccess),
-          backgroundColor: AppColors.main.withOpacity(0.8),
+          backgroundColor: AppColors.main.withValues(alpha: 0.8),
         ),
       );
 
@@ -141,7 +141,7 @@ class _AddRelativePageState extends State<AddRelativePage> {
           content: Text(
             AppLocalizations.of(context)!.relativeAddFailed(e.toString()),
           ),
-          backgroundColor: AppColors.red.withOpacity(0.8),
+          backgroundColor: AppColors.red.withValues(alpha: 0.8),
         ),
       );
     }
@@ -441,9 +441,9 @@ class _AddRelativePageState extends State<AddRelativePage> {
     return Container(
       padding: EdgeInsets.symmetric(horizontal: 12.w, vertical: 16.h),
       decoration: BoxDecoration(
-        color: AppColors.main.withOpacity(0.1),
+        color: AppColors.main.withValues(alpha: 0.1),
         borderRadius: BorderRadius.circular(8.r),
-        border: Border.all(color: AppColors.main.withOpacity(0.7)),
+        border: Border.all(color: AppColors.main.withValues(alpha: 0.7)),
       ),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -509,11 +509,11 @@ class _AddRelativePageState extends State<AddRelativePage> {
           ),
           errorBorder: OutlineInputBorder(
             borderRadius: BorderRadius.circular(25.r),
-            borderSide: BorderSide(color: AppColors.red.withOpacity(0.5), width: 1),
+            borderSide: BorderSide(color: AppColors.red.withValues(alpha: 0.5), width: 1),
           ),
           focusedErrorBorder: OutlineInputBorder(
             borderRadius: BorderRadius.circular(25.r),
-            borderSide: BorderSide(color: AppColors.main.withOpacity(0.5), width: 1),
+            borderSide: BorderSide(color: AppColors.main.withValues(alpha: 0.5), width: 1),
           ),
 
           suffixIcon: controller.text.isEmpty
@@ -610,11 +610,11 @@ class _AddRelativePageState extends State<AddRelativePage> {
         ),
         errorBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(25.r),
-          borderSide: BorderSide(color: AppColors.red.withOpacity(0.5), width: 1),
+          borderSide: BorderSide(color: AppColors.red.withValues(alpha: 0.5), width: 1),
         ),
         focusedErrorBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(25.r),
-          borderSide: BorderSide(color: AppColors.main.withOpacity(0.5), width: 1),
+          borderSide: BorderSide(color: AppColors.main.withValues(alpha: 0.5), width: 1),
         ),
       ),
       onChanged: (value) {
@@ -672,14 +672,14 @@ class _AddRelativePageState extends State<AddRelativePage> {
         ),
         errorBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(25.r),
-          borderSide: BorderSide(color: AppColors.red.withOpacity(0.5), width: 1),
+          borderSide: BorderSide(color: AppColors.red.withValues(alpha: 0.5), width: 1),
         ),
         focusedErrorBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(25.r),
-          borderSide: BorderSide(color: AppColors.main.withOpacity(0.5), width: 1),
+          borderSide: BorderSide(color: AppColors.main.withValues(alpha: 0.5), width: 1),
         ),
       ),
-      dropdownColor: Colors.white.withOpacity(0.95),
+      dropdownColor: Colors.white.withValues(alpha: 0.95),
       isExpanded: true,
       borderRadius: BorderRadius.circular(15.r),
       menuMaxHeight: 250.h,
@@ -731,11 +731,11 @@ class _AddRelativePageState extends State<AddRelativePage> {
             ),
             errorBorder: OutlineInputBorder(
               borderRadius: BorderRadius.circular(25.r),
-              borderSide: BorderSide(color: AppColors.red.withOpacity(0.5), width: 1),
+              borderSide: BorderSide(color: AppColors.red.withValues(alpha: 0.5), width: 1),
             ),
             focusedErrorBorder: OutlineInputBorder(
               borderRadius: BorderRadius.circular(25.r),
-              borderSide: BorderSide(color: AppColors.main.withOpacity(0.5), width: 1),
+              borderSide: BorderSide(color: AppColors.main.withValues(alpha: 0.5), width: 1),
             ),
           ),
           validator: (value) {
@@ -826,11 +826,11 @@ class _AddRelativePageState extends State<AddRelativePage> {
         ),
         errorBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(25.r),
-          borderSide: BorderSide(color: AppColors.red.withOpacity(0.5), width: 1),
+          borderSide: BorderSide(color: AppColors.red.withValues(alpha: 0.5), width: 1),
         ),
         focusedErrorBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(25.r),
-          borderSide: BorderSide(color: AppColors.main.withOpacity(0.5), width: 1),
+          borderSide: BorderSide(color: AppColors.main.withValues(alpha: 0.5), width: 1),
         ),
       ),
         onChanged: (value) async {
@@ -912,11 +912,11 @@ class _AddRelativePageState extends State<AddRelativePage> {
         ),
         errorBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(25.r),
-          borderSide: BorderSide(color: AppColors.red.withOpacity(0.5), width: 1),
+          borderSide: BorderSide(color: AppColors.red.withValues(alpha: 0.5), width: 1),
         ),
         focusedErrorBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(25.r),
-          borderSide: BorderSide(color: AppColors.main.withOpacity(0.5), width: 1),
+          borderSide: BorderSide(color: AppColors.main.withValues(alpha: 0.5), width: 1),
         ),
         suffixIcon: emailController.text.isEmpty
             ? null
@@ -951,7 +951,7 @@ class _AddRelativePageState extends State<AddRelativePage> {
           if (exists) {
             ScaffoldMessenger.of(context).showSnackBar(SnackBar(
               content: Text(AppLocalizations.of(context)!.emailAlreadyRegistered),
-              backgroundColor: AppColors.red.withOpacity(0.8),
+              backgroundColor: AppColors.red.withValues(alpha: 0.8),
             ));
 
             emailController.clear();

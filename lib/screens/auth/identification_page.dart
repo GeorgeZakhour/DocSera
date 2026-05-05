@@ -1,4 +1,3 @@
-import 'package:docsera/models/sign_up_info.dart';
 import 'package:docsera/screens/auth/sign_up/account_method_choice.dart';
 import 'package:docsera/screens/auth/login/login_page.dart';
 import 'package:docsera/utils/page_transitions.dart';

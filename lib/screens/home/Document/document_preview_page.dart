@@ -296,7 +296,7 @@ class _DocumentPreviewPageState extends State<DocumentPreviewPage> {
         messenger.showSnackBar(
           SnackBar(
             content: Text(local.downloadFailed),
-            backgroundColor: AppColors.red.withOpacity(0.9),
+            backgroundColor: AppColors.red.withValues(alpha: 0.9),
           ),
         );
         return;
@@ -566,8 +566,8 @@ class _DocumentPreviewPageState extends State<DocumentPreviewPage> {
             preferredSize: Size.fromHeight(4.h),
             child: LinearProgressIndicator(
               value: _progress,
-              backgroundColor: AppColors.main.withOpacity(0.2),
-              valueColor: AlwaysStoppedAnimation(AppColors.whiteText.withOpacity(0.5)),
+              backgroundColor: AppColors.main.withValues(alpha: 0.2),
+              valueColor: AlwaysStoppedAnimation(AppColors.whiteText.withValues(alpha: 0.5)),
               minHeight: 4.h,
             ),
           )
@@ -598,7 +598,7 @@ class _DocumentPreviewPageState extends State<DocumentPreviewPage> {
           swipeHorizontal: false,
           autoSpacing: false,
           pageSnap: true,
-          backgroundColor: Colors.grey.withOpacity(0.2),
+          backgroundColor: Colors.grey.withValues(alpha: 0.2),
           fitPolicy: FitPolicy.BOTH,
           onRender: (pages) => setState(() => _totalPages = pages ?? 0),
           onPageChanged: (page, _) => setState(() => _currentPage = page ?? 0),

@@ -107,7 +107,7 @@ class WaitingForConfirmationPage extends StatelessWidget {
                         children: [
                           CircleAvatar(
                             radius: 22.r,
-                            backgroundColor: AppColors.main.withOpacity(0.3),
+                            backgroundColor: AppColors.main.withValues(alpha: 0.3),
                             backgroundImage: imageProvider,
                           ),
                           SizedBox(width: 12.w),

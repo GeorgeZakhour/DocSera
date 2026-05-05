@@ -78,14 +78,14 @@ class _DocumentInfoScreenState extends State<DocumentInfoScreen> {
 
     final List<Color> mainShades = [
       AppColors.main,
-      AppColors.main.withOpacity(0.4),
-      AppColors.main.withOpacity(0.6),
+      AppColors.main.withValues(alpha: 0.4),
+      AppColors.main.withValues(alpha: 0.6),
     ];
 
     final List<Color> yellowShades = [
-      AppColors.yellow.withOpacity(0.85),
-      AppColors.yellow.withOpacity(0.65),
-      AppColors.yellow.withOpacity(0.75),
+      AppColors.yellow.withValues(alpha: 0.85),
+      AppColors.yellow.withValues(alpha: 0.65),
+      AppColors.yellow.withValues(alpha: 0.75),
     ];
 
     avatarColors = List.generate(6, (index) {
@@ -99,7 +99,7 @@ class _DocumentInfoScreenState extends State<DocumentInfoScreen> {
   List<Color> generateShades(Color baseColor, int count) {
     return List.generate(count, (index) {
       final t = index / (count - 1);
-      return Color.lerp(baseColor.withOpacity(0.7), baseColor, t)!;
+      return Color.lerp(baseColor.withValues(alpha: 0.7), baseColor, t)!;
     });
   }
 
@@ -476,7 +476,7 @@ class _DocumentInfoScreenState extends State<DocumentInfoScreen> {
     if (widget.appointmentId == null || widget.appointmentId!.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          backgroundColor: AppColors.red.withOpacity(0.8),
+          backgroundColor: AppColors.red.withValues(alpha: 0.8),
           content: Text(locale.somethingWentWrong),
         ),
       );
@@ -601,7 +601,7 @@ class _DocumentInfoScreenState extends State<DocumentInfoScreen> {
 
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          backgroundColor: AppColors.main.withOpacity(0.8),
+          backgroundColor: AppColors.main.withValues(alpha: 0.8),
           content: Text(locale.documentUploadedSuccessfully),
         ),
       );
@@ -621,7 +621,7 @@ class _DocumentInfoScreenState extends State<DocumentInfoScreen> {
 
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            backgroundColor: AppColors.red.withOpacity(0.8),
+            backgroundColor: AppColors.red.withValues(alpha: 0.8),
             content: Text(errorMessage),
             duration: const Duration(seconds: 4),
           ),
@@ -794,7 +794,7 @@ class _DocumentInfoScreenState extends State<DocumentInfoScreen> {
       
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          backgroundColor: AppColors.main.withOpacity(0.8),
+          backgroundColor: AppColors.main.withValues(alpha: 0.8),
           content: Text(locale.documentUploadedSuccessfully),
         ),
       );
@@ -803,7 +803,7 @@ class _DocumentInfoScreenState extends State<DocumentInfoScreen> {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            backgroundColor: AppColors.red.withOpacity(0.8),
+            backgroundColor: AppColors.red.withValues(alpha: 0.8),
             content: Text(
               e.toString().contains("PDF too large")
                   ? locale.pdfTooLarge
@@ -859,7 +859,7 @@ class _DocumentInfoScreenState extends State<DocumentInfoScreen> {
             Icon(Icons.arrow_drop_down, color: hasError ? AppColors.red : AppColors.main, size: 22.sp),
             borderRadius: BorderRadius.circular(15.r),
             menuMaxHeight: 380.h,
-            dropdownColor: Colors.white.withOpacity(0.99),
+            dropdownColor: Colors.white.withValues(alpha: 0.99),
             elevation: 1,
             selectedItemBuilder: selectedItemBuilder,
             decoration: InputDecoration(

@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:docsera/screens/home/messages/conversation/widgets/audio_message_bubble.dart';
-import '../../../../../utils/full_page_loader.dart';
 import 'package:shimmer/shimmer.dart';
 
 class ResolvedImagesBubble extends StatefulWidget {

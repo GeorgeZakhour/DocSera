@@ -147,7 +147,7 @@ class PatientSectionRenderers {
                       height: 4.w,
                       margin: EdgeInsets.only(top: 6.h, left: 4.w, right: 4.w),
                       decoration: BoxDecoration(
-                        color: AppColors.main.withOpacity(0.7),
+                        color: AppColors.main.withValues(alpha: 0.7),
                         shape: BoxShape.circle,
                       ),
                     ),
@@ -250,8 +250,8 @@ class PatientSectionRenderers {
             margin: EdgeInsets.only(bottom: 6.h),
             padding: EdgeInsets.symmetric(horizontal: 10.w, vertical: 8.h),
             decoration: BoxDecoration(
-              color: AppColors.main.withOpacity(0.04),
-              border: Border.all(color: AppColors.main.withOpacity(0.12)),
+              color: AppColors.main.withValues(alpha: 0.04),
+              border: Border.all(color: AppColors.main.withValues(alpha: 0.12)),
               borderRadius: BorderRadius.circular(10.r),
             ),
             child: Column(
@@ -319,7 +319,7 @@ class PatientSectionRenderers {
                   margin:
                       EdgeInsets.only(top: 6.h, left: 4.w, right: 4.w),
                   decoration: BoxDecoration(
-                    color: AppColors.main.withOpacity(0.7),
+                    color: AppColors.main.withValues(alpha: 0.7),
                     shape: BoxShape.circle,
                   ),
                 ),
@@ -352,7 +352,7 @@ class PatientSectionRenderers {
             Row(
               children: [
                 Icon(Icons.event_rounded,
-                    size: 13.sp, color: AppColors.main.withOpacity(0.7)),
+                    size: 13.sp, color: AppColors.main.withValues(alpha: 0.7)),
                 SizedBox(width: 4.w),
                 Text(
                   dateDisplay,
@@ -488,7 +488,7 @@ class PatientSectionRenderers {
                   padding:
                       EdgeInsets.symmetric(horizontal: 8.w, vertical: 2.h),
                   decoration: BoxDecoration(
-                    color: AppColors.main.withOpacity(0.1),
+                    color: AppColors.main.withValues(alpha: 0.1),
                     borderRadius: BorderRadius.circular(6.r),
                   ),
                   child: Text(
@@ -1157,9 +1157,9 @@ class PatientSectionRenderers {
         Container(
           padding: EdgeInsets.symmetric(horizontal: 10.w, vertical: 3.h),
           decoration: BoxDecoration(
-            color: urgencyColor.withOpacity(0.1),
+            color: urgencyColor.withValues(alpha: 0.1),
             borderRadius: BorderRadius.circular(10.r),
-            border: Border.all(color: urgencyColor.withOpacity(0.5)),
+            border: Border.all(color: urgencyColor.withValues(alpha: 0.5)),
           ),
           child: Text(
             urgencyLabel,
@@ -1200,7 +1200,7 @@ class PatientSectionRenderers {
           horizontalMargin: 12,
           columnSpacing: 18,
           headingRowColor:
-              WidgetStateProperty.all(AppColors.main.withOpacity(0.08)),
+              WidgetStateProperty.all(AppColors.main.withValues(alpha: 0.08)),
           headingTextStyle: TextStyle(
             fontSize: 11.sp,
             fontWeight: FontWeight.w700,
@@ -1253,7 +1253,7 @@ class PatientSectionRenderers {
             child: Row(
               children: [
                 Icon(Icons.attach_file_rounded,
-                    size: 14.sp, color: AppColors.main.withOpacity(0.6)),
+                    size: 14.sp, color: AppColors.main.withValues(alpha: 0.6)),
                 SizedBox(width: 4.w),
                 Expanded(
                   child: Text(name,
@@ -1262,7 +1262,7 @@ class PatientSectionRenderers {
                 ),
                 if (url.isNotEmpty)
                   Icon(Icons.open_in_new_rounded,
-                      size: 12.sp, color: AppColors.main.withOpacity(0.4)),
+                      size: 12.sp, color: AppColors.main.withValues(alpha: 0.4)),
               ],
             ),
           ),

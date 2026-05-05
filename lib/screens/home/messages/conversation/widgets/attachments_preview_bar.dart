@@ -41,8 +41,8 @@ class AttachmentsPreviewBar extends StatelessWidget {
               child: Container(
                 padding: EdgeInsets.symmetric(horizontal: 12.w, vertical: 10.h),
                 decoration: BoxDecoration(
-                  color: Colors.white.withOpacity(0.3),
-                  border: Border.all(color: AppColors.main.withOpacity(0.4)),
+                  color: Colors.white.withValues(alpha: 0.3),
+                  border: Border.all(color: AppColors.main.withValues(alpha: 0.4)),
                   borderRadius: BorderRadius.circular(12.r),
                 ),
                 child: Row(
@@ -74,8 +74,8 @@ class AttachmentsPreviewBar extends StatelessWidget {
             child: Container(
               padding: EdgeInsets.symmetric(horizontal: 12.w, vertical: 10.h),
               decoration: BoxDecoration(
-                color: Colors.white.withOpacity(0.3),
-                border: Border.all(color: AppColors.main.withOpacity(0.4)),
+                color: Colors.white.withValues(alpha: 0.3),
+                border: Border.all(color: AppColors.main.withValues(alpha: 0.4)),
                 borderRadius: BorderRadius.circular(12.r),
               ),
               child: Row(
@@ -132,8 +132,8 @@ class AttachmentsPreviewBar extends StatelessWidget {
         items.add(ClipRRect(
           borderRadius: BorderRadius.circular(6.r),
           child: Shimmer.fromColors(
-            baseColor: Colors.white.withOpacity(0.4),
-            highlightColor: Colors.white.withOpacity(0.8),
+            baseColor: Colors.white.withValues(alpha: 0.4),
+            highlightColor: Colors.white.withValues(alpha: 0.8),
             child: Container(
               width: 40.w,
               height: 40.w,
@@ -151,7 +151,7 @@ class AttachmentsPreviewBar extends StatelessWidget {
          width: 40.w,
          height: 40.w,
          decoration: BoxDecoration(
-           color: Colors.white.withOpacity(0.5),
+           color: Colors.white.withValues(alpha: 0.5),
            borderRadius: BorderRadius.circular(6.r),
            border: Border.all(color: Colors.white, width: 1),
          ),
@@ -177,8 +177,8 @@ class AttachmentsPreviewBar extends StatelessWidget {
           child: Container(
             padding: EdgeInsets.all(10.w),
             decoration: BoxDecoration(
-              color: Colors.white.withOpacity(0.3),
-              border: Border.all(color: AppColors.main.withOpacity(0.4)),
+              color: Colors.white.withValues(alpha: 0.3),
+              border: Border.all(color: AppColors.main.withValues(alpha: 0.4)),
               borderRadius: BorderRadius.circular(12.r),
             ),
             child: Row(

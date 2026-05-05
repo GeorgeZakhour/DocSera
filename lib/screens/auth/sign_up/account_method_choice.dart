@@ -1,5 +1,4 @@
 import 'dart:ui';
-import 'package:docsera/app/text_styles.dart';
 import 'package:docsera/models/sign_up_info.dart';
 import 'package:docsera/utils/page_transitions.dart';
 import 'package:flutter/material.dart';
@@ -27,7 +26,7 @@ class AccountMethodChoicePage extends StatelessWidget {
               height: 300.w,
               decoration: BoxDecoration(
                 shape: BoxShape.circle,
-                color: AppColors.main.withOpacity(0.08),
+                color: AppColors.main.withValues(alpha: 0.08),
               ),
             ),
           ),
@@ -39,14 +38,14 @@ class AccountMethodChoicePage extends StatelessWidget {
               height: 350.w,
               decoration: BoxDecoration(
                 shape: BoxShape.circle,
-                color: AppColors.mainDark.withOpacity(0.05),
+                color: AppColors.mainDark.withValues(alpha: 0.05),
               ),
             ),
           ),
           Positioned.fill(
             child: BackdropFilter(
               filter: ImageFilter.blur(sigmaX: 70, sigmaY: 70),
-              child: Container(color: Colors.white.withOpacity(0.2)),
+              child: Container(color: Colors.white.withValues(alpha: 0.2)),
             ),
           ),
 
@@ -144,8 +143,8 @@ class AccountMethodChoicePage extends StatelessWidget {
         decoration: BoxDecoration(
           borderRadius: BorderRadius.circular(28.r),
           boxShadow: isRecommended 
-              ? [BoxShadow(color: AppColors.main.withOpacity(0.12), blurRadius: 25, spreadRadius: 2)] 
-              : [BoxShadow(color: Colors.black.withOpacity(0.04), blurRadius: 20, spreadRadius: 1)],
+              ? [BoxShadow(color: AppColors.main.withValues(alpha: 0.12), blurRadius: 25, spreadRadius: 2)] 
+              : [BoxShadow(color: Colors.black.withValues(alpha: 0.04), blurRadius: 20, spreadRadius: 1)],
         ),
         child: ClipRRect(
           borderRadius: BorderRadius.circular(28.r),
@@ -154,10 +153,10 @@ class AccountMethodChoicePage extends StatelessWidget {
             child: Container(
               padding: EdgeInsets.all(24.w),
               decoration: BoxDecoration(
-                color: isRecommended ? Colors.white.withOpacity(0.8) : Colors.white.withOpacity(0.5),
+                color: isRecommended ? Colors.white.withValues(alpha: 0.8) : Colors.white.withValues(alpha: 0.5),
                 borderRadius: BorderRadius.circular(28.r),
                 border: Border.all(
-                  color: isRecommended ? AppColors.main.withOpacity(0.3) : Colors.white.withOpacity(0.8),
+                  color: isRecommended ? AppColors.main.withValues(alpha: 0.3) : Colors.white.withValues(alpha: 0.8),
                   width: isRecommended ? 1.5 : 1.0,
                 ),
               ),
@@ -170,7 +169,7 @@ class AccountMethodChoicePage extends StatelessWidget {
                       Container(
                         padding: EdgeInsets.all(16.w),
                         decoration: BoxDecoration(
-                          color: isRecommended ? AppColors.main.withOpacity(0.12) : Colors.grey.withOpacity(0.1),
+                          color: isRecommended ? AppColors.main.withValues(alpha: 0.12) : Colors.grey.withValues(alpha: 0.1),
                           shape: BoxShape.circle,
                         ),
                         child: Icon(
@@ -224,7 +223,7 @@ class AccountMethodChoicePage extends StatelessWidget {
                           borderRadius: BorderRadius.circular(100.r),
                           boxShadow: [
                             BoxShadow(
-                              color: AppColors.main.withOpacity(0.3),
+                              color: AppColors.main.withValues(alpha: 0.3),
                               blurRadius: 8,
                               offset: const Offset(0, 3),
                             ),

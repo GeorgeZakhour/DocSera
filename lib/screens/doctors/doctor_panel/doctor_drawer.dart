@@ -101,7 +101,7 @@ class DoctorDrawer extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           CircleAvatar(
-            backgroundColor: AppColors.background2.withOpacity(0.5),
+            backgroundColor: AppColors.background2.withValues(alpha: 0.5),
             radius: 30,
             backgroundImage: avatarImage,
 

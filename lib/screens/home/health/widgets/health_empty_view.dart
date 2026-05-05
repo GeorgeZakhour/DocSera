@@ -39,7 +39,7 @@ class HealthEmptyView extends StatelessWidget {
         height: 100.w,
         decoration: BoxDecoration(
           shape: BoxShape.circle,
-          color: AppColors.main.withOpacity(0.08),
+          color: AppColors.main.withValues(alpha: 0.08),
         ),
         child: Center(
           child: Icon(

@@ -188,7 +188,7 @@ import 'package:docsera/utils/doctor_image_utils.dart';
         child: Container(
           padding: EdgeInsets.all(12.w),
           decoration: BoxDecoration(
-            color: AppColors.main.withOpacity(0.05),
+            color: AppColors.main.withValues(alpha: 0.05),
             borderRadius: BorderRadius.circular(12.r),
           ),
           child: Row(
@@ -279,7 +279,7 @@ import 'package:docsera/utils/doctor_image_utils.dart';
       final isRTL = Directionality.of(context).toString().contains('rtl');
 
       return Container(
-        color: isExpanded ? AppColors.main.withOpacity(0.03) : Colors.transparent,
+        color: isExpanded ? AppColors.main.withValues(alpha: 0.03) : Colors.transparent,
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
@@ -304,7 +304,7 @@ import 'package:docsera/utils/doctor_image_utils.dart';
                           children: [
                             CircleAvatar(
                               radius: 22.r,
-                              backgroundColor: AppColors.main.withOpacity(0.1),
+                              backgroundColor: AppColors.main.withValues(alpha: 0.1),
                               backgroundImage: imageResult.imageProvider,
 
                             ),
@@ -321,7 +321,7 @@ import 'package:docsera/utils/doctor_image_utils.dart';
                                   width: 16.w,
                                   height: 16.w,
                                   decoration: BoxDecoration(
-                                    color: AppColors.mainDark.withOpacity(0.3),
+                                    color: AppColors.mainDark.withValues(alpha: 0.3),
                                     shape: BoxShape.circle,
                                   ),
                                   alignment: Alignment.center,
@@ -389,15 +389,15 @@ import 'package:docsera/utils/doctor_image_utils.dart';
                             ? BorderSide.none
                             : BorderSide(
                           color: convo.patientName == convo.accountHolderName
-                              ? AppColors.main.withOpacity(0.8)
-                              : AppColors.yellow.withOpacity(0.6),
+                              ? AppColors.main.withValues(alpha: 0.8)
+                              : AppColors.yellow.withValues(alpha: 0.6),
                           width: 4.w,
                         ),
                         right: isRTL
                             ? BorderSide(
                           color: convo.patientName == convo.accountHolderName
-                              ? AppColors.main.withOpacity(0.8)
-                              : AppColors.yellow.withOpacity(0.6),
+                              ? AppColors.main.withValues(alpha: 0.8)
+                              : AppColors.yellow.withValues(alpha: 0.6),
                           width: 4.w,
                         )
                             : BorderSide.none,
@@ -514,7 +514,7 @@ import 'package:docsera/utils/doctor_image_utils.dart';
 
 
         child: Container(
-          color: showDoctorName ? Colors.transparent :AppColors.grayMain.withOpacity(0.05),
+          color: showDoctorName ? Colors.transparent :AppColors.grayMain.withValues(alpha: 0.05),
           child: Column(
             children: [
               Padding(
@@ -527,7 +527,7 @@ import 'package:docsera/utils/doctor_image_utils.dart';
                     else
                     CircleAvatar(
                           radius: 22.r,
-                          backgroundColor: AppColors.main.withOpacity(0.1),
+                          backgroundColor: AppColors.main.withValues(alpha: 0.1),
                           backgroundImage: imageResult.imageProvider,
 
                   ),

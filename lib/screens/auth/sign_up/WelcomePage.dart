@@ -122,9 +122,9 @@ class _WelcomePageState extends State<WelcomePage> {
               shouldLoop: false,
               colors: [
                 AppColors.main,
-                AppColors.main.withOpacity(0.7),
-                AppColors.main.withOpacity(0.5),
-                Colors.white.withOpacity(0.6),
+                AppColors.main.withValues(alpha: 0.7),
+                AppColors.main.withValues(alpha: 0.5),
+                Colors.white.withValues(alpha: 0.6),
               ],
             ),
           ),
@@ -248,7 +248,7 @@ class _AnimatedLogo   {
                   boxShadow: [
                     BoxShadow(
                       blurRadius: blur,
-                      color: Colors.white.withOpacity(0.4),
+                      color: Colors.white.withValues(alpha: 0.4),
                       spreadRadius: 1,
                     )
                   ],
@@ -258,7 +258,7 @@ class _AnimatedLogo   {
                   height: size.h,
                   width: size.w,
                   colorFilter: ColorFilter.mode(
-                    Colors.white.withOpacity(0.35),
+                    Colors.white.withValues(alpha: 0.35),
                     BlendMode.lighten,
                   ),
                 ),

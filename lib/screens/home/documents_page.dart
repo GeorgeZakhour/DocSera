@@ -223,7 +223,7 @@ class _DocumentsPageState extends State<DocumentsPage> with AutomaticKeepAliveCl
             height: 50.w,
             decoration: BoxDecoration(
               shape: BoxShape.circle,
-              color: AppColors.main.withOpacity(0.1),
+              color: AppColors.main.withValues(alpha: 0.1),
             ),
             child: Center(
               child: SvgPicture.asset(
@@ -251,7 +251,7 @@ class _DocumentsPageState extends State<DocumentsPage> with AutomaticKeepAliveCl
         height: 44.w,
         margin: EdgeInsets.only(bottom: 12.h),
         decoration: BoxDecoration(
-          color: AppColors.main.withOpacity(0.10),
+          color: AppColors.main.withValues(alpha: 0.10),
           shape: BoxShape.circle,
         ),
         child: IconButton(
@@ -783,7 +783,7 @@ class _DocumentsPageState extends State<DocumentsPage> with AutomaticKeepAliveCl
       child: Container(
         padding: EdgeInsets.all(6.w),
         decoration: BoxDecoration(
-          color: isSelected ? AppColors.main.withOpacity(0.7) : Colors.transparent,
+          color: isSelected ? AppColors.main.withValues(alpha: 0.7) : Colors.transparent,
           shape: BoxShape.circle,
         ),
         child: Icon(
@@ -828,7 +828,7 @@ class _DocumentsPageState extends State<DocumentsPage> with AutomaticKeepAliveCl
       child: Container(
         padding: EdgeInsets.all(6.w),
         decoration: BoxDecoration(
-          color: isSelected ? AppColors.main.withOpacity(0.7) : Colors.transparent,
+          color: isSelected ? AppColors.main.withValues(alpha: 0.7) : Colors.transparent,
           shape: BoxShape.circle,
         ),
         child: Icon(
@@ -859,7 +859,7 @@ class _DocumentsPageState extends State<DocumentsPage> with AutomaticKeepAliveCl
               Text(
                 title,
                 style: AppTextStyles.getTitle1(context).copyWith(
-                  color: isSelected ? Colors.white : Colors.white.withOpacity(0.6),
+                  color: isSelected ? Colors.white : Colors.white.withValues(alpha: 0.6),
                 ),
               ),
               SizedBox(height: 4.h),
@@ -1026,7 +1026,7 @@ class _DocumentsPageState extends State<DocumentsPage> with AutomaticKeepAliveCl
                       alignment: Alignment.centerRight,
                       child: FractionallySizedBox(
                         child: Container(
-                          color: AppColors.red.withOpacity(0.7),
+                          color: AppColors.red.withValues(alpha: 0.7),
                           alignment: Alignment.center,
                           child: const Icon(Icons.delete, color: Colors.white),
                         ),
@@ -1176,7 +1176,7 @@ class _DocumentsPageState extends State<DocumentsPage> with AutomaticKeepAliveCl
       child: Container(
         padding: EdgeInsets.all(12.w),
         decoration: BoxDecoration(
-          color: AppColors.main.withOpacity(0.05),
+          color: AppColors.main.withValues(alpha: 0.05),
           borderRadius: BorderRadius.circular(12.r),
         ),
         child: Row(
@@ -1230,12 +1230,12 @@ class _DocumentsPageState extends State<DocumentsPage> with AutomaticKeepAliveCl
                 decoration: BoxDecoration(
                   borderRadius: BorderRadius.circular(20.r),
                   color: isActive
-                      ? (color?.withOpacity(0.15) ?? AppColors.main.withOpacity(0.1))
-                      : (color?.withOpacity(0.06) ?? Colors.grey.withOpacity(0.08)),
+                      ? (color?.withValues(alpha: 0.15) ?? AppColors.main.withValues(alpha: 0.1))
+                      : (color?.withValues(alpha: 0.06) ?? Colors.grey.withValues(alpha: 0.08)),
                   border: Border.all(
                     color: isActive
                         ? (color ?? AppColors.main)
-                        : (color?.withOpacity(0.12) ?? Colors.grey.withOpacity(0.1)),
+                        : (color?.withValues(alpha: 0.12) ?? Colors.grey.withValues(alpha: 0.1)),
                   ),
                 ),
                 child: Text(
@@ -1245,7 +1245,7 @@ class _DocumentsPageState extends State<DocumentsPage> with AutomaticKeepAliveCl
                     fontWeight: isActive ? FontWeight.w600 : FontWeight.w500,
                     color: isActive
                         ? (color ?? AppColors.main)
-                        : (color?.withOpacity(0.7) ?? Colors.grey),
+                        : (color?.withValues(alpha: 0.7) ?? Colors.grey),
                   ),
                 ),
               ),
@@ -1270,7 +1270,7 @@ class _DocumentsPageState extends State<DocumentsPage> with AutomaticKeepAliveCl
       child: Container(
         padding: EdgeInsets.all(12.w),
         decoration: BoxDecoration(
-          color: AppColors.main.withOpacity(0.05),
+          color: AppColors.main.withValues(alpha: 0.05),
           borderRadius: BorderRadius.circular(12.r),
         ),
         child: Row(
@@ -1634,7 +1634,7 @@ class _DocumentsPageState extends State<DocumentsPage> with AutomaticKeepAliveCl
         child: Row(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Icon(Icons.notes, color: AppColors.mainDark.withOpacity(0.5), size: 24.sp),
+            Icon(Icons.notes, color: AppColors.mainDark.withValues(alpha: 0.5), size: 24.sp),
             SizedBox(width: 12.w),
             Expanded(
               child: Column(
@@ -1666,7 +1666,7 @@ class _DocumentsPageState extends State<DocumentsPage> with AutomaticKeepAliveCl
               height: 32.w,
               decoration: BoxDecoration(
                 shape: BoxShape.circle,
-                color: AppColors.grayMain.withOpacity(0.1),
+                color: AppColors.grayMain.withValues(alpha: 0.1),
               ),
               child: IconButton(
                 padding: EdgeInsets.zero,
@@ -1707,7 +1707,7 @@ class _DocumentsPageState extends State<DocumentsPage> with AutomaticKeepAliveCl
           },
           child: Container(
             decoration: BoxDecoration(
-              color: AppColors.main.withOpacity(0.03),
+              color: AppColors.main.withValues(alpha: 0.03),
               borderRadius: BorderRadius.circular(12.r),
               border: Border.all(color: Colors.grey.shade200),
             ),
@@ -1735,7 +1735,7 @@ class _DocumentsPageState extends State<DocumentsPage> with AutomaticKeepAliveCl
                             child: Container(
                               decoration: BoxDecoration(
                                 border: Border(
-                                  bottom: BorderSide(color: Colors.grey.withOpacity(0.2), width: 1),
+                                  bottom: BorderSide(color: Colors.grey.withValues(alpha: 0.2), width: 1),
                                 ),
                               ),
                             ),
@@ -2230,10 +2230,10 @@ class _DocumentGridItemState extends State<DocumentGridItem> {
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(999.r),
-        border: Border.all(color: color.withOpacity(0.45), width: 0.8),
+        border: Border.all(color: color.withValues(alpha: 0.45), width: 0.8),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.08),
+            color: Colors.black.withValues(alpha: 0.08),
             blurRadius: 4,
             offset: const Offset(0, 1),
           ),

@@ -38,7 +38,7 @@ class RelativeBanner extends StatelessWidget {
 
     final avatar = CircleAvatar(
       radius: 10.r,
-      backgroundColor: AppColors.main.withOpacity(0.9),
+      backgroundColor: AppColors.main.withValues(alpha: 0.9),
       child: FittedBox(
         fit: BoxFit.scaleDown,
         child: Transform.translate(
@@ -66,7 +66,7 @@ class RelativeBanner extends StatelessWidget {
         filter: ImageFilter.blur(sigmaX: 20, sigmaY: 20),
         child: Container(
           width: double.infinity,
-          color: Colors.white10.withOpacity(0.65),
+          color: Colors.white10.withValues(alpha: 0.65),
           padding: EdgeInsets.symmetric(horizontal: 20.w, vertical: 12.h),
           child: Row(
             children: isArabic

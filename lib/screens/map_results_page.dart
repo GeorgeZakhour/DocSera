@@ -198,7 +198,7 @@ class _FullMapResultsPageState extends State<FullMapResultsPage> with SingleTick
     );
 
     final unselected = await _createLocationIcon(
-      fillColor: AppColors.main.withOpacity(0.4),
+      fillColor: AppColors.main.withValues(alpha: 0.4),
       borderColor: AppColors.main,
       size: 120,
       borderWidth: 6,
@@ -388,7 +388,7 @@ class _FullMapResultsPageState extends State<FullMapResultsPage> with SingleTick
           circleId: const CircleId('pulse'),
           center: LatLng(_currentPosition!.latitude, _currentPosition!.longitude),
           radius: _pulseRadius,
-          fillColor: AppColors.main.withOpacity(0.20),
+          fillColor: AppColors.main.withValues(alpha: 0.20),
           strokeColor: Colors.transparent,
         ),
       );
@@ -637,7 +637,7 @@ class _DoctorCard extends StatelessWidget {
             crossAxisAlignment: CrossAxisAlignment.center,
             children: [
               CircleAvatar(
-                backgroundColor: AppColors.mainDark.withOpacity(0.2),
+                backgroundColor: AppColors.mainDark.withValues(alpha: 0.2),
                 radius: 26.sp,
                 backgroundImage: imageProvider,
               ),

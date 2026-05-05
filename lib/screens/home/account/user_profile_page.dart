@@ -176,7 +176,7 @@ class _UserProfilePageState extends State<UserProfilePage> {
                         children: [
                           CircleAvatar(
                             radius: 22.r,
-                            backgroundColor: AppColors.main.withOpacity(0.5),
+                            backgroundColor: AppColors.main.withValues(alpha: 0.5),
                             child: Text(
                               fullName.isNotEmpty ? _getInitials(fullName).toUpperCase() : 'NA',
                               style: AppTextStyles.getText2(context).copyWith(

@@ -9,7 +9,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:docsera/gen_l10n/app_localizations.dart';
 import '../../../app/const.dart';
-import '../../../utils/full_page_loader.dart';
 
 class OtpVerificationPage extends StatefulWidget {
   final String email;

@@ -239,9 +239,9 @@ class VisitReportDetailsPage extends StatelessWidget {
         child: Container(
           padding: EdgeInsets.all(16.w),
           decoration: BoxDecoration(
-            color: Colors.white.withOpacity(0.55),
+            color: Colors.white.withValues(alpha: 0.55),
             border: Border.all(
-              color: AppColors.main.withOpacity(0.22),
+              color: AppColors.main.withValues(alpha: 0.22),
             ),
             borderRadius: BorderRadius.circular(22.r),
           ),
@@ -252,7 +252,7 @@ class VisitReportDetailsPage extends StatelessWidget {
                 child: CircleAvatar(
                   radius: 26,
                   backgroundImage: imageResult.imageProvider,
-                  backgroundColor: AppColors.main.withOpacity(0.1),
+                  backgroundColor: AppColors.main.withValues(alpha: 0.1),
                 ),
               ),
               SizedBox(width: 12.w),
@@ -282,7 +282,7 @@ class VisitReportDetailsPage extends StatelessWidget {
                         Icon(
                           Icons.calendar_today_rounded,
                           size: 12.sp,
-                          color: AppColors.mainDark.withOpacity(0.8),
+                          color: AppColors.mainDark.withValues(alpha: 0.8),
                         ),
                         SizedBox(width: 6.w),
                         Text(
@@ -320,10 +320,10 @@ class VisitReportDetailsPage extends StatelessWidget {
         child: Container(
           padding: EdgeInsets.all(14.w),
           decoration: BoxDecoration(
-            color: Colors.white.withOpacity(0.55),
+            color: Colors.white.withValues(alpha: 0.55),
             borderRadius: BorderRadius.circular(18.r),
             border: Border.all(
-              color: AppColors.main.withOpacity(0.18),
+              color: AppColors.main.withValues(alpha: 0.18),
             ),
           ),
           child: Column(

@@ -46,7 +46,7 @@ class _VisitedDoctorPageState extends State<VisitedDoctorPage> {
         crossAxisAlignment: CrossAxisAlignment.center,
         children: [
           CircleAvatar(
-            backgroundColor: AppColors.background2.withOpacity(0.3),
+            backgroundColor: AppColors.background2.withValues(alpha: 0.3),
             radius: 18.r,
             backgroundImage: imageProvider,
           ),

@@ -60,7 +60,7 @@ class _HealthManualEntryFormState extends State<HealthManualEntryForm> {
                 height: 36.w,
                 decoration: BoxDecoration(
                   shape: BoxShape.circle,
-                  color: AppColors.main.withOpacity(0.10),
+                  color: AppColors.main.withValues(alpha: 0.10),
                 ),
                 child: Icon(widget.icon, size: 18.sp, color: AppColors.main),
               ),
@@ -126,10 +126,10 @@ class _HealthManualEntryFormState extends State<HealthManualEntryForm> {
           Container(
             padding: EdgeInsets.all(10.w),
             decoration: BoxDecoration(
-              color: Colors.amber.withOpacity(0.08),
+              color: Colors.amber.withValues(alpha: 0.08),
               borderRadius: BorderRadius.circular(10.r),
               border: Border.all(
-                color: Colors.amber.withOpacity(0.25),
+                color: Colors.amber.withValues(alpha: 0.25),
                 width: 0.8,
               ),
             ),

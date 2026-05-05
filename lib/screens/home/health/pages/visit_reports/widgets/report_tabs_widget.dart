@@ -25,10 +25,10 @@ class ReportTabsWidget extends StatelessWidget {
           child: Container(
             padding: const EdgeInsets.symmetric(vertical: 6, horizontal: 8),
             decoration: BoxDecoration(
-              color: Colors.white.withOpacity(0.35),
+              color: Colors.white.withValues(alpha: 0.35),
               borderRadius: BorderRadius.circular(16),
               border: Border.all(
-                color: AppColors.main.withOpacity(0.28),
+                color: AppColors.main.withValues(alpha: 0.28),
               ),
             ),
             child: Row(
@@ -44,7 +44,7 @@ class ReportTabsWidget extends StatelessWidget {
                           vertical: 6, horizontal: 4),
                       decoration: BoxDecoration(
                         color: active
-                            ? AppColors.main.withOpacity(0.28)
+                            ? AppColors.main.withValues(alpha: 0.28)
                             : Colors.transparent,
                         borderRadius: BorderRadius.circular(12),
                       ),
@@ -57,7 +57,7 @@ class ReportTabsWidget extends StatelessWidget {
                             active ? FontWeight.bold : FontWeight.w500,
                             color: active
                                 ? AppColors.mainDark
-                                : AppColors.mainDark.withOpacity(0.6),
+                                : AppColors.mainDark.withValues(alpha: 0.6),
                           ),
                         ),
                       ),

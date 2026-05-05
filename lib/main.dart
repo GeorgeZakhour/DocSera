@@ -1,5 +1,4 @@
 import 'dart:async';
-import 'dart:io';
 import 'package:http/http.dart' as http;
 
 import 'package:docsera/Business_Logic/Account_page/danger/account_danger_cubit.dart';
@@ -20,7 +19,6 @@ import 'package:docsera/Business_Logic/Loyalty/referral/referral_cubit.dart';
 import 'package:docsera/Business_Logic/Loyalty/unread_gifts/unread_gifts_cubit.dart';
 import 'package:docsera/Business_Logic/Main_page/main_screen_cubit.dart';
 import 'package:docsera/Business_Logic/Messages_page/messages_cubit.dart';
-import 'package:docsera/screens/doctors/doctor_profile_page.dart';
 import 'package:docsera/services/supabase/user/account_relatives_service.dart';
 import 'package:docsera/services/notifications/notification_service.dart';
 import 'package:docsera/splash_screen.dart';
@@ -46,8 +44,6 @@ import 'services/supabase/user/account_profile_service.dart';
 import 'services/supabase/user/account_security_service.dart';
 import 'services/supabase/user/supabase_user_service.dart';
 import 'services/storage/secure_storage_service.dart';
-import 'dart:developer';
-import 'package:app_links/app_links.dart';
 
 
 import 'services/navigation/deep_link_service.dart';
@@ -400,24 +396,24 @@ class _MyAppState extends State<MyApp> {
                 // ✅ تأثير الضغط المطول لكل الأزرار
                 textButtonTheme: TextButtonThemeData(
                   style: ButtonStyle(
-                    overlayColor: WidgetStateProperty.all(AppColors.main.withOpacity(0.08)),
+                    overlayColor: WidgetStateProperty.all(AppColors.main.withValues(alpha: 0.08)),
                   ),
                 ),
                 outlinedButtonTheme: OutlinedButtonThemeData(
                   style: ButtonStyle(
-                    overlayColor: WidgetStateProperty.all(AppColors.main.withOpacity(0.08)),
+                    overlayColor: WidgetStateProperty.all(AppColors.main.withValues(alpha: 0.08)),
                   ),
                 ),
                 elevatedButtonTheme: ElevatedButtonThemeData(
                   style: ButtonStyle(
                     backgroundColor: WidgetStateProperty.all(AppColors.main),
                     foregroundColor: WidgetStateProperty.all(Colors.white),
-                    overlayColor: WidgetStateProperty.all(AppColors.main.withOpacity(0.08)),
+                    overlayColor: WidgetStateProperty.all(AppColors.main.withValues(alpha: 0.08)),
                   ),
                 ),
 
-                splashColor: AppColors.main.withOpacity(0.1),
-                highlightColor: AppColors.main.withOpacity(0.05),
+                splashColor: AppColors.main.withValues(alpha: 0.1),
+                highlightColor: AppColors.main.withValues(alpha: 0.05),
                 splashFactory: InkRipple.splashFactory,
 
                 /// ✅ Use responsive font family based on the selected language,
@@ -429,7 +425,7 @@ class _MyAppState extends State<MyApp> {
                     : const ['Cairo'],
 
                 popupMenuTheme: PopupMenuThemeData(
-                  color: Colors.white.withOpacity(0.95),
+                  color: Colors.white.withValues(alpha: 0.95),
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(12.r),
                   ),
@@ -462,7 +458,7 @@ class _MyAppState extends State<MyApp> {
                 /// ✅ Set Cursor and Selection Color
                 textSelectionTheme: TextSelectionThemeData(
                   cursorColor: AppColors.main, // 🔹 لون المؤشر
-                  selectionColor: AppColors.main.withOpacity(0.25), // 🔹 لون خلفية التحديد (بدل البنفسجي)
+                  selectionColor: AppColors.main.withValues(alpha: 0.25), // 🔹 لون خلفية التحديد (بدل البنفسجي)
                   selectionHandleColor: AppColors.main, // 🔹 لون المقابض الصغيرة عند تحديد النص
                 ),
               ),

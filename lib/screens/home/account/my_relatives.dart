@@ -150,7 +150,7 @@ class _MyRelativesPageState extends State<MyRelativesPage> {
               children: [
                 CircleAvatar(
                   radius: 20.r,
-                  backgroundColor: AppColors.main.withOpacity(0.5),
+                  backgroundColor: AppColors.main.withValues(alpha: 0.5),
                   child: Text(
                     initials.toUpperCase(),
                     style: AppTextStyles.getText2(context)

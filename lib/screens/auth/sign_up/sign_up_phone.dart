@@ -9,7 +9,6 @@ import 'package:docsera/widgets/base_scaffold.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
-import 'package:supabase_flutter/supabase_flutter.dart';
 import '../../../app/const.dart';
 import '../../../models/sign_up_info.dart';
 import 'package:docsera/gen_l10n/app_localizations.dart';
@@ -470,11 +469,11 @@ class _SignUpFirstPageState extends State<SignUpFirstPage> {
                             decoration: InputDecoration(
                               counterText: '',
                               filled: true,
-                              fillColor: Colors.grey.withOpacity(0.1),
+                              fillColor: Colors.grey.withValues(alpha: 0.1),
                               contentPadding: EdgeInsets.symmetric(vertical: 10.h),
                               border: OutlineInputBorder(
                                 borderRadius: BorderRadius.circular(10.r),
-                                borderSide: BorderSide(color: AppColors.mainDark.withOpacity(0.2)),
+                                borderSide: BorderSide(color: AppColors.mainDark.withValues(alpha: 0.2)),
                               ),
                               focusedBorder: OutlineInputBorder(
                                 borderRadius: BorderRadius.circular(10.r),
@@ -496,8 +495,8 @@ class _SignUpFirstPageState extends State<SignUpFirstPage> {
                   // the user's way.
                   Center(
                     child: Shimmer.fromColors(
-                      baseColor: AppColors.main.withOpacity(0.25),
-                      highlightColor: AppColors.main.withOpacity(0.7),
+                      baseColor: AppColors.main.withValues(alpha: 0.25),
+                      highlightColor: AppColors.main.withValues(alpha: 0.7),
                       period: const Duration(milliseconds: 1100),
                       child: Container(
                         width: 160.w,
@@ -518,7 +517,7 @@ class _SignUpFirstPageState extends State<SignUpFirstPage> {
               /// **📌 شريط التقدم**
               LinearProgressIndicator(
                 value: 0.15,
-                backgroundColor: AppColors.main.withOpacity(0.1),
+                backgroundColor: AppColors.main.withValues(alpha: 0.1),
                 valueColor: const AlwaysStoppedAnimation<Color>(AppColors.main),
               ),
               SizedBox(height: 20.h),

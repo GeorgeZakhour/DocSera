@@ -8,9 +8,7 @@ import 'package:docsera/Business_Logic/Account_page/security/account_security_cu
 import 'package:docsera/Business_Logic/Account_page/security/account_security_state.dart';
 import 'package:docsera/Business_Logic/Authentication/auth_cubit.dart';
 import 'package:docsera/Business_Logic/Authentication/auth_state.dart';
-import 'package:docsera/models/sign_up_info.dart';
 import 'package:docsera/screens/auth/sign_up/account_method_choice.dart';
-import 'package:docsera/screens/auth/sign_up/sign_up_phone.dart';
 import 'package:docsera/screens/home/account/goodbye_page.dart';
 import 'package:docsera/screens/home/account/legal_information.dart';
 import 'package:docsera/screens/home/shimmer/shimmer_widgets.dart';
@@ -29,7 +27,6 @@ import 'package:shared_preferences/shared_preferences.dart';
 import '../../Business_Logic/Account_page/user_cubit.dart';
 import '../../Business_Logic/Account_page/user_state.dart';
 import 'package:package_info_plus/package_info_plus.dart';
-import 'account/preferences.dart';
 import 'loyalty/wallet_page.dart';
 import 'loyalty/offers_page.dart';
 import 'loyalty/vouchers_page.dart';
@@ -37,7 +34,6 @@ import 'loyalty/referral_section.dart';
 
 // 🆕 NEW COMPONENTS
 import 'account/widgets/account_banner_card.dart';
-import 'account/widgets/points_card.dart';
 import 'account/widgets/account_section_title.dart';
 import 'account/widgets/account_list_tile.dart';
 import 'account/widgets/loyalty_rewards_banner.dart';

@@ -77,7 +77,7 @@ class _LegalReconsentGateState extends State<LegalReconsentGate>
       barrierDismissible: false,
       useRootNavigator: true,
       barrierLabel: 'reconsent',
-      barrierColor: Colors.black.withOpacity(0.55),
+      barrierColor: Colors.black.withValues(alpha: 0.55),
       transitionDuration: const Duration(milliseconds: 280),
       pageBuilder: (ctx, _, __) => PopScope(
         canPop: false,
@@ -185,18 +185,18 @@ class _ReconsentDialogState extends State<_ReconsentDialog> {
               decoration: BoxDecoration(
                 color: Colors.white,
                 border: Border.all(
-                  color: AppColors.main.withOpacity(0.18),
+                  color: AppColors.main.withValues(alpha: 0.18),
                   width: 1,
                 ),
                 borderRadius: BorderRadius.circular(24.r),
                 boxShadow: [
                   BoxShadow(
-                    color: AppColors.main.withOpacity(0.18),
+                    color: AppColors.main.withValues(alpha: 0.18),
                     blurRadius: 32,
                     offset: const Offset(0, 16),
                   ),
                   BoxShadow(
-                    color: Colors.black.withOpacity(0.06),
+                    color: Colors.black.withValues(alpha: 0.06),
                     blurRadius: 14,
                     offset: const Offset(0, 4),
                   ),
@@ -220,7 +220,7 @@ class _ReconsentDialogState extends State<_ReconsentDialog> {
                             center: Alignment.topCenter,
                             radius: 0.9,
                             colors: [
-                              AppColors.main.withOpacity(0.10),
+                              AppColors.main.withValues(alpha: 0.10),
                               Colors.transparent,
                             ],
                           ),
@@ -253,7 +253,7 @@ class _ReconsentDialogState extends State<_ReconsentDialog> {
                             textAlign: TextAlign.center,
                             style:
                                 AppTextStyles.getText2(context).copyWith(
-                              color: Colors.black.withOpacity(0.62),
+                              color: Colors.black.withValues(alpha: 0.62),
                               height: 1.45,
                               fontSize: 11.5.sp,
                             ),
@@ -301,12 +301,12 @@ class _ReconsentDialogState extends State<_ReconsentDialog> {
             begin: Alignment.topLeft,
             end: Alignment.bottomRight,
             colors: [
-              AppColors.main.withOpacity(0.18),
-              AppColors.main.withOpacity(0.06),
+              AppColors.main.withValues(alpha: 0.18),
+              AppColors.main.withValues(alpha: 0.06),
             ],
           ),
           border: Border.all(
-            color: AppColors.main.withOpacity(0.30),
+            color: AppColors.main.withValues(alpha: 0.30),
             width: 1.2,
           ),
         ),
@@ -329,7 +329,7 @@ class _ReconsentDialogState extends State<_ReconsentDialog> {
         boxShadow: enabled
             ? [
                 BoxShadow(
-                  color: AppColors.main.withOpacity(0.30),
+                  color: AppColors.main.withValues(alpha: 0.30),
                   blurRadius: 18,
                   offset: const Offset(0, 8),
                 ),
@@ -410,11 +410,11 @@ class _DocConsentCard extends StatelessWidget {
       curve: Curves.easeOut,
       decoration: BoxDecoration(
         color: checked
-            ? AppColors.main.withOpacity(0.07)
+            ? AppColors.main.withValues(alpha: 0.07)
             : const Color(0xFFF7FAFA),
         border: Border.all(
           color: checked
-              ? AppColors.main.withOpacity(0.45)
+              ? AppColors.main.withValues(alpha: 0.45)
               : const Color(0xFFE2E8E8),
           width: checked ? 1.2 : 1,
         ),
@@ -444,7 +444,7 @@ class _DocConsentCard extends StatelessWidget {
                               checked ? FontWeight.w700 : FontWeight.w500,
                           color: checked
                               ? AppColors.mainDark
-                              : Colors.black.withOpacity(0.78),
+                              : Colors.black.withValues(alpha: 0.78),
                           height: 1.35,
                         ),
                       ),
@@ -481,7 +481,7 @@ class _DocConsentCard extends StatelessWidget {
                             padding: EdgeInsets.symmetric(
                                 horizontal: 6.w, vertical: 1.h),
                             decoration: BoxDecoration(
-                              color: AppColors.main.withOpacity(0.12),
+                              color: AppColors.main.withValues(alpha: 0.12),
                               borderRadius: BorderRadius.circular(6.r),
                             ),
                             child: Text(
@@ -497,7 +497,7 @@ class _DocConsentCard extends StatelessWidget {
                           SizedBox(width: 4.w),
                           Icon(Icons.chevron_right_rounded,
                               size: 14.sp,
-                              color: AppColors.main.withOpacity(0.7)),
+                              color: AppColors.main.withValues(alpha: 0.7)),
                         ],
                       ),
                     ),
@@ -526,7 +526,7 @@ class _CustomCheckbox extends StatelessWidget {
       decoration: BoxDecoration(
         color: checked ? AppColors.main : Colors.transparent,
         border: Border.all(
-          color: checked ? AppColors.main : Colors.black.withOpacity(0.30),
+          color: checked ? AppColors.main : Colors.black.withValues(alpha: 0.30),
           width: 1.6,
         ),
         borderRadius: BorderRadius.circular(7.r),

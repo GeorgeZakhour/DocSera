@@ -35,7 +35,6 @@ import 'package:docsera/screens/home/Document/document_info_screen.dart';
 import 'package:pdf/pdf.dart';
 import 'package:pdf/widgets.dart' as pw;
 
-import '../../../../utils/full_page_loader.dart';
 
 class ConversationPage extends StatefulWidget {
   final String conversationId;
@@ -494,7 +493,7 @@ class _ConversationPageState extends State<ConversationPage> {
           Container(
             padding: EdgeInsets.all(14.r),
             decoration: BoxDecoration(
-              color: AppColors.main.withOpacity(0.12),
+              color: AppColors.main.withValues(alpha: 0.12),
               shape: BoxShape.circle,
             ),
             child: SvgPicture.asset(icon, width: 26.sp, height: 26.sp),
@@ -546,7 +545,7 @@ class _ConversationPageState extends State<ConversationPage> {
             width: double.infinity,
             padding: EdgeInsets.symmetric(horizontal: 20.w, vertical: 14.h),
             decoration: BoxDecoration(
-              color: Colors.white.withOpacity(0.55),
+              color: Colors.white.withValues(alpha: 0.55),
               borderRadius: BorderRadius.circular(16.r),
               border: Border.all(
                 color: AppColors.main,
@@ -599,7 +598,7 @@ class _ConversationPageState extends State<ConversationPage> {
 
             CircleAvatar(
               radius: 16,
-              backgroundColor: Colors.white.withOpacity(0.25),
+              backgroundColor: Colors.white.withValues(alpha: 0.25),
               backgroundImage: widget.doctorAvatar,
             ),
 
@@ -760,7 +759,7 @@ class _ConversationPageState extends State<ConversationPage> {
                                onAddAttachment: () async {
                                  showModalBottomSheet(
                                    context: context,
-                                   backgroundColor: Colors.white.withOpacity(0.0),
+                                   backgroundColor: Colors.white.withValues(alpha: 0.0),
                                    shape: const RoundedRectangleBorder(
                                      borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
                                    ),
@@ -773,7 +772,7 @@ class _ConversationPageState extends State<ConversationPage> {
                                            height: 200.h,
                                            padding: EdgeInsets.symmetric(horizontal: 24.w, vertical: 22.h),
                                            decoration: BoxDecoration(
-                                             color: Colors.white.withOpacity(0.65),
+                                             color: Colors.white.withValues(alpha: 0.65),
                                              borderRadius:
                                              const BorderRadius.vertical(top: Radius.circular(20)),
                                            ),

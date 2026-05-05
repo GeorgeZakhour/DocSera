@@ -173,7 +173,7 @@ class _VisitReportsPageState extends State<VisitReportsPage>
                             AppLocalizations.of(context)!.health_noReports,
                             style: TextStyle(
                               fontSize: 14,
-                              color: AppColors.mainDark.withOpacity(0.6),
+                              color: AppColors.mainDark.withValues(alpha: 0.6),
                             ),
                           ),
                         ),
@@ -310,9 +310,9 @@ class _VisitReportsPageState extends State<VisitReportsPage>
           filter: ImageFilter.blur(sigmaX: 12, sigmaY: 12),
           child: Container(
             decoration: BoxDecoration(
-              color: Colors.white.withOpacity(0.55),
+              color: Colors.white.withValues(alpha: 0.55),
               borderRadius: BorderRadius.circular(20),
-              border: Border.all(color: AppColors.main.withOpacity(0.22)),
+              border: Border.all(color: AppColors.main.withValues(alpha: 0.22)),
             ),
             child: Stack(
               children: [
@@ -349,7 +349,7 @@ class _VisitReportsPageState extends State<VisitReportsPage>
                                   report.doctorSpecialty!,
                                   style: TextStyle(
                                     fontSize: 11,
-                                    color: AppColors.mainDark.withOpacity(0.6),
+                                    color: AppColors.mainDark.withValues(alpha: 0.6),
                                   ),
                                 ),
                               ),
@@ -395,7 +395,7 @@ class _VisitReportsPageState extends State<VisitReportsPage>
                       Icon(
                         Icons.arrow_forward_ios_rounded,
                         size: 14,
-                        color: AppColors.mainDark.withOpacity(0.35),
+                        color: AppColors.mainDark.withValues(alpha: 0.35),
                       ),
                     ],
                   ),
@@ -407,7 +407,7 @@ class _VisitReportsPageState extends State<VisitReportsPage>
                   left: isRtl ? null : 14,
                   child: CircleAvatar(
                     radius: 20,
-                    backgroundColor: AppColors.main.withOpacity(0.1),
+                    backgroundColor: AppColors.main.withValues(alpha: 0.1),
                     backgroundImage: imageResult.imageProvider,
                   ),
                 ),
@@ -433,8 +433,8 @@ class _VisitReportsPageState extends State<VisitReportsPage>
               padding: const EdgeInsets.all(8),
               decoration: BoxDecoration(
                 borderRadius: BorderRadius.circular(30),
-                color: Colors.white.withOpacity(0.15),
-                border: Border.all(color: Colors.white.withOpacity(0.2)),
+                color: Colors.white.withValues(alpha: 0.15),
+                border: Border.all(color: Colors.white.withValues(alpha: 0.2)),
               ),
               child: const Icon(
                 Icons.arrow_back_ios_new ,
@@ -509,10 +509,10 @@ class _VisitReportsPageState extends State<VisitReportsPage>
         duration: const Duration(milliseconds: 180),
         padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
         decoration: BoxDecoration(
-          color: active ? AppColors.main.withOpacity(0.28) : Colors.white.withOpacity(0.22),
+          color: active ? AppColors.main.withValues(alpha: 0.28) : Colors.white.withValues(alpha: 0.22),
           borderRadius: BorderRadius.circular(14),
           border: Border.all(
-            color: active ? AppColors.main : Colors.white.withOpacity(0.1),
+            color: active ? AppColors.main : Colors.white.withValues(alpha: 0.1),
           ),
         ),
         child: Center(
@@ -520,7 +520,7 @@ class _VisitReportsPageState extends State<VisitReportsPage>
             label,
             style: TextStyle(
               fontSize: 11,
-              color: active ? AppColors.mainDark : AppColors.mainDark.withOpacity(0.6),
+              color: active ? AppColors.mainDark : AppColors.mainDark.withValues(alpha: 0.6),
               fontWeight: active ? FontWeight.bold : FontWeight.w500,
             ),
           ),
@@ -539,7 +539,7 @@ class _VisitReportsPageState extends State<VisitReportsPage>
           AppLocalizations.of(context)!.health_noReports,
           style: TextStyle(
             fontSize: 14,
-            color: AppColors.mainDark.withOpacity(0.6),
+            color: AppColors.mainDark.withValues(alpha: 0.6),
           ),
         ),
       );

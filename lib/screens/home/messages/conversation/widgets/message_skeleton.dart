@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:shimmer/shimmer.dart';
-import 'package:docsera/app/const.dart';
 
 class MessageSkeleton extends StatelessWidget {
   final bool isUser;

@@ -1,5 +1,4 @@
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:docsera/models/home_card_model.dart';
 import 'package:docsera/services/supabase/home_cards/supabase_home_card_service.dart';
 import 'home_cards_state.dart';
 

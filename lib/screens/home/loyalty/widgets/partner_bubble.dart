@@ -29,8 +29,8 @@ class PartnerBubble extends StatelessWidget {
               height: 64.w,
               decoration: BoxDecoration(
                 shape: BoxShape.circle,
-                border: Border.all(color: ringColor.withOpacity(0.6), width: 2),
-                color: ringColor.withOpacity(0.06),
+                border: Border.all(color: ringColor.withValues(alpha: 0.6), width: 2),
+                color: ringColor.withValues(alpha: 0.06),
               ),
               padding: EdgeInsets.all(3.w),
               child: ClipOval(
@@ -63,7 +63,7 @@ class PartnerBubble extends StatelessWidget {
   Widget _initialsFallback(String name, Color color) {
     final initial = name.isEmpty ? '?' : name.characters.first.toUpperCase();
     return Container(
-      color: color.withOpacity(0.12),
+      color: color.withValues(alpha: 0.12),
       alignment: Alignment.center,
       child: Text(
         initial,

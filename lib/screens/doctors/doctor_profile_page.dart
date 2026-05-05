@@ -5,7 +5,6 @@ import 'dart:ui';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:docsera/models/gift.dart';
 import 'package:docsera/models/sign_up_info.dart';
-import 'package:intl/intl.dart' show DateFormat;
 import 'package:docsera/screens/auth/login/login_page.dart';
 import 'package:docsera/services/supabase/loyalty/loyalty_service.dart';
 import 'package:docsera/screens/auth/sign_up/sign_up_phone.dart';
@@ -411,7 +410,7 @@ class _DoctorProfilePageState extends State<DoctorProfilePage> {
         behavior: HitTestBehavior.translucent,
         onTap: _hideImageOverlay,
         child: Container(
-          color: Colors.black.withOpacity(0.85),
+          color: Colors.black.withValues(alpha: 0.85),
           child: SafeArea(
             child: Column(
               children: [
@@ -431,7 +430,7 @@ class _DoctorProfilePageState extends State<DoctorProfilePage> {
                             child: Container(
                               padding: EdgeInsets.symmetric(horizontal: 4.w),
                               decoration: BoxDecoration(
-                                color: Colors.white.withOpacity(0.1),
+                                color: Colors.white.withValues(alpha: 0.1),
                                 borderRadius: BorderRadius.circular(24.r),
                               ),
                               child: IconButton(
@@ -643,7 +642,7 @@ class _DoctorProfilePageState extends State<DoctorProfilePage> {
                       decoration: BoxDecoration(
                         color: AppColors.background3,
                         borderRadius: BorderRadius.circular(8.r),
-                        border: Border.all(color: AppColors.main.withOpacity(0.3)),
+                        border: Border.all(color: AppColors.main.withValues(alpha: 0.3)),
                       ),
                       child: Row(
                         children: [
@@ -951,11 +950,11 @@ class _DoctorProfilePageState extends State<DoctorProfilePage> {
     }
 
     final bgColor = isActive
-        ? accent.withOpacity(0.08)
-        : accent.withOpacity(0.04);
+        ? accent.withValues(alpha: 0.08)
+        : accent.withValues(alpha: 0.04);
     final borderColor = isActive
-        ? accent.withOpacity(0.30)
-        : accent.withOpacity(0.15);
+        ? accent.withValues(alpha: 0.30)
+        : accent.withValues(alpha: 0.15);
 
     return GestureDetector(
       onTap: () => showGiftDetailSheet(context, gift),
@@ -977,8 +976,8 @@ class _DoctorProfilePageState extends State<DoctorProfilePage> {
               decoration: BoxDecoration(
                 gradient: LinearGradient(
                   colors: [
-                    accent.withOpacity(0.85),
-                    accent.withOpacity(0.45),
+                    accent.withValues(alpha: 0.85),
+                    accent.withValues(alpha: 0.45),
                   ],
                   begin: Alignment.topLeft,
                   end: Alignment.bottomRight,
@@ -1016,7 +1015,7 @@ class _DoctorProfilePageState extends State<DoctorProfilePage> {
                           padding: EdgeInsets.symmetric(
                               horizontal: 7.w, vertical: 2.h),
                           decoration: BoxDecoration(
-                            color: accent.withOpacity(0.15),
+                            color: accent.withValues(alpha: 0.15),
                             borderRadius: BorderRadius.circular(6.r),
                           ),
                           child: Text(
@@ -1065,7 +1064,7 @@ class _DoctorProfilePageState extends State<DoctorProfilePage> {
             Icon(
               Icons.chevron_right_rounded,
               size: 16.sp,
-              color: accent.withOpacity(0.55),
+              color: accent.withValues(alpha: 0.55),
             ),
           ],
         ),
@@ -1134,7 +1133,7 @@ class _DoctorProfilePageState extends State<DoctorProfilePage> {
           child: Divider(
             height: 1,
             thickness: 1,
-            color: AppColors.main.withOpacity(0.12),
+            color: AppColors.main.withValues(alpha: 0.12),
           ),
         ));
       }
@@ -1145,7 +1144,7 @@ class _DoctorProfilePageState extends State<DoctorProfilePage> {
       color: AppColors.background2,
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(12.r),
-        side: BorderSide(color: AppColors.main.withOpacity(0.2), width: 0.8),
+        side: BorderSide(color: AppColors.main.withValues(alpha: 0.2), width: 0.8),
       ),
       elevation: 0,
       child: Padding(
@@ -1541,11 +1540,11 @@ class _DoctorProfilePageState extends State<DoctorProfilePage> {
     // When the patient has an active (unused) code, the card itself takes on
     // a stronger visual presence — no badge needed.
     final bgColor = hasActiveVoucher
-        ? color.withOpacity(0.12)
-        : color.withOpacity(0.05);
+        ? color.withValues(alpha: 0.12)
+        : color.withValues(alpha: 0.05);
     final borderColor = hasActiveVoucher
-        ? color.withOpacity(0.45)
-        : color.withOpacity(0.15);
+        ? color.withValues(alpha: 0.45)
+        : color.withValues(alpha: 0.15);
     final borderWidth = hasActiveVoucher ? 1.2 : 1.0;
 
     return Opacity(
@@ -1571,7 +1570,7 @@ class _DoctorProfilePageState extends State<DoctorProfilePage> {
             boxShadow: hasActiveVoucher
                 ? [
                     BoxShadow(
-                      color: color.withOpacity(0.15),
+                      color: color.withValues(alpha: 0.15),
                       blurRadius: 10,
                       offset: const Offset(0, 3),
                     ),
@@ -1594,8 +1593,8 @@ class _DoctorProfilePageState extends State<DoctorProfilePage> {
                       decoration: BoxDecoration(
                         gradient: LinearGradient(
                           colors: [
-                            color.withOpacity(0.85),
-                            color.withOpacity(0.45),
+                            color.withValues(alpha: 0.85),
+                            color.withValues(alpha: 0.45),
                           ],
                           begin: Alignment.topLeft,
                           end: Alignment.bottomRight,
@@ -1772,9 +1771,9 @@ class _DoctorProfilePageState extends State<DoctorProfilePage> {
     return Container(
       padding: EdgeInsets.symmetric(horizontal: 8.w, vertical: 2.h),
       decoration: BoxDecoration(
-        color: color.withOpacity(0.08),
+        color: color.withValues(alpha: 0.08),
         borderRadius: BorderRadius.circular(6.r),
-        border: Border.all(color: color.withOpacity(0.20)),
+        border: Border.all(color: color.withValues(alpha: 0.20)),
       ),
       child: Text(
         label,
@@ -1860,7 +1859,7 @@ class _DoctorProfilePageState extends State<DoctorProfilePage> {
                     Container(
                       padding: EdgeInsets.symmetric(horizontal: 10.w, vertical: 4.h),
                       decoration: BoxDecoration(
-                        color: AppColors.main.withOpacity(0.1),
+                        color: AppColors.main.withValues(alpha: 0.1),
                         borderRadius: BorderRadius.circular(8.r),
                       ),
                       child: Row(
@@ -1966,7 +1965,7 @@ class _DoctorProfilePageState extends State<DoctorProfilePage> {
                         if (index == 3 && extraCount > 0)
                           Container(
                             decoration: BoxDecoration(
-                              color: Colors.black.withOpacity(0.4),
+                              color: Colors.black.withValues(alpha: 0.4),
                               borderRadius: BorderRadius.circular(8.r),
                             ),
                             child: Center(
@@ -3035,7 +3034,7 @@ class _DoctorProfilePageState extends State<DoctorProfilePage> {
                 children: translatedLanguages.map((language) {
                   return Container(
                     decoration: BoxDecoration(
-                      color: AppColors.main.withOpacity(0.2),
+                      color: AppColors.main.withValues(alpha: 0.2),
                       borderRadius: BorderRadius.circular(20.r),
                     ),
                     padding: EdgeInsets.symmetric(horizontal: 12.w, vertical: 6.h),
@@ -3291,10 +3290,10 @@ class _DoctorProfilePageState extends State<DoctorProfilePage> {
             margin: EdgeInsets.all(16.w),
             padding: EdgeInsets.all(20.w),
             decoration: BoxDecoration(
-              color: AppColors.background2.withOpacity(0.92),
+              color: AppColors.background2.withValues(alpha: 0.92),
               borderRadius: BorderRadius.circular(28.r),
               border: Border.all(
-                color: AppColors.main.withOpacity(0.25),
+                color: AppColors.main.withValues(alpha: 0.25),
               ),
             ),
             child: Column(
@@ -3355,7 +3354,7 @@ class _DoctorProfilePageState extends State<DoctorProfilePage> {
                           Navigator.pop(context);
                           ScaffoldMessenger.of(context).showSnackBar(
                             SnackBar(
-                                backgroundColor: AppColors.main.withOpacity(0.8),
+                                backgroundColor: AppColors.main.withValues(alpha: 0.8),
                                 content: Text(l.linkCopied)
                             ),
                           );
@@ -3643,7 +3642,7 @@ $deepLink
                         fit: BoxFit.cover,
                       ),
                       Container(
-                        color: AppColors.background2.withOpacity(0.15),
+                        color: AppColors.background2.withValues(alpha: 0.15),
                       ),
                       Column(
                         mainAxisAlignment: MainAxisAlignment.center,
@@ -3656,7 +3655,7 @@ $deepLink
                               }
                             },
                             child: CircleAvatar(
-                              backgroundColor: AppColors.background2.withOpacity(0.2),
+                              backgroundColor: AppColors.background2.withValues(alpha: 0.2),
                               radius: 40.r,
                               child: ClipRRect(
                                 borderRadius: BorderRadius.circular(50),
@@ -5263,7 +5262,7 @@ class _ConfettiPainter extends CustomPainter {
       final y = center.dy + distance * particleProgress * math.sin(angle) + 20 * particleProgress * particleProgress;
 
       final paint = Paint()
-        ..color = colors[i % colors.length].withOpacity(fadeOut * 0.8)
+        ..color = colors[i % colors.length].withValues(alpha: fadeOut * 0.8)
         ..style = PaintingStyle.fill;
 
       // Alternate between circles and small rectangles

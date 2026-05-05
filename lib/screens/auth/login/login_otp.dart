@@ -109,7 +109,7 @@ class _LoginOTPPageState extends State<LoginOTPPage> {
       // ScaffoldMessenger.of(context).showSnackBar(
       //   SnackBar(
       //     content: Text('OTP: $sentCode'),
-      //     backgroundColor: AppColors.main.withOpacity(0.9),
+      //     backgroundColor: AppColors.main.withValues(alpha: 0.9),
       //     duration: const Duration(seconds: 3),
       //   ),
       // );
@@ -127,7 +127,7 @@ class _LoginOTPPageState extends State<LoginOTPPage> {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text(AppLocalizations.of(context)!.otpSendFailed),
-          backgroundColor: AppColors.red.withOpacity(0.8),
+          backgroundColor: AppColors.red.withValues(alpha: 0.8),
           action: SnackBarAction(
             label: AppLocalizations.of(context)!.tryAgain,
             textColor: Colors.white,

@@ -229,7 +229,7 @@ class _DoctorDashboardState extends State<DoctorDashboard> {
               child: Padding(
                 padding: const EdgeInsets.only(top: 20),
                 child: CircleAvatar(
-                  backgroundColor: AppColors.main.withOpacity(0.2),
+                  backgroundColor: AppColors.main.withValues(alpha: 0.2),
                   radius: 50,
                   child: ClipRRect(
                     borderRadius: BorderRadius.circular(60),

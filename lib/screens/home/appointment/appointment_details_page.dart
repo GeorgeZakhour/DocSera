@@ -395,7 +395,7 @@ class _AppointmentDetailsPageState extends State<AppointmentDetailsPage> {
                 Container(
                   padding: EdgeInsets.symmetric(horizontal: 14.w, vertical: 6.h),
                   decoration: BoxDecoration(
-                    color: AppColors.orange.withOpacity(0.1),
+                    color: AppColors.orange.withValues(alpha: 0.1),
                     borderRadius: BorderRadius.circular(30.r),
                   ),
                   child: Text(
@@ -490,8 +490,8 @@ class _AppointmentDetailsPageState extends State<AppointmentDetailsPage> {
                                         ? Icons.warning_rounded
                                         : Icons.access_time,
                                     color: isShortNotice
-                                        ? AppColors.yellow.withOpacity(0.8)
-                                        : AppColors.orangeText.withOpacity(0.8),
+                                        ? AppColors.yellow.withValues(alpha: 0.8)
+                                        : AppColors.orangeText.withValues(alpha: 0.8),
                                     size: 35,
                                   ),
                                 ),
@@ -509,10 +509,10 @@ class _AppointmentDetailsPageState extends State<AppointmentDetailsPage> {
                               Container(
                                 padding: EdgeInsets.all(16.w),
                                 decoration: BoxDecoration(
-                                  color: AppColors.yellow.withOpacity(0.2),
+                                  color: AppColors.yellow.withValues(alpha: 0.2),
                                   borderRadius: BorderRadius.circular(8.r),
                                   border: Border.all(
-                                      color: AppColors.yellow.withOpacity(0.8)),
+                                      color: AppColors.yellow.withValues(alpha: 0.8)),
                                 ),
                                 child: Row(
                                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -770,7 +770,7 @@ class _AppointmentDetailsPageState extends State<AppointmentDetailsPage> {
                     Positioned(
                       bottom: -10,
                       right: -10,
-                      child: Icon(Icons.cancel, color: AppColors.red.withOpacity(0.8), size: 35),
+                      child: Icon(Icons.cancel, color: AppColors.red.withValues(alpha: 0.8), size: 35),
                     ),
                   ],
                 ),
@@ -868,7 +868,7 @@ class _AppointmentDetailsPageState extends State<AppointmentDetailsPage> {
                               Positioned(
                                 bottom: -10,
                                 right: -10,
-                                child: Icon(Icons.warning_rounded, color: AppColors.yellow.withOpacity(0.8), size: 35),
+                                child: Icon(Icons.warning_rounded, color: AppColors.yellow.withValues(alpha: 0.8), size: 35),
                               ),
                             ],
                           ),
@@ -876,9 +876,9 @@ class _AppointmentDetailsPageState extends State<AppointmentDetailsPage> {
                           Container(
                             padding: EdgeInsets.all(16.w),
                             decoration: BoxDecoration(
-                              color: AppColors.yellow.withOpacity(0.2),
+                              color: AppColors.yellow.withValues(alpha: 0.2),
                               borderRadius: BorderRadius.circular(8.r),
-                              border: Border.all(color: AppColors.yellow.withOpacity(0.8)),
+                              border: Border.all(color: AppColors.yellow.withValues(alpha: 0.8)),
                             ),
                             child: Row(
                               crossAxisAlignment: CrossAxisAlignment.start,
@@ -1023,7 +1023,7 @@ class _AppointmentDetailsPageState extends State<AppointmentDetailsPage> {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text(AppLocalizations.of(context)!.appointmentCancelled),
-            backgroundColor: AppColors.red.withOpacity(0.8),
+            backgroundColor: AppColors.red.withValues(alpha: 0.8),
           ),
         );
       }
@@ -1072,7 +1072,7 @@ class _AppointmentDetailsPageState extends State<AppointmentDetailsPage> {
         borderRadius: BorderRadius.circular(12),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.06),
+            color: Colors.black.withValues(alpha: 0.06),
             blurRadius: 4,
             offset: const Offset(0, 2),
           )
@@ -1272,7 +1272,7 @@ class _AppointmentDetailsPageState extends State<AppointmentDetailsPage> {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text(local.documentDeleted),
-          backgroundColor: AppColors.red.withOpacity(0.9), // ✅ Red with opacity
+          backgroundColor: AppColors.red.withValues(alpha: 0.9), // ✅ Red with opacity
           behavior: SnackBarBehavior.floating, // Optional: makes it look better
           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
         ),
@@ -1425,7 +1425,7 @@ class _AppointmentDetailsPageState extends State<AppointmentDetailsPage> {
                               child: Row(
                                 children: [
                                   CircleAvatar(
-                                    backgroundColor: AppColors.main.withOpacity(0.3),
+                                    backgroundColor: AppColors.main.withValues(alpha: 0.3),
                                     radius: 20.sp,
                                     backgroundImage: imageProvider,
                                 ),
@@ -2111,7 +2111,7 @@ class DoctorAppointmentsBottomSheet extends StatelessWidget {
                               borderRadius: BorderRadius.circular(12.r),
                               boxShadow: [
                                 BoxShadow(
-                                  color: AppColors.main.withOpacity(0.1),
+                                  color: AppColors.main.withValues(alpha: 0.1),
                                   blurRadius: 5,
                                   spreadRadius: 2,
                                 ),
@@ -2224,7 +2224,7 @@ class DoctorAppointmentsBottomSheet extends StatelessWidget {
                                               horizontal: 16.w),
                                           decoration: BoxDecoration(
                                             color:
-                                            AppColors.main.withOpacity(0.1),
+                                            AppColors.main.withValues(alpha: 0.1),
                                             borderRadius:
                                             BorderRadius.circular(8.r),
                                           ),

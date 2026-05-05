@@ -298,7 +298,7 @@ import 'package:docsera/gen_l10n/app_localizations.dart';
                 Text(
                   title,
                   style: AppTextStyles.getTitle1(context).copyWith(
-                    color: isSelected ? Colors.white : Colors.white.withOpacity(0.6),
+                    color: isSelected ? Colors.white : Colors.white.withValues(alpha: 0.6),
                   ),
                 ),
                 SizedBox(height: 4.h),
@@ -394,7 +394,7 @@ import 'package:docsera/gen_l10n/app_localizations.dart';
           borderRadius: BorderRadius.circular(25.r),
           boxShadow: [
             BoxShadow(
-              color: Colors.grey.withOpacity(0.08),
+              color: Colors.grey.withValues(alpha: 0.08),
               blurRadius: 18,
               offset: const Offset(0, 6),
             ),
@@ -409,12 +409,12 @@ import 'package:docsera/gen_l10n/app_localizations.dart';
                 child: Container(
                   decoration: BoxDecoration(
                     color: isRedState
-                        ? AppColors.red.withOpacity(0.09)
+                        ? AppColors.red.withValues(alpha: 0.09)
                         : (needsConfirmation
-                        ? AppColors.grayMain.withOpacity(0.12)
+                        ? AppColors.grayMain.withValues(alpha: 0.12)
                         : (isDone
-                            ? AppColors.success.withOpacity(0.18) // Success green tint for done
-                            : AppColors.main.withOpacity(0.12))),
+                            ? AppColors.success.withValues(alpha: 0.18) // Success green tint for done
+                            : AppColors.main.withValues(alpha: 0.12))),
                   ),
                 ),
               ),
@@ -424,16 +424,16 @@ import 'package:docsera/gen_l10n/app_localizations.dart';
                 filter: ImageFilter.blur(sigmaX: 20, sigmaY: 20),
                 child: Container(
                   decoration: BoxDecoration(
-                    color: Colors.white.withOpacity(0.45), // frosted white blend
+                    color: Colors.white.withValues(alpha: 0.45), // frosted white blend
                     borderRadius: BorderRadius.circular(25.r),
                     border: Border.all(
                       color: isRedState
-                          ? AppColors.red.withOpacity(0.4)
+                          ? AppColors.red.withValues(alpha: 0.4)
                           : (needsConfirmation
-                          ? AppColors.grayMain.withOpacity(0.4)
+                          ? AppColors.grayMain.withValues(alpha: 0.4)
                           : (isDone
-                              ? AppColors.success.withOpacity(0.8) // Success green border for done
-                              : AppColors.main.withOpacity(0.45))),
+                              ? AppColors.success.withValues(alpha: 0.8) // Success green border for done
+                              : AppColors.main.withValues(alpha: 0.45))),
                       width: isDone ? 1.5 : 1.3,
                     ),
                   ),
@@ -516,7 +516,7 @@ import 'package:docsera/gen_l10n/app_localizations.dart';
                           children: [
                             CircleAvatar(
                               radius: (needsConfirmation || isRedState) ? 18.r : 22.r,
-                              backgroundColor: Colors.white.withOpacity(0.6),
+                              backgroundColor: Colors.white.withValues(alpha: 0.6),
                               backgroundImage: imageProvider,
                             ),
                             SizedBox(width: 14.w),
@@ -560,7 +560,7 @@ import 'package:docsera/gen_l10n/app_localizations.dart';
                                 ? AppColors.red
                                 : (needsConfirmation
                                 ? AppColors.grayMain
-                                : AppColors.main.withOpacity(0.8)),
+                                : AppColors.main.withValues(alpha: 0.8)),
                             size: (needsConfirmation || isRedState) ? 13.sp : 15.sp,
                           ),
                           SizedBox(width: 5.w),
@@ -577,7 +577,7 @@ import 'package:docsera/gen_l10n/app_localizations.dart';
                       ),
 
                       Divider(
-                        color: Colors.grey.withOpacity(0.22),
+                        color: Colors.grey.withValues(alpha: 0.22),
                         height: (needsConfirmation || isRedState) ? 14.h : 20.h,
                       ),
 
@@ -638,21 +638,21 @@ import 'package:docsera/gen_l10n/app_localizations.dart';
                               borderRadius: BorderRadius.circular(20.r),
                               border: Border.all(
                                 color: isRedState
-                                    ? AppColors.red.withOpacity(0.7)
+                                    ? AppColors.red.withValues(alpha: 0.7)
                                     : (needsConfirmation
-                                    ? AppColors.grayMain.withOpacity(0.7)
+                                    ? AppColors.grayMain.withValues(alpha: 0.7)
                                     : (isDone
                                         ? AppColors.success // Success green border for done
-                                        : AppColors.main.withOpacity(0.7))),
+                                        : AppColors.main.withValues(alpha: 0.7))),
                                 width: isDone ? 1.5 : 1,
                               ),
                               color: isRedState
-                                  ? AppColors.red.withOpacity(0.06)
+                                  ? AppColors.red.withValues(alpha: 0.06)
                                   : (needsConfirmation
-                                  ? AppColors.grayMain.withOpacity(0.06)
+                                  ? AppColors.grayMain.withValues(alpha: 0.06)
                                   : (isDone
-                                      ? AppColors.success.withOpacity(0.12) // Success green background for done
-                                      : AppColors.main.withOpacity(0.08))),
+                                      ? AppColors.success.withValues(alpha: 0.12) // Success green background for done
+                                      : AppColors.main.withValues(alpha: 0.08))),
                             ),
                             child: Row(
                               mainAxisSize: MainAxisSize.min,

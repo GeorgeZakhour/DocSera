@@ -42,7 +42,7 @@ class TopSection extends StatelessWidget {
                     width: 60,
                     height: 60,
                     decoration: BoxDecoration(
-                      color: AppColors.orange.withOpacity(0.7),
+                      color: AppColors.orange.withValues(alpha: 0.7),
                       shape: BoxShape.circle,
                     ),
                   ),
@@ -54,7 +54,7 @@ class TopSection extends StatelessWidget {
                     width: 15,
                     height: 15,
                     decoration: BoxDecoration(
-                      color: AppColors.orange.withOpacity(0.4),
+                      color: AppColors.orange.withValues(alpha: 0.4),
                       shape: BoxShape.circle,
                     ),
                   ),
@@ -69,7 +69,7 @@ class TopSection extends StatelessWidget {
                       child: Container(
                         width: 100,
                         height: 120,
-                        color: Colors.white.withOpacity(0.1),
+                        color: Colors.white.withValues(alpha: 0.1),
                       ),
                     ),
                   ),
@@ -84,7 +84,7 @@ class TopSection extends StatelessWidget {
                       child: Container(
                         width: 200,
                         height: 150,
-                        color: AppColors.mainDark.withOpacity(0.4),
+                        color: AppColors.mainDark.withValues(alpha: 0.4),
                       ),
                     ),
                   ),
@@ -99,7 +99,7 @@ class TopSection extends StatelessWidget {
                       child: Container(
                         width: 120,
                         height: 200,
-                        color: AppColors.whiteText.withOpacity(0.4),
+                        color: AppColors.whiteText.withValues(alpha: 0.4),
                       ),
                     ),
                   ),
@@ -120,7 +120,7 @@ class TopSection extends StatelessWidget {
               Text(
                 AppLocalizations.of(context)!.yourDoctor,
                 style: AppTextStyles.getTitle2(context).copyWith(
-                  color: Colors.white.withOpacity(0.7),
+                  color: Colors.white.withValues(alpha: 0.7),
                 ),
               ),
               Text(
@@ -570,7 +570,7 @@ class BannerCard extends StatelessWidget {
                   0.6.w,
                 ),
                 decoration: BoxDecoration(
-                  color: Colors.white.withOpacity(0.8),
+                  color: Colors.white.withValues(alpha: 0.8),
                   borderRadius: BorderRadius.circular(18.r),
                 ),
                 child: Text(
@@ -896,7 +896,7 @@ class DecorativeImageCard extends StatelessWidget {
                         width: 90.w,
                         height: 100.h,
                         colorFilter: ColorFilter.mode(
-                          secondShapeColor ?? Colors.white.withOpacity(0.3),
+                          secondShapeColor ?? Colors.white.withValues(alpha: 0.3),
                           BlendMode.srcIn,
                         ),
                       ),
@@ -919,7 +919,7 @@ class DecorativeImageCard extends StatelessWidget {
               padding: EdgeInsets.symmetric(horizontal: 35.w),
               child: Text(
                 description,
-                style: AppTextStyles.getText2(context).copyWith(color: textColor.withOpacity(0.7)),
+                style: AppTextStyles.getText2(context).copyWith(color: textColor.withValues(alpha: 0.7)),
                 textAlign: TextAlign.center,
               ),
             ),
@@ -1025,7 +1025,7 @@ class CompactDecorativeCard extends StatelessWidget {
                     Text(
                       description,
                       style: AppTextStyles.getText2(context).copyWith(
-                        color: textColor.withOpacity(0.7),
+                        color: textColor.withValues(alpha: 0.7),
                         fontSize: 11.sp,
                       ),
                       maxLines: 2,

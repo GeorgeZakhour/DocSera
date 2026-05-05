@@ -92,7 +92,7 @@ class NotePreviewSheet extends StatelessWidget {
                   child: CustomPaint(
                     painter: _LinedPaperPainter(
                       lineHeight: 26.h,
-                      lineColor: Colors.grey.withOpacity(0.2),
+                      lineColor: Colors.grey.withValues(alpha: 0.2),
                       startFrom: 40.h,
                     ),
                   ),

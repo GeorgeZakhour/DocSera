@@ -58,7 +58,7 @@ class BannerDetailsPage extends StatelessWidget {
                         begin: Alignment.topCenter,
                         end: Alignment.bottomCenter,
                         colors: [
-                          Colors.black.withOpacity(0.3),
+                          Colors.black.withValues(alpha: 0.3),
                           Colors.transparent,
                         ],
                       ),
@@ -70,7 +70,7 @@ class BannerDetailsPage extends StatelessWidget {
           ),
           SliverToBoxAdapter(
             child: Container(
-              color: themeColor.withOpacity(0.1), // Verified matching theme
+              color: themeColor.withValues(alpha: 0.1), // Verified matching theme
               constraints: BoxConstraints(minHeight: MediaQuery.of(context).size.height - 250.h),
               child: Padding(
                 padding: EdgeInsets.all(20.w),
@@ -116,7 +116,7 @@ class BannerDetailsPage extends StatelessWidget {
                       ),
                     
                     SizedBox(height: 25.h),
-                    Divider(color: Colors.grey.withOpacity(0.3)),
+                    Divider(color: Colors.grey.withValues(alpha: 0.3)),
                     SizedBox(height: 15.h),
 
                     // Dynamic Content Sections

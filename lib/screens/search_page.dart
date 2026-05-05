@@ -151,7 +151,7 @@ class _SearchPageState extends State<SearchPage> {
             LinearProgressIndicator(
               minHeight: 2,
               backgroundColor: Colors.transparent,
-              color: AppColors.main.withOpacity(0.3),
+              color: AppColors.main.withValues(alpha: 0.3),
             ),
 
           Padding(
@@ -293,7 +293,7 @@ class _SearchPageState extends State<SearchPage> {
 
         return ListTile(
           leading: CircleAvatar(
-            backgroundColor: Colors.grey.withOpacity(0.08),
+            backgroundColor: Colors.grey.withValues(alpha: 0.08),
             child: SvgPicture.asset(
               iconAsset,
               width: 25.w,
@@ -394,7 +394,7 @@ class _SearchPageState extends State<SearchPage> {
             child: ListTile(
               contentPadding: const EdgeInsets.symmetric(vertical: 6, horizontal: 8),
               leading: CircleAvatar(
-                backgroundColor: AppColors.mainDark.withOpacity(0.15),
+                backgroundColor: AppColors.mainDark.withValues(alpha: 0.15),
                 radius: 22,
                 backgroundImage: imageProvider,
               ),
@@ -502,7 +502,7 @@ class _SearchPageState extends State<SearchPage> {
     return ListTile(
       contentPadding: const EdgeInsets.symmetric(vertical: 6, horizontal: 8),
       leading: CircleAvatar(
-        backgroundColor: AppColors.mainDark.withOpacity(0.15),
+        backgroundColor: AppColors.mainDark.withValues(alpha: 0.15),
         radius: 22,
         backgroundImage: imageProvider,
       ),

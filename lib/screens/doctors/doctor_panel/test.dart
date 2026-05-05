@@ -187,7 +187,7 @@
 //           if (widget.patientName != widget.accountHolderName)
 //             Container(
 //               width: double.infinity,
-//               color: AppColors.grayMain.withOpacity(0.15),
+//               color: AppColors.grayMain.withValues(alpha: 0.15),
 //               padding: EdgeInsets.symmetric(horizontal: 20.w, vertical: 12.h),
 //               child: Row(
 //                 children: [
@@ -276,8 +276,8 @@
 //                                     CircleAvatar(
 //                                       radius: 12.r,
 //                                       backgroundColor: isUser
-//                                           ? AppColors.main.withOpacity(0.6)
-//                                           : AppColors.whiteText.withOpacity(0.4),
+//                                           ? AppColors.main.withValues(alpha: 0.6)
+//                                           : AppColors.whiteText.withValues(alpha: 0.4),
 //                                       backgroundImage: !isUser
 //                                           ? (widget.doctorImage.startsWith('http')
 //                                           ? NetworkImage(widget.doctorImage)

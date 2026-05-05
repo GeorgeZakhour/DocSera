@@ -60,7 +60,7 @@ class HealthRecordDetailsDialog extends StatelessWidget {
           ),
 
           SizedBox(height: 10.h),
-          Divider(thickness: 1, color: AppColors.grayMain.withOpacity(0.4)),
+          Divider(thickness: 1, color: AppColors.grayMain.withValues(alpha: 0.4)),
           SizedBox(height: 10.h),
 
           /// DETAILS ROWS

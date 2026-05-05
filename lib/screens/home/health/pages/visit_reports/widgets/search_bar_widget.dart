@@ -19,23 +19,23 @@ class SearchBarWidget extends StatelessWidget {
           hintText: AppLocalizations.of(context)!.search_doctor,
           prefixIcon: Icon(
             Icons.search,
-            color: AppColors.mainDark.withOpacity(0.7),
+            color: AppColors.mainDark.withValues(alpha: 0.7),
           ),
           contentPadding: const EdgeInsets.symmetric(vertical: 12),
           hintStyle: TextStyle(
             fontSize: 13,
-            color: AppColors.mainDark.withOpacity(0.5),
+            color: AppColors.mainDark.withValues(alpha: 0.5),
           ),
           border: OutlineInputBorder(
             borderRadius: BorderRadius.circular(24),
             borderSide: BorderSide(
-              color: AppColors.main.withOpacity(0.15),
+              color: AppColors.main.withValues(alpha: 0.15),
             ),
           ),
           enabledBorder: OutlineInputBorder(
             borderRadius: BorderRadius.circular(24),
             borderSide: BorderSide(
-              color: AppColors.main.withOpacity(0.15),
+              color: AppColors.main.withValues(alpha: 0.15),
             ),
           ),
         ),

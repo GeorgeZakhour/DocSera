@@ -11,7 +11,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:gallery_saver_plus/gallery_saver.dart';
 import 'package:http/http.dart' as http;
-import 'package:path/path.dart' as path;
 import 'package:path_provider/path_provider.dart';
 import 'package:transparent_image/transparent_image.dart';
 import 'package:flutter_svg/flutter_svg.dart';
@@ -157,7 +156,7 @@ class _ImageOverlayViewerState extends State<ImageOverlayViewer> {
             }
           },
           child: Container(
-            color: Colors.black.withOpacity(0.85),
+            color: Colors.black.withValues(alpha: 0.85),
             child: SafeArea(
               child: Column(
                 children: [
@@ -179,7 +178,7 @@ class _ImageOverlayViewerState extends State<ImageOverlayViewer> {
                               child: Container(
                                 padding: EdgeInsets.symmetric(horizontal: 4.w),
                                 decoration: BoxDecoration(
-                                  color: Colors.white.withOpacity(0.1),
+                                  color: Colors.white.withValues(alpha: 0.1),
                                   borderRadius: BorderRadius.circular(24.r),
                                 ),
                                 child: IconButton(
@@ -254,7 +253,7 @@ class _ImageOverlayViewerState extends State<ImageOverlayViewer> {
         key: const ValueKey('single-expanded'),
         padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 12.h),
         decoration: BoxDecoration(
-          color: Colors.white.withOpacity(0.15),
+          color: Colors.white.withValues(alpha: 0.15),
           borderRadius: BorderRadius.circular(24.r),
         ),
         child: Row(
@@ -279,7 +278,7 @@ class _ImageOverlayViewerState extends State<ImageOverlayViewer> {
                          messenger.showSnackBar(
                            SnackBar(
                              content: Text(local.downloadFailed), // Or specific error
-                             backgroundColor: AppColors.red.withOpacity(0.9),
+                             backgroundColor: AppColors.red.withValues(alpha: 0.9),
                            ),
                          );
                       }
@@ -313,14 +312,14 @@ class _ImageOverlayViewerState extends State<ImageOverlayViewer> {
                           messenger.showSnackBar(
                               SnackBar(
                                 content: Text(local.downloadCompleted),
-                                backgroundColor: AppColors.main.withOpacity(0.9),
+                                backgroundColor: AppColors.main.withValues(alpha: 0.9),
                               ),
                           );
                         } catch (_) {
                           messenger.showSnackBar(
                               SnackBar(
                                 content: Text(local.downloadFailed),
-                                backgroundColor: AppColors.red.withOpacity(0.9),
+                                backgroundColor: AppColors.red.withValues(alpha: 0.9),
                               ),
                           );
                         }
@@ -346,7 +345,7 @@ class _ImageOverlayViewerState extends State<ImageOverlayViewer> {
           padding:
           EdgeInsets.symmetric(horizontal: 16.w, vertical: 10.h),
           decoration: BoxDecoration(
-            color: Colors.white.withOpacity(0.15),
+            color: Colors.white.withValues(alpha: 0.15),
             borderRadius: BorderRadius.circular(24.r),
           ),
           child: Column(
@@ -377,7 +376,7 @@ class _ImageOverlayViewerState extends State<ImageOverlayViewer> {
         child: Container(
           padding: EdgeInsets.symmetric(horizontal: 4.w),
           decoration: BoxDecoration(
-            color: Colors.white.withOpacity(0.1),
+            color: Colors.white.withValues(alpha: 0.1),
             borderRadius: BorderRadius.circular(24.r),
           ),
           child: IconButton(
@@ -404,7 +403,7 @@ class _ImageOverlayViewerState extends State<ImageOverlayViewer> {
         key: const ValueKey('grid-expanded'),
         padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 12.h),
         decoration: BoxDecoration(
-          color: Colors.white.withOpacity(0.15),
+          color: Colors.white.withValues(alpha: 0.15),
           borderRadius: BorderRadius.circular(24.r),
         ),
         child: Row(
@@ -432,7 +431,7 @@ class _ImageOverlayViewerState extends State<ImageOverlayViewer> {
                          messenger.showSnackBar(
                             SnackBar(
                                content: Text(local.imagesDownloadFailed),
-                               backgroundColor: AppColors.red.withOpacity(0.9),
+                               backgroundColor: AppColors.red.withValues(alpha: 0.9),
                             ),
                          );
                       }
@@ -469,14 +468,14 @@ class _ImageOverlayViewerState extends State<ImageOverlayViewer> {
                               content: Text(
                                 '${widget.imageUrls.length} ${local.imagesDownloadedSuccessfully}',
                               ),
-                              backgroundColor: AppColors.main.withOpacity(0.9),
+                              backgroundColor: AppColors.main.withValues(alpha: 0.9),
                             ),
                           );
                       } catch (_) {
                          messenger.showSnackBar(
                             SnackBar(
                                content: Text(local.imagesDownloadFailed),
-                               backgroundColor: AppColors.red.withOpacity(0.9),
+                               backgroundColor: AppColors.red.withValues(alpha: 0.9),
                             ),
                          );
                       }
@@ -502,7 +501,7 @@ class _ImageOverlayViewerState extends State<ImageOverlayViewer> {
           padding:
           EdgeInsets.symmetric(horizontal: 14.w, vertical: 15.h),
           decoration: BoxDecoration(
-            color: Colors.white.withOpacity(0.1),
+            color: Colors.white.withValues(alpha: 0.1),
             borderRadius: BorderRadius.circular(24.r),
           ),
           child: Row(

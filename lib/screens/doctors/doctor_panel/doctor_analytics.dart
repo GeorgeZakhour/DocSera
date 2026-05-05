@@ -237,9 +237,9 @@ class _DoctorAnalyticsPageState extends State<DoctorAnalyticsPage> {
 
   List<PieChartSectionData> _getPieChartSections(Map<String, int> data, int? selectedIndex) {
     List<Color> themeColors = [
-      AppColors.main.withOpacity(0.8),
-      AppColors.mainDark.withOpacity(0.8),
-      AppColors.yellow.withOpacity(0.8),
+      AppColors.main.withValues(alpha: 0.8),
+      AppColors.mainDark.withValues(alpha: 0.8),
+      AppColors.yellow.withValues(alpha: 0.8),
       AppColors.background3
     ];
 

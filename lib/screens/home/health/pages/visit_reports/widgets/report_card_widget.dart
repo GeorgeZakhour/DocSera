@@ -46,9 +46,9 @@ class ReportCardWidget extends StatelessWidget {
           filter: ImageFilter.blur(sigmaX: 12, sigmaY: 12),
           child: Container(
             decoration: BoxDecoration(
-              color: Colors.white.withOpacity(0.55),
+              color: Colors.white.withValues(alpha: 0.55),
               borderRadius: BorderRadius.circular(20),
-              border: Border.all(color: AppColors.main.withOpacity(0.22)),
+              border: Border.all(color: AppColors.main.withValues(alpha: 0.22)),
             ),
             child: Stack(
               children: [
@@ -86,7 +86,7 @@ class ReportCardWidget extends StatelessWidget {
                                   report.doctorSpecialty!,
                                   style: AppTextStyles.getText3(context).copyWith(
                                     fontSize: 11,
-                                    color: AppColors.mainDark.withOpacity(0.6),
+                                    color: AppColors.mainDark.withValues(alpha: 0.6),
                                   ),
                                 ),
                               ),
@@ -121,7 +121,7 @@ class ReportCardWidget extends StatelessWidget {
                       Icon(
                         Icons.arrow_forward_ios_rounded,
                         size: 14,
-                        color: AppColors.mainDark.withOpacity(0.35),
+                        color: AppColors.mainDark.withValues(alpha: 0.35),
                       ),
                     ],
                   ),
@@ -138,7 +138,7 @@ class ReportCardWidget extends StatelessWidget {
                       // Doctor avatar
                       CircleAvatar(
                         radius: 20,
-                        backgroundColor: AppColors.main.withOpacity(0.1),
+                        backgroundColor: AppColors.main.withValues(alpha: 0.1),
                         backgroundImage: imageResult.imageProvider,
                       ),
 
@@ -155,7 +155,7 @@ class ReportCardWidget extends StatelessWidget {
                             shape: BoxShape.circle,
                             boxShadow: [
                               BoxShadow(
-                                color: Colors.black.withOpacity(0.12),
+                                color: Colors.black.withValues(alpha: 0.12),
                                 blurRadius: 4,
                                 offset: const Offset(0, 2),
                               ),

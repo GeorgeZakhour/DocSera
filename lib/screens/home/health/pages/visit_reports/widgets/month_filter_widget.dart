@@ -61,9 +61,9 @@ class MonthFilterWidget extends StatelessWidget {
         alignment: Alignment.center,
         decoration: BoxDecoration(
           borderRadius: BorderRadius.circular(14),
-          color: active ? AppColors.main.withOpacity(0.25) : Colors.white.withOpacity(0.18),
+          color: active ? AppColors.main.withValues(alpha: 0.25) : Colors.white.withValues(alpha: 0.18),
           border: Border.all(
-            color: active ? AppColors.main : AppColors.main.withOpacity(0.2),
+            color: active ? AppColors.main : AppColors.main.withValues(alpha: 0.2),
           ),
         ),
         child: Center(
@@ -73,7 +73,7 @@ class MonthFilterWidget extends StatelessWidget {
             style: TextStyle(
               fontSize: 12,
               fontWeight: active ? FontWeight.bold : FontWeight.w500,
-              color: active ? AppColors.mainDark : AppColors.mainDark.withOpacity(0.6),
+              color: active ? AppColors.mainDark : AppColors.mainDark.withValues(alpha: 0.6),
             ),
           ),
         ),

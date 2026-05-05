@@ -465,7 +465,7 @@ class _SearchAdvancedPageState extends State<SearchAdvancedPage> {
 
     return ListTile(
       leading: CircleAvatar(
-        backgroundColor: AppColors.mainDark.withOpacity(0.2),
+        backgroundColor: AppColors.mainDark.withValues(alpha: 0.2),
         radius: 22.sp,
         backgroundImage: imageProvider,
       ),
@@ -581,7 +581,7 @@ class _SearchAdvancedPageState extends State<SearchAdvancedPage> {
 
     return ListTile(
       leading: CircleAvatar(
-        backgroundColor: AppColors.mainDark.withOpacity(0.2),
+        backgroundColor: AppColors.mainDark.withValues(alpha: 0.2),
         radius: 22.sp,
         backgroundImage: imageProvider,
       ),
@@ -643,7 +643,7 @@ class _SearchAdvancedPageState extends State<SearchAdvancedPage> {
   Widget _specialtySuggestionTile(String name, String asset, String key) {
     return ListTile(
       leading: CircleAvatar(
-        backgroundColor: Colors.grey.withOpacity(0.08),
+        backgroundColor: Colors.grey.withValues(alpha: 0.08),
         child: SvgPicture.asset(
           asset,
           width: 25.w,
@@ -881,9 +881,9 @@ class _SearchAdvancedPageState extends State<SearchAdvancedPage> {
       margin: EdgeInsets.only(top: 10.h),
       padding: EdgeInsets.symmetric(horizontal: 10.w, vertical: 8.h),
       decoration: BoxDecoration(
-        color: AppColors.main.withOpacity(0.10),
+        color: AppColors.main.withValues(alpha: 0.10),
         borderRadius: BorderRadius.circular(12.r),
-        border: Border.all(color: AppColors.main.withOpacity(0.25)),
+        border: Border.all(color: AppColors.main.withValues(alpha: 0.25)),
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,
@@ -978,7 +978,7 @@ class _SearchAdvancedPageState extends State<SearchAdvancedPage> {
           borderRadius: BorderRadius.circular(20),
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withOpacity(0.05),
+              color: Colors.black.withValues(alpha: 0.05),
               blurRadius: 6,
               offset: const Offset(0, 3),
             ),
@@ -993,7 +993,7 @@ class _SearchAdvancedPageState extends State<SearchAdvancedPage> {
               child: Container(
                 padding: EdgeInsets.all(6.w),
                 decoration: BoxDecoration(
-                  color: AppColors.main.withOpacity(0.15),
+                  color: AppColors.main.withValues(alpha: 0.15),
                   shape: BoxShape.circle,
                 ),
                 child: SvgPicture.asset(
@@ -1028,7 +1028,7 @@ class _SearchAdvancedPageState extends State<SearchAdvancedPage> {
               child: Container(
                 padding: EdgeInsets.all(6.w),
                 decoration: BoxDecoration(
-                  color: Colors.grey.withOpacity(0.15),
+                  color: Colors.grey.withValues(alpha: 0.15),
                   shape: BoxShape.circle,
                 ),
                 child: const Icon(Icons.edit, color: Colors.grey, size: 18),
@@ -1044,7 +1044,7 @@ class _SearchAdvancedPageState extends State<SearchAdvancedPage> {
     return Container(
       padding: EdgeInsets.symmetric(horizontal: 10.w, vertical: 6.h),
       decoration: BoxDecoration(
-        color: color.withOpacity(0.15),
+        color: color.withValues(alpha: 0.15),
         borderRadius: BorderRadius.circular(12),
       ),
       child: Text(
@@ -1235,7 +1235,7 @@ class _SearchAdvancedPageState extends State<SearchAdvancedPage> {
         borderRadius: BorderRadius.circular(16.r),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.05),
+            color: Colors.black.withValues(alpha: 0.05),
             blurRadius: 6,
             offset: const Offset(0, 3),
           ),
@@ -1250,8 +1250,8 @@ class _SearchAdvancedPageState extends State<SearchAdvancedPage> {
             data: SliderTheme.of(context).copyWith(
               activeTrackColor: AppColors.main,
               thumbColor: AppColors.main,
-              overlayColor: AppColors.main.withOpacity(0.1),
-              inactiveTrackColor: AppColors.main.withOpacity(0.2),
+              overlayColor: AppColors.main.withValues(alpha: 0.1),
+              inactiveTrackColor: AppColors.main.withValues(alpha: 0.2),
               valueIndicatorColor: AppColors.main,
             ),
             child: Slider(
@@ -1853,7 +1853,7 @@ class _ResultsSheet extends StatelessWidget {
                 if (isLoading)
                   LinearProgressIndicator(
                     minHeight: 2,
-                    color: AppColors.main.withOpacity(0.3),
+                    color: AppColors.main.withValues(alpha: 0.3),
                     backgroundColor: Colors.transparent,
                   ),
                 // Combined Results List

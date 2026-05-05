@@ -178,7 +178,7 @@ class _SelectPatientForMessagePageState extends State<SelectPatientForMessagePag
             padding: EdgeInsets.symmetric(vertical: 12.h, horizontal: 16.w),
             decoration: BoxDecoration(
               color: selectedPatientId == id
-                  ? AppColors.main.withOpacity(0.1)
+                  ? AppColors.main.withValues(alpha: 0.1)
                   : Colors.transparent,
               borderRadius: BorderRadius.only(
                 topLeft: isFirst ? Radius.circular(12.r) : Radius.zero,
@@ -290,7 +290,7 @@ class _SelectPatientForMessagePageState extends State<SelectPatientForMessagePag
         borderRadius: BorderRadius.circular(12.r),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.05),
+            color: Colors.black.withValues(alpha: 0.05),
             blurRadius: 5,
             spreadRadius: 1,
           ),
@@ -318,7 +318,7 @@ class _SelectPatientForMessagePageState extends State<SelectPatientForMessagePag
       title: Row(
         children: [
           CircleAvatar(
-            backgroundColor: AppColors.background2.withOpacity(0.3),
+            backgroundColor: AppColors.background2.withValues(alpha: 0.3),
             radius: 18.r,
             child: ClipRRect(
               borderRadius: BorderRadius.circular(50),
@@ -382,7 +382,7 @@ class _SelectPatientForMessagePageState extends State<SelectPatientForMessagePag
                   // ❌ المريض محظور
                   showDialog(
                     context: context,
-                    barrierColor: Colors.black.withOpacity(0.3),
+                    barrierColor: Colors.black.withValues(alpha: 0.3),
                     builder: (_) {
                       final isArabic = Localizations.localeOf(context).languageCode == 'ar';
                       return Center(
@@ -396,12 +396,12 @@ class _SelectPatientForMessagePageState extends State<SelectPatientForMessagePag
                               decoration: BoxDecoration(
                                 borderRadius: BorderRadius.circular(20),
                                 border: Border.all(
-                                  color: Colors.white.withOpacity(0.15),
+                                  color: Colors.white.withValues(alpha: 0.15),
                                 ),
-                                color: Colors.white.withOpacity(0.85),
+                                color: Colors.white.withValues(alpha: 0.85),
                                 boxShadow: [
                                   BoxShadow(
-                                    color: Colors.black.withOpacity(0.1),
+                                    color: Colors.black.withValues(alpha: 0.1),
                                     blurRadius: 15,
                                     offset: const Offset(0, 8),
                                   ),
@@ -414,7 +414,7 @@ class _SelectPatientForMessagePageState extends State<SelectPatientForMessagePag
                                   Container(
                                     padding: const EdgeInsets.all(14),
                                     decoration: BoxDecoration(
-                                      color: AppColors.main.withOpacity(0.15),
+                                      color: AppColors.main.withValues(alpha: 0.15),
                                       shape: BoxShape.circle,
                                     ),
                                     child: const Icon(Icons.lock_rounded,

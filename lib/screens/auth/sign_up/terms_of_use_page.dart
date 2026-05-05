@@ -124,7 +124,7 @@ class _TermsOfUsePageState extends State<TermsOfUsePage> {
             SizedBox(height: 30.h),
             LinearProgressIndicator(
               value: 0.8,
-              backgroundColor: AppColors.main.withOpacity(0.1),
+              backgroundColor: AppColors.main.withValues(alpha: 0.1),
               valueColor: const AlwaysStoppedAnimation<Color>(AppColors.main),
               minHeight: 4,
             ),

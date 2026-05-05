@@ -39,13 +39,13 @@ class HealthRecordCard extends StatelessWidget {
           borderRadius: BorderRadius.circular(14.r),
           border: Border.all(
             color: highlighted
-                ? (highlightColor ?? AppColors.main).withOpacity(0.45)
-                : AppColors.main.withOpacity(0.12),
+                ? (highlightColor ?? AppColors.main).withValues(alpha: 0.45)
+                : AppColors.main.withValues(alpha: 0.12),
             width: 0.9,
           ),
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withOpacity(0.03),
+              color: Colors.black.withValues(alpha: 0.03),
               blurRadius: 5,
               offset: const Offset(0, 2),
             ),
@@ -61,7 +61,7 @@ class HealthRecordCard extends StatelessWidget {
               height: 26.w,
               decoration: BoxDecoration(
                 shape: BoxShape.circle,
-                color: AppColors.main.withOpacity(0.12),
+                color: AppColors.main.withValues(alpha: 0.12),
               ),
               child: Icon(
                 icon,

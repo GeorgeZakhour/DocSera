@@ -19,8 +19,8 @@ class CategoryChip extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final bg = isSelected ? AppColors.main : AppColors.main.withOpacity(0.08);
-    final fg = isSelected ? Colors.white : AppColors.main.withOpacity(0.85);
+    final bg = isSelected ? AppColors.main : AppColors.main.withValues(alpha: 0.08);
+    final fg = isSelected ? Colors.white : AppColors.main.withValues(alpha: 0.85);
 
     return GestureDetector(
       onTap: onTap,

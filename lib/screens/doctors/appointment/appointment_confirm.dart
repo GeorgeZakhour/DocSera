@@ -563,7 +563,7 @@ class _ConfirmationPageState extends State<ConfirmationPage> {
           Stack(
             children: [
               CircleAvatar(
-                backgroundColor: AppColors.background2.withOpacity(0.3),
+                backgroundColor: AppColors.background2.withValues(alpha: 0.3),
                 radius: 18.r,
                 backgroundImage: imageProvider,
               ),
@@ -650,7 +650,7 @@ class _ConfirmationPageState extends State<ConfirmationPage> {
             Container(
               padding: EdgeInsets.all(10.w),
               decoration: BoxDecoration(
-                color: AppColors.main.withOpacity(0.1),
+                color: AppColors.main.withValues(alpha: 0.1),
                 borderRadius: BorderRadius.circular(8.r),
               ),
               child: Row(
@@ -699,7 +699,7 @@ class _ConfirmationPageState extends State<ConfirmationPage> {
     return Row(
       children: [
         CircleAvatar(
-          backgroundColor: AppColors.orange.withOpacity(0.3),
+          backgroundColor: AppColors.orange.withValues(alpha: 0.3),
           radius: 25.r,
           backgroundImage: imageProvider,
         ),

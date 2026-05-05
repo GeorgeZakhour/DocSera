@@ -59,7 +59,7 @@ class _MultiPageUploadScreenState extends State<MultiPageUploadScreen> {
       width: 44.w,
       height: 44.w,
       decoration: BoxDecoration(
-        color: AppColors.main.withOpacity(0.10),
+        color: AppColors.main.withValues(alpha: 0.10),
         shape: BoxShape.circle,
       ),
       child: IconButton(
@@ -179,7 +179,7 @@ class _MultiPageUploadScreenState extends State<MultiPageUploadScreen> {
                       decoration: BoxDecoration(
                         borderRadius: BorderRadius.circular(27.r),
                         border: Border.all(
-                          color: isSelected ? AppColors.main : AppColors.main.withOpacity(0.3),
+                          color: isSelected ? AppColors.main : AppColors.main.withValues(alpha: 0.3),
                           width: isSelected ? 4 : 2,
                         ),
                       ),
@@ -212,7 +212,7 @@ class _MultiPageUploadScreenState extends State<MultiPageUploadScreen> {
                   height: isSelected ? 12.w : 8.w,
                   decoration: BoxDecoration(
                     shape: BoxShape.circle,
-                    color: isSelected ? AppColors.main : AppColors.main.withOpacity(0.5),
+                    color: isSelected ? AppColors.main : AppColors.main.withValues(alpha: 0.5),
                   ),
                 );
               }),

@@ -68,8 +68,8 @@ class HealthStepHeader extends StatelessWidget {
                 borderRadius: BorderRadius.circular(18.r),
                 border: Border.all(
                   color: active
-                      ? AppColors.mainDark.withOpacity(0.8)
-                      : AppColors.main.withOpacity(0.25),
+                      ? AppColors.mainDark.withValues(alpha: 0.8)
+                      : AppColors.main.withValues(alpha: 0.25),
                   width: 1.1,
                 ),
               ),

@@ -165,7 +165,7 @@ class DoctorMessagesPage extends StatelessWidget {
               children: [
                 CircleAvatar(
                   radius: 20.r,
-                  backgroundColor: AppColors.main.withOpacity(0.1),
+                  backgroundColor: AppColors.main.withValues(alpha: 0.1),
                   child: const Icon(Icons.person, color: AppColors.main),
                 ),
                 SizedBox(width: 12.w),
@@ -189,7 +189,7 @@ class DoctorMessagesPage extends StatelessWidget {
                                     padding: EdgeInsets.symmetric(horizontal: 6.w, vertical: 3.h),
                                     margin: EdgeInsets.only(bottom: 2.h),
                                     decoration: BoxDecoration(
-                                      color: AppColors.main.withOpacity(0.1),
+                                      color: AppColors.main.withValues(alpha: 0.1),
                                       borderRadius: BorderRadius.circular(8.r),
                                     ),
                                     child: Text.rich(

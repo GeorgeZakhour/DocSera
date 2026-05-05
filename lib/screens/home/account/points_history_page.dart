@@ -283,7 +283,7 @@ class _PointsHistoryPageState extends State<PointsHistoryPage>
               Container(
                 padding: EdgeInsets.all(12.w),
                 decoration: BoxDecoration(
-                  color: AppColors.main.withOpacity(0.18),
+                  color: AppColors.main.withValues(alpha: 0.18),
                   shape: BoxShape.circle,
                 ),
                 child:
@@ -313,7 +313,7 @@ class _PointsHistoryPageState extends State<PointsHistoryPage>
               return LinearProgressIndicator(
                 value: _progressAnim.value,
                 minHeight: 13.h,
-                backgroundColor: AppColors.main.withOpacity(0.15),
+                backgroundColor: AppColors.main.withValues(alpha: 0.15),
                 valueColor: const AlwaysStoppedAnimation(AppColors.main),
                 borderRadius: BorderRadius.circular(20.r),
               );
@@ -366,7 +366,7 @@ class _PointsHistoryPageState extends State<PointsHistoryPage>
           borderRadius: BorderRadius.circular(16.r),
           boxShadow: [
             BoxShadow(
-                color: Colors.grey.withOpacity(0.3),
+                color: Colors.grey.withValues(alpha: 0.3),
                 blurRadius: 3,
                 offset: const Offset(0, 1))
           ],

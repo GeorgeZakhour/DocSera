@@ -151,9 +151,9 @@ class _DoctorAppointmentsPageState extends State<DoctorAppointmentsPage> {
               Container(
                 padding: EdgeInsets.symmetric(horizontal: 10.w, vertical: 6.h),
                 decoration: BoxDecoration(
-                  color: AppColors.main.withOpacity(0.08),
+                  color: AppColors.main.withValues(alpha: 0.08),
                   borderRadius: BorderRadius.circular(999),
-                  border: Border.all(color: AppColors.main.withOpacity(0.2)),
+                  border: Border.all(color: AppColors.main.withValues(alpha: 0.2)),
                 ),
                 child: Text(
                   '$reasonLabel : ${widget.patientProfile.reason}',
@@ -297,7 +297,7 @@ class _DoctorAppointmentsPageState extends State<DoctorAppointmentsPage> {
             borderRadius: BorderRadius.circular(12.r),
             boxShadow: [
               BoxShadow(
-                color: Colors.black.withOpacity(0.05),
+                color: Colors.black.withValues(alpha: 0.05),
                 blurRadius: 5,
                 spreadRadius: 1,
               ),
@@ -349,9 +349,9 @@ class _DoctorAppointmentsPageState extends State<DoctorAppointmentsPage> {
                         child: Container(
                           padding: EdgeInsets.symmetric(vertical: 10.h, horizontal: 16.w),
                           decoration: BoxDecoration(
-                            color: AppColors.main.withOpacity(0.1),
+                            color: AppColors.main.withValues(alpha: 0.1),
                             borderRadius: BorderRadius.circular(8.r),
-                            border: Border.all(color: AppColors.main.withOpacity(0.25)),
+                            border: Border.all(color: AppColors.main.withValues(alpha: 0.25)),
                           ),
                           child: Text(
                             label,

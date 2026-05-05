@@ -82,7 +82,7 @@ class _SelectMessageReasonPageState extends State<SelectMessageReasonPage> {
       title: Row(
         children: [
           CircleAvatar(
-            backgroundColor: AppColors.background2.withOpacity(0.3),
+            backgroundColor: AppColors.background2.withValues(alpha: 0.3),
             radius: 18.r,
             child: ClipRRect(
               borderRadius: BorderRadius.circular(50),

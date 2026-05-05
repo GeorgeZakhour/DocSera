@@ -78,9 +78,9 @@ class HealthRecapStep extends StatelessWidget {
             width: double.infinity,
             padding: EdgeInsets.symmetric(horizontal: 12.w, vertical: 8.h),
             decoration: BoxDecoration(
-              color: AppColors.main.withOpacity(0.07),
+              color: AppColors.main.withValues(alpha: 0.07),
               border: Border.all(
-                color: AppColors.main.withOpacity(0.35),
+                color: AppColors.main.withValues(alpha: 0.35),
                 width: 1,
               ),
               borderRadius: BorderRadius.circular(12.r),

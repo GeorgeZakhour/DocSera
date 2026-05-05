@@ -108,7 +108,7 @@ class _MarketingPreferencesPageState extends State<MarketingPreferencesPage> {
             // 🟢 Progress Line
             LinearProgressIndicator(
               value: 0.9,
-              backgroundColor: AppColors.main.withOpacity(0.1),
+              backgroundColor: AppColors.main.withValues(alpha: 0.1),
               valueColor: const AlwaysStoppedAnimation<Color>(AppColors.main),
               minHeight: 4,
             ),

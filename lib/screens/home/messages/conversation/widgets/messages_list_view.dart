@@ -9,13 +9,10 @@ import 'package:docsera/utils/time_utils.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:flutter_svg/flutter_svg.dart';
-import 'package:intl/intl.dart' as intl;
 import 'package:supabase_flutter/supabase_flutter.dart';
-import 'package:docsera/screens/home/messages/conversation/widgets/audio_message_bubble.dart';
 import 'package:docsera/screens/home/messages/conversation/widgets/resolved_bubbles.dart';
 import 'package:docsera/screens/home/messages/conversation/widgets/decrypted_image_cache.dart';
 
-import '../../../../../utils/full_page_loader.dart';
 
 class MessagesListView extends StatelessWidget {
   final List<Map<String, dynamic>> messages;
@@ -195,7 +192,7 @@ class MessagesListView extends StatelessWidget {
 
         final avatarUser = CircleAvatar(
           radius: 12.r,
-          backgroundColor: AppColors.whiteText.withOpacity(0.6),
+          backgroundColor: AppColors.whiteText.withValues(alpha: 0.6),
           child: FittedBox(
             fit: BoxFit.scaleDown,
             child: Transform.translate(
@@ -219,7 +216,7 @@ class MessagesListView extends StatelessWidget {
 
         final avatarUserSmall = CircleAvatar(
           radius: 6.r,
-          backgroundColor: AppColors.main.withOpacity(0.8),
+          backgroundColor: AppColors.main.withValues(alpha: 0.8),
           child: FittedBox(
             fit: BoxFit.scaleDown,
             child: Transform.translate(
@@ -243,13 +240,13 @@ class MessagesListView extends StatelessWidget {
 
         final avatarDoctor = CircleAvatar(
           radius: 10.r,
-          backgroundColor: AppColors.main.withOpacity(0.55),
+          backgroundColor: AppColors.main.withValues(alpha: 0.55),
           backgroundImage: doctorImage,
         );
 
         final avatarDoctorSmall = CircleAvatar(
           radius: 10.r,
-          backgroundColor: AppColors.main.withOpacity(0.55),
+          backgroundColor: AppColors.main.withValues(alpha: 0.55),
           backgroundImage: doctorImage,
         );
 
@@ -374,7 +371,7 @@ class MessagesListView extends StatelessWidget {
                                     radius: 7.r,
                                     backgroundImage: doctorImage,
                                     backgroundColor:
-                                    AppColors.main.withOpacity(0.5),
+                                    AppColors.main.withValues(alpha: 0.5),
                                   ),
                                   SizedBox(width: 4.w),
                                   Text(
@@ -430,8 +427,8 @@ class MessagesListView extends StatelessWidget {
               EdgeInsets.symmetric(horizontal: 14.w, vertical: 10.h),
               decoration: BoxDecoration(
                 color: isUser
-                    ? AppColors.mainDark.withOpacity(0.9)
-                    : AppColors.grayMain.withOpacity(0.25),
+                    ? AppColors.mainDark.withValues(alpha: 0.9)
+                    : AppColors.grayMain.withValues(alpha: 0.25),
                 borderRadius: BorderRadius.only(
                   topLeft: Radius.circular(12.r),
                   topRight: Radius.circular(12.r),
@@ -726,7 +723,7 @@ class MessagesListView extends StatelessWidget {
                     color: Colors.white,
                     borderRadius: BorderRadius.circular(8.r),
                     border: Border.all(
-                      color: AppColors.main.withOpacity(0.4),
+                      color: AppColors.main.withValues(alpha: 0.4),
                     ),
                   ),
                   child: Row(
@@ -1000,13 +997,13 @@ class MessagesListView extends StatelessWidget {
                           },
                           child: Container(
                             decoration: BoxDecoration(
-                              color: AppColors.main.withOpacity(0.1),
+                              color: AppColors.main.withValues(alpha: 0.1),
                               borderRadius: BorderRadius.circular(8.r),
                             ),
                             child: Center(
                               child: CircleAvatar(
                                 radius: 16.r,
-                                backgroundColor: Colors.white.withOpacity(0.85),
+                                backgroundColor: Colors.white.withValues(alpha: 0.85),
                                 child: Text(
                                   '+${images.length - 3}',
                                   style: AppTextStyles.getText3(context).copyWith(

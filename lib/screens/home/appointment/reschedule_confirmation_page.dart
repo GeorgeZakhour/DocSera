@@ -241,8 +241,8 @@ class RescheduleConfirmationPage extends StatelessWidget {
             children: [
               CircleAvatar(
                 backgroundColor: old
-                    ? AppColors.yellow.withOpacity(0.2)
-                    : AppColors.main.withOpacity(0.2),
+                    ? AppColors.yellow.withValues(alpha: 0.2)
+                    : AppColors.main.withValues(alpha: 0.2),
                 radius: 25.r,
                 backgroundImage: imageResult.imageProvider,
               ),
@@ -356,10 +356,10 @@ class RescheduleConfirmationPage extends StatelessWidget {
                 child: Container(
                   padding: EdgeInsets.all(12.w),
                   decoration: BoxDecoration(
-                    color: AppColors.main.withOpacity(0.08),
+                    color: AppColors.main.withValues(alpha: 0.08),
                     borderRadius: BorderRadius.circular(12.r),
                     border: Border.all(
-                      color: AppColors.main.withOpacity(0.35),
+                      color: AppColors.main.withValues(alpha: 0.35),
                       width: 0.8,
                     ),
                   ),

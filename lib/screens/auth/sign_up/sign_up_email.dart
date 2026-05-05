@@ -330,11 +330,11 @@ class _EnterEmailPageState extends State<EnterEmailPage> {
                             decoration: InputDecoration(
                               counterText: '',
                               filled: true,
-                              fillColor: Colors.grey.withOpacity(0.1),
+                              fillColor: Colors.grey.withValues(alpha: 0.1),
                               contentPadding: EdgeInsets.symmetric(vertical: 10.h),
                               border: OutlineInputBorder(
                                 borderRadius: BorderRadius.circular(10.r),
-                                borderSide: BorderSide(color: AppColors.mainDark.withOpacity(0.2)),
+                                borderSide: BorderSide(color: AppColors.mainDark.withValues(alpha: 0.2)),
                               ),
                               focusedBorder: OutlineInputBorder(
                                 borderRadius: BorderRadius.circular(10.r),
@@ -358,7 +358,7 @@ class _EnterEmailPageState extends State<EnterEmailPage> {
               // ✅ **خط التقدم**
               LinearProgressIndicator(
                 value: 0.40,
-                backgroundColor: AppColors.main.withOpacity(0.1),
+                backgroundColor: AppColors.main.withValues(alpha: 0.1),
                 valueColor: const AlwaysStoppedAnimation<Color>(AppColors.main),
               ),
               SizedBox(height: 20.h),

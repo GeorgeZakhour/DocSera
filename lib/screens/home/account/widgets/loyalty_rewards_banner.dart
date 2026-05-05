@@ -116,7 +116,7 @@ class _LoyaltyRewardsBannerState extends State<LoyaltyRewardsBanner>
           borderRadius: BorderRadius.circular(20.r),
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withOpacity(0.06),
+              color: Colors.black.withValues(alpha: 0.06),
               blurRadius: 10,
               offset: const Offset(0, 3),
             ),
@@ -216,7 +216,7 @@ class _LoyaltyRewardsBannerState extends State<LoyaltyRewardsBanner>
             width: 40.r,
             height: 40.r,
             decoration: BoxDecoration(
-              color: AppColors.main.withOpacity(0.08),
+              color: AppColors.main.withValues(alpha: 0.08),
               borderRadius: BorderRadius.circular(12.r),
             ),
             child: Icon(
@@ -257,7 +257,7 @@ class _LoyaltyRewardsBannerState extends State<LoyaltyRewardsBanner>
                           TextSpan(
                             text: ' ${l.points}',
                             style: AppTextStyles.getText2(context).copyWith(
-                              color: AppColors.main.withOpacity(0.6),
+                              color: AppColors.main.withValues(alpha: 0.6),
                               fontWeight: FontWeight.w600,
                             ),
                           ),
@@ -380,19 +380,19 @@ class _GlassTileState extends State<_GlassTile>
                   gradient: LinearGradient(
                     colors: _isPressed
                         ? [
-                            AppColors.main.withOpacity(0.15),
-                            AppColors.main.withOpacity(0.08),
+                            AppColors.main.withValues(alpha: 0.15),
+                            AppColors.main.withValues(alpha: 0.08),
                           ]
                         : [
-                            AppColors.main.withOpacity(0.08),
-                            AppColors.main.withOpacity(0.04),
+                            AppColors.main.withValues(alpha: 0.08),
+                            AppColors.main.withValues(alpha: 0.04),
                           ],
                     begin: Alignment.topLeft,
                     end: Alignment.bottomRight,
                   ),
                   borderRadius: BorderRadius.circular(14.r),
                   border: Border.all(
-                    color: AppColors.main.withOpacity(_isPressed ? 0.25 : 0.12),
+                    color: AppColors.main.withValues(alpha: _isPressed ? 0.25 : 0.12),
                   ),
                 ),
                 child: Column(

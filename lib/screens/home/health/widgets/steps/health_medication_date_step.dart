@@ -83,10 +83,10 @@ class MedicationDateStep extends StatelessWidget {
           child: Container(
             padding: EdgeInsets.symmetric(horizontal: 14.w, vertical: 14.h),
             decoration: BoxDecoration(
-              color: AppColors.main.withOpacity(0.08),
+              color: AppColors.main.withValues(alpha: 0.08),
               borderRadius: BorderRadius.circular(18.r),
               border: Border.all(
-                color: AppColors.main.withOpacity(0.25),
+                color: AppColors.main.withValues(alpha: 0.25),
               ),
             ),
             child: Row(
@@ -109,7 +109,7 @@ class MedicationDateStep extends StatelessWidget {
                 ),
 
                 Icon(Icons.edit_calendar_rounded,
-                    color: AppColors.mainDark.withOpacity(0.7), size: 18.sp),
+                    color: AppColors.mainDark.withValues(alpha: 0.7), size: 18.sp),
               ],
             ),
           ),
@@ -125,7 +125,7 @@ class MedicationDateStep extends StatelessWidget {
             padding: EdgeInsets.symmetric(vertical: 12.h),
             decoration: BoxDecoration(
               color: selectedDate == null
-                  ? AppColors.main.withOpacity(0.35)
+                  ? AppColors.main.withValues(alpha: 0.35)
                   : AppColors.main,
               borderRadius: BorderRadius.circular(24.r),
             ),

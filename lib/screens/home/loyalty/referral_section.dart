@@ -135,7 +135,7 @@ class _ReferralSectionPageState extends State<ReferralSectionPage>
                   height: 120.r,
                   decoration: BoxDecoration(
                     shape: BoxShape.circle,
-                    color: Colors.white.withOpacity(0.06),
+                    color: Colors.white.withValues(alpha: 0.06),
                   ),
                 ),
               ),
@@ -147,7 +147,7 @@ class _ReferralSectionPageState extends State<ReferralSectionPage>
                   height: 80.r,
                   decoration: BoxDecoration(
                     shape: BoxShape.circle,
-                    color: Colors.white.withOpacity(0.04),
+                    color: Colors.white.withValues(alpha: 0.04),
                   ),
                 ),
               ),
@@ -158,7 +158,7 @@ class _ReferralSectionPageState extends State<ReferralSectionPage>
                 child: Text(
                   l.referralReward,
                   style: AppTextStyles.getText2(context).copyWith(
-                    color: Colors.white.withOpacity(0.8),
+                    color: Colors.white.withValues(alpha: 0.8),
                     fontWeight: FontWeight.w500,
                   ),
                   textAlign: TextAlign.center,
@@ -227,7 +227,7 @@ class _ReferralSectionPageState extends State<ReferralSectionPage>
         borderRadius: BorderRadius.circular(20.r),
         boxShadow: [
           BoxShadow(
-            color: AppColors.main.withOpacity(0.08),
+            color: AppColors.main.withValues(alpha: 0.08),
             blurRadius: 16,
             offset: const Offset(0, 6),
           ),
@@ -240,7 +240,7 @@ class _ReferralSectionPageState extends State<ReferralSectionPage>
             padding: EdgeInsets.all(14.w),
             decoration: BoxDecoration(
               gradient: LinearGradient(
-                colors: [AppColors.main.withOpacity(0.12), AppColors.main.withOpacity(0.04)],
+                colors: [AppColors.main.withValues(alpha: 0.12), AppColors.main.withValues(alpha: 0.04)],
                 begin: Alignment.topLeft,
                 end: Alignment.bottomRight,
               ),
@@ -264,15 +264,15 @@ class _ReferralSectionPageState extends State<ReferralSectionPage>
                 child: Container(
                   padding: EdgeInsets.symmetric(horizontal: 24.w, vertical: 14.h),
                   decoration: BoxDecoration(
-                    color: AppColors.main.withOpacity(0.04),
+                    color: AppColors.main.withValues(alpha: 0.04),
                     borderRadius: BorderRadius.circular(14.r),
                     border: Border.all(
-                      color: AppColors.main.withOpacity(0.15 + 0.1 * _codeGlowController.value),
+                      color: AppColors.main.withValues(alpha: 0.15 + 0.1 * _codeGlowController.value),
                       width: 1.5,
                     ),
                     boxShadow: [
                       BoxShadow(
-                        color: AppColors.main.withOpacity(0.05 * _codeGlowController.value),
+                        color: AppColors.main.withValues(alpha: 0.05 * _codeGlowController.value),
                         blurRadius: 12,
                         spreadRadius: 2,
                       ),
@@ -295,7 +295,7 @@ class _ReferralSectionPageState extends State<ReferralSectionPage>
                         duration: const Duration(milliseconds: 200),
                         child: _codeCopied
                             ? Icon(Icons.check_rounded, key: const ValueKey('check'), size: 20.sp, color: const Color(0xFF4CAF50))
-                            : Icon(Icons.copy_rounded, key: const ValueKey('copy'), size: 18.sp, color: AppColors.main.withOpacity(0.5)),
+                            : Icon(Icons.copy_rounded, key: const ValueKey('copy'), size: 18.sp, color: AppColors.main.withValues(alpha: 0.5)),
                       ),
                     ],
                   ),
@@ -334,7 +334,7 @@ class _ReferralSectionPageState extends State<ReferralSectionPage>
                 borderRadius: BorderRadius.circular(14.r),
                 boxShadow: [
                   BoxShadow(
-                    color: AppColors.main.withOpacity(0.3),
+                    color: AppColors.main.withValues(alpha: 0.3),
                     blurRadius: 12,
                     offset: const Offset(0, 4),
                   ),
@@ -398,7 +398,7 @@ class _ReferralSectionPageState extends State<ReferralSectionPage>
         borderRadius: BorderRadius.circular(16.r),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.03),
+            color: Colors.black.withValues(alpha: 0.03),
             blurRadius: 8,
             offset: const Offset(0, 2),
           ),
@@ -472,7 +472,7 @@ class _ReferralSectionPageState extends State<ReferralSectionPage>
                   borderRadius: BorderRadius.circular(14.r),
                   boxShadow: [
                     BoxShadow(
-                      color: Colors.black.withOpacity(0.03),
+                      color: Colors.black.withValues(alpha: 0.03),
                       blurRadius: 6,
                       offset: const Offset(0, 2),
                     ),
@@ -485,7 +485,7 @@ class _ReferralSectionPageState extends State<ReferralSectionPage>
                       height: 38.r,
                       decoration: BoxDecoration(
                         gradient: LinearGradient(
-                          colors: [AppColors.main.withOpacity(0.12), AppColors.main.withOpacity(0.04)],
+                          colors: [AppColors.main.withValues(alpha: 0.12), AppColors.main.withValues(alpha: 0.04)],
                         ),
                         borderRadius: BorderRadius.circular(10.r),
                       ),
@@ -514,7 +514,7 @@ class _ReferralSectionPageState extends State<ReferralSectionPage>
                     Container(
                       padding: EdgeInsets.symmetric(horizontal: 10.w, vertical: 4.h),
                       decoration: BoxDecoration(
-                        color: AppColors.main.withOpacity(0.08),
+                        color: AppColors.main.withValues(alpha: 0.08),
                         borderRadius: BorderRadius.circular(8.r),
                       ),
                       child: Text(
@@ -626,7 +626,7 @@ class _AnimatedStatCardState extends State<_AnimatedStatCard>
         borderRadius: BorderRadius.circular(16.r),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.03),
+            color: Colors.black.withValues(alpha: 0.03),
             blurRadius: 8,
             offset: const Offset(0, 2),
           ),
@@ -637,7 +637,7 @@ class _AnimatedStatCardState extends State<_AnimatedStatCard>
           Container(
             padding: EdgeInsets.all(10.w),
             decoration: BoxDecoration(
-              color: widget.color.withOpacity(0.08),
+              color: widget.color.withValues(alpha: 0.08),
               borderRadius: BorderRadius.circular(12.r),
             ),
             child: Icon(widget.icon, color: widget.color, size: 20.sp),
@@ -691,7 +691,7 @@ class _StepRow extends StatelessWidget {
           height: 32.r,
           decoration: BoxDecoration(
             gradient: LinearGradient(
-              colors: [color, color.withOpacity(0.7)],
+              colors: [color, color.withValues(alpha: 0.7)],
             ),
             borderRadius: BorderRadius.circular(10.r),
           ),
@@ -723,7 +723,7 @@ class _StepConnector extends StatelessWidget {
         height: 16.h,
         decoration: BoxDecoration(
           gradient: LinearGradient(
-            colors: [Colors.grey.withOpacity(0.2), Colors.grey.withOpacity(0.05)],
+            colors: [Colors.grey.withValues(alpha: 0.2), Colors.grey.withValues(alpha: 0.05)],
             begin: Alignment.topCenter,
             end: Alignment.bottomCenter,
           ),

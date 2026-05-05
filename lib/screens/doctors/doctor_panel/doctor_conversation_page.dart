@@ -324,7 +324,7 @@ class _DoctorConversationPageState extends State<DoctorConversationPage> {
                                       padding: EdgeInsets.all(10.w),
                                       constraints: BoxConstraints(maxWidth: 0.7.sw),
                                       decoration: BoxDecoration(
-                                        color: isUser ? AppColors.grayMain.withOpacity(0.25) : AppColors.main.withOpacity(0.85),
+                                        color: isUser ? AppColors.grayMain.withValues(alpha: 0.25) : AppColors.main.withValues(alpha: 0.85),
                                         borderRadius: BorderRadius.circular(12.r),
                                       ),
                                       child: Column(
@@ -362,7 +362,7 @@ class _DoctorConversationPageState extends State<DoctorConversationPage> {
                                         children: [
                                           CircleAvatar(
                                             radius: 7.r,
-                                            backgroundColor: AppColors.main.withOpacity(0.5),
+                                            backgroundColor: AppColors.main.withValues(alpha: 0.5),
                                             child: Icon(Icons.person, size: 9.sp, color: Colors.white),
                                           ),
                                           SizedBox(width: 4.w),
@@ -415,7 +415,7 @@ class _DoctorConversationPageState extends State<DoctorConversationPage> {
                 filter: ImageFilter.blur(sigmaX: 12, sigmaY: 12),
                 child: Container(
                   width: double.infinity,
-                  color: AppColors.main.withOpacity(0.5),
+                  color: AppColors.main.withValues(alpha: 0.5),
                   padding: EdgeInsets.symmetric(horizontal: 20.w, vertical: 10.h),
                   child: Row(
                     children: [
@@ -446,7 +446,7 @@ class _DoctorConversationPageState extends State<DoctorConversationPage> {
                     filter: ImageFilter.blur(sigmaX: 20, sigmaY: 20),
                     child: Container(
                       width: double.infinity,
-                      color: AppColors.grayMain.withOpacity(0.35),
+                      color: AppColors.grayMain.withValues(alpha: 0.35),
                       padding: EdgeInsets.symmetric(horizontal: 20.w, vertical: 12.h),
                       child: Row(
                         children: _isArabic(widget.accountHolderName)
@@ -462,7 +462,7 @@ class _DoctorConversationPageState extends State<DoctorConversationPage> {
 
                           CircleAvatar(
                             radius: 10.r,
-                            backgroundColor: AppColors.main.withOpacity(0.9),
+                            backgroundColor: AppColors.main.withValues(alpha: 0.9),
                             child: FittedBox(
                               fit: BoxFit.scaleDown,
                               child: Transform.translate(
@@ -499,7 +499,7 @@ class _DoctorConversationPageState extends State<DoctorConversationPage> {
                             : [
                           CircleAvatar(
                             radius: 10.r,
-                            backgroundColor: AppColors.main.withOpacity(0.9),
+                            backgroundColor: AppColors.main.withValues(alpha: 0.9),
                             child: FittedBox(
                               fit: BoxFit.scaleDown,
                               child: Transform.translate(
@@ -558,7 +558,7 @@ class _DoctorConversationPageState extends State<DoctorConversationPage> {
         child: Container(
           padding: EdgeInsets.symmetric(horizontal: 12.w, vertical: 12.h),
           decoration: BoxDecoration(
-            color: AppColors.grayMain.withOpacity(0.15),
+            color: AppColors.grayMain.withValues(alpha: 0.15),
             borderRadius: BorderRadius.circular(16.r),
           ),
           child: Row(
@@ -621,7 +621,7 @@ class _DoctorConversationPageState extends State<DoctorConversationPage> {
             height: 55.h,
             child: Container(
               decoration: BoxDecoration(
-                color: AppColors.grayMain.withOpacity(0.15),
+                color: AppColors.grayMain.withValues(alpha: 0.15),
                 border: Border(top: BorderSide(color: Colors.grey.shade300, width: 0.5)),
               ),
               padding: EdgeInsets.symmetric(horizontal: 8.w, vertical: 8.h),
@@ -635,7 +635,7 @@ class _DoctorConversationPageState extends State<DoctorConversationPage> {
                         hintText: AppLocalizations.of(context)!.writeYourMessage,
                         hintStyle: AppTextStyles.getText3(context).copyWith(fontSize: 11.sp, color: Colors.grey),
                         filled: true,
-                        fillColor: Colors.white.withOpacity(0.8),
+                        fillColor: Colors.white.withValues(alpha: 0.8),
                         contentPadding: EdgeInsets.symmetric(horizontal: 14.w, vertical: 8.h),
                         border: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(30.r),
@@ -679,7 +679,7 @@ class _DoctorConversationPageState extends State<DoctorConversationPage> {
                 child: BackdropFilter(
                   filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
                   child: Container(
-                    color: AppColors.grayMain.withOpacity(0.2),
+                    color: AppColors.grayMain.withValues(alpha: 0.2),
                   ),
                 ),
               ),

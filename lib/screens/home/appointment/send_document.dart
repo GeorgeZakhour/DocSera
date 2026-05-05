@@ -239,7 +239,7 @@ class _SendDocumentToDoctorPageState extends State<SendDocumentToDoctorPage> {
             height: 50.w,
             decoration: BoxDecoration(
               shape: BoxShape.circle,
-              color: AppColors.main.withOpacity(0.1),
+              color: AppColors.main.withValues(alpha: 0.1),
             ),
             child: Center(
               child: SvgPicture.asset(iconPath, width: 22.w, height: 22.w),

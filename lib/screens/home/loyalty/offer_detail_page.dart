@@ -120,8 +120,8 @@ class _OfferDetailPageState extends State<OfferDetailPage>
                                 begin: Alignment.topCenter,
                                 end: Alignment.bottomCenter,
                                 colors: [
-                                  Colors.black.withOpacity(0.05),
-                                  Colors.black.withOpacity(0.55),
+                                  Colors.black.withValues(alpha: 0.05),
+                                  Colors.black.withValues(alpha: 0.55),
                                 ],
                               ),
                             ),
@@ -208,7 +208,7 @@ class _OfferDetailPageState extends State<OfferDetailPage>
   Widget _heroFallback(Color brand) => Container(
         decoration: BoxDecoration(
           gradient: LinearGradient(
-            colors: [brand, brand.withOpacity(0.75)],
+            colors: [brand, brand.withValues(alpha: 0.75)],
             begin: Alignment.topLeft,
             end: Alignment.bottomRight,
           ),
@@ -218,7 +218,7 @@ class _OfferDetailPageState extends State<OfferDetailPage>
             widget.offer.category == 'credit'
                 ? Icons.phone_android_rounded
                 : Icons.local_offer_rounded,
-            color: Colors.white.withOpacity(0.35),
+            color: Colors.white.withValues(alpha: 0.35),
             size: 80.sp,
           ),
         ),
@@ -255,7 +255,7 @@ class _OfferDetailPageState extends State<OfferDetailPage>
           borderRadius: BorderRadius.circular(14.r),
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withOpacity(0.04),
+              color: Colors.black.withValues(alpha: 0.04),
               blurRadius: 8,
               offset: const Offset(0, 2),
             ),
@@ -267,7 +267,7 @@ class _OfferDetailPageState extends State<OfferDetailPage>
               width: 44.w,
               height: 44.w,
               decoration: BoxDecoration(
-                color: AppColors.main.withOpacity(0.06),
+                color: AppColors.main.withValues(alpha: 0.06),
                 shape: BoxShape.circle,
               ),
               child: ClipOval(
@@ -321,7 +321,7 @@ class _OfferDetailPageState extends State<OfferDetailPage>
         borderRadius: BorderRadius.circular(16.r),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.03),
+            color: Colors.black.withValues(alpha: 0.03),
             blurRadius: 8,
             offset: const Offset(0, 2),
           ),
@@ -343,19 +343,19 @@ class _OfferDetailPageState extends State<OfferDetailPage>
       padding: EdgeInsets.all(18.w),
       decoration: BoxDecoration(
         gradient: LinearGradient(
-          colors: [AppColors.main.withOpacity(0.08), AppColors.main.withOpacity(0.03)],
+          colors: [AppColors.main.withValues(alpha: 0.08), AppColors.main.withValues(alpha: 0.03)],
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
         ),
         borderRadius: BorderRadius.circular(16.r),
-        border: Border.all(color: AppColors.main.withOpacity(0.15)),
+        border: Border.all(color: AppColors.main.withValues(alpha: 0.15)),
       ),
       child: Row(
         children: [
           Container(
             padding: EdgeInsets.all(10.w),
             decoration: BoxDecoration(
-              color: AppColors.main.withOpacity(0.12),
+              color: AppColors.main.withValues(alpha: 0.12),
               borderRadius: BorderRadius.circular(12.r),
             ),
             child: Icon(Icons.discount_rounded, color: AppColors.main, size: 22.sp),
@@ -368,7 +368,7 @@ class _OfferDetailPageState extends State<OfferDetailPage>
                 Text(
                   AppLocalizations.of(context)!.discount,
                   style: AppTextStyles.getText3(context).copyWith(
-                    color: AppColors.main.withOpacity(0.7),
+                    color: AppColors.main.withValues(alpha: 0.7),
                     fontWeight: FontWeight.w600,
                   ),
                 ),
@@ -400,7 +400,7 @@ class _OfferDetailPageState extends State<OfferDetailPage>
         borderRadius: BorderRadius.circular(18.r),
         boxShadow: [
           BoxShadow(
-            color: AppColors.main.withOpacity(0.08),
+            color: AppColors.main.withValues(alpha: 0.08),
             blurRadius: 12,
             offset: const Offset(0, 4),
           ),
@@ -413,7 +413,7 @@ class _OfferDetailPageState extends State<OfferDetailPage>
             padding: EdgeInsets.symmetric(horizontal: 20.w, vertical: 14.h),
             decoration: BoxDecoration(
               gradient: LinearGradient(
-                colors: [AppColors.main.withOpacity(0.08), AppColors.main.withOpacity(0.03)],
+                colors: [AppColors.main.withValues(alpha: 0.08), AppColors.main.withValues(alpha: 0.03)],
               ),
               borderRadius: BorderRadius.circular(14.r),
             ),
@@ -436,7 +436,7 @@ class _OfferDetailPageState extends State<OfferDetailPage>
                   style: TextStyle(
                     fontSize: 14.sp,
                     fontWeight: FontWeight.w600,
-                    color: AppColors.main.withOpacity(0.7),
+                    color: AppColors.main.withValues(alpha: 0.7),
                   ),
                 ),
               ],
@@ -464,7 +464,7 @@ class _OfferDetailPageState extends State<OfferDetailPage>
                         borderRadius: BorderRadius.circular(14.r),
                       ),
                       elevation: hasEnough ? 4 : 0,
-                      shadowColor: AppColors.main.withOpacity(0.3),
+                      shadowColor: AppColors.main.withValues(alpha: 0.3),
                     ),
                     child: Row(
                       mainAxisAlignment: MainAxisAlignment.center,
@@ -598,7 +598,7 @@ class _OfferDetailPageState extends State<OfferDetailPage>
               margin: EdgeInsets.only(top: 10.h),
               padding: EdgeInsets.symmetric(vertical: 10.h),
               decoration: BoxDecoration(
-                color: AppColors.main.withOpacity(0.06),
+                color: AppColors.main.withValues(alpha: 0.06),
                 borderRadius: BorderRadius.circular(10.r),
               ),
               child: Row(
@@ -665,7 +665,7 @@ class _OfferDetailPageState extends State<OfferDetailPage>
           margin: EdgeInsets.only(top: 2.h),
           padding: EdgeInsets.all(5.w),
           decoration: BoxDecoration(
-            color: color.withOpacity(0.08),
+            color: color.withValues(alpha: 0.08),
             borderRadius: BorderRadius.circular(6.r),
           ),
           child: Icon(icon, size: 14.sp, color: color),
@@ -699,7 +699,7 @@ class _OfferDetailPageState extends State<OfferDetailPage>
               Container(
                 padding: EdgeInsets.all(16.w),
                 decoration: BoxDecoration(
-                  color: const Color(0xFF4CAF50).withOpacity(0.1),
+                  color: const Color(0xFF4CAF50).withValues(alpha: 0.1),
                   shape: BoxShape.circle,
                 ),
                 child: Icon(Icons.check_circle_rounded, color: const Color(0xFF4CAF50), size: 48.sp),
@@ -721,9 +721,9 @@ class _OfferDetailPageState extends State<OfferDetailPage>
               Container(
                 padding: EdgeInsets.symmetric(horizontal: 24.w, vertical: 14.h),
                 decoration: BoxDecoration(
-                  color: AppColors.main.withOpacity(0.08),
+                  color: AppColors.main.withValues(alpha: 0.08),
                   borderRadius: BorderRadius.circular(12.r),
-                  border: Border.all(color: AppColors.main.withOpacity(0.2)),
+                  border: Border.all(color: AppColors.main.withValues(alpha: 0.2)),
                 ),
                 child: Text(
                   code,

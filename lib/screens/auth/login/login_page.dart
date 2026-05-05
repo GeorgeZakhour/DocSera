@@ -11,7 +11,6 @@ import 'package:crypto/crypto.dart'; // For hashing
 import 'package:docsera/app/const.dart';
 import 'package:docsera/widgets/custom_bottom_navigation_bar.dart';
 import 'dart:convert'; // For utf8 encoding
-import 'dart:math';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -242,7 +241,7 @@ class _LogInPageState extends State<LogInPage> with SingleTickerProviderStateMix
       height: 64.h,
       padding: EdgeInsets.all(4.w),
       decoration: BoxDecoration(
-        color: AppColors.main.withOpacity(0.08),
+        color: AppColors.main.withValues(alpha: 0.08),
         borderRadius: BorderRadius.circular(100.r),
       ),
       child: Stack(
@@ -258,7 +257,7 @@ class _LogInPageState extends State<LogInPage> with SingleTickerProviderStateMix
                 borderRadius: BorderRadius.circular(100.r),
                 boxShadow: [
                   BoxShadow(
-                    color: Colors.black.withOpacity(0.06),
+                    color: Colors.black.withValues(alpha: 0.06),
                     blurRadius: 6,
                     offset: const Offset(0, 2),
                   ),
@@ -281,14 +280,14 @@ class _LogInPageState extends State<LogInPage> with SingleTickerProviderStateMix
                       Icon(
                         Icons.phone_android_rounded,
                         size: 18.sp,
-                        color: _isPhoneMode ? AppColors.main : AppColors.main.withOpacity(0.4),
+                        color: _isPhoneMode ? AppColors.main : AppColors.main.withValues(alpha: 0.4),
                       ),
                       SizedBox(height: 2.h),
                       Text(
                         AppLocalizations.of(context)!.phoneLogin,
                         textAlign: TextAlign.center,
                         style: TextStyle(
-                          color: _isPhoneMode ? AppColors.mainDark : AppColors.mainDark.withOpacity(0.45),
+                          color: _isPhoneMode ? AppColors.mainDark : AppColors.mainDark.withValues(alpha: 0.45),
                           fontWeight: _isPhoneMode ? FontWeight.w600 : FontWeight.w500,
                           fontSize: 10.sp,
                         ),
@@ -310,14 +309,14 @@ class _LogInPageState extends State<LogInPage> with SingleTickerProviderStateMix
                       Icon(
                         Icons.email_outlined,
                         size: 18.sp,
-                        color: !_isPhoneMode ? AppColors.main : AppColors.main.withOpacity(0.4),
+                        color: !_isPhoneMode ? AppColors.main : AppColors.main.withValues(alpha: 0.4),
                       ),
                       SizedBox(height: 2.h),
                       Text(
                         AppLocalizations.of(context)!.emailLogin,
                         textAlign: TextAlign.center,
                         style: TextStyle(
-                          color: !_isPhoneMode ? AppColors.mainDark : AppColors.mainDark.withOpacity(0.45),
+                          color: !_isPhoneMode ? AppColors.mainDark : AppColors.mainDark.withValues(alpha: 0.45),
                           fontWeight: !_isPhoneMode ? FontWeight.w600 : FontWeight.w500,
                           fontSize: 10.sp,
                         ),
@@ -725,7 +724,7 @@ class _LogInPageState extends State<LogInPage> with SingleTickerProviderStateMix
               AppLocalizations.of(context)!.loginMethodDescription,
               style: TextStyle(
                 fontSize: 9.sp,
-                color: AppColors.mainDark.withOpacity(0.5),
+                color: AppColors.mainDark.withValues(alpha: 0.5),
                 height: 1.2,
               ),
             ),
@@ -756,7 +755,7 @@ class _LogInPageState extends State<LogInPage> with SingleTickerProviderStateMix
                   labelText: AppLocalizations.of(context)!.phoneNumber,
                   hintText: AppLocalizations.of(context)!.phoneNumber,
                   labelStyle: AppTextStyles.getText2(context).copyWith(color: Colors.grey),
-                  hintStyle: AppTextStyles.getText2(context).copyWith(color: Colors.grey.withOpacity(0.5)),
+                  hintStyle: AppTextStyles.getText2(context).copyWith(color: Colors.grey.withValues(alpha: 0.5)),
                   border: OutlineInputBorder(borderRadius: BorderRadius.circular(15.r)),
                 ),
                 onChanged: (val) {
@@ -779,7 +778,7 @@ class _LogInPageState extends State<LogInPage> with SingleTickerProviderStateMix
                   labelText: AppLocalizations.of(context)!.password,
                   hintText: AppLocalizations.of(context)!.password,
                   labelStyle: AppTextStyles.getText2(context).copyWith(color: Colors.grey),
-                  hintStyle: AppTextStyles.getText2(context).copyWith(color: Colors.grey.withOpacity(0.5)),
+                  hintStyle: AppTextStyles.getText2(context).copyWith(color: Colors.grey.withValues(alpha: 0.5)),
                   border: OutlineInputBorder(borderRadius: BorderRadius.circular(15.r)),
                   suffixIcon: IconButton(
                     icon: Icon(
@@ -878,7 +877,7 @@ class _LogInPageState extends State<LogInPage> with SingleTickerProviderStateMix
                   hintText: AppLocalizations.of(context)!.email,
                   labelStyle: AppTextStyles.getText2(context).copyWith(color: Colors.grey),
                   border: OutlineInputBorder(borderRadius: BorderRadius.circular(15.r)),
-                  hintStyle: AppTextStyles.getText2(context).copyWith(color: Colors.grey.withOpacity(0.5)),
+                  hintStyle: AppTextStyles.getText2(context).copyWith(color: Colors.grey.withValues(alpha: 0.5)),
                 ),
                 onChanged: (value) {
                   setState(() {
@@ -900,7 +899,7 @@ class _LogInPageState extends State<LogInPage> with SingleTickerProviderStateMix
                   labelText: AppLocalizations.of(context)!.password,
                   hintText: AppLocalizations.of(context)!.password,
                   labelStyle: AppTextStyles.getText2(context).copyWith(color: Colors.grey),
-                  hintStyle: AppTextStyles.getText2(context).copyWith(color: Colors.grey.withOpacity(0.5)),
+                  hintStyle: AppTextStyles.getText2(context).copyWith(color: Colors.grey.withValues(alpha: 0.5)),
                   border: OutlineInputBorder(borderRadius: BorderRadius.circular(15.r)),
                   suffixIcon: IconButton(
                     icon: Icon(

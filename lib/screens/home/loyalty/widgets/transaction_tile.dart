@@ -300,12 +300,12 @@ class _TransactionTileState extends State<TransactionTile>
             color: Colors.white,
             borderRadius: BorderRadius.circular(16.r),
             border: !isPending && _isExpanded
-                ? Border.all(color: color.withOpacity(0.25))
+                ? Border.all(color: color.withValues(alpha: 0.25))
                 : null,
             boxShadow: isPending
                 ? [
                     BoxShadow(
-                      color: Colors.black.withOpacity(0.02),
+                      color: Colors.black.withValues(alpha: 0.02),
                       blurRadius: 4,
                       offset: const Offset(0, 1),
                     ),
@@ -313,8 +313,8 @@ class _TransactionTileState extends State<TransactionTile>
                 : [
                     BoxShadow(
                       color: _isExpanded
-                          ? color.withOpacity(0.08)
-                          : Colors.black.withOpacity(0.03),
+                          ? color.withValues(alpha: 0.08)
+                          : Colors.black.withValues(alpha: 0.03),
                       blurRadius: _isExpanded ? 12 : 6,
                       offset: Offset(0, _isExpanded ? 4 : 2),
                     ),
@@ -323,7 +323,7 @@ class _TransactionTileState extends State<TransactionTile>
           child: isPending
               ? CustomPaint(
                   painter: _DashedBorderPainter(
-                    color: const Color(0xFFFF9800).withOpacity(0.4),
+                    color: const Color(0xFFFF9800).withValues(alpha: 0.4),
                     borderRadius: 16.r,
                     dashWidth: 6,
                     dashGap: 4,
@@ -356,8 +356,8 @@ class _TransactionTileState extends State<TransactionTile>
                       decoration: BoxDecoration(
                         gradient: LinearGradient(
                           colors: [
-                            color.withOpacity(_isExpanded ? 0.2 : 0.12),
-                            color.withOpacity(_isExpanded ? 0.08 : 0.04),
+                            color.withValues(alpha: _isExpanded ? 0.2 : 0.12),
+                            color.withValues(alpha: _isExpanded ? 0.08 : 0.04),
                           ],
                           begin: Alignment.topLeft,
                           end: Alignment.bottomRight,
@@ -378,7 +378,7 @@ class _TransactionTileState extends State<TransactionTile>
                                   color: Colors.white,
                                   shape: BoxShape.circle,
                                   boxShadow: [
-                                    BoxShadow(color: Colors.black.withOpacity(0.08), blurRadius: 2),
+                                    BoxShadow(color: Colors.black.withValues(alpha: 0.08), blurRadius: 2),
                                   ],
                                 ),
                                 child: Icon(Icons.schedule_rounded, size: 8.sp, color: const Color(0xFFFF9800)),
@@ -420,7 +420,7 @@ class _TransactionTileState extends State<TransactionTile>
                                 Container(
                                   padding: EdgeInsets.symmetric(horizontal: 6.w, vertical: 2.h),
                                   decoration: BoxDecoration(
-                                    color: const Color(0xFFFF9800).withOpacity(0.1),
+                                    color: const Color(0xFFFF9800).withValues(alpha: 0.1),
                                     borderRadius: BorderRadius.circular(4.r),
                                   ),
                                   child: Row(
@@ -450,7 +450,7 @@ class _TransactionTileState extends State<TransactionTile>
                     Container(
                       padding: EdgeInsets.symmetric(horizontal: 10.w, vertical: 5.h),
                       decoration: BoxDecoration(
-                        color: color.withOpacity(0.08),
+                        color: color.withValues(alpha: 0.08),
                         borderRadius: BorderRadius.circular(8.r),
                       ),
                       child: Text(
@@ -500,7 +500,7 @@ class _TransactionTileState extends State<TransactionTile>
       child: Container(
         padding: EdgeInsets.all(12.r),
         decoration: BoxDecoration(
-          color: color.withOpacity(0.03),
+          color: color.withValues(alpha: 0.03),
           borderRadius: BorderRadius.circular(12.r),
         ),
         child: Column(
@@ -602,7 +602,7 @@ class _TransactionTileState extends State<TransactionTile>
     }
 
     if (rows.isNotEmpty) {
-      rows.add(Divider(color: Colors.grey.withOpacity(0.15), height: 16.h));
+      rows.add(Divider(color: Colors.grey.withValues(alpha: 0.15), height: 16.h));
     }
     return rows;
   }
@@ -626,7 +626,7 @@ class _TransactionTileState extends State<TransactionTile>
     }
 
     if (rows.isNotEmpty) {
-      rows.add(Divider(color: Colors.grey.withOpacity(0.15), height: 16.h));
+      rows.add(Divider(color: Colors.grey.withValues(alpha: 0.15), height: 16.h));
     }
     return rows;
   }
@@ -657,7 +657,7 @@ class _TransactionTileState extends State<TransactionTile>
       rows.add(SizedBox(height: 6.h));
     }
 
-    rows.add(Divider(color: Colors.grey.withOpacity(0.15), height: 16.h));
+    rows.add(Divider(color: Colors.grey.withValues(alpha: 0.15), height: 16.h));
     return rows;
   }
 
@@ -668,7 +668,7 @@ class _TransactionTileState extends State<TransactionTile>
       return [
         _detailRow(context, Icons.event_rounded, l.eventDate, _formatDateTime(context, _eventDate!), Colors.grey[600]!),
         SizedBox(height: 6.h),
-        Divider(color: Colors.grey.withOpacity(0.15), height: 16.h),
+        Divider(color: Colors.grey.withValues(alpha: 0.15), height: 16.h),
       ];
     }
     return [];
@@ -722,9 +722,9 @@ class _TransactionTileState extends State<TransactionTile>
     rows.add(Container(
       padding: EdgeInsets.symmetric(horizontal: 10.w, vertical: 8.h),
       decoration: BoxDecoration(
-        color: AppColors.main.withOpacity(0.06),
+        color: AppColors.main.withValues(alpha: 0.06),
         borderRadius: BorderRadius.circular(8.r),
-        border: Border.all(color: AppColors.main.withOpacity(0.12)),
+        border: Border.all(color: AppColors.main.withValues(alpha: 0.12)),
       ),
       child: Row(
         children: [
@@ -745,7 +745,7 @@ class _TransactionTileState extends State<TransactionTile>
     ));
     rows.add(SizedBox(height: 6.h));
 
-    rows.add(Divider(color: Colors.grey.withOpacity(0.15), height: 16.h));
+    rows.add(Divider(color: Colors.grey.withValues(alpha: 0.15), height: 16.h));
     return rows;
   }
 
@@ -756,7 +756,7 @@ class _TransactionTileState extends State<TransactionTile>
       return [
         _detailRow(context, Icons.info_outline_rounded, l.transactionType, _description, Colors.grey[600]!),
         SizedBox(height: 6.h),
-        Divider(color: Colors.grey.withOpacity(0.15), height: 16.h),
+        Divider(color: Colors.grey.withValues(alpha: 0.15), height: 16.h),
       ];
     }
     return [];
@@ -815,7 +815,7 @@ class _TransactionTileState extends State<TransactionTile>
                         final ripen = (_metadata['ripen_hours'] as num?)?.toDouble() ?? 72.0;
                         return (1.0 - (hoursLeft / ripen)).clamp(0.0, 1.0);
                       })(),
-                      backgroundColor: Colors.grey.withOpacity(0.12),
+                      backgroundColor: Colors.grey.withValues(alpha: 0.12),
                       valueColor: const AlwaysStoppedAnimation<Color>(Color(0xFFFF9800)),
                       minHeight: 3.h,
                     ),
@@ -837,7 +837,7 @@ class _TransactionTileState extends State<TransactionTile>
       children: [
         Padding(
           padding: EdgeInsets.only(top: 1.h),
-          child: Icon(icon, size: 14.sp, color: color.withOpacity(0.7)),
+          child: Icon(icon, size: 14.sp, color: color.withValues(alpha: 0.7)),
         ),
         SizedBox(width: 8.w),
         Text(

@@ -254,7 +254,7 @@ class _ResetPasswordPageState extends State<ResetPasswordPage> {
             // Progress Bar
             LinearProgressIndicator(
               value: _strength, // Use the calculated strength
-              backgroundColor: AppColors.main.withOpacity(0.1),
+              backgroundColor: AppColors.main.withValues(alpha: 0.1),
               valueColor: AlwaysStoppedAnimation<Color>(_strengthColor), // Use calculated color
               minHeight: 4,
             ),

@@ -273,7 +273,7 @@ class _InputBarState extends State<InputBar> with TickerProviderStateMixin {
               filter: ImageFilter.blur(sigmaX: 12, sigmaY: 12),
               child: Container(
                 decoration: BoxDecoration(
-                  color: AppColors.grayMain.withOpacity(0.15),
+                  color: AppColors.grayMain.withValues(alpha: 0.15),
                   borderRadius: BorderRadius.circular(30.r),
                   border: Border.all(color: Colors.grey.shade300, width: 0.5),
                 ),

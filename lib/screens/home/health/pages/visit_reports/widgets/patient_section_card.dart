@@ -26,9 +26,9 @@ class PatientSectionCard extends StatelessWidget {
           child: Container(
             padding: EdgeInsets.all(14.w),
             decoration: BoxDecoration(
-              color: Colors.white.withOpacity(0.55),
+              color: Colors.white.withValues(alpha: 0.55),
               borderRadius: BorderRadius.circular(18.r),
-              border: Border.all(color: AppColors.main.withOpacity(0.18)),
+              border: Border.all(color: AppColors.main.withValues(alpha: 0.18)),
             ),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,

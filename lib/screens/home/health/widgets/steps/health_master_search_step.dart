@@ -155,7 +155,7 @@ class _HealthMasterSearchStepState<T> extends State<HealthMasterSearchStep<T>> {
           Icon(
             Icons.search_off_rounded,
             size: 42.sp,
-            color: AppColors.grayMain.withOpacity(0.4),
+            color: AppColors.grayMain.withValues(alpha: 0.4),
           ),
           SizedBox(height: 12.h),
           Text(
@@ -225,10 +225,10 @@ class _ManualEntryCTA extends StatelessWidget {
     return Container(
       margin: EdgeInsets.symmetric(horizontal: 4.w),
       decoration: BoxDecoration(
-        color: AppColors.main.withOpacity(0.04),
+        color: AppColors.main.withValues(alpha: 0.04),
         borderRadius: BorderRadius.circular(14.r),
         border: Border.all(
-          color: AppColors.main.withOpacity(0.15),
+          color: AppColors.main.withValues(alpha: 0.15),
           width: 1,
         ),
       ),
@@ -246,7 +246,7 @@ class _ManualEntryCTA extends StatelessWidget {
                   height: 34.w,
                   decoration: BoxDecoration(
                     shape: BoxShape.circle,
-                    color: AppColors.main.withOpacity(0.10),
+                    color: AppColors.main.withValues(alpha: 0.10),
                   ),
                   child: Icon(
                     Icons.edit_note_rounded,
@@ -281,7 +281,7 @@ class _ManualEntryCTA extends StatelessWidget {
                 Icon(
                   Icons.arrow_forward_ios_rounded,
                   size: 14.sp,
-                  color: AppColors.main.withOpacity(0.5),
+                  color: AppColors.main.withValues(alpha: 0.5),
                 ),
               ],
             ),

@@ -125,7 +125,7 @@ class _DoctorAppointmentsState extends State<DoctorAppointments> {
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 6),
         decoration: BoxDecoration(
-          color: isSelected ? AppColors.main.withOpacity(0.7) : Colors.white,
+          color: isSelected ? AppColors.main.withValues(alpha: 0.7) : Colors.white,
 
           /// ✅ Use correct `BorderRadius`
           borderRadius: BorderRadius.only(
@@ -537,21 +537,21 @@ class _DoctorAppointmentsState extends State<DoctorAppointments> {
                   icon: Icon(
                     Icons.filter_alt,
                     size: 15,
-                    color: _showFreeSlots ? Colors.white : AppColors.main.withOpacity(0.5), // ✅ Change color when active
+                    color: _showFreeSlots ? Colors.white : AppColors.main.withValues(alpha: 0.5), // ✅ Change color when active
                   ),
                   label: Text("Available Slots",
                     style: TextStyle(
-                      color: _showFreeSlots ? Colors.white : AppColors.main.withOpacity(0.5), // ✅ Match icon color
+                      color: _showFreeSlots ? Colors.white : AppColors.main.withValues(alpha: 0.5), // ✅ Match icon color
                       fontSize: 10,
                       fontWeight: FontWeight.bold,
                     ),
                   ),
                   style: TextButton.styleFrom(
-                    backgroundColor: _showFreeSlots ? AppColors.main.withOpacity(0.8) : Colors.white, // ✅ Change background when active
+                    backgroundColor: _showFreeSlots ? AppColors.main.withValues(alpha: 0.8) : Colors.white, // ✅ Change background when active
                     padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 3),
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(25),
-                      side: BorderSide(color: AppColors.main.withOpacity(0.5)), // ✅ Border to match design
+                      side: BorderSide(color: AppColors.main.withValues(alpha: 0.5)), // ✅ Border to match design
                     ),
                     overlayColor: Colors.transparent, // ✅ Removes tap effect
                   ),
@@ -603,7 +603,7 @@ class _DoctorAppointmentsState extends State<DoctorAppointments> {
             ),
             calendarStyle:  CalendarStyle(
               todayDecoration: BoxDecoration(
-                color: AppColors.main.withOpacity(0.3),
+                color: AppColors.main.withValues(alpha: 0.3),
                 shape: BoxShape.circle,
               ),
               selectedDecoration: const BoxDecoration(
@@ -732,7 +732,7 @@ class _DoctorAppointmentsState extends State<DoctorAppointments> {
                           /// 🔹 **Time and Clock Icon**
                           Container(
                             decoration: BoxDecoration(
-                                color: isBooked ?AppColors.whiteText : AppColors.main.withOpacity(0.8),
+                                color: isBooked ?AppColors.whiteText : AppColors.main.withValues(alpha: 0.8),
                                 borderRadius: const BorderRadius.only(topLeft: Radius.circular(10.0), bottomLeft: Radius.circular(10.0))),
                             child: Padding(
                               padding: isBooked ? const EdgeInsets.all(0) : const EdgeInsets.only(left: 20, right: 20, top:3, bottom: 7),

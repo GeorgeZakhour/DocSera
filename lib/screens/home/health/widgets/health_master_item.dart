@@ -32,12 +32,12 @@ class HealthMasterTile extends StatelessWidget {
         ? Colors.grey.shade400
         : selected
         ? AppColors.main
-        : AppColors.main.withOpacity(0.15);
+        : AppColors.main.withValues(alpha: 0.15);
 
     final Color bgColor = disabled
-        ? Colors.grey.withOpacity(0.2)
+        ? Colors.grey.withValues(alpha: 0.2)
         : selected
-        ? AppColors.main.withOpacity(0.08)
+        ? AppColors.main.withValues(alpha: 0.08)
         : Colors.white;
 
     final Color textColor = disabled
@@ -62,7 +62,7 @@ class HealthMasterTile extends StatelessWidget {
             boxShadow: [
               if (!disabled)
                 BoxShadow(
-                  color: Colors.black.withOpacity(0.04),
+                  color: Colors.black.withValues(alpha: 0.04),
                   blurRadius: 6,
                   offset: const Offset(0, 2),
                 ),
@@ -78,8 +78,8 @@ class HealthMasterTile extends StatelessWidget {
                 decoration: BoxDecoration(
                   shape: BoxShape.circle,
                   color: disabled
-                      ? iconColor.withOpacity(0.15)
-                      : AppColors.main.withOpacity(0.12),
+                      ? iconColor.withValues(alpha: 0.15)
+                      : AppColors.main.withValues(alpha: 0.12),
                 ),
                 child: Icon(
                   icon,
@@ -129,7 +129,7 @@ class HealthMasterTile extends StatelessWidget {
                 Container(
                   padding: EdgeInsets.symmetric(horizontal: 8.w, vertical: 4.h),
                   decoration: BoxDecoration(
-                    color: Colors.grey.shade500.withOpacity(0.15),
+                    color: Colors.grey.shade500.withValues(alpha: 0.15),
                     borderRadius: BorderRadius.circular(10.r),
                   ),
                   child: Text(

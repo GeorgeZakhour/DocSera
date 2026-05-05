@@ -2,7 +2,6 @@ import 'package:docsera/app/text_styles.dart';
 import 'package:docsera/screens/auth/forgot_password/otp_verification_page.dart';
 import 'package:docsera/services/supabase/supabase_otp_service.dart';
 import 'package:docsera/utils/page_transitions.dart';
-import 'package:docsera/utils/text_direction_utils.dart';
 import 'package:docsera/widgets/base_scaffold.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';

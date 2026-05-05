@@ -105,8 +105,8 @@ class _MessageBubbleState extends State<MessageBubble> {
             margin: EdgeInsets.symmetric(vertical: 4.h),
             decoration: BoxDecoration(
               color: widget.isUser
-                  ? AppColors.mainDark.withOpacity(0.9)
-                  : AppColors.grayMain.withOpacity(0.18),
+                  ? AppColors.mainDark.withValues(alpha: 0.9)
+                  : AppColors.grayMain.withValues(alpha: 0.18),
               borderRadius: BorderRadius.only(
                 topLeft: Radius.circular(12.r),
                 topRight: Radius.circular(12.r),

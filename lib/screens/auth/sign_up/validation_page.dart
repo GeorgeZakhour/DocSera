@@ -66,7 +66,7 @@ class _ValidationPageState extends State<ValidationPage> {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text('OTP: $sentCode'),
-            backgroundColor: AppColors.main.withOpacity(0.9),
+            backgroundColor: AppColors.main.withValues(alpha: 0.9),
             duration: const Duration(seconds: 10),
           ),
         );
@@ -101,7 +101,7 @@ class _ValidationPageState extends State<ValidationPage> {
               AppLocalizations.of(context)!
                   .pleaseWaitBeforeRequestingAnotherCode,
             ),
-            backgroundColor: AppColors.red.withOpacity(0.85),
+            backgroundColor: AppColors.red.withValues(alpha: 0.85),
           ),
         );
         return;
@@ -111,7 +111,7 @@ class _ValidationPageState extends State<ValidationPage> {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text(AppLocalizations.of(context)!.otpSendFailed),
-          backgroundColor: AppColors.red.withOpacity(0.8),
+          backgroundColor: AppColors.red.withValues(alpha: 0.8),
           action: SnackBarAction(
             label: AppLocalizations.of(context)!.tryAgain,
             textColor: Colors.white,

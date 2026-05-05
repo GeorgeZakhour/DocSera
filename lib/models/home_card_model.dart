@@ -56,7 +56,7 @@ class HomeCardModel {
       shapeNumber: json['shape_number'] ?? 1,
       imageShapeNumber: json['image_shape_number'] ?? 1,
       secondShapeNumber: json['second_shape_number'] ?? 1,
-      shapeColor: _parseColor(json['shape_color']) ?? Colors.white.withOpacity(0.3),
+      shapeColor: _parseColor(json['shape_color']) ?? Colors.white.withValues(alpha: 0.3),
       secondShapeColor: _parseColor(json['second_shape_color']),
       showSecondShape: json['show_second_shape'] ?? false,
       actionType: json['action_type'] ?? 'internal',

@@ -237,7 +237,7 @@ class _SelectPatientPageState extends State<SelectPatientPage> {
         crossAxisAlignment: CrossAxisAlignment.center,
         children: [
           CircleAvatar(
-            backgroundColor: AppColors.background2.withOpacity(0.3),
+            backgroundColor: AppColors.background2.withValues(alpha: 0.3),
             radius: 18.r,
             backgroundImage: imageProvider,
           ),
@@ -511,7 +511,7 @@ class _SelectPatientPageState extends State<SelectPatientPage> {
         borderRadius: BorderRadius.circular(12.r),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.05),
+            color: Colors.black.withValues(alpha: 0.05),
             blurRadius: 5,
             spreadRadius: 1,
           ),
@@ -570,7 +570,7 @@ class _SelectPatientPageState extends State<SelectPatientPage> {
           child: Container(
             padding: EdgeInsets.symmetric(vertical: 12.h, horizontal: 16.w),
             decoration: BoxDecoration(
-              color: selectedPatientId == id ? AppColors.main.withOpacity(0.1) : Colors.transparent,
+              color: selectedPatientId == id ? AppColors.main.withValues(alpha: 0.1) : Colors.transparent,
               borderRadius: BorderRadius.only(
                 topLeft: isFirst ? Radius.circular(12.r) : Radius.zero,
                 topRight: isFirst ? Radius.circular(12.r) : Radius.zero,
