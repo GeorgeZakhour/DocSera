@@ -1,0 +1,162 @@
+# =============================================================================
+# DocSera Patient App — Continuous Integration
+# =============================================================================
+# Runs on every push to main and on every pull request. Validates the code
+# never reaches a broken state in main: static analysis, unit/widget tests,
+# and end-to-end builds for both Android and iOS.
+#
+# What is NOT in this workflow:
+#   - Code signing (no production certs in CI)
+#   - Store uploads (manual via local build script — see scripts/build_release.sh)
+#   - Sentry symbol uploads (handled at local build time)
+#   - Database migrations (applied manually on the VPS — see CLAUDE.md)
+#
+# Tuning notes:
+#   - Flutter version is pinned to match the developer environment
+#     (ios/Flutter/Generated.xcconfig). Bump intentionally, not implicitly.
+#   - Builds use --debug to keep CI minutes low; production builds happen
+#     locally via scripts/build_release.sh with --release --obfuscate.
+#   - dart_defines/sentry.json is gitignored and absent in CI; --dart-define
+#     is therefore omitted. Sentry stays disabled in CI builds (safe default).
+# =============================================================================
+
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+# Cancel any in-progress run for the same branch when a new commit lands.
+# Prevents wasted minutes when the developer pushes a quick fix-up.
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  FLUTTER_VERSION: '3.32.7'
+  FLUTTER_CHANNEL: 'stable'
+
+jobs:
+  # ---------------------------------------------------------------------------
+  # 1. Static analysis — runs flutter analyze on the entire lib/ tree.
+  #    Fast, cheap, catches type errors, unused code, and most regressions.
+  # ---------------------------------------------------------------------------
+  analyze:
+    name: Static analysis
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: subosito/flutter-action@v2
+        with:
+          flutter-version: ${{ env.FLUTTER_VERSION }}
+          channel: ${{ env.FLUTTER_CHANNEL }}
+          cache: true
+
+      - name: Install dependencies
+        run: flutter pub get
+
+      - name: Generate localizations
+        run: flutter gen-l10n
+
+      - name: Analyze (lib only — production code)
+        run: flutter analyze lib/
+
+  # ---------------------------------------------------------------------------
+  # 2. Tests — runs the unit + widget test suite.
+  #    Files under test/_pending_rewrite/ are renamed *_DISABLED.dart and
+  #    skipped by Flutter's *_test.dart discovery. They will be reauthored as
+  #    part of Step 8 (testing strategy).
+  # ---------------------------------------------------------------------------
+  test:
+    name: Tests
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: subosito/flutter-action@v2
+        with:
+          flutter-version: ${{ env.FLUTTER_VERSION }}
+          channel: ${{ env.FLUTTER_CHANNEL }}
+          cache: true
+
+      - name: Install dependencies
+        run: flutter pub get
+
+      - name: Generate localizations
+        run: flutter gen-l10n
+
+      - name: Run tests
+        run: flutter test --reporter=compact
+
+  # ---------------------------------------------------------------------------
+  # 3. Android build — verifies the app compiles end-to-end for Android.
+  #    Debug build, no signing required; we only confirm the build succeeds.
+  # ---------------------------------------------------------------------------
+  build-android:
+    name: Build Android (debug)
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    needs: [analyze, test]
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up JDK 17
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'temurin'
+          java-version: '17'
+
+      - uses: subosito/flutter-action@v2
+        with:
+          flutter-version: ${{ env.FLUTTER_VERSION }}
+          channel: ${{ env.FLUTTER_CHANNEL }}
+          cache: true
+
+      - name: Install dependencies
+        run: flutter pub get
+
+      - name: Generate localizations
+        run: flutter gen-l10n
+
+      - name: Build debug APK
+        run: flutter build apk --debug
+
+      - name: Upload APK artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: docsera-debug-apk
+          path: build/app/outputs/flutter-apk/app-debug.apk
+          retention-days: 7
+          if-no-files-found: warn
+
+  # ---------------------------------------------------------------------------
+  # 4. iOS build — runs on a macOS runner; verifies the app compiles for iOS.
+  #    --no-codesign skips the signing step so we don't need certs in CI.
+  # ---------------------------------------------------------------------------
+  build-ios:
+    name: Build iOS (no codesign)
+    runs-on: macos-latest
+    timeout-minutes: 30
+    needs: [analyze, test]
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: subosito/flutter-action@v2
+        with:
+          flutter-version: ${{ env.FLUTTER_VERSION }}
+          channel: ${{ env.FLUTTER_CHANNEL }}
+          cache: true
+
+      - name: Install dependencies
+        run: flutter pub get
+
+      - name: Generate localizations
+        run: flutter gen-l10n
+
+      - name: Build iOS (no codesign)
+        run: flutter build ios --debug --no-codesign

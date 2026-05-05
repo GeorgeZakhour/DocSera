@@ -18,6 +18,7 @@ Operator-focused docs for everything done in preparation for the public launch o
 | 05a | [Pen-test brief (ministry submission doc)](05a-pentest-brief.md) | ✅ Done | — |
 | 06 | [Syrian Ministry License (ترخيص) — full playbook](06-ministry-license-playbook.md) | 📚 Living reference | — |
 | 07 | [Legal documents (Privacy / Terms / Medical Disclaimer / Report Abuse) + deletion lifecycle + consent tracking + in-app UI](07-legal-documents.md) | ✅ Done | 9.2 / 10 |
+| 08 | [CI / GitHub Actions (analyze + tests + Android build + iOS build)](08-ci-github-actions.md) | ✅ Done | 9.3 / 10 |
 | — | [Full roadmap & score progression](roadmap.md) | Living doc | — |
 
 ## How to use these docs
