@@ -494,7 +494,6 @@
 				DEVELOPMENT_TEAM = 6C9U988HWY;
 				ENABLE_BITCODE = NO;
 				FLUTTER_BUILD_DIR = build/ios/Release;
-				FLUTTER_ROOT = /Users/georgezakhour/development/flutter;
 				INFOPLIST_FILE = Runner/Info.plist;
 				INFOPLIST_KEY_CFBundleDisplayName = DocSera;
 				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.medical";
@@ -692,7 +691,6 @@
 				DEVELOPMENT_TEAM = 6C9U988HWY;
 				ENABLE_BITCODE = NO;
 				FLUTTER_BUILD_DIR = build/ios/Release;
-				FLUTTER_ROOT = /Users/georgezakhour/development/flutter;
 				INFOPLIST_FILE = Runner/Info.plist;
 				INFOPLIST_KEY_CFBundleDisplayName = DocSera;
 				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.medical";
@@ -727,7 +725,6 @@
 				DEVELOPMENT_TEAM = 6C9U988HWY;
 				ENABLE_BITCODE = NO;
 				FLUTTER_BUILD_DIR = build/ios/Release;
-				FLUTTER_ROOT = /Users/georgezakhour/development/flutter;
 				INFOPLIST_FILE = Runner/Info.plist;
 				INFOPLIST_KEY_CFBundleDisplayName = DocSera;
 				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.medical";
