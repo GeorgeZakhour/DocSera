@@ -29,15 +29,19 @@ Living doc — updated after each completed step. Score is a subjective launch-r
 | 4 | **Analytics events** (Supabase `analytics_events` table + key events: signup, OTP success/fail, booking start/complete, message sent) | 🟠 High | Can't improve what you can't measure. Booking funnel + OTP success rate are the two metrics that tell you if the app *works* in the field. Lightweight, no extra infra. | 3–4h | 8.8 |
 | 5 | **Pen test + security review** (auth, encryption, RPCs, edge functions) | 🔴 Critical | Healthtech is a high-value target. The RLS audit found one real hole; others may exist. External eyes find what we miss. | 2–4 days external, 1–2 days internal | 9.1 |
 | 6 | **Privacy Policy + Terms of Service + Medical Disclaimer** (in-app screens + URLs for store listings, EN + AR) | 🔴 Critical | App stores reject medical apps without these. Also legally required for GDPR-aligned users. | 1 day to draft + 1 day legal review | 9.2 |
-| 12 | **Beta testing** (TestFlight + Play Internal, 2–4 weeks, ~20–50 real users) | 🔴 Critical | Single biggest crash-rate-reducer. Catches device-specific bugs solo testing misses. | Calendar 2–4 weeks; setup 3h | 9.7 |
-| 13 | **Accessibility audit** (Semantics labels, contrast, dynamic-type) | 🟡 Medium | Healthtech serves elderly/visually-impaired patients. Legal in EU. | 1 day audit + 1–2 days fixes | 9.8 |
-| 14 | **Dependency + bundle audit** (77 deps; `flutter build apk --analyze-size`) | 🟡 Medium | Likely 10–15 MB savings. Smaller install = higher conversion in low-bandwidth markets. | 4–6h | 9.9 |
-| 15 | **App store assets** (per-locale screenshots, descriptions, icons, privacy nutrition labels) | 🟠 High | Required to publish. Underestimated time-sink. | 1 day | 10.0 |
+| ~~12~~ | ~~**Beta testing** (TestFlight + Play Internal)~~ | **DEFERRED — out of scope for this launch.** Requires Apple Developer ($99/yr) + Google Play Console ($25) + tester recruitment, none of which are achievable on the current launch path. Mitigations in place: (a) Sentry crash reporting wired in Step 3 catches real-user crashes from day one; (b) forced-update mechanism in Step 2 lets us push critical fixes mid-flight; (c) recommend a **soft launch** to 10–20 personal Syrian-market contacts as de facto beta — watch Sentry for 1–2 weeks, fix what surfaces, then announce broadly. | n/a | n/a |
+| 13 | **Accessibility audit** (Semantics labels, contrast, dynamic-type) | 🟡 Medium | Healthtech serves elderly/visually-impaired patients. Legal in EU. | 1 day audit + 1–2 days fixes | 9.65 |
+| 14 | **Dependency + bundle audit** (77 deps; `flutter build apk --analyze-size`) | 🟡 Medium | Likely 10–15 MB savings. Smaller install = higher conversion in low-bandwidth markets. | 4–6h | 9.7 |
+| 15 | **App store assets** (per-locale screenshots, descriptions, icons, privacy nutrition labels) | 🟠 High | Required to publish. Underestimated time-sink. | 1 day | 9.8 |
+
+## Score ceiling
+
+Without Step 12 (beta testing), the realistic launch-readiness ceiling is **9.8 / 10**, not 10.0. The missing 0.2 represents the calendar-bound "weeks of real-user feedback before public launch" risk reduction that no amount of engineering can substitute for. **Mitigated, not eliminated**, by Sentry + forced-update + a soft-launch ramp.
 
 ## Total time budget
 
-- **Engineering work I can do:** ~3–5 working days (#4, #7, #8, #9, #11, #12).
-- **Human/external in-the-loop:** legal review (#6), pen test (#5), beta cycle (#10) — ~3–4 calendar weeks regardless of engineering velocity.
+- **Engineering work remaining:** ~2 working days (#13 a11y, #14 deps audit, #15 store assets).
+- **Calendar-bound:** the soft-launch + first-week Sentry watch (~1–2 weeks) substitutes for #12 beta — short of formal beta but practical for this scope.
 
 ## Critical truth
 
