@@ -15,7 +15,7 @@ Every push to `main` and every pull request triggers four parallel-ish jobs on G
 | **Static analysis** | Ubuntu | `flutter analyze lib/` — catches type errors, unused symbols, lint regressions in production code | 2-3 min |
 | **Tests** | Ubuntu | `flutter test` — runs the unit + widget test suite | 3-5 min |
 | **Android build** | Ubuntu | `flutter build apk --debug` end-to-end; uploads the APK as a downloadable artifact | 8-12 min |
-| **iOS build** | macOS | `flutter build ios --debug --no-codesign` end-to-end; verifies the iOS toolchain compiles the project | 10-15 min |
+| **iOS build** | macOS | `flutter build ios --debug --simulator` — builds for the iOS Simulator (host CPU); verifies the iOS toolchain compiles the project end-to-end without needing certs or a development team | 10-15 min |
 
 You'll see a green ✅ or red ❌ next to every commit on the GitHub commits page. Failures send an email and block PR merges (when branch protection is enabled — separate one-time setup in GitHub UI).
 

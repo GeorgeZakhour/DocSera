@@ -141,10 +141,20 @@ jobs:
 
   # ---------------------------------------------------------------------------
   # 4. iOS build — runs on a macOS runner; verifies the app compiles for iOS.
-  #    --no-codesign skips the signing step so we don't need certs in CI.
+  #
+  #    We build for the iOS Simulator (--simulator) rather than for device.
+  #    Reasoning: a device build requires Flutter to assemble Release/
+  #    XCFrameworks (App.xcframework, Flutter.xcframework) and even with
+  #    --no-codesign that pipeline still expects a development team /
+  #    provisioning context that we don't have on a fresh CI checkout.
+  #    A simulator build runs on the macOS host's CPU, needs zero signing,
+  #    and still exercises the entire iOS toolchain (Swift compiler, Pods,
+  #    asset catalog, Info.plist, our l10n). That's exactly the verification
+  #    we want from CI. Real device signing happens locally via
+  #    scripts/build_release.sh.
   # ---------------------------------------------------------------------------
   build-ios:
-    name: Build iOS (no codesign)
+    name: Build iOS (simulator)
     runs-on: macos-latest
     timeout-minutes: 30
     needs: [analyze, test]
@@ -163,5 +173,5 @@ jobs:
       - name: Generate localizations
         run: flutter gen-l10n
 
-      - name: Build iOS (no codesign)
-        run: flutter build ios --debug --no-codesign
+      - name: Build iOS (simulator)
+        run: flutter build ios --debug --simulator
