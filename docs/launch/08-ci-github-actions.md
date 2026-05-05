@@ -28,23 +28,30 @@ The split:
 
 ## What this gives you
 
-Every push to `main` and every pull request triggers four parallel-ish jobs on GitHub-hosted runners:
+Two workflows, different triggers:
+
+**`ci.yml` — runs on every push to `main` and every PR:**
 
 | Job | Where | What it does | Typical time |
 |---|---|---|---|
-| **Static analysis** | Ubuntu | `flutter analyze lib/` — catches type errors, unused symbols, lint regressions in production code | 2-3 min |
-| **Tests** | Ubuntu | `flutter test` — runs the unit + widget test suite | 3-5 min |
-| **Android build** | Ubuntu | `flutter build apk --debug` end-to-end; uploads the APK as a downloadable artifact | 8-12 min |
-| **iOS build** | macOS | `flutter build ios --debug --simulator` — builds for the iOS Simulator (host CPU); verifies the iOS toolchain compiles the project end-to-end without needing certs or a development team. **Currently `continue-on-error: true` (non-blocking) — see "Known iOS CI gap" below.** | 10-15 min |
+| **Static analysis** | Ubuntu | `flutter analyze lib/` — catches type errors, unused symbols, lint regressions | 2-3 min |
+| **Tests** | Ubuntu | `flutter test --coverage` — runs the full 367-test suite + uploads `lcov.info` | 3-5 min |
 
-You'll see a green ✅ or red ❌ next to every commit on the GitHub commits page. Failures send an email and block PR merges (when branch protection is enabled — separate one-time setup in GitHub UI).
+**`build.yml` — runs only on manual trigger or `v*` tag push:**
+
+| Job | Where | What it does | Typical time |
+|---|---|---|---|
+| **Android build** | Ubuntu | `flutter build apk --debug`; uploads APK artifact (3-day retention) | 8-12 min |
+| **iOS build** | macOS | `flutter build ios --debug --simulator` — verifies the iOS toolchain end-to-end (Xcode pin: `latest-stable`) | 10-15 min |
+
+You'll see a green ✅ or red ❌ next to every commit (from `ci.yml`). Failures send an email and block PR merges (when branch protection is enabled — separate one-time setup in GitHub UI).
 
 ## Why each job exists
 
 - **analyze** catches the cheapest class of bugs (typos, unused imports, type mismatches) before any test ever runs. It's our first wall.
-- **tests** runs the existing suite. It's intentionally lean today and grows aggressively in Step 8.
-- **build-android** catches anything that compiles locally but breaks on a clean Linux env (forgotten `flutter pub get`, missing files in git, accidentally-committed broken state).
-- **build-ios** catches the iOS-specific equivalent — Xcode project misconfiguration, Pod install issues, missing iOS-only files. Runs on macOS because Apple-platform builds can't run on Linux.
+- **tests** runs the full suite (367 tests / 9 funnels / encryption guard — see [09-test-strategy.md](09-test-strategy.md)).
+- **build-android** catches anything that compiles locally but breaks on a clean Linux env (forgotten `flutter pub get`, missing files in git, accidentally-committed broken state). In `build.yml` so it doesn't run on every push (free-tier discipline).
+- **build-ios** catches the iOS-specific equivalent — Xcode project misconfiguration, Pod install issues, missing iOS-only files. Runs on macOS because Apple-platform builds can't run on Linux. Also gated to `build.yml` because macOS minutes have a 10× multiplier and would burn the free tier within ~2 weeks if run on every push.
 
 ## What's intentionally NOT in CI
 
