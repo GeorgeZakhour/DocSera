@@ -26,6 +26,7 @@ Operator-focused docs for everything done in preparation for the public launch o
 | 10 | [Performance pass — 4 setState/N+1 antipatterns fixed on hot screens](10-perf-pass.md) | ✅ Done | 9.55 / 10 |
 | 12 | [Accessibility audit — contrast fixes + tooltips + patterns](12-accessibility.md) | ✅ Done | 9.65 / 10 |
 | 13 | [Dependency + bundle audit — 4 unused removed, 2 dev tools rescoped](13-deps-bundle-audit.md) | ✅ Done | 9.7 / 10 |
+| 14 | [App Store submission pack — descriptions, keywords, privacy labels, age rating, submission checklist](14-app-store-assets.md) | ✅ Pack ready | 9.8 / 10 |
 | — | [Full roadmap & score progression](roadmap.md) | Living doc | — |
 
 ## How to use these docs

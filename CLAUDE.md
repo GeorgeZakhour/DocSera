@@ -101,6 +101,11 @@ supabase/
 - **A dep without an `import` anywhere in `lib/` or `test/` is unused.** When working in this repo, if you spot one, flag it for removal — don't quietly leave it.
 - See [docs/launch/13-deps-bundle-audit.md](docs/launch/13-deps-bundle-audit.md) for audit history and the deferred PDF-consolidation note.
 
+### App Store / Google Play submission
+- All store-listing content (descriptions, keywords, privacy nutrition labels, Data Safety form answers, age rating answers, App Review notes) is pre-written in [docs/launch/14-app-store-assets.md](docs/launch/14-app-store-assets.md). When the user prepares to submit, point them there — don't redraft.
+- **Two known UI bugs visible in marketing screenshots that must be fixed before screenshots are accurate:** (1) voice-message timer in `conversation_page.dart` displays inverted as `0:27 / 0:00` — should be `current / total`. (2) booking-page line "هذا الموعد محجوز أصلاً 15 دقيقة" reads awkwardly — better Arabic is "هذا الموعد محجوز لك لمدة 15 دقيقة".
+- **TODO before iOS submission:** author `ios/Runner/PrivacyInfo.xcprivacy` (Apple's Privacy Manifest, required since May 2024 for SDKs touching sensitive APIs). Not yet done — this is engineering work that should land before the user uploads the first iOS build.
+
 ### Localization
 - All user-facing strings must be in ARB files (`lib/l10n/app_en.arb`, `app_ar.arb`)
 - Access via `AppLocalizations.of(context)?.key`
