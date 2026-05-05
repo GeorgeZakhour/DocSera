@@ -6,6 +6,20 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:docsera/screens/doctors/doctor_profile_page.dart';
 import 'package:docsera/services/navigation/app_lifecycle.dart';
 
+/// Validates a doctor public_token from a deep link before any DB query.
+///
+/// Tokens in the DB are short alphanumeric IDs (typically <16 chars).
+/// Anything outside `[A-Za-z0-9_-]` of length 1..64 is malicious or
+/// malformed and must be rejected at the boundary, not at the DB.
+///
+/// Security tripwire: changing this regex without updating the
+/// corresponding test in test/utils/deep_link_validator_test.dart is
+/// almost certainly wrong.
+bool isValidDoctorToken(String token) {
+  if (token.isEmpty || token.length > 64) return false;
+  return RegExp(r'^[A-Za-z0-9_\-]+$').hasMatch(token);
+}
+
 class DeepLinkService {
   final SupabaseClient _supabase;
   late final AppLinks _appLinks;
@@ -63,11 +77,9 @@ class DeepLinkService {
       log('⚠️ Ignored deep link');
       return;
     }
-    // Defense: bound length and charset before issuing a DB query. public_token
-    // values in the database are short alphanumeric IDs; anything else is a
-    // malicious or malformed link.
-    if (doctorToken.length > 64 ||
-        !RegExp(r'^[A-Za-z0-9_\-]+$').hasMatch(doctorToken)) {
+    // Defense: bound length and charset before issuing a DB query.
+    // See [isValidDoctorToken] for the canonical validator.
+    if (!isValidDoctorToken(doctorToken)) {
       log('⚠️ Rejected deep link with invalid token shape');
       return;
     }
