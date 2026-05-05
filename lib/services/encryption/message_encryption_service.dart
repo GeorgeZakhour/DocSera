@@ -1,6 +1,7 @@
 import 'dart:convert';
 import 'dart:typed_data';
 import 'package:encrypt/encrypt.dart' as enc;
+import 'package:flutter/foundation.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 /// ============================================================
@@ -51,6 +52,22 @@ class MessageEncryptionService {
 
   /// Whether encryption is ready to use
   bool get isReady => _initialized && _key != null;
+
+  /// Test-only: directly inject a 32-byte key without going through Supabase.
+  /// Use [resetForTesting] in tearDown to undo.
+  @visibleForTesting
+  void initWithKeyForTesting(Uint8List keyBytes) {
+    assert(keyBytes.length == 32, 'AES-256 key must be 32 bytes');
+    _key = enc.Key(keyBytes);
+    _initialized = true;
+  }
+
+  /// Test-only: revert to uninitialized state. Call in tearDown.
+  @visibleForTesting
+  void resetForTesting() {
+    _key = null;
+    _initialized = false;
+  }
 
   /// Defensive: ensure the key is loaded before any decrypt/encrypt call.
   /// Safe to call multiple times — returns immediately if already initialized.
