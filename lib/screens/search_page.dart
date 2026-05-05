@@ -243,6 +243,7 @@ class _SearchPageState extends State<SearchPage> {
                     suffixIcon: _searchController.text.isNotEmpty
                         ? IconButton(
                       icon: const Icon(Icons.clear),
+                      tooltip: AppLocalizations.of(context)!.clearSearchTooltip,
                       onPressed: () {
                         _searchController.clear();
                         _onSearchChanged("");

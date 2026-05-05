@@ -4779,4 +4779,16 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get doctorPatientNotFound => 'Patient not found';
+
+  @override
+  String get clearSearchTooltip => 'Clear search';
+
+  @override
+  String get addToFavorites => 'Add to favorites';
+
+  @override
+  String get showQrCodeTooltip => 'Show QR code';
+
+  @override
+  String get shareTooltip => 'Share';
 }

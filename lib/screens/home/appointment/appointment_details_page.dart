@@ -400,8 +400,11 @@ class _AppointmentDetailsPageState extends State<AppointmentDetailsPage> {
                   ),
                   child: Text(
                     AppLocalizations.of(context)!.tooLateToReschedule,
+                    // orangeText (#FFA070) on a 10%-alpha-orange pill is
+                    // ~1.8:1 → fails WCAG AA. giftAccent (#E07A1F) restores
+                    // readability while keeping the warning-pill aesthetic.
                     style: TextStyle(
-                        color: AppColors.orangeText,
+                        color: AppColors.giftAccent,
                         fontWeight: FontWeight.bold,
                         fontSize: 12.sp),
                   ),

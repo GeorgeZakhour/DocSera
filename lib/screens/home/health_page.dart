@@ -471,18 +471,25 @@ class _HealthAuthenticatedViewState extends State<HealthAuthenticatedView> {
       children: [
         Text(
           title,
+          // Was AppColors.orangeText (#FFA070): only 1.84:1 contrast on
+          // the white/teal-gradient background → fails WCAG AA. Switched
+          // to AppColors.giftAccent (#E07A1F) which passes AA at 15sp
+          // bold (counts as large text — 3:1 threshold) and keeps the
+          // visual accent the design intended.
           style: AppTextStyles.getTitle1(context).copyWith(
             fontSize: 15.sp,
-            color: AppColors.orangeText,
+            color: AppColors.giftAccent,
             fontWeight: FontWeight.bold,
           ),
         ),
         SizedBox(height: 1.h),
         Text(
           subtitle,
+          // Was AppColors.background3 (#F7FDFC): nearly white on a near-
+          // white gradient → invisible. Switched to a readable darker grey.
           style: AppTextStyles.getText3(context).copyWith(
             fontSize: 11.sp,
-            color: AppColors.background3,
+            color: Colors.grey.shade700,
           ),
         ),
       ],

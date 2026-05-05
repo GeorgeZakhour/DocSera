@@ -4721,4 +4721,16 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get doctorPatientNotFound => 'لم يتم العثور على المريض';
+
+  @override
+  String get clearSearchTooltip => 'مسح البحث';
+
+  @override
+  String get addToFavorites => 'إضافة إلى المفضلة';
+
+  @override
+  String get showQrCodeTooltip => 'عرض رمز QR';
+
+  @override
+  String get shareTooltip => 'مشاركة';
 }

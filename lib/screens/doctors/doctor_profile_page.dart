@@ -3604,6 +3604,7 @@ $deepLink
                 backgroundColor: AppColors.main,
                 leading: IconButton(
                   icon: Icon(Icons.arrow_back_ios_new, color: AppColors.whiteText, size: 16.sp),
+                  tooltip: AppLocalizations.of(context)!.back,
                   onPressed: () => Navigator.of(context).pop(),
                 ),
                 actions: [
@@ -3613,14 +3614,19 @@ $deepLink
                         _isFavorite ? Icons.star : Icons.star_border,
                         color: AppColors.whiteText,
                       ),
+                      tooltip: _isFavorite
+                          ? AppLocalizations.of(context)!.removeFromFavorites
+                          : AppLocalizations.of(context)!.addToFavorites,
                       onPressed: _toggleFavoriteStatus,
                     ),
                   IconButton(
                     icon: const Icon(Icons.qr_code_rounded, color: AppColors.whiteText),
+                    tooltip: AppLocalizations.of(context)!.showQrCodeTooltip,
                     onPressed: _showDoctorQrSheet,
                   ),
                   IconButton(
                     icon: const Icon(Icons.share, color: AppColors.whiteText),
+                    tooltip: AppLocalizations.of(context)!.shareTooltip,
                     onPressed: _shareDoctorLink,
                   ),
                 ],

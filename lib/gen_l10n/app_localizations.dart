@@ -8839,6 +8839,30 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Patient not found'**
   String get doctorPatientNotFound;
+
+  /// No description provided for @clearSearchTooltip.
+  ///
+  /// In en, this message translates to:
+  /// **'Clear search'**
+  String get clearSearchTooltip;
+
+  /// No description provided for @addToFavorites.
+  ///
+  /// In en, this message translates to:
+  /// **'Add to favorites'**
+  String get addToFavorites;
+
+  /// No description provided for @showQrCodeTooltip.
+  ///
+  /// In en, this message translates to:
+  /// **'Show QR code'**
+  String get showQrCodeTooltip;
+
+  /// No description provided for @shareTooltip.
+  ///
+  /// In en, this message translates to:
+  /// **'Share'**
+  String get shareTooltip;
 }
 
 class _AppLocalizationsDelegate

@@ -1860,5 +1860,14 @@
   "doctorPatientProfileTitle": "ملف المريض",
   "@doctorPatientProfileTitle": {},
   "doctorPatientNotFound": "لم يتم العثور على المريض",
-  "@doctorPatientNotFound": {}
+  "@doctorPatientNotFound": {},
+
+  "clearSearchTooltip": "مسح البحث",
+  "@clearSearchTooltip": {},
+  "addToFavorites": "إضافة إلى المفضلة",
+  "@addToFavorites": {},
+  "showQrCodeTooltip": "عرض رمز QR",
+  "@showQrCodeTooltip": {},
+  "shareTooltip": "مشاركة",
+  "@shareTooltip": {}
 }
