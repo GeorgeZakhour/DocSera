@@ -112,26 +112,15 @@ The Xcode project file `ios/Runner.xcodeproj/project.pbxproj` contains **4 hardc
 
 Estimated 1-2 hours; better done in a focused session than in a CI bring-up sprint.
 
-## Currently-disabled tests
+## Test suite status
 
-Stale tests with outdated API references are parked under `test/_pending_rewrite/` and renamed `*_DISABLED.dart` so Flutter's `*_test.dart` discovery skips them. They'll be reauthored during Step 8.
+As of Step 8 ([09-test-strategy.md](09-test-strategy.md)), the parked-tests area has been retired:
 
-| Disabled file | What broke |
-|---|---|
-| `test/_pending_rewrite/login_page_DISABLED.dart` | LoginPage UI redesigned; assertions on old text/widgets |
-| `test/_pending_rewrite/notes_cubit_DISABLED.dart` | `listenToNotes()` API removed `explicitUserId` parameter |
-| `test/_pending_rewrite/documents_cubit_DISABLED.dart` | `fetchDocuments` and `subscribeToDocuments` signatures changed |
-| `test/_pending_rewrite/integration/app_flow_DISABLED.dart` | Multi-cubit flow test, broken by service refactors |
-| `test/_pending_rewrite/integration/documents_rls_DISABLED.dart` | Hits a real DB; should run as a separate integration suite |
-| `test/_pending_rewrite/integration/notes_rls_DISABLED.dart` | Same — real-DB integration test |
+- **`test/_pending_rewrite/` directory removed.** Two of the six parked tests (`notes_cubit`, `documents_cubit`) were reauthored against the current API. Three RLS/integration tests were superseded by `test/integration/documents_rls_test.dart` (Flutter-half RLS contract). The login_page widget test was deferred (needs platform-channel mocks for biometric storage; tracked for a future widget-test session).
+- One in-tree widget test remains skipped: `test/widget/complete_profile_banner_test.dart` → `'shows arrow icon next to Start label'` (banner no longer uses `Icons.arrow_forward_rounded`).
+- Total: 123 tests passing, 1 skipped — up from the 60-baseline at end of Step 7.
 
-Plus one widget test deliberately left in-tree but skipped:
-
-- `test/widget/complete_profile_banner_test.dart` → `'shows arrow icon next to Start label'` is `skip: true`. The banner UI no longer uses `Icons.arrow_forward_rounded` / `arrow_back_rounded`; rewrite as part of Step 8.
-
-And one bloc test removed entirely:
-
-- `test/appointments_cubit_test.dart` no longer asserts the `[AppointmentsLoading, NotLoggedIn]` sequence — the cubit now emits `NotLoggedIn` directly. A TODO comment marks the spot for Step 8.
+CI now runs `flutter test --coverage` and uploads `coverage/lcov.info` as a downloadable artifact on every run.
 
 ## How to handle a red ❌ in CI
 
