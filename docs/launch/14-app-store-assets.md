@@ -24,180 +24,61 @@ This is the **single source of truth** for everything you'll paste into App Stor
 
 ## 1. App identity
 
+> ⚠️ **DRAFT — NEEDS USER INPUT.** The previous version of this section had names and subtitles I invented without asking. Removed. Fill in below from authoritative source (brand guide / marketing decisions made by the user).
+
 | Field | Value |
 |---|---|
-| App name (App Store) | `DocSera — احجز طبيبك` (29 chars, max 30) |
-| App name (Play Store) | `DocSera: Doctors & Appointments` (32 chars, max 30 — **trim to** `DocSera: Doctor Appointments`) |
-| Subtitle (App Store, AR) | `طبيبك معك دائماً — مواعيد ورسائل وملف صحي` |
-| Subtitle (App Store, EN) | `Book doctors. Manage your health.` |
-| Bundle ID | `com.docsera.app` |
-| App Store Connect SKU | `docsera-patient-app-001` (any unique string) |
+| App name (App Store) | _TBD — confirm with user_ |
+| App name (Play Store) | _TBD_ |
+| Subtitle (App Store, AR) | _TBD — candidate from home screen: `دكتورك معنا... دايماً موجود`_ |
+| Subtitle (App Store, EN) | _TBD — needs canonical English tagline_ |
+| Bundle ID | `com.docsera.app` ✓ verified in `android/app/build.gradle` |
+| App Store Connect SKU | any unique string, e.g. `docsera-patient-app-001` |
 | Primary category | **Medical** |
 | Secondary category | **Health & Fitness** |
-| Content rights | Yes — we own all rights to all content |
+| Content rights | Yes — we own all rights |
 | Pricing | Free, no in-app purchases |
 
 ---
 
 ## 2. App descriptions
 
-### 2a. Promotional Text — App Store only (170 chars max)
-
-**Arabic:**
-```
-دكتورك معك دائماً. ابحث، احجز، تواصل واحتفظ بسجلاتك الطبية في تطبيق واحد آمن ومُصمَّم خصيصاً لسوريا.
-```
-*(140 chars — fits)*
-
-**English:**
-```
-Your doctor, always with you. Find practitioners, book appointments, message securely, and keep your medical records — built for Syria.
-```
-*(140 chars — fits)*
-
-> Promotional text can be updated anytime without a new app review. Use it for seasonal messaging.
-
-### 2b. Short Description — Google Play only (80 chars max)
-
-**Arabic:**
-```
-احجز طبيبك، تواصل معه، واحتفظ بكل سجلاتك الصحية في مكان واحد آمن
-```
-*(64 chars — fits)*
-
-**English:**
-```
-Book doctors, message securely, keep all your health records in one safe place
-```
-*(78 chars — fits)*
-
-### 2c. Full Description (App Store + Google Play, 4000 chars max)
-
-**Arabic:**
-
-```
-DocSera هو تطبيق الرعاية الصحية المتكامل المُصمَّم خصيصاً للمرضى في سوريا.
-
-في تطبيق واحد، يمكنك:
-
-🩺 ابحث عن طبيبك المناسب
-• استكشف آلاف الأطباء حسب الاختصاص أو الموقع
-• شاهد ملفات الأطباء الكاملة: الخبرة، التقييمات، الخدمات، الأسعار، صور العيادة
-• اعثر على الأطباء القريبين منك على الخريطة
-
-📅 احجز موعدك بثوانٍ
-• شاهد المواعيد المتاحة لحظياً
-• احجز بضغطة زر، بدون اتصالات هاتفية ولا انتظار
-• تذكير تلقائي قبل الموعد
-• إلغاء أو إعادة جدولة بكل مرونة
-
-💬 تواصل آمن مع طبيبك
-• راسل طبيبك مباشرة بعد زيارتك
-• أرسل صور التقارير والتحاليل
-• رسائل صوتية وملفات PDF
-• تشفير من طرف إلى طرف لجميع الرسائل
-
-📋 ملفك الصحي في جيبك
-• الأمراض المزمنة، الحساسيّات، الأدوية
-• العمليات السابقة، اللقاحات، التاريخ العائلي
-• تقارير زياراتك الطبية محفوظة بترتيب
-• مشاركة آمنة مع طبيبك بنقرة واحدة
-
-👨‍👩‍👧 صحة عائلتك بيدك
-• أضف أقاربك وأطفالك إلى حسابك
-• إدارة مواعيدهم وملفاتهم الصحية
-• صلاحيات وصول قابلة للتخصيص
-
-🔒 الخصوصية والأمان
-• تشفير AES-256 لجميع الرسائل والملفات
-• مصادقة بصمة الإصبع / Face ID
-• بيانات مخزَّنة على خوادم آمنة
-• شفافية كاملة في سياسة الخصوصية
-
-DocSera هو رفيقك الصحي اليومي. واجهة بسيطة، أداء سريع، ودعم كامل للغة العربية مع التصميم من اليمين إلى اليسار.
-
-تطبيق متاح مجاناً ومُحسَّن للهواتف ذات الشبكات البطيئة.
-
----
-الموقع: https://docsera.app
-سياسة الخصوصية: https://docsera.app/legal/privacy
-شروط الاستخدام: https://docsera.app/legal/terms
-الدعم: support@docsera.app
-
-ملاحظة طبية: DocSera ليس بديلاً عن الاستشارة الطبية المباشرة. في حالات الطوارئ، اتصل بالإسعاف فوراً.
-```
-
-**English:**
-
-```
-DocSera is the all-in-one healthcare app built for patients in Syria.
-
-In one app, you can:
-
-🩺 Find the right doctor
-• Browse thousands of practitioners by specialty or location
-• View complete doctor profiles: experience, services, pricing, clinic photos
-• Find nearby doctors on the map
-
-📅 Book in seconds
-• See real-time availability
-• Book with a single tap — no phone calls, no waiting
-• Automatic reminders before your appointment
-• Easy cancellation and rescheduling
-
-💬 Secure messaging with your doctor
-• Message your doctor directly after a visit
-• Send photos of reports and tests
-• Voice messages and PDF files
-• End-to-end encryption on all messages
-
-📋 Your health file in your pocket
-• Chronic conditions, allergies, medications
-• Past surgeries, vaccinations, family history
-• Medical reports from every visit, organized
-• Share securely with your doctor in one tap
-
-👨‍👩‍👧 Manage family health
-• Add relatives and children to your account
-• Manage their appointments and health records
-• Granular access permissions
-
-🔒 Privacy & security
-• AES-256 encryption on all messages and files
-• Fingerprint / Face ID authentication
-• Data stored on secure infrastructure
-• Full transparency in our privacy policy
-
-DocSera is your daily health companion — simple interface, fast performance, full Arabic + RTL support.
-
-Free, optimized for slow-network conditions.
-
----
-Website: https://docsera.app
-Privacy: https://docsera.app/legal/privacy
-Terms: https://docsera.app/legal/terms
-Support: support@docsera.app
-
-Medical disclaimer: DocSera does not replace direct medical consultation. In emergencies, call your local emergency number immediately.
-```
+> ⚠️ **DRAFT REMOVED — REJECTED BY USER.** The previous draft had several factual errors:
+>
+> - Claimed user-facing **ratings/reviews** of doctors (verified: this feature does NOT exist in the codebase)
+> - Claimed **end-to-end encryption** for messages (verified: NOT true — keys come from a server-side RPC `rpc_get_encryption_key`. Correct framing is "AES-256-GCM, server-managed key" or just "encrypted in transit and at rest")
+> - Claimed "**thousands of practitioners**" — unverified, almost certainly aspirational at launch
+> - Generic SaaS clichés ("all-in-one", "daily health companion", "your doctor, always with you")
+> - Invented a tagline instead of using the user's actual one (`دكتورك معنا... دايماً موجود` from the home screen, or `مستقبل الرعاية الصحية في سوريا الجديدة` from the banner)
+>
+> **Before re-drafting, the user must provide:**
+> 1. Authoritative app name + subtitle (in both AR and EN)
+> 2. The canonical slogan/tagline (one of the two above, or something else)
+> 3. Confirmed feature list — which of these exist in production *today* (the doc author should NOT guess):
+>    - [ ] Doctor search by specialty + city/governorate
+>    - [ ] Map-based doctor discovery
+>    - [ ] Appointment booking with real-time availability
+>    - [ ] In-app messaging (text, voice, PDF, images)
+>    - [ ] Health profile (allergies / chronic / meds / surgeries / vaccines / family history)
+>    - [ ] Medical visit reports archived per visit
+>    - [ ] Family member / relative profiles
+>    - [ ] Doctor profile with credentials / services / opening hours / FAQ
+>    - [ ] Loyalty / vouchers / partner offers
+>    - [ ] Telemedicine / video calls — _user confirmation needed_
+>    - [ ] Prescription / pharmacy delivery — _user confirmation needed_
+>    - [ ] Insurance integration — _user confirmation needed_
+> 4. Brand voice preference: warm/personal vs clinical/professional vs modern/tech-forward vs localized/national
+> 5. Specific factual claims they want highlighted (founder context, partnerships, doctor count if confirmed, years operating, anything Syrian-context specific)
+>
+> Only when ALL FIVE inputs are in hand should the descriptions be re-drafted. Do NOT fill in placeholders with marketing-language guesses.
 
 ---
 
 ## 3. App Store keywords (100 chars max each, comma-separated)
 
-**Arabic locale:**
-```
-طبيب,موعد,حجز,طبيبي,مواعيد طبية,صحة,سوريا,استشارة,تحاليل,سجلات طبية
-```
-*(78 chars — fits)*
-
-**English locale:**
-```
-doctor,appointment,booking,health,medical,clinic,syria,records,telemedicine,prescription
-```
-*(89 chars — fits)*
-
-> Don't repeat words from the app name/subtitle — they're already indexed. Don't use competitor names (rejection risk).
+> ⚠️ **DRAFT REMOVED.** The previous list included `telemedicine` and `prescription` — features that may not exist (see §2 unverified-features list). Don't list keywords for features the app doesn't have; Apple can reject for misrepresentation.
+>
+> Will be re-drafted once the canonical feature list is confirmed.
 
 ---
 
