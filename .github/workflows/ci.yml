@@ -167,15 +167,11 @@ jobs:
     runs-on: macos-latest
     timeout-minutes: 30
     needs: [analyze, test]
-    # NON-BLOCKING for now: ios/Runner.xcodeproj/project.pbxproj has hardcoded
-    # PBXFileReference entries pointing at Flutter/Release/App.xcframework and
-    # Flutter/Release/Flutter.xcframework — paths that exist locally on the
-    # developer's Mac but not on a fresh CI checkout. Cleaning those references
-    # safely requires a focused Xcode-project edit (or a regen via `flutter
-    # create -t app .` and merging changes) and is tracked as its own roadmap
-    # item. Until then we still attempt the build so the failure mode stays
-    # visible, but we don't block the overall workflow on it.
-    continue-on-error: true
+    # iOS CI is now a real gate (Step 9b — 2026-05-05).
+    # The 4 spurious PBXFileReference entries that previously pointed at
+    # Flutter/Release/{App,Flutter}.xcframework have been removed from
+    # ios/Runner.xcodeproj/project.pbxproj. Verified building cleanly on
+    # both macOS Simulator and a real-device Xcode build (no-codesign).
     steps:
       - uses: actions/checkout@v4
 
