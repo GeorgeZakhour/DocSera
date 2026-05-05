@@ -45,7 +45,10 @@ class _FullMapResultsPageState extends State<FullMapResultsPage> with SingleTick
   // الموقع الحي + نبضة
   Position? _currentPosition;
   late AnimationController _pulseController;
-  double _pulseRadius = 60; // متر
+  // _pulseRadius is computed on-demand from _pulseController.value inside
+  // an AnimatedBuilder around the GoogleMap. We do NOT call setState() from
+  // the controller's listener — that would rebuild the whole Scaffold every
+  // frame just to animate one circle.
 
   // PageView للتحكم بالسوايب
   late final PageController _pageController;
@@ -61,12 +64,10 @@ class _FullMapResultsPageState extends State<FullMapResultsPage> with SingleTick
     _pulseController = AnimationController(
       vsync: this,
       duration: const Duration(seconds: 2),
-    )..addListener(() {
-      setState(() {
-        _pulseRadius = 60 + (_pulseController.value * 40);
-      });
-    })
-      ..repeat(reverse: true);
+    )..repeat(reverse: true);
+    // Note: no listener here — the GoogleMap is wrapped in an AnimatedBuilder
+    // below, so only its `circles:` parameter rebuilds at 60fps, not the
+    // entire Scaffold tree.
   }
 
   @override
@@ -380,48 +381,54 @@ class _FullMapResultsPageState extends State<FullMapResultsPage> with SingleTick
       );
     }
 
-    // دائرة نبض موقع المستخدم
-    final Set<Circle> circles = {};
-    if (_currentPosition != null) {
-      circles.add(
-        Circle(
-          circleId: const CircleId('pulse'),
-          center: LatLng(_currentPosition!.latitude, _currentPosition!.longitude),
-          radius: _pulseRadius,
-          fillColor: AppColors.main.withValues(alpha: 0.20),
-          strokeColor: Colors.transparent,
-        ),
-      );
-    }
-
     final bool hasCards = widget.results.isNotEmpty;
 
     return Scaffold(
       body: Stack(
         children: [
           // ===== Google Map =====
-          GoogleMap(
-            initialCameraPosition: CameraPosition(
-              target: initialCenter,
-              zoom: widget.fromDoctorProfile ? 16 : 12, // 👈 farther when from profile
-            ),
-            onMapCreated: (c) async {
-              _gController = c;
-              await _applyMapStyle();
-              await _fitAllPins();
+          // Wrapped in AnimatedBuilder so the pulse circle's radius can
+          // update at 60fps without rebuilding the entire Stack/PageView.
+          AnimatedBuilder(
+            animation: _pulseController,
+            builder: (context, _) {
+              final pulseRadius = 60 + (_pulseController.value * 40);
+              final Set<Circle> circles = {};
+              if (_currentPosition != null) {
+                circles.add(
+                  Circle(
+                    circleId: const CircleId('pulse'),
+                    center: LatLng(_currentPosition!.latitude, _currentPosition!.longitude),
+                    radius: pulseRadius,
+                    fillColor: AppColors.main.withValues(alpha: 0.20),
+                    strokeColor: Colors.transparent,
+                  ),
+                );
+              }
+              return GoogleMap(
+                initialCameraPosition: CameraPosition(
+                  target: initialCenter,
+                  zoom: widget.fromDoctorProfile ? 16 : 12, // 👈 farther when from profile
+                ),
+                onMapCreated: (c) async {
+                  _gController = c;
+                  await _applyMapStyle();
+                  await _fitAllPins();
+                },
+                padding: EdgeInsets.only(bottom: hasCards ? (_bottomCardHeight + 24) : 0),
+                markers: markers,
+                circles: circles,
+                onTap: (_) {},
+                rotateGesturesEnabled: true,
+                mapType: MapType.normal,
+                myLocationEnabled: true,
+                myLocationButtonEnabled: false,
+                zoomControlsEnabled: false,
+                mapToolbarEnabled: false,
+                buildingsEnabled: true,
+                compassEnabled: false,
+              );
             },
-            padding: EdgeInsets.only(bottom: hasCards ? (_bottomCardHeight + 24) : 0),
-            markers: markers,
-            circles: circles,
-            onTap: (_) {},
-            rotateGesturesEnabled: true,
-            mapType: MapType.normal,
-            myLocationEnabled: true,
-            myLocationButtonEnabled: false,
-            zoomControlsEnabled: false,
-            mapToolbarEnabled: false,
-            buildingsEnabled: true,
-            compassEnabled: false,
           ),
 
           // زر "موقعي"

@@ -71,7 +71,10 @@ class _DoctorProfilePageState extends State<DoctorProfilePage> {
   final TransformationController _transformationController = TransformationController();
   Offset _doubleTapPosition = Offset.zero;
   final Map<String, ImageProvider> _imageCache = {};
-  double _buttonTopOffset = 0.0;
+  // Scroll-derived button position. Stored in a ValueNotifier so the
+  // floating button updates on scroll without rebuilding the entire
+  // 5000+-line page tree (which used to happen via setState in _onScroll).
+  final ValueNotifier<double> _buttonTopOffset = ValueNotifier<double>(0.0);
   bool _isOpeningImageOverlay = false;
   List<Map<String, dynamic>> _promotions = [];
   // promotion_id -> { has_active_voucher, used_count, is_eligible }
@@ -151,15 +154,14 @@ class _DoctorProfilePageState extends State<DoctorProfilePage> {
     _loadGifts();
 
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      setState(() {
-        _buttonTopOffset = _calculateButtonOffset();
-      });
+      _buttonTopOffset.value = _calculateButtonOffset();
     });
   }
 
   @override
   void dispose() {
     _scrollController.dispose();
+    _buttonTopOffset.dispose();
     super.dispose();
   }
 
@@ -286,15 +288,19 @@ class _DoctorProfilePageState extends State<DoctorProfilePage> {
     double offset = _scrollController.offset;
     double triggerOffset = MediaQuery.of(context).size.height * 0.30 - kToolbarHeight;
 
+    // _showAppBar only changes on threshold cross — setState here is cheap
+    // and unavoidable (the SliverAppBar's opacity depends on it).
     if (offset >= triggerOffset && !_showAppBar) {
       setState(() => _showAppBar = true);
     } else if (offset < triggerOffset && _showAppBar) {
       setState(() => _showAppBar = false);
     }
 
-    setState(() {
-      _buttonTopOffset = _calculateButtonOffset();
-    });
+    // Update the floating button's position via the notifier — this is what
+    // used to rebuild the entire page on every pixel of scroll. The
+    // ValueListenableBuilder around the Positioned button rebuilds only that
+    // small subtree.
+    _buttonTopOffset.value = _calculateButtonOffset();
   }
 
   double _calculateButtonOffset() {
@@ -3777,10 +3783,14 @@ $deepLink
               ),
             ],
           ),
-          Positioned(
-            top: _buttonTopOffset,
-            left: 32.w,
-            right: 32.w,
+          ValueListenableBuilder<double>(
+            valueListenable: _buttonTopOffset,
+            builder: (context, topOffset, child) => Positioned(
+              top: topOffset,
+              left: 32.w,
+              right: 32.w,
+              child: child!,
+            ),
             child: Opacity(
               opacity: opacity.clamp(0.0, 1.0),
               child: Container(

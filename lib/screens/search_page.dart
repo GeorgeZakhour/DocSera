@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:docsera/models/document.dart';
 import 'package:docsera/screens/centers/center_profile_page.dart';
 import 'package:docsera/screens/doctors/doctor_profile_page.dart';
@@ -43,6 +45,19 @@ class _SearchPageState extends State<SearchPage> {
   bool _isSearching = false;
   List<Map<String, dynamic>> _specialties = [];
 
+  // Debouncer for the search input. Without this, _performSearch fires a
+  // Supabase query on every keystroke — typing "cardiology" issues 9
+  // queries in rapid succession. With a 300ms debounce, only the final
+  // query after the user stops typing fires.
+  Timer? _searchDebounce;
+  static const Duration _searchDebounceWindow = Duration(milliseconds: 300);
+
+  // Cache of doctorId → bool ("is current user a patient of this doctor?").
+  // Used only in mode == 'message' to decide if the doctor's "patients-only"
+  // messaging gate applies. Without caching, _buildDoctorTile would issue a
+  // Supabase query per result row on every rebuild (N+1 query antipattern).
+  final Map<String, bool> _isPatientCache = {};
+
   /// Set of icon_key values that have actual SVG files bundled in assets.
   static const _availableSvgIcons = <String>{
     'Internal-specialty', 'Pediatrics-specialty', 'Gynecology-specialty',
@@ -75,6 +90,7 @@ class _SearchPageState extends State<SearchPage> {
 
   @override
   void dispose() {
+    _searchDebounce?.cancel();
     _searchController.dispose();
     _focusNode.dispose();
     super.dispose();
@@ -105,6 +121,19 @@ class _SearchPageState extends State<SearchPage> {
     }
   }
 
+  /// Debounced entry point — called by the TextField onChanged. Cancels any
+  /// in-flight timer and re-arms it so the actual query only fires after
+  /// the user pauses typing for [_searchDebounceWindow].
+  void _onSearchChanged(String query) {
+    _searchDebounce?.cancel();
+    if (query.trim().isEmpty) {
+      // Clearing the field is immediate (no debounce on empty string).
+      _performSearch(query);
+      return;
+    }
+    _searchDebounce = Timer(_searchDebounceWindow, () => _performSearch(query));
+  }
+
   /// **Perform search based on user input**
   void _performSearch(String query) async {
     if (query.trim().isEmpty) {
@@ -118,18 +147,61 @@ class _SearchPageState extends State<SearchPage> {
     setState(() => _isSearching = true);
 
     final q = query.toLowerCase();
-    
+
     final rawResults = await _searchService.searchUnified(q);
-    
+
     // 🛡️ Filter centers if in messaging mode
     final results = widget.mode == "message"
         ? rawResults.where((r) => r['search_type'] != 'center').toList()
         : rawResults;
 
+    // In message mode the per-doctor "is current user a patient?" query is
+    // needed to gate the patients-only messaging UX. Pre-fetch ALL of them
+    // in a single batch up-front so the tile builder can read from
+    // _isPatientCache synchronously instead of issuing N FutureBuilders.
+    if (widget.mode == "message" && _userId != null && results.isNotEmpty) {
+      final doctorIds = results
+          .where((r) => r['search_type'] != 'center' && r['id'] != null)
+          .map((r) => r['id'] as String)
+          .where((id) => !_isPatientCache.containsKey(id))
+          .toList();
+      if (doctorIds.isNotEmpty) {
+        await _prefetchPatientStatus(doctorIds);
+      }
+    }
+
+    if (!mounted) return;
     setState(() {
       _searchResults = results;
       _isSearching = false;
     });
+  }
+
+  /// Single batched query that populates _isPatientCache for every doctor
+  /// id in the search results. Replaces the per-row FutureBuilder pattern
+  /// that issued N queries on every list rebuild.
+  Future<void> _prefetchPatientStatus(List<String> doctorIds) async {
+    try {
+      final rows = await Supabase.instance.client
+          .from('appointments')
+          .select('doctor_id')
+          .eq('user_id', _userId!)
+          .inFilter('doctor_id', doctorIds);
+      final patientOf = <String>{};
+      for (final r in rows) {
+        final id = r['doctor_id']?.toString();
+        if (id != null) patientOf.add(id);
+      }
+      for (final id in doctorIds) {
+        _isPatientCache[id] = patientOf.contains(id);
+      }
+    } catch (e) {
+      // Treat as "not a patient" on error — the patients-only gate is a
+      // permissive default elsewhere in the app, so this matches behavior.
+      for (final id in doctorIds) {
+        _isPatientCache[id] = false;
+      }
+    }
   }
 
   @override
@@ -173,7 +245,7 @@ class _SearchPageState extends State<SearchPage> {
                       icon: const Icon(Icons.clear),
                       onPressed: () {
                         _searchController.clear();
-                        _performSearch("");
+                        _onSearchChanged("");
                       },
                     )
                         : null,
@@ -190,7 +262,7 @@ class _SearchPageState extends State<SearchPage> {
                       borderSide: const BorderSide(color: AppColors.main, width: 2),
                     ),
                   ),
-                  onChanged: _performSearch,
+                  onChanged: _onSearchChanged,
                 ),
                 
                 SizedBox(height: 20.h),
@@ -339,19 +411,6 @@ class _SearchPageState extends State<SearchPage> {
     );
   }
 
-  Future<bool> _isUserPatientOfDoctor(String doctorId) async {
-    if (_userId == null) return false;
-
-    final result = await Supabase.instance.client
-        .from('appointments')
-        .select('id')
-        .eq('doctor_id', doctorId)
-        .eq('user_id', _userId!)
-        .limit(1);
-
-    return (result.isNotEmpty);
-  }
-
 
   /// **Doctor Search Result Tile**
   Widget _buildDoctorTile(Map<String, dynamic> doctor) {
@@ -363,31 +422,31 @@ class _SearchPageState extends State<SearchPage> {
     final bool messagesEnabled = doctor['messages_enabled'] == true;
     final String access = doctor['messages_access'] ?? 'public';
 
-    return FutureBuilder<bool>(
-      future: _isUserPatientOfDoctor(doctor['id']),
-      builder: (context, snapshot) {
-        final bool isPatient = snapshot.data ?? false;
+    // Pull patient status from the prefetched cache (populated in batch by
+    // _prefetchPatientStatus during the search). Falls back to false in
+    // search mode where we never need this value anyway.
+    final bool isPatient = _isPatientCache[doctor['id']] ?? false;
 
-        // 🧩 تحقق من التوفر (فقط في وضع الرسائل)
-        bool isUnavailable = false;
-        String unavailableReason = '';
+    // 🧩 تحقق من التوفر (فقط في وضع الرسائل)
+    bool isUnavailable = false;
+    String unavailableReason = '';
 
-        if (widget.mode == "message") {
-          if (doctor['id'] == _userId) {
-            isUnavailable = true;
-            unavailableReason = local.ownProfileBadge;
-          } else if (!messagesEnabled) {
-            isUnavailable = true;
-            unavailableReason = local.messagesDisabled; // 🔹 "غير متاح للرسائل"
-          } else if (access == 'patients' && !isPatient) {
-            isUnavailable = true;
-            unavailableReason = local.patientsOnlyMessaging; // 🔹 "متاح فقط لمرضاه"
-          }
-        }
+    if (widget.mode == "message") {
+      if (doctor['id'] == _userId) {
+        isUnavailable = true;
+        unavailableReason = local.ownProfileBadge;
+      } else if (!messagesEnabled) {
+        isUnavailable = true;
+        unavailableReason = local.messagesDisabled; // 🔹 "غير متاح للرسائل"
+      } else if (access == 'patients' && !isPatient) {
+        isUnavailable = true;
+        unavailableReason = local.patientsOnlyMessaging; // 🔹 "متاح فقط لمرضاه"
+      }
+    }
 
-        final tileOpacity = isUnavailable ? 0.6 : 1.0;
+    final tileOpacity = isUnavailable ? 0.6 : 1.0;
 
-        return Opacity(
+    return Opacity(
           opacity: tileOpacity,
           child: AbsorbPointer( // يمنع الضغط لما يكون غير متاح
             absorbing: isUnavailable,
@@ -488,8 +547,6 @@ class _SearchPageState extends State<SearchPage> {
             ),
           ),
         );
-      },
-    );
   }
 
   /// **Center Search Result Tile**
