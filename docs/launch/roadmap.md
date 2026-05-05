@@ -25,12 +25,13 @@ Living doc — updated after each completed step. Score is a subjective launch-r
 | 5 | **Pen test + security review** (auth, encryption, RPCs, edge functions) | 🔴 Critical | Healthtech is a high-value target. The RLS audit found one real hole; others may exist. External eyes find what we miss. | 2–4 days external, 1–2 days internal | 9.1 |
 | 6 | **Privacy Policy + Terms of Service + Medical Disclaimer** (in-app screens + URLs for store listings, EN + AR) | 🔴 Critical | App stores reject medical apps without these. Also legally required for GDPR-aligned users. | 1 day to draft + 1 day legal review | 9.2 |
 | 8 | **Comprehensive test strategy + suite** — design + author unit, widget, and integration tests covering the auth funnel, booking funnel, encryption, RLS-bounded queries, document upload, loyalty redemption, deletion lifecycle, and the legal-consent flow. Rewrites the tests currently parked in `test/_pending_rewrite/`. Also: golden tests for critical screens, coverage target ≥60%. | 🟠 High | The single biggest "I'm confident in my app" lever. Without tests every refactor is a gamble. With them, regressions get caught by CI before they ever reach a device. | 2–4 days | 9.4 |
-| 9 | **Resolve `untranslated_ar.txt`** | 🟠 High | Arabic is the default locale. Untranslated keys = English text in an Arabic UI. | 2–4h | 9.45 |
-| 10 | **Performance pass** (`search_page`, `map_results_page`, `doctor_profile_page`) | 🟠 High | Highest-traffic screens. Profile first, then fix targeted issues. | 1–2 days | 9.55 |
-| 11 | **Beta testing** (TestFlight + Play Internal, 2–4 weeks, ~20–50 real users) | 🔴 Critical | Single biggest crash-rate-reducer. Catches device-specific bugs solo testing misses. | Calendar 2–4 weeks; setup 3h | 9.7 |
-| 12 | **Accessibility audit** (Semantics labels, contrast, dynamic-type) | 🟡 Medium | Healthtech serves elderly/visually-impaired patients. Legal in EU. | 1 day audit + 1–2 days fixes | 9.8 |
-| 13 | **Dependency + bundle audit** (77 deps; `flutter build apk --analyze-size`) | 🟡 Medium | Likely 10–15 MB savings. Smaller install = higher conversion in low-bandwidth markets. | 4–6h | 9.9 |
-| 14 | **App store assets** (per-locale screenshots, descriptions, icons, privacy nutrition labels) | 🟠 High | Required to publish. Underestimated time-sink. | 1 day | 10.0 |
+| 9 | **Lint cleanup sweep** — burn down the ~1000+ analyzer warnings & infos: unused imports, unused locals, dead null-aware ops, withOpacity → withValues codemod, Unicode bidi marks in literals, must_be_immutable, etc. After this, tighten CI to be strict on warnings (`--fatal-warnings`). | 🟡 Medium | Not blocking but compounding tech debt. Once cleaned, every new warning becomes a real signal instead of background noise, and CI can enforce it. | 4–6h | 9.42 |
+| 10 | **Resolve `untranslated_ar.txt`** | 🟠 High | Arabic is the default locale. Untranslated keys = English text in an Arabic UI. | 2–4h | 9.45 |
+| 11 | **Performance pass** (`search_page`, `map_results_page`, `doctor_profile_page`) | 🟠 High | Highest-traffic screens. Profile first, then fix targeted issues. | 1–2 days | 9.55 |
+| 12 | **Beta testing** (TestFlight + Play Internal, 2–4 weeks, ~20–50 real users) | 🔴 Critical | Single biggest crash-rate-reducer. Catches device-specific bugs solo testing misses. | Calendar 2–4 weeks; setup 3h | 9.7 |
+| 13 | **Accessibility audit** (Semantics labels, contrast, dynamic-type) | 🟡 Medium | Healthtech serves elderly/visually-impaired patients. Legal in EU. | 1 day audit + 1–2 days fixes | 9.8 |
+| 14 | **Dependency + bundle audit** (77 deps; `flutter build apk --analyze-size`) | 🟡 Medium | Likely 10–15 MB savings. Smaller install = higher conversion in low-bandwidth markets. | 4–6h | 9.9 |
+| 15 | **App store assets** (per-locale screenshots, descriptions, icons, privacy nutrition labels) | 🟠 High | Required to publish. Underestimated time-sink. | 1 day | 10.0 |
 
 ## Total time budget
 
