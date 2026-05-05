@@ -62,8 +62,11 @@ jobs:
       - name: Generate localizations
         run: flutter gen-l10n
 
+      # --no-fatal-infos: don't fail on info-level lints (e.g. withOpacity
+      # deprecation notices) that are tracked but not blockers. Errors and
+      # warnings still fail the job.
       - name: Analyze (lib only — production code)
-        run: flutter analyze lib/
+        run: flutter analyze --no-fatal-infos lib/
 
   # ---------------------------------------------------------------------------
   # 2. Tests — runs the unit + widget test suite.
