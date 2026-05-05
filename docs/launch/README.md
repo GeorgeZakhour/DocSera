@@ -22,6 +22,7 @@ Operator-focused docs for everything done in preparation for the public launch o
 | 09 | [Comprehensive test strategy (367 tests, 9 integration funnels, encryption guard)](09-test-strategy.md) | ✅ Done | 9.4 / 10 |
 | — | Lint cleanup sweep (1068 → 275 analyzer issues, silent RTL bug caught and fixed) | ✅ Done | 9.42 / 10 |
 | — | iOS pbxproj cleanup (11 spurious xcframework refs removed; CI iOS gate strict) | ✅ Done | 9.43 / 10 |
+| — | Untranslated Arabic — 33 new l10n keys + 2 security fixes (OTP debug-leak gated, dead Doctor ID widget removed) | ✅ Done | 9.45 / 10 |
 | — | [Full roadmap & score progression](roadmap.md) | Living doc | — |
 
 ## How to use these docs
