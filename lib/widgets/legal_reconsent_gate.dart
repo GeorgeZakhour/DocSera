@@ -176,84 +176,111 @@ class _ReconsentDialogState extends State<_ReconsentDialog> {
         padding: EdgeInsets.symmetric(horizontal: 18.w, vertical: 28.h),
         child: ConstrainedBox(
           constraints: BoxConstraints(maxWidth: 460.w, maxHeight: 0.85.sh),
-          child: ClipRRect(
-            borderRadius: BorderRadius.circular(24.r),
-            child: BackdropFilter(
-              filter: ImageFilter.blur(sigmaX: 22, sigmaY: 22),
-              child: Container(
-                decoration: BoxDecoration(
-                  // Frosted card: warm neutral with a subtle teal tint at the top
-                  gradient: LinearGradient(
-                    begin: Alignment.topCenter,
-                    end: Alignment.bottomCenter,
-                    colors: [
-                      AppColors.main.withOpacity(0.06),
-                      Colors.white.withOpacity(0.96),
-                    ],
-                    stops: const [0.0, 0.35],
+          // Material(type: transparency) provides the InheritedWidget that
+          // Text needs to avoid the yellow-underline "no-Material" fallback,
+          // while keeping the card's own decoration visible through it.
+          child: Material(
+            type: MaterialType.transparency,
+            child: Container(
+              decoration: BoxDecoration(
+                color: Colors.white,
+                border: Border.all(
+                  color: AppColors.main.withOpacity(0.18),
+                  width: 1,
+                ),
+                borderRadius: BorderRadius.circular(24.r),
+                boxShadow: [
+                  BoxShadow(
+                    color: AppColors.main.withOpacity(0.18),
+                    blurRadius: 32,
+                    offset: const Offset(0, 16),
                   ),
-                  border: Border.all(
-                    color: Colors.white.withOpacity(0.7),
-                    width: 1,
+                  BoxShadow(
+                    color: Colors.black.withOpacity(0.06),
+                    blurRadius: 14,
+                    offset: const Offset(0, 4),
                   ),
-                  borderRadius: BorderRadius.circular(24.r),
-                  boxShadow: [
-                    BoxShadow(
-                      color: AppColors.main.withOpacity(0.12),
-                      blurRadius: 30,
-                      offset: const Offset(0, 14),
+                ],
+              ),
+              child: ClipRRect(
+                borderRadius: BorderRadius.circular(24.r),
+                child: Stack(
+                  children: [
+                    // Soft brand-tinted glow behind the hero badge — gives the
+                    // card a "DocSera" personality without making the surface
+                    // translucent.
+                    Positioned(
+                      top: -40.h,
+                      left: 0,
+                      right: 0,
+                      child: Container(
+                        height: 160.h,
+                        decoration: BoxDecoration(
+                          gradient: RadialGradient(
+                            center: Alignment.topCenter,
+                            radius: 0.9,
+                            colors: [
+                              AppColors.main.withOpacity(0.10),
+                              Colors.transparent,
+                            ],
+                          ),
+                        ),
+                      ),
+                    ),
+                    SingleChildScrollView(
+                      padding:
+                          EdgeInsets.fromLTRB(22.w, 26.h, 22.w, 22.h),
+                      child: Column(
+                        mainAxisSize: MainAxisSize.min,
+                        crossAxisAlignment: CrossAxisAlignment.stretch,
+                        children: [
+                          _heroBadge(),
+                          SizedBox(height: 16.h),
+                          Text(
+                            l.legalDocsUpdatedTitle,
+                            textAlign: TextAlign.center,
+                            style:
+                                AppTextStyles.getTitle1(context).copyWith(
+                              fontSize: 16.sp,
+                              fontWeight: FontWeight.w800,
+                              color: AppColors.mainDark,
+                              letterSpacing: -0.2,
+                            ),
+                          ),
+                          SizedBox(height: 8.h),
+                          Text(
+                            l.legalDocsUpdatedBody,
+                            textAlign: TextAlign.center,
+                            style:
+                                AppTextStyles.getText2(context).copyWith(
+                              color: Colors.black.withOpacity(0.62),
+                              height: 1.45,
+                              fontSize: 11.5.sp,
+                            ),
+                          ),
+                          SizedBox(height: 22.h),
+                          ...widget.pending.documents.map((doc) {
+                            final checked = _accepted[doc.code] ?? false;
+                            return Padding(
+                              padding: EdgeInsets.only(bottom: 10.h),
+                              child: _DocConsentCard(
+                                checked: checked,
+                                consentLabel: _consentLabel(doc.code, l),
+                                docTitle: _docTitle(doc.code, l),
+                                version: doc.version,
+                                onToggle: () => setState(
+                                  () => _accepted[doc.code] = !checked,
+                                ),
+                                onOpen: () => _open(doc.code),
+                              ),
+                            );
+                          }),
+                          SizedBox(height: 12.h),
+                          _submitButton(l),
+                        ],
+                      ),
                     ),
                   ],
-                ),
-                child: SingleChildScrollView(
-                  padding: EdgeInsets.fromLTRB(22.w, 26.h, 22.w, 22.h),
-                  child: Column(
-                    mainAxisSize: MainAxisSize.min,
-                    crossAxisAlignment: CrossAxisAlignment.stretch,
-                    children: [
-                      _heroBadge(),
-                      SizedBox(height: 16.h),
-                      Text(
-                        l.legalDocsUpdatedTitle,
-                        textAlign: TextAlign.center,
-                        style: AppTextStyles.getTitle1(context).copyWith(
-                          fontSize: 16.sp,
-                          fontWeight: FontWeight.w800,
-                          color: AppColors.mainDark,
-                          letterSpacing: -0.2,
-                        ),
-                      ),
-                      SizedBox(height: 8.h),
-                      Text(
-                        l.legalDocsUpdatedBody,
-                        textAlign: TextAlign.center,
-                        style: AppTextStyles.getText2(context).copyWith(
-                          color: Colors.black.withOpacity(0.62),
-                          height: 1.45,
-                          fontSize: 11.5.sp,
-                        ),
-                      ),
-                      SizedBox(height: 22.h),
-                      ...widget.pending.documents.map((doc) {
-                        final checked = _accepted[doc.code] ?? false;
-                        return Padding(
-                          padding: EdgeInsets.only(bottom: 10.h),
-                          child: _DocConsentCard(
-                            checked: checked,
-                            consentLabel: _consentLabel(doc.code, l),
-                            docTitle: _docTitle(doc.code, l),
-                            version: doc.version,
-                            onToggle: () => setState(
-                              () => _accepted[doc.code] = !checked,
-                            ),
-                            onOpen: () => _open(doc.code),
-                          ),
-                        );
-                      }),
-                      SizedBox(height: 12.h),
-                      _submitButton(l),
-                    ],
-                  ),
                 ),
               ),
             ),
@@ -383,12 +410,12 @@ class _DocConsentCard extends StatelessWidget {
       curve: Curves.easeOut,
       decoration: BoxDecoration(
         color: checked
-            ? AppColors.main.withOpacity(0.06)
-            : Colors.white.withOpacity(0.55),
+            ? AppColors.main.withOpacity(0.07)
+            : const Color(0xFFF7FAFA),
         border: Border.all(
           color: checked
               ? AppColors.main.withOpacity(0.45)
-              : Colors.black.withOpacity(0.08),
+              : const Color(0xFFE2E8E8),
           width: checked ? 1.2 : 1,
         ),
         borderRadius: BorderRadius.circular(14.r),
