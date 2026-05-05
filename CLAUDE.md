@@ -95,6 +95,12 @@ supabase/
 - **Tooltip strings always come from `AppLocalizations`** — they're user-facing text and need Arabic translation (project default locale).
 - See [docs/launch/12-accessibility.md](docs/launch/12-accessibility.md) for full WCAG cheat-sheet and rationale.
 
+### Dependencies (post-Step-14 hygiene)
+- **Before adding a new dep**, grep `pubspec.yaml` for similar functionality. Examples of overlap to avoid: PDF rendering (`pdfx` and `flutter_pdfview` both exist — pick one), file pickers, image pickers, HTTP clients.
+- **Build-time tools go in `dev_dependencies:`, never main `dependencies:`.** Code generators, `flutter_launcher_icons`, `flutter_native_splash`, `build_runner`, etc. are run via `dart run package:cmd` and never imported as Dart code; shipping them in main deps inflates the bundle and the supply-chain surface.
+- **A dep without an `import` anywhere in `lib/` or `test/` is unused.** When working in this repo, if you spot one, flag it for removal — don't quietly leave it.
+- See [docs/launch/13-deps-bundle-audit.md](docs/launch/13-deps-bundle-audit.md) for audit history and the deferred PDF-consolidation note.
+
 ### Localization
 - All user-facing strings must be in ARB files (`lib/l10n/app_en.arb`, `app_ar.arb`)
 - Access via `AppLocalizations.of(context)?.key`
