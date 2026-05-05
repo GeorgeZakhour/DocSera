@@ -6,7 +6,11 @@ buildscript {
         google()  // Make sure this is included
         mavenCentral()
     }
-    ext.kotlin_version = '1.9.23' // Downgraded to fix JVM target mismatch
+    // Kotlin 2.0.21 is the first stable version compatible with AGP 8.7+
+    // (AGP 8.x removed the BaseVariant API that Kotlin 1.9.x still referenced,
+    // causing 'Could not generate a decorated class for type KotlinAndroidTarget'
+    // failures on CI). Bumped from 1.9.23 on 2026-05-05.
+    ext.kotlin_version = '2.0.21'
 
     dependencies {
         classpath 'com.android.tools.build:gradle:8.8.0'
