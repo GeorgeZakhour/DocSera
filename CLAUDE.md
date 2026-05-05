@@ -87,6 +87,14 @@ supabase/
 - Text styles: use `AppTextStyles` methods (`getTitle1()` through `getTitle4()`, `getText1()` through `getText4()`)
 - Fonts: Montserrat (English), Cairo (Arabic) — auto-selected by locale
 
+### Accessibility (post-Step-13 patterns)
+- **Never use `AppColors.orangeText` (#FFA070) as a text color.** It fails WCAG AA on every background it appears on. Use `AppColors.giftAccent` (#E07A1F) for orange-accent text instead. Decorative icons can still use `orangeText` if shape is the signal.
+- **Never use `AppColors.background3` (#F7FDFC) as a text color.** It's a background tint, not a text color — invisible on white/near-white surfaces. Use `Colors.grey.shade700` or `AppColors.mainDark` for secondary text.
+- **Every icon-only `IconButton` must have a `tooltip:`** — Flutter wires `tooltip` to the Semantics label, so this fixes both long-press hint AND screen-reader announcement at once.
+- **For tappable icons in `GestureDetector`/`InkWell`** (which don't auto-label), wrap in `Semantics(label: ..., button: true, child: ...)`.
+- **Tooltip strings always come from `AppLocalizations`** — they're user-facing text and need Arabic translation (project default locale).
+- See [docs/launch/12-accessibility.md](docs/launch/12-accessibility.md) for full WCAG cheat-sheet and rationale.
+
 ### Localization
 - All user-facing strings must be in ARB files (`lib/l10n/app_en.arb`, `app_ar.arb`)
 - Access via `AppLocalizations.of(context)?.key`
