@@ -209,6 +209,29 @@ The convention going forward:
 - Test Cubits using `blocTest()` with mocked services
 - Integration tests in `test/integration/`
 
+## CI/CD discipline (free-tier — IMPORTANT)
+
+GitHub Actions is on the free tier (2,000 minute-units/month) and the user is **not paying** and **does not plan to pay**. CI is split into two workflows so the budget never blows:
+
+| Workflow | File | Trigger | Cost/run | Purpose |
+|---|---|---|---|---|
+| **CI** | `.github/workflows/ci.yml` | Every push to `main` and every PR | ~8 min-units (Linux only) | Fast: `flutter analyze` + `flutter test` |
+| **Build** | `.github/workflows/build.yml` | **Manual only** (`workflow_dispatch`) or `v*` tag push | ~58 min-units (50 of which are macOS at 10× multiplier) | Android APK + iOS simulator builds |
+
+**Rules for any agent working in this repo:**
+
+1. **Never re-add Android or iOS build jobs to `ci.yml`.** They live in `build.yml` for a reason. The math: at the user's pace, every-push iOS builds exhaust the free tier in <2 weeks. The split saves ~50 min/push.
+2. **Don't trigger the manual `Build` workflow speculatively.** Each full run costs ~58 min-units. Trigger it only when the user asks, or when there's a concrete reason (a native dep was added, an Android/iOS config file was touched, a release tag is going out).
+3. **Native build failures on `main` are not normally caught by `ci.yml`.** That is by design. When the user pushes Dart-only changes, analyze + tests are sufficient; the build workflow is the final gate before a release or when verifying a native-touching change.
+4. **How to suggest the user trigger a build** (in priority order):
+   - GitHub UI: Actions → "Build (Android + iOS)" → "Run workflow"
+   - CLI: `gh workflow run build.yml` (or `-f android=false` / `-f ios=false` to save minutes)
+   - Tag push: `git tag v1.0.0 && git push --tags` (auto-triggers both)
+5. **When a CI failure surfaces a native bug** (the build workflow is red), fix it but don't add per-push gating "to catch it earlier." The signal-to-noise of per-push native builds isn't worth the cost.
+6. **Free-tier headroom**: ~250 pushes/month on `ci.yml`, ~25 full builds/month on `build.yml`, before exhaustion. Watch usage at github.com/settings/billing if approaching limits.
+
+See [docs/launch/08-ci-github-actions.md](docs/launch/08-ci-github-actions.md) for the full design rationale and history.
+
 ## Commands
 
 ```bash
@@ -238,5 +261,5 @@ supabase db push          # Apply migrations
 
 - Supabase credentials are in `app/const.dart` — these are client-side anon keys (safe for mobile)
 - The app has 77 dependencies — check `pubspec.yaml` before adding new ones to avoid duplicates
-- No CI/CD pipeline exists yet — builds are done locally
+- CI is split: `ci.yml` (analyze + test on every push) + `build.yml` (manual builds only — see "CI/CD discipline" above)
 - Both DocSera and DocSera-Pro share the same Supabase backend — coordinate schema changes
