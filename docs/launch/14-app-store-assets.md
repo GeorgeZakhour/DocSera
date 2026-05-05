@@ -82,6 +82,178 @@ This is the **single source of truth** for everything you'll paste into App Stor
 
 ---
 
+## DRAFT v2 — pending user review (do NOT publish without approval)
+
+> Status: **PARKED 2026-05-06.** User asked to revisit when in a better mood. This is the draft to come back to. Verified against actual code (search, doctors+centers, AES-256 server-managed key, no E2E claim, no fabricated reviews/video/pharmacy).
+
+### v2 — App identity
+
+| Field | Value | Char count |
+|---|---|---|
+| App name (App Store + Google Play) | `DocSera` | 7 |
+| Subtitle (App Store, EN) | `Your Health, Connected.` | 24 / 30 |
+| Subtitle (App Store, AR) | `صحتك معك. أينما كنت.` | ~22 / 30 |
+| Bundle ID | `com.docsera.app` | verified ✓ |
+| Primary category | Medical | |
+| Secondary category | Health & Fitness | |
+
+### v2 — Promotional Text (App Store, 170 char max)
+
+**English (140):**
+> Find a doctor or medical center. Book in seconds. Message your practitioner. Keep your medical records — all in one secure app.
+
+**Arabic (155):**
+> ابحث عن طبيبك أو مركزك الطبي. احجز موعدك بثوانٍ. تواصل مع أخصائيك واحتفظ بسجلاتك الصحية — في تطبيق واحد آمن.
+
+### v2 — Short Description (Google Play, 80 char max)
+
+**English (78):**
+> Find doctors and medical centers, book appointments, manage your health records.
+
+**Arabic (76):**
+> اعثر على طبيبك ومركزك الطبي، احجز مواعيدك، وأدِر ملفك الصحي بسهولة وأمان.
+
+### v2 — Full Description (4000 char max)
+
+**English:**
+
+```
+DocSera connects you with the right doctor, specialist, or medical
+center — and keeps everything that matters about your health in one
+place.
+
+WHAT YOU CAN DO
+
+Find the right practitioner
+• Search doctors, specialists, and medical centers by specialty
+  and city
+• Browse complete profiles: credentials, services, opening hours,
+  clinic gallery, FAQ
+• See nearby practitioners on the map
+• Save your favorites for quick access
+
+Book in seconds
+• See real-time availability for in-clinic appointments
+• Book on behalf of yourself or a relative
+• Receive automatic reminders before your appointment
+• Reschedule or cancel up to 24 hours in advance
+
+Stay in touch with your practitioner
+• Direct messaging after your visit
+• Send photos of test results, attach PDFs, record voice notes
+• Messages and files are encrypted (AES-256)
+
+Your health, organized
+• Personal health profile: chronic conditions, allergies,
+  medications, past surgeries, vaccinations, family history
+• Medical reports from every visit, archived in one place
+• Personal health notes
+• Manage health records for your relatives — children, parents,
+  family members
+
+Privacy and security
+• AES-256 encryption on all messages and attachments
+• Sign in with Face ID or fingerprint
+• Granular control over what your relatives can see
+• Full data deletion on request
+
+DocSera is free for patients, made for the Syrian healthcare
+landscape, and designed to work well on slow networks.
+
+—
+Website: https://docsera.app
+Privacy Policy: https://docsera.app/legal/privacy
+Terms of Use: https://docsera.app/legal/terms
+Support: support@docsera.app
+
+DocSera does not replace direct medical consultation. In an
+emergency, contact your local emergency services immediately.
+```
+
+**Arabic:**
+
+```
+يربطك DocSera بالطبيب أو الأخصائي أو المركز الطبي المناسب —
+ويحفظ كل ما يخص صحتك في مكان واحد.
+
+ماذا يمكنك أن تفعل
+
+ابحث عن الأخصائي المناسب
+• ابحث عن أطباء وأخصائيين ومراكز طبية حسب الاختصاص والمدينة
+• تصفّح الملفات الكاملة: الشهادات، الخدمات، ساعات العمل،
+  معرض العيادة، الأسئلة الشائعة
+• اعثر على المختصين القريبين منك على الخريطة
+• احفظ أطباءك المفضلين للوصول السريع
+
+احجز موعدك بثوانٍ
+• شاهد الأوقات المتاحة لحظياً
+• احجز لنفسك أو لأحد أقاربك
+• تذكير تلقائي قبل الموعد
+• إلغاء أو إعادة جدولة حتى 24 ساعة قبل الموعد
+
+تواصل مع طبيبك
+• مراسلة مباشرة بعد الزيارة
+• أرسل صور نتائج التحاليل، أرفق ملفات PDF، سجّل ملاحظات صوتية
+• الرسائل والملفات مشفّرة (AES-256)
+
+ملفك الصحي، منظَّم
+• ملف صحي شخصي: الأمراض المزمنة، الحساسيّات، الأدوية،
+  العمليات السابقة، اللقاحات، التاريخ العائلي
+• تقارير طبية من كل زيارة، محفوظة في مكان واحد
+• ملاحظات صحية شخصية
+• أدِر السجلات الصحية لأقاربك — الأطفال، الوالدين، أفراد العائلة
+
+الخصوصية والأمان
+• تشفير AES-256 لجميع الرسائل والمرفقات
+• تسجيل الدخول ببصمة الإصبع أو Face ID
+• تحكّم كامل بما يمكن لأقاربك رؤيته
+• حذف كامل للبيانات عند الطلب
+
+DocSera مجاني للمرضى، مُصمَّم لقطاع الرعاية الصحية في سوريا،
+ومُحسَّن للعمل على الشبكات البطيئة.
+
+—
+الموقع: https://docsera.app
+سياسة الخصوصية: https://docsera.app/legal/privacy
+شروط الاستخدام: https://docsera.app/legal/terms
+الدعم: support@docsera.app
+
+DocSera لا يحلّ محل الاستشارة الطبية المباشرة. في حالة الطوارئ،
+اتصل بخدمات الطوارئ المحلية فوراً.
+```
+
+### v2 — App Store keywords
+
+**English (88 chars):**
+```
+doctor,specialist,clinic,appointment,booking,health,medical,records,messaging,syria
+```
+
+**Arabic (80 chars):**
+```
+طبيب,أخصائي,موعد,حجز,صحة,تحاليل,سجل طبي,استشارة,عيادة,مركز طبي
+```
+
+### v2 — Notable choices (so the user can correct any of them)
+
+1. App name = just `DocSera` (no descriptor) — pattern used by Doctolib, Practo, Babylon, Halodoc.
+2. Includes BOTH "specialists" and "medical centers" — verified both are first-class entities in the codebase.
+3. **No** "thousands of doctors" or any number claim.
+4. **No** "end-to-end encryption" — code review confirms server-managed AES-256-GCM (key from `rpc_get_encryption_key`); E2E would be a misrepresentation.
+5. **No** reviews/ratings claim — verified the feature doesn't exist.
+6. **No** video/telemedicine claim — verified not in production.
+7. Tone: factual, capability-focused (Doctolib voice).
+8. Closing always includes: website + privacy + terms + medical disclaimer (Apple's medical-app review specifically looks for the disclaimer).
+
+### v2 — Open question for the user (when revisiting)
+
+- Do you want to add any specific factual claims you didn't mention before? (e.g. founder credentials, partnerships, specific Syrian-market context, doctor count if confirmed).
+- Want a different brand voice? (Current: factual / Doctolib-like.)
+- Should the EN slogan be exactly `Your Health, Connected.` or do you want to refine?
+- Should the AR slogan be `صحتك معك. أينما كنت.` or another option?
+
+---
+
 ## 4. Privacy nutrition labels — App Store
 
 App Store Connect → "App Privacy" section. Walk through each data type and answer:
