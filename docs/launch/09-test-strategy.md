@@ -136,35 +136,44 @@ Branch protection (when re-enabled) gates merges on Tests passing — meaning th
 
 Realistic expectation: 2 focused days, 4 if interrupted. The biggest time-sink is **fixture authoring** — once the model factories and mock Supabase are in place, individual tests are 10-line files.
 
-## What's actually shipped (Phase 1)
+## What's actually shipped
 
-Status as of 2026-05-05, after the initial Step 8 implementation pass:
+Status as of 2026-05-05.
 
-**Tests added: 60 → 123 (+63), 1 skipped.** Distribution:
+**Tests: 60 → 302 (+242 net, 1 skipped).** Distribution by layer:
 
 | Layer | Files | Tests | Notes |
 |---|---|---|---|
 | Infrastructure | `test/_helpers/{fixtures,pump_app,tz_init}.dart` | — | Foundation reused by every other test |
-| Models | `test/models/{message,document,conversation,note}_test.dart` | 20 | JSON round-trips, optional-field tolerance, type coercion |
-| Utilities | `test/utils/{error_handler,text_direction,deep_link_validator}_test.dart` | 25 | Includes the deep-link validator security tripwire (extracted from `DeepLinkService` into a top-level `isValidDoctorToken`) |
-| Cubits | `test/{notes_cubit,documents_cubit}_test.dart` | 12 | Reauthored from `_pending_rewrite/`. Test the explicit-user paths; the `BuildContext` paths are exercised by widget/integration tests |
-| Widget | `test/widget/offline_banner_test.dart` | 4 | Offline icon, online-transition icon, EN+AR localization |
-| Integration | `test/integration/documents_rls_test.dart` | 3 | RLS contract — the **Flutter half** of the agreement (Cubit honors what RLS returns); the DB-side enforcement is verified at migration time |
+| Models | `test/models/*.dart` (12 files) | ~70 | Message, UserDocument, Conversation, Note, AppointmentDetails, PatientProfile, BannerModel + ContentSection, OfferModel, VoucherModel, PartnerModel, Gift, Promotion (doctor + center), PopupBannerModel, ReferralModel + ReferralInfo, SignUpInfo, HomeCardModel — all round-trips, optional-field tolerance, type coercion |
+| Utilities | `test/utils/*.dart` (7 files) | ~50 | ErrorHandler branch coverage, text-direction (RTL/LTR), getTextAlign with locale, **deep-link validator security tripwire**, ColorFromHex, getDoctorImage variants, SharedPrefsService boolean+JSON, DocSeraTime parsing/UTC round-trips/no-DST stability |
+| Cubits | `test/*_cubit*.dart` (8 files) | ~75 | AuthCubit, UserCubit, AppointmentsCubit + extended (loadAppointments edge cases, updateSelectedTab, logout, setAppointmentsFromStream), NotesCubit, DocumentsCubit, ConversationCubit (sendMessage optimistic + retry), HealthProfileWizardCubit, PartnerCubit |
+| Encryption | `test/services/encryption/message_encryption_test.dart` | 21 | **Privacy-claim guard** — text round-trip (ASCII/Arabic/emoji/multi-line), random-IV semantic security, legacy plain-text passthrough, garbage-payload fail-soft, **WRONG-KEY tamper detection** (must not return original plaintext), bytes round-trip + null-on-too-short, singleton lifecycle |
+| Services | `test/services/supabase/...` | 5 | Facade-delegation tests for SupabaseUserService → AuthRepository / UserRepository / FavoritesRepository / AppointmentRepository |
+| Widget | `test/widget/*.dart` (7 files) | ~30 | OfflineBanner (offline icon, online transition, EN+AR), wizard widgets (progress bar, multi-select, no-data button), complete-profile banner, loyalty widgets (partner bubble, offer cover card), wifi icons smoke |
+| Integration | `test/integration/*.dart` (7 files) | ~40 | **Auth funnel** (signIn failure paths, signOut, signUp), **booking funnel** (AppointmentDetails state machine + appointments-list refresh), **messaging funnel** (encrypted-text round-trip including Arabic, ConversationCubit transports ENC: payload through service unchanged, tampered ciphertext rejected), **document upload funnel** (encrypted bytes prepend IV, decrypt round-trip, wrong-key fail-soft, delete clears DB row + storage pages), **notes RLS contract**, **documents RLS contract**, **deep-link** (URI parsing, validator integration with hostile inputs) |
+| Loyalty | `test/loyalty/*.dart` | 11 | PartnerCubit, partner profile, offer cover card, partner bubble |
 
-**CI:** `flutter test --coverage` now runs on every push and PR. `coverage/lcov.info` is uploaded as a downloadable artifact (7-day retention).
+**CI:** `flutter test --coverage` runs on every push and PR. `coverage/lcov.info` uploaded as a downloadable artifact (7-day retention).
 
-**Parked tests retired:** `test/_pending_rewrite/` directory removed entirely. The cubit tests were reauthored, the integration tests were superseded by `test/integration/`, and the login-page widget test was deferred (platform-channel-mock heavy).
+**Parked tests retired:** `test/_pending_rewrite/` directory removed. Cubit tests reauthored, integration tests superseded, login-page widget test deferred (needs platform-channel mocks).
 
-## Phase 2 — what's left for future testing sessions
+## Test seams added to lib/
 
-Not blocking launch but worth doing as the codebase evolves:
+To make critical surfaces testable, two `@visibleForTesting` seams were added (no behavior change for production):
 
-- **Auth/booking funnel integration tests** — currently the integration layer is one file (RLS contract). Adding `auth_funnel_test.dart` and `booking_funnel_test.dart` would cover the two highest-stakes user journeys end-to-end.
-- **Encryption round-trip test** — `MessageEncryptionService` encrypt → "ENC:" prefix → decrypt, plus tampered-ciphertext rejection. Critical for healthtech privacy claims.
-- **Login page widget test** — needs `BiometricStorage` and `local_auth` channel mocks; deferred until those are extracted into a testable seam.
-- **Golden tests** — pixel snapshots for login/home/profile/settings in EN+AR. These pay off once the UI is more stable; right now Step 11 (perf pass) will redesign hot screens, so goldens written today would be churn.
-- **Coverage trend gate in CI** — once we have a baseline lcov number, gate PRs on a >2-point regression rather than an absolute threshold. Holds the line without arbitrary numerical pressure.
-- **Reconsent dialog widget test** — `_ReconsentDialog` is currently private; testing it requires either making it public or rendering the gate around a fake policy version.
+- `MessageEncryptionService.initWithKeyForTesting(Uint8List)` + `resetForTesting()` — inject a 32-byte AES-256 key directly without going through Supabase RPC. Used by encryption tests and integration funnels that exercise the encrypt-then-store path.
+- `isValidDoctorToken(String)` extracted from a closure inside `DeepLinkService._handleUri` into a top-level pure function. Production code routes through it via the same path; security tests now exercise it directly with hostile inputs.
+
+## What's still deferred for future test sessions
+
+These weren't done because they need infrastructure work that doesn't pay off until the codebase is more stable:
+
+- **Login page widget test** — needs `BiometricStorage` and `local_auth` platform-channel mocks. Deferred until those are extracted into a testable seam.
+- **Golden tests** — pixel snapshots for login/home/profile/settings in EN+AR. Step 11 (perf pass) will redesign the hot screens, so goldens written now would be churn.
+- **Coverage trend gate in CI** — once we have a baseline lcov number, gate PRs on a >2-point regression rather than an absolute threshold.
+- **Reconsent dialog widget test** — `_ReconsentDialog` is currently a private widget; testing it requires either making it public or rendering the gate around a fake policy version.
+- **Real-DB integration tests** — currently all integration tests use mocked services. A separate suite that hits a throwaway test schema would catch RLS regressions on the database side, but adds CI complexity (test DB lifecycle, isolation, cleanup).
 
 ## Score impact
 
