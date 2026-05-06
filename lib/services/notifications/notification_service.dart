@@ -192,23 +192,47 @@ class NotificationService {
     required String body,
     String? payload,
   }) {
+    // iOS-only: on Android, the OS notification already shows as a
+    // heads-up while in foreground, so a parallel Dart banner would
+    // double-display. Background delivery is unaffected by this guard
+    // (the OS-scheduled notification fires regardless).
+    if (!Platform.isIOS) return;
     _foregroundTimers.remove(key)?.cancel();
     if (delay.isNegative) return;
     _foregroundTimers[key] = Timer(delay, () {
       _foregroundTimers.remove(key);
-      final ctx = navigatorKey?.currentContext;
-      if (ctx == null || !ctx.mounted) {
-        debugPrint('🧪 foreground banner skipped (no live context) — key=$key');
-        return;
-      }
-      debugPrint('🧪 foreground banner firing — key=$key');
-      InAppNotificationBanner.show(
-        ctx,
-        title: title,
-        body: body,
-        payload: payload,
-      );
+      showInAppBannerNow(title: title, body: body, payload: payload);
     });
+  }
+
+  /// Show the foreground in-app banner immediately. Used by the
+  /// realtime-driven path in NotificationsCubit when a new push arrives
+  /// and the row appears in public.notifications. Guarded by:
+  ///   - Platform.isIOS (Android handles foreground itself via heads-up)
+  ///   - currentContext mounted (app is alive in this isolate)
+  ///   - WidgetsBinding lifecycle == resumed (app is actually foreground)
+  void showInAppBannerNow({
+    required String title,
+    required String body,
+    String? payload,
+  }) {
+    if (!Platform.isIOS) return;
+    final ctx = navigatorKey?.currentContext;
+    if (ctx == null || !ctx.mounted) {
+      debugPrint('🔔 foreground banner skipped (no live context)');
+      return;
+    }
+    final state = WidgetsBinding.instance.lifecycleState;
+    if (state != AppLifecycleState.resumed) {
+      debugPrint('🔔 foreground banner skipped (app state=$state)');
+      return;
+    }
+    InAppNotificationBanner.show(
+      ctx,
+      title: title,
+      body: body,
+      payload: payload,
+    );
   }
 
   void cancelForegroundBanner(String key) {

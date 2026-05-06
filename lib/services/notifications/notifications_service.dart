@@ -80,11 +80,11 @@ class NotificationsService {
     );
   }
 
-  /// Subscribe to inbox changes for the current user. The callback fires
+  /// Subscribe to inbox changes for the current user. Callback fires
   /// on INSERT (new notification arrived) and UPDATE (read/archived
-  /// flipped from another device). One filter only — RLS already restricts
-  /// rows to the calling user, but we filter explicitly for efficiency.
-  RealtimeChannel? subscribe(void Function() onChange) {
+  /// flipped from another device). The full payload is passed so the
+  /// caller can distinguish events and render UI for fresh inserts.
+  RealtimeChannel? subscribe(void Function(PostgresChangePayload payload) onChange) {
     final userId = _client.auth.currentUser?.id;
     if (userId == null) return null;
 
@@ -99,7 +99,7 @@ class NotificationsService {
             column: 'user_id',
             value: userId,
           ),
-          callback: (_) => onChange(),
+          callback: (payload) => onChange(payload),
         )
         .subscribe();
   }

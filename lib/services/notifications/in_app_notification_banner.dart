@@ -8,6 +8,8 @@
 // Background flow is unaffected: iOS presents notifications natively on
 // the lock screen / pull-down without going through the delegate.
 
+import 'dart:ui' as ui;
+
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 
@@ -150,28 +152,34 @@ class _BannerWidgetState extends State<_BannerWidget>
                       await _ctrl.reverse();
                       widget.onTap();
                     },
-                    child: Container(
-                      decoration: BoxDecoration(
-                        color: Colors.white,
-                        borderRadius: BorderRadius.circular(16.r),
-                        boxShadow: [
-                          BoxShadow(
-                            color: Colors.black.withValues(alpha: 0.12),
-                            blurRadius: 24,
-                            offset: const Offset(0, 6),
+                    child: ClipRRect(
+                      borderRadius: BorderRadius.circular(16.r),
+                      child: BackdropFilter(
+                        filter: ui.ImageFilter.blur(sigmaX: 8, sigmaY: 8),
+                        child: Container(
+                          decoration: BoxDecoration(
+                            // Subtle glass: opaque enough to stay legible, light
+                            // enough that whatever is behind bleeds through softly.
+                            color: Colors.white.withValues(alpha: 0.86),
+                            borderRadius: BorderRadius.circular(16.r),
+                            boxShadow: [
+                              BoxShadow(
+                                color: Colors.black.withValues(alpha: 0.12),
+                                blurRadius: 24,
+                                offset: const Offset(0, 6),
+                              ),
+                              BoxShadow(
+                                color: AppColors.main.withValues(alpha: 0.10),
+                                blurRadius: 14,
+                                offset: const Offset(0, 2),
+                              ),
+                            ],
+                            border: Border.all(
+                              color: AppColors.main.withValues(alpha: 0.18),
+                              width: 0.6,
+                            ),
                           ),
-                          BoxShadow(
-                            color: AppColors.main.withValues(alpha: 0.10),
-                            blurRadius: 14,
-                            offset: const Offset(0, 2),
-                          ),
-                        ],
-                        border: Border.all(
-                          color: AppColors.main.withValues(alpha: 0.15),
-                          width: 0.6,
-                        ),
-                      ),
-                      padding: EdgeInsets.fromLTRB(12.w, 10.h, 12.w, 10.h),
+                          padding: EdgeInsets.fromLTRB(12.w, 10.h, 12.w, 10.h),
                       child: Row(
                         crossAxisAlignment: CrossAxisAlignment.center,
                         children: [
@@ -257,6 +265,8 @@ class _BannerWidgetState extends State<_BannerWidget>
                         ],
                       ),
                     ),
+                  ),
+                  ),
                   ),
                 ),
               ),

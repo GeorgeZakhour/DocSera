@@ -5,6 +5,8 @@
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
+import 'package:docsera/models/app_notification.dart';
+import 'package:docsera/services/notifications/notification_service.dart';
 import 'package:docsera/services/notifications/notifications_service.dart';
 import 'notifications_state.dart';
 
@@ -36,10 +38,32 @@ class NotificationsCubit extends Cubit<NotificationsState> {
     }
   }
 
-  void _onRealtimeChange() {
-    // Coalesce by re-fetching — simpler and avoids divergence between the
-    // local state and DB state if multiple events fire in rapid succession.
+  void _onRealtimeChange(PostgresChangePayload payload) {
+    // Refresh the inbox state regardless of event type — read/archived
+    // flips from another device need to update too.
     refresh();
+    // For freshly-INSERTED rows, also show the foreground in-app banner
+    // (NotificationService.showInAppBannerNow no-ops on Android and when
+    // the app is not foregrounded). This is the path that lets messages,
+    // gifts, and every other server-pushed notification appear over the
+    // app instead of being silently swallowed by Pushy in foreground.
+    if (payload.eventType == PostgresChangeEvent.insert) {
+      try {
+        final row = AppNotification.fromMap(payload.newRecord);
+        // Ignore stale events (e.g. realtime catch-up after reconnect):
+        // only show if the row arrived in the last 15 seconds.
+        final age = DateTime.now().difference(row.createdAt);
+        if (age.inSeconds <= 15) {
+          NotificationService.instance.showInAppBannerNow(
+            title: row.title,
+            body: row.body,
+            payload: row.deepLink,
+          );
+        }
+      } catch (_) {
+        // Bad payload — skip silently; refresh() already handled state.
+      }
+    }
   }
 
   /// Optimistically mark a single row read, then sync server-side.
