@@ -19,6 +19,7 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:docsera/app/const.dart';
 import 'package:docsera/app/text_styles.dart';
 import 'package:docsera/gen_l10n/app_localizations.dart';
+import 'package:docsera/services/notifications/notification_service.dart';
 import 'package:docsera/widgets/base_scaffold.dart';
 
 class NotificationPreferencesPage extends StatefulWidget {
@@ -188,9 +189,66 @@ class _NotificationPreferencesPageState
                     for (final c in _categories) _buildCategoryCard(c, loc),
                     SizedBox(height: 16.h),
                     _buildQuietHoursCard(loc),
+                    SizedBox(height: 16.h),
+                    _buildTestReminderTile(loc),
                     SizedBox(height: 32.h),
                   ],
                 ),
+    );
+  }
+
+  Widget _buildTestReminderTile(AppLocalizations loc) {
+    return Container(
+      margin: EdgeInsets.symmetric(horizontal: 16.w),
+      padding: EdgeInsets.all(14.w),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(12.r),
+        border: Border.all(color: Colors.grey.shade200),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            loc.notificationPrefsTestReminderTitle,
+            style: AppTextStyles.getText2(context)
+                .copyWith(fontWeight: FontWeight.w700),
+          ),
+          SizedBox(height: 4.h),
+          Text(
+            loc.notificationPrefsTestReminderDescription,
+            style: AppTextStyles.getText3(context)
+                .copyWith(color: Colors.grey.shade700),
+          ),
+          SizedBox(height: 10.h),
+          Align(
+            alignment: AlignmentDirectional.centerEnd,
+            child: FilledButton.tonalIcon(
+              onPressed: () async {
+                await NotificationService.instance
+                    .sendTestReminder(delaySeconds: 5);
+                if (!mounted) return;
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(
+                    content: Text(loc.notificationPrefsTestReminderQueued),
+                    backgroundColor: AppColors.main,
+                    duration: const Duration(seconds: 4),
+                  ),
+                );
+              },
+              icon: Icon(Icons.bolt_rounded, size: 16.sp),
+              label: Text(
+                loc.notificationPrefsTestReminderButton,
+                style: TextStyle(fontSize: 12.sp),
+              ),
+              style: FilledButton.styleFrom(
+                backgroundColor: AppColors.main.withValues(alpha: 0.12),
+                foregroundColor: AppColors.main,
+              ),
+            ),
+          ),
+        ],
+      ),
     );
   }
 

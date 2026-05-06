@@ -1877,7 +1877,7 @@
   "@notificationsTodaySection": {},
   "notificationsEarlierSection": "سابقًا",
   "@notificationsEarlierSection": {},
-  "notificationsJustNow": "للتوّ",
+  "notificationsJustNow": "الآن",
   "@notificationsJustNow": {},
   "notificationsMinutesAgo": "{count, plural, =1{قبل دقيقة} =2{قبل دقيقتين} few{قبل {count} دقائق} many{قبل {count} دقيقة} other{قبل {count} دقيقة}}",
   "@notificationsMinutesAgo": {
@@ -1965,5 +1965,14 @@
   "reminderActionCallClinic": "اتصل بالعيادة",
   "@reminderActionCallClinic": {},
   "reminderActionDirections": "الاتجاهات",
-  "@reminderActionDirections": {}
+  "@reminderActionDirections": {},
+
+  "notificationPrefsTestReminderTitle": "اختبار التذكيرات",
+  "@notificationPrefsTestReminderTitle": {},
+  "notificationPrefsTestReminderDescription": "جدولة إشعار تجريبي يصلك بعد ٥ ثوانٍ للتأكد من عمل التذكيرات على هذا الجهاز.",
+  "@notificationPrefsTestReminderDescription": {},
+  "notificationPrefsTestReminderButton": "أرسل اختبارًا",
+  "@notificationPrefsTestReminderButton": {},
+  "notificationPrefsTestReminderQueued": "تمت الجدولة — سيصلك الإشعار خلال ٥ ثوانٍ.",
+  "@notificationPrefsTestReminderQueued": {}
 }

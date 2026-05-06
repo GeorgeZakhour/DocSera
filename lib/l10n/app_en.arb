@@ -1964,5 +1964,14 @@
   "reminderActionCallClinic": "Call clinic",
   "@reminderActionCallClinic": {},
   "reminderActionDirections": "Directions",
-  "@reminderActionDirections": {}
+  "@reminderActionDirections": {},
+
+  "notificationPrefsTestReminderTitle": "Test reminder",
+  "@notificationPrefsTestReminderTitle": {},
+  "notificationPrefsTestReminderDescription": "Schedule a sample notification 5 seconds from now to verify reminders are working on this device.",
+  "@notificationPrefsTestReminderDescription": {},
+  "notificationPrefsTestReminderButton": "Send test",
+  "@notificationPrefsTestReminderButton": {},
+  "notificationPrefsTestReminderQueued": "Test scheduled — you should see it in 5 seconds.",
+  "@notificationPrefsTestReminderQueued": {}
 }

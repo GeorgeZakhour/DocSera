@@ -4941,4 +4941,18 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get reminderActionDirections => 'Directions';
+
+  @override
+  String get notificationPrefsTestReminderTitle => 'Test reminder';
+
+  @override
+  String get notificationPrefsTestReminderDescription =>
+      'Schedule a sample notification 5 seconds from now to verify reminders are working on this device.';
+
+  @override
+  String get notificationPrefsTestReminderButton => 'Send test';
+
+  @override
+  String get notificationPrefsTestReminderQueued =>
+      'Test scheduled — you should see it in 5 seconds.';
 }

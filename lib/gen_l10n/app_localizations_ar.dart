@@ -4744,7 +4744,7 @@ class AppLocalizationsAr extends AppLocalizations {
   String get notificationsEarlierSection => 'سابقًا';
 
   @override
-  String get notificationsJustNow => 'للتوّ';
+  String get notificationsJustNow => 'الآن';
 
   @override
   String notificationsMinutesAgo(int count) {
@@ -4892,4 +4892,18 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get reminderActionDirections => 'الاتجاهات';
+
+  @override
+  String get notificationPrefsTestReminderTitle => 'اختبار التذكيرات';
+
+  @override
+  String get notificationPrefsTestReminderDescription =>
+      'جدولة إشعار تجريبي يصلك بعد ٥ ثوانٍ للتأكد من عمل التذكيرات على هذا الجهاز.';
+
+  @override
+  String get notificationPrefsTestReminderButton => 'أرسل اختبارًا';
+
+  @override
+  String get notificationPrefsTestReminderQueued =>
+      'تمت الجدولة — سيصلك الإشعار خلال ٥ ثوانٍ.';
 }

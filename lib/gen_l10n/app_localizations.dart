@@ -9097,6 +9097,30 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Directions'**
   String get reminderActionDirections;
+
+  /// No description provided for @notificationPrefsTestReminderTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Test reminder'**
+  String get notificationPrefsTestReminderTitle;
+
+  /// No description provided for @notificationPrefsTestReminderDescription.
+  ///
+  /// In en, this message translates to:
+  /// **'Schedule a sample notification 5 seconds from now to verify reminders are working on this device.'**
+  String get notificationPrefsTestReminderDescription;
+
+  /// No description provided for @notificationPrefsTestReminderButton.
+  ///
+  /// In en, this message translates to:
+  /// **'Send test'**
+  String get notificationPrefsTestReminderButton;
+
+  /// No description provided for @notificationPrefsTestReminderQueued.
+  ///
+  /// In en, this message translates to:
+  /// **'Test scheduled — you should see it in 5 seconds.'**
+  String get notificationPrefsTestReminderQueued;
 }
 
 class _AppLocalizationsDelegate

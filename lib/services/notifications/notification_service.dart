@@ -94,15 +94,69 @@ class NotificationService {
         .resolvePlatformSpecificImplementation<AndroidFlutterLocalNotificationsPlugin>()
         ?.createNotificationChannel(_defaultChannel);
 
-    // 3) طلب سماح iOS (اختياري، أغلبه تم في DarwinInitializationSettings)
-    await _fln
-        .resolvePlatformSpecificImplementation<IOSFlutterLocalNotificationsPlugin>()
-        ?.requestPermissions(alert: true, badge: true, sound: true);
+    // 3) iOS authorization. Request again explicitly + log the resulting
+    // status so the next time scheduled reminders mysteriously don't fire
+    // we know whether the OS actually authorized us.
+    final iosPlugin = _fln
+        .resolvePlatformSpecificImplementation<IOSFlutterLocalNotificationsPlugin>();
+    if (iosPlugin != null) {
+      final granted = await iosPlugin.requestPermissions(
+        alert: true,
+        badge: true,
+        sound: true,
+      );
+      final status = await iosPlugin.checkPermissions();
+      debugPrint(
+          '🔔 iOS local-notification authorization — requested=$granted, '
+          'status: alert=${status?.isAlertEnabled}, '
+          'sound=${status?.isSoundEnabled}, '
+          'badge=${status?.isBadgeEnabled}, '
+          'critical=${status?.isCriticalEnabled}, '
+          'enabled=${status?.isEnabled}');
+    }
+
+    // Same for Android — log permission state. Required from API 33+.
+    final androidPlugin = _fln
+        .resolvePlatformSpecificImplementation<AndroidFlutterLocalNotificationsPlugin>();
+    if (androidPlugin != null) {
+      final notifEnabled = await androidPlugin.areNotificationsEnabled();
+      final exactAllowed =
+          await androidPlugin.canScheduleExactNotifications();
+      debugPrint(
+          '🔔 Android notif perms — enabled=$notifEnabled, '
+          'exactAllowed=$exactAllowed');
+      if (notifEnabled == false) {
+        await androidPlugin.requestNotificationsPermission();
+      }
+      if (exactAllowed == false) {
+        // Required for zonedSchedule with exactAllowWhileIdle on Android 12+.
+        await androidPlugin.requestExactAlarmsPermission();
+      }
+    }
 
     // 4) Pushy (مهم: تأكد من استدعاء Pushy.listen() في main.dart داخل initState)
     await _initPushy();
 
     _initialized = true;
+  }
+
+  /// Schedule a smoke-test reminder N seconds from now. Used by the prefs
+  /// screen's "Send test notification" button so you can verify the
+  /// schedule pipeline end-to-end without waiting 30 minutes.
+  Future<void> sendTestReminder({int delaySeconds = 5}) async {
+    final whenLocal = DateTime.now().add(Duration(seconds: delaySeconds));
+    debugPrint('🧪 sendTestReminder scheduling for $whenLocal');
+    await _scheduleWithId(
+      id: 999001,
+      whenLocal: whenLocal,
+      title: 'DocSera',
+      body: 'Test reminder — your reminder pipeline is working ✅',
+      timeSensitive: true,
+      payload: 'appointment:test',
+    );
+    final pending = await _fln.pendingNotificationRequests();
+    debugPrint(
+        '🧪 pending after test schedule: ${pending.length} ids=${pending.map((p) => p.id).toList()}');
   }
 
   Future<void> _initPushy() async {
