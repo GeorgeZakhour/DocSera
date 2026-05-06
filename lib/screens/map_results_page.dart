@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:ui' as ui;
 
 import 'package:docsera/app/const.dart';
@@ -44,6 +45,7 @@ class _FullMapResultsPageState extends State<FullMapResultsPage> with SingleTick
 
   // الموقع الحي + نبضة
   Position? _currentPosition;
+  StreamSubscription<Position>? _positionSub;
   late AnimationController _pulseController;
   // _pulseRadius is computed on-demand from _pulseController.value inside
   // an AnimatedBuilder around the GoogleMap. We do NOT call setState() from
@@ -72,6 +74,7 @@ class _FullMapResultsPageState extends State<FullMapResultsPage> with SingleTick
 
   @override
   void dispose() {
+    _positionSub?.cancel();
     _pulseController.dispose();
     _pageController.dispose();
     super.dispose();
@@ -133,12 +136,19 @@ class _FullMapResultsPageState extends State<FullMapResultsPage> with SingleTick
 
     try {
       _currentPosition = await Geolocator.getCurrentPosition(desiredAccuracy: LocationAccuracy.high);
+      if (!mounted) return;
       setState(() {});
-      Geolocator.getPositionStream(
+      _positionSub?.cancel();
+      _positionSub = Geolocator.getPositionStream(
         locationSettings: const LocationSettings(accuracy: LocationAccuracy.high, distanceFilter: 5),
-      ).listen((pos) {
-        setState(() => _currentPosition = pos);
-      });
+      ).listen(
+        (pos) {
+          if (!mounted) return;
+          setState(() => _currentPosition = pos);
+        },
+        onError: (_) {},
+        cancelOnError: false,
+      );
     } catch (_) {}
   }
 
