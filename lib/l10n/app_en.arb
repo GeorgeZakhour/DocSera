@@ -1973,5 +1973,23 @@
   "notificationPrefsTestReminderButton": "Send test",
   "@notificationPrefsTestReminderButton": {},
   "notificationPrefsTestReminderQueued": "Test scheduled — you should see it in 5 seconds.",
-  "@notificationPrefsTestReminderQueued": {}
+  "@notificationPrefsTestReminderQueued": {},
+
+  "linkRequestTitle": "Connection request",
+  "linkRequestMergeTitle": "Record merge request",
+  "linkRequestConnectBody": "{doctorName} would like to add you to their patient list. If you approve, they will see only your name and your appointments with them, and you can message each other through the app.",
+  "@linkRequestConnectBody": { "placeholders": { "doctorName": { "type": "String" } } },
+  "linkRequestConnectRelativeBody": "{doctorName} would like to add your relative to their patient list. If you approve, you will be able to manage their appointments and messages from your account.",
+  "@linkRequestConnectRelativeBody": { "placeholders": { "doctorName": { "type": "String" } } },
+  "linkRequestMergeBody": "{doctorName} has an existing record that matches your details. If you approve, your past appointments and documents at this clinic will be merged into your account.",
+  "@linkRequestMergeBody": { "placeholders": { "doctorName": { "type": "String" } } },
+  "linkRequestApprove": "Approve",
+  "linkRequestReject": "Decline",
+  "linkRequestNotFoundTitle": "This request is no longer available",
+  "linkRequestNotFoundBody": "It may have been withdrawn or already responded to from another device.",
+  "linkRequestApprovedToast": "Approved. The doctor will be notified shortly.",
+  "linkRequestRejectedToast": "Request declined.",
+  "linkRequestMergedToast": "Your record has been merged successfully.",
+  "linkRequestErrorToast": "Couldn't complete the request. Please try again.",
+  "linkRequestTrustNote": "Your approval is required for the doctor to see your profile. You can decline without consequences."
 }

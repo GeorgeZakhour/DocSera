@@ -1974,5 +1974,23 @@
   "notificationPrefsTestReminderButton": "أرسل اختبارًا",
   "@notificationPrefsTestReminderButton": {},
   "notificationPrefsTestReminderQueued": "تمت الجدولة — سيصلك الإشعار خلال ٥ ثوانٍ.",
-  "@notificationPrefsTestReminderQueued": {}
+  "@notificationPrefsTestReminderQueued": {},
+
+  "linkRequestTitle": "طلب اتصال",
+  "linkRequestMergeTitle": "طلب دمج سجل طبي",
+  "linkRequestConnectBody": "{doctorName} يطلب إضافتك إلى قائمة مرضاه. عند الموافقة، سيتمكن من رؤية اسمك ومواعيدك معه فقط، ويمكنكما التواصل عبر التطبيق.",
+  "@linkRequestConnectBody": { "placeholders": { "doctorName": { "type": "String" } } },
+  "linkRequestConnectRelativeBody": "{doctorName} يطلب إضافة قريبك إلى قائمة مرضاه. عند الموافقة، ستتمكن من إدارة مواعيده ورسائله من حسابك.",
+  "@linkRequestConnectRelativeBody": { "placeholders": { "doctorName": { "type": "String" } } },
+  "linkRequestMergeBody": "{doctorName} لديه سجل قديم لديه يطابق بياناتك. عند الموافقة، ستُدمج المواعيد والمستندات السابقة في حسابك.",
+  "@linkRequestMergeBody": { "placeholders": { "doctorName": { "type": "String" } } },
+  "linkRequestApprove": "موافقة",
+  "linkRequestReject": "رفض",
+  "linkRequestNotFoundTitle": "هذا الطلب لم يعد متاحاً",
+  "linkRequestNotFoundBody": "ربما تم سحب الطلب أو الرد عليه من جهاز آخر.",
+  "linkRequestApprovedToast": "تمت الموافقة. سيظهر ذلك في حساب الطبيب قريباً.",
+  "linkRequestRejectedToast": "تم رفض الطلب.",
+  "linkRequestMergedToast": "تم دمج سجلك بنجاح.",
+  "linkRequestErrorToast": "تعذّر تنفيذ الطلب. حاول مجدداً.",
+  "linkRequestTrustNote": "موافقتك مطلوبة لكي يتمكن الطبيب من رؤية ملفك. يمكنك الرفض دون أي تبعات."
 }

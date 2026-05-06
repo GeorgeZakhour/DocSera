@@ -17,6 +17,7 @@ import 'package:docsera/widgets/custom_bottom_navigation_bar.dart';
 import 'package:docsera/Business_Logic/Health_page/patient_switcher_cubit.dart';
 import 'package:docsera/screens/home/health/pages/visit_reports/visit_reports_page.dart';
 import 'package:docsera/screens/home/loyalty/vouchers_page.dart';
+import 'package:docsera/screens/home/connections/link_request_review_page.dart';
 import 'package:docsera/services/notifications/in_app_notification_banner.dart';
 import 'package:url_launcher/url_launcher.dart' as launcher;
 
@@ -122,17 +123,9 @@ class NotificationService {
         .resolvePlatformSpecificImplementation<AndroidFlutterLocalNotificationsPlugin>();
     if (androidPlugin != null) {
       final notifEnabled = await androidPlugin.areNotificationsEnabled();
-      final exactAllowed =
-          await androidPlugin.canScheduleExactNotifications();
-      debugPrint(
-          '🔔 Android notif perms — enabled=$notifEnabled, '
-          'exactAllowed=$exactAllowed');
+      debugPrint('🔔 Android notif perms — enabled=$notifEnabled');
       if (notifEnabled == false) {
         await androidPlugin.requestNotificationsPermission();
-      }
-      if (exactAllowed == false) {
-        // Required for zonedSchedule with exactAllowWhileIdle on Android 12+.
-        await androidPlugin.requestExactAlarmsPermission();
       }
     }
 
@@ -495,7 +488,7 @@ class NotificationService {
       tz.TZDateTime.from(whenLocal, tz.local),
       NotificationDetails(android: android, iOS: ios),
       androidScheduleMode: allowWhileIdle
-          ? AndroidScheduleMode.exactAllowWhileIdle
+          ? AndroidScheduleMode.inexactAllowWhileIdle
           : AndroidScheduleMode.inexact,
       // لا ترسل هذا البراميتر بعد الآن:
       // uiLocalNotificationDateInterpretation: UILocalNotificationDateInterpretation.absoluteTime,
@@ -757,7 +750,7 @@ class NotificationService {
         body,
         tzWhen,
         NotificationDetails(android: android, iOS: ios),
-        androidScheduleMode: AndroidScheduleMode.exactAllowWhileIdle,
+        androidScheduleMode: AndroidScheduleMode.inexactAllowWhileIdle,
         payload: payload,
         matchDateTimeComponents: DateTimeComponents.dateAndTime,
       );
@@ -923,6 +916,23 @@ class NotificationService {
             ),
           );
         }
+    } else if (payload.startsWith('docsera://link-request/')) {
+        // Patient↔doctor connection / merge request review.
+        // Token is bounded charset + length to refuse malformed deep links
+        // before we hit the DB (mirrors isValidDoctorToken).
+        final requestId = payload.substring('docsera://link-request/'.length);
+        if (requestId.isEmpty || requestId.length > 64 ||
+            !RegExp(r'^[A-Za-z0-9_\-]+$').hasMatch(requestId)) {
+          debugPrint("⚠️ Rejected link-request deep link with invalid token shape");
+          return;
+        }
+        debugPrint("🤝 Navigating to LinkRequestReviewPage for $requestId");
+        nav.popUntil((route) => route.isFirst);
+        nav.push(
+          MaterialPageRoute(
+            builder: (_) => LinkRequestReviewPage(requestId: requestId),
+          ),
+        );
     } else if (payload.startsWith('voucher:')) {
         debugPrint("🎁 Navigating to Vouchers / Wallet");
         // The claim_id after the prefix is preserved in the payload but

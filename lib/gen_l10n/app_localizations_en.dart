@@ -4955,4 +4955,57 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get notificationPrefsTestReminderQueued =>
       'Test scheduled — you should see it in 5 seconds.';
+
+  @override
+  String get linkRequestTitle => 'Connection request';
+
+  @override
+  String get linkRequestMergeTitle => 'Record merge request';
+
+  @override
+  String linkRequestConnectBody(String doctorName) {
+    return '$doctorName would like to add you to their patient list. If you approve, they will see only your name and your appointments with them, and you can message each other through the app.';
+  }
+
+  @override
+  String linkRequestConnectRelativeBody(String doctorName) {
+    return '$doctorName would like to add your relative to their patient list. If you approve, you will be able to manage their appointments and messages from your account.';
+  }
+
+  @override
+  String linkRequestMergeBody(String doctorName) {
+    return '$doctorName has an existing record that matches your details. If you approve, your past appointments and documents at this clinic will be merged into your account.';
+  }
+
+  @override
+  String get linkRequestApprove => 'Approve';
+
+  @override
+  String get linkRequestReject => 'Decline';
+
+  @override
+  String get linkRequestNotFoundTitle => 'This request is no longer available';
+
+  @override
+  String get linkRequestNotFoundBody =>
+      'It may have been withdrawn or already responded to from another device.';
+
+  @override
+  String get linkRequestApprovedToast =>
+      'Approved. The doctor will be notified shortly.';
+
+  @override
+  String get linkRequestRejectedToast => 'Request declined.';
+
+  @override
+  String get linkRequestMergedToast =>
+      'Your record has been merged successfully.';
+
+  @override
+  String get linkRequestErrorToast =>
+      'Couldn\'t complete the request. Please try again.';
+
+  @override
+  String get linkRequestTrustNote =>
+      'Your approval is required for the doctor to see your profile. You can decline without consequences.';
 }

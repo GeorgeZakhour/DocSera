@@ -4906,4 +4906,55 @@ class AppLocalizationsAr extends AppLocalizations {
   @override
   String get notificationPrefsTestReminderQueued =>
       'تمت الجدولة — سيصلك الإشعار خلال ٥ ثوانٍ.';
+
+  @override
+  String get linkRequestTitle => 'طلب اتصال';
+
+  @override
+  String get linkRequestMergeTitle => 'طلب دمج سجل طبي';
+
+  @override
+  String linkRequestConnectBody(String doctorName) {
+    return '$doctorName يطلب إضافتك إلى قائمة مرضاه. عند الموافقة، سيتمكن من رؤية اسمك ومواعيدك معه فقط، ويمكنكما التواصل عبر التطبيق.';
+  }
+
+  @override
+  String linkRequestConnectRelativeBody(String doctorName) {
+    return '$doctorName يطلب إضافة قريبك إلى قائمة مرضاه. عند الموافقة، ستتمكن من إدارة مواعيده ورسائله من حسابك.';
+  }
+
+  @override
+  String linkRequestMergeBody(String doctorName) {
+    return '$doctorName لديه سجل قديم لديه يطابق بياناتك. عند الموافقة، ستُدمج المواعيد والمستندات السابقة في حسابك.';
+  }
+
+  @override
+  String get linkRequestApprove => 'موافقة';
+
+  @override
+  String get linkRequestReject => 'رفض';
+
+  @override
+  String get linkRequestNotFoundTitle => 'هذا الطلب لم يعد متاحاً';
+
+  @override
+  String get linkRequestNotFoundBody =>
+      'ربما تم سحب الطلب أو الرد عليه من جهاز آخر.';
+
+  @override
+  String get linkRequestApprovedToast =>
+      'تمت الموافقة. سيظهر ذلك في حساب الطبيب قريباً.';
+
+  @override
+  String get linkRequestRejectedToast => 'تم رفض الطلب.';
+
+  @override
+  String get linkRequestMergedToast => 'تم دمج سجلك بنجاح.';
+
+  @override
+  String get linkRequestErrorToast => 'تعذّر تنفيذ الطلب. حاول مجدداً.';
+
+  @override
+  String get linkRequestTrustNote =>
+      'موافقتك مطلوبة لكي يتمكن الطبيب من رؤية ملفك. يمكنك الرفض دون أي تبعات.';
 }

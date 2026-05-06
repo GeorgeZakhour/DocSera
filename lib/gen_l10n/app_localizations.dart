@@ -9121,6 +9121,90 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Test scheduled — you should see it in 5 seconds.'**
   String get notificationPrefsTestReminderQueued;
+
+  /// No description provided for @linkRequestTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Connection request'**
+  String get linkRequestTitle;
+
+  /// No description provided for @linkRequestMergeTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Record merge request'**
+  String get linkRequestMergeTitle;
+
+  /// No description provided for @linkRequestConnectBody.
+  ///
+  /// In en, this message translates to:
+  /// **'{doctorName} would like to add you to their patient list. If you approve, they will see only your name and your appointments with them, and you can message each other through the app.'**
+  String linkRequestConnectBody(String doctorName);
+
+  /// No description provided for @linkRequestConnectRelativeBody.
+  ///
+  /// In en, this message translates to:
+  /// **'{doctorName} would like to add your relative to their patient list. If you approve, you will be able to manage their appointments and messages from your account.'**
+  String linkRequestConnectRelativeBody(String doctorName);
+
+  /// No description provided for @linkRequestMergeBody.
+  ///
+  /// In en, this message translates to:
+  /// **'{doctorName} has an existing record that matches your details. If you approve, your past appointments and documents at this clinic will be merged into your account.'**
+  String linkRequestMergeBody(String doctorName);
+
+  /// No description provided for @linkRequestApprove.
+  ///
+  /// In en, this message translates to:
+  /// **'Approve'**
+  String get linkRequestApprove;
+
+  /// No description provided for @linkRequestReject.
+  ///
+  /// In en, this message translates to:
+  /// **'Decline'**
+  String get linkRequestReject;
+
+  /// No description provided for @linkRequestNotFoundTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'This request is no longer available'**
+  String get linkRequestNotFoundTitle;
+
+  /// No description provided for @linkRequestNotFoundBody.
+  ///
+  /// In en, this message translates to:
+  /// **'It may have been withdrawn or already responded to from another device.'**
+  String get linkRequestNotFoundBody;
+
+  /// No description provided for @linkRequestApprovedToast.
+  ///
+  /// In en, this message translates to:
+  /// **'Approved. The doctor will be notified shortly.'**
+  String get linkRequestApprovedToast;
+
+  /// No description provided for @linkRequestRejectedToast.
+  ///
+  /// In en, this message translates to:
+  /// **'Request declined.'**
+  String get linkRequestRejectedToast;
+
+  /// No description provided for @linkRequestMergedToast.
+  ///
+  /// In en, this message translates to:
+  /// **'Your record has been merged successfully.'**
+  String get linkRequestMergedToast;
+
+  /// No description provided for @linkRequestErrorToast.
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn\'t complete the request. Please try again.'**
+  String get linkRequestErrorToast;
+
+  /// No description provided for @linkRequestTrustNote.
+  ///
+  /// In en, this message translates to:
+  /// **'Your approval is required for the doctor to see your profile. You can decline without consequences.'**
+  String get linkRequestTrustNote;
 }
 
 class _AppLocalizationsDelegate
