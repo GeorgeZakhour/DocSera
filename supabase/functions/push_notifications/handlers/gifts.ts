@@ -24,13 +24,27 @@ export async function handleGifts(
     : "";
   const namePart = fullName.length > 0 ? `د. ${fullName}` : "طبيبك";
 
+  const enFullName = doctorRow
+    ? `${doctorRow.first_name ?? ""} ${doctorRow.last_name ?? ""}`.trim()
+    : "";
+  const enNamePart = enFullName.length > 0 ? `Dr. ${enFullName}` : "your doctor";
+
+  const titleAr = `🎁 هدية من ${namePart}`;
+  const titleEn = `🎁 Gift from ${enNamePart}`;
+  const bodyAr = "أُضيفت قسيمة جديدة إلى محفظتك. اضغط لعرض التفاصيل.";
+  const bodyEn = "A new voucher has been added to your wallet. Tap to view details.";
+
   return {
     user_ids: [record.patient_id],
     recipient_app: "docsera",
     event_code: "gift.received",
     category: "loyalty",
-    title: `🎁 هدية من ${namePart}`,
-    body: "أُضيفت قسيمة جديدة إلى محفظتك. اضغط لعرض التفاصيل.",
+    title: titleAr,
+    body: bodyAr,
+    localized: {
+      ar: { title: titleAr, body: bodyAr },
+      en: { title: titleEn, body: bodyEn },
+    },
     deep_link: `voucher:${record.claim_id}`,
     data: { gift_send_id: record.id, claim_id: record.claim_id },
     importance: "high",

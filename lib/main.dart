@@ -302,6 +302,10 @@ class _MyAppState extends State<MyApp> {
     setState(() {
       _locale = Locale(languageCode);
     });
+    // Mirror the user's locale to user_devices.locale so the next push
+    // from the edge function fires in their language without waiting for
+    // them to restart the app and re-register the Pushy token.
+    unawaited(NotificationService.instance.updateDeviceLocale(languageCode));
   }
 
   @override

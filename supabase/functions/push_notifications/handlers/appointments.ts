@@ -37,26 +37,40 @@ function handleInsert(
   const appointmentDate = record.appointment_date || "";
   const rawTime = record.appointment_time || "";
 
-  // 24h → 12h Arabic display ("17:00:00" → "5:00 م")
-  let displayTime = rawTime;
+  // 24h → 12h display. Same digits, locale-specific period suffix.
+  let h12 = "";
+  let mm = "00";
+  let isPm = false;
   if (rawTime) {
     const parts = rawTime.split(":");
     let h = parseInt(parts[0], 10);
-    const m = parts[1] || "00";
-    const period = h >= 12 ? "م" : "ص";
+    mm = parts[1] || "00";
+    isPm = h >= 12;
     if (h === 0) h = 12;
     else if (h > 12) h -= 12;
-    displayTime = `${h}:${m} ${period}`;
+    h12 = String(h);
   }
+  const displayTimeAr = h12 ? `${h12}:${mm} ${isPm ? "م" : "ص"}` : "";
+  const displayTimeEn = h12 ? `${h12}:${mm} ${isPm ? "PM" : "AM"}` : "";
+
+  const titleAr = `${LTR}📅 موعد جديد`;
+  const titleEn = `${LTR}📅 New appointment`;
+  const bodyAr =
+    `${LTR}تم حجز موعد لك مع ${doctorName} بتاريخ ${appointmentDate} الساعة ${displayTimeAr}.`;
+  const bodyEn =
+    `${LTR}Your appointment with ${doctorName} is booked for ${appointmentDate} at ${displayTimeEn}.`;
 
   return {
     user_ids: [record.user_id],
     recipient_app: "docsera",
     event_code: "appointment.booked",
     category: "appointments",
-    title: `${LTR}📅 موعد جديد`,
-    body:
-      `${LTR}تم حجز موعد لك مع ${doctorName} بتاريخ ${appointmentDate} الساعة ${displayTime}.`,
+    title: titleAr,
+    body: bodyAr,
+    localized: {
+      ar: { title: titleAr, body: bodyAr },
+      en: { title: titleEn, body: bodyEn },
+    },
     deep_link: `appointment:${record.id}`,
     data: { appointment_id: record.id },
     importance: "high",
@@ -79,8 +93,10 @@ function handleUpdate(
   const isConfirmedBool = record.is_confirmed;
   const oldConfirmedBool = old_record.is_confirmed;
 
-  let title = "";
-  let body = "";
+  let titleAr = "";
+  let titleEn = "";
+  let bodyAr = "";
+  let bodyEn = "";
   let event_code = "";
   let deep_link = `appointment:${record.id}`;
   let dedup_key: string | null = null;
@@ -93,10 +109,16 @@ function handleUpdate(
       oldStatus === null || oldStatus === "") &&
     oldConfirmedBool !== true
   ) {
-    title = `${LTR}⛔ تم رفض طلب الحجز`;
-    body =
+    titleAr = `${LTR}⛔ تم رفض طلب الحجز`;
+    titleEn = `${LTR}⛔ Booking declined`;
+    bodyAr =
       `${LTR}نعتذر، لا يمكن للدكتور ${doctorName} قبول طلبك في هذا الوقت.`;
-    if (record.rejection_reason) body += ` ${record.rejection_reason}`;
+    bodyEn =
+      `${LTR}Dr. ${doctorName} could not accept your booking at this time.`;
+    if (record.rejection_reason) {
+      bodyAr += ` ${record.rejection_reason}`;
+      bodyEn += ` ${record.rejection_reason}`;
+    }
     event_code = "appointment.rejected";
     dedup_key = `apt-rejected:${record.id}`;
   } // 2. Cancelled by doctor (Confirmed → Cancelled)
@@ -105,9 +127,14 @@ function handleUpdate(
       newStatus === "cancelled_by_doctor") &&
     (oldStatus === "confirmed" || oldConfirmedBool === true)
   ) {
-    title = `${LTR}❌ تم إلغاء الموعد`;
-    body = `${LTR}تم إلغاء موعدك المؤكد مع ${doctorName}.`;
-    if (record.rejection_reason) body += ` السبب: ${record.rejection_reason}`;
+    titleAr = `${LTR}❌ تم إلغاء الموعد`;
+    titleEn = `${LTR}❌ Appointment cancelled`;
+    bodyAr = `${LTR}تم إلغاء موعدك المؤكد مع ${doctorName}.`;
+    bodyEn = `${LTR}Your confirmed appointment with Dr. ${doctorName} has been cancelled.`;
+    if (record.rejection_reason) {
+      bodyAr += ` السبب: ${record.rejection_reason}`;
+      bodyEn += ` Reason: ${record.rejection_reason}`;
+    }
     event_code = "appointment.cancelled_by_doctor";
     dedup_key = `apt-cancelled:${record.id}`;
   } // 3. Confirmed
@@ -117,8 +144,10 @@ function handleUpdate(
       newStatus !== "rejected" && newStatus !== "cancelled" &&
       newStatus !== "cancelled_by_doctor")
   ) {
-    title = `${LTR}✅ تم تثبيت الحجز`;
-    body = `${LTR}تم تأكيد موعدك مع ${doctorName}.`;
+    titleAr = `${LTR}✅ تم تثبيت الحجز`;
+    titleEn = `${LTR}✅ Appointment confirmed`;
+    bodyAr = `${LTR}تم تأكيد موعدك مع ${doctorName}.`;
+    bodyEn = `${LTR}Your appointment with Dr. ${doctorName} has been confirmed.`;
     event_code = "appointment.confirmed";
     dedup_key = `apt-confirmed:${record.id}`;
   } // 4. Rescheduled (time changed)
@@ -127,9 +156,12 @@ function handleUpdate(
     (newStatus === "pending" || newStatus === "confirmed" ||
       newStatus === "not_arrived" || newStatus === "")
   ) {
-    title = `${LTR}🕒 تم تغيير الموعد`;
-    body =
+    titleAr = `${LTR}🕒 تم تغيير الموعد`;
+    titleEn = `${LTR}🕒 Appointment rescheduled`;
+    bodyAr =
       `${LTR}تم تغيير وقت موعدك مع ${doctorName}، يرجى مراجعة التطبيق.`;
+    bodyEn =
+      `${LTR}Your appointment with Dr. ${doctorName} has been rescheduled. Open the app for the new time.`;
     event_code = "appointment.rescheduled";
     // Use the new timestamp in the dedup key so each reschedule notifies once.
     dedup_key = `apt-rescheduled:${record.id}:${newTime}`;
@@ -145,14 +177,19 @@ function handleUpdate(
         : Object.keys(oldReport).length > 0);
 
     if (hasNew && !hadOld) {
-      title = `${LTR}📄 تقرير طبي جديد`;
-      body = `${LTR}أضاف الدكتور ${doctorName} تقريراً طبياً لموعدك.`;
+      titleAr = `${LTR}📄 تقرير طبي جديد`;
+      titleEn = `${LTR}📄 New medical report`;
+      bodyAr = `${LTR}أضاف الدكتور ${doctorName} تقريراً طبياً لموعدك.`;
+      bodyEn = `${LTR}Dr. ${doctorName} added a medical report to your visit.`;
       event_code = "report.added";
       dedup_key = `apt-report-added:${record.id}`;
     } else if (hasNew && hadOld) {
-      title = `${LTR}📝 تحديث التقرير الطبي`;
-      body =
+      titleAr = `${LTR}📝 تحديث التقرير الطبي`;
+      titleEn = `${LTR}📝 Medical report updated`;
+      bodyAr =
         `${LTR}قام الدكتور ${doctorName} بتعديل التقرير الطبي لموعدك.`;
+      bodyEn =
+        `${LTR}Dr. ${doctorName} updated the medical report for your visit.`;
       event_code = "report.edited";
       // Reports can be edited many times — don't dedup or only the first
       // edit notification will fire. NULL = always allow.
@@ -175,8 +212,12 @@ function handleUpdate(
     recipient_app: "docsera",
     event_code,
     category: event_code.startsWith("report.") ? "reports" : "appointments",
-    title,
-    body,
+    title: titleAr,
+    body: bodyAr,
+    localized: {
+      ar: { title: titleAr, body: bodyAr },
+      en: { title: titleEn, body: bodyEn },
+    },
     deep_link,
     data: {
       appointment_id: record.id,

@@ -12,14 +12,24 @@ export function handleDocuments(
   if (!record.patient_id) return null;
 
   const docName = record.conversation_doctor_name || "الطبيب";
+  const docNameEn = record.conversation_doctor_name || "Your doctor";
+
+  const titleAr = "📄 مستند جديد";
+  const titleEn = "📄 New document";
+  const bodyAr = `أضاف ${docName} مستنداً جديداً لملفك الطبي.`;
+  const bodyEn = `${docNameEn} added a new document to your medical file.`;
 
   return {
     user_ids: [record.patient_id],
     recipient_app: "docsera",
     event_code: "document.new",
     category: "documents",
-    title: "📄 مستند جديد",
-    body: `أضاف ${docName} مستنداً جديداً لملفك الطبي.`,
+    title: titleAr,
+    body: bodyAr,
+    localized: {
+      ar: { title: titleAr, body: bodyAr },
+      en: { title: titleEn, body: bodyEn },
+    },
     deep_link: `document:${record.id}`,
     data: { document_id: record.id },
     importance: "default",

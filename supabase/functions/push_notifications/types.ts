@@ -24,8 +24,14 @@ export interface NotificationIntent {
   recipient_app: RecipientApp;
   event_code: string;
   category: Category;
+  // Default copy (used for the persisted row + as fallback when no
+  // localized variant is registered for the device's locale).
   title: string;
   body: string;
+  // Optional per-locale variants. If present, fanout picks the variant
+  // matching the device's user_devices.locale; otherwise falls back to
+  // title/body. This is the migration path away from AR-only copy.
+  localized?: Record<"ar" | "en", { title: string; body: string }>;
   deep_link: string;
   data?: Record<string, unknown>;
   importance?: Importance;

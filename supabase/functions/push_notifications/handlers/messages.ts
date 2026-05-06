@@ -50,24 +50,34 @@ export async function handleMessages(
   const title = `${LTR}💬 ${senderName}`;
 
   let rawBody = record.text as string | null | undefined;
-  let body: string;
 
   if (rawBody && rawBody.startsWith("ENC:")) {
     const decrypted = await decryptMessage(supabase, rawBody);
-    rawBody = decrypted ?? "رسالة جديدة";
+    rawBody = decrypted ?? null;
   }
 
+  let bodyAr: string;
+  let bodyEn: string;
   if (!rawBody || rawBody.trim() === "") {
     if (record.attachments && record.attachments.length > 0) {
       const t = record.attachments[0].type;
-      if (t === "image") body = `${LTR}أرسل صورة 📷`;
-      else if (t === "pdf") body = `${LTR}أرسل مستند 📄`;
-      else body = `${LTR}أرسل مرفق 📎`;
+      if (t === "image") {
+        bodyAr = `${LTR}أرسل صورة 📷`;
+        bodyEn = `${LTR}Sent a photo 📷`;
+      } else if (t === "pdf") {
+        bodyAr = `${LTR}أرسل مستند 📄`;
+        bodyEn = `${LTR}Sent a document 📄`;
+      } else {
+        bodyAr = `${LTR}أرسل مرفق 📎`;
+        bodyEn = `${LTR}Sent an attachment 📎`;
+      }
     } else {
-      body = `${LTR}أرسل رسالة`;
+      bodyAr = `${LTR}أرسل رسالة`;
+      bodyEn = `${LTR}New message`;
     }
   } else {
-    body = `${LTR}${rawBody}`;
+    bodyAr = `${LTR}${rawBody}`;
+    bodyEn = `${LTR}${rawBody}`;
   }
 
   return {
@@ -76,7 +86,11 @@ export async function handleMessages(
     event_code: "message.new",
     category: "messages",
     title,
-    body,
+    body: bodyAr,
+    localized: {
+      ar: { title, body: bodyAr },
+      en: { title, body: bodyEn },
+    },
     deep_link: `conversation:${conversationId}`,
     data: { conversation_id: conversationId, message_id: record.id },
     importance: "high",

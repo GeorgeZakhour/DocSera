@@ -16,6 +16,7 @@ import 'package:docsera/widgets/custom_bottom_navigation_bar.dart';
 import 'package:docsera/Business_Logic/Health_page/patient_switcher_cubit.dart';
 import 'package:docsera/screens/home/health/pages/visit_reports/visit_reports_page.dart';
 import 'package:docsera/screens/home/loyalty/vouchers_page.dart';
+import 'package:url_launcher/url_launcher.dart' as launcher;
 
 class NotificationService {
   NotificationService._();
@@ -46,21 +47,45 @@ class NotificationService {
     // 2) تهيئة flutter_local_notifications
     const androidInit = AndroidInitializationSettings('@mipmap/ic_launcher');
 
-    const iosInit = DarwinInitializationSettings(
+    // Register a notification category for the T-30m appointment reminder
+    // with two actions: call the clinic and open Maps for directions.
+    // The action IDs are matched in _handleNotificationResponse to dispatch
+    // platform-channel intents.
+    final iosInit = DarwinInitializationSettings(
       requestAlertPermission: true,
       requestBadgePermission: true,
       requestSoundPermission: true,
-      // سنعرض الإشعار يدويًا عبر showLocal
       defaultPresentAlert: true,
       defaultPresentBadge: true,
       defaultPresentSound: true,
+      notificationCategories: <DarwinNotificationCategory>[
+        DarwinNotificationCategory(
+          _appointmentT30CategoryId,
+          actions: <DarwinNotificationAction>[
+            DarwinNotificationAction.plain(
+              _actionCallClinic,
+              '☎ اتصل بالعيادة',
+              options: <DarwinNotificationActionOption>{
+                DarwinNotificationActionOption.foreground,
+              },
+            ),
+            DarwinNotificationAction.plain(
+              _actionDirections,
+              '📍 الاتجاهات',
+              options: <DarwinNotificationActionOption>{
+                DarwinNotificationActionOption.foreground,
+              },
+            ),
+          ],
+        ),
+      ],
     );
 
-    const settings = InitializationSettings(android: androidInit, iOS: iosInit);
+    final settings = InitializationSettings(android: androidInit, iOS: iosInit);
 
     await _fln.initialize(
       settings,
-      onDidReceiveNotificationResponse: (resp) => _handleNotificationTap(resp.payload),
+      onDidReceiveNotificationResponse: _handleNotificationResponse,
       onDidReceiveBackgroundNotificationResponse: notificationTapBackground,
     );
 
@@ -127,9 +152,49 @@ class NotificationService {
       'token': token,
       'platform': Platform.isIOS ? 'ios' : 'android',
       'app': 'docsera',
+      'locale': _currentLocale(),
+      'last_seen_at': DateTime.now().toUtc().toIso8601String(),
     }, onConflict: 'user_id,token,app');
-    
+
     if (kDebugMode) debugPrint('✅ Pushy Token saved to Supabase');
+  }
+
+  /// Best-effort current locale read. Used by _saveDeviceTokenToSupabase
+  /// at registration time and by updateDeviceLocale() when the user
+  /// changes their language preference. Falls back to 'ar' (project
+  /// default) when no navigator context is available.
+  String _currentLocale() {
+    try {
+      final ctx = navigatorKey?.currentContext;
+      if (ctx != null) {
+        return Localizations.localeOf(ctx).languageCode;
+      }
+    } catch (_) {/* no-op */}
+    return 'ar';
+  }
+
+  /// Update user_devices.locale for the currently-registered device.
+  /// Called by the language-switcher after the user picks a new locale,
+  /// so the next push from the edge function fires in their language
+  /// without waiting for them to restart the app.
+  Future<void> updateDeviceLocale(String localeCode) async {
+    final token = _pushyDeviceToken;
+    final session = Supabase.instance.client.auth.currentSession;
+    final userId = session?.user.id;
+    if (token == null || userId == null) return;
+    try {
+      await Supabase.instance.client
+          .from('user_devices')
+          .update({'locale': localeCode})
+          .eq('user_id', userId)
+          .eq('token', token)
+          .eq('app', 'docsera');
+      if (kDebugMode) {
+        debugPrint('🌐 user_devices.locale → $localeCode');
+      }
+    } catch (e) {
+      debugPrint('❌ updateDeviceLocale failed: $e');
+    }
   }
 
   Future<void> deleteToken() async {
@@ -235,6 +300,104 @@ class NotificationService {
     _handleNotificationTap(payload);
   }
 
+  /// Routes the user-tap on a local notification: either the body
+  /// (resp.actionId is null → existing deep-link logic) or one of the
+  /// registered action buttons (call clinic, directions).
+  void _handleNotificationResponse(NotificationResponse resp) {
+    final actionId = resp.actionId;
+    final payload = resp.payload;
+    if (actionId == null || actionId.isEmpty) {
+      _handleNotificationTap(payload);
+      return;
+    }
+    // Action taps for the T-30m reminder. Both actions need the
+    // appointment ID so we can fetch phone / location at handle time.
+    if (payload != null && payload.startsWith('appointment:')) {
+      final appointmentId = payload.substring('appointment:'.length);
+      switch (actionId) {
+        case _actionCallClinic:
+          _dispatchCallClinic(appointmentId);
+          return;
+        case _actionDirections:
+          _dispatchDirections(appointmentId);
+          return;
+      }
+    }
+    // Unknown action — fall back to default tap behavior.
+    _handleNotificationTap(payload);
+  }
+
+  Future<void> _dispatchCallClinic(String appointmentId) async {
+    try {
+      final row = await Supabase.instance.client
+          .from('appointments')
+          .select('clinic_address')
+          .eq('id', appointmentId)
+          .maybeSingle();
+      final addr = row?['clinic_address'];
+      String? phone;
+      if (addr is Map) {
+        phone = (addr['phone'] ?? addr['phone_number'] ?? addr['contact_phone'])
+            ?.toString();
+      }
+      if (phone == null || phone.isEmpty) {
+        debugPrint('☎ no phone in clinic_address for $appointmentId');
+        return;
+      }
+      final telUri = Uri.parse('tel:${phone.replaceAll(RegExp(r"\s+"), "")}');
+      if (await launcher.canLaunchUrl(telUri)) {
+        await launcher.launchUrl(telUri);
+      } else {
+        debugPrint('☎ canLaunchUrl false for $telUri');
+      }
+    } catch (e) {
+      debugPrint('☎ call clinic dispatch error: $e');
+    }
+  }
+
+  Future<void> _dispatchDirections(String appointmentId) async {
+    try {
+      final row = await Supabase.instance.client
+          .from('appointments')
+          .select('location, clinic_address')
+          .eq('id', appointmentId)
+          .maybeSingle();
+      Uri? uri;
+      final loc = row?['location'];
+      if (loc is Map) {
+        final lat = loc['lat'] ?? loc['latitude'];
+        final lng = loc['lng'] ?? loc['longitude'] ?? loc['lon'];
+        if (lat != null && lng != null) {
+          uri = Uri.parse(
+              'https://www.google.com/maps/search/?api=1&query=$lat,$lng');
+        }
+      }
+      if (uri == null) {
+        final addr = row?['clinic_address'];
+        if (addr is Map) {
+          final text = (addr['address'] ?? addr['street'] ?? addr['name'])
+              ?.toString();
+          if (text != null && text.isNotEmpty) {
+            uri = Uri.parse(
+                'https://www.google.com/maps/search/?api=1&query=${Uri.encodeComponent(text)}');
+          }
+        }
+      }
+      if (uri == null) {
+        debugPrint('📍 no location/address for $appointmentId');
+        return;
+      }
+      if (await launcher.canLaunchUrl(uri)) {
+        await launcher.launchUrl(uri,
+            mode: launcher.LaunchMode.externalApplication);
+      } else {
+        debugPrint('📍 canLaunchUrl false for $uri');
+      }
+    } catch (e) {
+      debugPrint('📍 directions dispatch error: $e');
+    }
+  }
+
   // ---------------------------------------------------------------------
   // Appointment-reminder helpers (used by AppointmentReminderScheduler).
   // Deterministic IDs derived from appointment_id keep cancel/reschedule
@@ -266,6 +429,13 @@ class NotificationService {
     final now = DateTime.now();
     final payload = 'appointment:$appointmentId';
 
+    if (kDebugMode) {
+      debugPrint(
+          '⏰ scheduleAppointmentReminders($appointmentId): now=$now, '
+          'appt=$appointmentLocal, t24=$t24 (future=${t24.isAfter(now)}), '
+          't30=$t30 (future=${t30.isAfter(now)})');
+    }
+
     if (t24.isAfter(now)) {
       await _scheduleWithId(
         id: _reminderId(appointmentId, 't24'),
@@ -285,6 +455,13 @@ class NotificationService {
         timeSensitive: true,
         payload: payload,
       );
+    }
+
+    if (kDebugMode) {
+      final pending = await _fln.pendingNotificationRequests();
+      debugPrint(
+          '⏰ pending count after schedule: ${pending.length} '
+          '— ids: ${pending.map((p) => p.id).toList()}');
     }
   }
 
@@ -309,6 +486,22 @@ class NotificationService {
       priority: timeSensitive ? Priority.max : Priority.high,
       fullScreenIntent: timeSensitive,
       playSound: true,
+      actions: timeSensitive
+          ? <AndroidNotificationAction>[
+              const AndroidNotificationAction(
+                _actionCallClinic,
+                '☎ اتصل بالعيادة',
+                showsUserInterface: true,
+                cancelNotification: true,
+              ),
+              const AndroidNotificationAction(
+                _actionDirections,
+                '📍 الاتجاهات',
+                showsUserInterface: true,
+                cancelNotification: true,
+              ),
+            ]
+          : null,
     );
 
     final ios = DarwinNotificationDetails(
@@ -318,19 +511,39 @@ class NotificationService {
       interruptionLevel: timeSensitive
           ? InterruptionLevel.timeSensitive
           : InterruptionLevel.active,
+      categoryIdentifier:
+          timeSensitive ? _appointmentT30CategoryId : null,
     );
 
-    await _fln.zonedSchedule(
-      id,
-      title,
-      body,
-      tz.TZDateTime.from(whenLocal, tz.local),
-      NotificationDetails(android: android, iOS: ios),
-      androidScheduleMode: AndroidScheduleMode.exactAllowWhileIdle,
-      payload: payload,
-      matchDateTimeComponents: DateTimeComponents.dateAndTime,
-    );
+    final tzWhen = tz.TZDateTime.from(whenLocal, tz.local);
+    try {
+      await _fln.zonedSchedule(
+        id,
+        title,
+        body,
+        tzWhen,
+        NotificationDetails(android: android, iOS: ios),
+        androidScheduleMode: AndroidScheduleMode.exactAllowWhileIdle,
+        payload: payload,
+        matchDateTimeComponents: DateTimeComponents.dateAndTime,
+      );
+      if (kDebugMode) {
+        debugPrint(
+            '⏰ zonedSchedule OK: id=$id, when=$tzWhen, '
+            'title="$title", timeSensitive=$timeSensitive');
+      }
+    } catch (e, st) {
+      debugPrint('❌ zonedSchedule FAILED for id=$id: $e\n$st');
+      rethrow;
+    }
   }
+
+  /// iOS notification category ID for appointment T-30m reminders. Two
+  /// actions: dial the clinic, open Maps for directions. Registered in
+  /// init() via DarwinInitializationSettings.notificationCategories.
+  static const String _appointmentT30CategoryId = 'appointment_t30_actions';
+  static const String _actionCallClinic = 'action_call_clinic';
+  static const String _actionDirections = 'action_directions';
 
   void _handleNotificationTap(String? payload) async {
     debugPrint("👆 Notification Tapped with payload: $payload");
