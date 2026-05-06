@@ -79,6 +79,18 @@ class AppointmentReminderScheduler {
     final current = cubit.state;
     if (current is AppointmentsLoaded) {
       _reconcile(context, current.upcomingAppointments);
+    } else {
+      // Cubit hasn't been loaded yet (user hasn't visited the Appointments
+      // tab). Without this, a brand-new appointment booked from elsewhere
+      // (e.g. doctor profile) never reaches the scheduler — the cubit's
+      // realtime listener is only spun up inside loadAppointments. Force
+      // the load here so reminders work regardless of which tab the user
+      // visits.
+      if (kDebugMode) {
+        debugPrint(
+            '$_logTag start() — cubit not loaded, triggering loadAppointments');
+      }
+      cubit.loadAppointments(context: context);
     }
   }
 
