@@ -1,4 +1,5 @@
 // lib/services/notifications/notification_service.dart
+import 'dart:async';
 import 'dart:io';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
@@ -147,6 +148,8 @@ class NotificationService {
   Future<void> sendTestReminder({int delaySeconds = 5}) async {
     final whenLocal = DateTime.now().add(Duration(seconds: delaySeconds));
     debugPrint('🧪 sendTestReminder scheduling for $whenLocal');
+    // OS-scheduled notification — delivered on the lock screen if the
+    // app is backgrounded by the time it fires.
     await _scheduleWithId(
       id: 999001,
       whenLocal: whenLocal,
@@ -158,6 +161,65 @@ class NotificationService {
     final pending = await _fln.pendingNotificationRequests();
     debugPrint(
         '🧪 pending after test schedule: ${pending.length} ids=${pending.map((p) => p.id).toList()}');
+    // Foreground-only in-app banner. Fires in parallel with the OS
+    // schedule. If the app is foregrounded when this fires, render the
+    // banner; if backgrounded, the OS notification covers it.
+    scheduleForegroundBanner(
+      key: 'test',
+      delay: Duration(seconds: delaySeconds),
+      title: 'DocSera',
+      body: 'Test reminder — your reminder pipeline is working ✅',
+      payload: 'appointment:test',
+    );
+  }
+
+  // -------------------------------------------------------------------------
+  // Parallel foreground-banner scheduling
+  // -------------------------------------------------------------------------
+  // Pushy installs itself as the iOS UNUserNotificationCenter delegate and
+  // suppresses foreground presentation for OS-scheduled notifications. To
+  // give the user something to see while the app is open, we schedule a
+  // Dart Timer that fires at the same moment and renders an in-app banner
+  // overlay. Background delivery is unaffected — the OS notification still
+  // fires on the lock screen.
+
+  final Map<String, Timer> _foregroundTimers = {};
+
+  void scheduleForegroundBanner({
+    required String key,
+    required Duration delay,
+    required String title,
+    required String body,
+    String? payload,
+  }) {
+    _foregroundTimers.remove(key)?.cancel();
+    if (delay.isNegative) return;
+    _foregroundTimers[key] = Timer(delay, () {
+      _foregroundTimers.remove(key);
+      final ctx = navigatorKey?.currentContext;
+      if (ctx == null || !ctx.mounted) {
+        debugPrint('🧪 foreground banner skipped (no live context) — key=$key');
+        return;
+      }
+      debugPrint('🧪 foreground banner firing — key=$key');
+      InAppNotificationBanner.show(
+        ctx,
+        title: title,
+        body: body,
+        payload: payload,
+      );
+    });
+  }
+
+  void cancelForegroundBanner(String key) {
+    _foregroundTimers.remove(key)?.cancel();
+  }
+
+  void cancelAllForegroundBanners() {
+    for (final t in _foregroundTimers.values) {
+      t.cancel();
+    }
+    _foregroundTimers.clear();
   }
 
   Future<void> _initPushy() async {
@@ -512,6 +574,13 @@ class NotificationService {
         timeSensitive: false,
         payload: payload,
       );
+      scheduleForegroundBanner(
+        key: 'apt-$appointmentId-t24',
+        delay: t24.difference(now),
+        title: reminder24Title,
+        body: reminder24Body,
+        payload: payload,
+      );
     }
     if (t30.isAfter(now)) {
       await _scheduleWithId(
@@ -520,6 +589,13 @@ class NotificationService {
         title: reminder30Title,
         body: reminder30Body,
         timeSensitive: true,
+        payload: payload,
+      );
+      scheduleForegroundBanner(
+        key: 'apt-$appointmentId-t30',
+        delay: t30.difference(now),
+        title: reminder30Title,
+        body: reminder30Body,
         payload: payload,
       );
     }
@@ -535,6 +611,8 @@ class NotificationService {
   Future<void> cancelAppointmentReminders(String appointmentId) async {
     await _fln.cancel(_reminderId(appointmentId, 't24'));
     await _fln.cancel(_reminderId(appointmentId, 't30'));
+    cancelForegroundBanner('apt-$appointmentId-t24');
+    cancelForegroundBanner('apt-$appointmentId-t30');
   }
 
   Future<void> _scheduleWithId({
