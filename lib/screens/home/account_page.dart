@@ -12,6 +12,7 @@ import 'package:docsera/Business_Logic/Authentication/auth_state.dart';
 import 'package:docsera/screens/auth/sign_up/account_method_choice.dart';
 import 'package:docsera/screens/home/account/goodbye_page.dart';
 import 'package:docsera/screens/home/account/legal_information.dart';
+import 'package:docsera/screens/home/account/notification_preferences_page.dart';
 import 'package:docsera/screens/home/shimmer/shimmer_widgets.dart';
 import 'package:docsera/utils/custom_clippers.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -488,14 +489,19 @@ class _AccountScreenState extends State<AccountScreen> {
               AccountSectionTitle(title: AppLocalizations.of(context)!.confidentiality),
               Divider(color: Colors.grey[200], height: 2.h),
 
-              // My Preferences
-              // _buildPrivacyItem(
-              //   AppLocalizations.of(context)!.myPreferences,
-              //       () {
-              //     Navigator.push(context, fadePageRoute(const MyPreferencesPage()));
-              //   },
-              // ),
-              // Divider(color: Colors.grey[200], height: 2.h),
+              // Notification preferences (direct link — the parent
+              // MyPreferencesPage is intentionally disabled, but the
+              // notification settings need a discoverable entry point).
+              _buildPrivacyItem(
+                AppLocalizations.of(context)!.notifications,
+                    () {
+                  Navigator.push(
+                    context,
+                    fadePageRoute(const NotificationPreferencesPage()),
+                  );
+                },
+              ),
+              Divider(color: Colors.grey[200], height: 2.h),
 
               // Legal Information
               _buildPrivacyItem(
