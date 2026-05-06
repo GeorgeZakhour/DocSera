@@ -161,6 +161,18 @@ class NotificationService {
   }
 
   Future<void> _initPushy() async {
+    // Pushy's iOS SDK installs itself as the UNUserNotificationCenter
+    // delegate. By default, that means foreground notifications are
+    // suppressed (Pushy returns no presentation options to iOS). Flip
+    // on Pushy's built-in foreground in-app banner so users see the
+    // notification while the app is running. Without this, T-30m / T-24h
+    // appointment reminders (and any push received in foreground) only
+    // appear if the user happens to have backgrounded the app at the
+    // exact moment delivery fires.
+    if (Platform.isIOS) {
+      Pushy.toggleInAppBanner(true);
+    }
+
     // استقبال الإشعارات (خلفية/مقدمة)
     Pushy.setNotificationListener(backgroundNotificationListener);
 
