@@ -1869,5 +1869,101 @@
   "showQrCodeTooltip": "عرض رمز QR",
   "@showQrCodeTooltip": {},
   "shareTooltip": "مشاركة",
-  "@shareTooltip": {}
+  "@shareTooltip": {},
+
+  "notificationsMarkAllRead": "تعليم الكل كمقروء",
+  "@notificationsMarkAllRead": {},
+  "notificationsTodaySection": "اليوم",
+  "@notificationsTodaySection": {},
+  "notificationsEarlierSection": "سابقًا",
+  "@notificationsEarlierSection": {},
+  "notificationsJustNow": "للتوّ",
+  "@notificationsJustNow": {},
+  "notificationsMinutesAgo": "{count, plural, =1{قبل دقيقة} =2{قبل دقيقتين} few{قبل {count} دقائق} many{قبل {count} دقيقة} other{قبل {count} دقيقة}}",
+  "@notificationsMinutesAgo": {
+    "placeholders": { "count": { "type": "int" } }
+  },
+  "notificationsHoursAgo": "{count, plural, =1{قبل ساعة} =2{قبل ساعتين} few{قبل {count} ساعات} many{قبل {count} ساعة} other{قبل {count} ساعة}}",
+  "@notificationsHoursAgo": {
+    "placeholders": { "count": { "type": "int" } }
+  },
+  "notificationsDaysAgo": "{count, plural, =1{أمس} =2{قبل يومين} few{قبل {count} أيام} many{قبل {count} يومًا} other{قبل {count} يومًا}}",
+  "@notificationsDaysAgo": {
+    "placeholders": { "count": { "type": "int" } }
+  },
+  "notificationsEmptyTitle": "لا توجد إشعارات جديدة",
+  "@notificationsEmptyTitle": {},
+  "notificationsEmptyBody": "ستظهر هنا إشعارات مواعيدك ورسائلك وتقاريرك وهداياك.",
+  "@notificationsEmptyBody": {},
+
+  "notificationPrefsTitle": "تفضيلات الإشعارات",
+  "@notificationPrefsTitle": {},
+  "notificationPrefsCategoryAppointments": "المواعيد",
+  "@notificationPrefsCategoryAppointments": {},
+  "notificationPrefsCategoryMessages": "الرسائل",
+  "@notificationPrefsCategoryMessages": {},
+  "notificationPrefsCategoryDocuments": "المستندات",
+  "@notificationPrefsCategoryDocuments": {},
+  "notificationPrefsCategoryReports": "التقارير الطبية",
+  "@notificationPrefsCategoryReports": {},
+  "notificationPrefsCategoryLoyalty": "الهدايا والمكافآت",
+  "@notificationPrefsCategoryLoyalty": {},
+  "notificationPrefsCategorySecurity": "الأمان",
+  "@notificationPrefsCategorySecurity": {},
+  "notificationPrefsCategoryMarketing": "الأخبار والإعلانات",
+  "@notificationPrefsCategoryMarketing": {},
+  "notificationPrefsPushChannel": "إشعار",
+  "@notificationPrefsPushChannel": {},
+  "notificationPrefsInAppChannel": "داخل التطبيق",
+  "@notificationPrefsInAppChannel": {},
+  "notificationPrefsEmailChannel": "البريد الإلكتروني",
+  "@notificationPrefsEmailChannel": {},
+  "notificationPrefsEmailComingSoon": "قريبًا",
+  "@notificationPrefsEmailComingSoon": {},
+  "notificationPrefsAlwaysOn": "مفعّل دائمًا",
+  "@notificationPrefsAlwaysOn": {},
+  "notificationPrefsAlwaysOnExplanation": "تبقى التنبيهات الطبية وتنبيهات الأمان الحسّاسة مفعّلة افتراضيًا. يمكنك إيقافها لكنّك ستُسأل للتأكيد.",
+  "@notificationPrefsAlwaysOnExplanation": {},
+  "notificationPrefsConfirmMute": "إيقاف هذه التنبيهات؟",
+  "@notificationPrefsConfirmMute": {},
+  "notificationPrefsConfirmMuteBody": "إذا أوقفت هذه الفئة قد تفوّت تذكيرات المواعيد أو تنبيهات الحساب المهمة. هل أنت متأكد؟",
+  "@notificationPrefsConfirmMuteBody": {},
+  "notificationPrefsQuietHoursTitle": "ساعات الهدوء",
+  "@notificationPrefsQuietHoursTitle": {},
+  "notificationPrefsQuietHoursDescription": "أوقف الإشعارات غير العاجلة خلال فترة يومية.",
+  "@notificationPrefsQuietHoursDescription": {},
+  "notificationPrefsQuietHoursStart": "من",
+  "@notificationPrefsQuietHoursStart": {},
+  "notificationPrefsQuietHoursEnd": "حتى",
+  "@notificationPrefsQuietHoursEnd": {},
+  "notificationPrefsQuietHoursOverride": "تنبيهات المواعيد العاجلة تصلك دائمًا.",
+  "@notificationPrefsQuietHoursOverride": {},
+  "notificationPrefsDndTitle": "عدم الإزعاج",
+  "@notificationPrefsDndTitle": {},
+  "notificationPrefsDndUntil": "إيقاف الكل حتى…",
+  "@notificationPrefsDndUntil": {},
+  "notificationPrefsSavedToast": "تم الحفظ",
+  "@notificationPrefsSavedToast": {},
+
+  "reminder24hTitle": "موعد الغد",
+  "@reminder24hTitle": {},
+  "reminder24hBody": "موعدك مع د. {doctor} غدًا الساعة {time}.",
+  "@reminder24hBody": {
+    "placeholders": {
+      "doctor": { "type": "String" },
+      "time":   { "type": "String" }
+    }
+  },
+  "reminder30mTitle": "موعدك بعد 30 دقيقة",
+  "@reminder30mTitle": {},
+  "reminder30mBody": "ستلتقي د. {doctor} قريبًا — هل أنت في الطريق؟",
+  "@reminder30mBody": {
+    "placeholders": {
+      "doctor": { "type": "String" }
+    }
+  },
+  "reminderActionCallClinic": "اتصل بالعيادة",
+  "@reminderActionCallClinic": {},
+  "reminderActionDirections": "الاتجاهات",
+  "@reminderActionDirections": {}
 }

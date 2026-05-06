@@ -4733,4 +4733,163 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get shareTooltip => 'مشاركة';
+
+  @override
+  String get notificationsMarkAllRead => 'تعليم الكل كمقروء';
+
+  @override
+  String get notificationsTodaySection => 'اليوم';
+
+  @override
+  String get notificationsEarlierSection => 'سابقًا';
+
+  @override
+  String get notificationsJustNow => 'للتوّ';
+
+  @override
+  String notificationsMinutesAgo(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'قبل $count دقيقة',
+      many: 'قبل $count دقيقة',
+      few: 'قبل $count دقائق',
+      two: 'قبل دقيقتين',
+      one: 'قبل دقيقة',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String notificationsHoursAgo(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'قبل $count ساعة',
+      many: 'قبل $count ساعة',
+      few: 'قبل $count ساعات',
+      two: 'قبل ساعتين',
+      one: 'قبل ساعة',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String notificationsDaysAgo(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'قبل $count يومًا',
+      many: 'قبل $count يومًا',
+      few: 'قبل $count أيام',
+      two: 'قبل يومين',
+      one: 'أمس',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get notificationsEmptyTitle => 'لا توجد إشعارات جديدة';
+
+  @override
+  String get notificationsEmptyBody =>
+      'ستظهر هنا إشعارات مواعيدك ورسائلك وتقاريرك وهداياك.';
+
+  @override
+  String get notificationPrefsTitle => 'تفضيلات الإشعارات';
+
+  @override
+  String get notificationPrefsCategoryAppointments => 'المواعيد';
+
+  @override
+  String get notificationPrefsCategoryMessages => 'الرسائل';
+
+  @override
+  String get notificationPrefsCategoryDocuments => 'المستندات';
+
+  @override
+  String get notificationPrefsCategoryReports => 'التقارير الطبية';
+
+  @override
+  String get notificationPrefsCategoryLoyalty => 'الهدايا والمكافآت';
+
+  @override
+  String get notificationPrefsCategorySecurity => 'الأمان';
+
+  @override
+  String get notificationPrefsCategoryMarketing => 'الأخبار والإعلانات';
+
+  @override
+  String get notificationPrefsPushChannel => 'إشعار';
+
+  @override
+  String get notificationPrefsInAppChannel => 'داخل التطبيق';
+
+  @override
+  String get notificationPrefsEmailChannel => 'البريد الإلكتروني';
+
+  @override
+  String get notificationPrefsEmailComingSoon => 'قريبًا';
+
+  @override
+  String get notificationPrefsAlwaysOn => 'مفعّل دائمًا';
+
+  @override
+  String get notificationPrefsAlwaysOnExplanation =>
+      'تبقى التنبيهات الطبية وتنبيهات الأمان الحسّاسة مفعّلة افتراضيًا. يمكنك إيقافها لكنّك ستُسأل للتأكيد.';
+
+  @override
+  String get notificationPrefsConfirmMute => 'إيقاف هذه التنبيهات؟';
+
+  @override
+  String get notificationPrefsConfirmMuteBody =>
+      'إذا أوقفت هذه الفئة قد تفوّت تذكيرات المواعيد أو تنبيهات الحساب المهمة. هل أنت متأكد؟';
+
+  @override
+  String get notificationPrefsQuietHoursTitle => 'ساعات الهدوء';
+
+  @override
+  String get notificationPrefsQuietHoursDescription =>
+      'أوقف الإشعارات غير العاجلة خلال فترة يومية.';
+
+  @override
+  String get notificationPrefsQuietHoursStart => 'من';
+
+  @override
+  String get notificationPrefsQuietHoursEnd => 'حتى';
+
+  @override
+  String get notificationPrefsQuietHoursOverride =>
+      'تنبيهات المواعيد العاجلة تصلك دائمًا.';
+
+  @override
+  String get notificationPrefsDndTitle => 'عدم الإزعاج';
+
+  @override
+  String get notificationPrefsDndUntil => 'إيقاف الكل حتى…';
+
+  @override
+  String get notificationPrefsSavedToast => 'تم الحفظ';
+
+  @override
+  String get reminder24hTitle => 'موعد الغد';
+
+  @override
+  String reminder24hBody(String doctor, String time) {
+    return 'موعدك مع د. $doctor غدًا الساعة $time.';
+  }
+
+  @override
+  String get reminder30mTitle => 'موعدك بعد 30 دقيقة';
+
+  @override
+  String reminder30mBody(String doctor) {
+    return 'ستلتقي د. $doctor قريبًا — هل أنت في الطريق؟';
+  }
+
+  @override
+  String get reminderActionCallClinic => 'اتصل بالعيادة';
+
+  @override
+  String get reminderActionDirections => 'الاتجاهات';
 }

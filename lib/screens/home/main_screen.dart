@@ -31,6 +31,7 @@ import 'package:docsera/services/supabase/banners/supabase_banner_service.dart';
 import 'package:docsera/Business_Logic/Home_Cards/home_cards_cubit.dart';
 import 'package:docsera/Business_Logic/Home_Cards/home_cards_state.dart';
 import 'package:docsera/services/supabase/home_cards/supabase_home_card_service.dart';
+import 'package:docsera/services/notifications/appointment_reminder_scheduler.dart';
 import 'package:docsera/models/home_card_model.dart';
 import 'package:docsera/screens/misc/webview_page.dart';
 
@@ -82,6 +83,9 @@ class _MainScreenState extends State<MainScreen> with AutomaticKeepAliveClientMi
       if (auth is AuthAuthenticated) {
         maybeShowGiftAnnouncement(context);
       }
+      // Bridge AppointmentsCubit lifecycle → local T-24h / T-30m reminders.
+      // Idempotent — start() cancels its previous subscription on each call.
+      AppointmentReminderScheduler.instance.start(context);
     });
   }
 

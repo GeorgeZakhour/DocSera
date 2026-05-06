@@ -1868,5 +1868,101 @@
   "showQrCodeTooltip": "Show QR code",
   "@showQrCodeTooltip": {},
   "shareTooltip": "Share",
-  "@shareTooltip": {}
+  "@shareTooltip": {},
+
+  "notificationsMarkAllRead": "Mark all read",
+  "@notificationsMarkAllRead": {},
+  "notificationsTodaySection": "Today",
+  "@notificationsTodaySection": {},
+  "notificationsEarlierSection": "Earlier",
+  "@notificationsEarlierSection": {},
+  "notificationsJustNow": "just now",
+  "@notificationsJustNow": {},
+  "notificationsMinutesAgo": "{count, plural, =1{1 minute ago} other{{count} minutes ago}}",
+  "@notificationsMinutesAgo": {
+    "placeholders": { "count": { "type": "int" } }
+  },
+  "notificationsHoursAgo": "{count, plural, =1{1 hour ago} other{{count} hours ago}}",
+  "@notificationsHoursAgo": {
+    "placeholders": { "count": { "type": "int" } }
+  },
+  "notificationsDaysAgo": "{count, plural, =1{yesterday} other{{count} days ago}}",
+  "@notificationsDaysAgo": {
+    "placeholders": { "count": { "type": "int" } }
+  },
+  "notificationsEmptyTitle": "You're all caught up",
+  "@notificationsEmptyTitle": {},
+  "notificationsEmptyBody": "Notifications about your appointments, messages, reports and gifts will appear here.",
+  "@notificationsEmptyBody": {},
+
+  "notificationPrefsTitle": "Notification preferences",
+  "@notificationPrefsTitle": {},
+  "notificationPrefsCategoryAppointments": "Appointments",
+  "@notificationPrefsCategoryAppointments": {},
+  "notificationPrefsCategoryMessages": "Messages",
+  "@notificationPrefsCategoryMessages": {},
+  "notificationPrefsCategoryDocuments": "Documents",
+  "@notificationPrefsCategoryDocuments": {},
+  "notificationPrefsCategoryReports": "Medical reports",
+  "@notificationPrefsCategoryReports": {},
+  "notificationPrefsCategoryLoyalty": "Gifts & rewards",
+  "@notificationPrefsCategoryLoyalty": {},
+  "notificationPrefsCategorySecurity": "Security",
+  "@notificationPrefsCategorySecurity": {},
+  "notificationPrefsCategoryMarketing": "News & announcements",
+  "@notificationPrefsCategoryMarketing": {},
+  "notificationPrefsPushChannel": "Push",
+  "@notificationPrefsPushChannel": {},
+  "notificationPrefsInAppChannel": "In-app",
+  "@notificationPrefsInAppChannel": {},
+  "notificationPrefsEmailChannel": "Email",
+  "@notificationPrefsEmailChannel": {},
+  "notificationPrefsEmailComingSoon": "coming soon",
+  "@notificationPrefsEmailComingSoon": {},
+  "notificationPrefsAlwaysOn": "Always on",
+  "@notificationPrefsAlwaysOn": {},
+  "notificationPrefsAlwaysOnExplanation": "Time-sensitive medical and security alerts stay on by default. You can mute them, but you'll be asked to confirm.",
+  "@notificationPrefsAlwaysOnExplanation": {},
+  "notificationPrefsConfirmMute": "Mute these alerts?",
+  "@notificationPrefsConfirmMute": {},
+  "notificationPrefsConfirmMuteBody": "If you mute this category you may miss appointment reminders or important account alerts. Are you sure?",
+  "@notificationPrefsConfirmMuteBody": {},
+  "notificationPrefsQuietHoursTitle": "Quiet hours",
+  "@notificationPrefsQuietHoursTitle": {},
+  "notificationPrefsQuietHoursDescription": "Pause non-urgent notifications during a daily window.",
+  "@notificationPrefsQuietHoursDescription": {},
+  "notificationPrefsQuietHoursStart": "From",
+  "@notificationPrefsQuietHoursStart": {},
+  "notificationPrefsQuietHoursEnd": "Until",
+  "@notificationPrefsQuietHoursEnd": {},
+  "notificationPrefsQuietHoursOverride": "Time-sensitive medical alerts always come through.",
+  "@notificationPrefsQuietHoursOverride": {},
+  "notificationPrefsDndTitle": "Do not disturb",
+  "@notificationPrefsDndTitle": {},
+  "notificationPrefsDndUntil": "Mute everything until…",
+  "@notificationPrefsDndUntil": {},
+  "notificationPrefsSavedToast": "Saved",
+  "@notificationPrefsSavedToast": {},
+
+  "reminder24hTitle": "Tomorrow's appointment",
+  "@reminder24hTitle": {},
+  "reminder24hBody": "Your appointment with Dr. {doctor} is tomorrow at {time}.",
+  "@reminder24hBody": {
+    "placeholders": {
+      "doctor": { "type": "String" },
+      "time":   { "type": "String" }
+    }
+  },
+  "reminder30mTitle": "Appointment in 30 minutes",
+  "@reminder30mTitle": {},
+  "reminder30mBody": "You'll be seeing Dr. {doctor} soon — are you on your way?",
+  "@reminder30mBody": {
+    "placeholders": {
+      "doctor": { "type": "String" }
+    }
+  },
+  "reminderActionCallClinic": "Call clinic",
+  "@reminderActionCallClinic": {},
+  "reminderActionDirections": "Directions",
+  "@reminderActionDirections": {}
 }

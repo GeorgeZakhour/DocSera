@@ -226,6 +226,111 @@ class NotificationService {
     );
   }
 
+  /// Public deep-link entry point. Used by the in-app inbox so that
+  /// tap-from-row reuses exactly the same navigation logic as tap-from-push.
+  /// Adding a new destination should always be done in this method, not
+  /// duplicated at call sites.
+  Future<void> handleDeepLink(String? payload) async {
+    _handleNotificationTap(payload);
+  }
+
+  // ---------------------------------------------------------------------
+  // Appointment-reminder helpers (used by AppointmentReminderScheduler).
+  // Deterministic IDs derived from appointment_id keep cancel/reschedule
+  // idempotent across app launches.
+  // ---------------------------------------------------------------------
+
+  static int _reminderId(String appointmentId, String suffix) {
+    // hashCode is signed 64-bit on Dart; clamp to a safe positive 31-bit
+    // range so flutter_local_notifications (Android int32) doesn't choke.
+    final raw = '$appointmentId|$suffix'.hashCode;
+    return raw & 0x7FFFFFFF;
+  }
+
+  /// Schedule the T-24h and T-30m reminders for one appointment.
+  /// Cancels any existing reminders for the same appointment first so
+  /// reschedule loops are idempotent.
+  Future<void> scheduleAppointmentReminders({
+    required String appointmentId,
+    required DateTime appointmentLocal,
+    required String reminder24Title,
+    required String reminder24Body,
+    required String reminder30Title,
+    required String reminder30Body,
+  }) async {
+    await cancelAppointmentReminders(appointmentId);
+
+    final t24 = appointmentLocal.subtract(const Duration(hours: 24));
+    final t30 = appointmentLocal.subtract(const Duration(minutes: 30));
+    final now = DateTime.now();
+    final payload = 'appointment:$appointmentId';
+
+    if (t24.isAfter(now)) {
+      await _scheduleWithId(
+        id: _reminderId(appointmentId, 't24'),
+        whenLocal: t24,
+        title: reminder24Title,
+        body: reminder24Body,
+        timeSensitive: false,
+        payload: payload,
+      );
+    }
+    if (t30.isAfter(now)) {
+      await _scheduleWithId(
+        id: _reminderId(appointmentId, 't30'),
+        whenLocal: t30,
+        title: reminder30Title,
+        body: reminder30Body,
+        timeSensitive: true,
+        payload: payload,
+      );
+    }
+  }
+
+  Future<void> cancelAppointmentReminders(String appointmentId) async {
+    await _fln.cancel(_reminderId(appointmentId, 't24'));
+    await _fln.cancel(_reminderId(appointmentId, 't30'));
+  }
+
+  Future<void> _scheduleWithId({
+    required int id,
+    required DateTime whenLocal,
+    required String title,
+    required String body,
+    required bool timeSensitive,
+    String? payload,
+  }) async {
+    final android = AndroidNotificationDetails(
+      _defaultChannel.id,
+      _defaultChannel.name,
+      channelDescription: _defaultChannel.description,
+      importance: timeSensitive ? Importance.max : Importance.high,
+      priority: timeSensitive ? Priority.max : Priority.high,
+      fullScreenIntent: timeSensitive,
+      playSound: true,
+    );
+
+    final ios = DarwinNotificationDetails(
+      presentAlert: true,
+      presentBadge: true,
+      presentSound: true,
+      interruptionLevel: timeSensitive
+          ? InterruptionLevel.timeSensitive
+          : InterruptionLevel.active,
+    );
+
+    await _fln.zonedSchedule(
+      id,
+      title,
+      body,
+      tz.TZDateTime.from(whenLocal, tz.local),
+      NotificationDetails(android: android, iOS: ios),
+      androidScheduleMode: AndroidScheduleMode.exactAllowWhileIdle,
+      payload: payload,
+      matchDateTimeComponents: DateTimeComponents.dateAndTime,
+    );
+  }
+
   void _handleNotificationTap(String? payload) async {
     debugPrint("👆 Notification Tapped with payload: $payload");
     

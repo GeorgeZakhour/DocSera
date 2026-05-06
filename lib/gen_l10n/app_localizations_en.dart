@@ -4791,4 +4791,154 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get shareTooltip => 'Share';
+
+  @override
+  String get notificationsMarkAllRead => 'Mark all read';
+
+  @override
+  String get notificationsTodaySection => 'Today';
+
+  @override
+  String get notificationsEarlierSection => 'Earlier';
+
+  @override
+  String get notificationsJustNow => 'just now';
+
+  @override
+  String notificationsMinutesAgo(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count minutes ago',
+      one: '1 minute ago',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String notificationsHoursAgo(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count hours ago',
+      one: '1 hour ago',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String notificationsDaysAgo(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count days ago',
+      one: 'yesterday',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get notificationsEmptyTitle => 'You\'re all caught up';
+
+  @override
+  String get notificationsEmptyBody =>
+      'Notifications about your appointments, messages, reports and gifts will appear here.';
+
+  @override
+  String get notificationPrefsTitle => 'Notification preferences';
+
+  @override
+  String get notificationPrefsCategoryAppointments => 'Appointments';
+
+  @override
+  String get notificationPrefsCategoryMessages => 'Messages';
+
+  @override
+  String get notificationPrefsCategoryDocuments => 'Documents';
+
+  @override
+  String get notificationPrefsCategoryReports => 'Medical reports';
+
+  @override
+  String get notificationPrefsCategoryLoyalty => 'Gifts & rewards';
+
+  @override
+  String get notificationPrefsCategorySecurity => 'Security';
+
+  @override
+  String get notificationPrefsCategoryMarketing => 'News & announcements';
+
+  @override
+  String get notificationPrefsPushChannel => 'Push';
+
+  @override
+  String get notificationPrefsInAppChannel => 'In-app';
+
+  @override
+  String get notificationPrefsEmailChannel => 'Email';
+
+  @override
+  String get notificationPrefsEmailComingSoon => 'coming soon';
+
+  @override
+  String get notificationPrefsAlwaysOn => 'Always on';
+
+  @override
+  String get notificationPrefsAlwaysOnExplanation =>
+      'Time-sensitive medical and security alerts stay on by default. You can mute them, but you\'ll be asked to confirm.';
+
+  @override
+  String get notificationPrefsConfirmMute => 'Mute these alerts?';
+
+  @override
+  String get notificationPrefsConfirmMuteBody =>
+      'If you mute this category you may miss appointment reminders or important account alerts. Are you sure?';
+
+  @override
+  String get notificationPrefsQuietHoursTitle => 'Quiet hours';
+
+  @override
+  String get notificationPrefsQuietHoursDescription =>
+      'Pause non-urgent notifications during a daily window.';
+
+  @override
+  String get notificationPrefsQuietHoursStart => 'From';
+
+  @override
+  String get notificationPrefsQuietHoursEnd => 'Until';
+
+  @override
+  String get notificationPrefsQuietHoursOverride =>
+      'Time-sensitive medical alerts always come through.';
+
+  @override
+  String get notificationPrefsDndTitle => 'Do not disturb';
+
+  @override
+  String get notificationPrefsDndUntil => 'Mute everything until…';
+
+  @override
+  String get notificationPrefsSavedToast => 'Saved';
+
+  @override
+  String get reminder24hTitle => 'Tomorrow\'s appointment';
+
+  @override
+  String reminder24hBody(String doctor, String time) {
+    return 'Your appointment with Dr. $doctor is tomorrow at $time.';
+  }
+
+  @override
+  String get reminder30mTitle => 'Appointment in 30 minutes';
+
+  @override
+  String reminder30mBody(String doctor) {
+    return 'You\'ll be seeing Dr. $doctor soon — are you on your way?';
+  }
+
+  @override
+  String get reminderActionCallClinic => 'Call clinic';
+
+  @override
+  String get reminderActionDirections => 'Directions';
 }

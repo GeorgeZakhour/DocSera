@@ -4,6 +4,8 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:docsera/gen_l10n/app_localizations.dart';
 import 'package:docsera/app/const.dart';
 import 'package:docsera/app/text_styles.dart';
+import 'package:docsera/screens/home/account/notification_preferences_page.dart';
+import 'package:docsera/utils/page_transitions.dart';
 
 class MyPreferencesPage extends StatelessWidget {
   const MyPreferencesPage({super.key});
@@ -39,7 +41,11 @@ class MyPreferencesPage extends StatelessWidget {
             context,
             icon: Icons.notifications_outlined,
             text: AppLocalizations.of(context)!.notifications,
-            onTap: () {}, // TODO
+            onTap: () {
+              Navigator.of(context).push(
+                fadePageRoute(const NotificationPreferencesPage()),
+              );
+            },
           ),
           _buildTile(
             context,

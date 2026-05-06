@@ -12,6 +12,7 @@ import 'package:flutter_svg/flutter_svg.dart';
 import 'package:palette_generator/palette_generator.dart';
 import 'package:docsera/models/banner_model.dart'; // ✅ Import BannerModel
 import 'package:docsera/screens/home/banners/banner_details_page.dart'; // ✅ Import BannerDetailsPage
+import 'package:docsera/screens/home/notifications/widgets/notification_bell_button.dart';
 
 
 /// **🔹 Top Section (Now Correctly Positioned with Search Bar)**
@@ -140,6 +141,20 @@ class TopSection extends StatelessWidget {
           top: screenHeight * 0.17, // Adjusted to be higher
           left: (screenWidth - 150) / 2, // Centered
           child: const SearchBarSection(),
+        ),
+
+        // 🔔 Notifications bell — top-right of the green hero.
+        // Uses SafeArea for the iOS notch / Android status bar.
+        Positioned(
+          top: 0,
+          right: 0,
+          child: SafeArea(
+            bottom: false,
+            child: Padding(
+              padding: EdgeInsets.only(top: 4.h, right: 4.w),
+              child: const NotificationBellButton(),
+            ),
+          ),
         ),
       ],
     );

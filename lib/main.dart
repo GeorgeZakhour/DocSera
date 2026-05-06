@@ -2,6 +2,7 @@ import 'dart:async';
 import 'package:http/http.dart' as http;
 
 import 'package:docsera/Business_Logic/Account_page/danger/account_danger_cubit.dart';
+import 'package:docsera/Business_Logic/Notifications_page/notifications_cubit.dart';
 import 'package:docsera/Business_Logic/Account_page/profile/account_profile_cubit.dart';
 import 'package:docsera/Business_Logic/Account_page/relatives/relatives_cubit.dart';
 import 'package:docsera/Business_Logic/Account_page/security/account_security_cubit.dart';
@@ -173,6 +174,7 @@ Future<void> _bootstrap() async {
           BlocProvider(create: (_) => VouchersCubit(LoyaltyService())),
           BlocProvider(create: (_) => ReferralCubit(LoyaltyService())),
           BlocProvider(create: (_) => UnreadGiftsCubit(LoyaltyService())..refresh()),
+          BlocProvider(create: (_) => NotificationsCubit()..start()),
 
         ],
         child: BlocListener<AuthCubit, custom_auth.AppAuthState>(

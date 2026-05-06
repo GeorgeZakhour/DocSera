@@ -63,7 +63,7 @@ import 'app_localizations_en.dart';
 /// property.
 abstract class AppLocalizations {
   AppLocalizations(String locale)
-    : localeName = intl.Intl.canonicalizedLocale(locale.toString());
+      : localeName = intl.Intl.canonicalizedLocale(locale.toString());
 
   final String localeName;
 
@@ -86,16 +86,16 @@ abstract class AppLocalizations {
   /// of delegates is preferred or required.
   static const List<LocalizationsDelegate<dynamic>> localizationsDelegates =
       <LocalizationsDelegate<dynamic>>[
-        delegate,
-        GlobalMaterialLocalizations.delegate,
-        GlobalCupertinoLocalizations.delegate,
-        GlobalWidgetsLocalizations.delegate,
-      ];
+    delegate,
+    GlobalMaterialLocalizations.delegate,
+    GlobalCupertinoLocalizations.delegate,
+    GlobalWidgetsLocalizations.delegate,
+  ];
 
   /// A list of this localizations delegate's supported locales.
   static const List<Locale> supportedLocales = <Locale>[
     Locale('ar'),
-    Locale('en'),
+    Locale('en')
   ];
 
   /// No description provided for @chooseLanguage.
@@ -8863,6 +8863,240 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Share'**
   String get shareTooltip;
+
+  /// No description provided for @notificationsMarkAllRead.
+  ///
+  /// In en, this message translates to:
+  /// **'Mark all read'**
+  String get notificationsMarkAllRead;
+
+  /// No description provided for @notificationsTodaySection.
+  ///
+  /// In en, this message translates to:
+  /// **'Today'**
+  String get notificationsTodaySection;
+
+  /// No description provided for @notificationsEarlierSection.
+  ///
+  /// In en, this message translates to:
+  /// **'Earlier'**
+  String get notificationsEarlierSection;
+
+  /// No description provided for @notificationsJustNow.
+  ///
+  /// In en, this message translates to:
+  /// **'just now'**
+  String get notificationsJustNow;
+
+  /// No description provided for @notificationsMinutesAgo.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{1 minute ago} other{{count} minutes ago}}'**
+  String notificationsMinutesAgo(int count);
+
+  /// No description provided for @notificationsHoursAgo.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{1 hour ago} other{{count} hours ago}}'**
+  String notificationsHoursAgo(int count);
+
+  /// No description provided for @notificationsDaysAgo.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{yesterday} other{{count} days ago}}'**
+  String notificationsDaysAgo(int count);
+
+  /// No description provided for @notificationsEmptyTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'You\'re all caught up'**
+  String get notificationsEmptyTitle;
+
+  /// No description provided for @notificationsEmptyBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Notifications about your appointments, messages, reports and gifts will appear here.'**
+  String get notificationsEmptyBody;
+
+  /// No description provided for @notificationPrefsTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Notification preferences'**
+  String get notificationPrefsTitle;
+
+  /// No description provided for @notificationPrefsCategoryAppointments.
+  ///
+  /// In en, this message translates to:
+  /// **'Appointments'**
+  String get notificationPrefsCategoryAppointments;
+
+  /// No description provided for @notificationPrefsCategoryMessages.
+  ///
+  /// In en, this message translates to:
+  /// **'Messages'**
+  String get notificationPrefsCategoryMessages;
+
+  /// No description provided for @notificationPrefsCategoryDocuments.
+  ///
+  /// In en, this message translates to:
+  /// **'Documents'**
+  String get notificationPrefsCategoryDocuments;
+
+  /// No description provided for @notificationPrefsCategoryReports.
+  ///
+  /// In en, this message translates to:
+  /// **'Medical reports'**
+  String get notificationPrefsCategoryReports;
+
+  /// No description provided for @notificationPrefsCategoryLoyalty.
+  ///
+  /// In en, this message translates to:
+  /// **'Gifts & rewards'**
+  String get notificationPrefsCategoryLoyalty;
+
+  /// No description provided for @notificationPrefsCategorySecurity.
+  ///
+  /// In en, this message translates to:
+  /// **'Security'**
+  String get notificationPrefsCategorySecurity;
+
+  /// No description provided for @notificationPrefsCategoryMarketing.
+  ///
+  /// In en, this message translates to:
+  /// **'News & announcements'**
+  String get notificationPrefsCategoryMarketing;
+
+  /// No description provided for @notificationPrefsPushChannel.
+  ///
+  /// In en, this message translates to:
+  /// **'Push'**
+  String get notificationPrefsPushChannel;
+
+  /// No description provided for @notificationPrefsInAppChannel.
+  ///
+  /// In en, this message translates to:
+  /// **'In-app'**
+  String get notificationPrefsInAppChannel;
+
+  /// No description provided for @notificationPrefsEmailChannel.
+  ///
+  /// In en, this message translates to:
+  /// **'Email'**
+  String get notificationPrefsEmailChannel;
+
+  /// No description provided for @notificationPrefsEmailComingSoon.
+  ///
+  /// In en, this message translates to:
+  /// **'coming soon'**
+  String get notificationPrefsEmailComingSoon;
+
+  /// No description provided for @notificationPrefsAlwaysOn.
+  ///
+  /// In en, this message translates to:
+  /// **'Always on'**
+  String get notificationPrefsAlwaysOn;
+
+  /// No description provided for @notificationPrefsAlwaysOnExplanation.
+  ///
+  /// In en, this message translates to:
+  /// **'Time-sensitive medical and security alerts stay on by default. You can mute them, but you\'ll be asked to confirm.'**
+  String get notificationPrefsAlwaysOnExplanation;
+
+  /// No description provided for @notificationPrefsConfirmMute.
+  ///
+  /// In en, this message translates to:
+  /// **'Mute these alerts?'**
+  String get notificationPrefsConfirmMute;
+
+  /// No description provided for @notificationPrefsConfirmMuteBody.
+  ///
+  /// In en, this message translates to:
+  /// **'If you mute this category you may miss appointment reminders or important account alerts. Are you sure?'**
+  String get notificationPrefsConfirmMuteBody;
+
+  /// No description provided for @notificationPrefsQuietHoursTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Quiet hours'**
+  String get notificationPrefsQuietHoursTitle;
+
+  /// No description provided for @notificationPrefsQuietHoursDescription.
+  ///
+  /// In en, this message translates to:
+  /// **'Pause non-urgent notifications during a daily window.'**
+  String get notificationPrefsQuietHoursDescription;
+
+  /// No description provided for @notificationPrefsQuietHoursStart.
+  ///
+  /// In en, this message translates to:
+  /// **'From'**
+  String get notificationPrefsQuietHoursStart;
+
+  /// No description provided for @notificationPrefsQuietHoursEnd.
+  ///
+  /// In en, this message translates to:
+  /// **'Until'**
+  String get notificationPrefsQuietHoursEnd;
+
+  /// No description provided for @notificationPrefsQuietHoursOverride.
+  ///
+  /// In en, this message translates to:
+  /// **'Time-sensitive medical alerts always come through.'**
+  String get notificationPrefsQuietHoursOverride;
+
+  /// No description provided for @notificationPrefsDndTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Do not disturb'**
+  String get notificationPrefsDndTitle;
+
+  /// No description provided for @notificationPrefsDndUntil.
+  ///
+  /// In en, this message translates to:
+  /// **'Mute everything until…'**
+  String get notificationPrefsDndUntil;
+
+  /// No description provided for @notificationPrefsSavedToast.
+  ///
+  /// In en, this message translates to:
+  /// **'Saved'**
+  String get notificationPrefsSavedToast;
+
+  /// No description provided for @reminder24hTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Tomorrow\'s appointment'**
+  String get reminder24hTitle;
+
+  /// No description provided for @reminder24hBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Your appointment with Dr. {doctor} is tomorrow at {time}.'**
+  String reminder24hBody(String doctor, String time);
+
+  /// No description provided for @reminder30mTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Appointment in 30 minutes'**
+  String get reminder30mTitle;
+
+  /// No description provided for @reminder30mBody.
+  ///
+  /// In en, this message translates to:
+  /// **'You\'ll be seeing Dr. {doctor} soon — are you on your way?'**
+  String reminder30mBody(String doctor);
+
+  /// No description provided for @reminderActionCallClinic.
+  ///
+  /// In en, this message translates to:
+  /// **'Call clinic'**
+  String get reminderActionCallClinic;
+
+  /// No description provided for @reminderActionDirections.
+  ///
+  /// In en, this message translates to:
+  /// **'Directions'**
+  String get reminderActionDirections;
 }
 
 class _AppLocalizationsDelegate
@@ -8892,9 +9126,8 @@ AppLocalizations lookupAppLocalizations(Locale locale) {
   }
 
   throw FlutterError(
-    'AppLocalizations.delegate failed to load unsupported locale "$locale". This is likely '
-    'an issue with the localizations generation tool. Please file an issue '
-    'on GitHub with a reproducible sample app and the gen-l10n configuration '
-    'that was used.',
-  );
+      'AppLocalizations.delegate failed to load unsupported locale "$locale". This is likely '
+      'an issue with the localizations generation tool. Please file an issue '
+      'on GitHub with a reproducible sample app and the gen-l10n configuration '
+      'that was used.');
 }

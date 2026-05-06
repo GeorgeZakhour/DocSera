@@ -5,7 +5,6 @@
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
-import 'package:docsera/models/app_notification.dart';
 import 'package:docsera/services/notifications/notifications_service.dart';
 import 'notifications_state.dart';
 
