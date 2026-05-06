@@ -120,6 +120,10 @@ class _BannerWidgetState extends State<_BannerWidget>
     super.dispose();
   }
 
+  static String _nowLabel(BuildContext context, bool isRtl) {
+    return isRtl ? 'الآن' : 'now';
+  }
+
   @override
   Widget build(BuildContext context) {
     final isRtl = Directionality.of(context) == TextDirection.rtl;
@@ -172,13 +176,15 @@ class _BannerWidgetState extends State<_BannerWidget>
                         crossAxisAlignment: CrossAxisAlignment.center,
                         children: [
                           Container(
-                            width: 36.w,
-                            height: 36.w,
+                            width: 32.w,
+                            height: 32.w,
                             decoration: BoxDecoration(
                               gradient: LinearGradient(
+                                begin: Alignment.topLeft,
+                                end: Alignment.bottomRight,
                                 colors: [
                                   AppColors.main.withValues(alpha: 0.95),
-                                  AppColors.main.withValues(alpha: 0.75),
+                                  AppColors.main.withValues(alpha: 0.72),
                                 ],
                               ),
                               shape: BoxShape.circle,
@@ -192,24 +198,47 @@ class _BannerWidgetState extends State<_BannerWidget>
                             child: Icon(
                               Icons.notifications_active_rounded,
                               color: Colors.white,
-                              size: 18.sp,
+                              size: 16.sp,
                             ),
                           ),
-                          SizedBox(width: 12.w),
+                          SizedBox(width: 10.w),
                           Expanded(
                             child: Column(
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
-                                Text(
-                                  widget.title,
-                                  style: TextStyle(
-                                    color: AppColors.mainDark,
-                                    fontSize: 12.sp,
-                                    fontWeight: FontWeight.w700,
-                                    height: 1.2,
-                                  ),
-                                  maxLines: 1,
-                                  overflow: TextOverflow.ellipsis,
+                                Row(
+                                  children: [
+                                    Expanded(
+                                      child: Text(
+                                        widget.title,
+                                        style: TextStyle(
+                                          color: AppColors.mainDark,
+                                          fontSize: 12.sp,
+                                          fontWeight: FontWeight.w700,
+                                          height: 1.2,
+                                        ),
+                                        maxLines: 1,
+                                        overflow: TextOverflow.ellipsis,
+                                      ),
+                                    ),
+                                    SizedBox(width: 6.w),
+                                    Text(
+                                      _nowLabel(context, isRtl),
+                                      style: TextStyle(
+                                        color: Colors.grey.shade500,
+                                        fontSize: 9.5.sp,
+                                        fontWeight: FontWeight.w500,
+                                      ),
+                                    ),
+                                    SizedBox(width: 4.w),
+                                    Icon(
+                                      isRtl
+                                          ? Icons.chevron_right_rounded
+                                          : Icons.chevron_left_rounded,
+                                      color: Colors.grey.shade400,
+                                      size: 14.sp,
+                                    ),
+                                  ],
                                 ),
                                 SizedBox(height: 2.h),
                                 Text(
@@ -224,14 +253,6 @@ class _BannerWidgetState extends State<_BannerWidget>
                                 ),
                               ],
                             ),
-                          ),
-                          SizedBox(width: 6.w),
-                          Icon(
-                            isRtl
-                                ? Icons.chevron_left_rounded
-                                : Icons.chevron_right_rounded,
-                            color: Colors.grey.shade400,
-                            size: 18.sp,
                           ),
                         ],
                       ),
