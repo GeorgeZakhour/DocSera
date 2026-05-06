@@ -31,8 +31,18 @@ class InAppNotificationBanner {
     String? payload,
     Duration duration = const Duration(seconds: 5),
   }) {
-    final overlay = Overlay.maybeOf(context, rootOverlay: true);
-    if (overlay == null) return;
+    // Resolve the overlay. Overlay.maybeOf(context) looks UP the widget
+    // tree, so when called with the navigatorKey.currentContext (which
+    // IS the Navigator's own BuildContext) the search misses — the
+    // Navigator's Overlay is a descendant, not an ancestor. We try the
+    // ancestor lookup first, then fall back to the rootNavigator's own
+    // overlay state, which is what we actually want.
+    OverlayState? overlay = Overlay.maybeOf(context, rootOverlay: true);
+    overlay ??= Navigator.maybeOf(context, rootNavigator: true)?.overlay;
+    if (overlay == null) {
+      debugPrint('InAppNotificationBanner: no overlay available — banner not shown');
+      return;
+    }
 
     _entry?.remove();
     _entry = null;
