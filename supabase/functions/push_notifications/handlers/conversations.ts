@@ -30,6 +30,15 @@ export function handleConversations(
   const doctorNameEn = enRaw.length > 0 ? `Dr. ${enRaw}` : "your doctor";
   const conversationId = r.id as string;
 
+  // Each toggle (close or reopen) is its own event. Earlier we pinned
+  // dedup_key to just the conversation id, which silently dropped every
+  // notification after the first one — the doctor closing/reopening
+  // multiple times within a session looked broken. Using the current
+  // ISO timestamp in the dedup key gives each fire a unique key while
+  // still dedupping a single webhook's accidental retries (which would
+  // arrive within the same millisecond bucket).
+  const fireKey = new Date().toISOString();
+
   if (r.is_closed === true && o.is_closed === false) {
     // Closed
     const titleAr = "تم إغلاق المحادثة";
@@ -50,7 +59,7 @@ export function handleConversations(
       deep_link: `conversation:${conversationId}`,
       data: { conversation_id: conversationId },
       importance: "default",
-      dedup_key: `conv-closed:${conversationId}`,
+      dedup_key: `conv-closed:${conversationId}:${fireKey}`,
       locale: "ar",
     };
   }
@@ -75,7 +84,7 @@ export function handleConversations(
       deep_link: `conversation:${conversationId}`,
       data: { conversation_id: conversationId },
       importance: "high",
-      dedup_key: `conv-reopened:${conversationId}:${r.updated_at ?? Date.now()}`,
+      dedup_key: `conv-reopened:${conversationId}:${fireKey}`,
       locale: "ar",
     };
   }
