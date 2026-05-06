@@ -1,1 +1,8 @@
-{}
+{
+  "ar": [
+    "reminder2hTitle",
+    "reminder2hBody",
+    "reminder0Title",
+    "reminder0Body"
+  ]
+}

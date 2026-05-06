@@ -75,6 +75,13 @@ class _DoctorProfilePageState extends State<DoctorProfilePage> {
   // floating button updates on scroll without rebuilding the entire
   // 5000+-line page tree (which used to happen via setState in _onScroll).
   final ValueNotifier<double> _buttonTopOffset = ValueNotifier<double>(0.0);
+  // Scroll offset notifier driving the cross-fade between the top floating
+  // CTA and the bottom pinned CTA. Must be a notifier (not a build-time
+  // local) for the same reason as _buttonTopOffset: setState only fires on
+  // the _showAppBar threshold cross, so any scroll-derived value computed
+  // inside build() goes stale between thresholds. Holds raw scroll offset
+  // and the builders derive opacity from it.
+  final ValueNotifier<double> _scrollOffset = ValueNotifier<double>(0.0);
   bool _isOpeningImageOverlay = false;
   List<Map<String, dynamic>> _promotions = [];
   // promotion_id -> { has_active_voucher, used_count, is_eligible }
@@ -162,6 +169,7 @@ class _DoctorProfilePageState extends State<DoctorProfilePage> {
   void dispose() {
     _scrollController.dispose();
     _buttonTopOffset.dispose();
+    _scrollOffset.dispose();
     super.dispose();
   }
 
@@ -301,6 +309,11 @@ class _DoctorProfilePageState extends State<DoctorProfilePage> {
     // ValueListenableBuilder around the Positioned button rebuilds only that
     // small subtree.
     _buttonTopOffset.value = _calculateButtonOffset();
+    // Drive the top/bottom CTA cross-fade off the same scroll signal. Without
+    // this, opacity is frozen between _showAppBar threshold crossings —
+    // scroll back up and the top button stays invisible while the bottom one
+    // stays visible.
+    _scrollOffset.value = offset;
   }
 
   double _calculateButtonOffset() {
@@ -899,10 +912,113 @@ class _DoctorProfilePageState extends State<DoctorProfilePage> {
               ],
             ),
             SizedBox(height: 14.h),
-            ...gifts.map((g) => Padding(
+            // Gift items — show max 2, with "show all" if more
+            ...gifts.take(2).map((g) => Padding(
                   padding: EdgeInsets.only(bottom: 8.h),
                   child: _buildPersonalGiftItem(g, l, isAr),
                 )),
+            // "Show all" button when more than 2
+            if (gifts.length > 2)
+              Padding(
+                padding: EdgeInsets.only(top: 4.h),
+                child: Center(
+                  child: TextButton.icon(
+                    onPressed: () => _showAllGiftsSheet(gifts, l, isAr),
+                    icon: Icon(Icons.expand_more_rounded,
+                        size: 16.sp, color: AppColors.giftAccent),
+                    label: Text(
+                      '${l.showAll} (${gifts.length})',
+                      style: AppTextStyles.getText3(context).copyWith(
+                        color: AppColors.giftAccent,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                    style: TextButton.styleFrom(
+                      padding:
+                          EdgeInsets.symmetric(horizontal: 12.w, vertical: 4.h),
+                    ),
+                  ),
+                ),
+              ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  /// Bottom sheet listing every personal gift this doctor has sent to the
+  /// logged-in patient. Mirrors [_showAllPromotionsSheet] in shape but uses
+  /// the gift accent (pink) for the header chip so the two channels stay
+  /// visually distinct.
+  void _showAllGiftsSheet(
+    List<Gift> gifts,
+    AppLocalizations l,
+    bool isAr,
+  ) {
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (ctx) => Container(
+        constraints:
+            BoxConstraints(maxHeight: MediaQuery.of(context).size.height * 0.7),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.vertical(top: Radius.circular(24.r)),
+        ),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Container(
+              width: 36.w,
+              height: 4.h,
+              margin: EdgeInsets.only(top: 12.h, bottom: 16.h),
+              decoration: BoxDecoration(
+                color: Colors.grey.shade300,
+                borderRadius: BorderRadius.circular(2.r),
+              ),
+            ),
+            Padding(
+              padding: EdgeInsets.symmetric(horizontal: 20.w),
+              child: Row(
+                children: [
+                  Container(
+                    padding: EdgeInsets.all(6.r),
+                    decoration: BoxDecoration(
+                      gradient: const LinearGradient(
+                        colors: [
+                          AppColors.giftAccentLight,
+                          AppColors.giftAccent,
+                        ],
+                        begin: Alignment.topLeft,
+                        end: Alignment.bottomRight,
+                      ),
+                      borderRadius: BorderRadius.circular(8.r),
+                    ),
+                    child: Icon(Icons.card_giftcard_rounded,
+                        color: Colors.white, size: 14.sp),
+                  ),
+                  SizedBox(width: 8.w),
+                  Text(
+                    '${l.personalGiftsSectionTitle} (${gifts.length})',
+                    style: AppTextStyles.getTitle1(context)
+                        .copyWith(fontSize: 13.sp),
+                  ),
+                ],
+              ),
+            ),
+            SizedBox(height: 12.h),
+            Flexible(
+              child: ListView.separated(
+                padding: EdgeInsets.fromLTRB(20.w, 0, 20.w, 20.h),
+                shrinkWrap: true,
+                itemCount: gifts.length,
+                separatorBuilder: (_, __) => SizedBox(height: 8.h),
+                itemBuilder: (context, index) {
+                  return _buildPersonalGiftItem(gifts[index], l, isAr);
+                },
+              ),
+            ),
           ],
         ),
       ),
@@ -3549,10 +3665,12 @@ $deepLink
 
 
 
-    double offset = _scrollController.hasClients ? _scrollController.offset : 0;
-    double fadeStart = 100;
-    double fadeEnd = MediaQuery.of(context).size.height * 0.15;
-    double opacity = 1.0;
+    // Fade thresholds for the top/bottom CTA cross-fade. The actual opacity
+    // values are derived from `_scrollOffset` inside ValueListenableBuilders
+    // below — computing them here once at build time would freeze them
+    // between scroll-driven rebuilds.
+    const double fadeStart = 100;
+    final double fadeEnd = MediaQuery.of(context).size.height * 0.15;
     int visibleSections = 0;
 
     if (_doctorData?['gallery'] != null && (_doctorData!['gallery'] as List).isNotEmpty) {
@@ -3576,15 +3694,11 @@ $deepLink
     }
 
 
-    if (offset <= fadeStart) {
-      opacity = 1.0;
-    } else if (offset >= fadeEnd) {
-      opacity = 0.0;
-    } else {
-      opacity = 1.0 - ((offset - fadeStart) / (fadeEnd - fadeStart));
+    double topOpacityFor(double offset) {
+      if (offset <= fadeStart) return 1.0;
+      if (offset >= fadeEnd) return 0.0;
+      return 1.0 - ((offset - fadeStart) / (fadeEnd - fadeStart));
     }
-
-    double bottomButtonOpacity = (1.0 - opacity).clamp(0.0, 1.0);
 
     return Scaffold(
       extendBody: true,
@@ -3797,8 +3911,18 @@ $deepLink
               right: 32.w,
               child: child!,
             ),
-            child: Opacity(
-              opacity: opacity.clamp(0.0, 1.0),
+            child: ValueListenableBuilder<double>(
+              valueListenable: _scrollOffset,
+              builder: (context, scroll, child) {
+                final op = topOpacityFor(scroll).clamp(0.0, 1.0);
+                // Below ~5% the button is effectively invisible — also block
+                // taps so the user can't hit the bottom button's twin while
+                // it's faded out.
+                return IgnorePointer(
+                  ignoring: op < 0.05,
+                  child: Opacity(opacity: op, child: child),
+                );
+              },
               child: Container(
                 decoration: BoxDecoration(
                   borderRadius: BorderRadius.circular(30.r),
@@ -3871,8 +3995,16 @@ $deepLink
             bottom: 16.h,
             left: 32.w,
             right: 32.w,
-            child: Opacity(
-              opacity: bottomButtonOpacity.clamp(0.0, 1.0),
+            child: ValueListenableBuilder<double>(
+              valueListenable: _scrollOffset,
+              builder: (context, scroll, child) {
+                final op =
+                    (1.0 - topOpacityFor(scroll)).clamp(0.0, 1.0);
+                return IgnorePointer(
+                  ignoring: op < 0.05,
+                  child: Opacity(opacity: op, child: child),
+                );
+              },
               child: _userId == doctorId ? _buildOwnAccountBanner() : ElevatedButton.icon(
                 onPressed: () async {
                   final user = Supabase.instance.client.auth.currentUser;

@@ -6,7 +6,7 @@ plugins {
 }
 
 android {
-    namespace "com.techspearz.docsera"
+    namespace "com.docsera.app"
     // Override Flutter 3.32.7's default of 35 — `androidx.core:core-ktx:1.18.0`
     // (pulled in transitively) requires compileSdk 36+.
     compileSdk = 36
