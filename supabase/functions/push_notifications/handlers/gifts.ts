@@ -30,7 +30,7 @@ export async function handleGifts(
     event_code: "gift.received",
     category: "loyalty",
     title: `🎁 هدية من ${namePart}`,
-    body: "هدية شخصية بانتظارك في محفظتك — اضغط للعرض.",
+    body: "أُضيفت قسيمة جديدة إلى محفظتك. اضغط لعرض التفاصيل.",
     deep_link: `voucher:${record.claim_id}`,
     data: { gift_send_id: record.id, claim_id: record.claim_id },
     importance: "high",

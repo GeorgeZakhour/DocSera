@@ -15,6 +15,7 @@ import 'package:docsera/services/navigation/app_lifecycle.dart';
 import 'package:docsera/widgets/custom_bottom_navigation_bar.dart';
 import 'package:docsera/Business_Logic/Health_page/patient_switcher_cubit.dart';
 import 'package:docsera/screens/home/health/pages/visit_reports/visit_reports_page.dart';
+import 'package:docsera/screens/home/loyalty/vouchers_page.dart';
 
 class NotificationService {
   NotificationService._();
@@ -475,6 +476,18 @@ class NotificationService {
             ),
           );
         }
+    } else if (payload.startsWith('voucher:')) {
+        debugPrint("🎁 Navigating to Vouchers / Wallet");
+        // The claim_id after the prefix is preserved in the payload but
+        // the deep-link target is the vouchers list — same pattern as
+        // gift_announcement_dialog.dart. The claim row is auto-claimed
+        // server-side when the patient opens the wallet.
+        nav.popUntil((route) => route.isFirst);
+        nav.push(
+          MaterialPageRoute(
+            builder: (_) => const VouchersPage(),
+          ),
+        );
     }
   }
 
