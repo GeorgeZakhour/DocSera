@@ -1,10 +1,11 @@
-// Bell icon with unread badge for the home screen TopSection.
-// Subscribes to NotificationsCubit so the badge updates live without
-// the home tab needing to re-render.
+// Bell icon with unread badge. Sits in the home tab's top bar (right
+// side, mirroring the language button on the left). Sized to match the
+// surrounding top-bar icon dimensions — keep these magic numbers in sync
+// with custom_bottom_navigation_bar.dart's language button if styling
+// there changes.
 
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:flutter_screenutil/flutter_screenutil.dart';
 
 import 'package:docsera/Business_Logic/Notifications_page/notifications_cubit.dart';
 import 'package:docsera/Business_Logic/Notifications_page/notifications_state.dart';
@@ -24,57 +25,68 @@ class NotificationBellButton extends StatelessWidget {
       builder: (context, state) {
         final int unread =
             state is NotificationsLoaded ? state.unreadCount : 0;
-        return Stack(
-          clipBehavior: Clip.none,
-          children: [
-            IconButton(
-              tooltip: loc.notifications,
-              icon: Icon(
-                Icons.notifications_outlined,
-                color: Colors.white,
-                size: 24.sp,
-              ),
-              onPressed: () {
-                Navigator.of(context).push(
-                  fadePageRoute(const NotificationsInboxPage()),
-                );
-              },
-            ),
-            if (unread > 0)
-              Positioned(
-                top: 6.h,
-                right: 6.w,
-                child: IgnorePointer(
-                  child: Container(
-                    padding: EdgeInsets.symmetric(
-                      horizontal: unread > 9 ? 5.w : 0,
-                      vertical: 1.h,
-                    ),
-                    constraints: BoxConstraints(
-                      minWidth: 16.w,
-                      minHeight: 16.h,
-                    ),
-                    decoration: BoxDecoration(
-                      color: AppColors.giftAccent,
-                      borderRadius: BorderRadius.circular(8.r),
-                      border: Border.all(color: AppColors.main, width: 1.5),
-                    ),
-                    child: Center(
-                      child: Text(
-                        unread > 99 ? '99+' : '$unread',
-                        textAlign: TextAlign.center,
-                        style: TextStyle(
-                          color: Colors.white,
-                          fontSize: 9.sp,
-                          fontWeight: FontWeight.w700,
-                          height: 1.0,
+        return Tooltip(
+          message: loc.notifications,
+          child: InkResponse(
+            onTap: () {
+              Navigator.of(context).push(
+                fadePageRoute(const NotificationsInboxPage()),
+              );
+            },
+            radius: 22,
+            child: SizedBox(
+              width: 50,
+              height: 50,
+              child: Stack(
+                clipBehavior: Clip.none,
+                alignment: Alignment.center,
+                children: [
+                  const Icon(
+                    Icons.notifications_outlined,
+                    color: AppColors.whiteText,
+                    size: 22,
+                  ),
+                  if (unread > 0)
+                    Positioned(
+                      top: 11,
+                      right: 11,
+                      child: IgnorePointer(
+                        child: Container(
+                          padding: EdgeInsets.symmetric(
+                            horizontal: unread > 9 ? 4 : 0,
+                            vertical: 0,
+                          ),
+                          constraints: const BoxConstraints(
+                            minWidth: 14,
+                            minHeight: 14,
+                          ),
+                          decoration: BoxDecoration(
+                            color: AppColors.giftAccent,
+                            borderRadius: BorderRadius.circular(7),
+                            border: Border.all(
+                              color: AppColors.main,
+                              width: 1.2,
+                            ),
+                          ),
+                          child: Center(
+                            child: Text(
+                              unread > 99 ? '99+' : '$unread',
+                              textAlign: TextAlign.center,
+                              style: const TextStyle(
+                                color: Colors.white,
+                                fontSize: 8.5,
+                                fontWeight: FontWeight.w700,
+                                height: 1.0,
+                              ),
+                            ),
+                          ),
                         ),
                       ),
                     ),
-                  ),
-                ),
+                ],
               ),
-          ],
+            ),
+          ),
         );
       },
     );

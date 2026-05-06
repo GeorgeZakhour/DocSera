@@ -15,6 +15,7 @@ import 'package:docsera/screens/home/messages_page.dart';
 import 'package:docsera/screens/auth/identification_page.dart';
 import 'package:docsera/screens/home/account_page.dart';
 import 'package:docsera/screens/home/main_screen.dart';
+import 'package:docsera/screens/home/notifications/widgets/notification_bell_button.dart';
 import 'package:docsera/utils/page_transitions.dart';
 import 'package:flutter/material.dart';
 import 'package:docsera/app/const.dart';
@@ -444,6 +445,8 @@ class _CustomBottomNavigationBarState extends State<CustomBottomNavigationBar>
                       ),
                     ),
                   )
+                else if (_currentIndex == 0 && isLoggedIn)
+                  const NotificationBellButton()
                 else
                   const SizedBox(width: 50),
               ],
