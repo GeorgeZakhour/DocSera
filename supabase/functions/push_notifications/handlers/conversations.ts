@@ -21,15 +21,20 @@ export function handleConversations(
   if (r.relative_id) user_ids.push(r.relative_id);
   if (user_ids.length === 0) return null;
 
-  const doctorName = (r.doctor_name as string | null) ?? "الطبيب";
-  const doctorNameEn = (r.doctor_name as string | null) ?? "your doctor";
+  // doctor_name on conversations already carries the "د." prefix.
+  // Don't double it. Fall back to "الطبيب" / "your doctor" only if missing.
+  const rawName = (r.doctor_name as string | null)?.trim() ?? "";
+  const doctorName = rawName.length > 0 ? rawName : "الطبيب";
+  // For EN, strip the Arabic "د. " title and use "Dr." prefix for English copy.
+  const enRaw = rawName.replace(/^د\.\s*/, "").trim();
+  const doctorNameEn = enRaw.length > 0 ? `Dr. ${enRaw}` : "your doctor";
   const conversationId = r.id as string;
 
   if (r.is_closed === true && o.is_closed === false) {
     // Closed
     const titleAr = "تم إغلاق المحادثة";
     const titleEn = "Conversation closed";
-    const bodyAr = `أغلق د. ${doctorName} هذه المحادثة. يمكنك بدء محادثة جديدة عند الحاجة.`;
+    const bodyAr = `أغلق ${doctorName} هذه المحادثة. يمكنك بدء محادثة جديدة عند الحاجة.`;
     const bodyEn = `${doctorNameEn} closed this conversation. You can start a new one when needed.`;
     return {
       user_ids,
@@ -54,7 +59,7 @@ export function handleConversations(
     // Reopened
     const titleAr = "تم إعادة فتح المحادثة";
     const titleEn = "Conversation reopened";
-    const bodyAr = `أعاد د. ${doctorName} فتح المحادثة. يمكنك إكمال الحديث الآن.`;
+    const bodyAr = `أعاد ${doctorName} فتح المحادثة. يمكنك إكمال الحديث الآن.`;
     const bodyEn = `${doctorNameEn} reopened the conversation. You can continue chatting now.`;
     return {
       user_ids,

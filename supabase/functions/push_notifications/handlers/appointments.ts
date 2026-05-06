@@ -34,6 +34,12 @@ function handleInsert(
   // Manual patients (no DocSera account) skipped.
   if (!record.user_id) return null;
 
+  // The patient initiated the booking themselves — they just tapped
+  // "Book", they don't need a system notification telling them an
+  // action they just performed happened. The doctor's confirmation
+  // will fire its own notification when it lands.
+  if (record.booked_by === "patient") return null;
+
   const appointmentDate = record.appointment_date || "";
   const rawTime = record.appointment_time || "";
 
@@ -53,17 +59,40 @@ function handleInsert(
   const displayTimeAr = h12 ? `${h12}:${mm} ${isPm ? "م" : "ص"}` : "";
   const displayTimeEn = h12 ? `${h12}:${mm} ${isPm ? "PM" : "AM"}` : "";
 
-  const titleAr = `${LTR}📅 موعد جديد`;
-  const titleEn = `${LTR}📅 New appointment`;
-  const bodyAr =
-    `${LTR}تم حجز موعد لك مع ${doctorName} بتاريخ ${appointmentDate} الساعة ${displayTimeAr}.`;
-  const bodyEn =
-    `${LTR}Your appointment with ${doctorName} is booked for ${appointmentDate} at ${displayTimeEn}.`;
+  // Differentiate by is_confirmed at creation time. Auto-confirmed
+  // bookings (e.g. clinic staff books on patient's behalf and confirms
+  // in the same flow) get the "appointment confirmed" copy. Pending
+  // bookings get the "request received, awaiting confirmation" copy.
+  const isConfirmed = record.is_confirmed === true;
+  const eventCode = isConfirmed
+    ? "appointment.confirmed"
+    : "appointment.pending_received";
+
+  let titleAr: string;
+  let titleEn: string;
+  let bodyAr: string;
+  let bodyEn: string;
+
+  if (isConfirmed) {
+    titleAr = `${LTR}✅ موعد جديد مؤكد`;
+    titleEn = `${LTR}✅ New confirmed appointment`;
+    bodyAr =
+      `${LTR}تم تأكيد موعدك مع ${doctorName} بتاريخ ${appointmentDate} الساعة ${displayTimeAr}.`;
+    bodyEn =
+      `${LTR}Your appointment with ${doctorName} on ${appointmentDate} at ${displayTimeEn} is confirmed.`;
+  } else {
+    titleAr = `${LTR}📨 تم استلام طلب الحجز`;
+    titleEn = `${LTR}📨 Booking request received`;
+    bodyAr =
+      `${LTR}طلب موعد مع ${doctorName} بتاريخ ${appointmentDate} الساعة ${displayTimeAr} — بانتظار تأكيد الطبيب.`;
+    bodyEn =
+      `${LTR}A booking request was sent to ${doctorName} for ${appointmentDate} at ${displayTimeEn} — awaiting doctor confirmation.`;
+  }
 
   return {
     user_ids: [record.user_id],
     recipient_app: "docsera",
-    event_code: "appointment.booked",
+    event_code: eventCode,
     category: "appointments",
     title: titleAr,
     body: bodyAr,
@@ -74,7 +103,7 @@ function handleInsert(
     deep_link: `appointment:${record.id}`,
     data: { appointment_id: record.id },
     importance: "high",
-    dedup_key: `apt-booked:${record.id}`,
+    dedup_key: `apt-${eventCode}:${record.id}`,
     locale: "ar",
   };
 }
