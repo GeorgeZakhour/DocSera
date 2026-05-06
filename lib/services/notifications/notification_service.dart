@@ -184,7 +184,68 @@ class NotificationService {
   // fires on the lock screen.
 
   final Map<String, Timer> _foregroundTimers = {};
+  // Per-key memory of the fire-time we last delivered a banner for.
+  // Reconcile re-runs on app resume (and on cubit refresh) — without this
+  // we'd re-deliver the same banner every time. Resetting on cancel /
+  // when the fireTime changes (reschedule) lets us re-fire for genuinely
+  // new schedules.
+  final Map<String, DateTime> _firedFireTimes = {};
 
+  /// Idempotent scheduling helper that:
+  ///   - cancels any existing timer for [key]
+  ///   - if [fireTime] is in the future: arms a Timer to fire the banner
+  ///   - if [fireTime] is in the past but within the last 60 seconds AND
+  ///     we haven't already fired for this exact moment: fires immediately
+  ///   - if [fireTime] is older than 60s in the past: skips silently
+  ///
+  /// The "fired this exact moment" memory uses the fireTime value, so a
+  /// reschedule that changes fireTime will re-fire as needed.
+  void scheduleOrFireForegroundBanner({
+    required String key,
+    required DateTime fireTime,
+    required String title,
+    required String body,
+    String? payload,
+  }) {
+    if (!Platform.isIOS) return;
+    _foregroundTimers.remove(key)?.cancel();
+    final now = DateTime.now();
+    final delta = fireTime.difference(now);
+
+    if (delta.isNegative) {
+      // Already passed. Within tolerance, fire now if we haven't already
+      // for this fireTime; otherwise drop.
+      if (delta.inSeconds.abs() > 60) {
+        if (kDebugMode) {
+          debugPrint('🔔 banner $key: too late ($delta), skipping');
+        }
+        return;
+      }
+      final lastFired = _firedFireTimes[key];
+      if (lastFired != null && lastFired.isAtSameMomentAs(fireTime)) {
+        if (kDebugMode) {
+          debugPrint('🔔 banner $key: already fired for $fireTime');
+        }
+        return;
+      }
+      _firedFireTimes[key] = fireTime;
+      if (kDebugMode) {
+        debugPrint('🔔 banner $key: firing now (was due $delta ago)');
+      }
+      showInAppBannerNow(title: title, body: body, payload: payload);
+      return;
+    }
+
+    // Future moment — arm a Timer.
+    _foregroundTimers[key] = Timer(delta, () {
+      _foregroundTimers.remove(key);
+      _firedFireTimes[key] = fireTime;
+      if (kDebugMode) debugPrint('🔔 banner $key: firing on schedule');
+      showInAppBannerNow(title: title, body: body, payload: payload);
+    });
+  }
+
+  /// Backwards-compatible delay-based wrapper. Used by sendTestReminder.
   void scheduleForegroundBanner({
     required String key,
     required Duration delay,
@@ -192,17 +253,15 @@ class NotificationService {
     required String body,
     String? payload,
   }) {
-    // iOS-only: on Android, the OS notification already shows as a
-    // heads-up while in foreground, so a parallel Dart banner would
-    // double-display. Background delivery is unaffected by this guard
-    // (the OS-scheduled notification fires regardless).
     if (!Platform.isIOS) return;
-    _foregroundTimers.remove(key)?.cancel();
-    if (delay.isNegative) return;
-    _foregroundTimers[key] = Timer(delay, () {
-      _foregroundTimers.remove(key);
-      showInAppBannerNow(title: title, body: body, payload: payload);
-    });
+    final fireTime = DateTime.now().add(delay);
+    scheduleOrFireForegroundBanner(
+      key: key,
+      fireTime: fireTime,
+      title: title,
+      body: body,
+      payload: payload,
+    );
   }
 
   /// Show the foreground in-app banner immediately. Used by the
@@ -589,6 +648,9 @@ class NotificationService {
           't30=$t30 (future=${t30.isAfter(now)})');
     }
 
+    // OS notification: only schedule if in the future (iOS won't accept
+    // past timestamps). The foreground banner separately handles the
+    // "moment just passed" case via scheduleOrFireForegroundBanner.
     if (t24.isAfter(now)) {
       await _scheduleWithId(
         id: _reminderId(appointmentId, 't24'),
@@ -598,14 +660,15 @@ class NotificationService {
         timeSensitive: false,
         payload: payload,
       );
-      scheduleForegroundBanner(
-        key: 'apt-$appointmentId-t24',
-        delay: t24.difference(now),
-        title: reminder24Title,
-        body: reminder24Body,
-        payload: payload,
-      );
     }
+    scheduleOrFireForegroundBanner(
+      key: 'apt-$appointmentId-t24',
+      fireTime: t24,
+      title: reminder24Title,
+      body: reminder24Body,
+      payload: payload,
+    );
+
     if (t30.isAfter(now)) {
       await _scheduleWithId(
         id: _reminderId(appointmentId, 't30'),
@@ -615,14 +678,14 @@ class NotificationService {
         timeSensitive: true,
         payload: payload,
       );
-      scheduleForegroundBanner(
-        key: 'apt-$appointmentId-t30',
-        delay: t30.difference(now),
-        title: reminder30Title,
-        body: reminder30Body,
-        payload: payload,
-      );
     }
+    scheduleOrFireForegroundBanner(
+      key: 'apt-$appointmentId-t30',
+      fireTime: t30,
+      title: reminder30Title,
+      body: reminder30Body,
+      payload: payload,
+    );
 
     if (kDebugMode) {
       final pending = await _fln.pendingNotificationRequests();
@@ -637,6 +700,8 @@ class NotificationService {
     await _fln.cancel(_reminderId(appointmentId, 't30'));
     cancelForegroundBanner('apt-$appointmentId-t24');
     cancelForegroundBanner('apt-$appointmentId-t30');
+    _firedFireTimes.remove('apt-$appointmentId-t24');
+    _firedFireTimes.remove('apt-$appointmentId-t30');
   }
 
   Future<void> _scheduleWithId({
