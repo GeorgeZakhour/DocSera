@@ -16,6 +16,7 @@ import 'package:docsera/widgets/custom_bottom_navigation_bar.dart';
 import 'package:docsera/Business_Logic/Health_page/patient_switcher_cubit.dart';
 import 'package:docsera/screens/home/health/pages/visit_reports/visit_reports_page.dart';
 import 'package:docsera/screens/home/loyalty/vouchers_page.dart';
+import 'package:docsera/services/notifications/in_app_notification_banner.dart';
 import 'package:url_launcher/url_launcher.dart' as launcher;
 
 class NotificationService {
@@ -822,10 +823,17 @@ Future<void> backgroundNotificationListener(Map<String, dynamic> data) async {
     _recentNotifications.removeWhere((_, time) => now - time > 10000);
 
 
-    // ✅ Main Isolate Check: If NotificationService is initialized, use it!
-    if (NotificationService.instance.navigatorKey != null) {
-      debugPrint("✅ Using NotificationService.instance (Foreground)");
-      await NotificationService.instance.showLocal(
+    // ✅ Main Isolate Check: If NotificationService is initialized, the
+    // app is in the foreground. Pushy installs itself as the iOS
+    // UNUserNotificationCenterDelegate and tells iOS not to present
+    // anything in foreground — it just forwards the data to us. Calling
+    // _fln.show here would loop back through the same delegate and get
+    // suppressed again. Instead, render an in-app banner overlay.
+    final ctx = NotificationService.instance.navigatorKey?.currentContext;
+    if (ctx != null && ctx.mounted) {
+      debugPrint("✅ Foreground notification → in-app banner");
+      InAppNotificationBanner.show(
+        ctx,
         title: title,
         body: body,
         payload: payload,
