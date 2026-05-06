@@ -41,9 +41,11 @@ export interface NotificationIntent {
   locale?: "ar" | "en";
 }
 
-// What the DB webhook delivers.
+// What the DB webhook delivers, plus a synthetic "EMIT" type from
+// fn_emit_notification (SQL-side helper) that signals "row already
+// persisted, just fanout".
 export interface WebhookPayload {
-  type: "INSERT" | "UPDATE" | "DELETE";
+  type: "INSERT" | "UPDATE" | "DELETE" | "EMIT";
   table: string;
   schema: string;
   record: Record<string, any> | null;

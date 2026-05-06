@@ -25,10 +25,13 @@
 import { serve } from "https://deno.land/std@0.177.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.7.1";
 
-import type { WebhookPayload } from "./types.ts";
+import type { NotificationIntent, WebhookPayload } from "./types.ts";
 import { handleMessages } from "./handlers/messages.ts";
 import { handleAppointments } from "./handlers/appointments.ts";
 import { handleDocuments } from "./handlers/documents.ts";
+import { handleDocumentsDeletion } from "./handlers/documents_deletion.ts";
+import { handleConversations } from "./handlers/conversations.ts";
+import { handleDoctorVacations } from "./handlers/doctor_vacations.ts";
 import { handleGifts } from "./handlers/gifts.ts";
 import { handleTodoTasks } from "./handlers/todo_tasks.ts";
 import { persistNotifications } from "./persist.ts";
@@ -53,8 +56,51 @@ serve(async (req) => {
       Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? "",
     );
 
-    // Route to per-table handler.
-    let intent = null;
+    // EMIT router: SQL-side fn_emit_notification already inserted the row
+    // and pinged us. We just need to fan out via Pushy. The record carries
+    // {id} only — we read the rest from the notifications table.
+    if (payload.type === "EMIT" || payload.table === "_emit") {
+      const id = payload.record?.id as string | undefined;
+      if (!id) {
+        return new Response("EMIT missing id", { status: 400 });
+      }
+      const { data: row, error } = await supabase
+        .from("notifications")
+        .select(
+          "id, user_id, recipient_app, event_code, category, title, body, deep_link, data, importance, dedup_key, locale",
+        )
+        .eq("id", id)
+        .maybeSingle();
+      if (error || !row) {
+        return new Response("EMIT row not found", { status: 200 });
+      }
+      const intent: NotificationIntent = {
+        user_ids: [row.user_id],
+        recipient_app: row.recipient_app,
+        event_code: row.event_code,
+        category: row.category,
+        title: row.title,
+        body: row.body,
+        deep_link: row.deep_link ?? "",
+        data: (row.data as Record<string, unknown>) ?? {},
+        importance: row.importance ?? "default",
+        dedup_key: row.dedup_key,
+        locale: (row.locale as "ar" | "en") ?? "ar",
+      };
+      await fanoutNotifications(supabase, intent, [
+        { id: row.id, user_id: row.user_id },
+      ]);
+      return new Response(
+        JSON.stringify({ ok: true, event_code: row.event_code, source: "emit" }),
+        { headers: { "Content-Type": "application/json" }, status: 200 },
+      );
+    }
+
+    // Route to per-table handler. Most return a single intent or null;
+    // doctor_vacations may return an array (one intent per affected
+    // patient appointment).
+    let intents: NotificationIntent[] = [];
+    let intent: NotificationIntent | null = null;
     switch (payload.table) {
       case "messages":
         intent = await handleMessages(supabase, payload);
@@ -63,8 +109,20 @@ serve(async (req) => {
         intent = handleAppointments(payload);
         break;
       case "documents":
-        intent = handleDocuments(payload);
+        if (payload.type === "DELETE") {
+          intent = handleDocumentsDeletion(payload);
+        } else {
+          intent = handleDocuments(payload);
+        }
         break;
+      case "conversations":
+        intent = handleConversations(payload);
+        break;
+      case "doctor_vacations": {
+        const arr = await handleDoctorVacations(supabase, payload);
+        if (arr) intents = arr;
+        break;
+      }
       case "patient_gift_sends":
         intent = await handleGifts(supabase, payload);
         break;
@@ -78,34 +136,26 @@ serve(async (req) => {
         );
     }
 
-    if (!intent) {
+    if (intent) intents = [intent];
+    if (intents.length === 0) {
       return new Response("No notification produced", { status: 200 });
     }
 
-    if (intent.user_ids.length === 0) {
-      return new Response("No target users", { status: 200 });
-    }
-
-    // 1) Persist (idempotent — duplicates collapse via partial unique index).
-    const persisted = await persistNotifications(supabase, intent);
-
-    // 2) Fanout via Pushy. Even if persist returned 0 rows (all deduped),
-    // we still respect the original intent for shadow-mode comparability,
-    // but in steady state we'd skip fanout when nothing was inserted.
-    // For now: skip Pushy if everything deduped — that's the desired
-    // dedup behavior end-to-end.
-    if (persisted.length > 0) {
-      await fanoutNotifications(supabase, intent, persisted);
-    } else {
-      console.log("All recipients deduped — skipping Pushy fanout");
+    let totalPersisted = 0;
+    for (const it of intents) {
+      if (it.user_ids.length === 0) continue;
+      const persisted = await persistNotifications(supabase, it);
+      totalPersisted += persisted.length;
+      if (persisted.length > 0) {
+        await fanoutNotifications(supabase, it, persisted);
+      }
     }
 
     return new Response(
       JSON.stringify({
         ok: true,
-        event_code: intent.event_code,
-        persisted: persisted.length,
-        users: intent.user_ids.length,
+        intents: intents.length,
+        persisted: totalPersisted,
       }),
       {
         headers: { "Content-Type": "application/json" },
