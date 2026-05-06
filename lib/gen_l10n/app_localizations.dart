@@ -9205,6 +9205,84 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Your approval is required for the doctor to see your profile. You can decline without consequences.'**
   String get linkRequestTrustNote;
+
+  /// No description provided for @notificationsRetentionNote.
+  ///
+  /// In en, this message translates to:
+  /// **'Notifications are kept for 90 days, then automatically removed.'**
+  String get notificationsRetentionNote;
+
+  /// No description provided for @notificationsDeleteAction.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete'**
+  String get notificationsDeleteAction;
+
+  /// No description provided for @pendingDeletionTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Account deletion'**
+  String get pendingDeletionTitle;
+
+  /// No description provided for @pendingDeletionHeadline.
+  ///
+  /// In en, this message translates to:
+  /// **'Your account is scheduled for deletion'**
+  String get pendingDeletionHeadline;
+
+  /// No description provided for @pendingDeletionDaysRemaining.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{1 day remaining} other{{count} days remaining}}'**
+  String pendingDeletionDaysRemaining(int count);
+
+  /// No description provided for @pendingDeletionBody.
+  ///
+  /// In en, this message translates to:
+  /// **'After this period your personal information (name, phone, email) will be permanently scrubbed. Medical records will be kept anonymized for the doctors who treated you. You can cancel anytime before then.'**
+  String get pendingDeletionBody;
+
+  /// No description provided for @pendingDeletionCancelCta.
+  ///
+  /// In en, this message translates to:
+  /// **'Cancel deletion'**
+  String get pendingDeletionCancelCta;
+
+  /// No description provided for @pendingDeletionFootnote.
+  ///
+  /// In en, this message translates to:
+  /// **'Cancelling restores your account and all your data immediately.'**
+  String get pendingDeletionFootnote;
+
+  /// No description provided for @pendingDeletionConfirmTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Cancel deletion?'**
+  String get pendingDeletionConfirmTitle;
+
+  /// No description provided for @pendingDeletionConfirmBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Your account will be reactivated immediately. Are you sure?'**
+  String get pendingDeletionConfirmBody;
+
+  /// No description provided for @pendingDeletionCancelledToast.
+  ///
+  /// In en, this message translates to:
+  /// **'Deletion cancelled — welcome back.'**
+  String get pendingDeletionCancelledToast;
+
+  /// No description provided for @pendingDeletionNoneTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'No pending deletion'**
+  String get pendingDeletionNoneTitle;
+
+  /// No description provided for @pendingDeletionNoneBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Your account is in good standing.'**
+  String get pendingDeletionNoneBody;
 }
 
 class _AppLocalizationsDelegate

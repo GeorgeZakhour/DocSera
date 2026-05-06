@@ -4957,4 +4957,58 @@ class AppLocalizationsAr extends AppLocalizations {
   @override
   String get linkRequestTrustNote =>
       'موافقتك مطلوبة لكي يتمكن الطبيب من رؤية ملفك. يمكنك الرفض دون أي تبعات.';
+
+  @override
+  String get notificationsRetentionNote =>
+      'تُحفظ الإشعارات لمدة ٩٠ يومًا ثم تُحذف تلقائيًا.';
+
+  @override
+  String get notificationsDeleteAction => 'حذف';
+
+  @override
+  String get pendingDeletionTitle => 'حذف الحساب';
+
+  @override
+  String get pendingDeletionHeadline => 'حسابك مجدول للحذف';
+
+  @override
+  String pendingDeletionDaysRemaining(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count يومًا متبقيًا',
+      many: '$count يومًا متبقيًا',
+      few: '$count أيام متبقية',
+      two: 'يومان متبقيان',
+      one: 'يوم واحد متبقي',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get pendingDeletionBody =>
+      'بعد هذه الفترة سيتم حذف معلوماتك الشخصية (الاسم، الهاتف، البريد) نهائيًا. تبقى السجلات الطبية محفوظة بشكل مجهول الهوية للأطباء الذين عالجوك. يمكنك الإلغاء في أي وقت قبل ذلك.';
+
+  @override
+  String get pendingDeletionCancelCta => 'إلغاء الحذف';
+
+  @override
+  String get pendingDeletionFootnote =>
+      'الإلغاء يعيد تفعيل حسابك وبياناتك بالكامل فورًا.';
+
+  @override
+  String get pendingDeletionConfirmTitle => 'إلغاء الحذف؟';
+
+  @override
+  String get pendingDeletionConfirmBody =>
+      'سيتم إعادة تفعيل حسابك فورًا. هل أنت متأكد؟';
+
+  @override
+  String get pendingDeletionCancelledToast => 'تم إلغاء الحذف — أهلًا بعودتك.';
+
+  @override
+  String get pendingDeletionNoneTitle => 'لا يوجد طلب حذف معلّق';
+
+  @override
+  String get pendingDeletionNoneBody => 'حسابك في وضع جيد.';
 }

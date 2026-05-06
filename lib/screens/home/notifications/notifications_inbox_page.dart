@@ -51,17 +51,40 @@ class _NotificationsInboxPageState extends State<NotificationsInboxPage> {
         foregroundColor: Colors.white,
         elevation: 0,
         scrolledUnderElevation: 0,
-        toolbarHeight: 50,
+        toolbarHeight: 48,
         centerTitle: true,
         titleSpacing: 0,
-        title: Text(
-          loc.notifications,
-          style: TextStyle(
-            color: Colors.white,
-            fontSize: 14.sp,
-            fontWeight: FontWeight.w600,
-            letterSpacing: 0.2,
+        leading: IconButton(
+          // Smaller back arrow to match the trimmed-down header.
+          icon: Icon(
+            Directionality.of(context) == ui.TextDirection.rtl
+                ? Icons.arrow_forward_rounded
+                : Icons.arrow_back_rounded,
+            size: 18.sp,
           ),
+          onPressed: () => Navigator.of(context).maybePop(),
+          tooltip: MaterialLocalizations.of(context).backButtonTooltip,
+        ),
+        leadingWidth: 38.w,
+        title: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(
+              Icons.notifications_rounded,
+              size: 14.sp,
+              color: Colors.white.withValues(alpha: 0.95),
+            ),
+            SizedBox(width: 6.w),
+            Text(
+              loc.notifications,
+              style: TextStyle(
+                color: Colors.white,
+                fontSize: 13.sp,
+                fontWeight: FontWeight.w600,
+                letterSpacing: 0.3,
+              ),
+            ),
+          ],
         ),
         actions: [
           BlocBuilder<NotificationsCubit, NotificationsState>(
@@ -69,38 +92,12 @@ class _NotificationsInboxPageState extends State<NotificationsInboxPage> {
               final hasUnread =
                   state is NotificationsLoaded && state.unreadCount > 0;
               return Padding(
-                padding: EdgeInsetsDirectional.only(end: 6.w),
-                child: Tooltip(
-                  message: loc.notificationsMarkAllRead,
-                  child: TextButton.icon(
-                    onPressed: hasUnread
-                        ? () =>
-                            context.read<NotificationsCubit>().markAllRead()
-                        : null,
-                    icon: Icon(
-                      Icons.done_all_rounded,
-                      size: 14.sp,
-                      color: hasUnread
-                          ? Colors.white
-                          : Colors.white.withValues(alpha: 0.35),
-                    ),
-                    label: Text(
-                      loc.notificationsMarkAllRead,
-                      style: TextStyle(
-                        color: hasUnread
-                            ? Colors.white
-                            : Colors.white.withValues(alpha: 0.35),
-                        fontSize: 10.sp,
-                        fontWeight: FontWeight.w500,
-                      ),
-                    ),
-                    style: TextButton.styleFrom(
-                      padding:
-                          EdgeInsets.symmetric(horizontal: 8.w, vertical: 0),
-                      minimumSize: const Size(0, 36),
-                      tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                    ),
-                  ),
+                padding: EdgeInsetsDirectional.only(end: 8.w, start: 4.w),
+                child: _GlassMarkAllPill(
+                  enabled: hasUnread,
+                  label: loc.notificationsMarkAllRead,
+                  onTap: () =>
+                      context.read<NotificationsCubit>().markAllRead(),
                 ),
               );
             },
@@ -108,6 +105,62 @@ class _NotificationsInboxPageState extends State<NotificationsInboxPage> {
         ],
       ),
       body: const _GlassBackdrop(child: _Body()),
+    );
+  }
+}
+
+/// Mark-all-read action rendered as a frosted-glass capsule with an
+/// InkWell ripple. Disabled state fades it to white-alpha.
+class _GlassMarkAllPill extends StatelessWidget {
+  const _GlassMarkAllPill({
+    required this.enabled,
+    required this.label,
+    required this.onTap,
+  });
+
+  final bool enabled;
+  final String label;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    return ClipRRect(
+      borderRadius: BorderRadius.circular(14.r),
+      child: BackdropFilter(
+        filter: ui.ImageFilter.blur(sigmaX: 8, sigmaY: 8),
+        child: Material(
+          color: Colors.white.withValues(alpha: enabled ? 0.18 : 0.10),
+          child: InkWell(
+            onTap: enabled ? onTap : null,
+            splashColor: Colors.white.withValues(alpha: 0.20),
+            highlightColor: Colors.white.withValues(alpha: 0.10),
+            child: Padding(
+              padding: EdgeInsets.symmetric(horizontal: 10.w, vertical: 6.h),
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Icon(
+                    Icons.done_all_rounded,
+                    size: 13.sp,
+                    color: Colors.white
+                        .withValues(alpha: enabled ? 1.0 : 0.45),
+                  ),
+                  SizedBox(width: 5.w),
+                  Text(
+                    label,
+                    style: TextStyle(
+                      color: Colors.white
+                          .withValues(alpha: enabled ? 1.0 : 0.45),
+                      fontSize: 9.5.sp,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ),
+      ),
     );
   }
 }
@@ -255,6 +308,8 @@ class _InboxList extends StatelessWidget {
       child: ListView(
         padding: EdgeInsets.fromLTRB(14.w, 8.h, 14.w, 32.h),
         children: [
+          const _RetentionBanner(),
+          SizedBox(height: 6.h),
           if (today.isNotEmpty) ...[
             _SectionHeader(label: loc.notificationsTodaySection),
             ...today.map((n) => _NotificationCard(notification: n)),
@@ -265,6 +320,57 @@ class _InboxList extends StatelessWidget {
             ...earlier.map((n) => _NotificationCard(notification: n)),
           ],
         ],
+      ),
+    );
+  }
+}
+
+/// Tiny glass strip at the top of the inbox telling users notifications
+/// are retained for 90 days.
+class _RetentionBanner extends StatelessWidget {
+  const _RetentionBanner();
+
+  @override
+  Widget build(BuildContext context) {
+    final loc = AppLocalizations.of(context)!;
+    return Padding(
+      padding: EdgeInsets.fromLTRB(2.w, 8.h, 2.w, 0),
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(14.r),
+        child: BackdropFilter(
+          filter: ui.ImageFilter.blur(sigmaX: 6, sigmaY: 6),
+          child: Container(
+            padding: EdgeInsets.symmetric(horizontal: 12.w, vertical: 8.h),
+            decoration: BoxDecoration(
+              color: Colors.white.withValues(alpha: 0.55),
+              borderRadius: BorderRadius.circular(14.r),
+              border: Border.all(
+                color: AppColors.main.withValues(alpha: 0.18),
+                width: 0.6,
+              ),
+            ),
+            child: Row(
+              children: [
+                Icon(
+                  Icons.history_rounded,
+                  size: 13.sp,
+                  color: AppColors.main.withValues(alpha: 0.75),
+                ),
+                SizedBox(width: 8.w),
+                Expanded(
+                  child: Text(
+                    loc.notificationsRetentionNote,
+                    style: TextStyle(
+                      color: AppColors.mainDark.withValues(alpha: 0.7),
+                      fontSize: 10.sp,
+                      height: 1.3,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
       ),
     );
   }
@@ -347,15 +453,30 @@ class _NotificationCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final isUnread = notification.isUnread;
     final accent = _accentColor;
+    // Per-category very-light tint for unread cards; read cards revert to
+    // the neutral white-with-alpha glass. Tints are deliberately faint
+    // (8% alpha) so they read as a hint, not a banner.
+    final unreadTint = isUnread ? accent.withValues(alpha: 0.08) : null;
+    final cardSurface = unreadTint != null
+        ? Color.alphaBlend(
+            unreadTint, Colors.white.withValues(alpha: 0.88))
+        : Colors.white.withValues(alpha: 0.66);
 
     return Padding(
       padding: EdgeInsets.symmetric(vertical: 4.h),
-      child: ClipRRect(
+      child: Dismissible(
+        key: ValueKey('notif-${notification.id}'),
+        direction: DismissDirection.endToStart,
+        background: _buildDismissBackground(context),
+        onDismissed: (_) {
+          context.read<NotificationsCubit>().archive(notification.id);
+        },
+        child: ClipRRect(
         borderRadius: BorderRadius.circular(18.r),
         child: BackdropFilter(
           filter: ui.ImageFilter.blur(sigmaX: 14, sigmaY: 14),
           child: Material(
-            color: Colors.white.withValues(alpha: isUnread ? 0.88 : 0.66),
+            color: cardSurface,
             child: InkWell(
               splashColor: accent.withValues(alpha: 0.08),
               highlightColor: accent.withValues(alpha: 0.04),
@@ -364,10 +485,6 @@ class _NotificationCard extends StatelessWidget {
                 await cubit.recordClick(notification.id);
                 final deepLink = notification.deepLink;
                 if (deepLink == null || deepLink.isEmpty) return;
-                // Reuse the existing push-tap handler so navigation rules
-                // stay in one place — adding a new destination here should
-                // never be needed; add it to
-                // NotificationService.handleDeepLink instead.
                 await NotificationService.instance.handleDeepLink(deepLink);
               },
               child: Container(
@@ -375,7 +492,7 @@ class _NotificationCard extends StatelessWidget {
                   borderRadius: BorderRadius.circular(18.r),
                   border: Border.all(
                     color: isUnread
-                        ? accent.withValues(alpha: 0.18)
+                        ? accent.withValues(alpha: 0.22)
                         : Colors.white.withValues(alpha: 0.6),
                     width: 0.7,
                   ),
@@ -459,6 +576,50 @@ class _NotificationCard extends StatelessWidget {
                   ],
                 ),
               ),
+            ),
+          ),
+        ),
+      ),
+      ),
+    );
+  }
+
+  /// Red-glass background that slides into view as the user swipes left.
+  /// Tapping it (or completing the swipe) archives the notification.
+  Widget _buildDismissBackground(BuildContext context) {
+    final loc = AppLocalizations.of(context)!;
+    final isRtl = Directionality.of(context) == ui.TextDirection.rtl;
+    return Padding(
+      padding: EdgeInsets.symmetric(vertical: 4.h),
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(18.r),
+        child: BackdropFilter(
+          filter: ui.ImageFilter.blur(sigmaX: 8, sigmaY: 8),
+          child: Container(
+            decoration: BoxDecoration(
+              color: Colors.red.shade400.withValues(alpha: 0.85),
+              borderRadius: BorderRadius.circular(18.r),
+            ),
+            alignment: isRtl ? Alignment.centerLeft : Alignment.centerRight,
+            padding: EdgeInsets.symmetric(horizontal: 18.w),
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Icon(
+                  Icons.delete_outline_rounded,
+                  color: Colors.white,
+                  size: 20.sp,
+                ),
+                SizedBox(width: 6.w),
+                Text(
+                  loc.notificationsDeleteAction,
+                  style: TextStyle(
+                    color: Colors.white,
+                    fontSize: 11.sp,
+                    fontWeight: FontWeight.w700,
+                  ),
+                ),
+              ],
             ),
           ),
         ),

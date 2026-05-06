@@ -5008,4 +5008,57 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get linkRequestTrustNote =>
       'Your approval is required for the doctor to see your profile. You can decline without consequences.';
+
+  @override
+  String get notificationsRetentionNote =>
+      'Notifications are kept for 90 days, then automatically removed.';
+
+  @override
+  String get notificationsDeleteAction => 'Delete';
+
+  @override
+  String get pendingDeletionTitle => 'Account deletion';
+
+  @override
+  String get pendingDeletionHeadline =>
+      'Your account is scheduled for deletion';
+
+  @override
+  String pendingDeletionDaysRemaining(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count days remaining',
+      one: '1 day remaining',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get pendingDeletionBody =>
+      'After this period your personal information (name, phone, email) will be permanently scrubbed. Medical records will be kept anonymized for the doctors who treated you. You can cancel anytime before then.';
+
+  @override
+  String get pendingDeletionCancelCta => 'Cancel deletion';
+
+  @override
+  String get pendingDeletionFootnote =>
+      'Cancelling restores your account and all your data immediately.';
+
+  @override
+  String get pendingDeletionConfirmTitle => 'Cancel deletion?';
+
+  @override
+  String get pendingDeletionConfirmBody =>
+      'Your account will be reactivated immediately. Are you sure?';
+
+  @override
+  String get pendingDeletionCancelledToast =>
+      'Deletion cancelled — welcome back.';
+
+  @override
+  String get pendingDeletionNoneTitle => 'No pending deletion';
+
+  @override
+  String get pendingDeletionNoneBody => 'Your account is in good standing.';
 }

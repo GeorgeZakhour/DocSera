@@ -1991,5 +1991,35 @@
   "linkRequestRejectedToast": "Request declined.",
   "linkRequestMergedToast": "Your record has been merged successfully.",
   "linkRequestErrorToast": "Couldn't complete the request. Please try again.",
-  "linkRequestTrustNote": "Your approval is required for the doctor to see your profile. You can decline without consequences."
+  "linkRequestTrustNote": "Your approval is required for the doctor to see your profile. You can decline without consequences.",
+
+  "notificationsRetentionNote": "Notifications are kept for 90 days, then automatically removed.",
+  "@notificationsRetentionNote": {},
+  "notificationsDeleteAction": "Delete",
+  "@notificationsDeleteAction": {},
+
+  "pendingDeletionTitle": "Account deletion",
+  "@pendingDeletionTitle": {},
+  "pendingDeletionHeadline": "Your account is scheduled for deletion",
+  "@pendingDeletionHeadline": {},
+  "pendingDeletionDaysRemaining": "{count, plural, =1{1 day remaining} other{{count} days remaining}}",
+  "@pendingDeletionDaysRemaining": {
+    "placeholders": { "count": { "type": "int" } }
+  },
+  "pendingDeletionBody": "After this period your personal information (name, phone, email) will be permanently scrubbed. Medical records will be kept anonymized for the doctors who treated you. You can cancel anytime before then.",
+  "@pendingDeletionBody": {},
+  "pendingDeletionCancelCta": "Cancel deletion",
+  "@pendingDeletionCancelCta": {},
+  "pendingDeletionFootnote": "Cancelling restores your account and all your data immediately.",
+  "@pendingDeletionFootnote": {},
+  "pendingDeletionConfirmTitle": "Cancel deletion?",
+  "@pendingDeletionConfirmTitle": {},
+  "pendingDeletionConfirmBody": "Your account will be reactivated immediately. Are you sure?",
+  "@pendingDeletionConfirmBody": {},
+  "pendingDeletionCancelledToast": "Deletion cancelled — welcome back.",
+  "@pendingDeletionCancelledToast": {},
+  "pendingDeletionNoneTitle": "No pending deletion",
+  "@pendingDeletionNoneTitle": {},
+  "pendingDeletionNoneBody": "Your account is in good standing.",
+  "@pendingDeletionNoneBody": {}
 }

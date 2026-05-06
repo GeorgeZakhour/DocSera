@@ -18,6 +18,7 @@ import 'package:docsera/Business_Logic/Health_page/patient_switcher_cubit.dart';
 import 'package:docsera/screens/home/health/pages/visit_reports/visit_reports_page.dart';
 import 'package:docsera/screens/home/loyalty/vouchers_page.dart';
 import 'package:docsera/screens/home/connections/link_request_review_page.dart';
+import 'package:docsera/screens/home/account/pending_deletion_page.dart';
 import 'package:docsera/services/notifications/in_app_notification_banner.dart';
 import 'package:url_launcher/url_launcher.dart' as launcher;
 
@@ -935,16 +936,27 @@ class NotificationService {
         );
     } else if (payload.startsWith('voucher:')) {
         debugPrint("🎁 Navigating to Vouchers / Wallet");
-        // The claim_id after the prefix is preserved in the payload but
-        // the deep-link target is the vouchers list — same pattern as
-        // gift_announcement_dialog.dart. The claim row is auto-claimed
-        // server-side when the patient opens the wallet.
         nav.popUntil((route) => route.isFirst);
         nav.push(
           MaterialPageRoute(
             builder: (_) => const VouchersPage(),
           ),
         );
+    } else if (payload.startsWith('account_deletion:')) {
+        debugPrint("⚠️ Navigating to Pending Deletion page");
+        nav.popUntil((route) => route.isFirst);
+        nav.push(
+          MaterialPageRoute(
+            builder: (_) => const PendingDeletionPage(),
+          ),
+        );
+    } else if (payload.startsWith('account:')) {
+        debugPrint("👤 Navigating to Account tab");
+        nav.popUntil((route) => route.isFirst);
+        final mainScreenState = CustomBottomNavigationBar.globalKey.currentState;
+        if (mainScreenState != null) {
+          mainScreenState.switchTab(4);
+        }
     }
   }
 
