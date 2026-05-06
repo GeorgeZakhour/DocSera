@@ -1977,21 +1977,40 @@
 
   "linkRequestTitle": "Connection request",
   "linkRequestMergeTitle": "Record merge request",
-  "linkRequestConnectBody": "{doctorName} would like to add you to their patient list. If you approve, they will see only your name and your appointments with them, and you can message each other through the app.",
-  "@linkRequestConnectBody": { "placeholders": { "doctorName": { "type": "String" } } },
-  "linkRequestConnectRelativeBody": "{doctorName} would like to add your relative to their patient list. If you approve, you will be able to manage their appointments and messages from your account.",
-  "@linkRequestConnectRelativeBody": { "placeholders": { "doctorName": { "type": "String" } } },
-  "linkRequestMergeBody": "{doctorName} has an existing record that matches your details. If you approve, your past appointments and documents at this clinic will be merged into your account.",
-  "@linkRequestMergeBody": { "placeholders": { "doctorName": { "type": "String" } } },
+  "linkRequestKindConnect": "New connection request",
+  "linkRequestKindConnectRelative": "Connection request for your relative",
+  "linkRequestKindMerge": "Merge an existing record",
+  "linkRequestIntroConnect": "would like to add you to their patient list on Docsera",
+  "linkRequestIntroConnectRelative": "would like to add your relative to their patient list on Docsera",
+  "linkRequestIntroMerge": "has an existing record matching your details and wants to merge it into your account",
+  "linkRequestViewProfile": "View doctor's profile",
+  "linkRequestWhatDoctorSeesTitle": "What the doctor will see",
+  "linkRequestAccessIdentity": "Your name, profile photo, age, and gender",
+  "linkRequestAccessAppointments": "Only your appointments with them — never with other doctors",
+  "linkRequestAccessMessages": "A direct messaging channel with them through the app",
+  "linkRequestAccessDocuments": "Only the documents you choose to share with them",
+  "linkRequestAccessHealthProfile": "Your health profile, only if you choose to share it later",
+  "linkRequestNotSharedTitle": "What stays private",
+  "linkRequestNotSharedAppointments": "Any appointments you have with other doctors",
+  "linkRequestNotSharedDocuments": "Any documents you haven't explicitly shared",
+  "linkRequestNotSharedHealth": "Your health profile until you actively share it",
+  "linkRequestMergeBenefits": "Past appointments, documents, and notes from your existing record at this clinic will move into your Docsera account, appearing in the usual sections of the app.",
   "linkRequestApprove": "Approve",
   "linkRequestReject": "Decline",
+  "linkRequestRejectExplain": "Declining has no consequences. The doctor will simply be notified that the request was declined.",
   "linkRequestNotFoundTitle": "This request is no longer available",
-  "linkRequestNotFoundBody": "It may have been withdrawn or already responded to from another device.",
-  "linkRequestApprovedToast": "Approved. The doctor will be notified shortly.",
-  "linkRequestRejectedToast": "Request declined.",
-  "linkRequestMergedToast": "Your record has been merged successfully.",
+  "linkRequestNotFoundBody": "It may have been withdrawn by the doctor, already responded to from another device, or expired.",
+  "linkRequestNotFoundCta": "Go back",
+  "linkRequestResultApprovedTitle": "You're connected",
+  "linkRequestResultApprovedBody": "You are now connected with {doctorName}. They will appear in your list of doctors, and you can communicate and book appointments through the app.",
+  "@linkRequestResultApprovedBody": { "placeholders": { "doctorName": { "type": "String" } } },
+  "linkRequestResultMergedTitle": "Records merged",
+  "linkRequestResultMergedBody": "Your existing record at {doctorName} has been moved into your Docsera account. You'll find the appointments and documents in the usual sections.",
+  "@linkRequestResultMergedBody": { "placeholders": { "doctorName": { "type": "String" } } },
+  "linkRequestResultRejectedTitle": "Request declined",
+  "linkRequestResultRejectedBody": "The doctor will not be able to add you to their list. They can send a new request in the future and we'll let you know.",
+  "linkRequestResultDone": "Back to notifications",
   "linkRequestErrorToast": "Couldn't complete the request. Please try again.",
-  "linkRequestTrustNote": "Your approval is required for the doctor to see your profile. You can decline without consequences.",
 
   "notificationsRetentionNote": "Notifications are kept for 90 days, then automatically removed.",
   "@notificationsRetentionNote": {},
@@ -2021,5 +2040,23 @@
   "pendingDeletionNoneTitle": "No pending deletion",
   "@pendingDeletionNoneTitle": {},
   "pendingDeletionNoneBody": "Your account is in good standing.",
-  "@pendingDeletionNoneBody": {}
+  "@pendingDeletionNoneBody": {},
+
+  "reminder2hTitle": "Appointment in 2 hours",
+  "@reminder2hTitle": {},
+  "reminder2hBody": "Your appointment with Dr. {doctor} starts at {time}.",
+  "@reminder2hBody": {
+    "placeholders": {
+      "doctor": { "type": "String" },
+      "time": { "type": "String" }
+    }
+  },
+  "reminder0Title": "Your appointment is now",
+  "@reminder0Title": {},
+  "reminder0Body": "Dr. {doctor} is ready to see you.",
+  "@reminder0Body": {
+    "placeholders": {
+      "doctor": { "type": "String" }
+    }
+  }
 }

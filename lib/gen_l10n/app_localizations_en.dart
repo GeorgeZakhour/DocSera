@@ -4963,19 +4963,71 @@ class AppLocalizationsEn extends AppLocalizations {
   String get linkRequestMergeTitle => 'Record merge request';
 
   @override
-  String linkRequestConnectBody(String doctorName) {
-    return '$doctorName would like to add you to their patient list. If you approve, they will see only your name and your appointments with them, and you can message each other through the app.';
-  }
+  String get linkRequestKindConnect => 'New connection request';
 
   @override
-  String linkRequestConnectRelativeBody(String doctorName) {
-    return '$doctorName would like to add your relative to their patient list. If you approve, you will be able to manage their appointments and messages from your account.';
-  }
+  String get linkRequestKindConnectRelative =>
+      'Connection request for your relative';
 
   @override
-  String linkRequestMergeBody(String doctorName) {
-    return '$doctorName has an existing record that matches your details. If you approve, your past appointments and documents at this clinic will be merged into your account.';
-  }
+  String get linkRequestKindMerge => 'Merge an existing record';
+
+  @override
+  String get linkRequestIntroConnect =>
+      'would like to add you to their patient list on Docsera';
+
+  @override
+  String get linkRequestIntroConnectRelative =>
+      'would like to add your relative to their patient list on Docsera';
+
+  @override
+  String get linkRequestIntroMerge =>
+      'has an existing record matching your details and wants to merge it into your account';
+
+  @override
+  String get linkRequestViewProfile => 'View doctor\'s profile';
+
+  @override
+  String get linkRequestWhatDoctorSeesTitle => 'What the doctor will see';
+
+  @override
+  String get linkRequestAccessIdentity =>
+      'Your name, profile photo, age, and gender';
+
+  @override
+  String get linkRequestAccessAppointments =>
+      'Only your appointments with them — never with other doctors';
+
+  @override
+  String get linkRequestAccessMessages =>
+      'A direct messaging channel with them through the app';
+
+  @override
+  String get linkRequestAccessDocuments =>
+      'Only the documents you choose to share with them';
+
+  @override
+  String get linkRequestAccessHealthProfile =>
+      'Your health profile, only if you choose to share it later';
+
+  @override
+  String get linkRequestNotSharedTitle => 'What stays private';
+
+  @override
+  String get linkRequestNotSharedAppointments =>
+      'Any appointments you have with other doctors';
+
+  @override
+  String get linkRequestNotSharedDocuments =>
+      'Any documents you haven\'t explicitly shared';
+
+  @override
+  String get linkRequestNotSharedHealth =>
+      'Your health profile until you actively share it';
+
+  @override
+  String get linkRequestMergeBenefits =>
+      'Past appointments, documents, and notes from your existing record at this clinic will move into your Docsera account, appearing in the usual sections of the app.';
 
   @override
   String get linkRequestApprove => 'Approve';
@@ -4984,30 +5036,48 @@ class AppLocalizationsEn extends AppLocalizations {
   String get linkRequestReject => 'Decline';
 
   @override
+  String get linkRequestRejectExplain =>
+      'Declining has no consequences. The doctor will simply be notified that the request was declined.';
+
+  @override
   String get linkRequestNotFoundTitle => 'This request is no longer available';
 
   @override
   String get linkRequestNotFoundBody =>
-      'It may have been withdrawn or already responded to from another device.';
+      'It may have been withdrawn by the doctor, already responded to from another device, or expired.';
 
   @override
-  String get linkRequestApprovedToast =>
-      'Approved. The doctor will be notified shortly.';
+  String get linkRequestNotFoundCta => 'Go back';
 
   @override
-  String get linkRequestRejectedToast => 'Request declined.';
+  String get linkRequestResultApprovedTitle => 'You\'re connected';
 
   @override
-  String get linkRequestMergedToast =>
-      'Your record has been merged successfully.';
+  String linkRequestResultApprovedBody(String doctorName) {
+    return 'You are now connected with $doctorName. They will appear in your list of doctors, and you can communicate and book appointments through the app.';
+  }
+
+  @override
+  String get linkRequestResultMergedTitle => 'Records merged';
+
+  @override
+  String linkRequestResultMergedBody(String doctorName) {
+    return 'Your existing record at $doctorName has been moved into your Docsera account. You\'ll find the appointments and documents in the usual sections.';
+  }
+
+  @override
+  String get linkRequestResultRejectedTitle => 'Request declined';
+
+  @override
+  String get linkRequestResultRejectedBody =>
+      'The doctor will not be able to add you to their list. They can send a new request in the future and we\'ll let you know.';
+
+  @override
+  String get linkRequestResultDone => 'Back to notifications';
 
   @override
   String get linkRequestErrorToast =>
       'Couldn\'t complete the request. Please try again.';
-
-  @override
-  String get linkRequestTrustNote =>
-      'Your approval is required for the doctor to see your profile. You can decline without consequences.';
 
   @override
   String get notificationsRetentionNote =>
@@ -5061,4 +5131,20 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get pendingDeletionNoneBody => 'Your account is in good standing.';
+
+  @override
+  String get reminder2hTitle => 'Appointment in 2 hours';
+
+  @override
+  String reminder2hBody(String doctor, String time) {
+    return 'Your appointment with Dr. $doctor starts at $time.';
+  }
+
+  @override
+  String get reminder0Title => 'Your appointment is now';
+
+  @override
+  String reminder0Body(String doctor) {
+    return 'Dr. $doctor is ready to see you.';
+  }
 }

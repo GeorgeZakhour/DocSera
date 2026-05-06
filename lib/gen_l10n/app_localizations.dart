@@ -9134,23 +9134,113 @@ abstract class AppLocalizations {
   /// **'Record merge request'**
   String get linkRequestMergeTitle;
 
-  /// No description provided for @linkRequestConnectBody.
+  /// No description provided for @linkRequestKindConnect.
   ///
   /// In en, this message translates to:
-  /// **'{doctorName} would like to add you to their patient list. If you approve, they will see only your name and your appointments with them, and you can message each other through the app.'**
-  String linkRequestConnectBody(String doctorName);
+  /// **'New connection request'**
+  String get linkRequestKindConnect;
 
-  /// No description provided for @linkRequestConnectRelativeBody.
+  /// No description provided for @linkRequestKindConnectRelative.
   ///
   /// In en, this message translates to:
-  /// **'{doctorName} would like to add your relative to their patient list. If you approve, you will be able to manage their appointments and messages from your account.'**
-  String linkRequestConnectRelativeBody(String doctorName);
+  /// **'Connection request for your relative'**
+  String get linkRequestKindConnectRelative;
 
-  /// No description provided for @linkRequestMergeBody.
+  /// No description provided for @linkRequestKindMerge.
   ///
   /// In en, this message translates to:
-  /// **'{doctorName} has an existing record that matches your details. If you approve, your past appointments and documents at this clinic will be merged into your account.'**
-  String linkRequestMergeBody(String doctorName);
+  /// **'Merge an existing record'**
+  String get linkRequestKindMerge;
+
+  /// No description provided for @linkRequestIntroConnect.
+  ///
+  /// In en, this message translates to:
+  /// **'would like to add you to their patient list on Docsera'**
+  String get linkRequestIntroConnect;
+
+  /// No description provided for @linkRequestIntroConnectRelative.
+  ///
+  /// In en, this message translates to:
+  /// **'would like to add your relative to their patient list on Docsera'**
+  String get linkRequestIntroConnectRelative;
+
+  /// No description provided for @linkRequestIntroMerge.
+  ///
+  /// In en, this message translates to:
+  /// **'has an existing record matching your details and wants to merge it into your account'**
+  String get linkRequestIntroMerge;
+
+  /// No description provided for @linkRequestViewProfile.
+  ///
+  /// In en, this message translates to:
+  /// **'View doctor\'s profile'**
+  String get linkRequestViewProfile;
+
+  /// No description provided for @linkRequestWhatDoctorSeesTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'What the doctor will see'**
+  String get linkRequestWhatDoctorSeesTitle;
+
+  /// No description provided for @linkRequestAccessIdentity.
+  ///
+  /// In en, this message translates to:
+  /// **'Your name, profile photo, age, and gender'**
+  String get linkRequestAccessIdentity;
+
+  /// No description provided for @linkRequestAccessAppointments.
+  ///
+  /// In en, this message translates to:
+  /// **'Only your appointments with them — never with other doctors'**
+  String get linkRequestAccessAppointments;
+
+  /// No description provided for @linkRequestAccessMessages.
+  ///
+  /// In en, this message translates to:
+  /// **'A direct messaging channel with them through the app'**
+  String get linkRequestAccessMessages;
+
+  /// No description provided for @linkRequestAccessDocuments.
+  ///
+  /// In en, this message translates to:
+  /// **'Only the documents you choose to share with them'**
+  String get linkRequestAccessDocuments;
+
+  /// No description provided for @linkRequestAccessHealthProfile.
+  ///
+  /// In en, this message translates to:
+  /// **'Your health profile, only if you choose to share it later'**
+  String get linkRequestAccessHealthProfile;
+
+  /// No description provided for @linkRequestNotSharedTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'What stays private'**
+  String get linkRequestNotSharedTitle;
+
+  /// No description provided for @linkRequestNotSharedAppointments.
+  ///
+  /// In en, this message translates to:
+  /// **'Any appointments you have with other doctors'**
+  String get linkRequestNotSharedAppointments;
+
+  /// No description provided for @linkRequestNotSharedDocuments.
+  ///
+  /// In en, this message translates to:
+  /// **'Any documents you haven\'t explicitly shared'**
+  String get linkRequestNotSharedDocuments;
+
+  /// No description provided for @linkRequestNotSharedHealth.
+  ///
+  /// In en, this message translates to:
+  /// **'Your health profile until you actively share it'**
+  String get linkRequestNotSharedHealth;
+
+  /// No description provided for @linkRequestMergeBenefits.
+  ///
+  /// In en, this message translates to:
+  /// **'Past appointments, documents, and notes from your existing record at this clinic will move into your Docsera account, appearing in the usual sections of the app.'**
+  String get linkRequestMergeBenefits;
 
   /// No description provided for @linkRequestApprove.
   ///
@@ -9164,6 +9254,12 @@ abstract class AppLocalizations {
   /// **'Decline'**
   String get linkRequestReject;
 
+  /// No description provided for @linkRequestRejectExplain.
+  ///
+  /// In en, this message translates to:
+  /// **'Declining has no consequences. The doctor will simply be notified that the request was declined.'**
+  String get linkRequestRejectExplain;
+
   /// No description provided for @linkRequestNotFoundTitle.
   ///
   /// In en, this message translates to:
@@ -9173,38 +9269,62 @@ abstract class AppLocalizations {
   /// No description provided for @linkRequestNotFoundBody.
   ///
   /// In en, this message translates to:
-  /// **'It may have been withdrawn or already responded to from another device.'**
+  /// **'It may have been withdrawn by the doctor, already responded to from another device, or expired.'**
   String get linkRequestNotFoundBody;
 
-  /// No description provided for @linkRequestApprovedToast.
+  /// No description provided for @linkRequestNotFoundCta.
   ///
   /// In en, this message translates to:
-  /// **'Approved. The doctor will be notified shortly.'**
-  String get linkRequestApprovedToast;
+  /// **'Go back'**
+  String get linkRequestNotFoundCta;
 
-  /// No description provided for @linkRequestRejectedToast.
+  /// No description provided for @linkRequestResultApprovedTitle.
   ///
   /// In en, this message translates to:
-  /// **'Request declined.'**
-  String get linkRequestRejectedToast;
+  /// **'You\'re connected'**
+  String get linkRequestResultApprovedTitle;
 
-  /// No description provided for @linkRequestMergedToast.
+  /// No description provided for @linkRequestResultApprovedBody.
   ///
   /// In en, this message translates to:
-  /// **'Your record has been merged successfully.'**
-  String get linkRequestMergedToast;
+  /// **'You are now connected with {doctorName}. They will appear in your list of doctors, and you can communicate and book appointments through the app.'**
+  String linkRequestResultApprovedBody(String doctorName);
+
+  /// No description provided for @linkRequestResultMergedTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Records merged'**
+  String get linkRequestResultMergedTitle;
+
+  /// No description provided for @linkRequestResultMergedBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Your existing record at {doctorName} has been moved into your Docsera account. You\'ll find the appointments and documents in the usual sections.'**
+  String linkRequestResultMergedBody(String doctorName);
+
+  /// No description provided for @linkRequestResultRejectedTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Request declined'**
+  String get linkRequestResultRejectedTitle;
+
+  /// No description provided for @linkRequestResultRejectedBody.
+  ///
+  /// In en, this message translates to:
+  /// **'The doctor will not be able to add you to their list. They can send a new request in the future and we\'ll let you know.'**
+  String get linkRequestResultRejectedBody;
+
+  /// No description provided for @linkRequestResultDone.
+  ///
+  /// In en, this message translates to:
+  /// **'Back to notifications'**
+  String get linkRequestResultDone;
 
   /// No description provided for @linkRequestErrorToast.
   ///
   /// In en, this message translates to:
   /// **'Couldn\'t complete the request. Please try again.'**
   String get linkRequestErrorToast;
-
-  /// No description provided for @linkRequestTrustNote.
-  ///
-  /// In en, this message translates to:
-  /// **'Your approval is required for the doctor to see your profile. You can decline without consequences.'**
-  String get linkRequestTrustNote;
 
   /// No description provided for @notificationsRetentionNote.
   ///
@@ -9283,6 +9403,30 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Your account is in good standing.'**
   String get pendingDeletionNoneBody;
+
+  /// No description provided for @reminder2hTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Appointment in 2 hours'**
+  String get reminder2hTitle;
+
+  /// No description provided for @reminder2hBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Your appointment with Dr. {doctor} starts at {time}.'**
+  String reminder2hBody(String doctor, String time);
+
+  /// No description provided for @reminder0Title.
+  ///
+  /// In en, this message translates to:
+  /// **'Your appointment is now'**
+  String get reminder0Title;
+
+  /// No description provided for @reminder0Body.
+  ///
+  /// In en, this message translates to:
+  /// **'Dr. {doctor} is ready to see you.'**
+  String reminder0Body(String doctor);
 }
 
 class _AppLocalizationsDelegate

@@ -176,8 +176,12 @@ class AppointmentReminderScheduler with WidgetsBindingObserver {
         appointmentLocal: whenLocal,
         reminder24Title: loc.reminder24hTitle,
         reminder24Body: loc.reminder24hBody(doctorName, timeLabel),
+        reminder2hTitle: loc.reminder2hTitle,
+        reminder2hBody: loc.reminder2hBody(doctorName, timeLabel),
         reminder30Title: loc.reminder30mTitle,
         reminder30Body: loc.reminder30mBody(doctorName),
+        reminder0Title: loc.reminder0Title,
+        reminder0Body: loc.reminder0Body(doctorName),
       );
       _scheduled.add(id);
     }

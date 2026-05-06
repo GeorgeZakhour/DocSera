@@ -4911,52 +4911,120 @@ class AppLocalizationsAr extends AppLocalizations {
   String get linkRequestTitle => 'طلب اتصال';
 
   @override
-  String get linkRequestMergeTitle => 'طلب دمج سجل طبي';
+  String get linkRequestMergeTitle => 'دمج سجل طبي';
 
   @override
-  String linkRequestConnectBody(String doctorName) {
-    return '$doctorName يطلب إضافتك إلى قائمة مرضاه. عند الموافقة، سيتمكن من رؤية اسمك ومواعيدك معه فقط، ويمكنكما التواصل عبر التطبيق.';
-  }
+  String get linkRequestKindConnect => 'طلب اتصال جديد';
 
   @override
-  String linkRequestConnectRelativeBody(String doctorName) {
-    return '$doctorName يطلب إضافة قريبك إلى قائمة مرضاه. عند الموافقة، ستتمكن من إدارة مواعيده ورسائله من حسابك.';
-  }
+  String get linkRequestKindConnectRelative => 'طلب اتصال لقريبك';
 
   @override
-  String linkRequestMergeBody(String doctorName) {
-    return '$doctorName لديه سجل قديم لديه يطابق بياناتك. عند الموافقة، ستُدمج المواعيد والمستندات السابقة في حسابك.';
-  }
+  String get linkRequestKindMerge => 'دمج سجل قديم';
 
   @override
-  String get linkRequestApprove => 'موافقة';
+  String get linkRequestIntroConnect =>
+      'يرغب في إضافتك إلى قائمة مرضاه عبر Docsera';
+
+  @override
+  String get linkRequestIntroConnectRelative =>
+      'يرغب في إضافة قريبك إلى قائمة مرضاه عبر Docsera';
+
+  @override
+  String get linkRequestIntroMerge =>
+      'لديه سجل سابق باسمك ويرغب في دمجه مع حسابك';
+
+  @override
+  String get linkRequestViewProfile => 'عرض الملف الشخصي للطبيب';
+
+  @override
+  String get linkRequestWhatDoctorSeesTitle => 'ماذا سيرى الطبيب';
+
+  @override
+  String get linkRequestAccessIdentity => 'اسمك وصورتك الشخصية، عمرك وجنسك';
+
+  @override
+  String get linkRequestAccessAppointments =>
+      'مواعيدك معه فقط — لا يرى مواعيدك مع أي طبيب آخر';
+
+  @override
+  String get linkRequestAccessMessages =>
+      'ستفتح قناة المراسلة بينكما عبر التطبيق';
+
+  @override
+  String get linkRequestAccessDocuments =>
+      'المستندات التي ترفعها وتختار مشاركتها معه';
+
+  @override
+  String get linkRequestAccessHealthProfile =>
+      'ملفك الصحي إن اخترت مشاركته معه لاحقاً';
+
+  @override
+  String get linkRequestNotSharedTitle => 'ما لن يراه';
+
+  @override
+  String get linkRequestNotSharedAppointments => 'أي مواعيد لك مع أطباء آخرين';
+
+  @override
+  String get linkRequestNotSharedDocuments =>
+      'أي مستندات لم تشاركها معه صراحةً';
+
+  @override
+  String get linkRequestNotSharedHealth =>
+      'ملفك الصحي قبل أن تختار مشاركته معه';
+
+  @override
+  String get linkRequestMergeBenefits =>
+      'ستُنقل المواعيد السابقة، المستندات، والملاحظات الخاصة بك من سجله القديم إلى حسابك في Docsera، وتظهر في تطبيقك مباشرة.';
+
+  @override
+  String get linkRequestApprove => 'الموافقة';
 
   @override
   String get linkRequestReject => 'رفض';
+
+  @override
+  String get linkRequestRejectExplain =>
+      'يمكنك الرفض دون أي تبعات. سيتم إخطار الطبيب فقط بأن الطلب قد رُفض.';
 
   @override
   String get linkRequestNotFoundTitle => 'هذا الطلب لم يعد متاحاً';
 
   @override
   String get linkRequestNotFoundBody =>
-      'ربما تم سحب الطلب أو الرد عليه من جهاز آخر.';
+      'ربما تم سحب الطلب من قِبل الطبيب، أو رددتَ عليه سابقاً من جهاز آخر، أو انتهت صلاحيته.';
 
   @override
-  String get linkRequestApprovedToast =>
-      'تمت الموافقة. سيظهر ذلك في حساب الطبيب قريباً.';
+  String get linkRequestNotFoundCta => 'العودة';
 
   @override
-  String get linkRequestRejectedToast => 'تم رفض الطلب.';
+  String get linkRequestResultApprovedTitle => 'تم الاتصال بنجاح';
 
   @override
-  String get linkRequestMergedToast => 'تم دمج سجلك بنجاح.';
+  String linkRequestResultApprovedBody(String doctorName) {
+    return 'أنت الآن متصل بـ $doctorName. سيظهر اسمه في قائمة أطبائك، ويمكنكما التواصل والمواعيد عبر التطبيق.';
+  }
+
+  @override
+  String get linkRequestResultMergedTitle => 'تم دمج السجل بنجاح';
+
+  @override
+  String linkRequestResultMergedBody(String doctorName) {
+    return 'تم نقل سجلك السابق لدى $doctorName إلى حسابك في Docsera. ستجد المواعيد والمستندات في الأقسام المعتادة.';
+  }
+
+  @override
+  String get linkRequestResultRejectedTitle => 'تم رفض الطلب';
+
+  @override
+  String get linkRequestResultRejectedBody =>
+      'لن يتمكن الطبيب من إضافتك إلى قائمته. يمكنه إرسال طلب جديد في المستقبل وسنخبرك حينها.';
+
+  @override
+  String get linkRequestResultDone => 'العودة إلى الإشعارات';
 
   @override
   String get linkRequestErrorToast => 'تعذّر تنفيذ الطلب. حاول مجدداً.';
-
-  @override
-  String get linkRequestTrustNote =>
-      'موافقتك مطلوبة لكي يتمكن الطبيب من رؤية ملفك. يمكنك الرفض دون أي تبعات.';
 
   @override
   String get notificationsRetentionNote =>
@@ -5011,4 +5079,20 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get pendingDeletionNoneBody => 'حسابك في وضع جيد.';
+
+  @override
+  String get reminder2hTitle => 'Appointment in 2 hours';
+
+  @override
+  String reminder2hBody(String doctor, String time) {
+    return 'Your appointment with Dr. $doctor starts at $time.';
+  }
+
+  @override
+  String get reminder0Title => 'Your appointment is now';
+
+  @override
+  String reminder0Body(String doctor) {
+    return 'Dr. $doctor is ready to see you.';
+  }
 }

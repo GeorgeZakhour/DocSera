@@ -617,34 +617,49 @@ class NotificationService {
     return raw & 0x7FFFFFFF;
   }
 
-  /// Schedule the T-24h and T-30m reminders for one appointment.
-  /// Cancels any existing reminders for the same appointment first so
-  /// reschedule loops are idempotent.
+  /// Schedule the four reminders (T-24h, T-2h, T-30m, T-0) for one
+  /// appointment. Cancels any existing reminders for the same appointment
+  /// first so reschedule loops are idempotent.
+  ///
+  /// Importance ladder: T-24h and T-2h are high, T-30m and T-0 are
+  /// time-sensitive (break through Focus mode + use the action-buttons
+  /// category on iOS).
   Future<void> scheduleAppointmentReminders({
     required String appointmentId,
     required DateTime appointmentLocal,
     required String reminder24Title,
     required String reminder24Body,
+    required String reminder2hTitle,
+    required String reminder2hBody,
     required String reminder30Title,
     required String reminder30Body,
+    required String reminder0Title,
+    required String reminder0Body,
   }) async {
     await cancelAppointmentReminders(appointmentId);
 
     final t24 = appointmentLocal.subtract(const Duration(hours: 24));
+    final t2h = appointmentLocal.subtract(const Duration(hours: 2));
     final t30 = appointmentLocal.subtract(const Duration(minutes: 30));
+    final t0 = appointmentLocal;
     final now = DateTime.now();
     final payload = 'appointment:$appointmentId';
 
     if (kDebugMode) {
       debugPrint(
           '⏰ scheduleAppointmentReminders($appointmentId): now=$now, '
-          'appt=$appointmentLocal, t24=$t24 (future=${t24.isAfter(now)}), '
-          't30=$t30 (future=${t30.isAfter(now)})');
+          'appt=$appointmentLocal, '
+          't24=$t24 (future=${t24.isAfter(now)}), '
+          't2h=$t2h (future=${t2h.isAfter(now)}), '
+          't30=$t30 (future=${t30.isAfter(now)}), '
+          't0=$t0 (future=${t0.isAfter(now)})');
     }
 
     // OS notification: only schedule if in the future (iOS won't accept
     // past timestamps). The foreground banner separately handles the
     // "moment just passed" case via scheduleOrFireForegroundBanner.
+
+    // T-24h
     if (t24.isAfter(now)) {
       await _scheduleWithId(
         id: _reminderId(appointmentId, 't24'),
@@ -663,6 +678,26 @@ class NotificationService {
       payload: payload,
     );
 
+    // T-2h
+    if (t2h.isAfter(now)) {
+      await _scheduleWithId(
+        id: _reminderId(appointmentId, 't2h'),
+        whenLocal: t2h,
+        title: reminder2hTitle,
+        body: reminder2hBody,
+        timeSensitive: false,
+        payload: payload,
+      );
+    }
+    scheduleOrFireForegroundBanner(
+      key: 'apt-$appointmentId-t2h',
+      fireTime: t2h,
+      title: reminder2hTitle,
+      body: reminder2hBody,
+      payload: payload,
+    );
+
+    // T-30m (action buttons attached on iOS via category)
     if (t30.isAfter(now)) {
       await _scheduleWithId(
         id: _reminderId(appointmentId, 't30'),
@@ -681,6 +716,25 @@ class NotificationService {
       payload: payload,
     );
 
+    // T-0 (at appointment time itself)
+    if (t0.isAfter(now)) {
+      await _scheduleWithId(
+        id: _reminderId(appointmentId, 't0'),
+        whenLocal: t0,
+        title: reminder0Title,
+        body: reminder0Body,
+        timeSensitive: true,
+        payload: payload,
+      );
+    }
+    scheduleOrFireForegroundBanner(
+      key: 'apt-$appointmentId-t0',
+      fireTime: t0,
+      title: reminder0Title,
+      body: reminder0Body,
+      payload: payload,
+    );
+
     if (kDebugMode) {
       final pending = await _fln.pendingNotificationRequests();
       debugPrint(
@@ -690,12 +744,11 @@ class NotificationService {
   }
 
   Future<void> cancelAppointmentReminders(String appointmentId) async {
-    await _fln.cancel(_reminderId(appointmentId, 't24'));
-    await _fln.cancel(_reminderId(appointmentId, 't30'));
-    cancelForegroundBanner('apt-$appointmentId-t24');
-    cancelForegroundBanner('apt-$appointmentId-t30');
-    _firedFireTimes.remove('apt-$appointmentId-t24');
-    _firedFireTimes.remove('apt-$appointmentId-t30');
+    for (final suffix in const ['t24', 't2h', 't30', 't0']) {
+      await _fln.cancel(_reminderId(appointmentId, suffix));
+      cancelForegroundBanner('apt-$appointmentId-$suffix');
+      _firedFireTimes.remove('apt-$appointmentId-$suffix');
+    }
   }
 
   Future<void> _scheduleWithId({
