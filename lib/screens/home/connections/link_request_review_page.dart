@@ -13,6 +13,7 @@ import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 
 import 'package:docsera/Business_Logic/Connections/link_request_cubit.dart';
 import 'package:docsera/app/const.dart';
@@ -636,20 +637,34 @@ class _DoctorHeroCard extends StatelessWidget {
 
 /// Resolves the doctor's avatar with the same precedence as the rest of
 /// the patient app:
-///   1. Their uploaded `doctor_image` URL if present
+///   1. Their uploaded `doctor_image` if present — fully-qualified URL
+///      passes through; a relative storage path (e.g.
+///      "<doctor-id>/profile/profile.jpeg") is resolved against the
+///      `doctor` storage bucket via `getPublicUrl`
 ///   2. The gendered bundled asset (male-doc / female-doc / male-phys /
 ///      female-phys) chosen by `getDoctorImage` when no upload exists
 class _DoctorAvatar extends StatelessWidget {
   final PatientLinkRequest request;
   const _DoctorAvatar({required this.request});
 
+  String? _resolveUrl() {
+    final raw = request.doctorImage?.trim();
+    if (raw == null || raw.isEmpty || raw.toLowerCase() == 'null') return null;
+    if (raw.startsWith('http')) return raw;
+    if (raw.startsWith('assets/')) return null;
+    // Supabase storage path → public URL via the 'doctor' bucket. Mirrors
+    // `resolveDoctorImagePathAndWidget` in lib/utils/doctor_image_utils.dart.
+    try {
+      return Supabase.instance.client.storage.from('doctor').getPublicUrl(raw);
+    } catch (_) {
+      return null;
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
-    final url = request.doctorImage?.trim();
-    final hasNetworkImage =
-        url != null && url.isNotEmpty && url.toLowerCase() != 'null';
-
-    if (hasNetworkImage) {
+    final url = _resolveUrl();
+    if (url != null) {
       return CachedNetworkImage(
         imageUrl: url,
         fit: BoxFit.cover,
