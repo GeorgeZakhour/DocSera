@@ -22,6 +22,7 @@ class PatientLinkRequest {
   final String doctorName;
   final String? doctorImage;
   final String? doctorTitle;     // 'د.', 'أ.د.', etc.
+  final String? doctorGender;    // used to pick the gendered fallback avatar
   final String? doctorSpecialty;
   final String? doctorClinic;
   final String? targetUserId;
@@ -37,6 +38,7 @@ class PatientLinkRequest {
     required this.doctorName,
     required this.doctorImage,
     required this.doctorTitle,
+    required this.doctorGender,
     required this.doctorSpecialty,
     required this.doctorClinic,
     required this.targetUserId,
@@ -58,6 +60,7 @@ class PatientLinkRequest {
           ?? _composeName(doctorRow),
       doctorImage: doctorRow?['doctor_image'] as String?,
       doctorTitle: doctorRow?['title'] as String?,
+      doctorGender: doctorRow?['gender'] as String?,
       doctorSpecialty: doctorRow?['specialty'] as String?,
       doctorClinic: doctorRow?['clinic'] as String?,
       targetUserId: map['target_user_id'] as String?,
@@ -111,7 +114,7 @@ class PatientLinkRequestsService {
 
     final doctorRows = await _client
         .from('public_doctors')
-        .select('id, first_name, last_name, title, specialty, clinic, doctor_image')
+        .select('id, first_name, last_name, title, gender, specialty, clinic, doctor_image')
         .inFilter('id', doctorIds);
 
     final byId = <String, Map<String, dynamic>>{

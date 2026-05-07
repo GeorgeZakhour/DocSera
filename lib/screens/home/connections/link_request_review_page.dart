@@ -21,6 +21,7 @@ import 'package:docsera/gen_l10n/app_localizations.dart';
 import 'package:docsera/screens/doctors/doctor_profile_page.dart';
 import 'package:docsera/screens/home/connections/link_request_result_page.dart';
 import 'package:docsera/services/supabase/patient_link_requests_service.dart';
+import 'package:docsera/utils/doctor_image_utils.dart';
 
 class LinkRequestReviewPage extends StatelessWidget {
   final String requestId;
@@ -412,13 +413,8 @@ class _LoadedView extends StatelessWidget {
                     positive: false,
                   ),
                   _AccessRow(
-                    icon: Icons.folder_off_outlined,
-                    text: local.linkRequestNotSharedDocuments,
-                    positive: false,
-                  ),
-                  _AccessRow(
-                    icon: Icons.healing_outlined,
-                    text: local.linkRequestNotSharedHealth,
+                    icon: Icons.chat_bubble_outline_rounded,
+                    text: local.linkRequestNotSharedMessages,
                     positive: false,
                     isLast: true,
                   ),
@@ -511,8 +507,6 @@ class _DoctorHeroCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final local = AppLocalizations.of(context)!;
-    final hasImage =
-        request.doctorImage != null && request.doctorImage!.isNotEmpty;
 
     return Material(
       color: Colors.transparent,
@@ -563,14 +557,7 @@ class _DoctorHeroCard extends StatelessWidget {
                         ],
                       ),
                       clipBehavior: Clip.antiAlias,
-                      child: hasImage
-                          ? CachedNetworkImage(
-                              imageUrl: request.doctorImage!,
-                              fit: BoxFit.cover,
-                              placeholder: (_, __) => const _AvatarFallback(),
-                              errorWidget: (_, __, ___) => const _AvatarFallback(),
-                            )
-                          : const _AvatarFallback(),
+                      child: _DoctorAvatar(request: request),
                     ),
                   ),
                   SizedBox(width: 14.w),
@@ -647,17 +634,55 @@ class _DoctorHeroCard extends StatelessWidget {
   }
 }
 
-class _AvatarFallback extends StatelessWidget {
-  const _AvatarFallback();
+/// Resolves the doctor's avatar with the same precedence as the rest of
+/// the patient app:
+///   1. Their uploaded `doctor_image` URL if present
+///   2. The gendered bundled asset (male-doc / female-doc / male-phys /
+///      female-phys) chosen by `getDoctorImage` when no upload exists
+class _DoctorAvatar extends StatelessWidget {
+  final PatientLinkRequest request;
+  const _DoctorAvatar({required this.request});
+
   @override
   Widget build(BuildContext context) {
-    return Container(
-      color: AppColors.main.withValues(alpha: 0.08),
-      alignment: Alignment.center,
-      child: Icon(
-        Icons.medical_services_outlined,
-        color: AppColors.main,
-        size: 32.sp,
+    final url = request.doctorImage?.trim();
+    final hasNetworkImage =
+        url != null && url.isNotEmpty && url.toLowerCase() != 'null';
+
+    if (hasNetworkImage) {
+      return CachedNetworkImage(
+        imageUrl: url,
+        fit: BoxFit.cover,
+        placeholder: (_, __) => _GenderedFallback(request: request),
+        errorWidget: (_, __, ___) => _GenderedFallback(request: request),
+      );
+    }
+    return _GenderedFallback(request: request);
+  }
+}
+
+class _GenderedFallback extends StatelessWidget {
+  final PatientLinkRequest request;
+  const _GenderedFallback({required this.request});
+
+  @override
+  Widget build(BuildContext context) {
+    final assetPath = getDoctorImage(
+      imageUrl: null,
+      gender: request.doctorGender,
+      title: request.doctorTitle,
+    );
+    return Image.asset(
+      assetPath,
+      fit: BoxFit.cover,
+      errorBuilder: (_, __, ___) => Container(
+        color: AppColors.main.withValues(alpha: 0.08),
+        alignment: Alignment.center,
+        child: Icon(
+          Icons.medical_services_outlined,
+          color: AppColors.main,
+          size: 32.sp,
+        ),
       ),
     );
   }

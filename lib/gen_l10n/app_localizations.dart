@@ -9197,19 +9197,19 @@ abstract class AppLocalizations {
   /// No description provided for @linkRequestAccessMessages.
   ///
   /// In en, this message translates to:
-  /// **'A direct messaging channel with them through the app'**
+  /// **'A direct messaging channel between you and the doctor'**
   String get linkRequestAccessMessages;
 
   /// No description provided for @linkRequestAccessDocuments.
   ///
   /// In en, this message translates to:
-  /// **'Only the documents you choose to share with them'**
+  /// **'Documents you upload to your Docsera profile (visible to every doctor you are connected with, not just this one)'**
   String get linkRequestAccessDocuments;
 
   /// No description provided for @linkRequestAccessHealthProfile.
   ///
   /// In en, this message translates to:
-  /// **'Your health profile, only if you choose to share it later'**
+  /// **'Your health profile if you\'ve completed it (visible to every doctor you are connected with)'**
   String get linkRequestAccessHealthProfile;
 
   /// No description provided for @linkRequestNotSharedTitle.
@@ -9221,20 +9221,14 @@ abstract class AppLocalizations {
   /// No description provided for @linkRequestNotSharedAppointments.
   ///
   /// In en, this message translates to:
-  /// **'Any appointments you have with other doctors'**
+  /// **'Any appointments you have with doctors you aren\'t connected with'**
   String get linkRequestNotSharedAppointments;
 
-  /// No description provided for @linkRequestNotSharedDocuments.
+  /// No description provided for @linkRequestNotSharedMessages.
   ///
   /// In en, this message translates to:
-  /// **'Any documents you haven\'t explicitly shared'**
-  String get linkRequestNotSharedDocuments;
-
-  /// No description provided for @linkRequestNotSharedHealth.
-  ///
-  /// In en, this message translates to:
-  /// **'Your health profile until you actively share it'**
-  String get linkRequestNotSharedHealth;
+  /// **'Conversations between you and any other doctor'**
+  String get linkRequestNotSharedMessages;
 
   /// No description provided for @linkRequestMergeBenefits.
   ///

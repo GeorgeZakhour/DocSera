@@ -4949,29 +4949,25 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get linkRequestAccessMessages =>
-      'ستفتح قناة المراسلة بينكما عبر التطبيق';
+      'تُفتح قناة المراسلة بينكما عبر التطبيق';
 
   @override
   String get linkRequestAccessDocuments =>
-      'المستندات التي ترفعها وتختار مشاركتها معه';
+      'المستندات التي ترفعها إلى ملفك في Docsera (تظهر تلقائياً لكل أطبائك المتصلين، وليست خاصة بطبيب واحد)';
 
   @override
   String get linkRequestAccessHealthProfile =>
-      'ملفك الصحي إن اخترت مشاركته معه لاحقاً';
+      'ملفك الصحي إن أكملته (يظهر تلقائياً لكل أطبائك المتصلين)';
 
   @override
   String get linkRequestNotSharedTitle => 'ما لن يراه';
 
   @override
-  String get linkRequestNotSharedAppointments => 'أي مواعيد لك مع أطباء آخرين';
+  String get linkRequestNotSharedAppointments =>
+      'أي مواعيد لك مع أطباء لم تتصل بهم';
 
   @override
-  String get linkRequestNotSharedDocuments =>
-      'أي مستندات لم تشاركها معه صراحةً';
-
-  @override
-  String get linkRequestNotSharedHealth =>
-      'ملفك الصحي قبل أن تختار مشاركته معه';
+  String get linkRequestNotSharedMessages => 'محادثاتك مع أي طبيب آخر';
 
   @override
   String get linkRequestMergeBenefits =>

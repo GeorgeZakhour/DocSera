@@ -5000,30 +5000,26 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get linkRequestAccessMessages =>
-      'A direct messaging channel with them through the app';
+      'A direct messaging channel between you and the doctor';
 
   @override
   String get linkRequestAccessDocuments =>
-      'Only the documents you choose to share with them';
+      'Documents you upload to your Docsera profile (visible to every doctor you are connected with, not just this one)';
 
   @override
   String get linkRequestAccessHealthProfile =>
-      'Your health profile, only if you choose to share it later';
+      'Your health profile if you\'ve completed it (visible to every doctor you are connected with)';
 
   @override
   String get linkRequestNotSharedTitle => 'What stays private';
 
   @override
   String get linkRequestNotSharedAppointments =>
-      'Any appointments you have with other doctors';
+      'Any appointments you have with doctors you aren\'t connected with';
 
   @override
-  String get linkRequestNotSharedDocuments =>
-      'Any documents you haven\'t explicitly shared';
-
-  @override
-  String get linkRequestNotSharedHealth =>
-      'Your health profile until you actively share it';
+  String get linkRequestNotSharedMessages =>
+      'Conversations between you and any other doctor';
 
   @override
   String get linkRequestMergeBenefits =>
