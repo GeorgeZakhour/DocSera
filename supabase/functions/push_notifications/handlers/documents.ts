@@ -11,6 +11,13 @@ export function handleDocuments(
 
   if (!record.patient_id) return null;
 
+  // Only fire for doctor-uploaded docs. Patient self-uploads
+  // (source='patient') and other sources don't warrant a notification —
+  // the patient just performed the action, they don't need a system
+  // notification telling them what they did.
+  const source = (record.source as string | null) ?? "";
+  if (source !== "doctor_added") return null;
+
   const docName = record.conversation_doctor_name || "الطبيب";
   const docNameEn = record.conversation_doctor_name || "Your doctor";
 

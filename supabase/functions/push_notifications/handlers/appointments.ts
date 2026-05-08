@@ -34,11 +34,10 @@ function handleInsert(
   // Manual patients (no DocSera account) skipped.
   if (!record.user_id) return null;
 
-  // The patient initiated the booking themselves — they just tapped
-  // "Book", they don't need a system notification telling them an
-  // action they just performed happened. The doctor's confirmation
-  // will fire its own notification when it lands.
-  if (record.booked_by === "patient") return null;
+  // Always fire — the patient gets either the "request received,
+  // awaiting confirmation" copy (when pending) or the "appointment
+  // confirmed" copy (when auto-confirmed at booking time). The
+  // distinction is on is_confirmed below.
 
   const appointmentDate = record.appointment_date || "";
   const rawTime = record.appointment_time || "";
