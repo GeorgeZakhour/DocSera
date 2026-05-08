@@ -11,14 +11,16 @@ import '../../../app/const.dart';
 
 /// Forgot-password entry screen.
 ///
-/// Two channels: phone (SMS) and email. The user picks one via the
-/// tab toggle, types the matching identifier, and gets a 6-digit
-/// code. Phone uses [SupabaseOTPService.sendForgotPasswordPhoneOtp]
-/// (Syriatel SMS), email uses [SupabaseOTPService.sendForgotPasswordOtp].
+/// Channel is fixed by the caller — login_page passes the channel
+/// matching the tab the user came from (phone+password vs
+/// email+password). The reset flow then sends the OTP to that same
+/// channel: phone via [SupabaseOTPService.sendForgotPasswordPhoneOtp]
+/// (Syriatel SMS), email via [SupabaseOTPService.sendForgotPasswordOtp].
 ///
-/// [initialMode] lets the caller pre-select the tab (e.g. login_page
-/// passes `phone` when the user came from the phone tab).
-/// [prefilledIdentifier] auto-fills the matching field.
+/// We deliberately don't expose a channel toggle here: an account is
+/// created with one auth method and only that method can be used to
+/// recover it. Showing both options would invite the user to type
+/// the wrong identifier and hit a silent anti-enumeration dead-end.
 class ForgotPasswordPage extends StatefulWidget {
   final bool initialPhoneMode;
   final String? prefilledIdentifier;
@@ -205,8 +207,6 @@ class _ForgotPasswordPageState extends State<ForgotPasswordPage> {
               style: AppTextStyles.getText2(context).copyWith(color: Colors.grey),
             ),
             SizedBox(height: 20.h),
-            _buildModeToggle(local),
-            SizedBox(height: 20.h),
             if (_isPhoneMode)
               TextFormField(
                 controller: _phoneController,
@@ -281,62 +281,4 @@ class _ForgotPasswordPageState extends State<ForgotPasswordPage> {
     );
   }
 
-  Widget _buildModeToggle(AppLocalizations local) {
-    return Row(
-      children: [
-        Expanded(
-          child: _tab(
-            label: local.phone,
-            selected: _isPhoneMode,
-            onTap: () {
-              if (_isPhoneMode) return;
-              setState(() => _isPhoneMode = true);
-            },
-          ),
-        ),
-        SizedBox(width: 8.w),
-        Expanded(
-          child: _tab(
-            label: local.email,
-            selected: !_isPhoneMode,
-            onTap: () {
-              if (!_isPhoneMode) return;
-              setState(() => _isPhoneMode = false);
-            },
-          ),
-        ),
-      ],
-    );
-  }
-
-  Widget _tab({
-    required String label,
-    required bool selected,
-    required VoidCallback onTap,
-  }) {
-    return InkWell(
-      onTap: onTap,
-      borderRadius: BorderRadius.circular(10.r),
-      child: AnimatedContainer(
-        duration: const Duration(milliseconds: 180),
-        padding: EdgeInsets.symmetric(vertical: 10.h),
-        alignment: Alignment.center,
-        decoration: BoxDecoration(
-          color: selected ? AppColors.main.withValues(alpha: 0.12) : Colors.transparent,
-          borderRadius: BorderRadius.circular(10.r),
-          border: Border.all(
-            color: selected ? AppColors.main : Colors.grey.shade300,
-            width: selected ? 1.4 : 1.0,
-          ),
-        ),
-        child: Text(
-          label,
-          style: AppTextStyles.getText2(context).copyWith(
-            color: selected ? AppColors.mainDark : Colors.grey.shade700,
-            fontWeight: selected ? FontWeight.w700 : FontWeight.w500,
-          ),
-        ),
-      ),
-    );
-  }
 }
