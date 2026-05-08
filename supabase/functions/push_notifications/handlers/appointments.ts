@@ -129,14 +129,11 @@ function handleUpdate(
   let deep_link = `appointment:${record.id}`;
   let dedup_key: string | null = null;
 
-  // 1. Rejected (Pending → Rejected/Cancelled, never confirmed)
-  if (
-    (newStatus === "rejected" || newStatus === "cancelled" ||
-      newStatus === "cancelled_by_doctor") &&
-    (oldStatus === "pending" || oldStatus === "not_arrived" ||
-      oldStatus === null || oldStatus === "") &&
-    oldConfirmedBool !== true
-  ) {
+  // 1. Doctor explicitly REJECTED a request (newStatus = 'rejected').
+  // This is the "doctor said no" case — only fires when the doctor
+  // chose to reject the request specifically, not when an appointment
+  // gets cancelled for an external reason like a vacation.
+  if (newStatus === "rejected" && oldStatus !== "rejected") {
     titleAr = `${LTR}⛔ تم رفض طلب الحجز`;
     titleEn = `${LTR}⛔ Booking declined`;
     bodyAr =
@@ -149,16 +146,19 @@ function handleUpdate(
     }
     event_code = "appointment.rejected";
     dedup_key = `apt-rejected:${record.id}`;
-  } // 2. Cancelled by doctor (Confirmed → Cancelled)
+  } // 2. Cancelled by doctor — covers BOTH pending cancellations and
+  // confirmed cancellations. Triggered by status='cancelled' or
+  // 'cancelled_by_doctor' (from the bulk-cancel-on-vacation flow or
+  // any explicit doctor-side cancellation). Copy is consistent
+  // regardless of the appointment's prior confirmed/pending state.
   else if (
-    (newStatus === "cancelled" || newStatus === "rejected" ||
-      newStatus === "cancelled_by_doctor") &&
-    (oldStatus === "confirmed" || oldConfirmedBool === true)
+    (newStatus === "cancelled" || newStatus === "cancelled_by_doctor") &&
+    oldStatus !== "cancelled" && oldStatus !== "cancelled_by_doctor"
   ) {
     titleAr = `${LTR}❌ تم إلغاء الموعد`;
     titleEn = `${LTR}❌ Appointment cancelled`;
-    bodyAr = `${LTR}تم إلغاء موعدك المؤكد مع ${doctorName}.`;
-    bodyEn = `${LTR}Your confirmed appointment with Dr. ${doctorName} has been cancelled.`;
+    bodyAr = `${LTR}تم إلغاء موعدك مع ${doctorName}.`;
+    bodyEn = `${LTR}Your appointment with Dr. ${doctorName} has been cancelled.`;
     if (record.rejection_reason) {
       bodyAr += ` السبب: ${record.rejection_reason}`;
       bodyEn += ` Reason: ${record.rejection_reason}`;

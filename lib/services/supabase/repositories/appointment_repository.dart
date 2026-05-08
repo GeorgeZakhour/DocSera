@@ -48,6 +48,18 @@ class AppointmentRepository {
 
       final nowSyria = DocSeraTime.nowSyria();
 
+      // Statuses that mean "this booking is closed" — keep visible in
+      // the past tab but never in upcoming, even if the timestamp is
+      // future-dated. Mirrors the realtime stream filter below so the
+      // initial fetch and live updates agree.
+      const closedStatuses = <String>{
+        'cancelled',
+        'cancelled_by_doctor',
+        'rejected',
+        'done',
+        'no_show',
+      };
+
       for (var appt in allData) {
         final status = (appt['status'] ?? '').toString();
         final isRejected = status == 'rejected';
@@ -64,7 +76,8 @@ class AppointmentRepository {
 
         appt['timestamp'] = timestamp.toIso8601String();
 
-        if (timestamp.isAfter(nowSyria)) {
+        final isClosed = closedStatuses.contains(status);
+        if (!isClosed && timestamp.isAfter(nowSyria)) {
           upcoming.add(appt);
         } else {
           past.add(appt);
@@ -112,8 +125,32 @@ class AppointmentRepository {
         all.add(appt);
       }
 
-      final upcoming = all.where((a) => DocSeraTime.tryParseToSyria(a['timestamp'])!.isAfter(now)).toList();
-      final past = all.where((a) => DocSeraTime.tryParseToSyria(a['timestamp'])!.isBefore(now)).toList();
+      // Statuses that mean "this is no longer a live booking" — they
+      // belong in the past tab regardless of their scheduled time.
+      // Without this guard, an appointment cancelled by the doctor (e.g.
+      // via the vacation flow) keeps showing in "upcoming" until its
+      // timestamp passes, which misleads the patient into thinking the
+      // cancellation didn't take.
+      const closedStatuses = <String>{
+        'cancelled',
+        'cancelled_by_doctor',
+        'rejected',
+        'done',
+        'no_show',
+      };
+      bool isClosed(Map<String, dynamic> a) =>
+          closedStatuses.contains((a['status'] ?? '').toString());
+
+      final upcoming = all
+          .where((a) =>
+              !isClosed(a) &&
+              DocSeraTime.tryParseToSyria(a['timestamp'])!.isAfter(now))
+          .toList();
+      final past = all
+          .where((a) =>
+              isClosed(a) ||
+              DocSeraTime.tryParseToSyria(a['timestamp'])!.isBefore(now))
+          .toList();
 
       _sharedPrefsService.saveData('upcomingAppointments', upcoming);
       _sharedPrefsService.saveData('pastAppointments', past);
