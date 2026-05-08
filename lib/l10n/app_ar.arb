@@ -668,6 +668,16 @@
   },
   "forgotPasswordTitle": "نسيت كلمة المرور",
   "forgotPasswordSubtitle": "أدخل بريدك الإلكتروني لعملية التحقق. سنرسل لك رمزًا مكونًا من 6 أرقام.",
+  "forgotPasswordSubtitlePhone": "أدخل رقم الهاتف الخاص بحسابك. سنرسل لك رمزًا مكونًا من 6 أرقام.",
+  "forgotPasswordPhoneFieldHint": "رقم الهاتف المستخدم عند إنشاء الحساب",
+  "forgotPasswordEmailFieldHint": "البريد الإلكتروني المستخدم عند إنشاء الحساب",
+  "smsSentTitle": "تم إرسال الرمز",
+  "codeSentMessagePhone": "لقد أرسلنا رمز التحقق إلى {phone}",
+  "@codeSentMessagePhone": {
+    "placeholders": {
+      "phone": { "type": "String" }
+    }
+  },
   "sendCode": "إرسال الرمز",
   "verificationCode": "رمز التحقق",
   "verifyCodeSubtitle": "يرجى إدخال الرمز المرسل إلى {email}",

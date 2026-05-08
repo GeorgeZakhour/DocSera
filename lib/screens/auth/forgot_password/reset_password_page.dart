@@ -10,10 +10,21 @@ import '../../../app/const.dart';
 import 'package:docsera/gen_l10n/app_localizations.dart';
 
 class ResetPasswordPage extends StatefulWidget {
-  final String email;
+  final bool isPhoneMode;
+  final String? email;
+  final String? phone;
   final String code;
 
-  const ResetPasswordPage({super.key, required this.email, required this.code});
+  const ResetPasswordPage({
+    super.key,
+    required this.isPhoneMode,
+    this.email,
+    this.phone,
+    required this.code,
+  }) : assert(
+          (isPhoneMode && phone != null) || (!isPhoneMode && email != null),
+          'must provide phone in phone mode or email in email mode',
+        );
 
   @override
   State<ResetPasswordPage> createState() => _ResetPasswordPageState();
@@ -136,15 +147,27 @@ class _ResetPasswordPageState extends State<ResetPasswordPage> {
     });
   }
   
+  /// Convert 00963XXXXXXXXX → 09XXXXXXXX so the LogInPage phone tab
+  /// recognizes it as the local Syrian form and pre-fills correctly.
+  String _localPhoneFromStored(String stored) {
+    if (stored.startsWith('00963')) return '0${stored.substring(5)}';
+    if (stored.startsWith('+963')) return '0${stored.substring(4)}';
+    return stored;
+  }
+
   Future<void> _resetPassword() async {
     final local = AppLocalizations.of(context)!;
     final password = _passwordController.text;
     if (!_isPasswordValid) return;
     
     setState(() => _isLoading = true);
-    
+
     try {
-      await _otpService.resetPassword(widget.email, widget.code, password);
+      if (widget.isPhoneMode) {
+        await _otpService.resetPasswordPhone(widget.phone!, widget.code, password);
+      } else {
+        await _otpService.resetPassword(widget.email!, widget.code, password);
+      }
       
       if (mounted) {
         // Success Dialog
@@ -173,9 +196,12 @@ class _ResetPasswordPageState extends State<ResetPasswordPage> {
                    onPressed: () {
                      Navigator.pop(context); // Close dialog
                      // Navigate to Login Page and clear history
+                     final prefill = widget.isPhoneMode
+                         ? _localPhoneFromStored(widget.phone!)
+                         : widget.email!;
                      Navigator.pushAndRemoveUntil(
-                       context, 
-                       fadePageRoute(LogInPage(preFilledInput: widget.email)), 
+                       context,
+                       fadePageRoute(LogInPage(preFilledInput: prefill)),
                        (route) => false
                      );
                    }, 

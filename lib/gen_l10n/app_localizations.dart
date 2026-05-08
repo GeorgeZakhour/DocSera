@@ -3716,6 +3716,36 @@ abstract class AppLocalizations {
   /// **'Enter your email for the verification process. We will send you a 6-digit code.'**
   String get forgotPasswordSubtitle;
 
+  /// No description provided for @forgotPasswordSubtitlePhone.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter the phone number for your account. We will send a 6-digit code to it.'**
+  String get forgotPasswordSubtitlePhone;
+
+  /// No description provided for @forgotPasswordPhoneFieldHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Phone number used to create the account'**
+  String get forgotPasswordPhoneFieldHint;
+
+  /// No description provided for @forgotPasswordEmailFieldHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Email used to create the account'**
+  String get forgotPasswordEmailFieldHint;
+
+  /// No description provided for @smsSentTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Code Sent'**
+  String get smsSentTitle;
+
+  /// No description provided for @codeSentMessagePhone.
+  ///
+  /// In en, this message translates to:
+  /// **'We have sent a verification code to {phone}'**
+  String codeSentMessagePhone(String phone);
+
   /// No description provided for @sendCode.
   ///
   /// In en, this message translates to:

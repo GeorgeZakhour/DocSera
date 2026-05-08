@@ -10,10 +10,30 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:docsera/gen_l10n/app_localizations.dart';
 import '../../../app/const.dart';
 
+/// OTP entry screen for the forgot-password flow.
+///
+/// Channel-agnostic: caller passes either an [email] or a [phone]
+/// (in 00963XXXXXXXXX form) plus [isPhoneMode]. Validation peeks
+/// (without consuming) so the next screen can call the consume +
+/// reset endpoint atomically. [displayValue] is what we show to the
+/// user — for phone we show the human local form (09…), not the
+/// 00963 form.
 class OtpVerificationPage extends StatefulWidget {
-  final String email;
+  final bool isPhoneMode;
+  final String? email;
+  final String? phone;
+  final String displayValue;
 
-  const OtpVerificationPage({super.key, required this.email});
+  const OtpVerificationPage({
+    super.key,
+    required this.isPhoneMode,
+    this.email,
+    this.phone,
+    required this.displayValue,
+  }) : assert(
+          (isPhoneMode && phone != null) || (!isPhoneMode && email != null),
+          'must provide phone in phone mode or email in email mode',
+        );
 
   @override
   State<OtpVerificationPage> createState() => _OtpVerificationPageState();
@@ -22,9 +42,9 @@ class OtpVerificationPage extends StatefulWidget {
 class _OtpVerificationPageState extends State<OtpVerificationPage> {
   final SupabaseOTPService _otpService = SupabaseOTPService();
   final TextEditingController _codeController = TextEditingController();
-  
+
   bool _isLoading = false;
-  int _secondsRemaining = 30; // 30 seconds cooldown
+  int _secondsRemaining = 30;
   Timer? _resendTimer;
   bool _canResend = false;
 
@@ -55,10 +75,19 @@ class _OtpVerificationPageState extends State<OtpVerificationPage> {
     final local = AppLocalizations.of(context)!;
     setState(() => _isLoading = true);
     try {
-      await _otpService.sendForgotPasswordOtp(widget.email);
+      if (widget.isPhoneMode) {
+        await _otpService.sendForgotPasswordPhoneOtp(widget.phone!);
+      } else {
+        await _otpService.sendForgotPasswordOtp(widget.email!);
+      }
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-           SnackBar(content: Text(local.emailSentTitle), backgroundColor: Colors.green),
+          SnackBar(
+            content: Text(widget.isPhoneMode
+                ? local.smsSentTitle
+                : local.emailSentTitle),
+            backgroundColor: Colors.green,
+          ),
         );
       }
       _startResendTimer();
@@ -81,8 +110,10 @@ class _OtpVerificationPageState extends State<OtpVerificationPage> {
     setState(() => _isLoading = true);
 
     try {
-      final isValid = await _otpService.validateForgotPasswordOtp(widget.email, code);
-      
+      final isValid = widget.isPhoneMode
+          ? await _otpService.validateForgotPasswordPhoneOtp(widget.phone!, code)
+          : await _otpService.validateForgotPasswordOtp(widget.email!, code);
+
       if (!isValid) {
         throw Exception(local.invalidCode);
       }
@@ -90,7 +121,12 @@ class _OtpVerificationPageState extends State<OtpVerificationPage> {
       if (mounted) {
         Navigator.push(
           context,
-          fadePageRoute(ResetPasswordPage(email: widget.email, code: code)),
+          fadePageRoute(ResetPasswordPage(
+            isPhoneMode: widget.isPhoneMode,
+            email: widget.email,
+            phone: widget.phone,
+            code: code,
+          )),
         );
       }
     } catch (e) {
@@ -121,58 +157,53 @@ class _OtpVerificationPageState extends State<OtpVerificationPage> {
         child: Column(
           children: [
             SizedBox(height: 20.h),
-            Icon(Icons.mark_email_read_outlined, size: 50.sp, color: AppColors.main),
+            Icon(
+              widget.isPhoneMode ? Icons.sms_outlined : Icons.mark_email_read_outlined,
+              size: 50.sp,
+              color: AppColors.main,
+            ),
             SizedBox(height: 20.h),
             Text(
               local.otpSentTo,
               style: AppTextStyles.getTitle2(context),
             ),
-             Text(
-              widget.email,
+            Text(
+              widget.displayValue,
               style: AppTextStyles.getText2(context).copyWith(fontWeight: FontWeight.bold),
             ),
             SizedBox(height: 30.h),
-            
             TextFormField(
-                controller: _codeController,
-                textDirection: detectTextDirection(_codeController.text),
-                textAlign: TextAlign.center,
-                keyboardType: TextInputType.number,
-                maxLength: 6,
-                style: AppTextStyles.getTitle1(context).copyWith(fontSize: 24.sp, letterSpacing: 5),
-                decoration: InputDecoration(
-                  labelText: local.otpLabel,
-                  labelStyle: AppTextStyles.getText2(context).copyWith(color: Colors.grey, letterSpacing: 0),
-                  border: OutlineInputBorder(borderRadius: BorderRadius.circular(12.r)),
-                  focusedBorder: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(12.r),
-                    borderSide: const BorderSide(color: AppColors.main, width: 2),
-                  ),
+              controller: _codeController,
+              textDirection: detectTextDirection(_codeController.text),
+              textAlign: TextAlign.center,
+              keyboardType: TextInputType.number,
+              maxLength: 6,
+              style: AppTextStyles.getTitle1(context).copyWith(fontSize: 24.sp, letterSpacing: 5),
+              decoration: InputDecoration(
+                labelText: local.otpLabel,
+                labelStyle: AppTextStyles.getText2(context).copyWith(color: Colors.grey, letterSpacing: 0),
+                border: OutlineInputBorder(borderRadius: BorderRadius.circular(12.r)),
+                focusedBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(12.r),
+                  borderSide: const BorderSide(color: AppColors.main, width: 2),
                 ),
-                onChanged: (_) => setState(() {}),
               ),
-              
+              onChanged: (_) => setState(() {}),
+            ),
             SizedBox(height: 20.h),
-            
             GestureDetector(
-                onTap: _canResend ? _resendCode : null,
-                child: Text(
-                  _canResend
-                      ? local.resendCode
-                      : '${local.resendCode.split('?')[0]}? $_secondsRemaining ${local.seconds}', // Using split to remove potential extra text if resendCode is "Resend?" 
-                      // Actually local.resendCode is "Didn't receive the code? Tap to resend."
-                      // Let's just use local.didntReceiveCode (Line 575: "Didn't receive a code?") for brevity or construct correctly.
-                      // Line 589: didntReceiveCode: "Didn't receive the code?"
-                      // Wait, line 589 in my view was: "didntReceiveCode": "Didn't receive the code?",
-                      // I will just use local.didntReceiveCode.
-                  style: AppTextStyles.getText3(context).copyWith(
-                    color: _canResend ? AppColors.main : Colors.grey,
-                    decoration: TextDecoration.underline,
-                  ),
+              onTap: _canResend ? _resendCode : null,
+              child: Text(
+                _canResend
+                    ? local.resendCode
+                    : '${local.resendCode.split('?')[0]}? $_secondsRemaining ${local.seconds}',
+                style: AppTextStyles.getText3(context).copyWith(
+                  color: _canResend ? AppColors.main : Colors.grey,
+                  decoration: TextDecoration.underline,
                 ),
               ),
-              
-             SizedBox(height: 40.h),
+            ),
+            SizedBox(height: 40.h),
             SizedBox(
               width: double.infinity,
               child: ElevatedButton(
@@ -182,12 +213,12 @@ class _OtpVerificationPageState extends State<OtpVerificationPage> {
                   padding: EdgeInsets.symmetric(vertical: 14.h),
                   shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12.r)),
                 ),
-                child: _isLoading 
-                ? SizedBox(width: 20.w, height: 20.w, child: const CircularProgressIndicator(color: Colors.white, strokeWidth: 2))
-                : Text(
-                  local.verify,
-                  style: AppTextStyles.getTitle2(context).copyWith(color: Colors.white, fontSize: 13.sp),
-                ),
+                child: _isLoading
+                    ? SizedBox(width: 20.w, height: 20.w, child: const CircularProgressIndicator(color: Colors.white, strokeWidth: 2))
+                    : Text(
+                        local.verify,
+                        style: AppTextStyles.getTitle2(context).copyWith(color: Colors.white, fontSize: 13.sp),
+                      ),
               ),
             ),
           ],

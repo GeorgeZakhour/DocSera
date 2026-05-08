@@ -1971,6 +1971,25 @@ class AppLocalizationsEn extends AppLocalizations {
       'Enter your email for the verification process. We will send you a 6-digit code.';
 
   @override
+  String get forgotPasswordSubtitlePhone =>
+      'Enter the phone number for your account. We will send a 6-digit code to it.';
+
+  @override
+  String get forgotPasswordPhoneFieldHint =>
+      'Phone number used to create the account';
+
+  @override
+  String get forgotPasswordEmailFieldHint => 'Email used to create the account';
+
+  @override
+  String get smsSentTitle => 'Code Sent';
+
+  @override
+  String codeSentMessagePhone(String phone) {
+    return 'We have sent a verification code to $phone';
+  }
+
+  @override
   String get sendCode => 'Send Code';
 
   @override

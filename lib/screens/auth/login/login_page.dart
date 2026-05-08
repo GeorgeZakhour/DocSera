@@ -225,9 +225,16 @@ class _LogInPageState extends State<LogInPage> with SingleTickerProviderStateMix
           duration: const Duration(seconds: 4),
         ),
       );
+      // Pre-select the channel matching what the user typed: phone tab
+      // when this came from the phone+password path, email otherwise.
       Navigator.push(
         context,
-        fadePageRoute(const ForgotPasswordPage()),
+        fadePageRoute(ForgotPasswordPage(
+          initialPhoneMode: _isPhoneMode,
+          prefilledIdentifier: _isPhoneMode
+              ? _phoneController.text.trim()
+              : _inputController.text.trim(),
+        )),
       );
       return;
     }
@@ -817,7 +824,10 @@ class _LogInPageState extends State<LogInPage> with SingleTickerProviderStateMix
                     onPressed: () {
                       Navigator.push(
                         context,
-                        fadePageRoute(const ForgotPasswordPage()),
+                        fadePageRoute(ForgotPasswordPage(
+                          initialPhoneMode: true,
+                          prefilledIdentifier: _phoneController.text.trim(),
+                        )),
                       );
                     },
                     style: TextButton.styleFrom(
@@ -931,7 +941,10 @@ class _LogInPageState extends State<LogInPage> with SingleTickerProviderStateMix
                     onPressed: () {
                       Navigator.push(
                         context,
-                        fadePageRoute(const ForgotPasswordPage()),
+                        fadePageRoute(ForgotPasswordPage(
+                          initialPhoneMode: false,
+                          prefilledIdentifier: _inputController.text.trim(),
+                        )),
                       );
                     },
                     style: TextButton.styleFrom(

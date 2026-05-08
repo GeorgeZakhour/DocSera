@@ -4,12 +4,30 @@ import 'package:docsera/services/supabase/supabase_otp_service.dart';
 import 'package:docsera/utils/page_transitions.dart';
 import 'package:docsera/widgets/base_scaffold.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:docsera/gen_l10n/app_localizations.dart';
 import '../../../app/const.dart';
 
+/// Forgot-password entry screen.
+///
+/// Two channels: phone (SMS) and email. The user picks one via the
+/// tab toggle, types the matching identifier, and gets a 6-digit
+/// code. Phone uses [SupabaseOTPService.sendForgotPasswordPhoneOtp]
+/// (Syriatel SMS), email uses [SupabaseOTPService.sendForgotPasswordOtp].
+///
+/// [initialMode] lets the caller pre-select the tab (e.g. login_page
+/// passes `phone` when the user came from the phone tab).
+/// [prefilledIdentifier] auto-fills the matching field.
 class ForgotPasswordPage extends StatefulWidget {
-  const ForgotPasswordPage({super.key});
+  final bool initialPhoneMode;
+  final String? prefilledIdentifier;
+
+  const ForgotPasswordPage({
+    super.key,
+    this.initialPhoneMode = false,
+    this.prefilledIdentifier,
+  });
 
   @override
   State<ForgotPasswordPage> createState() => _ForgotPasswordPageState();
@@ -17,73 +35,148 @@ class ForgotPasswordPage extends StatefulWidget {
 
 class _ForgotPasswordPageState extends State<ForgotPasswordPage> {
   final TextEditingController _emailController = TextEditingController();
+  final TextEditingController _phoneController = TextEditingController();
   final SupabaseOTPService _otpService = SupabaseOTPService();
+  final RegExp _phoneRegex = RegExp(r'^09\d{8}$');
+
   bool _isLoading = false;
+  late bool _isPhoneMode;
 
-  void _sendCode() async {
-    final email = _emailController.text.trim();
-    if (email.isEmpty) return;
+  @override
+  void initState() {
+    super.initState();
+    _isPhoneMode = widget.initialPhoneMode;
+    final pre = (widget.prefilledIdentifier ?? '').trim();
+    if (pre.isNotEmpty) {
+      if (_isPhoneMode || RegExp(r'^09\d{0,8}$').hasMatch(pre)) {
+        _phoneController.text = pre;
+        _isPhoneMode = true;
+      } else {
+        _emailController.text = pre;
+        _isPhoneMode = false;
+      }
+    }
+  }
 
+  @override
+  void dispose() {
+    _emailController.dispose();
+    _phoneController.dispose();
+    super.dispose();
+  }
+
+  String _formattedPhone() {
+    var p = _phoneController.text.trim();
+    if (p.startsWith('09')) p = p.substring(1);
+    return '00963$p';
+  }
+
+  Future<void> _sendCode() async {
+    final local = AppLocalizations.of(context)!;
     setState(() => _isLoading = true);
 
     try {
-      await _otpService.sendForgotPasswordOtp(email);
-      if (mounted) {
-        // Show confirmation dialog before navigating
-        await showDialog(
-          context: context, 
-          builder: (context) => AlertDialog(
-             backgroundColor: Colors.white,
-             shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16.r)),
-              title: Text(
-                AppLocalizations.of(context)!.emailSentTitle, 
-                style: AppTextStyles.getTitle2(context).copyWith(color: AppColors.mainDark),
-                textAlign: TextAlign.center,
-              ),
-             content: Text(
-                AppLocalizations.of(context)!.codeSentMessage(email), 
-                style: AppTextStyles.getText2(context),
-                textAlign: TextAlign.center,
-             ),
-             actionsAlignment: MainAxisAlignment.center,
-             actionsPadding: EdgeInsets.only(bottom: 24.h, left: 24.w, right: 24.w),
-             actions: [
-               SizedBox(
-                 width: double.infinity,
-                 child: ElevatedButton(
-                   onPressed: () => Navigator.pop(context), 
-                   style: ElevatedButton.styleFrom(
-                     backgroundColor: AppColors.main,
-                     padding: EdgeInsets.symmetric(vertical: 12.h),
-                     shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12.r)),
-                     elevation: 0,
-                   ),
-                   child: Text(
-                     AppLocalizations.of(context)!.ok, 
-                     style: AppTextStyles.getText2(context).copyWith(color: Colors.white, fontWeight: FontWeight.bold)
-                   )
-                 ),
-               )
-             ]
-          )
+      if (_isPhoneMode) {
+        if (!_phoneRegex.hasMatch(_phoneController.text.trim())) return;
+        final phone = _formattedPhone();
+        await _otpService.sendForgotPasswordPhoneOtp(phone);
+        if (!mounted) return;
+        await _showSentDialog(
+          title: local.smsSentTitle,
+          body: local.codeSentMessagePhone(_phoneController.text.trim()),
         );
-
-        if (mounted) {
-          Navigator.push(
-            context,
-            fadePageRoute(OtpVerificationPage(email: email)),
-          );
-        }
+        if (!mounted) return;
+        Navigator.push(
+          context,
+          fadePageRoute(OtpVerificationPage(
+            isPhoneMode: true,
+            phone: phone,
+            displayValue: _phoneController.text.trim(),
+          )),
+        );
+      } else {
+        final email = _emailController.text.trim();
+        if (email.isEmpty) return;
+        await _otpService.sendForgotPasswordOtp(email);
+        if (!mounted) return;
+        await _showSentDialog(
+          title: local.emailSentTitle,
+          body: local.codeSentMessage(email),
+        );
+        if (!mounted) return;
+        Navigator.push(
+          context,
+          fadePageRoute(OtpVerificationPage(
+            isPhoneMode: false,
+            email: email,
+            displayValue: email,
+          )),
+        );
       }
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text("${AppLocalizations.of(context)!.errorOccurred}: $e"), backgroundColor: Colors.red),
+          SnackBar(
+            content: Text("${local.errorOccurred}: $e"),
+            backgroundColor: Colors.red,
+          ),
         );
       }
     } finally {
       if (mounted) setState(() => _isLoading = false);
     }
+  }
+
+  Future<void> _showSentDialog({required String title, required String body}) {
+    final local = AppLocalizations.of(context)!;
+    return showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        backgroundColor: Colors.white,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16.r)),
+        title: Text(
+          title,
+          style: AppTextStyles.getTitle2(context).copyWith(color: AppColors.mainDark),
+          textAlign: TextAlign.center,
+        ),
+        content: Text(
+          body,
+          style: AppTextStyles.getText2(context),
+          textAlign: TextAlign.center,
+        ),
+        actionsAlignment: MainAxisAlignment.center,
+        actionsPadding: EdgeInsets.only(bottom: 24.h, left: 24.w, right: 24.w),
+        actions: [
+          SizedBox(
+            width: double.infinity,
+            child: ElevatedButton(
+              onPressed: () => Navigator.pop(context),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: AppColors.main,
+                padding: EdgeInsets.symmetric(vertical: 12.h),
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12.r)),
+                elevation: 0,
+              ),
+              child: Text(
+                local.ok,
+                style: AppTextStyles.getText2(context).copyWith(
+                  color: Colors.white,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+            ),
+          )
+        ],
+      ),
+    );
+  }
+
+  bool get _canSubmit {
+    if (_isLoading) return false;
+    if (_isPhoneMode) {
+      return _phoneRegex.hasMatch(_phoneController.text.trim());
+    }
+    return _emailController.text.trim().isNotEmpty;
   }
 
   @override
@@ -106,44 +199,142 @@ class _ForgotPasswordPageState extends State<ForgotPasswordPage> {
             ),
             SizedBox(height: 8.h),
             Text(
-              local.forgotPasswordSubtitle,
+              _isPhoneMode
+                  ? local.forgotPasswordSubtitlePhone
+                  : local.forgotPasswordSubtitle,
               style: AppTextStyles.getText2(context).copyWith(color: Colors.grey),
             ),
-            SizedBox(height: 30.h),
-            TextFormField(
-              controller: _emailController,
-              keyboardType: TextInputType.emailAddress,
-              style: AppTextStyles.getText2(context),
-              decoration: InputDecoration(
-                labelText: local.email,
-                labelStyle: AppTextStyles.getText3(context).copyWith(color: Colors.grey),
-                border: OutlineInputBorder(borderRadius: BorderRadius.circular(12.r)),
-                focusedBorder: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(12.r),
-                  borderSide: const BorderSide(color: AppColors.main, width: 2),
+            SizedBox(height: 20.h),
+            _buildModeToggle(local),
+            SizedBox(height: 20.h),
+            if (_isPhoneMode)
+              TextFormField(
+                controller: _phoneController,
+                keyboardType: TextInputType.phone,
+                style: AppTextStyles.getText2(context),
+                inputFormatters: [
+                  FilteringTextInputFormatter.digitsOnly,
+                  LengthLimitingTextInputFormatter(10),
+                ],
+                onChanged: (_) => setState(() {}),
+                decoration: InputDecoration(
+                  labelText: local.phoneNumber,
+                  hintText: local.forgotPasswordPhoneFieldHint,
+                  labelStyle: AppTextStyles.getText3(context).copyWith(color: Colors.grey),
+                  hintStyle: AppTextStyles.getText3(context)
+                      .copyWith(color: Colors.grey.withValues(alpha: 0.5)),
+                  border: OutlineInputBorder(borderRadius: BorderRadius.circular(12.r)),
+                  focusedBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12.r),
+                    borderSide: const BorderSide(color: AppColors.main, width: 2),
+                  ),
+                  prefixIcon: const Icon(Icons.phone_android, color: Colors.grey),
                 ),
-                prefixIcon: const Icon(Icons.email_outlined, color: Colors.grey),
+              )
+            else
+              TextFormField(
+                controller: _emailController,
+                keyboardType: TextInputType.emailAddress,
+                style: AppTextStyles.getText2(context),
+                onChanged: (_) => setState(() {}),
+                decoration: InputDecoration(
+                  labelText: local.email,
+                  hintText: local.forgotPasswordEmailFieldHint,
+                  labelStyle: AppTextStyles.getText3(context).copyWith(color: Colors.grey),
+                  hintStyle: AppTextStyles.getText3(context)
+                      .copyWith(color: Colors.grey.withValues(alpha: 0.5)),
+                  border: OutlineInputBorder(borderRadius: BorderRadius.circular(12.r)),
+                  focusedBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12.r),
+                    borderSide: const BorderSide(color: AppColors.main, width: 2),
+                  ),
+                  prefixIcon: const Icon(Icons.email_outlined, color: Colors.grey),
+                ),
               ),
-            ),
             SizedBox(height: 40.h),
             SizedBox(
               width: double.infinity,
               child: ElevatedButton(
-                onPressed: _isLoading ? null : _sendCode,
+                onPressed: _canSubmit ? _sendCode : null,
                 style: ElevatedButton.styleFrom(
-                  backgroundColor: AppColors.main,
+                  backgroundColor: _canSubmit ? AppColors.main : Colors.grey,
                   padding: EdgeInsets.symmetric(vertical: 14.h),
                   shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12.r)),
                 ),
                 child: _isLoading
-                    ? SizedBox(width: 20.w, height: 20.w, child: const CircularProgressIndicator(color: Colors.white, strokeWidth: 2))
+                    ? SizedBox(
+                        width: 20.w,
+                        height: 20.w,
+                        child: const CircularProgressIndicator(
+                            color: Colors.white, strokeWidth: 2),
+                      )
                     : Text(
-                  local.sendCode,
-                  style: AppTextStyles.getTitle2(context).copyWith(color: Colors.white, fontSize: 13.sp),
-                ),
+                        local.sendCode,
+                        style: AppTextStyles.getTitle2(context)
+                            .copyWith(color: Colors.white, fontSize: 13.sp),
+                      ),
               ),
             ),
           ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildModeToggle(AppLocalizations local) {
+    return Row(
+      children: [
+        Expanded(
+          child: _tab(
+            label: local.phone,
+            selected: _isPhoneMode,
+            onTap: () {
+              if (_isPhoneMode) return;
+              setState(() => _isPhoneMode = true);
+            },
+          ),
+        ),
+        SizedBox(width: 8.w),
+        Expanded(
+          child: _tab(
+            label: local.email,
+            selected: !_isPhoneMode,
+            onTap: () {
+              if (!_isPhoneMode) return;
+              setState(() => _isPhoneMode = false);
+            },
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _tab({
+    required String label,
+    required bool selected,
+    required VoidCallback onTap,
+  }) {
+    return InkWell(
+      onTap: onTap,
+      borderRadius: BorderRadius.circular(10.r),
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 180),
+        padding: EdgeInsets.symmetric(vertical: 10.h),
+        alignment: Alignment.center,
+        decoration: BoxDecoration(
+          color: selected ? AppColors.main.withValues(alpha: 0.12) : Colors.transparent,
+          borderRadius: BorderRadius.circular(10.r),
+          border: Border.all(
+            color: selected ? AppColors.main : Colors.grey.shade300,
+            width: selected ? 1.4 : 1.0,
+          ),
+        ),
+        child: Text(
+          label,
+          style: AppTextStyles.getText2(context).copyWith(
+            color: selected ? AppColors.mainDark : Colors.grey.shade700,
+            fontWeight: selected ? FontWeight.w700 : FontWeight.w500,
+          ),
         ),
       ),
     );

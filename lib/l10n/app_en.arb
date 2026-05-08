@@ -652,6 +652,16 @@
   "@ForgotPassword================================": "Forgot Password Flow",
   "forgotPasswordTitle": "Forgot Password",
   "forgotPasswordSubtitle": "Enter your email for the verification process. We will send you a 6-digit code.",
+  "forgotPasswordSubtitlePhone": "Enter the phone number for your account. We will send a 6-digit code to it.",
+  "forgotPasswordPhoneFieldHint": "Phone number used to create the account",
+  "forgotPasswordEmailFieldHint": "Email used to create the account",
+  "smsSentTitle": "Code Sent",
+  "codeSentMessagePhone": "We have sent a verification code to {phone}",
+  "@codeSentMessagePhone": {
+    "placeholders": {
+      "phone": { "type": "String" }
+    }
+  },
   "sendCode": "Send Code",
   "verificationCode": "Verification Code",
   "verifyCodeSubtitle": "Please enter the code sent to {email}",

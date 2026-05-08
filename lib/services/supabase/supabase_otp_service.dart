@@ -112,6 +112,60 @@ class SupabaseOTPService {
   }
 
   // ---------------------------------------------------------------------------
+  // 🔐 Forgot Password Flow — Phone channel (SMS)
+  //
+  // Reuses the cross-app SMS infrastructure: send_sms_otp with
+  // purpose=password_reset, then rpc_validate_phone_otp_peek to peek
+  // the code, then confirm_password_reset to consume + reset. Same
+  // backend endpoints DocSera-Pro already uses.
+  // ---------------------------------------------------------------------------
+
+  /// 1. Send SMS OTP (Purpose: password_reset)
+  Future<void> sendForgotPasswordPhoneOtp(String phone) async {
+    final res = await _supabase.functions.invoke(
+      'send_sms_otp',
+      body: {
+        'phone': phone,
+        'purpose': 'password_reset',
+      },
+    );
+
+    if (res.status != 200) {
+      throw Exception('Failed to send SMS verification code');
+    }
+  }
+
+  /// 2. Validate SMS OTP (peek without consuming)
+  Future<bool> validateForgotPasswordPhoneOtp(String phone, String code) async {
+    final res = await _supabase.rpc(
+      'rpc_validate_phone_otp_peek',
+      params: {
+        'p_phone': phone,
+        'p_code': code,
+        'p_purpose': 'password_reset',
+      },
+    );
+    return res == true;
+  }
+
+  /// 3. Reset password via phone channel (consumes OTP + updates password)
+  Future<void> resetPasswordPhone(String phone, String code, String newPassword) async {
+    final res = await _supabase.functions.invoke(
+      'confirm_password_reset',
+      body: {
+        'channel': 'phone',
+        'value': phone,
+        'otp_code': code,
+        'new_password': newPassword,
+      },
+    );
+
+    if (res.status != 200) {
+      throw Exception('Failed to reset password. Code might be expired.');
+    }
+  }
+
+  // ---------------------------------------------------------------------------
   // 🔢 OTP Generator (SMS فقط)
   // ---------------------------------------------------------------------------
   String _generateOTP() {

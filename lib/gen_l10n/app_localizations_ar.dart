@@ -1948,6 +1948,26 @@ class AppLocalizationsAr extends AppLocalizations {
       'أدخل بريدك الإلكتروني لعملية التحقق. سنرسل لك رمزًا مكونًا من 6 أرقام.';
 
   @override
+  String get forgotPasswordSubtitlePhone =>
+      'أدخل رقم الهاتف الخاص بحسابك. سنرسل لك رمزًا مكونًا من 6 أرقام.';
+
+  @override
+  String get forgotPasswordPhoneFieldHint =>
+      'رقم الهاتف المستخدم عند إنشاء الحساب';
+
+  @override
+  String get forgotPasswordEmailFieldHint =>
+      'البريد الإلكتروني المستخدم عند إنشاء الحساب';
+
+  @override
+  String get smsSentTitle => 'تم إرسال الرمز';
+
+  @override
+  String codeSentMessagePhone(String phone) {
+    return 'لقد أرسلنا رمز التحقق إلى $phone';
+  }
+
+  @override
   String get sendCode => 'إرسال الرمز';
 
   @override
