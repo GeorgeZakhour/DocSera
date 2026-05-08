@@ -47,7 +47,10 @@ serve(async (req) => {
       `🔔 Webhook received! Type: ${payload.type}, Table: ${payload.table}, Schema: ${payload.schema}`,
     );
 
-    if (!payload.record) {
+    // For INSERT/UPDATE webhooks the row of interest is in `record`. For
+    // DELETE webhooks Supabase puts it in `old_record` and `record` is
+    // null. Accept either.
+    if (!payload.record && !payload.old_record) {
       return new Response("No record found", { status: 400 });
     }
 
