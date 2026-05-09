@@ -56,33 +56,60 @@ class AccountSecurityService {
   // Phone change flow (OTP)
   // ---------------------------------------------------------------------------
 
-  /// ✅ requestPhoneChange(e164) → rpc_request_phone_change
-  /// يتوقع أن الـ RPC يقوم بإنشاء OTP وإرساله (SMS/WhatsApp/Provider)
-  Future<String> requestPhoneChange(String e164) async {
+  /// requestPhoneChange(e164) → send_sms_otp edge function
+  ///
+  /// Migrated from the legacy rpc_request_phone_change which leaked the
+  /// OTP back to the client. Now uses the same unified edge function
+  /// that DocSera-Pro signup + login + cross-app flows use:
+  ///   * Real Syriatel SMS for production phones
+  ///   * Test-phone whitelist (00963900000001..13) accepting "123456"
+  ///   * OTP stored as a sha256 hash in doctor_phone_otps — never
+  ///     returned to the client
+  Future<void> requestPhoneChange(String e164) async {
     try {
-      final res = await _supabase.rpc(
-        'rpc_request_phone_change',
-        params: {'e164': e164},
+      final res = await _supabase.functions.invoke(
+        'send_sms_otp',
+        body: {
+          'phone': e164,
+          'purpose': 'phone_change',
+        },
       );
-
-      if (res == null) {
-        throw Exception('OTP not returned');
+      final data = res.data;
+      if (data is Map && data['error'] != null) {
+        throw Exception(data['error'].toString());
       }
-
-      return res.toString();
     } catch (e) {
       throw Exception('AccountSecurityService.requestPhoneChange failed: $e');
     }
   }
 
 
-  /// ✅ verifyPhoneOtp(e164, otp) → rpc_verify_phone_otp
-  /// يتوقع أن الـ RPC يتحقق ثم يحدّث الهاتف (أو يثبت طلب التغيير)
+  /// verifyPhoneOtp(e164, otp) → rpc_verify_phone_otp(3-arg, unified)
+  ///
+  /// The unified RPC consults doctor_phone_otps (sha256-hashed). On
+  /// success we still need to write the new phone onto public.users —
+  /// the legacy 2-arg RPC did that inline; the 3-arg unified RPC just
+  /// validates the code, so we update separately via rpc_update_my_user.
   Future<void> verifyPhoneOtp(String e164, String otp) async {
     try {
-      await _supabase.rpc(
+      final ok = await _supabase.rpc(
         'rpc_verify_phone_otp',
-        params: {'e164': e164, 'p_otp': otp},
+        params: {
+          'p_phone': e164,
+          'p_code': otp,
+          'p_purpose': 'phone_change',
+        },
+      );
+      if (ok != true) {
+        throw Exception('INVALID_OTP');
+      }
+      // Persist the new phone on public.users now that it's verified.
+      await _supabase.rpc(
+        'rpc_set_my_phone',
+        params: {
+          'p_phone': e164,
+          'p_verified': true,
+        },
       );
     } catch (e) {
       throw Exception('AccountSecurityService.verifyPhoneOtp failed: $e');

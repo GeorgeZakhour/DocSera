@@ -59,14 +59,15 @@ class AccountSecurityCubit extends Cubit<AccountSecurityState> {
   Future<void> requestPhoneOtp(String e164) async {
     try {
       emit(const AccountSecurityLoading());
-
-      final otp = await _service.requestPhoneChange(e164);
-
-      // Note: OLD flow returns OTP for phone.
+      // The unified send_sms_otp edge function does not return the OTP
+      // (it's hashed server-side). Pass null and let the UI prompt the
+      // user to enter the code they receive via SMS — same behavior as
+      // the rest of the cross-app phone flows.
+      await _service.requestPhoneChange(e164);
       emit(AccountOtpSent(
         target: AccountSecurityTarget.phone,
         value: e164,
-        otp: otp,
+        otp: null,
       ));
     } catch (e) {
       emit(const AccountSecurityError('OTP_REQUEST_FAILED'));
