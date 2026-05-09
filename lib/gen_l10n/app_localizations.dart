@@ -9434,6 +9434,24 @@ abstract class AppLocalizations {
   /// **'Sign out'**
   String get pendingDeletionSignOutCta;
 
+  /// No description provided for @pendingDeletionHoursRemaining.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{1 hour remaining} other{{count} hours remaining}}'**
+  String pendingDeletionHoursRemaining(int count);
+
+  /// No description provided for @pendingDeletionMinutesRemaining.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{1 minute remaining} other{{count} minutes remaining}}'**
+  String pendingDeletionMinutesRemaining(int count);
+
+  /// No description provided for @pendingDeletionExpiringNow.
+  ///
+  /// In en, this message translates to:
+  /// **'Grace period ending now'**
+  String get pendingDeletionExpiringNow;
+
   /// No description provided for @reminder2hTitle.
   ///
   /// In en, this message translates to:

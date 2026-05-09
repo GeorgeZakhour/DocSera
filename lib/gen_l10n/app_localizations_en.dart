@@ -5152,6 +5152,31 @@ class AppLocalizationsEn extends AppLocalizations {
   String get pendingDeletionSignOutCta => 'Sign out';
 
   @override
+  String pendingDeletionHoursRemaining(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count hours remaining',
+      one: '1 hour remaining',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String pendingDeletionMinutesRemaining(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count minutes remaining',
+      one: '1 minute remaining',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get pendingDeletionExpiringNow => 'Grace period ending now';
+
+  @override
   String get reminder2hTitle => 'Appointment in 2 hours';
 
   @override

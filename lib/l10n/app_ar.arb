@@ -2053,5 +2053,15 @@
   "pendingDeletionNoneBody": "حسابك مفعّل بالكامل ولا يوجد طلب حذف معلّق.",
   "pendingDeletionSignOutCta": "تسجيل الخروج",
   "@pendingDeletionSignOutCta": {},
+  "pendingDeletionHoursRemaining": "{count, plural, =1{ساعة واحدة متبقية} =2{ساعتان متبقيتان} few{{count} ساعات متبقية} many{{count} ساعة متبقية} other{{count} ساعة متبقية}}",
+  "@pendingDeletionHoursRemaining": {
+    "placeholders": { "count": { "type": "int" } }
+  },
+  "pendingDeletionMinutesRemaining": "{count, plural, =1{دقيقة واحدة متبقية} =2{دقيقتان متبقيتان} few{{count} دقائق متبقية} many{{count} دقيقة متبقية} other{{count} دقيقة متبقية}}",
+  "@pendingDeletionMinutesRemaining": {
+    "placeholders": { "count": { "type": "int" } }
+  },
+  "pendingDeletionExpiringNow": "تنتهي المهلة الآن",
+  "@pendingDeletionExpiringNow": {},
   "@pendingDeletionNoneBody": {}
 }

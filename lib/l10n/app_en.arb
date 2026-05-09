@@ -2052,6 +2052,16 @@
   "pendingDeletionNoneBody": "Your account is fully active and there is no pending deletion request.",
   "pendingDeletionSignOutCta": "Sign out",
   "@pendingDeletionSignOutCta": {},
+  "pendingDeletionHoursRemaining": "{count, plural, =1{1 hour remaining} other{{count} hours remaining}}",
+  "@pendingDeletionHoursRemaining": {
+    "placeholders": { "count": { "type": "int" } }
+  },
+  "pendingDeletionMinutesRemaining": "{count, plural, =1{1 minute remaining} other{{count} minutes remaining}}",
+  "@pendingDeletionMinutesRemaining": {
+    "placeholders": { "count": { "type": "int" } }
+  },
+  "pendingDeletionExpiringNow": "Grace period ending now",
+  "@pendingDeletionExpiringNow": {},
   "@pendingDeletionNoneBody": {},
 
   "reminder2hTitle": "Appointment in 2 hours",

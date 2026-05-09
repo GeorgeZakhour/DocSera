@@ -187,6 +187,32 @@ class _PendingDeletionPageState extends State<PendingDeletionPage> {
     return diff.ceil().clamp(0, 30);
   }
 
+  /// Localized "X days / hours / minutes remaining" with degrading
+  /// granularity as the deadline approaches: full days when ≥1 day
+  /// remains, hours when <1 day, minutes when <1 hour, an "expiring
+  /// now" line when the window is gone.
+  String _remainingLabel(AppLocalizations loc) {
+    final until = _status?['cancellable_until'];
+    if (until == null) return loc.pendingDeletionDaysRemaining(0);
+    final dt = DateTime.tryParse(until.toString());
+    if (dt == null) return loc.pendingDeletionDaysRemaining(0);
+
+    final remaining = dt.difference(DateTime.now());
+    if (remaining.isNegative || remaining.inSeconds <= 0) {
+      return loc.pendingDeletionExpiringNow;
+    }
+    if (remaining.inDays >= 1) {
+      // Round up so e.g. 23h shows as "1 day", 36h as "2 days".
+      final days = (remaining.inHours / 24.0).ceil().clamp(1, 30);
+      return loc.pendingDeletionDaysRemaining(days);
+    }
+    if (remaining.inHours >= 1) {
+      return loc.pendingDeletionHoursRemaining(remaining.inHours);
+    }
+    final minutes = remaining.inMinutes.clamp(1, 59);
+    return loc.pendingDeletionMinutesRemaining(minutes);
+  }
+
   @override
   Widget build(BuildContext context) {
     final loc = AppLocalizations.of(context)!;
@@ -297,7 +323,7 @@ class _PendingDeletionPageState extends State<PendingDeletionPage> {
               ),
               SizedBox(height: 14.h),
               Text(
-                loc.pendingDeletionDaysRemaining(daysLeft),
+                _remainingLabel(loc),
                 style: AppTextStyles.getText1(context)
                     .copyWith(fontWeight: FontWeight.w700),
               ),
