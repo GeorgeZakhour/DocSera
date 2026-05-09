@@ -235,11 +235,19 @@ class _PendingDeletionPageState extends State<PendingDeletionPage> {
                   ),
                 )
               : const Icon(Icons.shield_rounded),
-          label: Text(loc.pendingDeletionCancelCta),
+          // Wrap label in a Text-with-explicit-style so the Cairo/Montserrat
+          // family from AppTextStyles is applied. FilledButton.styleFrom's
+          // textStyle param doesn't pick up the locale-aware font.
+          label: Text(
+            loc.pendingDeletionCancelCta,
+            style: AppTextStyles.getText2(context).copyWith(
+              color: Colors.white,
+              fontWeight: FontWeight.w700,
+            ),
+          ),
           style: FilledButton.styleFrom(
             backgroundColor: AppColors.main,
             minimumSize: Size(double.infinity, 50.h),
-            textStyle: TextStyle(fontSize: 14.sp, fontWeight: FontWeight.w700),
           ),
         ),
         SizedBox(height: 16.h),
