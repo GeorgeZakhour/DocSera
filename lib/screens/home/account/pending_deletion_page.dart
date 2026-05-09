@@ -190,11 +190,19 @@ class _PendingDeletionPageState extends State<PendingDeletionPage> {
   @override
   Widget build(BuildContext context) {
     final loc = AppLocalizations.of(context)!;
-    return BaseScaffold(
+    // Block both the AppBar back arrow and the Android system back
+    // gesture: this page is the only route on the stack (reached via
+    // pushAndRemoveUntil), so popping leads to a black screen. Force
+    // the user through one of the explicit exits: Cancel (→ home) or
+    // Sign out (→ login).
+    return PopScope(
+      canPop: false,
+      child: BaseScaffold(
       title: Text(
         loc.pendingDeletionTitle,
         style: AppTextStyles.getTitle1(context).copyWith(color: AppColors.whiteText),
       ),
+      showBackArrow: false,
       child: _loading
           ? const Center(child: CircularProgressIndicator(color: AppColors.main))
           : _error != null
@@ -202,6 +210,7 @@ class _PendingDeletionPageState extends State<PendingDeletionPage> {
               : _status == null || _status!['status'] == 'not_pending'
                   ? _buildNotPending(loc)
                   : _buildPending(loc),
+      ),
     );
   }
 
