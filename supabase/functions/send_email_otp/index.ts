@@ -52,6 +52,66 @@ serve(async (req) => {
     }
 
     // ------------------------------------------------------------
+    // TEMP DEV BYPASS — fake test emails (test*@docsera.dev and
+    // anything *@doctor.com / *@member.com / *@email.com) skip the
+    // Mailgun send and instead write a real OTP row hashed for
+    // code "123456". Mirrors the whitelist in Pro's send_doctor_otp
+    // so dev/staging accounts behave identically across both apps.
+    //
+    // Important: we have to write the row, not just return success.
+    // The verify side (rpc_verify_email_otp) looks up email_otps by
+    // hash, so a no-row bypass would make every verify fail.
+    //
+    // Remove or narrow before public launch. Tracked in
+    // docs/launch/_pending-followups.md.
+    // ------------------------------------------------------------
+    const normalizedEmail = email.trim().toLowerCase();
+    const isTestEmail = (() => {
+      if (normalizedEmail.endsWith("@doctor.com")) return true;
+      if (normalizedEmail.endsWith("@member.com")) return true;
+      // email.com is a real public domain — narrower than the rest.
+      if (normalizedEmail.endsWith("@email.com")) return true;
+      if (/^test\d+@docsera\.dev$/.test(normalizedEmail)) return true;
+      return false;
+    })();
+    if (isTestEmail) {
+      const otpPurpose = (purpose as string | undefined) || "signup_email_verify";
+      const codeHash = await sha256Hex("123456");
+      // Invalidate any prior unconsumed rows so the latest one wins.
+      await supabase
+        .from("email_otps")
+        .update({ consumed_at: new Date().toISOString() })
+        .eq("email", normalizedEmail)
+        .eq("purpose", otpPurpose)
+        .is("consumed_at", null);
+      const { error: insertErr } = await supabase
+        .from("email_otps")
+        .insert({
+          email: normalizedEmail,
+          code_hash: codeHash,
+          purpose: otpPurpose,
+          expires_at: new Date(Date.now() + 15 * 60 * 1000).toISOString(),
+        });
+      if (insertErr) {
+        console.error(
+          `[Dev bypass] send_email_otp insert failed for ${normalizedEmail}:`,
+          insertErr,
+        );
+        return new Response(
+          JSON.stringify({ error: "Failed to generate OTP" }),
+          { status: 500, headers: { "Content-Type": "application/json" } }
+        );
+      }
+      console.log(
+        `[Dev bypass] send_email_otp wrote row for ${normalizedEmail} (purpose=${otpPurpose})`,
+      );
+      return new Response(
+        JSON.stringify({ success: true }),
+        { status: 200, headers: { "Content-Type": "application/json" } }
+      );
+    }
+
+    // ------------------------------------------------------------
     // 0️⃣ Security Check: Verify email belongs to DocSera user
     // ------------------------------------------------------------
     console.log(`[Debug] Checking existence for email: ${email}`);
@@ -385,3 +445,14 @@ ${html}
     );
   }
 });
+
+// SHA-256 helper used by the dev-bypass path. Same shape as the helper
+// in Pro's send_doctor_otp so the hashed OTP row is in the exact format
+// the verify RPC (rpc_verify_email_otp) expects.
+async function sha256Hex(input: string): Promise<string> {
+  const data = new TextEncoder().encode(input);
+  const digest = await crypto.subtle.digest("SHA-256", data);
+  return Array.from(new Uint8Array(digest))
+    .map((b) => b.toString(16).padStart(2, "0"))
+    .join("");
+}
