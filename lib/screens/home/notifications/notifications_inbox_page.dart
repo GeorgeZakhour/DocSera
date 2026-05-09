@@ -55,13 +55,10 @@ class _NotificationsInboxPageState extends State<NotificationsInboxPage> {
         centerTitle: true,
         titleSpacing: 0,
         leading: IconButton(
-          // Smaller back arrow to match the trimmed-down header.
-          icon: Icon(
-            Directionality.of(context) == ui.TextDirection.rtl
-                ? Icons.arrow_forward_rounded
-                : Icons.arrow_back_rounded,
-            size: 18.sp,
-          ),
+          // Chevron style ("<" in LTR, ">" in RTL) — Flutter mirrors
+          // arrow_back_ios_new_rounded automatically based on Directionality,
+          // so we don't branch manually.
+          icon: const Icon(Icons.arrow_back_ios_new_rounded, size: 16),
           onPressed: () => Navigator.of(context).maybePop(),
           tooltip: MaterialLocalizations.of(context).backButtonTooltip,
         ),

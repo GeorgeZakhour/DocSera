@@ -55,6 +55,8 @@ class AppointmentRepository {
       const closedStatuses = <String>{
         'cancelled',
         'cancelled_by_doctor',
+        'cancelled_by_patient',
+        'never_arrived_cancelled',
         'rejected',
         'done',
         'no_show',
@@ -134,6 +136,8 @@ class AppointmentRepository {
       const closedStatuses = <String>{
         'cancelled',
         'cancelled_by_doctor',
+        'cancelled_by_patient',
+        'never_arrived_cancelled',
         'rejected',
         'done',
         'no_show',

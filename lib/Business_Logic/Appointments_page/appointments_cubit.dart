@@ -250,9 +250,27 @@ class AppointmentsCubit extends Cubit<AppointmentsState> {
       List<Map<String, dynamic>> upcoming = [];
       List<Map<String, dynamic>> past = [];
 
+      // Mirror the repository's filter: an appointment in one of these
+      // statuses is no longer a live booking and must move to the past
+      // tab regardless of timestamp. Without this guard a doctor-side
+      // cancellation (e.g. vacation flow) keeps showing in upcoming —
+      // including in the "needs confirmation" pending card variant —
+      // until the timestamp passes.
+      const closedStatuses = <String>{
+        'cancelled',
+        'cancelled_by_doctor',
+        'cancelled_by_patient',
+        'never_arrived_cancelled',
+        'rejected',
+        'done',
+        'no_show',
+      };
+
       for (var appointment in appointments) {
+        final status = (appointment['status'] ?? '').toString();
+        final isClosed = closedStatuses.contains(status);
         DateTime appointmentDate = DateTime.parse(appointment['timestamp']);
-        if (appointmentDate.isAfter(DateTime.now())) {
+        if (!isClosed && appointmentDate.isAfter(DateTime.now())) {
           upcoming.add(appointment);
         } else {
           past.add(appointment);

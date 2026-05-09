@@ -9,6 +9,7 @@ import 'package:docsera/services/supabase/user/supabase_user_service.dart';
 import 'package:docsera/utils/text_direction_utils.dart';
 import 'package:crypto/crypto.dart'; // For hashing
 import 'package:docsera/app/const.dart';
+import 'package:docsera/screens/home/account/pending_deletion_page.dart';
 import 'package:docsera/widgets/custom_bottom_navigation_bar.dart';
 import 'dart:convert'; // For utf8 encoding
 import 'package:flutter/foundation.dart';
@@ -464,7 +465,18 @@ class _LogInPageState extends State<LogInPage> with SingleTickerProviderStateMix
       }
 
       final isActive = loginInfo['is_active'] == true;
-      if (!isActive) {
+      // Distinguish a soft "deletion pending" deactivation (the 30-day grace
+      // window after rpc_request_account_deletion) from a hard ban. The
+      // former MUST allow login so the user can reach the cancel-deletion
+      // screen — they were trapped behind the same accountDisabled message
+      // before this branch existed.
+      final deletionRequestedAtRaw = loginInfo['deletion_requested_at']?.toString();
+      final deletionRequestedAt = (deletionRequestedAtRaw == null || deletionRequestedAtRaw.isEmpty)
+          ? null
+          : DateTime.tryParse(deletionRequestedAtRaw)?.toUtc();
+      final isInGraceWindow = deletionRequestedAt != null &&
+          DateTime.now().toUtc().difference(deletionRequestedAt).inDays < 30;
+      if (!isActive && !isInGraceWindow) {
         throw Exception("account_disabled");
       }
 
@@ -582,13 +594,26 @@ class _LogInPageState extends State<LogInPage> with SingleTickerProviderStateMix
       }
 
       // ---------------------------------------------------------------------
-      // 7️⃣ Enter app normally
+      // 7️⃣ Enter app normally — except when deletion is pending. In that
+      //    case route directly to PendingDeletionPage so the user lands on
+      //    the cancel-deletion control instead of being dropped into the
+      //    main app where features they no longer have access to would
+      //    silently fail.
       // ---------------------------------------------------------------------
       debugPrint("✅ [NAVIGATION] Entering app");
 
       context.read<UserCubit>().loadUserData(context: context);
 
       if (!mounted) return;
+
+      if (isInGraceWindow) {
+        Navigator.pushAndRemoveUntil(
+          context,
+          fadePageRoute(const PendingDeletionPage()),
+          (_) => false,
+        );
+        return;
+      }
 
       Navigator.pushAndRemoveUntil(
         context,
