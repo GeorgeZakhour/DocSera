@@ -50,25 +50,30 @@ UNIQUE (user_id, document_code, version)
 
 This is the audit trail. For every user, you can prove which version they accepted, when, from which app version and platform.
 
-### 4. Deletion lifecycle (Tier 1 → Tier 4)
+### 4. Deletion lifecycle (redesigned in Step 16 — see [15-notifications-platform.md](15-notifications-platform.md))
 
-Migration `20260505100000_account_deletion_lifecycle.sql` — three new user-callable RPCs:
+Original baseline (Step 7, migration `20260505100000_account_deletion_lifecycle.sql`): three user-callable RPCs and a two-pass pseudonymize-then-purge orchestrator. **Superseded** by the Step 16 redesign — the pseudonymize-in-place approach was replaced because it penalized doctors (who have a clinical retention obligation) for the patient's GDPR decision.
+
+**Current behavior (Step 16):**
 
 | RPC | Purpose |
 |---|---|
-| `rpc_request_account_deletion()` | User-initiated permanent-deletion request. Sets `deletion_requested_at`. Account locked. 30-day window. |
-| `rpc_cancel_account_deletion()` | Reverts within the 30-day window. |
-| `rpc_get_account_deletion_status()` | Read-only status for the UI. |
+| `rpc_request_account_deletion()` | Sets `deletion_requested_at` + `deletion_cancellable_until = now + 30d`. Account locked. Future appointments cancelled. Conversations closed. Fires `account.deletion_scheduled` notification. |
+| `rpc_cancel_account_deletion()` | Reverts within the 30-day window. Fires `account.deletion_cancelled`. |
+| `rpc_get_account_deletion_status()` | Read-only status for `PendingDeletionPage` and the login-flow grace-window check. |
 
-Plus two operator-only RPCs:
-- `fn_pseudonymize_user(uuid)` — scrubs personal columns; pseudonymizes denormalized snapshots in appointments + conversations + relatives; deletes user_devices; nulls user_id on analytics rows.
-- `fn_hard_purge_user(uuid)` — full cascade-delete of all related rows.
+Lifecycle phases:
 
-Plus the orchestrator `fn_process_account_deletions()` that runs both passes daily.
+| Phase | Day | What happens |
+|---|---|---|
+| Request | 0 | RPC above. Notification fires. |
+| Warnings | 23, 29 | `fn_cron_deletion_warning_t7d` + `_t1d` fire via Pushy. Patient can still log in (login flow allows the grace-window state) and reach `PendingDeletionPage` to cancel. |
+| Finalize | 30 | `fn_cron_account_deletion_finalize` (daily 02:00 UTC). For each doctor with a clinical relationship, creates a `doctor_patients` row with `was_docsera_user=true`, re-points appointments + documents, drops user-side records (health profile, devices, notifications), pseudonymizes `public.users` tombstone, **deletes `auth.users`** so the patient can no longer sign in. The doctor's manual record carries full clinical history exactly as if they'd added the patient manually. |
+| Hard purge | year 7 | `fn_cron_account_deletion_hard_purge` (daily 02:30 UTC). Severs `doctor_patients.prior_user_id`, drops `notification_events` audit, hard-deletes `public.users` tombstone. The doctor's manual record + clinical history remain — fully self-contained. |
 
-**Daily cron installed on VPS:** `/etc/cron.daily/docsera-account-deletions`. Logs to `/var/log/docsera-account-deletions.log`.
+The legacy `fn_pseudonymize_user` / `fn_hard_purge_user` / `fn_process_account_deletions` from the Step 7 migration are still in the database for historical reference but are not on any cron schedule. The two new crons (`notif_account_deletion_finalize` + `notif_account_deletion_hard_purge`) are the active path.
 
-Tested end-to-end: smoke runs return `{"pseudonymized": 0, "purged": 0}` (correct — no users in the lifecycle yet).
+Tested end-to-end on iOS device: deletion request fires notification, T-7d and T-1d warnings deliver via Pushy, login during the grace window routes to `PendingDeletionPage`, cancel-deletion restores account.
 
 ### 5. Permission cleanup
 

@@ -1,10 +1,29 @@
 # Pending Follow-ups
 
-**Last updated:** 2026-05-06
+**Last updated:** 2026-05-09
 
 A scratchpad for items that came up during reviews / external feedback but haven't been worked yet. **Not part of the official roadmap steps** — these are operational/perf/quality follow-ups to discuss and prioritize when the user is ready.
 
 > **Important for any agent:** do **not** silently start working through this list. The user wants to review and prioritize each item before any of it is touched. Wait for explicit go-ahead.
+
+---
+
+## Pre-launch security items (added 2026-05-09 from notifications-platform Step 16)
+
+Surfaced while testing the notifications + account-deletion lifecycle. Real launch blockers if not addressed.
+
+### 1. 🔴 Strip TEST_PHONES whitelist
+**Where:**
+  - `supabase/functions/send_sms_otp/index.ts` — `TEST_PHONES` set accepts `00963900000001..13` with code `123456` without going through Syriatel.
+  - Migration `20260509100000_phone_change_test_whitelist.sql` adds the same bypass to `rpc_verify_phone_otp` (legacy 2-arg form, kept for backward-compat during the patient phone-change migration).
+
+Both must be stripped before public launch. Search for `TEST_PHONES` and `'123456'` literal across both repos.
+
+### 2. 🔴 Legacy `rpc_request_phone_change` still leaks OTP plaintext
+The patient app no longer calls it (migrated to the unified `send_sms_otp` edge function in Step 16) but the function still exists in the database and still returns the generated OTP in its response. Drop entirely, or rewrite to call `send_sms_otp` and return `void`.
+
+### 3. 🟡 Notification preferences visibility pass
+The screen exists and writes correctly to `notification_preferences` but isn't heavily exposed in the Account UI. Final pass before launch to confirm it's discoverable.
 
 ---
 
