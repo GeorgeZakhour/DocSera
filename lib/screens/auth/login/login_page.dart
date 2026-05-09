@@ -459,8 +459,15 @@ class _LogInPageState extends State<LogInPage> with SingleTickerProviderStateMix
         isPhone ? formattedPhone! : input,
       );
 
+      // A phone-only user (signed up via phone OTP, never set an email)
+      // returns is_active + user_id but a null email. We still proceed —
+      // the actual auth call below uses signInWithPhonePassword (synthetic
+      // email shim) when no real email is on file.
       final email = loginInfo['email']?.toString();
-      if (email == null || email.isEmpty) {
+      if (!isPhone && (email == null || email.isEmpty)) {
+        throw Exception("user not found");
+      }
+      if (isPhone && email == null && loginInfo['user_id'] == null) {
         throw Exception("user not found");
       }
 
@@ -484,24 +491,39 @@ class _LogInPageState extends State<LogInPage> with SingleTickerProviderStateMix
 
       // ---------------------------------------------------------------------
       // 3️⃣ Supabase Auth (password check)
+      //    For email signups: signInWithPassword(email, password).
+      //    For phone-only signups: signInWithPhonePassword shims through
+      //    the synthetic <e164>@phone.docsera.app email the signup flow
+      //    stamped on auth.users.
       // ---------------------------------------------------------------------
-      final response = await _supabaseUserService.signInWithPassword(
-        email: email,
-        password: password,
-      );
+      final response = isPhone && (email == null || email.isEmpty)
+          ? await _supabaseUserService.signInWithPhonePassword(
+              phone: formattedPhone!,
+              password: password,
+            )
+          : await _supabaseUserService.signInWithPassword(
+              email: email!,
+              password: password,
+            );
 
       final supabaseUser = response.user;
       if (supabaseUser == null) {
         throw Exception("wrong password");
       }
 
-      // 🔐 Save biometric credentials (EMAIL-BASED)
+      // Resolve the email we'll use for biometric save and downstream
+      // session bookkeeping. For phone-only users the auth.users.email
+      // is the synthetic shim — that's fine, biometric login uses it
+      // verbatim on subsequent attempts.
+      final resolvedEmail = supabaseUser.email ?? email ?? '';
+
+      // 🔐 Save biometric credentials
       final prefs = await SharedPreferences.getInstance();
 
       final isEnabled = await BiometricStorage.isEnabled();
       if (isEnabled) {
         await BiometricStorage.saveCredentials(
-          email: email,
+          email: resolvedEmail,
           password: password,
         );
       }
@@ -517,7 +539,7 @@ class _LogInPageState extends State<LogInPage> with SingleTickerProviderStateMix
       // ---------------------------------------------------------------------
       await prefs.setBool('isLoggedIn', true);
       await prefs.setString('userId', userId);
-      await prefs.setString('userEmail', email);
+      await prefs.setString('userEmail', resolvedEmail);
 
       // Defense-in-depth: scrub any legacy plaintext password that may have
       // been persisted by older builds before the security review.
@@ -585,7 +607,7 @@ class _LogInPageState extends State<LogInPage> with SingleTickerProviderStateMix
           context,
           MaterialPageRoute(
             builder: (_) => LoginOTPPage(
-              email: email, // ✅ Pass email for verification
+              email: resolvedEmail.isNotEmpty ? resolvedEmail : null,
             ),
           ),
         );
