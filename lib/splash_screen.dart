@@ -1,5 +1,9 @@
+import 'dart:io' show Platform;
+
+import 'package:device_info_plus/device_info_plus.dart';
 import 'package:docsera/app/text_styles.dart';
-import 'package:docsera/screens/auth/login/login_page.dart';
+import 'package:docsera/screens/auth/login/login_otp.dart';
+import 'package:docsera/screens/auth/login/login_start.dart';
 import 'package:docsera/screens/home/account/pending_deletion_page.dart';
 import 'package:docsera/utils/page_transitions.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
@@ -171,12 +175,36 @@ class _SplashScreenState extends State<SplashScreen> with TickerProviderStateMix
         );
         return;
       }
+
+      // Trusted-device gate: the new-device 2FA OTP is enforced at this
+      // boundary, not just inside the login flow. Otherwise a user who
+      // signs in with their password (Supabase session created), sees
+      // the OTP screen, then closes the app without completing the OTP
+      // would be treated as fully authenticated on the next cold start.
+      // We re-check trusted_devices on every resume and force the user
+      // back to LoginOTPPage until their device is trusted.
+      final stepUp = await _requiresOtpStepUp();
+      if (stepUp != null) {
+        if (!mounted) return;
+        Navigator.of(context).pushReplacement(
+          MaterialPageRoute(
+            builder: (_) => LoginOTPPage(
+              email: stepUp.email,
+              phoneNumber: stepUp.phone,
+            ),
+          ),
+        );
+        return;
+      }
+
       _navigateToHomeScreen();
     } else {
       if (!mounted) return;
       Navigator.of(context).pushReplacement(
         MaterialPageRoute(
-          builder: (_) => const LogInPage(),
+          builder: (_) => LoginPage(
+            backgroundHeightAnimation: _backgroundHeightAnimation,
+          ),
         ),
       );
     }
@@ -213,6 +241,56 @@ class _SplashScreenState extends State<SplashScreen> with TickerProviderStateMix
 
   Future<bool> _isBiometricRequired() async {
     return false;
+  }
+
+  /// Returns the OTP step-up channel info if the current physical device
+  /// is NOT in the user's `trusted_devices` array. Returning non-null
+  /// means the splash router should send the user through LoginOTPPage
+  /// before letting them into the app — this enforces 2FA on every cold
+  /// start until the device is trusted, closing the loophole where a
+  /// user could sign in with password, dismiss the OTP screen, and
+  /// resume into a fully authenticated session next time.
+  ///
+  /// Errors fall through to null (skip the gate) so a backend hiccup
+  /// doesn't lock anyone out — pen-test guidance was "fail open on
+  /// security checks, not closed".
+  Future<_OtpStepUp?> _requiresOtpStepUp() async {
+    try {
+      final security = await Supabase.instance.client
+          .rpc('rpc_get_my_security_state');
+      if (security is! Map) return null;
+      final List trustedDevices =
+          (security['trusted_devices'] as List?) ?? const [];
+      final deviceId = await _getDeviceId();
+      if (trustedDevices.contains(deviceId)) return null;
+
+      // Device NOT trusted — collect channel info for LoginOTPPage.
+      final email = (security['email'] as String?)?.trim();
+      final phone = (security['phone_number'] as String?)?.trim();
+      return _OtpStepUp(
+        email: email != null && email.isNotEmpty ? email : null,
+        phone: phone != null && phone.isNotEmpty ? phone : null,
+      );
+    } catch (_) {
+      return null;
+    }
+  }
+
+  Future<String> _getDeviceId() async {
+    try {
+      final info = DeviceInfoPlugin();
+      if (Platform.isIOS) {
+        final ios = await info.iosInfo;
+        return ios.identifierForVendor ?? 'ios-unknown';
+      }
+      if (Platform.isAndroid) {
+        final android = await info.androidInfo;
+        return android.id;
+      }
+      return 'unknown-platform';
+    } catch (_) {
+      return 'unknown-error';
+    }
   }
 
   /// Returns true if the user has an open Tier 2 deletion request that
@@ -344,4 +422,11 @@ class _SplashScreenState extends State<SplashScreen> with TickerProviderStateMix
       ),
     );
   }
+}
+
+/// Channel info for the splash → LoginOTPPage step-up route.
+class _OtpStepUp {
+  final String? email;
+  final String? phone;
+  const _OtpStepUp({this.email, this.phone});
 }
