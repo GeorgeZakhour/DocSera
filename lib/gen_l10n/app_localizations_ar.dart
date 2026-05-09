@@ -4952,7 +4952,7 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get linkRequestIntroMerge =>
-      'لديه سجل سابق باسمك ويرغب في دمجه مع حسابك';
+      'لديه سجل لك ويرغب في ربطه بحسابك في Docsera';
 
   @override
   String get linkRequestViewProfile => 'عرض الملف الشخصي للطبيب';
@@ -4991,7 +4991,7 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get linkRequestMergeBenefits =>
-      'ستُنقل المواعيد السابقة، المستندات، والملاحظات الخاصة بك من سجله القديم إلى حسابك في Docsera، وتظهر في تطبيقك مباشرة.';
+      'ستُنقل مواعيدك ومستنداتك من السجل الذي يحتفظ به الطبيب إلى حسابك في Docsera، وتظهر مباشرة في الأقسام المعتادة (المواعيد، المستندات).';
 
   @override
   String get linkRequestApprove => 'الموافقة';
@@ -5022,12 +5022,18 @@ class AppLocalizationsAr extends AppLocalizations {
   }
 
   @override
-  String get linkRequestResultMergedTitle => 'تم دمج السجل بنجاح';
+  String get linkRequestResultMergedTitle => 'تم ربط سجلك بنجاح';
 
   @override
   String linkRequestResultMergedBody(String doctorName) {
-    return 'تم نقل سجلك السابق لدى $doctorName إلى حسابك في Docsera. ستجد المواعيد والمستندات في الأقسام المعتادة.';
+    return 'تم نقل سجلك لدى $doctorName إلى حسابك في Docsera. ستجد موعدك في قسم المواعيد، ومستنداتك في قسم المستندات.';
   }
+
+  @override
+  String get linkRequestResultMergedAppointmentsCta => 'عرض المواعيد';
+
+  @override
+  String get linkRequestResultMergedDocumentsCta => 'عرض المستندات';
 
   @override
   String get linkRequestResultRejectedTitle => 'تم رفض الطلب';

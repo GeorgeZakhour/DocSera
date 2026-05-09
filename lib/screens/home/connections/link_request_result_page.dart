@@ -16,6 +16,7 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:docsera/app/const.dart';
 import 'package:docsera/app/text_styles.dart';
 import 'package:docsera/gen_l10n/app_localizations.dart';
+import 'package:docsera/widgets/custom_bottom_navigation_bar.dart';
 
 enum LinkRequestResultKind { approved, merged, rejected }
 
@@ -114,27 +115,76 @@ class LinkRequestResultPage extends StatelessWidget {
                     duration: const Duration(milliseconds: 800),
                     curve: Curves.easeOutCubic,
                     builder: (_, t, child) => Opacity(opacity: t, child: child),
-                    child: SizedBox(
-                      width: double.infinity,
-                      height: 52.h,
-                      child: ElevatedButton(
-                        onPressed: () => Navigator.of(context).pop(),
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: accent,
-                          foregroundColor: Colors.white,
-                          elevation: 0,
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(14.r),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
+                      children: [
+                        // Merge results push the user toward the
+                        // appointments tab — the freshly-migrated
+                        // appointment is the most concrete proof the
+                        // merge worked, and it's where they likely
+                        // wanted to end up.
+                        if (isMerge) ...[
+                          SizedBox(
+                            height: 52.h,
+                            child: ElevatedButton.icon(
+                              onPressed: () =>
+                                  _navigateToTab(context, _appointmentsTabIndex),
+                              icon: const Icon(Icons.event_available_rounded,
+                                  color: Colors.white),
+                              label: Text(
+                                local.linkRequestResultMergedAppointmentsCta,
+                                style: AppTextStyles.getText1(context).copyWith(
+                                  fontWeight: FontWeight.w800,
+                                  color: Colors.white,
+                                ),
+                              ),
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor: accent,
+                                foregroundColor: Colors.white,
+                                elevation: 0,
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(14.r),
+                                ),
+                              ),
+                            ),
                           ),
-                        ),
-                        child: Text(
-                          local.linkRequestResultDone,
-                          style: AppTextStyles.getText1(context).copyWith(
-                            fontWeight: FontWeight.w700,
-                            color: Colors.white,
+                          SizedBox(height: 8.h),
+                          SizedBox(
+                            height: 44.h,
+                            child: TextButton(
+                              onPressed: () => Navigator.of(context).pop(),
+                              child: Text(
+                                local.linkRequestResultDone,
+                                style: AppTextStyles.getText2(context).copyWith(
+                                  fontWeight: FontWeight.w700,
+                                  color: Colors.grey.shade700,
+                                ),
+                              ),
+                            ),
                           ),
-                        ),
-                      ),
+                        ] else
+                          SizedBox(
+                            height: 52.h,
+                            child: ElevatedButton(
+                              onPressed: () => Navigator.of(context).pop(),
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor: accent,
+                                foregroundColor: Colors.white,
+                                elevation: 0,
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(14.r),
+                                ),
+                              ),
+                              child: Text(
+                                local.linkRequestResultDone,
+                                style: AppTextStyles.getText1(context).copyWith(
+                                  fontWeight: FontWeight.w700,
+                                  color: Colors.white,
+                                ),
+                              ),
+                            ),
+                          ),
+                      ],
                     ),
                   ),
                   SizedBox(height: 12.h),
@@ -293,4 +343,19 @@ class _BackgroundOrbs extends StatelessWidget {
       ),
     );
   }
+}
+
+/// Tab indices on the bottom nav. Centralised here so the constants
+/// don't drift if the bar order ever changes.
+const int _appointmentsTabIndex = 1;
+
+/// Pops back to the home root and switches the bottom-nav to the
+/// requested tab. Mirrors the pattern used by notification_service tap
+/// handlers.
+void _navigateToTab(BuildContext context, int tabIndex) {
+  Navigator.of(context).popUntil((route) => route.isFirst);
+  WidgetsBinding.instance.addPostFrameCallback((_) {
+    final mainScreenState = CustomBottomNavigationBar.globalKey.currentState;
+    mainScreenState?.switchTab(tabIndex);
+  });
 }

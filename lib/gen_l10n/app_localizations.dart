@@ -9197,7 +9197,7 @@ abstract class AppLocalizations {
   /// No description provided for @linkRequestIntroMerge.
   ///
   /// In en, this message translates to:
-  /// **'has an existing record matching your details and wants to merge it into your account'**
+  /// **'has a record under your name and would like to link it to your Docsera account'**
   String get linkRequestIntroMerge;
 
   /// No description provided for @linkRequestViewProfile.
@@ -9263,7 +9263,7 @@ abstract class AppLocalizations {
   /// No description provided for @linkRequestMergeBenefits.
   ///
   /// In en, this message translates to:
-  /// **'Past appointments, documents, and notes from your existing record at this clinic will move into your Docsera account, appearing in the usual sections of the app.'**
+  /// **'Your appointments and documents from the doctor\'s record will move into your Docsera account and appear in the usual sections of the app (Appointments, Documents).'**
   String get linkRequestMergeBenefits;
 
   /// No description provided for @linkRequestApprove.
@@ -9317,14 +9317,26 @@ abstract class AppLocalizations {
   /// No description provided for @linkRequestResultMergedTitle.
   ///
   /// In en, this message translates to:
-  /// **'Records merged'**
+  /// **'Record linked'**
   String get linkRequestResultMergedTitle;
 
   /// No description provided for @linkRequestResultMergedBody.
   ///
   /// In en, this message translates to:
-  /// **'Your existing record at {doctorName} has been moved into your Docsera account. You\'ll find the appointments and documents in the usual sections.'**
+  /// **'Your record at {doctorName} has been moved into your Docsera account. You\'ll find your appointment in Appointments and any documents in Documents.'**
   String linkRequestResultMergedBody(String doctorName);
+
+  /// No description provided for @linkRequestResultMergedAppointmentsCta.
+  ///
+  /// In en, this message translates to:
+  /// **'View appointments'**
+  String get linkRequestResultMergedAppointmentsCta;
+
+  /// No description provided for @linkRequestResultMergedDocumentsCta.
+  ///
+  /// In en, this message translates to:
+  /// **'View documents'**
+  String get linkRequestResultMergedDocumentsCta;
 
   /// No description provided for @linkRequestResultRejectedTitle.
   ///

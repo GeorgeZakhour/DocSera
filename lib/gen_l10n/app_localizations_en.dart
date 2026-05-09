@@ -5001,7 +5001,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get linkRequestIntroMerge =>
-      'has an existing record matching your details and wants to merge it into your account';
+      'has a record under your name and would like to link it to your Docsera account';
 
   @override
   String get linkRequestViewProfile => 'View doctor\'s profile';
@@ -5042,7 +5042,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get linkRequestMergeBenefits =>
-      'Past appointments, documents, and notes from your existing record at this clinic will move into your Docsera account, appearing in the usual sections of the app.';
+      'Your appointments and documents from the doctor\'s record will move into your Docsera account and appear in the usual sections of the app (Appointments, Documents).';
 
   @override
   String get linkRequestApprove => 'Approve';
@@ -5073,12 +5073,18 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
-  String get linkRequestResultMergedTitle => 'Records merged';
+  String get linkRequestResultMergedTitle => 'Record linked';
 
   @override
   String linkRequestResultMergedBody(String doctorName) {
-    return 'Your existing record at $doctorName has been moved into your Docsera account. You\'ll find the appointments and documents in the usual sections.';
+    return 'Your record at $doctorName has been moved into your Docsera account. You\'ll find your appointment in Appointments and any documents in Documents.';
   }
+
+  @override
+  String get linkRequestResultMergedAppointmentsCta => 'View appointments';
+
+  @override
+  String get linkRequestResultMergedDocumentsCta => 'View documents';
 
   @override
   String get linkRequestResultRejectedTitle => 'Request declined';
