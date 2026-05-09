@@ -21,6 +21,7 @@ import 'package:docsera/utils/page_transitions.dart';
 import 'package:flutter/material.dart';
 import 'package:docsera/app/const.dart';
 import 'package:docsera/widgets/gift_announcement_dialog.dart';
+import 'package:docsera/services/notifications/maybe_show_link_request_gate.dart';
 import 'package:docsera/widgets/main_screen_widgets.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
@@ -82,6 +83,11 @@ class _MainScreenState extends State<MainScreen> with AutomaticKeepAliveClientMi
       final auth = context.read<AuthCubit>().state;
       if (auth is AuthAuthenticated) {
         maybeShowGiftAnnouncement(context);
+        // Pop-up gate: doctor↔patient link requests (connect / merge)
+        // are high-stakes and shouldn't be discoverable only via the
+        // inbox bell. If the patient has any pending request, push
+        // the review page automatically. Once-per-session.
+        maybeShowPendingLinkRequest(context);
       }
       // Bridge AppointmentsCubit lifecycle → local T-24h / T-30m reminders.
       // Idempotent — start() cancels its previous subscription on each call.

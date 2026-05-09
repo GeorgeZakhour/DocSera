@@ -3,6 +3,7 @@ import 'package:bloc/bloc.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:docsera/services/notifications/notification_service.dart';
+import 'package:docsera/services/notifications/maybe_show_link_request_gate.dart';
 import 'auth_state.dart';
 
 typedef RealtimeStarter = void Function(User user);
@@ -156,6 +157,9 @@ class AuthCubit extends Cubit<AppAuthState> {
       try {
         await NotificationService.instance.deleteToken();
       } catch (_) { /* best effort */ }
+      // Reset the once-per-session pop-up gate so the next sign-in
+      // gets fresh prompting for any pending link requests.
+      resetLinkRequestGate();
       await _supabase.auth.signOut();
     } catch (e) {
       emit(AuthError("Sign out error: $e"));
