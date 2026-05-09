@@ -5043,6 +5043,84 @@ class AppLocalizationsAr extends AppLocalizations {
   String get linkRequestErrorToast => 'تعذّر تنفيذ الطلب. حاول مجدداً.';
 
   @override
+  String get apptConfirmTitle => 'تأكيد موعد';
+
+  @override
+  String get apptConfirmKind => 'حجز جديد بانتظار تأكيدك';
+
+  @override
+  String apptConfirmIntro(String doctorName) {
+    return '$doctorName حجز لك هذا الموعد. يرجى تأكيد الحجز إن كنت تتذكره، أو الاعتراض إن لم تطلبه.';
+  }
+
+  @override
+  String apptConfirmIntroRelative(String doctorName) {
+    return '$doctorName حجز موعداً لقريبك. يرجى تأكيد الحجز إن كنت على علم به، أو الاعتراض إن لم تطلبه.';
+  }
+
+  @override
+  String get apptConfirmDateLabel => 'التاريخ والوقت';
+
+  @override
+  String get apptConfirmReasonLabel => 'سبب الزيارة';
+
+  @override
+  String get apptConfirmClinicLabel => 'العيادة';
+
+  @override
+  String get apptConfirmWhyTitle => 'لماذا نطلب التأكيد؟';
+
+  @override
+  String get apptConfirmWhyBody =>
+      'هذا أول موعد لك مع هذا الطبيب. عند التأكيد ستُفتح قناة الاتصال بينكما، وستظهر مواعيدكما المشتركة في حسابك.';
+
+  @override
+  String get apptConfirmCta => 'تأكيد الموعد';
+
+  @override
+  String get apptConfirmDisputeCta => 'لم أحجز هذا الموعد';
+
+  @override
+  String get apptConfirmDisputeNote =>
+      'الاعتراض سيلغي الموعد ويمنع الطبيب من إضافتك تلقائياً مرة أخرى. سيكون عليه إرسال طلب اتصال يستوجب موافقتك إن أراد التواصل معك مستقبلاً.';
+
+  @override
+  String get apptConfirmNotFoundTitle => 'هذا الموعد لم يعد متاحاً';
+
+  @override
+  String get apptConfirmNotFoundBody =>
+      'ربما تم إلغاؤه أو تأكيده مسبقاً من جهاز آخر.';
+
+  @override
+  String get apptConfirmActionedTitle => 'تم التأكيد بالفعل';
+
+  @override
+  String get apptConfirmActionedBody =>
+      'تم التأكيد على هذا الموعد سابقاً، أو تم إلغاؤه. لا حاجة لأي إجراء.';
+
+  @override
+  String get apptConfirmResultConfirmedTitle => 'تم تأكيد الموعد';
+
+  @override
+  String apptConfirmResultConfirmedBody(String doctorName) {
+    return 'تم تأكيد موعدك مع $doctorName. ستجده في قسم المواعيد، ويمكنكما المراسلة عبر التطبيق.';
+  }
+
+  @override
+  String get apptConfirmResultDisputedTitle => 'تم إلغاء الموعد';
+
+  @override
+  String apptConfirmResultDisputedBody(String doctorName) {
+    return 'تم إلغاء الموعد، ولن يتمكن $doctorName من إضافتك تلقائياً مرة أخرى. سيحتاج إلى إرسال طلب اتصال إن أراد التواصل معك.';
+  }
+
+  @override
+  String get apptConfirmDispatchedToast => 'تم استلام طلبك.';
+
+  @override
+  String get apptConfirmErrorToast => 'تعذّر تنفيذ الطلب. حاول مجدداً.';
+
+  @override
   String get notificationsRetentionNote =>
       'تُحفظ الإشعارات لمدة ٩٠ يومًا ثم تُحذف تلقائيًا.';
 

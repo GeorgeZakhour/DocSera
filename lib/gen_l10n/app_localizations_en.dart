@@ -5095,6 +5095,86 @@ class AppLocalizationsEn extends AppLocalizations {
       'Couldn\'t complete the request. Please try again.';
 
   @override
+  String get apptConfirmTitle => 'Confirm appointment';
+
+  @override
+  String get apptConfirmKind => 'New booking awaiting your confirmation';
+
+  @override
+  String apptConfirmIntro(String doctorName) {
+    return '$doctorName booked this appointment for you. Please confirm if you recognize it, or dispute if you didn\'t request it.';
+  }
+
+  @override
+  String apptConfirmIntroRelative(String doctorName) {
+    return '$doctorName booked an appointment for your relative. Please confirm if you\'re aware of it, or dispute if you didn\'t request it.';
+  }
+
+  @override
+  String get apptConfirmDateLabel => 'Date & time';
+
+  @override
+  String get apptConfirmReasonLabel => 'Reason for visit';
+
+  @override
+  String get apptConfirmClinicLabel => 'Clinic';
+
+  @override
+  String get apptConfirmWhyTitle => 'Why do we ask?';
+
+  @override
+  String get apptConfirmWhyBody =>
+      'This is your first appointment with this doctor. Confirming it opens a messaging channel between you and the doctor, and the appointment becomes visible in your account.';
+
+  @override
+  String get apptConfirmCta => 'Confirm appointment';
+
+  @override
+  String get apptConfirmDisputeCta => 'I didn\'t book this';
+
+  @override
+  String get apptConfirmDisputeNote =>
+      'Disputing cancels the appointment and prevents this doctor from auto-adding you again. They\'ll have to send an explicit connection request if they want to reach you in the future.';
+
+  @override
+  String get apptConfirmNotFoundTitle =>
+      'This appointment is no longer available';
+
+  @override
+  String get apptConfirmNotFoundBody =>
+      'It may have been cancelled or already confirmed from another device.';
+
+  @override
+  String get apptConfirmActionedTitle => 'Already settled';
+
+  @override
+  String get apptConfirmActionedBody =>
+      'This appointment has already been confirmed or cancelled. No further action is needed.';
+
+  @override
+  String get apptConfirmResultConfirmedTitle => 'Appointment confirmed';
+
+  @override
+  String apptConfirmResultConfirmedBody(String doctorName) {
+    return 'Your appointment with $doctorName is confirmed. You\'ll find it in your appointments list, and you can message each other through the app.';
+  }
+
+  @override
+  String get apptConfirmResultDisputedTitle => 'Appointment cancelled';
+
+  @override
+  String apptConfirmResultDisputedBody(String doctorName) {
+    return 'The appointment has been cancelled. $doctorName won\'t be able to auto-add you again — they\'ll need to send a connection request if they want to reach you.';
+  }
+
+  @override
+  String get apptConfirmDispatchedToast => 'Your response has been recorded.';
+
+  @override
+  String get apptConfirmErrorToast =>
+      'Couldn\'t complete the request. Please try again.';
+
+  @override
   String get notificationsRetentionNote =>
       'Notifications are kept for 90 days, then automatically removed.';
 

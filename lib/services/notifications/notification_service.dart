@@ -17,6 +17,7 @@ import 'package:docsera/widgets/custom_bottom_navigation_bar.dart';
 import 'package:docsera/Business_Logic/Health_page/patient_switcher_cubit.dart';
 import 'package:docsera/screens/home/health/pages/visit_reports/visit_reports_page.dart';
 import 'package:docsera/screens/home/loyalty/vouchers_page.dart';
+import 'package:docsera/screens/home/connections/appointment_confirm_page.dart';
 import 'package:docsera/screens/home/connections/link_request_review_page.dart';
 import 'package:docsera/screens/home/account/pending_deletion_page.dart';
 import 'package:docsera/services/notifications/in_app_notification_banner.dart';
@@ -985,6 +986,22 @@ class NotificationService {
         nav.push(
           MaterialPageRoute(
             builder: (_) => LinkRequestReviewPage(requestId: requestId),
+          ),
+        );
+    } else if (payload.startsWith('docsera://appointment-confirm/')) {
+        // First-booking confirm / dispute. Same token validation as the
+        // link-request handler — refuse malformed shapes at the boundary.
+        final apptId = payload.substring('docsera://appointment-confirm/'.length);
+        if (apptId.isEmpty || apptId.length > 64 ||
+            !RegExp(r'^[A-Za-z0-9_\-]+$').hasMatch(apptId)) {
+          debugPrint("⚠️ Rejected appointment-confirm deep link with invalid token shape");
+          return;
+        }
+        debugPrint("📅 Navigating to AppointmentConfirmPage for $apptId");
+        nav.popUntil((route) => route.isFirst);
+        nav.push(
+          MaterialPageRoute(
+            builder: (_) => AppointmentConfirmPage(appointmentId: apptId),
           ),
         );
     } else if (payload.startsWith('voucher:')) {
