@@ -92,13 +92,21 @@ class _LoginOTPPageState extends State<LoginOTPPage> {
         if (res.status != 200) throw Exception('Failed to send email OTP');
         sentCode = 'SENT_VIA_EMAIL'; // Edge function doesn't return code
       } else {
-        // 📱 Phone Flow (Legacy RPC)
-        sentCode = await Supabase.instance.client.rpc(
-          'send_login_otp',
-          params: {
-            'p_phone': widget.phoneNumber,
+        // 📱 Phone Flow — unified send_sms_otp edge function. Real
+        // phones get Syriatel SMS; whitelisted test phones accept
+        // "123456" via the function's TEST_PHONES bypass. The OTP
+        // is hashed server-side and never returned to the client.
+        final res = await Supabase.instance.client.functions.invoke(
+          'send_sms_otp',
+          body: {
+            'phone': widget.phoneNumber,
+            'purpose': 'login_2fa',
           },
         );
+        if (res.status != 200) {
+          throw Exception('Failed to send phone OTP');
+        }
+        sentCode = 'SENT_VIA_SMS';
       }
       setState(() {
         isLoading = false;
@@ -165,19 +173,24 @@ class _LoginOTPPageState extends State<LoginOTPPage> {
         );
 
       } else {
-        // 📱 Phone Verification
-        final res = await Supabase.instance.client.rpc(
-          'verify_login_otp',
+        // 📱 Phone Verification — unified rpc_verify_phone_otp + the
+        // dedicated trust_current_device RPC (mirrors the email path
+        // above exactly).
+        final ok = await Supabase.instance.client.rpc(
+          'rpc_verify_phone_otp',
           params: {
             'p_phone': widget.phoneNumber,
             'p_code': _codeController.text.trim(),
-            'p_device_id': deviceId,
+            'p_purpose': 'login_2fa',
           },
         );
-
-        if (res != true) {
+        if (ok != true) {
           throw Exception('invalid_otp');
         }
+        await Supabase.instance.client.rpc(
+          'trust_current_device',
+          params: {'p_device_id': deviceId},
+        );
       }
       Analytics.instance.track(Events.otpVerified, {
         'channel': channel,
