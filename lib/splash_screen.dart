@@ -1,5 +1,8 @@
 import 'package:docsera/app/text_styles.dart';
 import 'package:docsera/screens/auth/login/login_page.dart';
+import 'package:docsera/screens/home/account/pending_deletion_page.dart';
+import 'package:docsera/utils/page_transitions.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:docsera/utils/custom_clippers.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -155,6 +158,19 @@ class _SplashScreenState extends State<SplashScreen> with TickerProviderStateMix
     final biometricRequired = await _isBiometricRequired();
 
     if (state is AuthAuthenticated && !biometricRequired) {
+      // Pending-deletion check: a session can be valid AND the user can
+      // still be inside the 30-day deletion grace window. Route them
+      // straight to PendingDeletionPage so they don't pop into a
+      // partially-functional home with an account that's scheduled to
+      // close. UserCubit's silent path (no auto-signout for grace-window
+      // state) used to drop them onto home with no signpost.
+      if (await _isPendingDeletion()) {
+        if (!mounted) return;
+        Navigator.of(context).pushReplacement(
+          fadePageRoute(const PendingDeletionPage()),
+        );
+        return;
+      }
       _navigateToHomeScreen();
     } else {
       if (!mounted) return;
@@ -197,6 +213,25 @@ class _SplashScreenState extends State<SplashScreen> with TickerProviderStateMix
 
   Future<bool> _isBiometricRequired() async {
     return false;
+  }
+
+  /// Returns true if the user has an open Tier 2 deletion request that
+  /// hasn't expired yet. Errors fall through to false so a backend hiccup
+  /// doesn't trap the user on the deletion page.
+  Future<bool> _isPendingDeletion() async {
+    try {
+      final res = await Supabase.instance.client
+          .rpc('rpc_get_account_deletion_status');
+      if (res is! Map) return false;
+      final raw = res['deletion_requested_at']?.toString();
+      if (raw == null || raw.isEmpty) return false;
+      final dt = DateTime.tryParse(raw)?.toUtc();
+      if (dt == null) return false;
+      // Inside the 30-day window?
+      return DateTime.now().toUtc().difference(dt).inDays < 30;
+    } catch (_) {
+      return false;
+    }
   }
 
   @override

@@ -184,6 +184,21 @@ class _LogInPageState extends State<LogInPage> with SingleTickerProviderStateMix
 
       if (!mounted) return;
       context.read<UserCubit>().loadUserData(context: context);
+
+      // Grace-window check (Tier 2 deletion in progress) — same as the
+      // email path. We could fold this into rpc_get_login_info but the
+      // phone+password path doesn't currently hit that RPC, so query
+      // status directly post-auth.
+      if (await _isInDeletionGraceWindow()) {
+        if (!mounted) return;
+        Navigator.pushAndRemoveUntil(
+          context,
+          fadePageRoute(const PendingDeletionPage()),
+          (_) => false,
+        );
+        return;
+      }
+
       Navigator.pushAndRemoveUntil(
         context,
         fadePageRoute(CustomBottomNavigationBar()),
@@ -201,6 +216,25 @@ class _LogInPageState extends State<LogInPage> with SingleTickerProviderStateMix
       _shakeController.forward(from: 0);
     } finally {
       if (mounted) setState(() => isLoading = false);
+    }
+  }
+
+  /// Returns true if the freshly-authenticated user has an open Tier 2
+  /// deletion request still inside the 30-day grace window. Used by
+  /// both the email and phone login paths to route to PendingDeletionPage
+  /// instead of dropping the user on home.
+  Future<bool> _isInDeletionGraceWindow() async {
+    try {
+      final res = await Supabase.instance.client
+          .rpc('rpc_get_account_deletion_status');
+      if (res is! Map) return false;
+      final raw = res['deletion_requested_at']?.toString();
+      if (raw == null || raw.isEmpty) return false;
+      final dt = DateTime.tryParse(raw)?.toUtc();
+      if (dt == null) return false;
+      return DateTime.now().toUtc().difference(dt).inDays < 30;
+    } catch (_) {
+      return false;
     }
   }
 
