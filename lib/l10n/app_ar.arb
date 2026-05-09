@@ -1987,10 +1987,10 @@
   "@notificationPrefsTestReminderQueued": {},
 
   "linkRequestTitle": "طلب اتصال",
-  "linkRequestMergeTitle": "دمج سجل طبي",
+  "linkRequestMergeTitle": "ربط سجلك بحسابك",
   "linkRequestKindConnect": "طلب اتصال جديد",
   "linkRequestKindConnectRelative": "طلب اتصال لقريبك",
-  "linkRequestKindMerge": "دمج سجل قديم",
+  "linkRequestKindMerge": "ربط سجلك بحسابك",
   "linkRequestIntroConnect": "يرغب في إضافتك إلى قائمة مرضاه عبر Docsera",
   "linkRequestIntroConnectRelative": "يرغب في إضافة قريبك إلى قائمة مرضاه عبر Docsera",
   "linkRequestIntroMerge": "لديه سجل لك ويرغب في ربطه بحسابك في Docsera",

@@ -4979,7 +4979,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get linkRequestTitle => 'Connection request';
 
   @override
-  String get linkRequestMergeTitle => 'Record merge request';
+  String get linkRequestMergeTitle => 'Link this record to your account';
 
   @override
   String get linkRequestKindConnect => 'New connection request';
@@ -4989,7 +4989,7 @@ class AppLocalizationsEn extends AppLocalizations {
       'Connection request for your relative';
 
   @override
-  String get linkRequestKindMerge => 'Merge an existing record';
+  String get linkRequestKindMerge => 'Link this record to your account';
 
   @override
   String get linkRequestIntroConnect =>

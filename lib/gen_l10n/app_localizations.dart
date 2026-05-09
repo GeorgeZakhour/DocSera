@@ -9161,7 +9161,7 @@ abstract class AppLocalizations {
   /// No description provided for @linkRequestMergeTitle.
   ///
   /// In en, this message translates to:
-  /// **'Record merge request'**
+  /// **'Link this record to your account'**
   String get linkRequestMergeTitle;
 
   /// No description provided for @linkRequestKindConnect.
@@ -9179,7 +9179,7 @@ abstract class AppLocalizations {
   /// No description provided for @linkRequestKindMerge.
   ///
   /// In en, this message translates to:
-  /// **'Merge an existing record'**
+  /// **'Link this record to your account'**
   String get linkRequestKindMerge;
 
   /// No description provided for @linkRequestIntroConnect.

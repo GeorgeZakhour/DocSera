@@ -1986,10 +1986,10 @@
   "@notificationPrefsTestReminderQueued": {},
 
   "linkRequestTitle": "Connection request",
-  "linkRequestMergeTitle": "Record merge request",
+  "linkRequestMergeTitle": "Link this record to your account",
   "linkRequestKindConnect": "New connection request",
   "linkRequestKindConnectRelative": "Connection request for your relative",
-  "linkRequestKindMerge": "Merge an existing record",
+  "linkRequestKindMerge": "Link this record to your account",
   "linkRequestIntroConnect": "would like to add you to their patient list on Docsera",
   "linkRequestIntroConnectRelative": "would like to add your relative to their patient list on Docsera",
   "linkRequestIntroMerge": "has a record under your name and would like to link it to your Docsera account",

@@ -4931,7 +4931,7 @@ class AppLocalizationsAr extends AppLocalizations {
   String get linkRequestTitle => 'طلب اتصال';
 
   @override
-  String get linkRequestMergeTitle => 'دمج سجل طبي';
+  String get linkRequestMergeTitle => 'ربط سجلك بحسابك';
 
   @override
   String get linkRequestKindConnect => 'طلب اتصال جديد';
@@ -4940,7 +4940,7 @@ class AppLocalizationsAr extends AppLocalizations {
   String get linkRequestKindConnectRelative => 'طلب اتصال لقريبك';
 
   @override
-  String get linkRequestKindMerge => 'دمج سجل قديم';
+  String get linkRequestKindMerge => 'ربط سجلك بحسابك';
 
   @override
   String get linkRequestIntroConnect =>
