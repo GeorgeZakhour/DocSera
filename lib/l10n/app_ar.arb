@@ -2051,5 +2051,7 @@
   "pendingDeletionNoneTitle": "لا يوجد طلب حذف معلّق",
   "@pendingDeletionNoneTitle": {},
   "pendingDeletionNoneBody": "حسابك مفعّل بالكامل ولا يوجد طلب حذف معلّق.",
+  "pendingDeletionSignOutCta": "تسجيل الخروج",
+  "@pendingDeletionSignOutCta": {},
   "@pendingDeletionNoneBody": {}
 }

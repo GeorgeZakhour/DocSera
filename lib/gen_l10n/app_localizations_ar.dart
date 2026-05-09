@@ -5098,6 +5098,9 @@ class AppLocalizationsAr extends AppLocalizations {
       'حسابك مفعّل بالكامل ولا يوجد طلب حذف معلّق.';
 
   @override
+  String get pendingDeletionSignOutCta => 'تسجيل الخروج';
+
+  @override
   String get reminder2hTitle => 'Appointment in 2 hours';
 
   @override

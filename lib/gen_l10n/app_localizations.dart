@@ -9428,6 +9428,12 @@ abstract class AppLocalizations {
   /// **'Your account is fully active and there is no pending deletion request.'**
   String get pendingDeletionNoneBody;
 
+  /// No description provided for @pendingDeletionSignOutCta.
+  ///
+  /// In en, this message translates to:
+  /// **'Sign out'**
+  String get pendingDeletionSignOutCta;
+
   /// No description provided for @reminder2hTitle.
   ///
   /// In en, this message translates to:

@@ -338,7 +338,38 @@ class _PendingDeletionPageState extends State<PendingDeletionPage> {
             textAlign: TextAlign.center,
           ),
         ),
+        SizedBox(height: 24.h),
+        // Explicit sign-out: the user reached this page either right after
+        // requesting deletion (still signed in, by design — see the
+        // BlocConsumer in DeleteAccountSheet) or via the login flow's
+        // grace-window detection. Either way, when they're done reading
+        // and don't want to cancel, this button is the polite exit.
+        OutlinedButton.icon(
+          onPressed: _cancelling ? null : _signOutFromHere,
+          icon: Icon(Icons.logout_rounded,
+              size: 18.sp, color: Colors.grey.shade700),
+          label: Text(
+            loc.pendingDeletionSignOutCta,
+            style: AppTextStyles.getText3(context).copyWith(
+              color: Colors.grey.shade800,
+              fontWeight: FontWeight.w600,
+            ),
+          ),
+          style: OutlinedButton.styleFrom(
+            minimumSize: Size(double.infinity, 46.h),
+            side: BorderSide(color: Colors.grey.shade400, width: 0.6),
+          ),
+        ),
       ],
     );
+  }
+
+  Future<void> _signOutFromHere() async {
+    try { await NotificationService.instance.deleteToken(); } catch (_) {}
+    try {
+      await Supabase.instance.client.auth.signOut();
+    } catch (_) {}
+    if (!mounted) return;
+    Navigator.of(context).pushNamedAndRemoveUntil('/login', (_) => false);
   }
 }

@@ -2050,6 +2050,8 @@
   "pendingDeletionNoneTitle": "No pending deletion",
   "@pendingDeletionNoneTitle": {},
   "pendingDeletionNoneBody": "Your account is fully active and there is no pending deletion request.",
+  "pendingDeletionSignOutCta": "Sign out",
+  "@pendingDeletionSignOutCta": {},
   "@pendingDeletionNoneBody": {},
 
   "reminder2hTitle": "Appointment in 2 hours",

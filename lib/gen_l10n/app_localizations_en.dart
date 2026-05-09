@@ -5149,6 +5149,9 @@ class AppLocalizationsEn extends AppLocalizations {
       'Your account is fully active and there is no pending deletion request.';
 
   @override
+  String get pendingDeletionSignOutCta => 'Sign out';
+
+  @override
   String get reminder2hTitle => 'Appointment in 2 hours';
 
   @override

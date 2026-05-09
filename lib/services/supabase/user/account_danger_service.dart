@@ -22,16 +22,10 @@ class AccountDangerService {
 
     final res = await _supabase.rpc('rpc_request_account_deletion');
 
-    // Drop this device's user_devices row before terminating the session
-    // so notifications stop firing on this physical device for the
-    // just-deleted user (critical when the same handset is later signed
-    // into by someone else).
-    try { await NotificationService.instance.deleteToken(); } catch (_) {}
-    // Sign out locally so the user lands on the login screen and the next
-    // sign-in can route them to the cancel-deletion page (login flow now
-    // distinguishes a soft pending-deletion state from a hard ban).
-    await _supabase.auth.signOut();
-
+    // Note: we intentionally do NOT sign out here. The caller pushes
+    // PendingDeletionPage so the user sees the confirmation, days
+    // remaining, and Cancel button right away. They can sign out from
+    // that page via the dedicated logout button when they're ready.
     return Map<String, dynamic>.from(res as Map);
   }
 
