@@ -14,7 +14,10 @@ import 'package:docsera/app/const.dart';
 import 'package:docsera/app/text_styles.dart';
 import 'package:docsera/gen_l10n/app_localizations.dart';
 import 'package:docsera/services/supabase/user/account_danger_service.dart';
+import 'package:docsera/utils/page_transitions.dart';
 import 'package:docsera/widgets/base_scaffold.dart';
+import 'package:docsera/widgets/custom_bottom_navigation_bar.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 
 class PendingDeletionPage extends StatefulWidget {
   const PendingDeletionPage({super.key});
@@ -42,19 +45,61 @@ class _PendingDeletionPageState extends State<PendingDeletionPage> {
       _error = null;
     });
     try {
+      // Pre-flight: if the cached auth.currentUser is null (or expired and
+      // the SDK hasn't refreshed yet), the RPC will throw NOT_AUTHENTICATED
+      // — short-circuit to login.
+      final currentUser = Supabase.instance.client.auth.currentUser;
+      if (currentUser == null) {
+        await _bounceToLogin();
+        return;
+      }
+
       final s = await _service.getDeletionStatus();
       if (!mounted) return;
+
+      // The page may have been opened from a stale entry point (login-flow
+      // grace-window check using a snapshot from before the user cancelled,
+      // or a deletion-warning notification tapped after the deletion was
+      // cancelled). If there's no pending deletion server-side, bounce to
+      // home so the user doesn't see a stale screen with a broken cancel
+      // button.
+      final requestedAt = s?['deletion_requested_at'];
+      if (requestedAt == null || requestedAt.toString().isEmpty) {
+        if (!mounted) return;
+        Navigator.pushAndRemoveUntil(
+          context,
+          fadePageRoute(CustomBottomNavigationBar()),
+          (_) => false,
+        );
+        return;
+      }
+
       setState(() {
         _status = s;
         _loading = false;
       });
     } catch (e) {
+      // NOT_AUTHENTICATED means the access token expired and the auto
+      // refresh hasn't kicked in. Sign out and route to login — keeps the
+      // user out of a wedged state.
+      if (e.toString().contains('NOT_AUTHENTICATED')) {
+        await _bounceToLogin();
+        return;
+      }
       if (!mounted) return;
       setState(() {
         _error = e.toString();
         _loading = false;
       });
     }
+  }
+
+  Future<void> _bounceToLogin() async {
+    try {
+      await Supabase.instance.client.auth.signOut();
+    } catch (_) {}
+    if (!mounted) return;
+    Navigator.of(context).pushNamedAndRemoveUntil('/login', (_) => false);
   }
 
   Future<void> _cancel() async {
@@ -93,8 +138,23 @@ class _PendingDeletionPageState extends State<PendingDeletionPage> {
     } catch (e) {
       if (!mounted) return;
       setState(() => _cancelling = false);
+      // NOT_AUTHENTICATED → session is stale, bounce to login.
+      // no_pending_deletion → server has no pending row, bounce to home.
+      final msg = e.toString();
+      if (msg.contains('NOT_AUTHENTICATED')) {
+        await _bounceToLogin();
+        return;
+      }
+      if (msg.contains('no_pending_deletion')) {
+        Navigator.pushAndRemoveUntil(
+          context,
+          fadePageRoute(CustomBottomNavigationBar()),
+          (_) => false,
+        );
+        return;
+      }
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('$e'), backgroundColor: AppColors.red),
+        SnackBar(content: Text(msg), backgroundColor: AppColors.red),
       );
     }
   }
