@@ -123,8 +123,22 @@ class UserCubit extends Cubit<UserState> {
     final Map<String, dynamic>? address =
     (userData['address'] as Map?)?.cast<String, dynamic>();
 
-    if (!isActive) {
-      // 🚫 الحساب معطّل (Soft deleted)
+    // Distinguish a soft "deletion pending" deactivation (the 30-day
+    // grace window after rpc_request_account_deletion) from a hard
+    // deactivation. The former MUST keep the user signed in so they
+    // can reach PendingDeletionPage and cancel — without this branch
+    // UserCubit's auto-signout was racing the login flow's redirect to
+    // PendingDeletionPage and dropping the user back at /login the
+    // moment they tapped Cancel.
+    final deletionRequestedAtRaw = userData['deletion_requested_at']?.toString();
+    final deletionRequestedAt = (deletionRequestedAtRaw == null || deletionRequestedAtRaw.isEmpty)
+        ? null
+        : DateTime.tryParse(deletionRequestedAtRaw)?.toUtc();
+    final isInGraceWindow = deletionRequestedAt != null &&
+        DateTime.now().toUtc().difference(deletionRequestedAt).inDays < 30;
+
+    if (!isActive && !isInGraceWindow) {
+      // 🚫 الحساب معطّل (Soft deleted, NOT in deletion grace window)
 
       // 1️⃣ أوقف أي realtime listener
       await _userChannel?.unsubscribe();

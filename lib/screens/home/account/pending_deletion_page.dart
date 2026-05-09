@@ -13,6 +13,9 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:docsera/app/const.dart';
 import 'package:docsera/app/text_styles.dart';
 import 'package:docsera/gen_l10n/app_localizations.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
+
+import 'package:docsera/Business_Logic/Account_page/user_cubit.dart';
 import 'package:docsera/services/notifications/notification_service.dart';
 import 'package:docsera/services/supabase/user/account_danger_service.dart';
 import 'package:docsera/utils/page_transitions.dart';
@@ -139,7 +142,18 @@ class _PendingDeletionPageState extends State<PendingDeletionPage> {
           backgroundColor: AppColors.main,
         ),
       );
-      Navigator.of(context).popUntil((r) => r.isFirst);
+      // Reload user data so cubits see the now-true is_active state, then
+      // push the home shell. PendingDeletionPage was reached via
+      // pushAndRemoveUntil so popping does nothing — we replace it
+      // explicitly.
+      // ignore: use_build_context_synchronously
+      context.read<UserCubit>().loadUserData(context: context);
+      // ignore: use_build_context_synchronously
+      Navigator.pushAndRemoveUntil(
+        context,
+        fadePageRoute(CustomBottomNavigationBar()),
+        (_) => false,
+      );
     } catch (e) {
       if (!mounted) return;
       setState(() => _cancelling = false);
