@@ -13,6 +13,7 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:docsera/app/const.dart';
 import 'package:docsera/app/text_styles.dart';
 import 'package:docsera/gen_l10n/app_localizations.dart';
+import 'package:docsera/services/notifications/notification_service.dart';
 import 'package:docsera/services/supabase/user/account_danger_service.dart';
 import 'package:docsera/utils/page_transitions.dart';
 import 'package:docsera/widgets/base_scaffold.dart';
@@ -95,6 +96,10 @@ class _PendingDeletionPageState extends State<PendingDeletionPage> {
   }
 
   Future<void> _bounceToLogin() async {
+    // Drop this device's user_devices row before tearing down the
+    // session — RLS needs the JWT to scope the delete to the current
+    // user's rows.
+    try { await NotificationService.instance.deleteToken(); } catch (_) {}
     try {
       await Supabase.instance.client.auth.signOut();
     } catch (_) {}

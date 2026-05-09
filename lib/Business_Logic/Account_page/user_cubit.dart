@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'package:docsera/Business_Logic/Authentication/auth_cubit.dart';
 import 'package:docsera/Business_Logic/Authentication/auth_state.dart';
+import 'package:docsera/services/notifications/notification_service.dart';
 import 'package:docsera/services/supabase/user/supabase_user_service.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -128,7 +129,10 @@ class UserCubit extends Cubit<UserState> {
       // 1️⃣ أوقف أي realtime listener
       await _userChannel?.unsubscribe();
 
-      // 2️⃣ Sign out من Supabase Auth
+      // 2️⃣ Drop this device's user_devices row first so notifications
+      //    for the just-deactivated account stop firing here, then sign
+      //    out of Supabase Auth.
+      try { await NotificationService.instance.deleteToken(); } catch (_) {}
       await Supabase.instance.client.auth.signOut();
 
       // 3️⃣ نظّف الكاش (مع الحفاظ على FaceID إذا أردت)

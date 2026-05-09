@@ -25,6 +25,9 @@ The patient app no longer calls it (migrated to the unified `send_sms_otp` edge 
 ### 3. 🟡 Notification preferences visibility pass
 The screen exists and writes correctly to `notification_preferences` but isn't heavily exposed in the Account UI. Final pass before launch to confirm it's discoverable.
 
+### 4. 🟡 Android device verification of the notifications platform
+All Phase 1 testing was done on iPhone. The infrastructure is platform-agnostic (server cron → Pushy → APNs/FCM-or-MQTT, same path on both), but the iOS-specific bits (in-app banner overlay around the foreground delegate suppression, time-sensitive importance, action-button category) don't apply to Android — Android shows heads-up natively in foreground. **Recommended:** install the APK on a real Android device, book an appointment 2h+1min in the future, force-close, wait, confirm the lock-screen banner. If anything's broken it'll be Pushy SDK-config related and worth catching before launch.
+
 ---
 
 ## From external code review (received 2026-05-06)

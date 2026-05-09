@@ -1,5 +1,7 @@
 import 'package:supabase_flutter/supabase_flutter.dart';
 
+import 'package:docsera/services/notifications/notification_service.dart';
+
 class AccountDangerService {
   final SupabaseClient _supabase;
 
@@ -20,6 +22,11 @@ class AccountDangerService {
 
     final res = await _supabase.rpc('rpc_request_account_deletion');
 
+    // Drop this device's user_devices row before terminating the session
+    // so notifications stop firing on this physical device for the
+    // just-deleted user (critical when the same handset is later signed
+    // into by someone else).
+    try { await NotificationService.instance.deleteToken(); } catch (_) {}
     // Sign out locally so the user lands on the login screen and the next
     // sign-in can route them to the cancel-deletion page (login flow now
     // distinguishes a soft pending-deletion state from a hard ban).
@@ -41,6 +48,7 @@ class AccountDangerService {
     final user = _supabase.auth.currentUser;
     if (user == null) throw Exception('NOT_AUTHENTICATED');
     await _supabase.rpc('rpc_deactivate_my_account');
+    try { await NotificationService.instance.deleteToken(); } catch (_) {}
     await _supabase.auth.signOut();
   }
 

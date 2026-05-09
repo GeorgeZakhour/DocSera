@@ -260,6 +260,24 @@ SELECT start_time, status, return_message
 | Phone-change OTP "wrong" with `0900000009` + `123456` | Was on the legacy `rpc_request_phone_change` infra not the unified one | Fixed in this phase — patient phone-change now uses `send_sms_otp` |
 | `fn_cron_account_deletion_finalize` silent | `deletion_cancellable_until` was not set during a manual deletion | The proper Tier 2 RPC sets it; if you backdate manually for testing, set both `deletion_requested_at` AND `deletion_cancellable_until` |
 
+## Cross-account notification bleed (CRITICAL — fixed this session)
+
+**Symptom seen earlier:** when User A logged out and User B signed in on the same physical device, User A kept receiving their notifications on the device — visible to User B.
+
+**Root cause:** seven of eight `auth.signOut()` call sites in the patient app bypassed `AuthRepository.signOut()` (which already cleaned `user_devices`) and just called `Supabase.instance.client.auth.signOut()` directly. Result: A's `(user_id=A, token=this_token)` row in `user_devices` survived. When B logged in, a new `(B, token)` row was upserted, but A's row stayed. Pushy still delivered A's notifications to A's token, which is on B's hands.
+
+**Fix:** every signOut call site now invokes `NotificationService.instance.deleteToken()` BEFORE `auth.signOut()`. RLS scopes the delete to the current user's own rows, so only the just-leaving user's device row is removed; other devices belonging to that user (laptop, second phone) are untouched. Patched sites:
+
+  * `lib/widgets/custom_bottom_navigation_bar.dart` — main logout button
+  * `lib/services/auth/authentication_service.dart` — central `logout()` helper
+  * `lib/Business_Logic/Authentication/auth_cubit.dart` — `signOut()` + orphan-session signOut path
+  * `lib/Business_Logic/Account_page/user_cubit.dart` — soft-deactivated account auto-signOut
+  * `lib/services/supabase/user/account_danger_service.dart` — `deleteMyAccount()` + `deactivateMyAccount()`
+  * `lib/screens/home/account/pending_deletion_page.dart` — `_bounceToLogin()` on stale-token state
+  * `AuthRepository.signOut()` already had it — unchanged
+
+The two remaining direct callers (`lib/screens/auth/sign_up/cross_app_options.dart` validation-only signin-then-signout, and a debug "Reset Session" button in main_screen.dart) are not auth-context user logouts — the validation-only paths run before any device row is created, and the debug button is gated to development.
+
 ## Pre-launch must-do (separate session — flagged but not done here)
 
 | # | Item |
@@ -267,6 +285,7 @@ SELECT start_time, status, return_message
 | 1 | **Strip TEST_PHONES whitelists**. Two locations: `supabase/functions/send_sms_otp/index.ts` (the canonical `00963900000001..13` set) and migration `20260509100000_phone_change_test_whitelist.sql` (we added the same bypass to `rpc_verify_phone_otp` 2-arg legacy form for compat). Also remove `TempPass123!` direct-DB password reset commands from any operator runbook. |
 | 2 | **Strip the legacy `rpc_request_phone_change` debug shortcut**. The patient app no longer calls it (migrated to `send_sms_otp` in this phase) but the function still exists and still returns OTP plaintext if any caller hits it. Drop the function entirely or rewrite it to call `send_sms_otp` and return void. |
 | 3 | **Notification preferences screen — visibility**. The screen exists and writes correctly to `notification_preferences` but it's not heavily exposed in the Account UI. Worth a final review pass to make sure it's discoverable. |
+| 4 | **Android device verification**. All Phase 1 testing was done on iPhone. The cron → Pushy → APNs path is platform-agnostic, but the iOS-specific overlay (in-app banner, time-sensitive flag, action-button category) doesn't apply to Android — Android shows heads-up natively. Recommend installing the APK on a real Android device and verifying T-2h reminder + foreground heads-up + action buttons before launch. |
 
 ## Score impact
 

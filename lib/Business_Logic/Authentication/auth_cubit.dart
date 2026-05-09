@@ -2,6 +2,7 @@ import 'dart:async';
 import 'package:bloc/bloc.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
+import 'package:docsera/services/notifications/notification_service.dart';
 import 'auth_state.dart';
 
 typedef RealtimeStarter = void Function(User user);
@@ -149,6 +150,12 @@ class AuthCubit extends Cubit<AppAuthState> {
   Future<void> signOut() async {
     try {
       onRealtimeStop?.call(); // ⛔ أوقف realtime فورًا
+      // Drop this device's user_devices row first so the just-signed-out
+      // user's notifications stop firing on this physical device after
+      // someone else signs in.
+      try {
+        await NotificationService.instance.deleteToken();
+      } catch (_) { /* best effort */ }
       await _supabase.auth.signOut();
     } catch (e) {
       emit(AuthError("Sign out error: $e"));
@@ -190,6 +197,7 @@ class AuthCubit extends Cubit<AppAuthState> {
     }
 
     if (!profileExists) {
+      try { await NotificationService.instance.deleteToken(); } catch (_) { /* best effort */ }
       try { await _supabase.auth.signOut(); } catch (_) { /* ignore */ }
       onRealtimeStop?.call();
       emit(AuthUnauthenticated());

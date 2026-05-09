@@ -24,6 +24,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:docsera/main.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:docsera/services/navigation/app_lifecycle.dart';
+import 'package:docsera/services/notifications/notification_service.dart';
 
 class CustomBottomNavigationBar extends StatefulWidget {
   final int initialIndex;
@@ -102,6 +103,19 @@ class _CustomBottomNavigationBarState extends State<CustomBottomNavigationBar>
   // --- Helpers ---
   Future<void> _logout(BuildContext context) async {
     try {
+      // CRITICAL: drop this device's user_devices row BEFORE signing out
+      // so notifications for the current user stop firing on this
+      // physical device. Without this, User A logs out, User B logs in
+      // on the same handset, and User A's still-active user_devices row
+      // keeps Pushy delivering A's notifications to B's hands. RLS scopes
+      // the delete to A's own rows; B's signin path will upsert a fresh
+      // (B, this_token) row when registerPushy runs.
+      try {
+        await NotificationService.instance.deleteToken();
+      } catch (e) {
+        debugPrint('⚠️ deleteToken on logout failed (continuing anyway): $e');
+      }
+
       await Supabase.instance.client.auth.signOut();
       SharedPreferences prefs = await SharedPreferences.getInstance();
       await prefs.setBool('isLoggedIn', false);
