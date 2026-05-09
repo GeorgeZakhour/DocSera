@@ -637,110 +637,19 @@ class NotificationService {
     required String reminder0Title,
     required String reminder0Body,
   }) async {
+    // The fn_cron_appointment_reminders pg_cron job (every minute) is now
+    // the single source of truth for the four reminder windows
+    // (T-24h, T-2h, T-30m, T-0). It fires via Pushy regardless of app
+    // state and the realtime channel surfaces the in-app banner when the
+    // app is foregrounded. Keep this method around so the existing
+    // AppointmentReminderScheduler bridge still compiles, but make it a
+    // no-op apart from cancelling any leftover OS-scheduled reminders
+    // that older builds may have left in the pending queue.
     await cancelAppointmentReminders(appointmentId);
-
-    final t24 = appointmentLocal.subtract(const Duration(hours: 24));
-    final t2h = appointmentLocal.subtract(const Duration(hours: 2));
-    final t30 = appointmentLocal.subtract(const Duration(minutes: 30));
-    final t0 = appointmentLocal;
-    final now = DateTime.now();
-    final payload = 'appointment:$appointmentId';
-
     if (kDebugMode) {
       debugPrint(
-          '⏰ scheduleAppointmentReminders($appointmentId): now=$now, '
-          'appt=$appointmentLocal, '
-          't24=$t24 (future=${t24.isAfter(now)}), '
-          't2h=$t2h (future=${t2h.isAfter(now)}), '
-          't30=$t30 (future=${t30.isAfter(now)}), '
-          't0=$t0 (future=${t0.isAfter(now)})');
-    }
-
-    // OS notification: only schedule if in the future (iOS won't accept
-    // past timestamps). The foreground banner separately handles the
-    // "moment just passed" case via scheduleOrFireForegroundBanner.
-
-    // T-24h
-    if (t24.isAfter(now)) {
-      await _scheduleWithId(
-        id: _reminderId(appointmentId, 't24'),
-        whenLocal: t24,
-        title: reminder24Title,
-        body: reminder24Body,
-        timeSensitive: false,
-        payload: payload,
-      );
-    }
-    scheduleOrFireForegroundBanner(
-      key: 'apt-$appointmentId-t24',
-      fireTime: t24,
-      title: reminder24Title,
-      body: reminder24Body,
-      payload: payload,
-    );
-
-    // T-2h
-    if (t2h.isAfter(now)) {
-      await _scheduleWithId(
-        id: _reminderId(appointmentId, 't2h'),
-        whenLocal: t2h,
-        title: reminder2hTitle,
-        body: reminder2hBody,
-        timeSensitive: false,
-        payload: payload,
-      );
-    }
-    scheduleOrFireForegroundBanner(
-      key: 'apt-$appointmentId-t2h',
-      fireTime: t2h,
-      title: reminder2hTitle,
-      body: reminder2hBody,
-      payload: payload,
-    );
-
-    // T-30m (action buttons attached on iOS via category)
-    if (t30.isAfter(now)) {
-      await _scheduleWithId(
-        id: _reminderId(appointmentId, 't30'),
-        whenLocal: t30,
-        title: reminder30Title,
-        body: reminder30Body,
-        timeSensitive: true,
-        payload: payload,
-      );
-    }
-    scheduleOrFireForegroundBanner(
-      key: 'apt-$appointmentId-t30',
-      fireTime: t30,
-      title: reminder30Title,
-      body: reminder30Body,
-      payload: payload,
-    );
-
-    // T-0 (at appointment time itself)
-    if (t0.isAfter(now)) {
-      await _scheduleWithId(
-        id: _reminderId(appointmentId, 't0'),
-        whenLocal: t0,
-        title: reminder0Title,
-        body: reminder0Body,
-        timeSensitive: true,
-        payload: payload,
-      );
-    }
-    scheduleOrFireForegroundBanner(
-      key: 'apt-$appointmentId-t0',
-      fireTime: t0,
-      title: reminder0Title,
-      body: reminder0Body,
-      payload: payload,
-    );
-
-    if (kDebugMode) {
-      final pending = await _fln.pendingNotificationRequests();
-      debugPrint(
-          '⏰ pending count after schedule: ${pending.length} '
-          '— ids: ${pending.map((p) => p.id).toList()}');
+          '⏰ scheduleAppointmentReminders($appointmentId): server-driven now '
+          '— skipping local OS scheduling, leftover pending notifications cleared');
     }
   }
 

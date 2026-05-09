@@ -31,7 +31,7 @@ class AccountDangerCubit extends Cubit<AccountDangerState> {
         super(const AccountDangerIdle());
 
   // ---------------------------------------------------------------------------
-  // 🗑️ Delete account
+  // 🗑️ Delete account — kicks off the Tier 2 30-day deletion lifecycle.
   // ---------------------------------------------------------------------------
   Future<void> deleteMyAccount() async {
     try {
