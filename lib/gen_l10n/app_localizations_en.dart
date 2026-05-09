@@ -939,7 +939,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get deleteAccountWarningText =>
-      'You can delete your DocSera account and associated data at any time. This will not automatically delete your personal data from the databases of the healthcare professionals with whom you have booked appointments. Healthcare professionals may have a legitimate interest in keeping your personal data. You are free to exercise your rights of access, rectification or deletion and contact them directly.';
+      'After you confirm, your account enters a 30-day grace period during which you can cancel at any time. When the grace period ends your DocSera account is permanently closed. Your medical records remain with the doctors who treated you — together with your name and contact details — inside their clinic systems for continuity of care. You will no longer be able to sign in to DocSera or receive messages from doctors after the account is closed. To access or delete those records later, contact your doctor directly.';
 
   @override
   String get confirmDeleteMyAccount => 'DELETE MY ACCOUNT';
@@ -5121,21 +5121,21 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get pendingDeletionBody =>
-      'After this period your personal information (name, phone, email) will be permanently scrubbed. Medical records will be kept anonymized for the doctors who treated you. You can cancel anytime before then.';
+      'When the grace period ends your DocSera account is permanently closed and you\'ll no longer be able to sign in. Your medical records remain with the doctors who treated you — together with your name and contact details — inside their clinic systems for continuity of care. You can cancel deletion anytime before the grace period ends.';
 
   @override
   String get pendingDeletionCancelCta => 'Cancel deletion';
 
   @override
   String get pendingDeletionFootnote =>
-      'Cancelling restores your account and all your data immediately.';
+      'Cancelling restores your account immediately and resumes access to all DocSera features.';
 
   @override
   String get pendingDeletionConfirmTitle => 'Cancel deletion?';
 
   @override
   String get pendingDeletionConfirmBody =>
-      'Your account will be reactivated immediately. Are you sure?';
+      'Your account will be reactivated immediately and all features resumed. Are you sure?';
 
   @override
   String get pendingDeletionCancelledToast =>
@@ -5145,7 +5145,8 @@ class AppLocalizationsEn extends AppLocalizations {
   String get pendingDeletionNoneTitle => 'No pending deletion';
 
   @override
-  String get pendingDeletionNoneBody => 'Your account is in good standing.';
+  String get pendingDeletionNoneBody =>
+      'Your account is fully active and there is no pending deletion request.';
 
   @override
   String get reminder2hTitle => 'Appointment in 2 hours';

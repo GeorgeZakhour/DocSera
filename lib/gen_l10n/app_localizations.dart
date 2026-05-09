@@ -1817,7 +1817,7 @@ abstract class AppLocalizations {
   /// No description provided for @deleteAccountWarningText.
   ///
   /// In en, this message translates to:
-  /// **'You can delete your DocSera account and associated data at any time. This will not automatically delete your personal data from the databases of the healthcare professionals with whom you have booked appointments. Healthcare professionals may have a legitimate interest in keeping your personal data. You are free to exercise your rights of access, rectification or deletion and contact them directly.'**
+  /// **'After you confirm, your account enters a 30-day grace period during which you can cancel at any time. When the grace period ends your DocSera account is permanently closed. Your medical records remain with the doctors who treated you — together with your name and contact details — inside their clinic systems for continuity of care. You will no longer be able to sign in to DocSera or receive messages from doctors after the account is closed. To access or delete those records later, contact your doctor directly.'**
   String get deleteAccountWarningText;
 
   /// No description provided for @confirmDeleteMyAccount.
@@ -9383,7 +9383,7 @@ abstract class AppLocalizations {
   /// No description provided for @pendingDeletionBody.
   ///
   /// In en, this message translates to:
-  /// **'After this period your personal information (name, phone, email) will be permanently scrubbed. Medical records will be kept anonymized for the doctors who treated you. You can cancel anytime before then.'**
+  /// **'When the grace period ends your DocSera account is permanently closed and you\'ll no longer be able to sign in. Your medical records remain with the doctors who treated you — together with your name and contact details — inside their clinic systems for continuity of care. You can cancel deletion anytime before the grace period ends.'**
   String get pendingDeletionBody;
 
   /// No description provided for @pendingDeletionCancelCta.
@@ -9395,7 +9395,7 @@ abstract class AppLocalizations {
   /// No description provided for @pendingDeletionFootnote.
   ///
   /// In en, this message translates to:
-  /// **'Cancelling restores your account and all your data immediately.'**
+  /// **'Cancelling restores your account immediately and resumes access to all DocSera features.'**
   String get pendingDeletionFootnote;
 
   /// No description provided for @pendingDeletionConfirmTitle.
@@ -9407,7 +9407,7 @@ abstract class AppLocalizations {
   /// No description provided for @pendingDeletionConfirmBody.
   ///
   /// In en, this message translates to:
-  /// **'Your account will be reactivated immediately. Are you sure?'**
+  /// **'Your account will be reactivated immediately and all features resumed. Are you sure?'**
   String get pendingDeletionConfirmBody;
 
   /// No description provided for @pendingDeletionCancelledToast.
@@ -9425,7 +9425,7 @@ abstract class AppLocalizations {
   /// No description provided for @pendingDeletionNoneBody.
   ///
   /// In en, this message translates to:
-  /// **'Your account is in good standing.'**
+  /// **'Your account is fully active and there is no pending deletion request.'**
   String get pendingDeletionNoneBody;
 
   /// No description provided for @reminder2hTitle.

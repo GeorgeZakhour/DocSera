@@ -930,7 +930,7 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get deleteAccountWarningText =>
-      'يمكنك حذف حسابك وبياناتك المرتبطة في أي وقت. لن يؤدي ذلك إلى حذف بياناتك تلقائيًا من قواعد بيانات الأطباء الذين حجزت معهم مواعيد. قد يكون لدى الأطباء مصلحة مشروعة في الاحتفاظ ببياناتك الشخصية. يمكنك ممارسة حقوقك في الوصول أو التصحيح أو الحذف من خلال التواصل معهم مباشرة.';
+      'بعد تأكيد الحذف، سيدخل حسابك في فترة سماح مدتها 30 يومًا يمكنك خلالها التراجع في أي وقت. عند انتهاء المهلة سيتم إغلاق حساب دوكسيرا الخاص بك نهائيًا. تبقى سجلاتك الطبية محفوظة لدى الأطباء الذين عالجوك ضمن أنظمة عياداتهم — مع اسمك ومعلومات تواصلك — لاستمرارية الرعاية. لن تتمكن من تسجيل الدخول إلى دوكسيرا أو استلام رسائل من الأطباء بعد إغلاق الحساب. للوصول إلى سجلاتك أو حذفها لاحقًا تواصل مع طبيبك مباشرة.';
 
   @override
   String get confirmDeleteMyAccount => 'حذف حسابي';
@@ -5071,21 +5071,21 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get pendingDeletionBody =>
-      'بعد هذه الفترة سيتم حذف معلوماتك الشخصية (الاسم، الهاتف، البريد) نهائيًا. تبقى السجلات الطبية محفوظة بشكل مجهول الهوية للأطباء الذين عالجوك. يمكنك الإلغاء في أي وقت قبل ذلك.';
+      'عند انتهاء المهلة سيتم إغلاق حساب دوكسيرا الخاص بك نهائيًا ولن تتمكن من تسجيل الدخول. تبقى سجلاتك الطبية محفوظة لدى الأطباء الذين عالجوك ضمن أنظمة عياداتهم — مع اسمك ومعلومات تواصلك — لاستمرارية رعايتك. يمكنك إلغاء الحذف في أي وقت قبل انتهاء المهلة.';
 
   @override
   String get pendingDeletionCancelCta => 'إلغاء الحذف';
 
   @override
   String get pendingDeletionFootnote =>
-      'الإلغاء يعيد تفعيل حسابك وبياناتك بالكامل فورًا.';
+      'الإلغاء يعيد تفعيل حسابك بالكامل فورًا ويستأنف وصولك لجميع ميزات دوكسيرا.';
 
   @override
   String get pendingDeletionConfirmTitle => 'إلغاء الحذف؟';
 
   @override
   String get pendingDeletionConfirmBody =>
-      'سيتم إعادة تفعيل حسابك فورًا. هل أنت متأكد؟';
+      'سيتم إعادة تفعيل حسابك فورًا واستئناف جميع ميزاتك. هل أنت متأكد؟';
 
   @override
   String get pendingDeletionCancelledToast => 'تم إلغاء الحذف — أهلًا بعودتك.';
@@ -5094,7 +5094,8 @@ class AppLocalizationsAr extends AppLocalizations {
   String get pendingDeletionNoneTitle => 'لا يوجد طلب حذف معلّق';
 
   @override
-  String get pendingDeletionNoneBody => 'حسابك في وضع جيد.';
+  String get pendingDeletionNoneBody =>
+      'حسابك مفعّل بالكامل ولا يوجد طلب حذف معلّق.';
 
   @override
   String get reminder2hTitle => 'Appointment in 2 hours';
