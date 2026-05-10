@@ -92,7 +92,7 @@
         <!-- silhouette without the colored background tile).       -->
         <meta-data
             android:name="me.pushy.sdk.notification.icon"
-            android:resource="@mipmap/ic_launcher" />
+            android:resource="@drawable/ic_launcher_foreground" />
 
         <!-- Internal notification receiver — bridges the MQTT push -->
         <!-- to the Flutter listener registered by Pushy.listen().  -->
