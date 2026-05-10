@@ -40,55 +40,60 @@ class _WizardNextButtonState extends State<WizardNextButton>
     return PositionedDirectional(
       bottom: 30.h,
       end: 24.w,
-      child: GestureDetector(
-        onTap: widget.onTap,
-        child: AnimatedBuilder(
-          animation: _pulse,
-          builder: (context, child) {
-            final t = _pulse.value;
-            final ringRadius = 12.0 * t;
-            final ringOpacity = (1 - t) * 0.35;
-            return Container(
-              padding: EdgeInsets.all(ringRadius),
+      child: Semantics(
+        button: true,
+        label: widget.label ??
+            MaterialLocalizations.of(context).continueButtonLabel,
+        child: GestureDetector(
+          onTap: widget.onTap,
+          child: AnimatedBuilder(
+            animation: _pulse,
+            builder: (context, child) {
+              final t = _pulse.value;
+              final ringRadius = 12.0 * t;
+              final ringOpacity = (1 - t) * 0.35;
+              return Container(
+                padding: EdgeInsets.all(ringRadius),
+                decoration: BoxDecoration(
+                  shape: hasLabel ? BoxShape.rectangle : BoxShape.circle,
+                  borderRadius: hasLabel ? BorderRadius.circular(40) : null,
+                  color: AppColors.main.withValues(alpha: ringOpacity),
+                ),
+                child: child,
+              );
+            },
+            child: Container(
+              height: 58.h,
+              padding: hasLabel
+                  ? EdgeInsets.symmetric(horizontal: 28.w)
+                  : EdgeInsets.zero,
+              constraints: hasLabel ? null : BoxConstraints.tightFor(width: 58.w, height: 58.h),
               decoration: BoxDecoration(
                 shape: hasLabel ? BoxShape.rectangle : BoxShape.circle,
                 borderRadius: hasLabel ? BorderRadius.circular(40) : null,
-                color: AppColors.main.withValues(alpha: ringOpacity),
+                color: AppColors.main,
+                boxShadow: [
+                  BoxShadow(
+                    color: AppColors.main.withValues(alpha: 0.55),
+                    blurRadius: 30,
+                    offset: const Offset(0, 14),
+                    spreadRadius: -8,
+                  ),
+                ],
               ),
-              child: child,
-            );
-          },
-          child: Container(
-            height: 58.h,
-            padding: hasLabel
-                ? EdgeInsets.symmetric(horizontal: 28.w)
-                : EdgeInsets.zero,
-            constraints: hasLabel ? null : BoxConstraints.tightFor(width: 58.w, height: 58.h),
-            decoration: BoxDecoration(
-              shape: hasLabel ? BoxShape.rectangle : BoxShape.circle,
-              borderRadius: hasLabel ? BorderRadius.circular(40) : null,
-              color: AppColors.main,
-              boxShadow: [
-                BoxShadow(
-                  color: AppColors.main.withValues(alpha: 0.55),
-                  blurRadius: 30,
-                  offset: const Offset(0, 14),
-                  spreadRadius: -8,
-                ),
-              ],
-            ),
-            child: Center(
-              child: hasLabel
-                  ? Text(
-                      widget.label!,
-                      style: TextStyle(
-                        fontFamily: 'Cairo',
-                        fontWeight: FontWeight.w700,
-                        fontSize: 14.sp,
-                        color: Colors.white,
-                      ),
-                    )
-                  : Icon(Icons.arrow_forward_rounded, color: Colors.white, size: 22.sp),
+              child: Center(
+                child: hasLabel
+                    ? Text(
+                        widget.label!,
+                        style: TextStyle(
+                          fontFamily: 'Cairo',
+                          fontWeight: FontWeight.w700,
+                          fontSize: 14.sp,
+                          color: Colors.white,
+                        ),
+                      )
+                    : Icon(Icons.arrow_forward_rounded, color: Colors.white, size: 22.sp),
+              ),
             ),
           ),
         ),

@@ -64,9 +64,9 @@ class _S01WelcomeState extends State<S01Welcome>
         AnimatedBuilder(
           animation: _marbles[0],
           builder: (context, _) {
-            return Positioned(
+            return PositionedDirectional(
               top: 0.10 * size.height + (-8 * _marbles[0].value),
-              left: 0.20 * size.width,
+              start: 0.20 * size.width,
               child: GlassMarble(size: 24.w),
             );
           },
@@ -74,9 +74,9 @@ class _S01WelcomeState extends State<S01Welcome>
         AnimatedBuilder(
           animation: _marbles[1],
           builder: (context, _) {
-            return Positioned(
+            return PositionedDirectional(
               top: 0.46 * size.height + (10 * _marbles[1].value),
-              right: 0.18 * size.width,
+              end: 0.18 * size.width,
               child: GlassMarble(size: 18.w),
             );
           },
@@ -84,9 +84,9 @@ class _S01WelcomeState extends State<S01Welcome>
         AnimatedBuilder(
           animation: _marbles[2],
           builder: (context, _) {
-            return Positioned(
+            return PositionedDirectional(
               top: 0.36 * size.height + (-12 * _marbles[2].value),
-              left: 0.32 * size.width,
+              start: 0.32 * size.width,
               child: GlassMarble(size: 14.w),
             );
           },

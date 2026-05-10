@@ -190,9 +190,9 @@ class _FeatureScaffoldState extends State<FeatureScaffold>
         if (widget.extraTopOverlay != null) widget.extraTopOverlay!,
 
         // Glass shard behind the title
-        Positioned(
+        PositionedDirectional(
           top: 0.50 * size.height,
-          right: 30.w,
+          end: 30.w,
           child: GlassShard(
             width: 220.w,
             height: 90.h,

@@ -28,18 +28,23 @@ class WizardPageDots extends StatelessWidget {
           final isActive = i == current;
           return Padding(
             padding: EdgeInsetsDirectional.only(end: 7.w),
-            child: GestureDetector(
-              onTap: () => onJump(i),
-              child: AnimatedContainer(
-                duration: const Duration(milliseconds: 350),
-                curve: Curves.easeOut,
-                width: isActive ? 24.w : 6.w,
-                height: 6.h,
-                decoration: BoxDecoration(
-                  color: isActive
-                      ? AppColors.main
-                      : AppColors.main.withValues(alpha: 0.22),
-                  borderRadius: BorderRadius.circular(999),
+            child: Semantics(
+              button: true,
+              label: 'Page ${i + 1} of $total',
+              selected: isActive,
+              child: GestureDetector(
+                onTap: () => onJump(i),
+                child: AnimatedContainer(
+                  duration: const Duration(milliseconds: 350),
+                  curve: Curves.easeOut,
+                  width: isActive ? 24.w : 6.w,
+                  height: 6.h,
+                  decoration: BoxDecoration(
+                    color: isActive
+                        ? AppColors.main
+                        : AppColors.main.withValues(alpha: 0.22),
+                    borderRadius: BorderRadius.circular(999),
+                  ),
                 ),
               ),
             ),

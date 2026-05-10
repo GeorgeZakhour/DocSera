@@ -12,18 +12,21 @@ class WizardSkipButton extends StatelessWidget {
     return PositionedDirectional(
       top: 22.h,
       start: 22.w,
-      child: GestureDetector(
-        behavior: HitTestBehavior.opaque,
-        onTap: onTap,
-        child: Padding(
-          padding: EdgeInsets.all(8.w),
-          child: Text(
-            l.wizard_skip_button,
-            style: TextStyle(
-              fontFamily: 'Cairo',
-              fontWeight: FontWeight.w500,
-              fontSize: 12.sp,
-              color: const Color(0xA6004146), // teal-near-black .65
+      child: Semantics(
+        button: true,
+        child: GestureDetector(
+          behavior: HitTestBehavior.opaque,
+          onTap: onTap,
+          child: Padding(
+            padding: EdgeInsets.all(8.w),
+            child: Text(
+              l.wizard_skip_button,
+              style: TextStyle(
+                fontFamily: 'Cairo',
+                fontWeight: FontWeight.w500,
+                fontSize: 12.sp,
+                color: const Color(0xA6004146), // teal-near-black .65
+              ),
             ),
           ),
         ),

@@ -95,9 +95,9 @@ class _CelebrationScaffoldState extends State<CelebrationScaffold>
               final t = _sparkleCtrls[i].value;
               // 0..0.5: fade in + scale up; 0.5..1.0: fade out + scale down
               final phase = t < 0.5 ? t * 2 : (1 - t) * 2;
-              return Positioned(
+              return PositionedDirectional(
                 top: widget.sparklePositions[i].dy * size.height,
-                left: widget.sparklePositions[i].dx * size.width,
+                start: widget.sparklePositions[i].dx * size.width,
                 child: Opacity(
                   opacity: phase,
                   child: Transform.scale(scale: phase, child: child),

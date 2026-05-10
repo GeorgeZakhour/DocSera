@@ -28,6 +28,7 @@ class _WelcomePageState extends State<WelcomePage> {
   List<_AnimatedLogo> _logos = [];
   bool _logosVisible = true;
   late ConfettiController _confettiController;
+  Timer? _logoTimer;
 
 
   @override
@@ -61,6 +62,7 @@ class _WelcomePageState extends State<WelcomePage> {
 
   @override
   void dispose() {
+    _logoTimer?.cancel();
     _confettiController.dispose();
     super.dispose();
   }
@@ -89,7 +91,7 @@ class _WelcomePageState extends State<WelcomePage> {
 
   /// ✅ Start Animation Loop (10 sec visible → fade out → 10 sec visible → repeat)
   void _startAnimationLoop() {
-    Timer.periodic(const Duration(seconds: 10), (timer) {
+    _logoTimer = Timer.periodic(const Duration(seconds: 10), (timer) {
       if (!mounted) return;
 
       setState(() {

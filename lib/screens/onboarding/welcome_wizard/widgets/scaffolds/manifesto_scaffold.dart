@@ -89,9 +89,9 @@ class _ManifestoScaffoldState extends State<ManifestoScaffold>
         if (widget.extraOverlay != null) widget.extraOverlay!,
 
         // shard
-        Positioned(
+        PositionedDirectional(
           top: 0.32 * size.height,
-          right: 30.w,
+          end: 30.w,
           child: GlassShard(
             width: 240.w,
             height: 100.h,
