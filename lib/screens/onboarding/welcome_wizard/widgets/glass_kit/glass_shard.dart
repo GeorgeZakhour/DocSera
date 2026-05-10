@@ -40,8 +40,8 @@ class GlassShard extends StatelessWidget {
                   height: height,
                   decoration: BoxDecoration(
                     borderRadius: BorderRadius.all(Radius.circular(height / 2)),
-                    color: const Color(0x38FFFFFF), // white .22
-                    border: Border.all(color: const Color(0x8CFFFFFF), width: 1), // .55
+                    color: const Color(0x24FFFFFF), // white .14 (was .22)
+                    border: Border.all(color: const Color(0x66FFFFFF), width: 1), // .40 (was .55)
                     boxShadow: const [
                       BoxShadow(
                         color: Color(0x2E009092), // teal .18

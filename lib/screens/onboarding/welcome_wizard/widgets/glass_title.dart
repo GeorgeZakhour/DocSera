@@ -26,10 +26,13 @@ class GlassTitle extends StatelessWidget {
     return Container(
       decoration: const BoxDecoration(
         boxShadow: [
+          // Very faint, symmetric (no offset) glow — replaces the previous
+          // block-shaped shadow. Spreads softly around the title without
+          // forming a rectangular block behind it.
           BoxShadow(
-            color: Color(0x38009092), // teal .22
-            blurRadius: 12,
-            offset: Offset(0, 6),
+            color: Color(0x14009092), // teal .08 — barely there
+            blurRadius: 32,
+            spreadRadius: -10,
           ),
         ],
       ),
@@ -38,11 +41,11 @@ class GlassTitle extends StatelessWidget {
           begin: Alignment.topCenter,
           end: Alignment.bottomCenter,
           colors: [
-            Color(0xFF4DD0D2), // light teal .100 — top sheen
+            Color(0xFF4DD0D2), // light teal — top sheen
             Color(0xF2009092), // teal .95
-            Color(0xBF009092), // teal .75 — bottom (was .50)
+            Color(0xE6009092), // teal .90 — bottom (was .75 — fixes white edges)
           ],
-          stops: [0.0, 0.30, 1.0],
+          stops: [0.0, 0.25, 1.0],
         ).createShader(bounds),
         blendMode: BlendMode.srcIn,
         child: Text(
@@ -54,7 +57,7 @@ class GlassTitle extends StatelessWidget {
             fontSize: size.sp,
             height: 1.18,
             letterSpacing: -0.4,
-            color: Colors.white, // overridden by ShaderMask
+            color: Colors.white,
           ),
         ),
       ),

@@ -53,7 +53,7 @@ class _PointsCounterState extends State<_PointsCounter>
     super.initState();
     _ctrl = AnimationController(
       vsync: this,
-      duration: const Duration(milliseconds: 1400),
+      duration: const Duration(milliseconds: 2000),
     )..forward();
     _ctrl.addStatusListener((status) {
       if (status == AnimationStatus.completed) {
@@ -79,7 +79,7 @@ class _PointsCounterState extends State<_PointsCounter>
     return AnimatedBuilder(
       animation: _ctrl,
       builder: (context, _) {
-        final n = (Curves.easeOut.transform(_ctrl.value) * 25).round();
+        final n = (Curves.easeOut.transform(_ctrl.value) * 100).round();
         return Text(
           '+$n',
           style: TextStyle(

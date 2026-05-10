@@ -10,7 +10,7 @@ class WizardSkipButton extends StatelessWidget {
   Widget build(BuildContext context) {
     final l = AppLocalizations.of(context)!;
     return PositionedDirectional(
-      top: 22.h,
+      top: 38.h,
       start: 22.w,
       child: Semantics(
         button: true,
