@@ -2,6 +2,8 @@ import 'dart:async';
 import 'dart:io';
 import 'package:flutter/foundation.dart' show kDebugMode;
 import 'package:docsera/Business_Logic/Account_page/danger/account_danger_cubit.dart';
+import 'package:docsera/Business_Logic/Onboarding/welcome_wizard/welcome_wizard_state.dart';
+import 'package:docsera/screens/onboarding/welcome_wizard/welcome_wizard_screen.dart';
 
 import 'package:docsera/Business_Logic/Account_page/profile/account_profile_cubit.dart';
 import 'package:docsera/Business_Logic/Account_page/profile/account_profile_state.dart';
@@ -483,6 +485,27 @@ class _AccountScreenState extends State<AccountScreen> {
                   )
               ),
 
+              Divider(color: Colors.grey[200], height: 2.h),
+
+              // Replay welcome wizard
+              _buildPrivacyItem(
+                AppLocalizations.of(context)!.replayWelcomeTour,
+                () {
+                  final state = context.read<UserCubit>().state;
+                  final firstName = state is UserLoaded
+                      ? state.userName.split(' ').first
+                      : '';
+                  Navigator.push(
+                    context,
+                    fadePageRoute(WelcomeWizardScreen(
+                      entryMode: WizardEntryMode.replay,
+                      firstName: firstName,
+                      onCompleteFirstTime: () {}, // unused in replay mode
+                      onCompleteReplay: () => Navigator.pop(context),
+                    )),
+                  );
+                },
+              ),
               Divider(color: Colors.grey[200], height: 2.h),
 
               SizedBox(height: 15.h),
