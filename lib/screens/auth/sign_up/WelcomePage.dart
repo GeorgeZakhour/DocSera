@@ -1,6 +1,9 @@
 import 'dart:async';
 import 'dart:math';
+import 'package:docsera/Business_Logic/Onboarding/welcome_wizard/welcome_wizard_state.dart';
+import 'package:docsera/screens/onboarding/welcome_wizard/welcome_wizard_screen.dart';
 import 'package:docsera/widgets/custom_bottom_navigation_bar.dart';
+import 'package:docsera/widgets/legal_reconsent_gate.dart';
 import 'package:docsera/utils/page_transitions.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
@@ -172,8 +175,21 @@ class _WelcomePageState extends State<WelcomePage> {
                     onPressed: () {
                       Navigator.pushAndRemoveUntil(
                         context,
-                        fadePageRoute(CustomBottomNavigationBar()),
-                            (route) => false,
+                        fadePageRoute(WelcomeWizardScreen(
+                          entryMode: WizardEntryMode.firstTime,
+                          firstName: widget.signUpInfo.firstName ?? '',
+                          onCompleteFirstTime: () {
+                            Navigator.pushAndRemoveUntil(
+                              context,
+                              fadePageRoute(LegalReconsentGate(
+                                child: CustomBottomNavigationBar(),
+                              )),
+                              (route) => false,
+                            );
+                          },
+                          onCompleteReplay: () {}, // unused in firstTime mode
+                        )),
+                        (route) => false,
                       );
                     },
                     style: ElevatedButton.styleFrom(
@@ -188,7 +204,7 @@ class _WelcomePageState extends State<WelcomePage> {
                       width: 200.w,
                       child: Center(
                         child: Text(
-                          AppLocalizations.of(context)!.goToHomepage,
+                          AppLocalizations.of(context)!.discoverDocsera,
                           style: AppTextStyles.getText2(context).copyWith(
                             color: AppColors.whiteText,
                             fontSize: 11.sp,
