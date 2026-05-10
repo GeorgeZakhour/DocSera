@@ -1325,9 +1325,6 @@ class AppLocalizationsAr extends AppLocalizations {
   String get confirm => 'تأكيد';
 
   @override
-  String get slotReservedFor => 'هذا الموعد محجوز لمدة 15 دقيقة';
-
-  @override
   String get byConfirming => 'بتأكيدك لهذا الموعد، ';
 
   @override
@@ -5192,10 +5189,10 @@ class AppLocalizationsAr extends AppLocalizations {
   String get discoverDocsera => 'تعرّف على دوكسيرا';
 
   @override
-  String get replayWelcomeTour => 'أعد الجولة التعريفية';
+  String get replayWelcomeTour => 'اكتشف دوكسيرا';
 
   @override
-  String get replayWelcomeTourSubtitle => 'شاهد كل ما يقدّمه دوكسيرا من جديد';
+  String get replayWelcomeTourSubtitle => 'جولة كاملة في تطبيقك، متى شئت';
 
   @override
   String get wizard_welcome_salam => 'أهلاً';

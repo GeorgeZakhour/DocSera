@@ -1337,9 +1337,6 @@ class AppLocalizationsEn extends AppLocalizations {
   String get confirm => 'Confirm';
 
   @override
-  String get slotReservedFor => 'This slot is reserved for 15 minutes';
-
-  @override
   String get byConfirming => 'By confirming this appointment, ';
 
   @override
@@ -5234,10 +5231,10 @@ class AppLocalizationsEn extends AppLocalizations {
   String get discoverDocsera => 'Discover DocSera';
 
   @override
-  String get replayWelcomeTour => 'Replay the welcome tour';
+  String get replayWelcomeTour => 'Discover DocSera';
 
   @override
-  String get replayWelcomeTourSubtitle => 'See everything DocSera offers again';
+  String get replayWelcomeTourSubtitle => 'A full tour of your app, anytime';
 
   @override
   String get wizard_welcome_salam => 'Welcome';

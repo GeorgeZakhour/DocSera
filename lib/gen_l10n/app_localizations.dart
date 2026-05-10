@@ -2594,12 +2594,6 @@ abstract class AppLocalizations {
   /// **'Confirm'**
   String get confirm;
 
-  /// No description provided for @slotReservedFor.
-  ///
-  /// In en, this message translates to:
-  /// **'This slot is reserved for 15 minutes'**
-  String get slotReservedFor;
-
   /// No description provided for @byConfirming.
   ///
   /// In en, this message translates to:
@@ -9539,13 +9533,13 @@ abstract class AppLocalizations {
   /// No description provided for @replayWelcomeTour.
   ///
   /// In en, this message translates to:
-  /// **'Replay the welcome tour'**
+  /// **'Discover DocSera'**
   String get replayWelcomeTour;
 
   /// No description provided for @replayWelcomeTourSubtitle.
   ///
   /// In en, this message translates to:
-  /// **'See everything DocSera offers again'**
+  /// **'A full tour of your app, anytime'**
   String get replayWelcomeTourSubtitle;
 
   /// No description provided for @wizard_welcome_salam.
