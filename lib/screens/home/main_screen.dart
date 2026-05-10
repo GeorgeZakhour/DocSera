@@ -83,10 +83,11 @@ class _MainScreenState extends State<MainScreen> with AutomaticKeepAliveClientMi
       final auth = context.read<AuthCubit>().state;
       if (auth is AuthAuthenticated) {
         maybeShowGiftAnnouncement(context);
-        // Pop-up gate: doctor↔patient link requests (connect / merge)
-        // are high-stakes and shouldn't be discoverable only via the
-        // inbox bell. If the patient has any pending request, push
-        // the review page automatically. Once-per-session.
+        // Pop-up gate: re-arm on every fresh MainScreen mount (cold
+        // start / sign-up / first app launch). Stale flag from a
+        // previous user session in the same Dart process must NOT
+        // block this fresh user from seeing their pending requests.
+        resetLinkRequestGate();
         maybeShowPendingLinkRequest(context);
       }
       // Bridge AppointmentsCubit lifecycle → local T-24h / T-30m reminders.
@@ -457,6 +458,12 @@ class _MainScreenState extends State<MainScreen> with AutomaticKeepAliveClientMi
               curr is AuthAuthenticated && prev is! AuthAuthenticated,
           listener: (context, state) {
             debugPrint('🚪 link-gate: auth → AuthAuthenticated, scheduling gate');
+            // Re-arm on every fresh authenticated transition.
+            // Sign-up doesn't go through signOut() (which would have
+            // reset the flag), so a stale `_gateFiredThisSession=true`
+            // from a previous session in the same Dart process would
+            // otherwise block this fresh user from seeing the gate.
+            resetLinkRequestGate();
             WidgetsBinding.instance.addPostFrameCallback((_) {
               if (!context.mounted) return;
               maybeShowPendingLinkRequest(context);
