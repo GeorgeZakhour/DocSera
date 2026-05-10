@@ -23,12 +23,16 @@ class GlassTitle extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final textStyle = TextStyle(
+      fontFamily: 'Cairo',
+      fontWeight: FontWeight.w900,
+      fontSize: size.sp,
+      height: 1.18,
+      letterSpacing: -0.4,
+    );
     return Container(
       decoration: const BoxDecoration(
         boxShadow: [
-          // Very faint, symmetric (no offset) glow — replaces the previous
-          // block-shaped shadow. Spreads softly around the title without
-          // forming a rectangular block behind it.
           BoxShadow(
             color: Color(0x14009092), // teal .08 — barely there
             blurRadius: 32,
@@ -36,30 +40,35 @@ class GlassTitle extends StatelessWidget {
           ),
         ],
       ),
-      child: ShaderMask(
-        shaderCallback: (bounds) => const LinearGradient(
-          begin: Alignment.topCenter,
-          end: Alignment.bottomCenter,
-          colors: [
-            Color(0xFF4DD0D2), // light teal — top sheen
-            Color(0xF2009092), // teal .95
-            Color(0xE6009092), // teal .90 — bottom (was .75 — fixes white edges)
-          ],
-          stops: [0.0, 0.25, 1.0],
-        ).createShader(bounds),
-        blendMode: BlendMode.srcIn,
-        child: Text(
-          text,
-          textAlign: textAlign,
-          style: TextStyle(
-            fontFamily: 'Cairo',
-            fontWeight: FontWeight.w900,
-            fontSize: size.sp,
-            height: 1.18,
-            letterSpacing: -0.4,
-            color: Colors.white,
+      child: Stack(
+        children: [
+          // Solid teal base — fills letter edges so anti-aliased pixels
+          // never become transparent (which would let mint backdrop bleed through).
+          Text(
+            text,
+            textAlign: textAlign,
+            style: textStyle.copyWith(color: const Color(0xFF009092)),
           ),
-        ),
+          // Top sheen via ShaderMask — fades to transparent at ~50% so the
+          // solid base shows through naturally for the lower half of letters.
+          ShaderMask(
+            shaderCallback: (bounds) => const LinearGradient(
+              begin: Alignment.topCenter,
+              end: Alignment.bottomCenter,
+              colors: [
+                Color(0xFF4DD0D2), // light teal — top sheen
+                Color(0x004DD0D2), // transparent — bottom
+              ],
+              stops: [0.0, 0.5],
+            ).createShader(bounds),
+            blendMode: BlendMode.srcIn,
+            child: Text(
+              text,
+              textAlign: textAlign,
+              style: textStyle.copyWith(color: Colors.white),
+            ),
+          ),
+        ],
       ),
     );
   }

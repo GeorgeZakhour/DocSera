@@ -17,6 +17,7 @@ import 'package:docsera/screens/home/account/legal_information.dart';
 import 'package:docsera/screens/home/account/notification_preferences_page.dart';
 import 'package:docsera/screens/home/shimmer/shimmer_widgets.dart';
 import 'package:docsera/utils/custom_clippers.dart';
+import 'package:flutter_svg/flutter_svg.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:docsera/gen_l10n/app_localizations.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
@@ -487,26 +488,114 @@ class _AccountScreenState extends State<AccountScreen> {
 
               Divider(color: Colors.grey[200], height: 2.h),
 
-              // Replay welcome wizard
-              _buildPrivacyItem(
-                AppLocalizations.of(context)!.replayWelcomeTour,
-                () {
-                  final state = context.read<UserCubit>().state;
-                  final firstName = state is UserLoaded
-                      ? state.userName.split(' ').first
-                      : '';
-                  Navigator.push(
-                    context,
-                    fadePageRoute(WelcomeWizardScreen(
-                      entryMode: WizardEntryMode.replay,
-                      firstName: firstName,
-                      onCompleteFirstTime: () {}, // unused in replay mode
-                      onCompleteReplay: () => Navigator.pop(context),
-                    )),
-                  );
-                },
+              SizedBox(height: 24.h),
+
+              // Replay welcome wizard — standalone discoverable card
+              Padding(
+                padding: EdgeInsets.symmetric(horizontal: 16.w),
+                child: InkWell(
+                  borderRadius: BorderRadius.circular(14),
+                  onTap: () {
+                    final state = context.read<UserCubit>().state;
+                    final firstName = state is UserLoaded
+                        ? state.userName.split(' ').first
+                        : '';
+                    Navigator.push(
+                      context,
+                      fadePageRoute(WelcomeWizardScreen(
+                        entryMode: WizardEntryMode.replay,
+                        firstName: firstName,
+                        onCompleteFirstTime: () {}, // unused in replay mode
+                        onCompleteReplay: () => Navigator.pop(context),
+                      )),
+                    );
+                  },
+                  child: Container(
+                    padding: EdgeInsets.symmetric(horizontal: 14.w, vertical: 14.h),
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      borderRadius: BorderRadius.circular(14),
+                      border: Border.all(
+                        color: AppColors.main.withValues(alpha: 0.18),
+                        width: 1,
+                      ),
+                      boxShadow: [
+                        BoxShadow(
+                          color: AppColors.main.withValues(alpha: 0.08),
+                          blurRadius: 12,
+                          offset: const Offset(0, 4),
+                          spreadRadius: -2,
+                        ),
+                      ],
+                    ),
+                    child: Row(
+                      children: [
+                        // Sparkle icon — teal gradient tile
+                        Container(
+                          width: 40.w,
+                          height: 40.w,
+                          decoration: BoxDecoration(
+                            borderRadius: BorderRadius.circular(12),
+                            gradient: const LinearGradient(
+                              colors: [Color(0xFF009092), Color(0xFF4DD0D2)],
+                              begin: Alignment.topLeft,
+                              end: Alignment.bottomRight,
+                            ),
+                            boxShadow: [
+                              BoxShadow(
+                                color: AppColors.main.withValues(alpha: 0.4),
+                                blurRadius: 12,
+                                offset: const Offset(0, 6),
+                                spreadRadius: -4,
+                              ),
+                            ],
+                          ),
+                          child: Center(
+                            child: SvgPicture.asset(
+                              'assets/images/onboarding/ic_points.svg',
+                              width: 20.w,
+                              colorFilter: const ColorFilter.mode(
+                                Colors.white,
+                                BlendMode.srcIn,
+                              ),
+                            ),
+                          ),
+                        ),
+                        SizedBox(width: 12.w),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                AppLocalizations.of(context)!.replayWelcomeTour,
+                                style: AppTextStyles.getText2(context).copyWith(
+                                  fontWeight: FontWeight.w700,
+                                  color: AppColors.blackText,
+                                ),
+                              ),
+                              SizedBox(height: 2.h),
+                              Text(
+                                AppLocalizations.of(context)!.replayWelcomeTourSubtitle,
+                                style: AppTextStyles.getText3(context).copyWith(
+                                  color: AppColors.grayMain,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                        SizedBox(width: 8.w),
+                        Icon(
+                          Icons.arrow_forward_ios,
+                          size: 12.sp,
+                          color: AppColors.grayMain,
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
               ),
-              Divider(color: Colors.grey[200], height: 2.h),
+
+              SizedBox(height: 24.h),
 
               SizedBox(height: 15.h),
               AccountSectionTitle(title: AppLocalizations.of(context)!.confidentiality),
