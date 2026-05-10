@@ -724,11 +724,6 @@ class _EditRelativePageState extends State<EditRelativePage> {
   Widget _buildPhoneNumberField() {
     final rawInput = phoneController.text.trim();
     final localValid = RegExp(r'^0?9\d{8}$').hasMatch(rawInput);
-    final formatted = rawInput.startsWith('09')
-        ? '00963${rawInput.substring(1)}'
-        : rawInput.startsWith('9')
-        ? '00963$rawInput'
-        : '';
 
     return TextFormField(
       controller: phoneController,
@@ -814,25 +809,11 @@ class _EditRelativePageState extends State<EditRelativePage> {
           return;
         }
 
+        // Phone uniqueness intentionally NOT enforced for relatives —
+        // shared family numbers are normal. Mirrors add_relative.dart.
         setState(() {
-          phoneErrorText = null; // إزالة أي خطأ قديم
+          phoneErrorText = null;
         });
-
-        final trimmed = value.trim();
-        if (RegExp(r'^0?9\d{8}$').hasMatch(trimmed)) {
-          final formatted = trimmed.startsWith('09')
-              ? '00963${trimmed.substring(1)}'
-              : '00963$trimmed';
-
-          final isDuplicate =
-          await context.read<RelativesCubit>().isPhoneDuplicate(formatted);
-
-          setState(() {
-            phoneErrorText = isDuplicate
-                ? AppLocalizations.of(context)!.phoneAlreadyRegistered
-                : null;
-          });
-        }
       },
         validator: (value) {
           if (value == null || value.trim().isEmpty) return null;
@@ -910,25 +891,10 @@ class _EditRelativePageState extends State<EditRelativePage> {
           ),
         ),
       ),
-      onChanged: (value) async {
-        setState(() {}); // لتحديث شكل الصح/الخطأ
-
-        // ✅ تحقق من التكرار إذا كان الإيميل صالح
-        if (emailRegex.hasMatch(value)) {
-          final exists = await context
-              .read<RelativesCubit>()
-              .isEmailDuplicate(value.trim());
-
-          if (exists) {
-            ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-              content: Text(AppLocalizations.of(context)!.emailAlreadyRegistered),
-              backgroundColor: AppColors.red.withValues(alpha: 0.8),
-            ));
-
-            emailController.clear();
-            setState(() {});
-          }
-        }
+      onChanged: (value) {
+        // Email uniqueness intentionally NOT enforced for relatives.
+        // Mirrors add_relative.dart — shared family inboxes are normal.
+        setState(() {});
       },
       validator: (value) {
         if (value == null || value.trim().isEmpty) return null;

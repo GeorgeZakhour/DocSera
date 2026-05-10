@@ -752,11 +752,6 @@ class _AddRelativePageState extends State<AddRelativePage> {
   Widget _buildPhoneNumberField() {
     final rawInput = phoneController.text.trim();
     final localValid = RegExp(r'^0?9\d{8}$').hasMatch(rawInput);
-    final formatted = rawInput.startsWith('09')
-        ? '00963${rawInput.substring(1)}'
-        : rawInput.startsWith('9')
-        ? '00963$rawInput'
-        : '';
 
     return TextFormField(
       controller: phoneController,
@@ -842,25 +837,14 @@ class _AddRelativePageState extends State<AddRelativePage> {
             return;
           }
 
+          // Phone uniqueness intentionally NOT enforced for relatives.
+          // A relative isn't an auth identity — phone here is just a
+          // contact field, and real families share numbers (parents
+          // and minor children, household landlines, couples).
+          // Blocking duplicates would refuse legitimate adds.
           setState(() {
-            phoneErrorText = null; // إزالة أي خطأ قديم
+            phoneErrorText = null;
           });
-
-          final trimmed = value.trim();
-          if (RegExp(r'^0?9\d{8}$').hasMatch(trimmed)) {
-            final formatted = trimmed.startsWith('09')
-                ? '00963${trimmed.substring(1)}'
-                : '00963$trimmed';
-
-            final isDuplicate =
-            await context.read<RelativesCubit>().isPhoneDuplicate(formatted);
-
-            setState(() {
-              phoneErrorText = isDuplicate
-                  ? AppLocalizations.of(context)!.phoneAlreadyRegistered
-                  : null;
-            });
-          }
         },
         validator: (value) {
       if (value == null || value.trim().isEmpty) return null;
@@ -939,25 +923,12 @@ class _AddRelativePageState extends State<AddRelativePage> {
           ),
         ),
       ),
-      onChanged: (value) async {
-        setState(() {}); // لتحديث شكل الصح/الخطأ
-
-        // ✅ تحقق من التكرار إذا كان الإيميل صالح
-        if (emailRegex.hasMatch(value)) {
-          final exists = await context
-              .read<RelativesCubit>()
-              .isEmailDuplicate(value.trim());
-
-          if (exists) {
-            ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-              content: Text(AppLocalizations.of(context)!.emailAlreadyRegistered),
-              backgroundColor: AppColors.red.withValues(alpha: 0.8),
-            ));
-
-            emailController.clear();
-            setState(() {});
-          }
-        }
+      onChanged: (value) {
+        // Email uniqueness intentionally NOT enforced for relatives —
+        // shared family inboxes (a parent's email used for a minor
+        // child's records) are normal. Email here is just a contact
+        // field, not an auth identifier.
+        setState(() {});
       },
       validator: (value) {
         if (value == null || value.trim().isEmpty) return null;
