@@ -35,36 +35,59 @@ and AND's that into every `isTest…` check. Any value other than the
 literal string `"true"` (including unset, `false`, `1`, `True`)
 disables the bypass entirely.
 
-## Production deployment checklist
+## Toggling on the production VPS
 
-When deploying the edge functions to the production Supabase instance,
-**do NOT set `ALLOW_TEST_OTP`**. Verify with:
+There is no separate dev / staging environment for DocSera — there's
+only the one production VPS (94.252.183.77). To test the auth flow
+without burning real SMS / email, the team toggles the bypass ON
+briefly, runs the test, then toggles it OFF again.
 
-```bash
-ssh -p 2203 george@94.252.183.77 \
-  "docker exec supabase-functions printenv | grep ALLOW_TEST_OTP"
-```
+A toggle script lives at `/home/george/scripts/otp_test` on the VPS.
+It edits the docker-compose `.env` file (adds or removes the
+`ALLOW_TEST_OTP=true` line) and recreates the `supabase-edge-functions`
+container so the new value takes effect.
 
-Empty output = bypass is OFF (correct for production).
-
-Output of `ALLOW_TEST_OTP=true` = bypass is ON. **Stop the deploy and
-investigate.**
-
-## Dev / staging deployment
-
-For dev or staging instances where you want the bypass active (e.g.,
-to run E2E tests without burning real SMS), set the env var on the
-edge-functions container:
+### Usage
 
 ```bash
-# On the dev / staging VPS:
-docker exec supabase-functions \
-  /bin/sh -c 'export ALLOW_TEST_OTP=true && /supabase/functions/start.sh'
+# Check current state — always run this first / last
+~/scripts/otp_test status
+
+# Enable bypass (writes ALLOW_TEST_OTP=true to .env, recreates container)
+~/scripts/otp_test on
+
+# Disable bypass (removes the line, recreates container)
+~/scripts/otp_test off
+
+# Enable + auto-disable after 30 minutes (uses `at` if installed)
+~/scripts/otp_test on 30
 ```
 
-Or persist via the Supabase project's `secrets` table /
-`docker-compose.yml` `environment:` block, depending on how the
-instance was provisioned.
+`on` prints a big warning so the operator can't miss that production
+is in a bypass-active state. `status` is safe to run anytime; `off`
+is idempotent.
+
+### Compose change that makes the toggle work
+
+`docker-compose.yml` (the supabase one at
+`/data/supabase/docker/supabase/docker/`) declares the env var on the
+`functions` service with a default of empty:
+
+```yaml
+ALLOW_TEST_OTP: "${ALLOW_TEST_OTP:-}"
+```
+
+The actual value comes from the `.env` file in the same directory. The
+toggle script writes / removes `ALLOW_TEST_OTP=true` in that `.env`.
+A backup of the original compose lives at
+`docker-compose.yml.before-allow-test-otp-2026-05-10.bak`.
+
+### Hard rule
+
+After every short testing session, `~/scripts/otp_test off`. Verify with
+`~/scripts/otp_test status`. The `on N` form with a self-disable timer
+exists specifically to prevent forgotten-toggle situations — use it
+when you're not sure how long you'll need.
 
 ## What still works without the bypass
 
