@@ -133,6 +133,30 @@ class NotificationService {
     // 4) Pushy (مهم: تأكد من استدعاء Pushy.listen() في main.dart داخل initState)
     await _initPushy();
 
+    // 5) Auth state listener — Pushy.register() runs at app boot, BEFORE
+    // login. _saveDeviceTokenToSupabase short-circuits when there's no
+    // session, so the row is never written. Without re-saving on login,
+    // the user is authenticated but their device has no row in
+    // user_devices → push fanout silently drops them. Listen for
+    // SIGNED_IN / TOKEN_REFRESHED events and re-save then.
+    Supabase.instance.client.auth.onAuthStateChange.listen((data) async {
+      final event = data.event;
+      if (event == AuthChangeEvent.signedIn ||
+          event == AuthChangeEvent.tokenRefreshed ||
+          event == AuthChangeEvent.userUpdated) {
+        final token = _pushyDeviceToken;
+        if (token != null && token.isNotEmpty) {
+          try {
+            await _saveDeviceTokenToSupabase(token);
+          } catch (e) {
+            if (kDebugMode) {
+              debugPrint('⚠️ post-auth device save failed: $e');
+            }
+          }
+        }
+      }
+    });
+
     _initialized = true;
   }
 
