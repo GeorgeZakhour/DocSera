@@ -27,6 +27,7 @@ A procedure marked **✅ Verified** has been run end-to-end at least once and is
 | D — Take backup | ✅ Verified | 2026-05-10 | 6.8 MB baseline, 30 sec total |
 | E — Restore backup | 🟡 Untested | — | — |
 | F — Local mirror | 🟡 Untested | — | — |
+| G — Full local Supabase stack | 📅 Deferred to post-launch | — | See [Procedure G](#procedure-g--full-local-supabase-stack-post-launch) |
 
 See the [verification log](#verification-log) at the bottom of this doc for each run's command + observed output.
 
@@ -56,7 +57,8 @@ If you ever see "no such container: supabase-db" when running a procedure, run `
 5. [Procedure D — take a production backup](#procedure-d--take-a-production-backup)
 6. [Procedure E — restore a backup (recovery drill)](#procedure-e--restore-a-backup-recovery-drill)
 7. [Procedure F — local Postgres mirror for testing migrations](#procedure-f--local-postgres-mirror-for-testing-migrations)
-8. [Emergency procedures](#emergency-procedures) — outages, rollbacks, halts
+8. [Procedure G — full local Supabase stack (post-launch)](#procedure-g--full-local-supabase-stack-post-launch) — the real "staging on your laptop" setup, deferred
+9. [Emergency procedures](#emergency-procedures) — outages, rollbacks, halts
 9. [Pre-flight checklist](#pre-flight-checklist) — run before every prod change
 10. [Practice schedule](#practice-schedule) — the drills you should run monthly
 11. [What we deliberately don't do (yet)](#what-we-deliberately-dont-do-yet)
@@ -489,6 +491,145 @@ When the prod schema changes (because *you* applied a migration), refresh by re-
 ```bash
 docker rm -f docsera-test-db
 ```
+
+---
+
+## Procedure G — full local Supabase stack (post-launch)
+
+**Status: 📅 Deferred to post-launch.** This is the closest thing to a real staging environment you can have without renting a second VPS — a full copy of every Supabase service running on your Mac via `supabase start`. Cost: ~1–2 hours one-time setup, ~4–6 GB RAM while running.
+
+### Why deferred until post-launch
+
+The pre-launch period is the wrong time to introduce new tooling. You are protected today by:
+- **Procedure F** — catches bad SQL before prod ever sees it
+- **TestFlight / Play Internal** — catches bad app behavior on real devices before public users see it
+- **Procedure D** — backups protect against everything else
+
+Procedure G doesn't catch a category of bug that those three miss. It just makes some categories *cheaper* to catch (no need to wait 24h for a TestFlight build to verify a Dart-against-new-schema change). That's a velocity improvement, not a safety improvement — worth doing once you're shipping fast, not while you're still finding the launch bar.
+
+### What it gives you when you do set it up
+
+- Full app testing against a fresh local Supabase (Postgres + Auth + Storage + Realtime + Edge Functions + Studio + Kong)
+- Switching app between local and prod via `--dart-define` (NOT manual `const.dart` edits — that path leads to shipping localhost-pointed builds to the App Store)
+- Edge function development with hot reload via `supabase functions serve`
+- A "blank slate" environment where you can break things freely without affecting users
+
+### Trigger to actually set this up
+
+Set this up the first time *any* of these happen:
+- You're about to ship a feature touching schema + Dart code + edge function in one PR
+- You're about to refactor auth or RLS policies
+- You shipped a bug that would have been caught by full local testing (and a TestFlight build would have been overkill)
+
+### The intended daily workflow (what this looks like once set up)
+
+Every morning:
+1. `supabase start` — local stack comes back up in ~30 sec (Docker resumes from disk; data persists across restarts)
+2. `flutter run --flavor dev` — the app launches pointing at `http://localhost:54321` with a different icon (so you can tell at a glance you're on dev)
+3. Develop, break things, run migrations against the local DB, edit edge functions, refresh — all without touching a single live byte
+4. When something is verified working: commit the migration / edge function / Dart change, then **separately** apply it to prod via Procedures B / C / A
+5. Switch the app to prod for a final sanity check via `flutter run --flavor prod`
+
+The daily mental model: **dev is where you work, prod is where you ship.** You should rarely run anything *against* prod manually — prod receives changes only via verified migrations and verified releases.
+
+### Prerequisites (the work BEFORE this procedure can be used)
+
+Procedure G requires three pieces of work first, in this order:
+
+**Prerequisite 1 — `const.dart` reads URL/key from environment, not hardcoded:**
+
+In [lib/app/const.dart](../../lib/app/const.dart), replace hardcoded constants with:
+```dart
+class SupabaseConfig {
+  static const String url = String.fromEnvironment(
+    'SUPABASE_URL',
+    defaultValue: 'https://api.docsera.app',  // production fallback
+  );
+  static const String anonKey = String.fromEnvironment(
+    'SUPABASE_ANON_KEY',
+    defaultValue: '<prod-anon-key>',
+  );
+}
+```
+
+The defaults remain prod — so existing builds that don't pass `--dart-define` still work exactly as before. Only `--flavor dev` builds will receive the local override.
+
+**Prerequisite 2 — build flavors:**
+
+Add `dev` and `prod` flavors at three layers:
+- **Flutter:** `flutter run --flavor dev` / `--flavor prod`. Configured via `flavorDimensions` in `android/app/build.gradle` and Xcode schemes.
+- **Android bundle ID:** `app.docsera.dev` (dev) vs `app.docsera` (prod) — both can coexist on one phone with different icons.
+- **iOS bundle ID:** `com.docsera.dev` (dev) vs `com.docsera` (prod) — same idea, configured in Xcode build configurations.
+
+Set the dev flavor to default to local URL via `--dart-define=SUPABASE_URL=http://localhost:54321` baked into a `scripts/run_local.sh` wrapper so you don't type it every time.
+
+**Prerequisite 3 — test data seeding:**
+
+Without seed data, `supabase start` gives you an empty database — you can't test login, can't book appointments, can't see anything. You need:
+
+- **A schema dump from prod** (Procedure F's `~/docsera-prod-schema.sql`) loaded into the local stack so the structure matches
+- **Synthetic test users** — say 5 patients, 3 doctors, 2 medical centers — created via SQL inserts in `supabase/seed.sql`. Use *fake* phone numbers and emails (e.g., `+963900000001`, `test1@example.com`). The existing OTP-bypass `123456` (per [project_test_otp_bypasses.md](../../.claude/projects/-Users-georgezakhour-development-DocSera/memory/project_test_otp_bypasses.md)) makes login trivial for these accounts.
+- **Synthetic appointments, conversations, documents** — enough to cover every screen with real-looking data. ~50 rows total is enough.
+- **Refresh script:** `scripts/refresh_local_schema.sh` that pulls the latest prod schema and re-applies seed data. Run when prod schema changes.
+
+**IMPORTANT:** Never seed real production data into local. Even if it would be more realistic, it's a privacy risk (user data on your laptop) and a security risk (a leaked test bundle could include real PHI). Always synthetic.
+
+### High-level commands (verify when actually doing this)
+
+```bash
+# One-time
+brew install supabase/tap/supabase    # CLI
+cd <project-root>
+supabase init                          # creates supabase/config.toml if not present
+supabase start                         # brings up the full stack on Docker
+psql -h localhost -p 54322 -U postgres < supabase/seed.sql  # load test data
+
+# Daily
+supabase start                         # idempotent — resumes existing stack
+./scripts/run_local.sh                 # wraps flutter run --flavor dev with --dart-defines
+
+# When prod schema changes (after applying a migration to prod)
+./scripts/refresh_local_schema.sh      # pulls prod schema, re-applies seed
+```
+
+### DocSera-specific gotchas to plan for
+
+| Service | Local behavior | Workaround |
+|---|---|---|
+| Phone OTP (SMS) | No SMS gateway locally | Existing test bypass `123456` works (see `project_test_otp_bypasses.md`) |
+| Email OTP | No SMTP locally | Run [Mailpit](https://github.com/axllent/mailpit) on `localhost:1025` to capture emails in a web UI |
+| Push notifications (Pushy) | Won't deliver | Test push only on TestFlight/Play Internal — accept this gap |
+| Sentry | Would pollute prod project | Either set `SENTRY_DSN=""` for local, or create a separate dev DSN |
+| Anon key | Different from prod | Build flavors handle this — never hardcode prod key as default |
+
+### Required Flutter changes before this works
+
+- `lib/app/const.dart` must read URL/anon-key via `String.fromEnvironment(...)` instead of hardcoded constants
+- Add `--flavor dev` and `--flavor prod` build flavors with different bundle IDs so both can coexist on one phone
+- A `Makefile` or `scripts/run_local.sh` so the long `--dart-define` command isn't typed by hand each time
+
+When this procedure is actually performed, fully document it here with verified commands and observed gotchas — same pattern as Procedure D's verification log.
+
+### Maintenance burden (the honest cost)
+
+Procedure G is not free to maintain. Things that will need ongoing attention:
+
+| Concern | How often | Effort |
+|---|---|---|
+| Refresh local schema after each prod migration | Per migration | ~2 min |
+| Re-create test users when seed data drifts from new schema | Whenever schema changes break seed | ~10 min |
+| Update local Supabase version when prod is upgraded | Quarterly | ~30 min |
+| Debug local-only issues (port conflicts, Docker disk space) | When they arise | Variable |
+
+The total cost is small once you're past setup, but it's non-zero. Build flavors specifically can be a source of subtle bugs — wrong flavor in CI, wrong flavor at submission. Be deliberate.
+
+### When this is verified, mark it ✅ at the top
+
+Update the [verification status table](#verification-status) when each prerequisite + the procedure itself is verified. Likely tracked as four sub-statuses:
+- G.1 — `const.dart` reads from environment
+- G.2 — Build flavors `dev` / `prod` work
+- G.3 — Test data seed produces a usable app
+- G.4 — Full daily workflow (`supabase start` → develop → ship via Procedures A/B/C) used for at least one feature
 
 ---
 
