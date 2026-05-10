@@ -9413,13 +9413,13 @@ abstract class AppLocalizations {
   /// No description provided for @connectionsCenterReassureNothingAuto.
   ///
   /// In en, this message translates to:
-  /// **'Nothing happens automatically — your decision is the only thing that changes anything.'**
+  /// **'Nothing changes until you tap Approve or Decline yourself.'**
   String get connectionsCenterReassureNothingAuto;
 
   /// No description provided for @connectionsCenterReassureCanReviewLater.
   ///
   /// In en, this message translates to:
-  /// **'You can review later — every request stays available for 30 days.'**
+  /// **'Every request stays available for 30 days, so you can take your time.'**
   String get connectionsCenterReassureCanReviewLater;
 
   /// No description provided for @connectionsCenterCtaContinue.
@@ -9479,8 +9479,26 @@ abstract class AppLocalizations {
   /// No description provided for @connectionsCenterAllCaughtUpBody.
   ///
   /// In en, this message translates to:
-  /// **'Every pending request has been handled. You can revisit any past decision from your account page.'**
+  /// **'Every request has been handled. We\'ll let you know if a new one arrives.'**
   String get connectionsCenterAllCaughtUpBody;
+
+  /// No description provided for @connectionsCenterRequestCountSingular.
+  ///
+  /// In en, this message translates to:
+  /// **'1 request waiting'**
+  String get connectionsCenterRequestCountSingular;
+
+  /// No description provided for @connectionsCenterRequestCountPlural.
+  ///
+  /// In en, this message translates to:
+  /// **'{count} requests waiting'**
+  String connectionsCenterRequestCountPlural(int count);
+
+  /// No description provided for @connectionsCardPosition.
+  ///
+  /// In en, this message translates to:
+  /// **'{index} of {total}'**
+  String connectionsCardPosition(int index, int total);
 
   /// No description provided for @connectionsCardKindConnect.
   ///

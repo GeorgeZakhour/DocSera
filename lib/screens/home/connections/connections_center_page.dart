@@ -115,12 +115,27 @@ class _ConnectionsCenterViewState extends State<_ConnectionsCenterView> {
         }
       },
       builder: (context, state) {
+        // postSignup is reached via pushAndRemoveUntil — there is no
+        // route to go back to. Every other entry has a real underlying
+        // stack, so it deserves a back arrow.
+        final showBack = widget.entry != ConnectionsCenterEntry.postSignup;
         return Scaffold(
           backgroundColor: const Color(0xFFF1FBF8),
+          extendBodyBehindAppBar: true,
+          appBar: showBack
+              ? AppBar(
+                  backgroundColor: Colors.transparent,
+                  elevation: 0,
+                  scrolledUnderElevation: 0,
+                  iconTheme:
+                      IconThemeData(color: Colors.grey.shade800),
+                )
+              : null,
           body: Stack(
             children: [
               const _MintBackdrop(),
               SafeArea(
+                bottom: false,
                 child: switch (state) {
                   ConnectionsCenterLoading() => const _LoadingView(),
                   ConnectionsCenterError(:final message) =>
@@ -359,29 +374,44 @@ class _LoadedView extends StatelessWidget {
       );
     }
 
+    final total = state.requests.length;
+    final media = MediaQuery.of(context);
     return SingleChildScrollView(
       physics: const BouncingScrollPhysics(),
-      padding: EdgeInsets.fromLTRB(20.w, 16.h, 20.w, 32.h),
+      padding: EdgeInsets.fromLTRB(
+        20.w,
+        16.h,
+        20.w,
+        // Manual bottom padding instead of SafeArea so the backdrop
+        // extends to the device edge but content still clears the
+        // home-indicator / gesture bar.
+        32.h + media.padding.bottom,
+      ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          _HeaderBlock(entry: entry),
+          _HeaderBlock(entry: entry, requestCount: total),
           SizedBox(height: 24.h),
           const _IntroExplainer(),
           SizedBox(height: 20.h),
-          for (final req in state.requests)
+          for (int i = 0; i < state.requests.length; i++)
             Padding(
               padding: EdgeInsets.only(bottom: 14.h),
               child: ConnectionsRequestCard(
-                request: req,
-                isActing: state.actingOnId == req.id,
-                resolved: state.lastResolved?.requestId == req.id
+                request: state.requests[i],
+                index: i + 1,
+                total: total,
+                isActing: state.actingOnId == state.requests[i].id,
+                resolved: state.lastResolved?.requestId ==
+                        state.requests[i].id
                     ? state.lastResolved
                     : null,
-                isFocused:
-                    focusedRequestId != null && req.id == focusedRequestId,
-                onApprove: () => _respond(context, req, true),
-                onDecline: () => _respond(context, req, false),
+                isFocused: focusedRequestId != null &&
+                    state.requests[i].id == focusedRequestId,
+                onApprove: () =>
+                    _respond(context, state.requests[i], true),
+                onDecline: () =>
+                    _respond(context, state.requests[i], false),
               ),
             ),
           SizedBox(height: 8.h),
@@ -426,7 +456,8 @@ class _LoadedView extends StatelessWidget {
 
 class _HeaderBlock extends StatelessWidget {
   final ConnectionsCenterEntry entry;
-  const _HeaderBlock({required this.entry});
+  final int requestCount;
+  const _HeaderBlock({required this.entry, required this.requestCount});
 
   @override
   Widget build(BuildContext context) {
@@ -440,6 +471,9 @@ class _HeaderBlock extends StatelessWidget {
       ConnectionsCenterEntry.fromAccount =>
         local.connectionsCenterTitleAccount,
     };
+    final countLabel = requestCount == 1
+        ? local.connectionsCenterRequestCountSingular
+        : local.connectionsCenterRequestCountPlural(requestCount);
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -479,6 +513,33 @@ class _HeaderBlock extends StatelessWidget {
             color: AppColors.mainDark,
             height: 1.2,
             fontWeight: FontWeight.w800,
+          ),
+        ),
+        SizedBox(height: 8.h),
+        // Count pill — sets scroll expectation immediately ("if I see
+        // '3 waiting' but only one card on screen, I know to scroll").
+        Container(
+          padding:
+              EdgeInsets.symmetric(horizontal: 10.w, vertical: 4.h),
+          decoration: BoxDecoration(
+            color: AppColors.main.withValues(alpha: 0.12),
+            borderRadius: BorderRadius.circular(100),
+          ),
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Icon(Icons.mark_email_unread_outlined,
+                  size: 12.sp, color: AppColors.main),
+              SizedBox(width: 6.w),
+              Text(
+                countLabel,
+                style: AppTextStyles.getText3(context).copyWith(
+                  color: AppColors.main,
+                  fontWeight: FontWeight.w800,
+                  letterSpacing: 0.2,
+                ),
+              ),
+            ],
           ),
         ),
       ],

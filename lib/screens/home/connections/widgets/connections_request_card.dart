@@ -43,6 +43,8 @@ import 'package:docsera/utils/doctor_image_utils.dart';
 
 class ConnectionsRequestCard extends StatefulWidget {
   final PatientLinkRequest request;
+  final int index; // 1-based
+  final int total;
   final bool isActing;
   final ResolvedRequest? resolved;
   final bool isFocused;
@@ -52,6 +54,8 @@ class ConnectionsRequestCard extends StatefulWidget {
   const ConnectionsRequestCard({
     super.key,
     required this.request,
+    required this.index,
+    required this.total,
     required this.isActing,
     required this.resolved,
     required this.isFocused,
@@ -150,6 +154,40 @@ class _ConnectionsRequestCardState extends State<ConnectionsRequestCard>
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.stretch,
                     children: [
+                      // Position pill — only visible when there are
+                      // multiple cards in the list. Tells the user
+                      // exactly where this one sits without needing
+                      // the scroll bar.
+                      if (widget.total > 1) ...[
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.end,
+                          children: [
+                            Container(
+                              padding: EdgeInsets.symmetric(
+                                  horizontal: 8.w, vertical: 3.h),
+                              decoration: BoxDecoration(
+                                color: AppColors.main
+                                    .withValues(alpha: 0.08),
+                                borderRadius: BorderRadius.circular(100),
+                              ),
+                              child: Text(
+                                local.connectionsCardPosition(
+                                  widget.index,
+                                  widget.total,
+                                ),
+                                style: AppTextStyles.getText3(context)
+                                    .copyWith(
+                                  color: AppColors.main,
+                                  fontWeight: FontWeight.w800,
+                                  height: 1,
+                                  letterSpacing: 0.4,
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                        SizedBox(height: 8.h),
+                      ],
                       _DoctorHero(request: req),
                       SizedBox(height: 14.h),
                       _KindChip(kind: req.kind, isForRelative: req.isForRelative),
@@ -548,6 +586,11 @@ class _MergeDetailsBody extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final local = AppLocalizations.of(context)!;
+    // Bills are intentionally NOT listed here — the merge does move
+    // them on the server side, but exposing "your past bills" on the
+    // patient-facing approval card feels financial / out of place when
+    // the rest of the framing is medical. The bills simply appear in
+    // the patient's account after merge, like any other record.
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -555,7 +598,6 @@ class _MergeDetailsBody extends StatelessWidget {
         _DetailRow(icon: Icons.description_outlined, text: local.connectionsCardMergeDocuments),
         _DetailRow(icon: Icons.assignment_outlined, text: local.connectionsCardMergeReports),
         _DetailRow(icon: Icons.favorite_outline_rounded, text: local.connectionsCardMergeMedicalRecords),
-        _DetailRow(icon: Icons.receipt_long_outlined, text: local.connectionsCardMergeBills),
         SizedBox(height: 6.h),
         Text(
           local.connectionsCardMergeFootnote,

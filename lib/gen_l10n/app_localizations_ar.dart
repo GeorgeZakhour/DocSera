@@ -5087,11 +5087,11 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get connectionsCenterReassureNothingAuto =>
-      'لا شيء يحدث تلقائياً — قرارك أنت ما يغيّر شيئاً.';
+      'لا يتغيّر شيء قبل أن تختار الموافقة أو الرفض بنفسك.';
 
   @override
   String get connectionsCenterReassureCanReviewLater =>
-      'يمكنك المراجعة لاحقاً — كل طلب يبقى متاحاً لمدة ٣٠ يوماً.';
+      'كل طلب يبقى متاحاً لمدة ٣٠ يوماً، فلا داعي للاستعجال.';
 
   @override
   String get connectionsCenterCtaContinue => 'تابع إلى الرئيسية';
@@ -5124,7 +5124,20 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get connectionsCenterAllCaughtUpBody =>
-      'تمت معالجة جميع الطلبات المعلّقة. يمكنك مراجعة قراراتك السابقة من صفحة الحساب.';
+      'لم يبقَ طلب بانتظار ردك. سنعلمك عند وصول طلب جديد.';
+
+  @override
+  String get connectionsCenterRequestCountSingular => 'طلب واحد بانتظار ردك';
+
+  @override
+  String connectionsCenterRequestCountPlural(int count) {
+    return '$count طلبات بانتظار ردك';
+  }
+
+  @override
+  String connectionsCardPosition(int index, int total) {
+    return '$index من $total';
+  }
 
   @override
   String get connectionsCardKindConnect => 'طلب اتصال';

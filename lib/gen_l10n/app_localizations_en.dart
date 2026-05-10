@@ -5138,11 +5138,11 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get connectionsCenterReassureNothingAuto =>
-      'Nothing happens automatically — your decision is the only thing that changes anything.';
+      'Nothing changes until you tap Approve or Decline yourself.';
 
   @override
   String get connectionsCenterReassureCanReviewLater =>
-      'You can review later — every request stays available for 30 days.';
+      'Every request stays available for 30 days, so you can take your time.';
 
   @override
   String get connectionsCenterCtaContinue => 'Continue to home';
@@ -5177,7 +5177,20 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get connectionsCenterAllCaughtUpBody =>
-      'Every pending request has been handled. You can revisit any past decision from your account page.';
+      'Every request has been handled. We\'ll let you know if a new one arrives.';
+
+  @override
+  String get connectionsCenterRequestCountSingular => '1 request waiting';
+
+  @override
+  String connectionsCenterRequestCountPlural(int count) {
+    return '$count requests waiting';
+  }
+
+  @override
+  String connectionsCardPosition(int index, int total) {
+    return '$index of $total';
+  }
 
   @override
   String get connectionsCardKindConnect => 'Connection request';
