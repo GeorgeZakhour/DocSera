@@ -255,19 +255,20 @@ class AccountSecurityService {
       // 2) Update password
       await _supabase.auth.updateUser(UserAttributes(password: next));
 
-      // 3) Optional: invalidate every OTHER session for this user. Two
-      //    parts because they cover separate state:
-      //      a. signOut(scope: others) revokes the refresh tokens for
-      //         every other Supabase session — kicks them out at the
-      //         next API call.
-      //      b. rpc_clear_trusted_devices_except_current strips the
-      //         trusted_devices array down to the current device only,
-      //         so when those other devices re-login they're forced
-      //         through the new-device 2FA OTP again.
+      // 3) Optional: invalidate every OTHER session for this user. The
+      //    RPC runs FIRST so it executes while our auth session is
+      //    guaranteed valid; signOut(scope: others) is then best-effort.
+      //    Two parts because they cover separate state:
+      //      a. rpc_clear_trusted_devices_except_current strips
+      //         trusted_devices down to the current device and DELETEs
+      //         every other user_devices row. The realtime listener on
+      //         those rows fires on each affected device, signing them
+      //         out instantly (within ~1s).
+      //      b. signOut(scope: others) revokes refresh tokens server-
+      //         side as a backstop in case realtime didn't reach the
+      //         device (offline, app killed, etc.) — they'll get
+      //         kicked next time their access token expires (~1h).
       if (signOutOtherDevices) {
-        try {
-          await _supabase.auth.signOut(scope: SignOutScope.others);
-        } catch (_) { /* best effort */ }
         if (currentDeviceId != null && currentDeviceId.isNotEmpty) {
           try {
             await _supabase.rpc(
@@ -275,15 +276,17 @@ class AccountSecurityService {
               params: {
                 'p_device_id': currentDeviceId,
                 // Pass our Pushy token so the RPC keeps OUR user_devices
-                // row and deletes every other one. Realtime DELETE on
-                // those rows fires on the affected devices, which then
-                // sign out immediately via NotificationService's
-                // _userDevicesListener subscription.
+                // row and deletes every other one. If null (e.g. iOS
+                // hasn't completed Pushy registration), the RPC skips
+                // user_devices DELETE but still updates trusted_devices.
                 'p_pushy_token': NotificationService.instance.pushyDeviceToken,
               },
             );
           } catch (_) { /* best effort */ }
         }
+        try {
+          await _supabase.auth.signOut(scope: SignOutScope.others);
+        } catch (_) { /* best effort */ }
       }
     } catch (e) {
       throw Exception('AccountSecurityService.changePassword failed: $e');
