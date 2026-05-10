@@ -7784,6 +7784,12 @@ abstract class AppLocalizations {
   /// **'Custom entry'**
   String get health_custom_entry_badge;
 
+  /// No description provided for @health_confirmed_by_n_doctors.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{Confirmed by 1 doctor} other{Confirmed by {count} doctors}}'**
+  String health_confirmed_by_n_doctors(int count);
+
   /// No description provided for @health_verification_status.
   ///
   /// In en, this message translates to:

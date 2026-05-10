@@ -79,13 +79,20 @@ class HealthCubit extends Cubit<HealthState> {
     emit(state.copyWith(isLoading: true));
 
     try {
-      final records = await service.fetchRecords(
+      final raw = await service.fetchRecords(
         userId: userId,
         relativeId: relativeId,
         category: category,
       );
 
-      debugPrint("📥 loadRecords RESULT count=${records.length}");
+      // Display-layer dedup: after a multi-doctor merge the same
+      // condition can appear N times. The rollup groups by master.id
+      // and exposes one row per condition. The underlying rows stay
+      // intact in the DB (so doctor-side audits still see each
+      // confirmation as a distinct event).
+      final records = HealthRecordsService.rollupByMaster(raw);
+
+      debugPrint("📥 loadRecords RESULT raw=${raw.length} rolled=${records.length}");
 
       emit(state.copyWith(isLoading: false, records: records));
     } catch (e) {
@@ -179,7 +186,32 @@ class HealthCubit extends Cubit<HealthState> {
   // --------------------------------------------------------------
   Future<void> deleteRecord(String id) async {
     emit(state.copyWith(isLoading: true));
-    await service.deleteRecord(id);
+    // If the row the user tapped is a rolled-up display row, fan the
+    // delete out across every underlying duplicate that backs it. For
+    // ungrouped rows this is the same single id, just expressed as a
+    // one-element list.
+    final visible = state.records.firstWhere(
+      (r) => r.id == id,
+      orElse: () => HealthRecord(
+        id: id,
+        patientId: null,
+        relativeId: null,
+        master: HealthMasterItem(
+          id: '', category: '', nameEn: '', nameAr: '',
+          severityAllowed: false,
+        ),
+        isConfirmed: false,
+        createdAt: DateTime.now(),
+      ),
+    );
+    final ids = visible.aggregatedIds.isNotEmpty
+        ? visible.aggregatedIds
+        : <String>[id];
+    if (ids.length == 1) {
+      await service.deleteRecord(ids.first);
+    } else {
+      await service.deleteRecords(ids);
+    }
     await loadRecords();
   }
 

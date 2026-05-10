@@ -4180,6 +4180,17 @@ class AppLocalizationsEn extends AppLocalizations {
   String get health_custom_entry_badge => 'Custom entry';
 
   @override
+  String health_confirmed_by_n_doctors(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'Confirmed by $count doctors',
+      one: 'Confirmed by 1 doctor',
+    );
+    return '$_temp0';
+  }
+
+  @override
   String get health_verification_status => 'Entry Type';
 
   @override

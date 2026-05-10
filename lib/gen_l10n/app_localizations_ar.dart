@@ -4132,6 +4132,20 @@ class AppLocalizationsAr extends AppLocalizations {
   String get health_custom_entry_badge => 'إدخال مخصص';
 
   @override
+  String health_confirmed_by_n_doctors(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'مؤكّدة من $count طبيب',
+      many: 'مؤكّدة من $count طبيباً',
+      few: 'مؤكّدة من $count أطباء',
+      two: 'مؤكّدة من طبيبَين',
+      one: 'مؤكّدة من طبيب',
+    );
+    return '$_temp0';
+  }
+
+  @override
   String get health_verification_status => 'نوع الإدخال';
 
   @override

@@ -1542,6 +1542,8 @@
   "health_manual_entry_name_required": "Please enter a name",
   "health_manual_entry_disclaimer": "This entry will be saved for review. A verified version may replace it later.",
   "health_custom_entry_badge": "Custom entry",
+  "health_confirmed_by_n_doctors": "{count, plural, =1{Confirmed by 1 doctor} other{Confirmed by {count} doctors}}",
+  "@health_confirmed_by_n_doctors": { "placeholders": { "count": { "type": "int" } } },
 
   "voucherUsedNote": "This voucher has already been used. You can claim a new one if the offer allows it.",
   "voucherUsedAt": "Used on",

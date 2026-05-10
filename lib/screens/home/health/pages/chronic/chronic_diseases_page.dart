@@ -244,6 +244,17 @@ class _ChronicList extends StatelessWidget {
                   : Icons.info_outline_rounded,
             ),
 
+            // Rolled-up duplicate-confirmation badge: shown when the
+            // same condition exists on multiple underlying rows
+            // (e.g., self-entered + N doctor-confirmed copies merged
+            // into one display row).
+            if (record.mergedCount > 1)
+              _tag(
+                t.health_confirmed_by_n_doctors(record.mergedCount),
+                AppColors.main,
+                icon: Icons.group_rounded,
+              ),
+
             if (!master.isVerified)
               _tag(
                 t.health_custom_entry_badge,

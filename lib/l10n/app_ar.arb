@@ -1564,6 +1564,8 @@
   "health_manual_entry_name_required": "يرجى إدخال الاسم",
   "health_manual_entry_disclaimer": "سيتم حفظ هذا العنصر للمراجعة. قد يتم استبداله بنسخة موثقة لاحقاً.",
   "health_custom_entry_badge": "إدخال مخصص",
+  "health_confirmed_by_n_doctors": "{count, plural, =1{مؤكّدة من طبيب} =2{مؤكّدة من طبيبَين} few{مؤكّدة من {count} أطباء} many{مؤكّدة من {count} طبيباً} other{مؤكّدة من {count} طبيب}}",
+  "@health_confirmed_by_n_doctors": { "placeholders": { "count": { "type": "int" } } },
 
   "voucherUsedNote": "تم استخدام هذه القسيمة بالفعل. يمكنك الحصول على قسيمة جديدة إذا كان العرض يسمح بذلك.",
   "voucherUsedAt": "تم الاستخدام في",

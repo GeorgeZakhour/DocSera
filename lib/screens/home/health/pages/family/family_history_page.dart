@@ -244,6 +244,13 @@ class _FamilyList extends StatelessWidget {
                   : Icons.info_outline_rounded,
             ),
 
+            if (record.mergedCount > 1)
+              _tag(
+                t.health_confirmed_by_n_doctors(record.mergedCount),
+                AppColors.main,
+                icon: Icons.group_rounded,
+              ),
+
             if (!master.isVerified)
               _tag(
                 t.health_custom_entry_badge,

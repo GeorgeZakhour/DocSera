@@ -232,4 +232,151 @@ class HealthRecordsService {
   Future<void> deleteRecord(String id) async {
     await _client.from('patient_medical_records').delete().eq('id', id);
   }
+
+  /// Deletes every row in [ids] in a single round-trip — used by the
+  /// rolled-up display path so a tap on one visible row removes all the
+  /// underlying duplicates that share the same master_id.
+  Future<void> deleteRecords(List<String> ids) async {
+    if (ids.isEmpty) return;
+    await _client.from('patient_medical_records').delete().inFilter('id', ids);
+  }
+
+  // ------------------------------------------------------------------
+  // ROLLUP — display-layer dedup
+  // ------------------------------------------------------------------
+  // After a multi-doctor merge, the same condition (master_id) can
+  // appear N times in patient_medical_records — once per doctor that
+  // had it on their manual record, plus optionally once that the
+  // patient self-entered. Each row is technically correct ("Dr X
+  // confirmed asthma"), but the user reads it as 4 redundant "asthma"
+  // entries.
+  //
+  // This helper groups by master.id and emits ONE rolled-up
+  // HealthRecord per condition. Rules per group:
+  //   * Primary id = the doctor-confirmed row if any exists, else the
+  //     most recent. Edit operations on the displayed row target this
+  //     primary.
+  //   * `aggregatedIds` = every underlying row's id, so the cubit's
+  //     delete path can fan out via deleteRecords([...]).
+  //   * `isConfirmed` = OR across rows (any doctor confirming wins).
+  //   * `hasDoctorSource` = OR across rows.
+  //   * `mergedCount` = group size; UI uses this to render a "Confirmed
+  //     by N doctors" badge when >1.
+  //   * severity = highest of {low, medium, high} present.
+  //   * notesEn / notesAr = first non-empty. Concatenating multiple
+  //     doctors' notes risked making the UI noisy; v1 picks one.
+  //   * startDate = earliest non-null; endDate = latest non-null.
+  //   * createdAt = earliest; updatedAt = latest.
+  //
+  // No DB change — the underlying rows stay intact (so doctor-side
+  // views, audits, and analytics continue to see each row as itself).
+  static List<HealthRecord> rollupByMaster(List<HealthRecord> records) {
+    if (records.length < 2) return records;
+    final byMaster = <String, List<HealthRecord>>{};
+    for (final r in records) {
+      byMaster.putIfAbsent(r.master.id, () => []).add(r);
+    }
+    final out = <HealthRecord>[];
+    for (final group in byMaster.values) {
+      if (group.length == 1) {
+        out.add(group.first);
+        continue;
+      }
+      out.add(_mergeGroup(group));
+    }
+    // Preserve original order — keep the earliest createdAt at the top.
+    out.sort((a, b) => a.createdAt.compareTo(b.createdAt));
+    return out;
+  }
+
+  static HealthRecord _mergeGroup(List<HealthRecord> group) {
+    // Pick the primary: first prefer doctor-confirmed; among ties take
+    // the most recently updated/created. This becomes the row whose id
+    // is exposed for edit operations.
+    HealthRecord primary = group.first;
+    for (final r in group) {
+      final isCandidateConfirmed = r.isConfirmed && !primary.isConfirmed;
+      final isCandidateNewer = r.isConfirmed == primary.isConfirmed &&
+          (r.updatedAt ?? r.createdAt).isAfter(primary.updatedAt ?? primary.createdAt);
+      if (isCandidateConfirmed || isCandidateNewer) {
+        primary = r;
+      }
+    }
+
+    final aggregatedIds = group.map((r) => r.id).toList(growable: false);
+    final isConfirmed = group.any((r) => r.isConfirmed);
+    final hasDoctor = group.any((r) => r.hasDoctorSource);
+
+    String? mergedNotesEn = primary.notesEn;
+    String? mergedNotesAr = primary.notesAr;
+    if ((mergedNotesEn == null || mergedNotesEn.isEmpty)) {
+      for (final r in group) {
+        if (r.notesEn != null && r.notesEn!.isNotEmpty) {
+          mergedNotesEn = r.notesEn;
+          break;
+        }
+      }
+    }
+    if ((mergedNotesAr == null || mergedNotesAr.isEmpty)) {
+      for (final r in group) {
+        if (r.notesAr != null && r.notesAr!.isNotEmpty) {
+          mergedNotesAr = r.notesAr;
+          break;
+        }
+      }
+    }
+
+    DateTime? earliestStart;
+    DateTime? latestEnd;
+    for (final r in group) {
+      if (r.startDate != null &&
+          (earliestStart == null || r.startDate!.isBefore(earliestStart))) {
+        earliestStart = r.startDate;
+      }
+      if (r.endDate != null &&
+          (latestEnd == null || r.endDate!.isAfter(latestEnd))) {
+        latestEnd = r.endDate;
+      }
+    }
+
+    String? topSeverity = primary.severity;
+    const order = {'low': 1, 'medium': 2, 'high': 3};
+    int currentRank = order[topSeverity ?? ''] ?? 0;
+    for (final r in group) {
+      final rank = order[r.severity ?? ''] ?? 0;
+      if (rank > currentRank) {
+        topSeverity = r.severity;
+        currentRank = rank;
+      }
+    }
+
+    DateTime earliestCreated = primary.createdAt;
+    DateTime? latestUpdated = primary.updatedAt;
+    for (final r in group) {
+      if (r.createdAt.isBefore(earliestCreated)) earliestCreated = r.createdAt;
+      if (r.updatedAt != null &&
+          (latestUpdated == null || r.updatedAt!.isAfter(latestUpdated))) {
+        latestUpdated = r.updatedAt;
+      }
+    }
+
+    return HealthRecord(
+      id: primary.id,
+      patientId: primary.patientId,
+      relativeId: primary.relativeId,
+      master: primary.master,
+      severity: topSeverity,
+      startDate: earliestStart,
+      endDate: latestEnd,
+      isConfirmed: isConfirmed,
+      notesEn: mergedNotesEn,
+      notesAr: mergedNotesAr,
+      source: primary.source,
+      createdAt: earliestCreated,
+      updatedAt: latestUpdated,
+      mergedCount: group.length,
+      aggregatedIds: aggregatedIds,
+      hasDoctorSource: hasDoctor,
+    );
+  }
 }

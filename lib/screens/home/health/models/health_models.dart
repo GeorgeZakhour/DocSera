@@ -57,6 +57,23 @@ class HealthRecord {
   final DateTime createdAt;
   final DateTime? updatedAt;
 
+  /// True when this row is the public face of multiple underlying
+  /// patient_medical_records rows merged together (e.g., the patient
+  /// + N doctors all having "asthma" attached to the same master_id).
+  /// Set by HealthRecordsService.rollupByMaster — non-rollups keep
+  /// the default value of 1 / null.
+  final int mergedCount;
+
+  /// IDs of every underlying row that this row represents. Used by the
+  /// cubit's delete path to fan a single tap-to-delete out across
+  /// every duplicate. The primary row's own id is included.
+  final List<String> aggregatedIds;
+
+  /// True when ANY underlying row was created by a doctor (source ==
+  /// 'doctor' or non-null created_by_doctor_id). Drives the "confirmed
+  /// by N doctors" UI affordance separately from is_confirmed.
+  final bool hasDoctorSource;
+
   HealthRecord({
     required this.id,
     required this.patientId,
@@ -71,11 +88,18 @@ class HealthRecord {
     this.source,
     required this.createdAt,
     this.updatedAt,
-  });
+    this.mergedCount = 1,
+    List<String>? aggregatedIds,
+    bool? hasDoctorSource,
+  })  : aggregatedIds = aggregatedIds ?? const [],
+        hasDoctorSource = hasDoctorSource ?? (source == 'doctor');
 
   factory HealthRecord.fromMap(Map<String, dynamic> map) {
+    final id = map['id'] as String;
+    final source = map['source'] as String? ?? "patient";
+    final hasDoctor = source == 'doctor' || map['created_by_doctor_id'] != null;
     return HealthRecord(
-      id: map['id'] as String,
+      id: id,
       patientId: map['patient_id'] as String?,         // FIXED
       relativeId: map['relative_id'] as String?,       // NEW
 
@@ -94,12 +118,16 @@ class HealthRecord {
       notesEn: map['notes_en'] as String?,
       notesAr: map['notes_ar'] as String?,
 
-      source: map['source'] as String? ?? "patient",
+      source: source,
 
       createdAt: DateTime.parse(map['created_at']),
       updatedAt: map['updated_at'] != null
           ? DateTime.parse(map['updated_at'])
           : null,
+
+      mergedCount: 1,
+      aggregatedIds: [id],
+      hasDoctorSource: hasDoctor,
     );
   }
 }
