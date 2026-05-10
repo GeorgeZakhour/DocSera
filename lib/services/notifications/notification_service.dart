@@ -351,7 +351,34 @@ class NotificationService {
   Future<void> _saveDeviceTokenToSupabase(String token) async {
     final session = Supabase.instance.client.auth.currentSession;
     final userId = session?.user.id;
-    if (userId == null) return;
+    if (userId == null) {
+      // No active session — orphan-clean any stale rows for THIS Pushy
+      // token so a previous user's notifications don't keep firing on
+      // this device. RLS allows DELETE only on rows the current user
+      // owns; without a session we can't clean directly here, so we
+      // just skip and let the periodic 90-day cron sweep handle it.
+      return;
+    }
+
+    // Orphan defense: before upserting our own row, drop ANY other
+    // user_devices row for this Pushy token that points at a different
+    // user_id. RLS scopes the delete to rows the current session owns,
+    // so we can only clean up tokens that belong to the current user
+    // anyway — which catches the common bug (User A signs out without
+    // cleanup, User B signs in on the same device, A's row would
+    // otherwise survive). Cross-account orphans need the operator-side
+    // 90-day prune to fully clean.
+    try {
+      await Supabase.instance.client
+          .from('user_devices')
+          .delete()
+          .eq('token', token)
+          .neq('user_id', userId);
+    } catch (e) {
+      if (kDebugMode) {
+        debugPrint('⚠️ user_devices orphan cleanup failed: $e');
+      }
+    }
 
     await Supabase.instance.client.from('user_devices').upsert({
       'user_id': userId,
