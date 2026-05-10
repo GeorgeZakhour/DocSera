@@ -1,0 +1,24 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 120">
+  <defs>
+    <linearGradient id="giftBox" x1="0" x2="0" y1="0" y2="1">
+      <stop offset="0" stop-color="#4DD0D2"/>
+      <stop offset="1" stop-color="#009092"/>
+    </linearGradient>
+    <linearGradient id="giftLid" x1="0" x2="0" y1="0" y2="1">
+      <stop offset="0" stop-color="#6ee0e2"/>
+      <stop offset="1" stop-color="#009092"/>
+    </linearGradient>
+    <linearGradient id="giftRibbon" x1="0" x2="1" y1="0" y2="0">
+      <stop offset="0" stop-color="#FFA070"/>
+      <stop offset="1" stop-color="#FFC8A8"/>
+    </linearGradient>
+  </defs>
+  <rect x="22" y="50" width="76" height="56" rx="6" fill="url(#giftBox)"/>
+  <rect x="18" y="40" width="84" height="18" rx="4" fill="url(#giftLid)"/>
+  <rect x="55" y="40" width="10" height="66" fill="url(#giftRibbon)"/>
+  <rect x="18" y="46" width="84" height="8" fill="url(#giftRibbon)"/>
+  <path d="M60 40 C 44 22, 28 30, 34 42 C 40 52, 56 44, 60 40 Z" fill="url(#giftRibbon)"/>
+  <path d="M60 40 C 76 22, 92 30, 86 42 C 80 52, 64 44, 60 40 Z" fill="url(#giftRibbon)"/>
+  <ellipse cx="60" cy="40" rx="6" ry="4" fill="#FF8A5C"/>
+  <path d="M22 50 L22 56 L98 56 L98 50" fill="rgba(255,255,255,.18)"/>
+</svg>

@@ -93,6 +93,7 @@ flutter:
     - assets/images/health/
     - assets/images/popup/
     - assets/images/body_map/
+    - assets/images/onboarding/
     - assets/icons/
     - assets/icons/specialties/
     - assets/shapes/
