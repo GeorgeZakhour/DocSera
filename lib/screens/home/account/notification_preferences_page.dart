@@ -124,7 +124,9 @@ class _NotificationPreferencesPageState
           'p_respects_quiet_hours': row.respectQuietHours,
         },
       );
-    } catch (_) {/* swallow — UI already optimistically updated */}
+    } catch (_) {
+      _showSaveFailedToast();
+    }
   }
 
   Future<void> _saveQuietHours() async {
@@ -138,7 +140,26 @@ class _NotificationPreferencesPageState
           'p_dnd_until': _dndUntil?.toUtc().toIso8601String(),
         },
       );
-    } catch (_) {/* swallow */}
+    } catch (_) {
+      _showSaveFailedToast();
+    }
+  }
+
+  /// Optimistic UI flips first, then we save. If the save fails the user
+  /// otherwise has no idea the change wasn't persisted — flag it so they
+  /// can retry instead of leaving with stale assumptions about quiet
+  /// hours or push toggles.
+  void _showSaveFailedToast() {
+    if (!mounted) return;
+    final loc = AppLocalizations.of(context);
+    final message = loc?.somethingWentWrong ?? 'Save failed';
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(message),
+        backgroundColor: AppColors.red,
+        duration: const Duration(seconds: 3),
+      ),
+    );
   }
 
   Future<bool> _confirmMuteIfNeeded(String category) async {
@@ -349,8 +370,12 @@ class _NotificationPreferencesPageState
             child: Text(
               label,
               style: AppTextStyles.getText3(context).copyWith(
+                // grey.shade700 keeps the "disabled" visual cue but
+                // clears WCAG AA (≥4.5:1) on white, where shade500
+                // failed. Disabled state still readable for low-vision
+                // users — they can see what's coming, just not toggle.
                 color: onChanged == null
-                    ? Colors.grey.shade500
+                    ? Colors.grey.shade700
                     : AppColors.mainDark,
               ),
             ),
