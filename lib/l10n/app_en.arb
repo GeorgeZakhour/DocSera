@@ -452,7 +452,6 @@
   "patientInfo": "Patient Information",
   "appointmentTime": "Appointment Time",
   "confirm": "Confirm",
-  "slotReservedFor": "This slot is reserved for 15 minutes",
   "byConfirming": "By confirming this appointment, ",
   "agreeToHonor": "you agree to honor it.",
   "for2": "For",

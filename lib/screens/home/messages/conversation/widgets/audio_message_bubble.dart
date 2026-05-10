@@ -44,7 +44,11 @@ class _AudioMessageBubbleState extends State<AudioMessageBubble> {
       }
     });
     _audioPlayer.durationStream.listen((d) {
-        if (mounted) {
+        // Stream emits Duration.zero on pause / replay / unload — ignoring
+        // those here keeps the displayed total from collapsing back to
+        // 0:00 mid-playback (which surfaced as "0:27 / 0:00" in the
+        // marketing screenshot bug).
+        if (mounted && d > Duration.zero) {
           setState(() => _duration = d);
         }
     });

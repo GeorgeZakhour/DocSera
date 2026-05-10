@@ -461,7 +461,6 @@
   "patientInfo": "معلومات المريض",
   "appointmentTime": "وقت الموعد",
   "confirm": "تأكيد",
-  "slotReservedFor": "هذا الموعد محجوز لمدة 15 دقيقة",
   "byConfirming": "بتأكيدك لهذا الموعد، ",
   "agreeToHonor": "أنت توافق على الالتزام به.",
   "for2": "لـ ",

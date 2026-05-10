@@ -592,13 +592,6 @@ class _ConfirmationPageState extends State<ConfirmationPage> {
                     .getText2(context)
                     .copyWith(fontWeight: FontWeight.w700, color: AppColors.whiteText),
               ),
-              SizedBox(height: 3.h),
-              Text(
-                AppLocalizations.of(context)!.slotReservedFor,
-                style: AppTextStyles
-                    .getText3(context)
-                    .copyWith(fontWeight: FontWeight.w300, color: AppColors.whiteText),
-              ),
             ],
           ),
         ],
