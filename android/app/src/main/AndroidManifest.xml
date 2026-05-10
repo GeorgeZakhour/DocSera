@@ -75,48 +75,51 @@
             />
 
         <!-- ===================================================== -->
-        <!-- Pushy SDK services + receivers (per Pushy Flutter docs) -->
-        <!-- Without these, push messages reach the SDK over MQTT  -->
-        <!-- but Android cannot dispatch them to be displayed.     -->
-        <!-- https://pushy.me/docs/additional-platforms/flutter    -->
+        <!-- Pushy SDK services + receivers (per pushy_flutter      -->
+        <!-- 2.0.43 canonical example manifest). Class names differ -->
+        <!-- from the bare-Pushy-Android docs; this is the Flutter  -->
+        <!-- variant: PushyInternalReceiver lives in the plugin's   -->
+        <!-- me.pushy.sdk.flutter.internal package, NOT the SDK's   -->
+        <!-- me.pushy.sdk.receivers package.                        -->
         <!-- ===================================================== -->
-        <service
-            android:name="me.pushy.sdk.services.PushySocketService"
-            android:stopWithTask="false"
-            android:exported="false" />
-        <service
-            android:name="me.pushy.sdk.services.PushyJobService"
-            android:permission="android.permission.BIND_JOB_SERVICE"
-            android:exported="false" />
-        <service
-            android:name="me.pushy.sdk.services.PushyBootService"
-            android:exported="false" />
 
+        <!-- Internal notification receiver — bridges the MQTT push -->
+        <!-- to the Flutter listener registered by Pushy.listen().  -->
         <receiver
-            android:name="me.pushy.sdk.receivers.PushyBootReceiver"
-            android:exported="true">
-            <intent-filter>
-                <action android:name="android.intent.action.BOOT_COMPLETED" />
-            </intent-filter>
-        </receiver>
-
-        <receiver
-            android:name="me.pushy.sdk.receivers.PushyUpdateReceiver"
-            android:exported="true">
-            <intent-filter>
-                <action android:name="android.intent.action.PACKAGE_REPLACED" />
-                <data android:scheme="package" />
-            </intent-filter>
-        </receiver>
-
-        <!-- This is the receiver that actually displays the push -->
-        <receiver
-            android:name="me.pushy.sdk.receivers.PushyReceiver"
+            android:name="me.pushy.sdk.flutter.internal.PushyInternalReceiver"
             android:exported="false">
             <intent-filter>
                 <action android:name="pushy.me" />
             </intent-filter>
         </receiver>
+
+        <!-- Restart the listener service after the app updates.    -->
+        <receiver
+            android:name="me.pushy.sdk.receivers.PushyUpdateReceiver"
+            android:exported="false">
+            <intent-filter>
+                <action android:name="android.intent.action.MY_PACKAGE_REPLACED" />
+            </intent-filter>
+        </receiver>
+
+        <!-- Restart the listener service after device reboot.      -->
+        <receiver
+            android:name="me.pushy.sdk.receivers.PushyBootReceiver"
+            android:exported="false">
+            <intent-filter>
+                <action android:name="android.intent.action.BOOT_COMPLETED" />
+            </intent-filter>
+        </receiver>
+
+        <!-- MQTT socket service. -->
+        <service android:name="me.pushy.sdk.services.PushySocketService" />
+
+        <!-- Job service (Pushy 1.0.35+). exported=true is required  -->
+        <!-- by the SDK's JobScheduler logic.                        -->
+        <service
+            android:name="me.pushy.sdk.services.PushyJobService"
+            android:permission="android.permission.BIND_JOB_SERVICE"
+            android:exported="true" />
     </application>
 
     <!-- ✅ Update the <queries> section for URL Launcher -->
