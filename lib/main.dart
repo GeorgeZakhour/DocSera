@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:io' show Platform;
 import 'package:http/http.dart' as http;
 
 import 'package:docsera/Business_Logic/Account_page/danger/account_danger_cubit.dart';
@@ -66,6 +67,7 @@ import 'services/analytics/analytics_navigator_observer.dart';
 import 'services/analytics/analytics_event_catalog.dart';
 import 'services/legal/legal_consent_service.dart';
 import 'dart:convert';
+import 'package:docsera/Business_Logic/Onboarding/welcome_wizard/welcome_wizard_cubit.dart';
 
 void main() async {
   await SentryInit.run(_bootstrap);
@@ -95,6 +97,13 @@ Future<void> _bootstrap() async {
 
 
   SharedPreferences prefs = await SharedPreferences.getInstance();
+
+  // One-time migration: existing users who predate the welcome wizard
+  // should not be shown it. The flag is only set if not already present —
+  // new signups (post-wizard release) hit the wizard via the WelcomePage
+  // CTA, which sets the flag at completion/skip.
+  await WelcomeWizardCubit.migrateExistingUser();
+
   // ✅ Initialize Repositories
   final client = Supabase.instance.client;
   final authRepo = AuthRepository(supabase: client);
@@ -324,8 +333,12 @@ class _MyAppState extends State<MyApp> {
             },
             child: MaterialApp(
               builder: (context, child) {
-                // ✅ Use Builder to get context for Connectivity
-                return Stack(
+                // Android-only keyboard-as-overlay: zero out viewInsets.bottom
+                // so no Scaffold downstream resizes when the IME opens. Pages
+                // that need the keyboard to push content (chat composer,
+                // form sheets) opt back in via RealKeyboardInsets / the
+                // realKeyboardInset() helper. iOS is unchanged.
+                final body = Stack(
                   children: [
                     child!,
                     
@@ -351,7 +364,7 @@ class _MyAppState extends State<MyApp> {
                           showDialog(
                             context: _navKey.currentContext!, // User Navigator key context
                             barrierDismissible: state.banner.isDismissible,
-                            useRootNavigator: true, 
+                            useRootNavigator: true,
                             builder: (_) => PopupBannerDialog(
                               banner: state.banner,
                               onDismiss: () {
@@ -370,12 +383,12 @@ class _MyAppState extends State<MyApp> {
                                     debugPrint("🔴 Could not launch URL: $url");
                                   }
                                 }
-                                
+
                                 if (state.banner.type != 'maintenance' && state.banner.type != 'update') {
                                    context.read<PopupBannerCubit>().dismissCurrentBanner();
                                    Navigator.of(_navKey.currentContext!, rootNavigator: true).pop();
                                 }
-                                
+
                                 // TODO: Implement specific URL launching logic here using url_launcher
                                 // We can use the existing _launchUrl logic or the new logic
                               },
@@ -386,6 +399,13 @@ class _MyAppState extends State<MyApp> {
                       child: const SizedBox.shrink(), // Invisible child, just for listener
                     ),
                   ],
+                );
+
+                if (!Platform.isAndroid) return body;
+                final mq = MediaQuery.of(context);
+                return MediaQuery(
+                  data: mq.copyWith(viewInsets: EdgeInsets.zero),
+                  child: body,
                 );
               },
               navigatorKey: _navKey,
