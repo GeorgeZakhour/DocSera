@@ -52,7 +52,7 @@ class NotificationService {
     // Use the flat foreground drawable, not the adaptive ic_launcher
     // wrapper — Android can't render adaptive icons in the
     // notification status bar, leading to a generic placeholder.
-    const androidInit = AndroidInitializationSettings('@drawable/ic_launcher_foreground');
+    const androidInit = AndroidInitializationSettings('@drawable/ic_notify');
 
     // Register a notification category for the T-30m appointment reminder
     // with two actions: call the clinic and open Maps for directions.
@@ -1097,7 +1097,7 @@ Future<void> backgroundNotificationListener(Map<String, dynamic> data) async {
     // Use the flat foreground drawable, not the adaptive ic_launcher
     // wrapper — Android can't render adaptive icons in the
     // notification status bar, leading to a generic placeholder.
-    const androidInit = AndroidInitializationSettings('@drawable/ic_launcher_foreground');
+    const androidInit = AndroidInitializationSettings('@drawable/ic_notify');
     const iosInit = DarwinInitializationSettings(
       requestAlertPermission: false, 
       requestBadgePermission: false, 
