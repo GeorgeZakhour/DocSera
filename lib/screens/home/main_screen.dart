@@ -446,7 +446,23 @@ class _MainScreenState extends State<MainScreen> with AutomaticKeepAliveClientMi
           return _buildShimmerLoading(); // ✅ `Shimmer` يظهر فقط عند فتح التطبيق لأول مرة
         }
 
-        return MultiBlocProvider(
+        return BlocListener<AuthCubit, AppAuthState>(
+          // Re-trigger the link-request gate whenever auth becomes
+          // authenticated. The initState postFrameCallback handles
+          // the "already-authenticated-on-mount" path; this listener
+          // handles the "auth-finished-resolving-after-mount" path
+          // (cold start with slow session restore). Both ultimately
+          // call the same once-per-session gate, which de-dupes.
+          listenWhen: (prev, curr) =>
+              curr is AuthAuthenticated && prev is! AuthAuthenticated,
+          listener: (context, state) {
+            debugPrint('🚪 link-gate: auth → AuthAuthenticated, scheduling gate');
+            WidgetsBinding.instance.addPostFrameCallback((_) {
+              if (!context.mounted) return;
+              maybeShowPendingLinkRequest(context);
+            });
+          },
+          child: MultiBlocProvider(
           providers: [
             BlocProvider.value(value: BlocProvider.of<MainScreenCubit>(context)),
             BlocProvider(create: (context) => BannersCubit(SupabaseBannerService())..loadBanners()),
@@ -469,6 +485,7 @@ class _MainScreenState extends State<MainScreen> with AutomaticKeepAliveClientMi
               return Center(child: Text(AppLocalizations.of(context)!.commonUnexpectedError));
             },
           ),
+        ),
         );
 
       },
