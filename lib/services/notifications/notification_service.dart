@@ -169,6 +169,14 @@ class NotificationService {
       }
     });
 
+    // Cold-start with a cached session does NOT emit a fresh signedIn
+    // event from the SDK — the listener above would never fire and the
+    // realtime watcher would never start. Bootstrap it here if a
+    // session is already restored.
+    if (Supabase.instance.client.auth.currentSession != null) {
+      _startUserDevicesWatcher();
+    }
+
     _initialized = true;
   }
 
