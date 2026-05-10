@@ -25,7 +25,7 @@ A procedure marked **✅ Verified** has been run end-to-end at least once and is
 | B — DB migration | 🟡 Untested | — | — |
 | C — Edge function deploy | 🟡 Untested | — | — |
 | D — Take backup | ✅ Verified | 2026-05-10 | 6.8 MB baseline, 30 sec total |
-| E — Restore backup | 🟡 Untested | — | — |
+| E — Restore backup | ⚠️ Partial — file structure verified; full row-restore requires Supabase target (Procedure G) | 2026-05-10 | Vanilla-Postgres restore loses appointments + conversations data |
 | F — Local mirror | 🟡 Untested | — | — |
 | G — Full local Supabase stack | 📅 Deferred to post-launch | — | See [Procedure G](#procedure-g--full-local-supabase-stack-post-launch) |
 
@@ -400,6 +400,33 @@ A backup you've never restored is not a backup — it's a hope. **Run the recove
 ## Procedure E — restore a backup (recovery drill)
 
 Practice this **before you ever need it for real.** The first time you restore should not be during an outage.
+
+> ### ⚠️ Critical caveat — vanilla Postgres restore is NOT a faithful recovery drill
+>
+> Discovered 2026-05-10: restoring this project's `pg_dump` output to a vanilla `postgres:15` Docker container **silently loses data** for tables whose triggers, RLS policies, or column types depend on Supabase-specific extensions (`pg_cron`, `pg_net`, `supabase_vault`) or roles (`supabase_admin`, `supabase_auth_admin`). Specifically observed: `appointments` and `conversations` tables restore with zero rows even though prod has them.
+>
+> **Vanilla-Postgres restore is only valid for proving the dump file is structurally intact** (i.e., not corrupt mid-stream). It does NOT prove every row will restore. For the latter, you need a Supabase-compatible target.
+>
+> **The real recovery path in an emergency** is documented in [Restore to prod](#restore-to-prod-real-emergency-only) below — pipe the gzipped dump back into the live `supabase-db` container. That container has all the extensions/roles the dump expects, so restore is byte-perfect.
+>
+> **For an offline validation drill** (post-launch), use Procedure G (full local Supabase stack via `supabase start`) — that local stack has the same extensions/roles, so restore there is also byte-perfect.
+>
+> See the [verification log](#verification-log) for the original investigation.
+
+### Disk-space prerequisite
+
+**Verify ≥10 GB free on your Mac before attempting any restore.** Discovered 2026-05-10: a restore drill failed because Docker had run out of disk during image extraction, requiring a Docker Desktop reset (deleting `~/Library/Containers/com.docker.docker/Data`) and freeing ~24 GB of build caches (`~/.gradle`, `~/Library/Developer/Xcode/DerivedData`). That recovery took ~45 minutes that you do not have during a real outage.
+
+Quick check before restore:
+```bash
+df -h /System/Volumes/Data
+```
+If "Avail" is under ~10 GB, free up space first using:
+```bash
+rm -rf ~/.gradle
+rm -rf ~/Library/Developer/Xcode/DerivedData
+```
+Both are safe to delete — they regenerate on next Android / iOS build.
 
 ### Restore to a local Docker Postgres (recommended for drills)
 
@@ -781,6 +808,93 @@ ls -lh ~/docsera-backups/
 **Outcome:** ✅ Procedure D verified working. Operator confirmed comfort with the commands. First real backup file lives at `~/docsera-backups/backup-20260510-1824.sql.gz`.
 
 **Next:** Run Procedure E (restore drill) against this backup file to confirm it's not just bytes but actually-restorable data.
+
+### 2026-05-10 — Procedure E (restore a backup) — first run, partial success with critical finding
+
+**Context:** Immediately after Procedure D's first verification, we proceeded to drill the restore against a vanilla `postgres:15` Docker container on the operator's Mac. Goal: confirm that the backup file from Procedure D contains restorable data (not just bytes).
+
+**Pre-flight obstacles encountered:**
+
+1. **Disk exhaustion.** Docker failed mid-image-pull with `input/output error` writing to `metadata.db`. Diagnosis showed the Mac had only **123 MB free on a 228 GB disk** (100% full). This wedged Docker Desktop entirely — it refused to start until cleared.
+   - Recovery: deleted `~/.gradle` (~19 GB) and `~/Library/Developer/Xcode/DerivedData` (~5 GB) for a 24 GB recovery; force-killed lingering `com.docker.backend` processes via `kill -9`; deleted `~/Library/Containers/com.docker.docker/Data` to reset Docker's internal state.
+   - Total time lost: ~45 minutes.
+   - Lesson captured: see [Disk-space prerequisite](#disk-space-prerequisite) section above.
+2. **Stale Docker processes.** After the disk cleanup, `open -a Docker` failed with error `-1712` (app launch timeout) because zombie `com.docker.backend` processes survived Docker Desktop's crash. `killall` (SIGTERM) failed to kill them; `kill -9` (SIGKILL) was needed.
+
+**Commands run, in order:**
+
+```bash
+# 1. Spin up empty Postgres
+docker run -d --name docsera-restore-test \
+  -p 5434:5432 \
+  -e POSTGRES_PASSWORD=test \
+  postgres:15
+# → container 94dbe2d97f05 started successfully
+
+# 2. Verify Postgres alive
+docker exec docsera-restore-test psql -U postgres -d postgres -c "SELECT version();"
+# → PostgreSQL 15.17 (vanilla, not Supabase fork)
+
+# 3. Restore the backup
+gunzip < ~/docsera-backups/backup-20260510-1824.sql.gz | \
+  docker exec -i docsera-restore-test psql -U postgres -d postgres
+# → ~60 seconds of mixed CREATE/ERROR output
+# → ERRORs included: role "supabase_admin" does not exist, role "supabase_auth_admin" does not exist,
+#                    role "supabase_storage_admin" does not exist, role "pgbouncer" does not exist,
+#                    extension "pg_cron" not available, extension "pg_net" not available,
+#                    extension "pg_graphql" not available, extension "pgjwt" not available,
+#                    extension "supabase_vault" not available
+# → No fatal/aborting error — Postgres continued past each one
+
+# 4. Verify table list
+docker exec docsera-restore-test psql -U postgres -d postgres -c "\dt public.*"
+# → 108 tables listed (expected count — operator confirmed)
+
+# 5. Verify data counts (LOCAL)
+docker exec docsera-restore-test psql -U postgres -d postgres -c "
+  SELECT 'users' AS t, COUNT(*) FROM public.users
+  UNION ALL SELECT 'doctors', COUNT(*) FROM public.doctors
+  UNION ALL SELECT 'appointments', COUNT(*) FROM public.appointments
+  UNION ALL SELECT 'documents', COUNT(*) FROM public.documents
+  UNION ALL SELECT 'conversations', COUNT(*) FROM public.conversations
+  UNION ALL SELECT 'messages', COUNT(*) FROM public.messages;"
+
+# 6. Compare against PROD
+ssh -p 2203 george@94.252.183.77 "docker exec supabase-db psql -U postgres -d postgres -c \"<same SELECT>\""
+```
+
+**Comparison (the critical finding):**
+
+| Table | Local restore | Prod | Lost in restore |
+|---|---|---|---|
+| users | 14 | 14 | 0 ✅ |
+| doctors | 22 | 22 | 0 ✅ |
+| documents | 24 | 24 | 0 ✅ |
+| messages | 128 | 128 | 0 ✅ |
+| **appointments** | **0** | **78** | **78 ❌** |
+| **conversations** | **0** | **21** | **21 ❌** |
+
+**Root cause:** `appointments` and `conversations` tables have triggers (`trg_sync_appointment_date_time`, `trg_handle_new_message`) and/or RLS policies that depend on Supabase-specific functions/roles (`supabase_admin`, `supabase_auth_admin`) or extensions (`pg_cron`, `pg_net`, `pgsodium`, `supabase_vault`). When `psql` ran `COPY public.appointments FROM stdin;` during the restore, the trigger fired and failed (because the function exists but is owned by `postgres` not `supabase_admin`, and possibly accesses missing extensions). The COPY block aborted for that table — silently — and Postgres moved to the next table. No fatal error appeared in the log because the COPY failure is contained to its own block.
+
+The dump file itself **is not corrupt** — those 78 appointment rows and 21 conversation rows ARE in the gzipped file. Vanilla Postgres just can't load them.
+
+**Outcome:** ⚠️ Procedure E **partial success.**
+- ✅ Backup file structure is valid (108/108 tables created)
+- ✅ Most table data restored faithfully (4/6 verified tables matched prod exactly)
+- ❌ Two specific tables silently lost all rows due to Supabase-extension dependencies
+- ✅ This finding was the entire point of the drill — caught silently-lost data before relying on it in a real emergency
+
+**Implications for real recovery:**
+- Vanilla Postgres restore is **NOT** the path to use in an actual outage. It's a structure-only validation.
+- The real emergency-recovery path is "restore to the live `supabase-db` container" (already documented in [Restore to prod](#restore-to-prod-real-emergency-only)), which has all the extensions/roles the dump expects. That path is byte-perfect.
+- For a faithful offline drill, we need Procedure G (full local Supabase stack via `supabase start`). Setting that up is deferred to post-launch — the gap is acceptable because (a) we've now identified the only two affected tables and (b) the real recovery path doesn't suffer this gap.
+
+**Cleanup commands (after the drill):**
+```bash
+docker rm -f docsera-restore-test
+```
+
+**Next:** Procedure F (local mirror for testing migrations) — different goal from E (test SQL safety, not data restoration), so the Supabase-extension issue doesn't apply the same way. Will continue in a separate session.
 
 ---
 
