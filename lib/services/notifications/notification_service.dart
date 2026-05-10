@@ -49,7 +49,10 @@ class NotificationService {
     tz.setLocalLocation(tz.getLocation(_fallbackTz()));
 
     // 2) تهيئة flutter_local_notifications
-    const androidInit = AndroidInitializationSettings('@mipmap/ic_launcher');
+    // Use the flat foreground drawable, not the adaptive ic_launcher
+    // wrapper — Android can't render adaptive icons in the
+    // notification status bar, leading to a generic placeholder.
+    const androidInit = AndroidInitializationSettings('@drawable/ic_launcher_foreground');
 
     // Register a notification category for the T-30m appointment reminder
     // with two actions: call the clinic and open Maps for directions.
@@ -1038,20 +1041,50 @@ Future<void> backgroundNotificationListener(Map<String, dynamic> data) async {
 
 
     // ✅ Main Isolate Check: If NotificationService is initialized, the
-    // app is in the foreground. Pushy installs itself as the iOS
-    // UNUserNotificationCenterDelegate and tells iOS not to present
-    // anything in foreground — it just forwards the data to us. Calling
-    // _fln.show here would loop back through the same delegate and get
-    // suppressed again. Instead, render an in-app banner overlay.
+    // app is in the foreground (or backgrounded but not killed).
     final ctx = NotificationService.instance.navigatorKey?.currentContext;
     if (ctx != null && ctx.mounted) {
-      debugPrint("✅ Foreground notification → in-app banner");
+      // (1) Render the in-app glass banner — only meaningful on iOS where
+      //     Pushy's UNUserNotificationCenterDelegate suppresses native
+      //     foreground display. On Android the OS-level heads-up still
+      //     fires below; the in-app banner is harmless duplication that
+      //     the user dismisses by swiping.
+      debugPrint("✅ Foreground notification → in-app banner + system tray");
       InAppNotificationBanner.show(
         ctx,
         title: title,
         body: body,
         payload: payload,
       );
+
+      // (2) ALSO display in the system tray. Without this, when the app
+      //     is alive (foreground OR backgrounded-but-not-killed), the
+      //     Pushy listener fires and we'd return — meaning nothing ever
+      //     lands in the notification shade. Users miss the entry on
+      //     next pull-down. flutter_local_notifications.show() bypasses
+      //     Pushy's delegate and writes directly to the OS shade.
+      try {
+        const androidDetails = AndroidNotificationDetails(
+          'docsera_default',
+          'General Notifications',
+          importance: Importance.high,
+          priority: Priority.high,
+        );
+        const iosDetails = DarwinNotificationDetails(
+          presentAlert: true,
+          presentBadge: true,
+          presentSound: true,
+        );
+        await NotificationService.instance._fln.show(
+          DateTime.now().millisecondsSinceEpoch ~/ 1000,
+          title,
+          body,
+          const NotificationDetails(android: androidDetails, iOS: iosDetails),
+          payload: payload,
+        );
+      } catch (e) {
+        if (kDebugMode) debugPrint('⚠️ system-tray show failed: $e');
+      }
       return;
     }
 
@@ -1061,7 +1094,10 @@ Future<void> backgroundNotificationListener(Map<String, dynamic> data) async {
     debugPrint("🌑 Using Standalone FLN (Background)");
     final FlutterLocalNotificationsPlugin fln = FlutterLocalNotificationsPlugin();
 
-    const androidInit = AndroidInitializationSettings('@mipmap/ic_launcher');
+    // Use the flat foreground drawable, not the adaptive ic_launcher
+    // wrapper — Android can't render adaptive icons in the
+    // notification status bar, leading to a generic placeholder.
+    const androidInit = AndroidInitializationSettings('@drawable/ic_launcher_foreground');
     const iosInit = DarwinInitializationSettings(
       requestAlertPermission: false, 
       requestBadgePermission: false, 
