@@ -1,7 +1,11 @@
 // Handler: messages.INSERT
-// Decrypts the body if encrypted, picks the recipient based on is_user,
-// and produces a NotificationIntent. Behavior preserved byte-for-byte
-// from the previous monolithic index.ts.
+// Decrypts the body if encrypted, picks recipients per direction, and
+// produces a NotificationIntent. The patient-direction path is
+// unchanged (notify patient + any relative on the convo). The
+// doctor-direction path (patient → doctor side) is now role-aware via
+// fn_resolve_recipients — instead of only the doctor's own auth row,
+// it notifies the doctor + secretaries assigned to that doctor with
+// viewMessages permission. Same encrypt/decrypt path, same template.
 
 import { SupabaseClient } from "https://esm.sh/@supabase/supabase-js@2.7.1";
 import type { NotificationIntent, WebhookPayload } from "../types.ts";
@@ -33,11 +37,42 @@ export async function handleMessages(
   let recipient_app: "docsera" | "docsera_pro";
 
   if (record.is_user) {
-    // Patient sent message → notify doctor on DocSera-Pro
-    user_ids = conversation.doctor_id ? [conversation.doctor_id] : [];
+    // Patient sent message → notify doctor + assigned secretaries via
+    // the role-aware resolver. The conversation carries doctors.id;
+    // we look up the center via center_members to feed the resolver.
+    if (!conversation.doctor_id) return null;
+    const centerId = await lookupCenterForDoctor(
+      supabase,
+      conversation.doctor_id as string,
+    );
+    if (!centerId) {
+      // Fallback to single-recipient when the doctor isn't in a team
+      // center (solo doctor still on the legacy doctor_accounts path).
+      user_ids = [conversation.doctor_id as string];
+    } else {
+      const { data: recipientRows, error: rErr } = await supabase
+        .rpc("fn_resolve_recipients", {
+          p_event_code: "pro.message.received",
+          p_ctx: {
+            center_id: centerId,
+            doctor_id: conversation.doctor_id,
+          },
+        });
+      if (rErr) {
+        console.error("[messages] resolver error:", rErr);
+        return null;
+      }
+      user_ids = normalizeUuidList(recipientRows);
+      // Resolver-empty centers (rare) still need the doctor notified
+      // as a safety net.
+      if (user_ids.length === 0 && conversation.doctor_id) {
+        user_ids = [conversation.doctor_id as string];
+      }
+    }
     recipient_app = "docsera_pro";
   } else {
-    // Doctor sent message → notify patient on DocSera (and any relative on the convo)
+    // Doctor sent message → notify patient on DocSera (and any
+    // relative on the convo). Unchanged from the patient-only path.
     user_ids = [];
     if (conversation.patient_id) user_ids.push(conversation.patient_id);
     if (conversation.relative_id) user_ids.push(conversation.relative_id);
@@ -80,10 +115,18 @@ export async function handleMessages(
     bodyEn = `${LTR}${rawBody}`;
   }
 
+  // Distinct event codes per direction so each side can have its own
+  // template, prefs, and analytics: `message.new` is patient-app
+  // legacy (kept for backward compat); `pro.message.received` is the
+  // doctor-side equivalent.
+  const eventCode = recipient_app === "docsera_pro"
+    ? "pro.message.received"
+    : "message.new";
+
   return {
     user_ids,
     recipient_app,
-    event_code: "message.new",
+    event_code: eventCode,
     category: "messages",
     title,
     body: bodyAr,
@@ -99,4 +142,43 @@ export async function handleMessages(
     dedup_key: `msg:${record.id}`,
     locale: "ar",
   };
+}
+
+/// Resolves the center_id for a doctor by inspecting their
+/// center_members row. Returns null if the doctor isn't on a team
+/// (legacy doctor_accounts solo flow — handler then falls back to a
+/// single-user intent).
+async function lookupCenterForDoctor(
+  supabase: SupabaseClient,
+  doctorId: string,
+): Promise<string | null> {
+  const { data, error } = await supabase
+    .from("center_members")
+    .select("center_id")
+    .eq("doctor_id", doctorId)
+    .eq("is_active", true)
+    .is("removed_at", null)
+    .limit(1)
+    .maybeSingle();
+  if (error || !data) return null;
+  return (data as { center_id: string }).center_id;
+}
+
+/// Normalizes the shape returned by .rpc('fn_resolve_recipients'):
+/// older supabase-js versions return [{fn_resolve_recipients: uuid}],
+/// newer ones return a flat string[]. Accept either.
+function normalizeUuidList(rows: unknown): string[] {
+  if (!rows) return [];
+  if (Array.isArray(rows)) {
+    return rows
+      .map((r) => {
+        if (typeof r === "string") return r;
+        if (r && typeof r === "object" && "fn_resolve_recipients" in r) {
+          return (r as Record<string, string>).fn_resolve_recipients;
+        }
+        return null;
+      })
+      .filter((r): r is string => typeof r === "string" && r.length > 0);
+  }
+  return [];
 }

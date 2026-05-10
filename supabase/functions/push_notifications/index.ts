@@ -28,6 +28,7 @@ import { createClient } from "https://esm.sh/@supabase/supabase-js@2.7.1";
 import type { NotificationIntent, WebhookPayload } from "./types.ts";
 import { handleMessages } from "./handlers/messages.ts";
 import { handleAppointments } from "./handlers/appointments.ts";
+import { handleProAppointments } from "./handlers/pro_appointments.ts";
 import { handleDocuments } from "./handlers/documents.ts";
 import { handleDocumentsDeletion } from "./handlers/documents_deletion.ts";
 import { handleConversations } from "./handlers/conversations.ts";
@@ -108,9 +109,19 @@ serve(async (req) => {
       case "messages":
         intent = await handleMessages(supabase, payload);
         break;
-      case "appointments":
-        intent = handleAppointments(payload);
+      case "appointments": {
+        // Patient-side intent (existing — unchanged): tells the patient
+        // about confirmations, cancellations, reschedules, reports.
+        const patientIntent = handleAppointments(payload);
+        if (patientIntent) intents.push(patientIntent);
+        // Pro-side intents (Phase 2): tells the doctor + assigned
+        // secretaries about the same lifecycle moments. Returns an
+        // array because role-aware fanout collapses to one batched
+        // intent (engine then writes one row per user_id).
+        const proIntents = await handleProAppointments(supabase, payload);
+        if (proIntents.length > 0) intents.push(...proIntents);
         break;
+      }
       case "documents":
         if (payload.type === "DELETE") {
           intent = handleDocumentsDeletion(payload);

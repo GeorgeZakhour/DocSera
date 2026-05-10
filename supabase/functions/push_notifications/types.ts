@@ -14,7 +14,13 @@ export type Category =
   | "marketing"
   | "system"
   | "health"
-  | "relatives";
+  | "relatives"
+  // Pro additions (Phase 2):
+  | "team"
+  | "clinic_ops"
+  | "subscription"
+  | "verification"
+  | "tasks";
 
 // What a handler returns. The dispatcher takes this and (a) inserts a
 // notifications row per user, (b) sends Pushy. Returning null means
