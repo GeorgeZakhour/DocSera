@@ -106,6 +106,23 @@ class NotificationService {
         .resolvePlatformSpecificImplementation<AndroidFlutterLocalNotificationsPlugin>()
         ?.createNotificationChannel(_defaultChannel);
 
+    // Cold-start tap on a scheduled local reminder (T-24h / T-30m): the
+    // app launches via the notification PendingIntent, but
+    // onDidReceiveNotificationResponse does NOT fire on launch — we have
+    // to read the launch details explicitly and route after the app is
+    // ready. Pushy handles its own cold-start tap via Pushy.listen() so
+    // this path only matters for flutter_local_notifications.
+    final launchDetails = await _fln.getNotificationAppLaunchDetails();
+    if (launchDetails?.didNotificationLaunchApp == true) {
+      final resp = launchDetails!.notificationResponse;
+      if (resp != null) {
+        // Defer until navigator is ready — _handleNotificationResponse
+        // already awaits AppLifecycle.waitForAppReady() inside the tap
+        // path, so calling it directly is safe.
+        unawaited(Future(() => _handleNotificationResponse(resp)));
+      }
+    }
+
     // 3) iOS authorization. Request again explicitly + log the resulting
     // status so the next time scheduled reminders mysteriously don't fire
     // we know whether the OS actually authorized us.
@@ -848,6 +865,14 @@ class NotificationService {
       importance: timeSensitive ? Importance.max : Importance.high,
       priority: timeSensitive ? Priority.max : Priority.high,
       fullScreenIntent: timeSensitive,
+      // CATEGORY_REMINDER lets users whitelist this class of notification
+      // in their system DND settings ("Allow reminders to interrupt").
+      // Without it, Android groups our reminder under CATEGORY_MESSAGE
+      // and DND silently drops it. Pair with importance.max + priority.max
+      // + fullScreenIntent on the T-30m reminder for max visibility.
+      category: timeSensitive
+          ? AndroidNotificationCategory.reminder
+          : null,
       playSound: true,
       actions: timeSensitive
           ? <AndroidNotificationAction>[

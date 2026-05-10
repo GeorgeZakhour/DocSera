@@ -27,6 +27,12 @@
     <uses-permission android:name="android.permission.SCHEDULE_EXACT_ALARM" tools:node="remove" />
     <uses-permission android:name="android.permission.USE_EXACT_ALARM" tools:node="remove" />
 
+    <!-- Required on Android 14+ for fullScreenIntent: true to actually
+         display a heads-up notification over the lockscreen / DND. We
+         set this on the T-30m appointment reminder so the user is more
+         likely to see it even if their phone is on silent / DND. -->
+    <uses-permission android:name="android.permission.USE_FULL_SCREEN_INTENT" />
+
     <application
         android:label="DocSera"
         android:name="${applicationName}"
