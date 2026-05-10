@@ -22,6 +22,7 @@ import 'package:docsera/screens/home/messages/conversation/widgets/messages_list
 import 'package:docsera/screens/home/messages/conversation/widgets/message_skeleton.dart';
 import 'package:docsera/screens/home/messages/conversation/services/chat_attachments_service.dart';
 import 'package:docsera/services/supabase/storage_quota_service.dart';
+import 'package:docsera/utils/keyboard_insets.dart';
 import 'package:docsera/widgets/chat_expiry_banner.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
@@ -594,7 +595,8 @@ class _ConversationPageState extends State<ConversationPage> {
     final bool isDisabled = chatState.isConversationClosed || chatState.isBlocked;
 
 
-    return Scaffold(
+    return RealKeyboardInsets(
+      child: Scaffold(
       backgroundColor: Colors.white,
       appBar: AppBar(
         backgroundColor: AppColors.main,
@@ -860,6 +862,7 @@ class _ConversationPageState extends State<ConversationPage> {
 
           if (_imageOverlay != null) Positioned.fill(child: Container()),
         ],
+      ),
       ),
     );
   }

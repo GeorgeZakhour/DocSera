@@ -1,3 +1,4 @@
+import 'package:docsera/utils/keyboard_insets.dart';
 import 'package:docsera/utils/text_direction_utils.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
@@ -43,7 +44,8 @@ class _EditDocumentNameSheetState extends State<EditDocumentNameSheet> {
   Widget build(BuildContext context) {
     final locale = AppLocalizations.of(context)!;
 
-    return Padding(
+    return RealKeyboardInsets(
+      child: Builder(builder: (context) => Padding(
       padding: EdgeInsets.only(
         bottom: MediaQuery.of(context).viewInsets.bottom,
         left: 24.w,
@@ -131,6 +133,7 @@ class _EditDocumentNameSheetState extends State<EditDocumentNameSheet> {
           SizedBox(height: 20.h),
         ],
       ),
+      )),
     );
   }
 }

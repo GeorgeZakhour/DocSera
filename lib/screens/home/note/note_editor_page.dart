@@ -7,6 +7,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_quill/flutter_quill.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:docsera/gen_l10n/app_localizations.dart';
+import 'package:docsera/utils/keyboard_insets.dart';
 
 class NoteEditorPage extends StatefulWidget {
   final Note? existingNote;
@@ -194,7 +195,8 @@ class _NoteEditorPageState extends State<NoteEditorPage> {
       fontFamily: isArabic ? 'Cairo' : 'Montserrat',
     );
 
-    return NotificationListener<DraggableScrollableNotification>(
+    return RealKeyboardInsets(
+      child: NotificationListener<DraggableScrollableNotification>(
       onNotification: (_) => true,
       child: SafeArea(
         bottom: false,
@@ -471,6 +473,7 @@ class _NoteEditorPageState extends State<NoteEditorPage> {
             ),
           ),
         ),
+      ),
       ),
     );
   }

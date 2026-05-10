@@ -9,6 +9,7 @@ import 'package:docsera/screens/home/appointment/reschedule_confirmation_page.da
 import 'package:docsera/screens/home/appointment/send_document.dart';
 import 'package:docsera/screens/home/shimmer/shimmer_widgets.dart';
 import 'package:docsera/utils/doctor_image_utils.dart';
+import 'package:docsera/utils/keyboard_insets.dart';
 import 'package:docsera/utils/text_direction_utils.dart';
 import 'package:docsera/utils/time_utils.dart';
 import 'package:docsera/widgets/base_scaffold.dart';
@@ -438,7 +439,8 @@ class _AppointmentDetailsPageState extends State<AppointmentDetailsPage> {
       builder: (ctx) {
         return StatefulBuilder(
           builder: (ctx, setBSState) {
-            return Padding(
+            return RealKeyboardInsets(
+              child: Builder(builder: (ctx) => Padding(
               padding: EdgeInsets.only(
                 bottom: MediaQuery.of(ctx).viewInsets.bottom,
                 top: 16.h,
@@ -702,6 +704,7 @@ class _AppointmentDetailsPageState extends State<AppointmentDetailsPage> {
                   ),
                 ),
               ),
+            )),
             );
           },
         );
@@ -823,7 +826,8 @@ class _AppointmentDetailsPageState extends State<AppointmentDetailsPage> {
       builder: (context) {
         return StatefulBuilder(
           builder: (context, setState) {
-            return Padding(
+            return RealKeyboardInsets(
+              child: Builder(builder: (context) => Padding(
               padding: EdgeInsets.only(
                 bottom: MediaQuery.of(context).viewInsets.bottom,
                 top: 16.h,
@@ -987,6 +991,7 @@ class _AppointmentDetailsPageState extends State<AppointmentDetailsPage> {
                   ),
                 ),
               ),
+            )),
             );
           },
         );

@@ -8,6 +8,7 @@ import 'package:docsera/Business_Logic/Account_page/security/account_security_cu
 import 'package:docsera/Business_Logic/Account_page/security/account_security_state.dart';
 import 'package:docsera/Business_Logic/Account_page/profile/account_profile_cubit.dart';
 import 'package:docsera/utils/input_decoration.dart';
+import 'package:docsera/utils/keyboard_insets.dart';
 
 class OtpVerificationSheet extends StatefulWidget {
   final String fieldType;
@@ -102,7 +103,8 @@ class _OtpVerificationSheetState extends State<OtpVerificationSheet> {
       builder: (context, s) {
         final loading = s is AccountSecurityLoading;
 
-        return Padding(
+        return RealKeyboardInsets(
+          child: Builder(builder: (context) => Padding(
           padding: EdgeInsets.only(
             bottom: MediaQuery.of(context).viewInsets.bottom,
           ),
@@ -157,6 +159,7 @@ class _OtpVerificationSheetState extends State<OtpVerificationSheet> {
               ],
             ),
           ),
+          )),
         );
       },
     );

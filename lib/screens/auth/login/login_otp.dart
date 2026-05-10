@@ -2,6 +2,7 @@ import 'dart:async';
 import 'dart:io';
 import 'package:docsera/app/text_styles.dart';
 import 'package:docsera/services/supabase/supabase_otp_service.dart';
+import 'package:docsera/utils/keyboard_insets.dart';
 import 'package:docsera/utils/page_transitions.dart';
 import 'package:docsera/utils/text_direction_utils.dart';
 import 'package:docsera/widgets/base_scaffold.dart';
@@ -31,7 +32,7 @@ class LoginOTPPage extends StatefulWidget {
   State<LoginOTPPage> createState() => _LoginOTPPageState();
 }
 
-class _LoginOTPPageState extends State<LoginOTPPage> {
+class _LoginOTPPageState extends State<LoginOTPPage> with WidgetsBindingObserver {
   final SupabaseOTPService _supabaseService = SupabaseOTPService();
   final TextEditingController _codeController = TextEditingController();
 
@@ -46,7 +47,13 @@ class _LoginOTPPageState extends State<LoginOTPPage> {
   @override
   void initState() {
     super.initState();
+    WidgetsBinding.instance.addObserver(this);
     _sendOTP();
+  }
+
+  @override
+  void didChangeMetrics() {
+    if (mounted) setState(() {});
   }
 
   Future<String> getDeviceId() async {
@@ -242,6 +249,7 @@ class _LoginOTPPageState extends State<LoginOTPPage> {
 
   @override
   void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
     _resendTimer?.cancel();
     _codeController.dispose();
     super.dispose();
@@ -264,7 +272,12 @@ class _LoginOTPPageState extends State<LoginOTPPage> {
         style: AppTextStyles.getTitle1(context).copyWith(color: AppColors.whiteText),
       ),
       child: Padding(
-        padding: EdgeInsets.all(16.w),
+        padding: EdgeInsets.only(
+          left: 16.w,
+          right: 16.w,
+          top: 16.w,
+          bottom: 16.w + realKeyboardInset(context),
+        ),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [

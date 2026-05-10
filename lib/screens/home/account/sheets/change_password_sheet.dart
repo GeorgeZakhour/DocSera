@@ -138,7 +138,7 @@ class _ChangePasswordSheetState extends State<ChangePasswordSheet> {
         }
       },
       child: RealKeyboardInsets(
-        child: Padding(
+        child: Builder(builder: (context) => Padding(
         padding: EdgeInsets.only(
           bottom: MediaQuery.of(context).viewInsets.bottom,
         ),
@@ -314,7 +314,7 @@ class _ChangePasswordSheetState extends State<ChangePasswordSheet> {
           ),
         ),
       ),
-      ),
+      )),
     );
   }
 }

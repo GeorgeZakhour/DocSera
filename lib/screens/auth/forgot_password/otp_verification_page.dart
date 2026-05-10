@@ -2,6 +2,7 @@ import 'dart:async';
 import 'package:docsera/app/text_styles.dart';
 import 'package:docsera/screens/auth/forgot_password/reset_password_page.dart';
 import 'package:docsera/services/supabase/supabase_otp_service.dart';
+import 'package:docsera/utils/keyboard_insets.dart';
 import 'package:docsera/utils/page_transitions.dart';
 import 'package:docsera/utils/text_direction_utils.dart';
 import 'package:docsera/widgets/base_scaffold.dart';
@@ -39,7 +40,8 @@ class OtpVerificationPage extends StatefulWidget {
   State<OtpVerificationPage> createState() => _OtpVerificationPageState();
 }
 
-class _OtpVerificationPageState extends State<OtpVerificationPage> {
+class _OtpVerificationPageState extends State<OtpVerificationPage>
+    with WidgetsBindingObserver {
   final SupabaseOTPService _otpService = SupabaseOTPService();
   final TextEditingController _codeController = TextEditingController();
 
@@ -51,7 +53,13 @@ class _OtpVerificationPageState extends State<OtpVerificationPage> {
   @override
   void initState() {
     super.initState();
+    WidgetsBinding.instance.addObserver(this);
     _startResendTimer();
+  }
+
+  @override
+  void didChangeMetrics() {
+    if (mounted) setState(() {});
   }
 
   void _startResendTimer() {
@@ -142,6 +150,7 @@ class _OtpVerificationPageState extends State<OtpVerificationPage> {
 
   @override
   void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
     _resendTimer?.cancel();
     _codeController.dispose();
     super.dispose();
@@ -153,7 +162,12 @@ class _OtpVerificationPageState extends State<OtpVerificationPage> {
     return BaseScaffold(
       title: Text(local.verificationCode, style: AppTextStyles.getTitle1(context).copyWith(color: AppColors.whiteText)),
       child: Padding(
-        padding: EdgeInsets.all(20.w),
+        padding: EdgeInsets.only(
+          left: 20.w,
+          right: 20.w,
+          top: 20.w,
+          bottom: 20.w + realKeyboardInset(context),
+        ),
         child: Column(
           children: [
             SizedBox(height: 20.h),
@@ -203,6 +217,7 @@ class _OtpVerificationPageState extends State<OtpVerificationPage> {
                 ),
               ),
             ),
+            const Spacer(),
             SizedBox(height: 40.h),
             SizedBox(
               width: double.infinity,

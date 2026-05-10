@@ -8,6 +8,7 @@ import 'package:docsera/gen_l10n/app_localizations.dart';
 import 'package:docsera/Business_Logic/Account_page/profile/account_profile_cubit.dart';
 import 'package:docsera/Business_Logic/Account_page/profile/account_profile_state.dart';
 import 'package:docsera/Business_Logic/Account_page/security/account_security_cubit.dart';
+import 'package:docsera/utils/keyboard_insets.dart';
 import 'package:docsera/utils/text_direction_utils.dart';
 import 'package:docsera/utils/input_decoration.dart';
 import 'package:docsera/screens/home/account/sheets/otp_verification_sheet.dart';
@@ -103,7 +104,8 @@ class _EditContactInfoSheetState extends State<EditContactInfoSheet> {
         ? AppLocalizations.of(context)!.newPhoneNumber
         : AppLocalizations.of(context)!.newEmailAddress;
 
-    return Padding(
+    return RealKeyboardInsets(
+      child: Builder(builder: (context) => Padding(
       padding: EdgeInsets.only(
           bottom: MediaQuery.of(context).viewInsets.bottom,
           left: 16.w,
@@ -283,6 +285,7 @@ class _EditContactInfoSheetState extends State<EditContactInfoSheet> {
           SizedBox(height: 16.h), // Safe area bottom padding
         ],
       ),
+      )),
     );
   }
 }

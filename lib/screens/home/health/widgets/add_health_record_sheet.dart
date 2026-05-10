@@ -4,6 +4,7 @@ import 'package:docsera/screens/home/health/widgets/health_step_header.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:docsera/app/const.dart';
+import 'package:docsera/utils/keyboard_insets.dart';
 
 
 /// --------------------------------------------
@@ -91,7 +92,8 @@ class _AddHealthRecordSheetState extends State<AddHealthRecordSheet>
       minChildSize: 0.4,
       maxChildSize: 0.92,
       builder: (_, controller) {
-        return Container(
+        return RealKeyboardInsets(
+          child: Builder(builder: (context) => Container(
           decoration: BoxDecoration(
             color: AppColors.background2,
             borderRadius: BorderRadius.vertical(top: Radius.circular(20.r)),
@@ -145,6 +147,7 @@ class _AddHealthRecordSheetState extends State<AddHealthRecordSheet>
               ],
             ],
           ),
+        )),
         );
       },
     );
