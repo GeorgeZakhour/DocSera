@@ -12,6 +12,15 @@
     <uses-permission android:name="android.permission.USE_FINGERPRINT"/>
     <uses-permission android:name="android.permission.RECORD_AUDIO" />
 
+    <!-- Pushy SDK requirements -->
+    <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
+    <uses-permission android:name="android.permission.WAKE_LOCK" />
+    <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
+    <!-- Required on Android 13+ to display any notifications. flutter_local_notifications
+         requests it at runtime via _initPushy() but the manifest declaration is
+         still required so the runtime call succeeds. -->
+    <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
+
     <!-- flutter_local_notifications adds SCHEDULE_EXACT_ALARM via manifest merge.
          We use inexactAllowWhileIdle only, so strip both exact-alarm permissions
          to keep Google Play Store policy clean. -->
@@ -64,6 +73,50 @@
             android:name="flutterEmbedding"
             android:value="2"
             />
+
+        <!-- ===================================================== -->
+        <!-- Pushy SDK services + receivers (per Pushy Flutter docs) -->
+        <!-- Without these, push messages reach the SDK over MQTT  -->
+        <!-- but Android cannot dispatch them to be displayed.     -->
+        <!-- https://pushy.me/docs/additional-platforms/flutter    -->
+        <!-- ===================================================== -->
+        <service
+            android:name="me.pushy.sdk.services.PushySocketService"
+            android:stopWithTask="false"
+            android:exported="false" />
+        <service
+            android:name="me.pushy.sdk.services.PushyJobService"
+            android:permission="android.permission.BIND_JOB_SERVICE"
+            android:exported="false" />
+        <service
+            android:name="me.pushy.sdk.services.PushyBootService"
+            android:exported="false" />
+
+        <receiver
+            android:name="me.pushy.sdk.receivers.PushyBootReceiver"
+            android:exported="true">
+            <intent-filter>
+                <action android:name="android.intent.action.BOOT_COMPLETED" />
+            </intent-filter>
+        </receiver>
+
+        <receiver
+            android:name="me.pushy.sdk.receivers.PushyUpdateReceiver"
+            android:exported="true">
+            <intent-filter>
+                <action android:name="android.intent.action.PACKAGE_REPLACED" />
+                <data android:scheme="package" />
+            </intent-filter>
+        </receiver>
+
+        <!-- This is the receiver that actually displays the push -->
+        <receiver
+            android:name="me.pushy.sdk.receivers.PushyReceiver"
+            android:exported="false">
+            <intent-filter>
+                <action android:name="pushy.me" />
+            </intent-filter>
+        </receiver>
     </application>
 
     <!-- ✅ Update the <queries> section for URL Launcher -->
