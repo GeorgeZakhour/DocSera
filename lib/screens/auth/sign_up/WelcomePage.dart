@@ -3,6 +3,7 @@ import 'dart:math';
 import 'package:docsera/Business_Logic/Onboarding/welcome_wizard/welcome_wizard_state.dart';
 import 'package:docsera/screens/home/connections/connections_center_page.dart';
 import 'package:docsera/screens/onboarding/welcome_wizard/welcome_wizard_screen.dart';
+import 'package:docsera/services/notifications/notification_service.dart';
 import 'package:docsera/services/supabase/patient_link_requests_service.dart';
 import 'package:docsera/widgets/custom_bottom_navigation_bar.dart';
 import 'package:docsera/widgets/legal_reconsent_gate.dart';
@@ -225,10 +226,14 @@ class _WelcomePageState extends State<WelcomePage> {
   /// Connections Center as the final post-signup beat. Otherwise route
   /// straight to home.
   ///
-  /// We pre-fetch the count here so the empty-list case doesn't flash
-  /// a "you're all caught up" celebration to a user who hasn't done
-  /// anything yet — that would be the wrong tone. Empty → straight home.
-  Future<void> _routeAfterWizard(BuildContext context) async {
+  /// Uses the global navigator key (via NotificationService.navigatorKey)
+  /// because by the time this fires, WelcomePage's own context has been
+  /// unmounted — the wizard was pushed via pushAndRemoveUntil with
+  /// `(route) => false`, which removes WelcomePage from the stack. Any
+  /// captured WelcomePage BuildContext fails the `mounted` check and a
+  /// naive Navigator.of(context) call may silently no-op. The root
+  /// NavigatorState held by the navigatorKey is always valid.
+  Future<void> _routeAfterWizard(BuildContext _) async {
     int pendingCount = 0;
     try {
       pendingCount =
@@ -238,11 +243,11 @@ class _WelcomePageState extends State<WelcomePage> {
       // home will still surface anything pending on the next session.
     }
 
-    if (!context.mounted) return;
+    final nav = NotificationService.instance.navigatorKey?.currentState;
+    if (nav == null) return; // app already shutting down — nothing to do.
 
     if (pendingCount == 0) {
-      Navigator.pushAndRemoveUntil(
-        context,
+      nav.pushAndRemoveUntil(
         fadePageRoute(LegalReconsentGate(
           child: CustomBottomNavigationBar(),
         )),
@@ -251,13 +256,12 @@ class _WelcomePageState extends State<WelcomePage> {
       return;
     }
 
-    Navigator.pushAndRemoveUntil(
-      context,
+    nav.pushAndRemoveUntil(
       fadePageRoute(ConnectionsCenterPage(
         entry: ConnectionsCenterEntry.postSignup,
         onComplete: () {
-          Navigator.pushAndRemoveUntil(
-            context,
+          final n = NotificationService.instance.navigatorKey?.currentState;
+          n?.pushAndRemoveUntil(
             fadePageRoute(LegalReconsentGate(
               child: CustomBottomNavigationBar(),
             )),
