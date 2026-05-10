@@ -28,6 +28,7 @@ Operator-focused docs for everything done in preparation for the public launch o
 | 13 | [Dependency + bundle audit — 4 unused removed, 2 dev tools rescoped](13-deps-bundle-audit.md) | ✅ Done | 9.7 / 10 |
 | 14 | [App Store submission pack — descriptions, keywords, privacy labels, age rating, submission checklist](14-app-store-assets.md) | 🟡 In progress (v2 draft saved, awaiting user review) | 9.8 / 10 (target) |
 | 15 | [Notifications platform — inbox + preferences + server crons + deletion lifecycle redesign (Phase 1+1.1+1.2+1.3)](15-notifications-platform.md) | ✅ Done | 9.85 / 10 |
+| 18 | [Deployment runbook — backup, migrate, deploy, rollback procedures with practice drills](18-deployment-runbook.md) | 📚 Living reference | — |
 | — | [Pending follow-ups from external review](_pending-followups.md) | 📋 Notes for later | — |
 | — | [Full roadmap & score progression](roadmap.md) | Living doc | — |
 
