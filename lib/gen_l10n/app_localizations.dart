@@ -9493,6 +9493,282 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Dr. {doctor} is ready to see you.'**
   String reminder0Body(String doctor);
+
+  /// No description provided for @wizard_skip_button.
+  ///
+  /// In en, this message translates to:
+  /// **'Skip'**
+  String get wizard_skip_button;
+
+  /// No description provided for @wizard_step_label.
+  ///
+  /// In en, this message translates to:
+  /// **'Step {current} of {total}'**
+  String wizard_step_label(String current, String total);
+
+  /// No description provided for @wizard_lets_begin.
+  ///
+  /// In en, this message translates to:
+  /// **'Let\'s begin'**
+  String get wizard_lets_begin;
+
+  /// No description provided for @wizard_done.
+  ///
+  /// In en, this message translates to:
+  /// **'Done'**
+  String get wizard_done;
+
+  /// No description provided for @discoverDocsera.
+  ///
+  /// In en, this message translates to:
+  /// **'Discover DocSera'**
+  String get discoverDocsera;
+
+  /// No description provided for @replayWelcomeTour.
+  ///
+  /// In en, this message translates to:
+  /// **'Replay the welcome tour'**
+  String get replayWelcomeTour;
+
+  /// No description provided for @replayWelcomeTourSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'See everything DocSera offers again'**
+  String get replayWelcomeTourSubtitle;
+
+  /// No description provided for @wizard_welcome_salam.
+  ///
+  /// In en, this message translates to:
+  /// **'Welcome'**
+  String get wizard_welcome_salam;
+
+  /// No description provided for @wizard_welcome_tagline.
+  ///
+  /// In en, this message translates to:
+  /// **'Care that suits you'**
+  String get wizard_welcome_tagline;
+
+  /// No description provided for @wizard_welcome_subline.
+  ///
+  /// In en, this message translates to:
+  /// **'Step by step — we walk this together.'**
+  String get wizard_welcome_subline;
+
+  /// No description provided for @wizard_search_title.
+  ///
+  /// In en, this message translates to:
+  /// **'Find your doctor in seconds'**
+  String get wizard_search_title;
+
+  /// No description provided for @wizard_search_body.
+  ///
+  /// In en, this message translates to:
+  /// **'Search by name, specialty, or clinic. Filter by location, language, hours.'**
+  String get wizard_search_body;
+
+  /// No description provided for @wizard_doctor_title.
+  ///
+  /// In en, this message translates to:
+  /// **'Everything you need, before you book'**
+  String get wizard_doctor_title;
+
+  /// No description provided for @wizard_doctor_body.
+  ///
+  /// In en, this message translates to:
+  /// **'Specialty, languages, hours, address, pricing, services — on a single profile.'**
+  String get wizard_doctor_body;
+
+  /// No description provided for @wizard_favorites_title.
+  ///
+  /// In en, this message translates to:
+  /// **'Keep your trusted doctors close'**
+  String get wizard_favorites_title;
+
+  /// No description provided for @wizard_favorites_body.
+  ///
+  /// In en, this message translates to:
+  /// **'One-tap favorites. Come back without searching again.'**
+  String get wizard_favorites_body;
+
+  /// No description provided for @wizard_promotions_title.
+  ///
+  /// In en, this message translates to:
+  /// **'Offers from DocSera doctors'**
+  String get wizard_promotions_title;
+
+  /// No description provided for @wizard_promotions_body.
+  ///
+  /// In en, this message translates to:
+  /// **'Claim a discount code in the app. Show it at payment — applied automatically to your bill.'**
+  String get wizard_promotions_body;
+
+  /// No description provided for @wizard_gifts_title.
+  ///
+  /// In en, this message translates to:
+  /// **'Personal gifts from your doctor'**
+  String get wizard_gifts_title;
+
+  /// No description provided for @wizard_gifts_body.
+  ///
+  /// In en, this message translates to:
+  /// **'Some doctors send exclusive gifts to their DocSera patients — they land in your wallet.'**
+  String get wizard_gifts_body;
+
+  /// No description provided for @wizard_booking_title.
+  ///
+  /// In en, this message translates to:
+  /// **'Book in under a minute'**
+  String get wizard_booking_title;
+
+  /// No description provided for @wizard_booking_body.
+  ///
+  /// In en, this message translates to:
+  /// **'Pick a day and time. We\'ll remind you. No calls. No waiting.'**
+  String get wizard_booking_body;
+
+  /// No description provided for @wizard_chat_title.
+  ///
+  /// In en, this message translates to:
+  /// **'Message your doctor, securely'**
+  String get wizard_chat_title;
+
+  /// No description provided for @wizard_chat_body.
+  ///
+  /// In en, this message translates to:
+  /// **'Send a question, photo, or voice note. Fully encrypted.'**
+  String get wizard_chat_body;
+
+  /// No description provided for @wizard_reports_title.
+  ///
+  /// In en, this message translates to:
+  /// **'Your visit reports, kept for you'**
+  String get wizard_reports_title;
+
+  /// No description provided for @wizard_reports_body.
+  ///
+  /// In en, this message translates to:
+  /// **'When your doctor attaches a report — diagnosis, meds, instructions — you\'ll find it here.'**
+  String get wizard_reports_body;
+
+  /// No description provided for @wizard_documents_title.
+  ///
+  /// In en, this message translates to:
+  /// **'Your medical files, safe'**
+  String get wizard_documents_title;
+
+  /// No description provided for @wizard_documents_body.
+  ///
+  /// In en, this message translates to:
+  /// **'Upload labs, prescriptions, scans. Files sent by your doctors land here too.'**
+  String get wizard_documents_body;
+
+  /// No description provided for @wizard_documents_badge.
+  ///
+  /// In en, this message translates to:
+  /// **'Encrypted'**
+  String get wizard_documents_badge;
+
+  /// No description provided for @wizard_health_title.
+  ///
+  /// In en, this message translates to:
+  /// **'Your health, the full picture'**
+  String get wizard_health_title;
+
+  /// No description provided for @wizard_health_body.
+  ///
+  /// In en, this message translates to:
+  /// **'Allergies, medications, conditions, family history, lifestyle — one reference, useful in emergencies.'**
+  String get wizard_health_body;
+
+  /// No description provided for @wizard_notes_title.
+  ///
+  /// In en, this message translates to:
+  /// **'Notes only you can see'**
+  String get wizard_notes_title;
+
+  /// No description provided for @wizard_notes_body.
+  ///
+  /// In en, this message translates to:
+  /// **'Symptoms, questions, personal observations. No one else can read them — not even us.'**
+  String get wizard_notes_body;
+
+  /// No description provided for @wizard_notes_badge.
+  ///
+  /// In en, this message translates to:
+  /// **'Private'**
+  String get wizard_notes_badge;
+
+  /// No description provided for @wizard_relatives_title.
+  ///
+  /// In en, this message translates to:
+  /// **'Care for your family from one account'**
+  String get wizard_relatives_title;
+
+  /// No description provided for @wizard_relatives_body.
+  ///
+  /// In en, this message translates to:
+  /// **'Add children, parents, or anyone you care for. Book and manage their visits in the same place.'**
+  String get wizard_relatives_body;
+
+  /// No description provided for @wizard_loyalty_title.
+  ///
+  /// In en, this message translates to:
+  /// **'Your loyalty earns its value'**
+  String get wizard_loyalty_title;
+
+  /// No description provided for @wizard_loyalty_body.
+  ///
+  /// In en, this message translates to:
+  /// **'Every move with DocSera — a visit, a profile, a friend — becomes points that unlock real offers and gifts.'**
+  String get wizard_loyalty_body;
+
+  /// No description provided for @wizard_earn_title.
+  ///
+  /// In en, this message translates to:
+  /// **'Every step adds to your balance'**
+  String get wizard_earn_title;
+
+  /// No description provided for @wizard_earn_body.
+  ///
+  /// In en, this message translates to:
+  /// **'Attend a visit, complete your health profile, invite a friend — they all add up automatically.'**
+  String get wizard_earn_body;
+
+  /// No description provided for @wizard_vouchers_title.
+  ///
+  /// In en, this message translates to:
+  /// **'Redeem, scan, enjoy'**
+  String get wizard_vouchers_title;
+
+  /// No description provided for @wizard_vouchers_body.
+  ///
+  /// In en, this message translates to:
+  /// **'Turn points into vouchers. Show your QR at one of our partners — pharmacy, lab, clinic, optical shop, and others — and your discount applies instantly.'**
+  String get wizard_vouchers_body;
+
+  /// No description provided for @wizard_referral_title.
+  ///
+  /// In en, this message translates to:
+  /// **'Invite a friend, both win'**
+  String get wizard_referral_title;
+
+  /// No description provided for @wizard_referral_body.
+  ///
+  /// In en, this message translates to:
+  /// **'25 points for you, 15 welcome points for them — same day they join with your code.'**
+  String get wizard_referral_body;
+
+  /// No description provided for @wizard_allset_title.
+  ///
+  /// In en, this message translates to:
+  /// **'You\'re all set, {firstName}'**
+  String wizard_allset_title(String firstName);
+
+  /// No description provided for @wizard_allset_body.
+  ///
+  /// In en, this message translates to:
+  /// **'Account ready, tools waiting, points starting now. Let\'s go.'**
+  String get wizard_allset_body;
 }
 
 class _AppLocalizationsDelegate

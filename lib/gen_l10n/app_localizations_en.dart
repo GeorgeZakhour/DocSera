@@ -5208,4 +5208,163 @@ class AppLocalizationsEn extends AppLocalizations {
   String reminder0Body(String doctor) {
     return 'Dr. $doctor is ready to see you.';
   }
+
+  @override
+  String get wizard_skip_button => 'Skip';
+
+  @override
+  String wizard_step_label(String current, String total) {
+    return 'Step $current of $total';
+  }
+
+  @override
+  String get wizard_lets_begin => 'Let\'s begin';
+
+  @override
+  String get wizard_done => 'Done';
+
+  @override
+  String get discoverDocsera => 'Discover DocSera';
+
+  @override
+  String get replayWelcomeTour => 'Replay the welcome tour';
+
+  @override
+  String get replayWelcomeTourSubtitle => 'See everything DocSera offers again';
+
+  @override
+  String get wizard_welcome_salam => 'Welcome';
+
+  @override
+  String get wizard_welcome_tagline => 'Care that suits you';
+
+  @override
+  String get wizard_welcome_subline => 'Step by step — we walk this together.';
+
+  @override
+  String get wizard_search_title => 'Find your doctor in seconds';
+
+  @override
+  String get wizard_search_body =>
+      'Search by name, specialty, or clinic. Filter by location, language, hours.';
+
+  @override
+  String get wizard_doctor_title => 'Everything you need, before you book';
+
+  @override
+  String get wizard_doctor_body =>
+      'Specialty, languages, hours, address, pricing, services — on a single profile.';
+
+  @override
+  String get wizard_favorites_title => 'Keep your trusted doctors close';
+
+  @override
+  String get wizard_favorites_body =>
+      'One-tap favorites. Come back without searching again.';
+
+  @override
+  String get wizard_promotions_title => 'Offers from DocSera doctors';
+
+  @override
+  String get wizard_promotions_body =>
+      'Claim a discount code in the app. Show it at payment — applied automatically to your bill.';
+
+  @override
+  String get wizard_gifts_title => 'Personal gifts from your doctor';
+
+  @override
+  String get wizard_gifts_body =>
+      'Some doctors send exclusive gifts to their DocSera patients — they land in your wallet.';
+
+  @override
+  String get wizard_booking_title => 'Book in under a minute';
+
+  @override
+  String get wizard_booking_body =>
+      'Pick a day and time. We\'ll remind you. No calls. No waiting.';
+
+  @override
+  String get wizard_chat_title => 'Message your doctor, securely';
+
+  @override
+  String get wizard_chat_body =>
+      'Send a question, photo, or voice note. Fully encrypted.';
+
+  @override
+  String get wizard_reports_title => 'Your visit reports, kept for you';
+
+  @override
+  String get wizard_reports_body =>
+      'When your doctor attaches a report — diagnosis, meds, instructions — you\'ll find it here.';
+
+  @override
+  String get wizard_documents_title => 'Your medical files, safe';
+
+  @override
+  String get wizard_documents_body =>
+      'Upload labs, prescriptions, scans. Files sent by your doctors land here too.';
+
+  @override
+  String get wizard_documents_badge => 'Encrypted';
+
+  @override
+  String get wizard_health_title => 'Your health, the full picture';
+
+  @override
+  String get wizard_health_body =>
+      'Allergies, medications, conditions, family history, lifestyle — one reference, useful in emergencies.';
+
+  @override
+  String get wizard_notes_title => 'Notes only you can see';
+
+  @override
+  String get wizard_notes_body =>
+      'Symptoms, questions, personal observations. No one else can read them — not even us.';
+
+  @override
+  String get wizard_notes_badge => 'Private';
+
+  @override
+  String get wizard_relatives_title => 'Care for your family from one account';
+
+  @override
+  String get wizard_relatives_body =>
+      'Add children, parents, or anyone you care for. Book and manage their visits in the same place.';
+
+  @override
+  String get wizard_loyalty_title => 'Your loyalty earns its value';
+
+  @override
+  String get wizard_loyalty_body =>
+      'Every move with DocSera — a visit, a profile, a friend — becomes points that unlock real offers and gifts.';
+
+  @override
+  String get wizard_earn_title => 'Every step adds to your balance';
+
+  @override
+  String get wizard_earn_body =>
+      'Attend a visit, complete your health profile, invite a friend — they all add up automatically.';
+
+  @override
+  String get wizard_vouchers_title => 'Redeem, scan, enjoy';
+
+  @override
+  String get wizard_vouchers_body =>
+      'Turn points into vouchers. Show your QR at one of our partners — pharmacy, lab, clinic, optical shop, and others — and your discount applies instantly.';
+
+  @override
+  String get wizard_referral_title => 'Invite a friend, both win';
+
+  @override
+  String get wizard_referral_body =>
+      '25 points for you, 15 welcome points for them — same day they join with your code.';
+
+  @override
+  String wizard_allset_title(String firstName) {
+    return 'You\'re all set, $firstName';
+  }
+
+  @override
+  String get wizard_allset_body =>
+      'Account ready, tools waiting, points starting now. Let\'s go.';
 }

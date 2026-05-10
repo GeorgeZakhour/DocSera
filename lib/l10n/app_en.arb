@@ -2084,5 +2084,72 @@
     "placeholders": {
       "doctor": { "type": "String" }
     }
-  }
+  },
+
+  "wizard_skip_button": "Skip",
+  "wizard_step_label": "Step {current} of {total}",
+  "@wizard_step_label": { "placeholders": { "current": { "type": "String" }, "total": { "type": "String" } } },
+  "wizard_lets_begin": "Let's begin",
+  "wizard_done": "Done",
+  "discoverDocsera": "Discover DocSera",
+  "replayWelcomeTour": "Replay the welcome tour",
+  "replayWelcomeTourSubtitle": "See everything DocSera offers again",
+
+  "wizard_welcome_salam": "Welcome",
+  "wizard_welcome_tagline": "Care that suits you",
+  "wizard_welcome_subline": "Step by step — we walk this together.",
+
+  "wizard_search_title": "Find your doctor in seconds",
+  "wizard_search_body": "Search by name, specialty, or clinic. Filter by location, language, hours.",
+
+  "wizard_doctor_title": "Everything you need, before you book",
+  "wizard_doctor_body": "Specialty, languages, hours, address, pricing, services — on a single profile.",
+
+  "wizard_favorites_title": "Keep your trusted doctors close",
+  "wizard_favorites_body": "One-tap favorites. Come back without searching again.",
+
+  "wizard_promotions_title": "Offers from DocSera doctors",
+  "wizard_promotions_body": "Claim a discount code in the app. Show it at payment — applied automatically to your bill.",
+
+  "wizard_gifts_title": "Personal gifts from your doctor",
+  "wizard_gifts_body": "Some doctors send exclusive gifts to their DocSera patients — they land in your wallet.",
+
+  "wizard_booking_title": "Book in under a minute",
+  "wizard_booking_body": "Pick a day and time. We'll remind you. No calls. No waiting.",
+
+  "wizard_chat_title": "Message your doctor, securely",
+  "wizard_chat_body": "Send a question, photo, or voice note. Fully encrypted.",
+
+  "wizard_reports_title": "Your visit reports, kept for you",
+  "wizard_reports_body": "When your doctor attaches a report — diagnosis, meds, instructions — you'll find it here.",
+
+  "wizard_documents_title": "Your medical files, safe",
+  "wizard_documents_body": "Upload labs, prescriptions, scans. Files sent by your doctors land here too.",
+  "wizard_documents_badge": "Encrypted",
+
+  "wizard_health_title": "Your health, the full picture",
+  "wizard_health_body": "Allergies, medications, conditions, family history, lifestyle — one reference, useful in emergencies.",
+
+  "wizard_notes_title": "Notes only you can see",
+  "wizard_notes_body": "Symptoms, questions, personal observations. No one else can read them — not even us.",
+  "wizard_notes_badge": "Private",
+
+  "wizard_relatives_title": "Care for your family from one account",
+  "wizard_relatives_body": "Add children, parents, or anyone you care for. Book and manage their visits in the same place.",
+
+  "wizard_loyalty_title": "Your loyalty earns its value",
+  "wizard_loyalty_body": "Every move with DocSera — a visit, a profile, a friend — becomes points that unlock real offers and gifts.",
+
+  "wizard_earn_title": "Every step adds to your balance",
+  "wizard_earn_body": "Attend a visit, complete your health profile, invite a friend — they all add up automatically.",
+
+  "wizard_vouchers_title": "Redeem, scan, enjoy",
+  "wizard_vouchers_body": "Turn points into vouchers. Show your QR at one of our partners — pharmacy, lab, clinic, optical shop, and others — and your discount applies instantly.",
+
+  "wizard_referral_title": "Invite a friend, both win",
+  "wizard_referral_body": "25 points for you, 15 welcome points for them — same day they join with your code.",
+
+  "wizard_allset_title": "You're all set, {firstName}",
+  "@wizard_allset_title": { "placeholders": { "firstName": { "type": "String" } } },
+  "wizard_allset_body": "Account ready, tools waiting, points starting now. Let's go."
 }

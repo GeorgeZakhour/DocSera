@@ -5166,4 +5166,163 @@ class AppLocalizationsAr extends AppLocalizations {
   String reminder0Body(String doctor) {
     return 'Dr. $doctor is ready to see you.';
   }
+
+  @override
+  String get wizard_skip_button => 'تخطّي';
+
+  @override
+  String wizard_step_label(String current, String total) {
+    return 'الخطوة $current من $total';
+  }
+
+  @override
+  String get wizard_lets_begin => 'هيا نبدأ';
+
+  @override
+  String get wizard_done => 'تم';
+
+  @override
+  String get discoverDocsera => 'تعرّف على دوكسيرا';
+
+  @override
+  String get replayWelcomeTour => 'أعد الجولة التعريفية';
+
+  @override
+  String get replayWelcomeTourSubtitle => 'شاهد كل ما يقدّمه دوكسيرا من جديد';
+
+  @override
+  String get wizard_welcome_salam => 'أهلاً';
+
+  @override
+  String get wizard_welcome_tagline => 'في رعايةٍ تليق بك';
+
+  @override
+  String get wizard_welcome_subline => 'خطوةٌ، خطوة — معاً نُكمل المشوار.';
+
+  @override
+  String get wizard_search_title => 'اعثر على طبيبك بثوانٍ';
+
+  @override
+  String get wizard_search_body =>
+      'ابحث بالاسم، التخصص، أو العيادة. وفلتر بالموقع، اللغة، وساعات العمل.';
+
+  @override
+  String get wizard_doctor_title => 'كل ما تحتاج، قبل الحجز';
+
+  @override
+  String get wizard_doctor_body =>
+      'الاختصاص، اللغات، ساعات العمل، العنوان، الأسعار، والخدمات — على ملف واحد.';
+
+  @override
+  String get wizard_favorites_title => 'احفظ من تثق بهم';
+
+  @override
+  String get wizard_favorites_body =>
+      'أضف أطباءك المفضّلين بضغطة، وارجع إليهم لاحقاً — دون بحث جديد.';
+
+  @override
+  String get wizard_promotions_title => 'عروض من أطباء دوكسيرا';
+
+  @override
+  String get wizard_promotions_body =>
+      'احصل على رمز الخصم من التطبيق، واعرضه عند الدفع — يُطبَّق الخصم تلقائياً على فاتورتك.';
+
+  @override
+  String get wizard_gifts_title => 'هدايا شخصية من طبيبك';
+
+  @override
+  String get wizard_gifts_body =>
+      'بعض الأطباء يرسلون هدايا حصرية لمرضاهم في دوكسيرا — تصل مباشرة إلى محفظتك.';
+
+  @override
+  String get wizard_booking_title => 'احجز موعدك بدقيقة';
+
+  @override
+  String get wizard_booking_body =>
+      'اختر اليوم والساعة. ستصلك تذكيرات قبل الموعد — بدون اتصالات أو انتظار.';
+
+  @override
+  String get wizard_chat_title => 'كلّم طبيبك مباشرةً، بأمان';
+
+  @override
+  String get wizard_chat_body =>
+      'أرسل سؤالاً، صورةً، أو ملاحظة صوتية — محادثاتك معه مشفّرة بالكامل.';
+
+  @override
+  String get wizard_reports_title => 'تقارير زياراتك، محفوظة لك';
+
+  @override
+  String get wizard_reports_body =>
+      'حين يُرفق طبيبك تقريراً بعد الزيارة — تشخيص، أدوية، تعليمات — تجده هنا، في أي وقت.';
+
+  @override
+  String get wizard_documents_title => 'ملفاتك الطبية، بأمان';
+
+  @override
+  String get wizard_documents_body =>
+      'ارفع التحاليل، الوصفات، والصور الشعاعية. ستجد بجانبها الملفات التي يرسلها أطباؤك.';
+
+  @override
+  String get wizard_documents_badge => 'مشفّر';
+
+  @override
+  String get wizard_health_title => 'صحّتك بصورة كاملة';
+
+  @override
+  String get wizard_health_body =>
+      'حساسيّاتك، أدويتك، أمراضك المزمنة، تاريخك العائلي، نمط حياتك — مرجع واحد، مفيد في الحالات الطارئة.';
+
+  @override
+  String get wizard_notes_title => 'ملاحظاتك — لك أنت فقط';
+
+  @override
+  String get wizard_notes_body =>
+      'دوّن أعراضاً، أسئلة لطبيبك، أو ملاحظات شخصية. لا أحد يراها — حتى نحن.';
+
+  @override
+  String get wizard_notes_badge => 'خاص';
+
+  @override
+  String get wizard_relatives_title => 'اعتنِ بعائلتك من حسابك';
+
+  @override
+  String get wizard_relatives_body =>
+      'أضف أبناءك، والدَيك، أو من تعتني بهم — واحجز وادر مواعيدهم من نفس المكان.';
+
+  @override
+  String get wizard_loyalty_title => 'ولاؤك له قيمة';
+
+  @override
+  String get wizard_loyalty_body =>
+      'كل تفاعل مع دوكسيرا — موعد، ملف، أو دعوة صديق — يصبح نقاطاً تفتح لك عروضاً وهدايا حقيقية.';
+
+  @override
+  String get wizard_earn_title => 'كل خطوة، نقطة في رصيدك';
+
+  @override
+  String get wizard_earn_body =>
+      'احضر موعداً، أكمل ملفك الصحي، ادعُ صديقاً — كلها تضيف إلى رصيدك تلقائياً، بدون أي مجهود إضافي.';
+
+  @override
+  String get wizard_vouchers_title => 'استبدل، امسح، استمتع';
+
+  @override
+  String get wizard_vouchers_body =>
+      'حوّل نقاطك إلى قسائم. أظهر رمز QR لدى أحد شركائنا — صيدلية، مخبر، عيادة، محل نظارات، وغيرها — وستحصل على خصمك فوراً.';
+
+  @override
+  String get wizard_referral_title => 'ادعُ صديقاً، اربحوا معاً';
+
+  @override
+  String get wizard_referral_body =>
+      'تكسب ٢٥ نقطة لكل صديق ينضم برمزك، وهو يحصل على ١٥ مكافأة ترحيب — في نفس اليوم.';
+
+  @override
+  String wizard_allset_title(String firstName) {
+    return 'كلّ شيء جاهز، $firstName';
+  }
+
+  @override
+  String get wizard_allset_body =>
+      'حسابك مفعّل، أدواتك تنتظر، ونقاطك تبدأ من الآن. هيا نبدأ.';
 }
