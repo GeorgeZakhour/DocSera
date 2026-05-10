@@ -152,16 +152,12 @@ class NotificationService {
       if (event == AuthChangeEvent.signedIn ||
           event == AuthChangeEvent.tokenRefreshed ||
           event == AuthChangeEvent.userUpdated) {
-        final token = _pushyDeviceToken;
-        if (token != null && token.isNotEmpty) {
-          try {
-            await _saveDeviceTokenToSupabase(token);
-          } catch (e) {
-            if (kDebugMode) {
-              debugPrint('⚠️ post-auth device save failed: $e');
-            }
-          }
-        }
+        // Self-heal: if Pushy registration failed earlier (common on
+        // iOS when permissions or APNs are flaky on first launch), the
+        // cached token will be null. ensureDeviceRegistered() retries
+        // registration AND upserts the user_devices row in one shot,
+        // so a missing row recovers automatically without restart.
+        await ensureDeviceRegistered();
         // Realtime force-logout watcher — start one per session.
         _startUserDevicesWatcher();
       } else if (event == AuthChangeEvent.signedOut) {
@@ -175,6 +171,11 @@ class NotificationService {
     // session is already restored.
     if (Supabase.instance.client.auth.currentSession != null) {
       _startUserDevicesWatcher();
+      // Belt-and-braces: make sure the user_devices row exists for the
+      // restored session. _initPushy() above tries this once on cold
+      // start, but iOS Pushy.register() can fail silently when APNs is
+      // delayed; this second attempt happens after Supabase is ready.
+      unawaited(ensureDeviceRegistered());
     }
 
     _initialized = true;
@@ -432,7 +433,7 @@ class NotificationService {
       // تسجيل الجهاز والحصول على التوكن
       final token = await Pushy.register();
       // Don't log the device token — it's a credential that can be used to push to this device.
-      if (kDebugMode) debugPrint('✅ Pushy Registration Success (token length=${token.length})');
+      debugPrint('✅ Pushy Registration Success (token length=${token.length})');
       _pushyDeviceToken = token;
 
       // بانر داخل التطبيق على iOS (اختياري)
@@ -444,8 +445,45 @@ class NotificationService {
 
       await _saveDeviceTokenToSupabase(token);
     } catch (e) {
-      // يمكنك تسجيل الخطأ
+      // Unconditional log: failure to register is the most common
+      // reason for "I'm logged in but never get pushes" reports, so
+      // we want this visible in release builds (Xcode console) too.
       debugPrint('❌ Pushy register error: $e');
+    }
+  }
+
+  /// Self-healing wrapper around Pushy.register() + Supabase upsert.
+  /// Safe to call multiple times — idempotent. Fixes the common iOS
+  /// boot-race where Pushy.register() inside _initPushy() failed (APNs
+  /// timeout, permission not yet granted, network blip) and the
+  /// user_devices row was therefore never written.
+  ///
+  /// Called from:
+  ///   - init() once on cold-start when a session is already restored
+  ///   - the auth state listener on signedIn / tokenRefreshed / userUpdated
+  Future<void> ensureDeviceRegistered() async {
+    final session = Supabase.instance.client.auth.currentSession;
+    final userId = session?.user.id;
+    if (userId == null) return; // Without a session there's nothing to write.
+
+    var token = _pushyDeviceToken;
+    if (token == null || token.isEmpty) {
+      try {
+        token = await Pushy.register();
+        debugPrint(
+          '✅ Pushy re-registration success (token length=${token.length})',
+        );
+        _pushyDeviceToken = token;
+      } catch (e) {
+        debugPrint('❌ Pushy re-registration failed: $e');
+        return;
+      }
+    }
+
+    try {
+      await _saveDeviceTokenToSupabase(token);
+    } catch (e) {
+      debugPrint('⚠️ ensureDeviceRegistered upsert failed: $e');
     }
   }
 
@@ -481,16 +519,23 @@ class NotificationService {
       }
     }
 
-    await Supabase.instance.client.from('user_devices').upsert({
-      'user_id': userId,
-      'token': token,
-      'platform': Platform.isIOS ? 'ios' : 'android',
-      'app': 'docsera',
-      'locale': _currentLocale(),
-      'last_seen_at': DateTime.now().toUtc().toIso8601String(),
-    }, onConflict: 'user_id,token,app');
-
-    if (kDebugMode) debugPrint('✅ Pushy Token saved to Supabase');
+    try {
+      await Supabase.instance.client.from('user_devices').upsert({
+        'user_id': userId,
+        'token': token,
+        'platform': Platform.isIOS ? 'ios' : 'android',
+        'app': 'docsera',
+        'locale': _currentLocale(),
+        'last_seen_at': DateTime.now().toUtc().toIso8601String(),
+      }, onConflict: 'user_id,token,app');
+      // Visible in release builds — confirms the device row landed.
+      debugPrint('✅ user_devices upsert ok '
+          '(platform=${Platform.isIOS ? 'ios' : 'android'}, '
+          'user=${userId.substring(0, 8)}…)');
+    } catch (e) {
+      debugPrint('❌ user_devices upsert failed: $e');
+      rethrow;
+    }
   }
 
   /// Best-effort current locale read. Used by _saveDeviceTokenToSupabase
