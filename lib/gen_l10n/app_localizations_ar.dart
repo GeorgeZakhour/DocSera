@@ -5067,6 +5067,192 @@ class AppLocalizationsAr extends AppLocalizations {
   String get linkRequestErrorToast => 'تعذّر تنفيذ الطلب. حاول مجدداً.';
 
   @override
+  String get connectionsCenterTitlePostSignup => 'خطوة أخيرة قبل أن تبدأ';
+
+  @override
+  String get connectionsCenterTitleHome => 'اتصالاتك بأطبائك';
+
+  @override
+  String get connectionsCenterTitleNotification => 'وصلك طلب اتصال جديد';
+
+  @override
+  String get connectionsCenterTitleAccount => 'اتصالاتك بأطبائك';
+
+  @override
+  String get connectionsCenterExplainerHeader => 'لماذا يظهر لي هذا؟';
+
+  @override
+  String get connectionsCenterExplainerBody =>
+      'تظهر هذه الطلبات عندما يجدك طبيب على دوكسيرا أو يحتفظ بسجل سابق لك. الموافقة تفتح المجال للمراسلة والحجز أو لنقل سجلاتك السابقة إلى حسابك.';
+
+  @override
+  String get connectionsCenterReassureNothingAuto =>
+      'لا شيء يحدث تلقائياً — قرارك أنت ما يغيّر شيئاً.';
+
+  @override
+  String get connectionsCenterReassureCanReviewLater =>
+      'يمكنك المراجعة لاحقاً — كل طلب يبقى متاحاً لمدة ٣٠ يوماً.';
+
+  @override
+  String get connectionsCenterCtaContinue => 'تابع إلى الرئيسية';
+
+  @override
+  String get connectionsCenterCtaReviewLater => 'سأراجع البقية لاحقاً';
+
+  @override
+  String get connectionsCenterRetry => 'إعادة المحاولة';
+
+  @override
+  String get connectionsCenterErrorTitle => 'تعذّر تحميل اتصالاتك';
+
+  @override
+  String get connectionsCenterErrorBody =>
+      'تأكد من اتصالك بالإنترنت وأعد المحاولة. لم يتغير شيء.';
+
+  @override
+  String get connectionsCenterErrorToast => 'حدث خطأ ما. حاول مجدداً.';
+
+  @override
+  String get connectionsCenterEmptyTitle => 'لا توجد طلبات معلّقة';
+
+  @override
+  String get connectionsCenterEmptyBody =>
+      'لا توجد لديك طلبات اتصال حالياً. سنخبرك إن أرسل لك طبيب طلباً.';
+
+  @override
+  String get connectionsCenterAllCaughtUpTitle => 'كل الطلبات تمّ التعامل معها';
+
+  @override
+  String get connectionsCenterAllCaughtUpBody =>
+      'تمت معالجة جميع الطلبات المعلّقة. يمكنك مراجعة قراراتك السابقة من صفحة الحساب.';
+
+  @override
+  String get connectionsCardKindConnect => 'طلب اتصال';
+
+  @override
+  String get connectionsCardKindConnectRelative => 'طلب لأحد أفراد عائلتك';
+
+  @override
+  String get connectionsCardKindMerge => 'سجلات للربط';
+
+  @override
+  String connectionsCardExplainConnect(String name) {
+    return '$name يطلب إضافتك إلى قائمة مرضاه. الموافقة تتيح له مراسلتك ورؤية المواعيد التي تحجزانها معاً.';
+  }
+
+  @override
+  String connectionsCardExplainConnectRelative(String name) {
+    return '$name يطلب إضافة أحد أفراد عائلتك إلى قائمة مرضاه. الموافقة تتيح له المراسلة ورؤية المواعيد المرتبطة.';
+  }
+
+  @override
+  String connectionsCardExplainMerge(String name) {
+    return '$name يحتفظ بسجلات لك من قبل انضمامك إلى دوكسيرا. الموافقة ستنقل مواعيدك ووثائقك السابقة إلى حسابك تلقائياً.';
+  }
+
+  @override
+  String get connectionsCardWhatThisMeans => 'ماذا يعني هذا بالنسبة لي؟';
+
+  @override
+  String get connectionsCardSeeFullDetails => 'عرض كل التفاصيل';
+
+  @override
+  String get connectionsCardApprove => 'موافقة';
+
+  @override
+  String get connectionsCardNotNow => 'ليس الآن';
+
+  @override
+  String get connectionsCardMergeAppointments =>
+      'المواعيد السابقة في هذه العيادة';
+
+  @override
+  String get connectionsCardMergeDocuments =>
+      'الوثائق والوصفات التي تمت مشاركتها معك';
+
+  @override
+  String get connectionsCardMergeReports => 'تقارير الزيارات التي كتبها الطبيب';
+
+  @override
+  String get connectionsCardMergeMedicalRecords =>
+      'سجلات الحالة المرضية التي دوّنها الطبيب، تُربط بملفك';
+
+  @override
+  String get connectionsCardMergeBills => 'أي فواتير سابقة';
+
+  @override
+  String get connectionsCardMergeFootnote =>
+      'لا يُحذف شيء من جهة الطبيب. حسابك هو المكان الجديد لهذه السجلات.';
+
+  @override
+  String get connectionsCardConnectMessages =>
+      'يستطيع الطبيب إرسال رسائل آمنة لك';
+
+  @override
+  String get connectionsCardConnectBooking =>
+      'الحجوزات المستقبلية بينكما تظهر في مواعيدك';
+
+  @override
+  String get connectionsCardConnectShareDocs =>
+      'تستطيع مشاركة الوثائق مع هذا الطبيب عند رغبتك';
+
+  @override
+  String get connectionsCardConnectFootnote =>
+      'لا تتم مشاركة شيء من حسابك تلقائياً. أنت تتحكم بكل وثيقة ورسالة.';
+
+  @override
+  String connectionsCardResolvedConnected(String doctorName) {
+    return 'أنت الآن متصل بـ $doctorName.';
+  }
+
+  @override
+  String connectionsCardResolvedMerged(String doctorName) {
+    return 'تمّ ربط سجلات $doctorName بحسابك.';
+  }
+
+  @override
+  String connectionsCardResolvedDeclined(String doctorName) {
+    return 'تمّ رفض طلب $doctorName.';
+  }
+
+  @override
+  String get connectionsDeclineDialogTitle => 'خذ وقتك';
+
+  @override
+  String connectionsDeclineDialogBody(String doctorName) {
+    return 'ليس عليك أن تقرر الآن. طلب $doctorName يبقى متاحاً لمدة ٣٠ يوماً — يمكنك العودة في أي وقت.';
+  }
+
+  @override
+  String get connectionsDeclineDialogNotNow => 'أقرر لاحقاً';
+
+  @override
+  String get connectionsDeclineDialogDecline => 'رفض هذا الطلب';
+
+  @override
+  String get connectionsBannerTitleSingular =>
+      'لديك طلب اتصال واحد بانتظار ردك';
+
+  @override
+  String connectionsBannerTitlePlural(int count) {
+    return 'لديك $count طلبات اتصال بانتظار ردك';
+  }
+
+  @override
+  String get connectionsBannerBody => 'اضغط لمراجعة ما يطلبه كل طبيب.';
+
+  @override
+  String get connectionsAccountTileTitle => 'اتصالاتي بأطبائي';
+
+  @override
+  String get connectionsAccountTileSubtitleEmpty => 'كل شيء على ما يرام';
+
+  @override
+  String connectionsAccountTileSubtitlePending(int count) {
+    return '$count بانتظار ردك';
+  }
+
+  @override
   String get notificationsRetentionNote =>
       'تُحفظ الإشعارات لمدة ٩٠ يومًا ثم تُحذف تلقائيًا.';
 

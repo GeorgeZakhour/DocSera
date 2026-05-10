@@ -5116,6 +5116,198 @@ class AppLocalizationsEn extends AppLocalizations {
       'Couldn\'t complete the request. Please try again.';
 
   @override
+  String get connectionsCenterTitlePostSignup =>
+      'One last step before you begin';
+
+  @override
+  String get connectionsCenterTitleHome => 'Your doctor connections';
+
+  @override
+  String get connectionsCenterTitleNotification =>
+      'You have a new connection request';
+
+  @override
+  String get connectionsCenterTitleAccount => 'Your doctor connections';
+
+  @override
+  String get connectionsCenterExplainerHeader => 'Why am I seeing this?';
+
+  @override
+  String get connectionsCenterExplainerBody =>
+      'These requests appear when a doctor finds you on Docsera or already has a record for you. Approving opens the way to messaging, booking, or bringing past records into your account.';
+
+  @override
+  String get connectionsCenterReassureNothingAuto =>
+      'Nothing happens automatically — your decision is the only thing that changes anything.';
+
+  @override
+  String get connectionsCenterReassureCanReviewLater =>
+      'You can review later — every request stays available for 30 days.';
+
+  @override
+  String get connectionsCenterCtaContinue => 'Continue to home';
+
+  @override
+  String get connectionsCenterCtaReviewLater => 'I\'ll review the rest later';
+
+  @override
+  String get connectionsCenterRetry => 'Try again';
+
+  @override
+  String get connectionsCenterErrorTitle =>
+      'We couldn\'t load your connections';
+
+  @override
+  String get connectionsCenterErrorBody =>
+      'Check your connection and try again. Nothing has been changed.';
+
+  @override
+  String get connectionsCenterErrorToast =>
+      'Something went wrong. Please try again.';
+
+  @override
+  String get connectionsCenterEmptyTitle => 'No pending requests';
+
+  @override
+  String get connectionsCenterEmptyBody =>
+      'You don\'t have any connection requests right now. We\'ll let you know if a doctor sends one.';
+
+  @override
+  String get connectionsCenterAllCaughtUpTitle => 'You\'re all caught up';
+
+  @override
+  String get connectionsCenterAllCaughtUpBody =>
+      'Every pending request has been handled. You can revisit any past decision from your account page.';
+
+  @override
+  String get connectionsCardKindConnect => 'Connection request';
+
+  @override
+  String get connectionsCardKindConnectRelative =>
+      'Request for a family member';
+
+  @override
+  String get connectionsCardKindMerge => 'Records to merge';
+
+  @override
+  String connectionsCardExplainConnect(String name) {
+    return '$name is asking to add you as a patient. Approving lets them message you and see appointments you book together.';
+  }
+
+  @override
+  String connectionsCardExplainConnectRelative(String name) {
+    return '$name is asking to add a family member you manage as a patient. Approving lets them message and see related appointments.';
+  }
+
+  @override
+  String connectionsCardExplainMerge(String name) {
+    return '$name has records for you from before you joined Docsera. Approving will move your past appointments and documents into your account automatically.';
+  }
+
+  @override
+  String get connectionsCardWhatThisMeans => 'What does this mean for me?';
+
+  @override
+  String get connectionsCardSeeFullDetails => 'See full details';
+
+  @override
+  String get connectionsCardApprove => 'Approve';
+
+  @override
+  String get connectionsCardNotNow => 'Not now';
+
+  @override
+  String get connectionsCardMergeAppointments =>
+      'Past appointments at this clinic';
+
+  @override
+  String get connectionsCardMergeDocuments =>
+      'Documents and prescriptions shared with you';
+
+  @override
+  String get connectionsCardMergeReports =>
+      'Visit reports the doctor has written';
+
+  @override
+  String get connectionsCardMergeMedicalRecords =>
+      'Medical-history items the doctor noted, attached to your profile';
+
+  @override
+  String get connectionsCardMergeBills => 'Any past bills';
+
+  @override
+  String get connectionsCardMergeFootnote =>
+      'Nothing is removed from the doctor\'s side. Your account is the new home for these records.';
+
+  @override
+  String get connectionsCardConnectMessages =>
+      'The doctor can send you secure messages';
+
+  @override
+  String get connectionsCardConnectBooking =>
+      'Future bookings between you appear in your appointments';
+
+  @override
+  String get connectionsCardConnectShareDocs =>
+      'You can share documents with this doctor when you choose';
+
+  @override
+  String get connectionsCardConnectFootnote =>
+      'Nothing from your account is shared automatically. You stay in control of every document and message.';
+
+  @override
+  String connectionsCardResolvedConnected(String doctorName) {
+    return 'You\'re now connected with $doctorName.';
+  }
+
+  @override
+  String connectionsCardResolvedMerged(String doctorName) {
+    return '$doctorName\'s records have been linked to your account.';
+  }
+
+  @override
+  String connectionsCardResolvedDeclined(String doctorName) {
+    return 'Request from $doctorName was declined.';
+  }
+
+  @override
+  String get connectionsDeclineDialogTitle => 'Take your time';
+
+  @override
+  String connectionsDeclineDialogBody(String doctorName) {
+    return 'You don\'t have to decide now. The request from $doctorName stays available for 30 days — you can come back anytime.';
+  }
+
+  @override
+  String get connectionsDeclineDialogNotNow => 'Decide later';
+
+  @override
+  String get connectionsDeclineDialogDecline => 'Decline this request';
+
+  @override
+  String get connectionsBannerTitleSingular => 'You have 1 pending connection';
+
+  @override
+  String connectionsBannerTitlePlural(int count) {
+    return 'You have $count pending connections';
+  }
+
+  @override
+  String get connectionsBannerBody =>
+      'Tap to review what each doctor is asking for.';
+
+  @override
+  String get connectionsAccountTileTitle => 'My doctor connections';
+
+  @override
+  String get connectionsAccountTileSubtitleEmpty => 'All up to date';
+
+  @override
+  String connectionsAccountTileSubtitlePending(int count) {
+    return '$count pending';
+  }
+
+  @override
   String get notificationsRetentionNote =>
       'Notifications are kept for 90 days, then automatically removed.';
 

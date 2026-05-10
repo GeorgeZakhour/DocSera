@@ -21,6 +21,7 @@ import 'package:docsera/utils/page_transitions.dart';
 import 'package:flutter/material.dart';
 import 'package:docsera/app/const.dart';
 import 'package:docsera/widgets/gift_announcement_dialog.dart';
+import 'package:docsera/screens/home/connections/widgets/connections_pending_banner.dart';
 import 'package:docsera/services/notifications/maybe_show_link_request_gate.dart';
 import 'package:docsera/widgets/main_screen_widgets.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -83,12 +84,11 @@ class _MainScreenState extends State<MainScreen> with AutomaticKeepAliveClientMi
       final auth = context.read<AuthCubit>().state;
       if (auth is AuthAuthenticated) {
         maybeShowGiftAnnouncement(context);
-        // Pop-up gate: re-arm on every fresh MainScreen mount (cold
-        // start / sign-up / first app launch). Stale flag from a
-        // previous user session in the same Dart process must NOT
-        // block this fresh user from seeing their pending requests.
+        // Pop-up gate retired in favor of the in-flow ConnectionsPendingBanner
+        // rendered in _buildMainScreenContent below — calmer surface, lists
+        // every pending request instead of the most-recent one. The reset
+        // call stays harmless: it simply clears the (unused) flag.
         resetLinkRequestGate();
-        maybeShowPendingLinkRequest(context);
       }
       // Bridge AppointmentsCubit lifecycle → local T-24h / T-30m reminders.
       // Idempotent — start() cancels its previous subscription on each call.
@@ -459,15 +459,11 @@ class _MainScreenState extends State<MainScreen> with AutomaticKeepAliveClientMi
           listener: (context, state) {
             debugPrint('🚪 link-gate: auth → AuthAuthenticated, scheduling gate');
             // Re-arm on every fresh authenticated transition.
-            // Sign-up doesn't go through signOut() (which would have
-            // reset the flag), so a stale `_gateFiredThisSession=true`
-            // from a previous session in the same Dart process would
-            // otherwise block this fresh user from seeing the gate.
+            // Pop-up gate retired — the ConnectionsPendingBanner on
+            // home picks up new pending requests on the next build,
+            // and the FutureBuilder inside the banner self-refreshes
+            // when the user returns from the Connections Center.
             resetLinkRequestGate();
-            WidgetsBinding.instance.addPostFrameCallback((_) {
-              if (!context.mounted) return;
-              maybeShowPendingLinkRequest(context);
-            });
           },
           child: MultiBlocProvider(
           providers: [
@@ -636,6 +632,14 @@ class _MainScreenState extends State<MainScreen> with AutomaticKeepAliveClientMi
               crossAxisAlignment: CrossAxisAlignment.center,
               children: [
                 const TopSection(), // ✅ Contains only the header & background
+
+                // Soft banner surfacing pending patient↔doctor link
+                // requests. Self-fetching — renders nothing when no
+                // requests pending, so we can leave it always-on here.
+                Transform.translate(
+                  offset: Offset(0, -screenHeight * 0.055),
+                  child: const ConnectionsPendingBanner(),
+                ),
 
                 // ✅ Pass the banners list to `BannersSection`
                 // ✅ Use optimized BannersSection

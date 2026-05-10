@@ -17,7 +17,7 @@ import 'package:docsera/widgets/custom_bottom_navigation_bar.dart';
 import 'package:docsera/Business_Logic/Health_page/patient_switcher_cubit.dart';
 import 'package:docsera/screens/home/health/pages/visit_reports/visit_reports_page.dart';
 import 'package:docsera/screens/home/loyalty/vouchers_page.dart';
-import 'package:docsera/screens/home/connections/link_request_review_page.dart';
+import 'package:docsera/screens/home/connections/connections_center_page.dart';
 import 'package:docsera/screens/home/account/pending_deletion_page.dart';
 import 'package:docsera/services/notifications/in_app_notification_banner.dart';
 import 'package:url_launcher/url_launcher.dart' as launcher;
@@ -1087,11 +1087,20 @@ class NotificationService {
           debugPrint("⚠️ Rejected link-request deep link with invalid token shape");
           return;
         }
-        debugPrint("🤝 Navigating to LinkRequestReviewPage for $requestId");
+        debugPrint("🤝 Navigating to ConnectionsCenterPage for $requestId");
+        // Land on the unified Connections Center scrolled to the
+        // requested id — calmer surface than pushing the dedicated
+        // review page directly. Users still get full details by
+        // tapping "see full details" on the focused card, which
+        // pushes [LinkRequestReviewPage] (kept reachable for the
+        // rich data-flow context).
         nav.popUntil((route) => route.isFirst);
         nav.push(
           MaterialPageRoute(
-            builder: (_) => LinkRequestReviewPage(requestId: requestId),
+            builder: (_) => ConnectionsCenterPage(
+              entry: ConnectionsCenterEntry.fromNotification,
+              focusedRequestId: requestId,
+            ),
           ),
         );
     } else if (payload.startsWith('voucher:')) {

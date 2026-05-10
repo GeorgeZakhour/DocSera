@@ -3,7 +3,9 @@ import 'dart:io';
 import 'package:flutter/foundation.dart' show kDebugMode;
 import 'package:docsera/Business_Logic/Account_page/danger/account_danger_cubit.dart';
 import 'package:docsera/Business_Logic/Onboarding/welcome_wizard/welcome_wizard_state.dart';
+import 'package:docsera/screens/home/connections/connections_center_page.dart';
 import 'package:docsera/screens/onboarding/welcome_wizard/welcome_wizard_screen.dart';
+import 'package:docsera/services/supabase/patient_link_requests_service.dart';
 
 import 'package:docsera/Business_Logic/Account_page/profile/account_profile_cubit.dart';
 import 'package:docsera/Business_Logic/Account_page/profile/account_profile_state.dart';
@@ -595,6 +597,14 @@ class _AccountScreenState extends State<AccountScreen> {
                 ),
               ),
 
+              SizedBox(height: 16.h),
+
+              // My doctor connections — surfaces every pending link
+              // request the user can act on. Self-fetching so the
+              // pending count badge stays in sync without parent
+              // wiring.
+              const _ConnectionsAccountTile(),
+
               SizedBox(height: 24.h),
 
               SizedBox(height: 15.h),
@@ -1037,6 +1047,152 @@ class _AuthenticatedAccountView extends StatelessWidget {
 
             return buildShimmer();
           },
+        ),
+      ),
+    );
+  }
+}
+
+/// Account-page tile that opens the [ConnectionsCenterPage]. Self-fetches
+/// the pending count so the chip on the right stays accurate without
+/// parent-state plumbing. Refreshes on return from the center.
+class _ConnectionsAccountTile extends StatefulWidget {
+  const _ConnectionsAccountTile();
+
+  @override
+  State<_ConnectionsAccountTile> createState() =>
+      _ConnectionsAccountTileState();
+}
+
+class _ConnectionsAccountTileState extends State<_ConnectionsAccountTile> {
+  Future<int>? _countFuture;
+
+  @override
+  void initState() {
+    super.initState();
+    _countFuture = _fetch();
+  }
+
+  Future<int> _fetch() async {
+    try {
+      final pending = await PatientLinkRequestsService().fetchPending();
+      return pending.length;
+    } catch (_) {
+      return 0;
+    }
+  }
+
+  Future<void> _open() async {
+    await Navigator.push(
+      context,
+      fadePageRoute(ConnectionsCenterPage(
+        entry: ConnectionsCenterEntry.fromAccount,
+        onComplete: () => Navigator.of(context).pop(),
+      )),
+    );
+    if (mounted) setState(() => _countFuture = _fetch());
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final l = AppLocalizations.of(context)!;
+
+    return Padding(
+      padding: EdgeInsets.symmetric(horizontal: 16.w),
+      child: InkWell(
+        borderRadius: BorderRadius.circular(14),
+        onTap: _open,
+        child: Container(
+          padding: EdgeInsets.symmetric(horizontal: 14.w, vertical: 14.h),
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(14),
+            border: Border.all(
+              color: AppColors.main.withValues(alpha: 0.18),
+              width: 1,
+            ),
+            boxShadow: [
+              BoxShadow(
+                color: AppColors.main.withValues(alpha: 0.08),
+                blurRadius: 12,
+                offset: const Offset(0, 4),
+                spreadRadius: -2,
+              ),
+            ],
+          ),
+          child: Row(
+            children: [
+              Container(
+                width: 40.w,
+                height: 40.w,
+                decoration: BoxDecoration(
+                  borderRadius: BorderRadius.circular(12),
+                  gradient: const LinearGradient(
+                    colors: [Color(0xFF009092), Color(0xFF4DD0D2)],
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
+                  ),
+                  boxShadow: [
+                    BoxShadow(
+                      color: AppColors.main.withValues(alpha: 0.4),
+                      blurRadius: 12,
+                      offset: const Offset(0, 6),
+                      spreadRadius: -4,
+                    ),
+                  ],
+                ),
+                child: Icon(
+                  Icons.handshake_rounded,
+                  color: Colors.white,
+                  size: 20.sp,
+                ),
+              ),
+              SizedBox(width: 12.w),
+              Expanded(
+                child: FutureBuilder<int>(
+                  future: _countFuture,
+                  builder: (context, snap) {
+                    final count = snap.data ?? 0;
+                    final subtitle = count == 0
+                        ? l.connectionsAccountTileSubtitleEmpty
+                        : l.connectionsAccountTileSubtitlePending(count);
+                    final subtitleColor = count == 0
+                        ? AppColors.grayMain
+                        : AppColors.main;
+                    return Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Text(
+                          l.connectionsAccountTileTitle,
+                          style: AppTextStyles.getText2(context).copyWith(
+                            fontWeight: FontWeight.w800,
+                            color: AppColors.mainDark,
+                          ),
+                        ),
+                        SizedBox(height: 2.h),
+                        Text(
+                          subtitle,
+                          style: AppTextStyles.getText3(context).copyWith(
+                            color: subtitleColor,
+                            fontWeight: count == 0
+                                ? FontWeight.w500
+                                : FontWeight.w700,
+                          ),
+                        ),
+                      ],
+                    );
+                  },
+                ),
+              ),
+              SizedBox(width: 8.w),
+              Icon(
+                Icons.arrow_forward_ios,
+                size: 12.sp,
+                color: AppColors.grayMain,
+              ),
+            ],
+          ),
         ),
       ),
     );

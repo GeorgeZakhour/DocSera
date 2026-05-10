@@ -1,7 +1,9 @@
 import 'dart:async';
 import 'dart:math';
 import 'package:docsera/Business_Logic/Onboarding/welcome_wizard/welcome_wizard_state.dart';
+import 'package:docsera/screens/home/connections/connections_center_page.dart';
 import 'package:docsera/screens/onboarding/welcome_wizard/welcome_wizard_screen.dart';
+import 'package:docsera/services/supabase/patient_link_requests_service.dart';
 import 'package:docsera/widgets/custom_bottom_navigation_bar.dart';
 import 'package:docsera/widgets/legal_reconsent_gate.dart';
 import 'package:docsera/utils/page_transitions.dart';
@@ -180,15 +182,7 @@ class _WelcomePageState extends State<WelcomePage> {
                         fadePageRoute(WelcomeWizardScreen(
                           entryMode: WizardEntryMode.firstTime,
                           firstName: widget.signUpInfo.firstName ?? '',
-                          onCompleteFirstTime: () {
-                            Navigator.pushAndRemoveUntil(
-                              context,
-                              fadePageRoute(LegalReconsentGate(
-                                child: CustomBottomNavigationBar(),
-                              )),
-                              (route) => false,
-                            );
-                          },
+                          onCompleteFirstTime: () => _routeAfterWizard(context),
                           onCompleteReplay: () {}, // unused in firstTime mode
                         )),
                         (route) => false,
@@ -222,6 +216,56 @@ class _WelcomePageState extends State<WelcomePage> {
           ),
         ],
       ),
+    );
+  }
+
+  /// Wizard finished. If the new user has any pending link requests
+  /// (they typically do — auto-detect on signup creates merge requests
+  /// for any phone+DOB matches against doctor manual records), open the
+  /// Connections Center as the final post-signup beat. Otherwise route
+  /// straight to home.
+  ///
+  /// We pre-fetch the count here so the empty-list case doesn't flash
+  /// a "you're all caught up" celebration to a user who hasn't done
+  /// anything yet — that would be the wrong tone. Empty → straight home.
+  Future<void> _routeAfterWizard(BuildContext context) async {
+    int pendingCount = 0;
+    try {
+      pendingCount =
+          (await PatientLinkRequestsService().fetchPending()).length;
+    } catch (_) {
+      // Best-effort. If the fetch fails, route home — the banner on
+      // home will still surface anything pending on the next session.
+    }
+
+    if (!context.mounted) return;
+
+    if (pendingCount == 0) {
+      Navigator.pushAndRemoveUntil(
+        context,
+        fadePageRoute(LegalReconsentGate(
+          child: CustomBottomNavigationBar(),
+        )),
+        (route) => false,
+      );
+      return;
+    }
+
+    Navigator.pushAndRemoveUntil(
+      context,
+      fadePageRoute(ConnectionsCenterPage(
+        entry: ConnectionsCenterEntry.postSignup,
+        onComplete: () {
+          Navigator.pushAndRemoveUntil(
+            context,
+            fadePageRoute(LegalReconsentGate(
+              child: CustomBottomNavigationBar(),
+            )),
+            (route) => false,
+          );
+        },
+      )),
+      (route) => false,
     );
   }
 }

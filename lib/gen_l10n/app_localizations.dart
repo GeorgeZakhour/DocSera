@@ -9374,6 +9374,312 @@ abstract class AppLocalizations {
   /// **'Couldn\'t complete the request. Please try again.'**
   String get linkRequestErrorToast;
 
+  /// No description provided for @connectionsCenterTitlePostSignup.
+  ///
+  /// In en, this message translates to:
+  /// **'One last step before you begin'**
+  String get connectionsCenterTitlePostSignup;
+
+  /// No description provided for @connectionsCenterTitleHome.
+  ///
+  /// In en, this message translates to:
+  /// **'Your doctor connections'**
+  String get connectionsCenterTitleHome;
+
+  /// No description provided for @connectionsCenterTitleNotification.
+  ///
+  /// In en, this message translates to:
+  /// **'You have a new connection request'**
+  String get connectionsCenterTitleNotification;
+
+  /// No description provided for @connectionsCenterTitleAccount.
+  ///
+  /// In en, this message translates to:
+  /// **'Your doctor connections'**
+  String get connectionsCenterTitleAccount;
+
+  /// No description provided for @connectionsCenterExplainerHeader.
+  ///
+  /// In en, this message translates to:
+  /// **'Why am I seeing this?'**
+  String get connectionsCenterExplainerHeader;
+
+  /// No description provided for @connectionsCenterExplainerBody.
+  ///
+  /// In en, this message translates to:
+  /// **'These requests appear when a doctor finds you on Docsera or already has a record for you. Approving opens the way to messaging, booking, or bringing past records into your account.'**
+  String get connectionsCenterExplainerBody;
+
+  /// No description provided for @connectionsCenterReassureNothingAuto.
+  ///
+  /// In en, this message translates to:
+  /// **'Nothing happens automatically — your decision is the only thing that changes anything.'**
+  String get connectionsCenterReassureNothingAuto;
+
+  /// No description provided for @connectionsCenterReassureCanReviewLater.
+  ///
+  /// In en, this message translates to:
+  /// **'You can review later — every request stays available for 30 days.'**
+  String get connectionsCenterReassureCanReviewLater;
+
+  /// No description provided for @connectionsCenterCtaContinue.
+  ///
+  /// In en, this message translates to:
+  /// **'Continue to home'**
+  String get connectionsCenterCtaContinue;
+
+  /// No description provided for @connectionsCenterCtaReviewLater.
+  ///
+  /// In en, this message translates to:
+  /// **'I\'ll review the rest later'**
+  String get connectionsCenterCtaReviewLater;
+
+  /// No description provided for @connectionsCenterRetry.
+  ///
+  /// In en, this message translates to:
+  /// **'Try again'**
+  String get connectionsCenterRetry;
+
+  /// No description provided for @connectionsCenterErrorTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'We couldn\'t load your connections'**
+  String get connectionsCenterErrorTitle;
+
+  /// No description provided for @connectionsCenterErrorBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Check your connection and try again. Nothing has been changed.'**
+  String get connectionsCenterErrorBody;
+
+  /// No description provided for @connectionsCenterErrorToast.
+  ///
+  /// In en, this message translates to:
+  /// **'Something went wrong. Please try again.'**
+  String get connectionsCenterErrorToast;
+
+  /// No description provided for @connectionsCenterEmptyTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'No pending requests'**
+  String get connectionsCenterEmptyTitle;
+
+  /// No description provided for @connectionsCenterEmptyBody.
+  ///
+  /// In en, this message translates to:
+  /// **'You don\'t have any connection requests right now. We\'ll let you know if a doctor sends one.'**
+  String get connectionsCenterEmptyBody;
+
+  /// No description provided for @connectionsCenterAllCaughtUpTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'You\'re all caught up'**
+  String get connectionsCenterAllCaughtUpTitle;
+
+  /// No description provided for @connectionsCenterAllCaughtUpBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Every pending request has been handled. You can revisit any past decision from your account page.'**
+  String get connectionsCenterAllCaughtUpBody;
+
+  /// No description provided for @connectionsCardKindConnect.
+  ///
+  /// In en, this message translates to:
+  /// **'Connection request'**
+  String get connectionsCardKindConnect;
+
+  /// No description provided for @connectionsCardKindConnectRelative.
+  ///
+  /// In en, this message translates to:
+  /// **'Request for a family member'**
+  String get connectionsCardKindConnectRelative;
+
+  /// No description provided for @connectionsCardKindMerge.
+  ///
+  /// In en, this message translates to:
+  /// **'Records to merge'**
+  String get connectionsCardKindMerge;
+
+  /// No description provided for @connectionsCardExplainConnect.
+  ///
+  /// In en, this message translates to:
+  /// **'{name} is asking to add you as a patient. Approving lets them message you and see appointments you book together.'**
+  String connectionsCardExplainConnect(String name);
+
+  /// No description provided for @connectionsCardExplainConnectRelative.
+  ///
+  /// In en, this message translates to:
+  /// **'{name} is asking to add a family member you manage as a patient. Approving lets them message and see related appointments.'**
+  String connectionsCardExplainConnectRelative(String name);
+
+  /// No description provided for @connectionsCardExplainMerge.
+  ///
+  /// In en, this message translates to:
+  /// **'{name} has records for you from before you joined Docsera. Approving will move your past appointments and documents into your account automatically.'**
+  String connectionsCardExplainMerge(String name);
+
+  /// No description provided for @connectionsCardWhatThisMeans.
+  ///
+  /// In en, this message translates to:
+  /// **'What does this mean for me?'**
+  String get connectionsCardWhatThisMeans;
+
+  /// No description provided for @connectionsCardSeeFullDetails.
+  ///
+  /// In en, this message translates to:
+  /// **'See full details'**
+  String get connectionsCardSeeFullDetails;
+
+  /// No description provided for @connectionsCardApprove.
+  ///
+  /// In en, this message translates to:
+  /// **'Approve'**
+  String get connectionsCardApprove;
+
+  /// No description provided for @connectionsCardNotNow.
+  ///
+  /// In en, this message translates to:
+  /// **'Not now'**
+  String get connectionsCardNotNow;
+
+  /// No description provided for @connectionsCardMergeAppointments.
+  ///
+  /// In en, this message translates to:
+  /// **'Past appointments at this clinic'**
+  String get connectionsCardMergeAppointments;
+
+  /// No description provided for @connectionsCardMergeDocuments.
+  ///
+  /// In en, this message translates to:
+  /// **'Documents and prescriptions shared with you'**
+  String get connectionsCardMergeDocuments;
+
+  /// No description provided for @connectionsCardMergeReports.
+  ///
+  /// In en, this message translates to:
+  /// **'Visit reports the doctor has written'**
+  String get connectionsCardMergeReports;
+
+  /// No description provided for @connectionsCardMergeMedicalRecords.
+  ///
+  /// In en, this message translates to:
+  /// **'Medical-history items the doctor noted, attached to your profile'**
+  String get connectionsCardMergeMedicalRecords;
+
+  /// No description provided for @connectionsCardMergeBills.
+  ///
+  /// In en, this message translates to:
+  /// **'Any past bills'**
+  String get connectionsCardMergeBills;
+
+  /// No description provided for @connectionsCardMergeFootnote.
+  ///
+  /// In en, this message translates to:
+  /// **'Nothing is removed from the doctor\'s side. Your account is the new home for these records.'**
+  String get connectionsCardMergeFootnote;
+
+  /// No description provided for @connectionsCardConnectMessages.
+  ///
+  /// In en, this message translates to:
+  /// **'The doctor can send you secure messages'**
+  String get connectionsCardConnectMessages;
+
+  /// No description provided for @connectionsCardConnectBooking.
+  ///
+  /// In en, this message translates to:
+  /// **'Future bookings between you appear in your appointments'**
+  String get connectionsCardConnectBooking;
+
+  /// No description provided for @connectionsCardConnectShareDocs.
+  ///
+  /// In en, this message translates to:
+  /// **'You can share documents with this doctor when you choose'**
+  String get connectionsCardConnectShareDocs;
+
+  /// No description provided for @connectionsCardConnectFootnote.
+  ///
+  /// In en, this message translates to:
+  /// **'Nothing from your account is shared automatically. You stay in control of every document and message.'**
+  String get connectionsCardConnectFootnote;
+
+  /// No description provided for @connectionsCardResolvedConnected.
+  ///
+  /// In en, this message translates to:
+  /// **'You\'re now connected with {doctorName}.'**
+  String connectionsCardResolvedConnected(String doctorName);
+
+  /// No description provided for @connectionsCardResolvedMerged.
+  ///
+  /// In en, this message translates to:
+  /// **'{doctorName}\'s records have been linked to your account.'**
+  String connectionsCardResolvedMerged(String doctorName);
+
+  /// No description provided for @connectionsCardResolvedDeclined.
+  ///
+  /// In en, this message translates to:
+  /// **'Request from {doctorName} was declined.'**
+  String connectionsCardResolvedDeclined(String doctorName);
+
+  /// No description provided for @connectionsDeclineDialogTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Take your time'**
+  String get connectionsDeclineDialogTitle;
+
+  /// No description provided for @connectionsDeclineDialogBody.
+  ///
+  /// In en, this message translates to:
+  /// **'You don\'t have to decide now. The request from {doctorName} stays available for 30 days — you can come back anytime.'**
+  String connectionsDeclineDialogBody(String doctorName);
+
+  /// No description provided for @connectionsDeclineDialogNotNow.
+  ///
+  /// In en, this message translates to:
+  /// **'Decide later'**
+  String get connectionsDeclineDialogNotNow;
+
+  /// No description provided for @connectionsDeclineDialogDecline.
+  ///
+  /// In en, this message translates to:
+  /// **'Decline this request'**
+  String get connectionsDeclineDialogDecline;
+
+  /// No description provided for @connectionsBannerTitleSingular.
+  ///
+  /// In en, this message translates to:
+  /// **'You have 1 pending connection'**
+  String get connectionsBannerTitleSingular;
+
+  /// No description provided for @connectionsBannerTitlePlural.
+  ///
+  /// In en, this message translates to:
+  /// **'You have {count} pending connections'**
+  String connectionsBannerTitlePlural(int count);
+
+  /// No description provided for @connectionsBannerBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Tap to review what each doctor is asking for.'**
+  String get connectionsBannerBody;
+
+  /// No description provided for @connectionsAccountTileTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'My doctor connections'**
+  String get connectionsAccountTileTitle;
+
+  /// No description provided for @connectionsAccountTileSubtitleEmpty.
+  ///
+  /// In en, this message translates to:
+  /// **'All up to date'**
+  String get connectionsAccountTileSubtitleEmpty;
+
+  /// No description provided for @connectionsAccountTileSubtitlePending.
+  ///
+  /// In en, this message translates to:
+  /// **'{count} pending'**
+  String connectionsAccountTileSubtitlePending(int count);
+
   /// No description provided for @notificationsRetentionNote.
   ///
   /// In en, this message translates to:
