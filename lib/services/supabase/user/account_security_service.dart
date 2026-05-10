@@ -1,5 +1,6 @@
 
 import 'package:docsera/services/biometrics/biometric_storage.dart';
+import 'package:docsera/services/notifications/notification_service.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
@@ -271,7 +272,15 @@ class AccountSecurityService {
           try {
             await _supabase.rpc(
               'rpc_clear_trusted_devices_except_current',
-              params: {'p_device_id': currentDeviceId},
+              params: {
+                'p_device_id': currentDeviceId,
+                // Pass our Pushy token so the RPC keeps OUR user_devices
+                // row and deletes every other one. Realtime DELETE on
+                // those rows fires on the affected devices, which then
+                // sign out immediately via NotificationService's
+                // _userDevicesListener subscription.
+                'p_pushy_token': NotificationService.instance.pushyDeviceToken,
+              },
             );
           } catch (_) { /* best effort */ }
         }

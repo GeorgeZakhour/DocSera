@@ -30,6 +30,11 @@ class NotificationService {
   bool _initialized = false;
   String? _pushyDeviceToken;
 
+  /// Public read-only access to the cached Pushy token. Used by the
+  /// password-change "sign out other devices" flow to identify which
+  /// user_devices row to KEEP when the RPC deletes the rest.
+  String? get pushyDeviceToken => _pushyDeviceToken;
+
   static const AndroidNotificationChannel _defaultChannel = AndroidNotificationChannel(
     'docsera_default',
     'General Notifications',
@@ -157,10 +162,71 @@ class NotificationService {
             }
           }
         }
+        // Realtime force-logout watcher — start one per session.
+        _startUserDevicesWatcher();
+      } else if (event == AuthChangeEvent.signedOut) {
+        await _stopUserDevicesWatcher();
       }
     });
 
     _initialized = true;
+  }
+
+  /// Realtime channel that watches user_devices for the current user.
+  /// If our row is DELETEd by another session (e.g. password change with
+  /// "sign out other devices" toggled on), we sign out immediately so
+  /// the user doesn't keep operating on a now-revoked session.
+  RealtimeChannel? _userDevicesChannel;
+
+  void _startUserDevicesWatcher() {
+    final session = Supabase.instance.client.auth.currentSession;
+    final userId = session?.user.id;
+    if (userId == null) return;
+    _stopUserDevicesWatcher(); // Idempotent — drop any previous channel.
+
+    _userDevicesChannel = Supabase.instance.client
+        .channel('user_devices:$userId')
+        .onPostgresChanges(
+          event: PostgresChangeEvent.delete,
+          schema: 'public',
+          table: 'user_devices',
+          filter: PostgresChangeFilter(
+            type: PostgresChangeFilterType.eq,
+            column: 'user_id',
+            value: userId,
+          ),
+          callback: (payload) async {
+            // Realtime DELETE payload is the OLD row. Ignore deletes
+            // whose token doesn't match ours — we only react to OUR
+            // own row going away.
+            final oldRow = payload.oldRecord;
+            final deletedToken = oldRow['token']?.toString();
+            if (deletedToken == null) return;
+            if (deletedToken == _pushyDeviceToken) {
+              if (kDebugMode) {
+                debugPrint('🚪 user_devices row deleted remotely — '
+                    'signing out');
+              }
+              try {
+                _pushyDeviceToken = null;
+                await Supabase.instance.client.auth.signOut();
+              } catch (e) {
+                if (kDebugMode) debugPrint('⚠️ remote-signOut failed: $e');
+              }
+            }
+          },
+        )
+        .subscribe();
+  }
+
+  Future<void> _stopUserDevicesWatcher() async {
+    final ch = _userDevicesChannel;
+    _userDevicesChannel = null;
+    if (ch != null) {
+      try {
+        await Supabase.instance.client.removeChannel(ch);
+      } catch (_) {}
+    }
   }
 
   /// Schedule a smoke-test reminder N seconds from now. Used by the prefs
