@@ -83,6 +83,17 @@
         <!-- me.pushy.sdk.receivers package.                        -->
         <!-- ===================================================== -->
 
+        <!-- Notification icon. Without this, Android shows a       -->
+        <!-- generic placeholder. Android tints notification icons  -->
+        <!-- to the system's notification color, so for a polished  -->
+        <!-- look we should ship a proper monochrome white-on-      -->
+        <!-- transparent ic_notify in res/drawable/. Until that's   -->
+        <!-- done, point at ic_launcher_foreground (the bare logo   -->
+        <!-- silhouette without the colored background tile).       -->
+        <meta-data
+            android:name="me.pushy.sdk.notification.icon"
+            android:resource="@mipmap/ic_launcher" />
+
         <!-- Internal notification receiver — bridges the MQTT push -->
         <!-- to the Flutter listener registered by Pushy.listen().  -->
         <receiver
