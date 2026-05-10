@@ -1,3 +1,6 @@
+import 'dart:io';
+
+import 'package:device_info_plus/device_info_plus.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
@@ -7,6 +10,7 @@ import 'package:docsera/app/const.dart';
 import 'package:docsera/gen_l10n/app_localizations.dart';
 import 'package:docsera/Business_Logic/Account_page/security/account_security_cubit.dart';
 import 'package:docsera/Business_Logic/Account_page/security/account_security_state.dart';
+import 'package:docsera/utils/keyboard_insets.dart';
 import 'package:docsera/utils/text_direction_utils.dart';
 import 'package:docsera/utils/input_decoration.dart';
 
@@ -29,6 +33,24 @@ class _ChangePasswordSheetState extends State<ChangePasswordSheet> {
   String newPasswordStrength = "";
   Color newPasswordStrengthColor = Colors.transparent;
   bool isUpdating = false;
+  bool signOutOtherDevices = true;
+
+  Future<String> _getDeviceId() async {
+    try {
+      final info = DeviceInfoPlugin();
+      if (Platform.isIOS) {
+        final ios = await info.iosInfo;
+        return ios.identifierForVendor ?? 'ios-unknown';
+      }
+      if (Platform.isAndroid) {
+        final android = await info.androidInfo;
+        return android.id;
+      }
+      return 'unknown-platform';
+    } catch (_) {
+      return 'unknown-error';
+    }
+  }
 
   void validateNewPassword(String password) {
     if (password.isEmpty) {
@@ -115,7 +137,8 @@ class _ChangePasswordSheetState extends State<ChangePasswordSheet> {
           Navigator.pop(context);
         }
       },
-      child: Padding(
+      child: RealKeyboardInsets(
+        child: Padding(
         padding: EdgeInsets.only(
           bottom: MediaQuery.of(context).viewInsets.bottom,
         ),
@@ -212,7 +235,42 @@ class _ChangePasswordSheetState extends State<ChangePasswordSheet> {
                 ),
               ),
 
-              SizedBox(height: 16.h),
+              SizedBox(height: 12.h),
+
+              // Sign-out-other-devices toggle. Defaults ON because the
+              // common reason to change a password is "I think someone
+              // else has it" — kicking other sessions out is the safe
+              // default. Power users can untoggle if they're on a
+              // shared family device they trust.
+              CheckboxListTile(
+                value: signOutOtherDevices,
+                onChanged: isUpdating
+                    ? null
+                    : (v) => setState(() => signOutOtherDevices = v ?? false),
+                controlAffinity: ListTileControlAffinity.leading,
+                contentPadding: EdgeInsets.zero,
+                dense: true,
+                visualDensity: const VisualDensity(horizontal: -4, vertical: -4),
+                title: Text(
+                  AppLocalizations.of(context)!.signOutOtherDevicesTitle,
+                  style: AppTextStyles.getText2(context).copyWith(
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+                subtitle: Padding(
+                  padding: EdgeInsets.only(top: 2.h),
+                  child: Text(
+                    AppLocalizations.of(context)!.signOutOtherDevicesSubtitle,
+                    style: AppTextStyles.getText4(context).copyWith(
+                      color: Colors.grey.shade700,
+                      height: 1.3,
+                    ),
+                  ),
+                ),
+                activeColor: AppColors.main,
+              ),
+
+              SizedBox(height: 12.h),
 
               // Save Button
               ElevatedButton(
@@ -220,10 +278,13 @@ class _ChangePasswordSheetState extends State<ChangePasswordSheet> {
                     ? null
                     : () async {
                   setState(() => isUpdating = true);
-
+                  final deviceId = signOutOtherDevices ? await _getDeviceId() : null;
+                  if (!context.mounted) return;
                   await context.read<AccountSecurityCubit>().changePassword(
                     current: currentPasswordController.text.trim(),
                     next: newPasswordController.text.trim(),
+                    signOutOtherDevices: signOutOtherDevices,
+                    currentDeviceId: deviceId,
                   );
                 },
                 style: ElevatedButton.styleFrom(
@@ -252,6 +313,7 @@ class _ChangePasswordSheetState extends State<ChangePasswordSheet> {
             ],
           ),
         ),
+      ),
       ),
     );
   }

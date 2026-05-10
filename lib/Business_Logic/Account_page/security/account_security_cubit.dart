@@ -133,10 +133,17 @@ class AccountSecurityCubit extends Cubit<AccountSecurityState> {
   Future<void> changePassword({
     required String current,
     required String next,
+    bool signOutOtherDevices = false,
+    String? currentDeviceId,
   }) async {
     try {
       emit(const AccountSecurityLoading());
-      await _service.changePassword(current: current, next: next);
+      await _service.changePassword(
+        current: current,
+        next: next,
+        signOutOtherDevices: signOutOtherDevices,
+        currentDeviceId: currentDeviceId,
+      );
       emit(const AccountPasswordChanged());
       emit(const AccountSecurityIdle());
     } catch (e) {

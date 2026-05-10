@@ -860,6 +860,13 @@ class AppLocalizationsAr extends AppLocalizations {
   String get changePassword => 'تغيير كلمة المرور';
 
   @override
+  String get signOutOtherDevicesTitle => 'تسجيل خروج الأجهزة الأخرى';
+
+  @override
+  String get signOutOtherDevicesSubtitle =>
+      'ستحتاج كل الأجهزة الأخرى التي سجّلت الدخول إلى حسابك إلى تسجيل الدخول من جديد، ولن تتمكن من تجاوز التحقق من جهاز جديد. يُنصح بتفعيله إذا تخوّفت من معرفة شخص آخر لكلمة مرورك.';
+
+  @override
   String get currentPassword => 'كلمة المرور الحالية';
 
   @override

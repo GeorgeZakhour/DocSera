@@ -1682,6 +1682,18 @@ abstract class AppLocalizations {
   /// **'Change Password'**
   String get changePassword;
 
+  /// No description provided for @signOutOtherDevicesTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Sign out from other devices'**
+  String get signOutOtherDevicesTitle;
+
+  /// No description provided for @signOutOtherDevicesSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Every other device signed in to your account will be signed out and forced through new-device verification on the next sign-in. Recommended if you\'re worried someone else knows your password.'**
+  String get signOutOtherDevicesSubtitle;
+
   /// No description provided for @currentPassword.
   ///
   /// In en, this message translates to:

@@ -233,6 +233,8 @@ class AccountSecurityService {
   Future<void> changePassword({
     required String current,
     required String next,
+    bool signOutOtherDevices = false,
+    String? currentDeviceId,
   }) async {
     try {
       final user = _supabase.auth.currentUser;
@@ -251,6 +253,29 @@ class AccountSecurityService {
 
       // 2) Update password
       await _supabase.auth.updateUser(UserAttributes(password: next));
+
+      // 3) Optional: invalidate every OTHER session for this user. Two
+      //    parts because they cover separate state:
+      //      a. signOut(scope: others) revokes the refresh tokens for
+      //         every other Supabase session — kicks them out at the
+      //         next API call.
+      //      b. rpc_clear_trusted_devices_except_current strips the
+      //         trusted_devices array down to the current device only,
+      //         so when those other devices re-login they're forced
+      //         through the new-device 2FA OTP again.
+      if (signOutOtherDevices) {
+        try {
+          await _supabase.auth.signOut(scope: SignOutScope.others);
+        } catch (_) { /* best effort */ }
+        if (currentDeviceId != null && currentDeviceId.isNotEmpty) {
+          try {
+            await _supabase.rpc(
+              'rpc_clear_trusted_devices_except_current',
+              params: {'p_device_id': currentDeviceId},
+            );
+          } catch (_) { /* best effort */ }
+        }
+      }
     } catch (e) {
       throw Exception('AccountSecurityService.changePassword failed: $e');
     }

@@ -869,6 +869,13 @@ class AppLocalizationsEn extends AppLocalizations {
   String get changePassword => 'Change Password';
 
   @override
+  String get signOutOtherDevicesTitle => 'Sign out from other devices';
+
+  @override
+  String get signOutOtherDevicesSubtitle =>
+      'Every other device signed in to your account will be signed out and forced through new-device verification on the next sign-in. Recommended if you\'re worried someone else knows your password.';
+
+  @override
   String get currentPassword => 'Current password';
 
   @override
