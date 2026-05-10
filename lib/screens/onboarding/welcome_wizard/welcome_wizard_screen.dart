@@ -151,27 +151,30 @@ class _WelcomeWizardScreenState extends State<WelcomeWizardScreen> {
             onPopInvokedWithResult: (didPop, _) {
               if (!didPop) _onPopInvoked();
             },
-            child: Scaffold(
-              body: Stack(
-                children: [
-                  const WizardBackground(),
-                  PageView.builder(
-                    controller: _pageController,
-                    itemCount: kWelcomeWizardScreenCount,
-                    onPageChanged: (i) => _cubit.jumpTo(i),
-                    itemBuilder: (context, index) => _buildPage(index),
-                  ),
-                  WizardSkipButton(onTap: _cubit.skip),
-                  WizardPageDots(
-                    total: kWelcomeWizardScreenCount,
-                    current: state.currentPage,
-                    onJump: _cubit.jumpTo,
-                  ),
-                  WizardNextButton(
-                    onTap: _cubit.next,
-                    label: nextLabel,
-                  ),
-                ],
+            child: Directionality(
+              textDirection: TextDirection.ltr,
+              child: Scaffold(
+                body: Stack(
+                  children: [
+                    const WizardBackground(),
+                    PageView.builder(
+                      controller: _pageController,
+                      itemCount: kWelcomeWizardScreenCount,
+                      onPageChanged: (i) => _cubit.jumpTo(i),
+                      itemBuilder: (context, index) => _buildPage(index),
+                    ),
+                    WizardSkipButton(onTap: _cubit.skip),
+                    WizardPageDots(
+                      total: kWelcomeWizardScreenCount,
+                      current: state.currentPage,
+                      onJump: _cubit.jumpTo,
+                    ),
+                    WizardNextButton(
+                      onTap: _cubit.next,
+                      label: nextLabel,
+                    ),
+                  ],
+                ),
               ),
             ),
           );

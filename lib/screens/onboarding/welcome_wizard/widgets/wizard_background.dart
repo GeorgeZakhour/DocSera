@@ -100,17 +100,33 @@ class _WizardBackgroundState extends State<WizardBackground>
   }
 
   Widget _orb({required double diameter, required double opacity, double blurSigma = 48}) {
+    // `opacity` now scales the teal edge tint only — never the white core.
+    final tealEdge = (opacity * 0.35).clamp(0.0, 1.0); // very subtle teal tint
     return Container(
       width: diameter,
       height: diameter,
       decoration: BoxDecoration(
         shape: BoxShape.circle,
-        color: AppColors.main.withValues(alpha: opacity),
+        gradient: RadialGradient(
+          center: const Alignment(-0.3, -0.4),
+          radius: 0.95,
+          colors: [
+            const Color(0xCCFFFFFF), // white .80 — core highlight
+            const Color(0x4DFFFFFF), // white .30
+            AppColors.main.withValues(alpha: tealEdge), // faint teal at edge
+          ],
+          stops: const [0.0, 0.5, 1.0],
+        ),
+        border: Border.all(
+          color: const Color(0x80FFFFFF), // .50 white border
+          width: 1.2,
+        ),
         boxShadow: [
           BoxShadow(
-            color: AppColors.main.withValues(alpha: opacity),
-            blurRadius: blurSigma,
-            spreadRadius: blurSigma * 0.4,
+            color: const Color(0x33009092), // teal .20 — soft cast shadow
+            blurRadius: blurSigma * 0.6,
+            spreadRadius: blurSigma * 0.1,
+            offset: const Offset(0, 12),
           ),
         ],
       ),

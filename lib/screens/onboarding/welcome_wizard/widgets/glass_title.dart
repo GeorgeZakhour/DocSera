@@ -38,9 +38,11 @@ class GlassTitle extends StatelessWidget {
           begin: Alignment.topCenter,
           end: Alignment.bottomCenter,
           colors: [
-            Color(0xE6009092), // teal .90
-            Color(0x80009092), // teal .50
+            Color(0xFF4DD0D2), // light teal .100 — top sheen
+            Color(0xF2009092), // teal .95
+            Color(0xBF009092), // teal .75 — bottom (was .50)
           ],
+          stops: [0.0, 0.30, 1.0],
         ).createShader(bounds),
         blendMode: BlendMode.srcIn,
         child: Text(
