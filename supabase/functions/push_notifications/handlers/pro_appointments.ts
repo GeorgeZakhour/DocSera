@@ -36,13 +36,22 @@ export async function handleProAppointments(
   // Manual patients (no DocSera account, booked by clinic) — still
   // notify the doctor + secretary; the patient_name field carries the
   // human label.
-  const centerId: string | null = record.center_id ?? null;
   const doctorId: string | null = record.doctor_id ?? null;
-  if (!centerId || !doctorId) {
-    // Without a center_id we can't resolve recipients. Skip — Pro
-    // notifications require the appointment to be attached to a
-    // center. Patient-side handler still fires.
-    return [];
+  if (!doctorId) return [];
+
+  // center_id on the appointments row is the cheap path. When it's
+  // null (the patient-app booking flow doesn't always set it), fall
+  // back to looking up the center via center_members.doctor_id — the
+  // doctor's own row carries the center_id. This is the same pattern
+  // messages.ts uses for the same reason.
+  let centerId: string | null = record.center_id ?? null;
+  if (!centerId) {
+    centerId = await lookupCenterForDoctor(supabase, doctorId);
+    if (!centerId) {
+      // Genuinely solo doctor (no team) — Pro handler has nothing to
+      // do. Patient-side handler still fires.
+      return [];
+    }
   }
 
   // Decide which event fired.
@@ -347,4 +356,26 @@ function normalizeUuidList(rows: unknown): string[] {
       .filter((r): r is string => typeof r === "string" && r.length > 0);
   }
   return [];
+}
+
+/// Resolve a doctor's center_id from center_members when the
+/// appointments row's center_id is null (booking flows don't always
+/// populate it). Returns null when the doctor isn't on a team —
+/// in which case the handler skips and the patient-side flow handles
+/// notifications for that booking.
+async function lookupCenterForDoctor(
+  supabase: SupabaseClient,
+  doctorId: string,
+): Promise<string | null> {
+  const { data, error } = await supabase
+    .from("center_members")
+    .select("center_id")
+    .eq("doctor_id", doctorId)
+    .eq("is_active", true)
+    .is("removed_at", null)
+    .order("joined_at", { ascending: true })
+    .limit(1)
+    .maybeSingle();
+  if (error || !data) return null;
+  return (data as { center_id: string }).center_id;
 }
