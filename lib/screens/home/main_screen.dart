@@ -633,14 +633,6 @@ class _MainScreenState extends State<MainScreen> with AutomaticKeepAliveClientMi
               children: [
                 const TopSection(), // ✅ Contains only the header & background
 
-                // Soft banner surfacing pending patient↔doctor link
-                // requests. Self-fetching — renders nothing when no
-                // requests pending, so we can leave it always-on here.
-                Transform.translate(
-                  offset: Offset(0, -screenHeight * 0.055),
-                  child: const ConnectionsPendingBanner(),
-                ),
-
                 // ✅ Pass the banners list to `BannersSection`
                 // ✅ Use optimized BannersSection
                 // ✅ Pass banners and ensure instant display
@@ -676,7 +668,12 @@ class _MainScreenState extends State<MainScreen> with AutomaticKeepAliveClientMi
                   ),
                 ),
 
-
+                // Soft banner surfacing pending patient↔doctor link
+                // requests. Self-fetching — renders nothing when no
+                // requests pending, so it can sit here unconditionally.
+                // Positioned BELOW the promotional banners so it doesn't
+                // visually compete with them on first paint.
+                const ConnectionsPendingBanner(),
 
 
                 // Health profile compact CTA — self-hides when completed
