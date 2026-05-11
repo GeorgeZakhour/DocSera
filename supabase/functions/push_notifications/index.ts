@@ -30,6 +30,8 @@ import { handleMessages } from "./handlers/messages.ts";
 import { handleAppointments } from "./handlers/appointments.ts";
 import { handleProAppointments } from "./handlers/pro_appointments.ts";
 import { handleProTeam } from "./handlers/pro_team.ts";
+import { handleProVerifications } from "./handlers/pro_verifications.ts";
+import { handleProSubscriptions } from "./handlers/pro_subscriptions.ts";
 import { handleDocuments } from "./handlers/documents.ts";
 import { handleDocumentsDeletion } from "./handlers/documents_deletion.ts";
 import { handleConversations } from "./handlers/conversations.ts";
@@ -148,6 +150,16 @@ serve(async (req) => {
       case "center_members": {
         const teamIntents = await handleProTeam(supabase, payload);
         if (teamIntents.length > 0) intents.push(...teamIntents);
+        break;
+      }
+      case "doctor_verifications": {
+        const verifIntents = await handleProVerifications(supabase, payload);
+        if (verifIntents.length > 0) intents.push(...verifIntents);
+        break;
+      }
+      case "subscriptions": {
+        const subIntents = await handleProSubscriptions(supabase, payload);
+        if (subIntents.length > 0) intents.push(...subIntents);
         break;
       }
       default:
