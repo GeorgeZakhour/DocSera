@@ -361,9 +361,14 @@ class _AccountScreenState extends State<AccountScreen> {
               // request the user can act on (connect / merge). Sits
               // first in Settings because actions on it can have
               // medical-record consequences (a doctor's records
-              // merging into the account).
-              const _ConnectionsSettingsTile(),
-              Divider(color: Colors.grey[200], height: 2.h),
+              // merging into the account). The card keeps its
+              // distinctive glass + gradient styling — visually
+              // separates it from the standard AccountListTile rows
+              // that follow.
+              Padding(
+                padding: EdgeInsets.fromLTRB(0, 12.h, 0, 4.h),
+                child: const _ConnectionsAccountTile(),
+              ),
 
               // Language
               AccountListTile(
@@ -1053,20 +1058,22 @@ class _AuthenticatedAccountView extends StatelessWidget {
   }
 }
 
-/// Connections entry inside the Settings section. Uses [AccountListTile]
-/// so it visually matches Language, Two-Factor Auth, etc. Self-fetches
-/// the pending count so the subtitle ("3 بانتظار ردك" vs "كل شيء على ما
-/// يرام") stays accurate without parent-state plumbing. Refreshes on
-/// return from the center.
-class _ConnectionsSettingsTile extends StatefulWidget {
-  const _ConnectionsSettingsTile();
+/// Account-page tile that opens the [ConnectionsCenterPage]. Self-fetches
+/// the pending count so the chip on the right stays accurate without
+/// parent-state plumbing. Refreshes on return from the center.
+///
+/// Custom glass + gradient styling — intentional visual standout from
+/// the surrounding AccountListTile rows since connections involve
+/// medical-data consequences and deserve a moment of attention.
+class _ConnectionsAccountTile extends StatefulWidget {
+  const _ConnectionsAccountTile();
 
   @override
-  State<_ConnectionsSettingsTile> createState() =>
-      _ConnectionsSettingsTileState();
+  State<_ConnectionsAccountTile> createState() =>
+      _ConnectionsAccountTileState();
 }
 
-class _ConnectionsSettingsTileState extends State<_ConnectionsSettingsTile> {
+class _ConnectionsAccountTileState extends State<_ConnectionsAccountTile> {
   Future<int>? _countFuture;
 
   @override
@@ -1099,41 +1106,104 @@ class _ConnectionsSettingsTileState extends State<_ConnectionsSettingsTile> {
   Widget build(BuildContext context) {
     final l = AppLocalizations.of(context)!;
 
-    return FutureBuilder<int>(
-      future: _countFuture,
-      builder: (context, snap) {
-        final count = snap.data ?? 0;
-        final subtitle = count == 0
-            ? l.connectionsAccountTileSubtitleEmpty
-            : l.connectionsAccountTileSubtitlePending(count);
-
-        return AccountListTile(
-          icon: Icons.handshake_outlined,
-          title: l.connectionsAccountTileTitle,
-          subtitle: subtitle,
-          onTap: _open,
-          // Pending count chip — only when > 0, mirrors the 2FA pill
-          // visual to stay consistent within the Settings section.
-          trailingWidget: count == 0
-              ? null
-              : Container(
-                  padding:
-                      EdgeInsets.symmetric(horizontal: 8.w, vertical: 4.h),
-                  decoration: BoxDecoration(
-                    color: AppColors.main.withValues(alpha: 0.14),
-                    borderRadius: BorderRadius.circular(12.r),
+    return Padding(
+      padding: EdgeInsets.symmetric(horizontal: 16.w),
+      child: InkWell(
+        borderRadius: BorderRadius.circular(14),
+        onTap: _open,
+        child: Container(
+          padding: EdgeInsets.symmetric(horizontal: 14.w, vertical: 14.h),
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(14),
+            border: Border.all(
+              color: AppColors.main.withValues(alpha: 0.18),
+              width: 1,
+            ),
+            boxShadow: [
+              BoxShadow(
+                color: AppColors.main.withValues(alpha: 0.08),
+                blurRadius: 12,
+                offset: const Offset(0, 4),
+                spreadRadius: -2,
+              ),
+            ],
+          ),
+          child: Row(
+            children: [
+              Container(
+                width: 40.w,
+                height: 40.w,
+                decoration: BoxDecoration(
+                  borderRadius: BorderRadius.circular(12),
+                  gradient: const LinearGradient(
+                    colors: [Color(0xFF009092), Color(0xFF4DD0D2)],
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
                   ),
-                  child: Text(
-                    '$count',
-                    style: AppTextStyles.getText3(context).copyWith(
-                      color: AppColors.main,
-                      fontWeight: FontWeight.w800,
-                      fontSize: 10,
+                  boxShadow: [
+                    BoxShadow(
+                      color: AppColors.main.withValues(alpha: 0.4),
+                      blurRadius: 12,
+                      offset: const Offset(0, 6),
+                      spreadRadius: -4,
                     ),
-                  ),
+                  ],
                 ),
-        );
-      },
+                child: Icon(
+                  Icons.handshake_rounded,
+                  color: Colors.white,
+                  size: 20.sp,
+                ),
+              ),
+              SizedBox(width: 12.w),
+              Expanded(
+                child: FutureBuilder<int>(
+                  future: _countFuture,
+                  builder: (context, snap) {
+                    final count = snap.data ?? 0;
+                    final subtitle = count == 0
+                        ? l.connectionsAccountTileSubtitleEmpty
+                        : l.connectionsAccountTileSubtitlePending(count);
+                    final subtitleColor = count == 0
+                        ? AppColors.grayMain
+                        : AppColors.main;
+                    return Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Text(
+                          l.connectionsAccountTileTitle,
+                          style: AppTextStyles.getText2(context).copyWith(
+                            fontWeight: FontWeight.w800,
+                            color: AppColors.mainDark,
+                          ),
+                        ),
+                        SizedBox(height: 2.h),
+                        Text(
+                          subtitle,
+                          style: AppTextStyles.getText3(context).copyWith(
+                            color: subtitleColor,
+                            fontWeight: count == 0
+                                ? FontWeight.w500
+                                : FontWeight.w700,
+                          ),
+                        ),
+                      ],
+                    );
+                  },
+                ),
+              ),
+              SizedBox(width: 8.w),
+              Icon(
+                Icons.arrow_forward_ios,
+                size: 12.sp,
+                color: AppColors.grayMain,
+              ),
+            ],
+          ),
+        ),
+      ),
     );
   }
 }
