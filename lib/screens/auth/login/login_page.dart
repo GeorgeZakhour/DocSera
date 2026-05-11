@@ -767,11 +767,13 @@ class _LogInPageState extends State<LogInPage> with SingleTickerProviderStateMix
         return;
       }
 
-      // Real email — autofill the email tab.
+      // Real email — autofill the email tab and clear the phone tab so
+      // a manual toggle doesn't surface stale data from a previous run.
       setState(() {
         _isPhoneMode = false;
         _inputController.text = email;
         _passwordController.text = password;
+        _phoneController.text = '';
         isValid = true;
       });
       await _logInUser();
@@ -1102,13 +1104,13 @@ class _LogInPageState extends State<LogInPage> with SingleTickerProviderStateMix
                       padding: EdgeInsets.only(bottom: 50.h),
                       child: isFaceID
                           ? Image.asset(
-                        'assets/images/face_Id.png',
+                        'assets/images/face_Id.webp',
                         width: 65.w,
                         height: 65.w,
                         color: AppColors.main,
                       )
                           : Image.asset(
-                        'assets/images/fingerprint.png',
+                        'assets/images/fingerprint.webp',
                         width: 55.w,
                         height: 55.w,
                         color: AppColors.main,

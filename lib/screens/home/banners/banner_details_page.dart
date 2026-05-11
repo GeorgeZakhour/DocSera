@@ -2,6 +2,7 @@ import 'package:docsera/app/text_styles.dart';
 import 'package:docsera/models/banner_model.dart';
 import 'package:docsera/widgets/main_screen_widgets.dart'; // For BannerLogo
 import 'package:flutter/material.dart';
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:docsera/app/const.dart';
 import 'package:url_launcher/url_launcher.dart';
@@ -41,10 +42,9 @@ class BannerDetailsPage extends StatelessWidget {
                 fit: StackFit.expand,
                 children: [
                   banner.imagePath.startsWith('http')
-                      ? Image.network(
-                          banner.imagePath,
+                      ? CachedNetworkImage(imageUrl: banner.imagePath,
                           fit: BoxFit.cover,
-                          errorBuilder: (context, error, stackTrace) => Container(color: themeColor),
+                          errorWidget: (context, error, stackTrace) => Container(color: themeColor),
                         )
                       : Image.asset(
                           banner.imagePath,
@@ -161,11 +161,10 @@ class BannerDetailsPage extends StatelessWidget {
             if (section.url != null)
               ClipRRect(
                 borderRadius: BorderRadius.circular(12.r),
-                child: Image.network(
-                  section.url!,
+                child: CachedNetworkImage(imageUrl: section.url!,
                   width: double.infinity,
                   fit: BoxFit.cover,
-                  errorBuilder: (_, __, ___) => const SizedBox(),
+                  errorWidget: (_, __, ___) => const SizedBox(),
                 ),
               ),
             SizedBox(height: 20.h),

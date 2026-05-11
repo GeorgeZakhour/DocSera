@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:docsera/app/const.dart';
 import 'package:docsera/app/text_styles.dart';
@@ -35,10 +36,9 @@ class PartnerBubble extends StatelessWidget {
               padding: EdgeInsets.all(3.w),
               child: ClipOval(
                 child: partner.logoUrl != null && partner.logoUrl!.isNotEmpty
-                    ? Image.network(
-                        partner.logoUrl!,
+                    ? CachedNetworkImage(imageUrl: partner.logoUrl!,
                         fit: BoxFit.cover,
-                        errorBuilder: (_, __, ___) => _initialsFallback(name, ringColor),
+                        errorWidget: (_, __, ___) => _initialsFallback(name, ringColor),
                       )
                     : _initialsFallback(name, ringColor),
               ),

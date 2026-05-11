@@ -247,7 +247,7 @@ class AppointmentCancelledPage extends StatelessWidget {
                               specialty: specialty,
                               image: appointment['doctor_image'] ??
                                   appointment['doctorImage'] ??
-                                  "assets/images/female-doc.png",
+                                  "assets/images/female-doc.webp",
                               clinicName: clinicName,
                               clinicAddress: clinicAddress,
                               clinicLocation: clinicLocation,

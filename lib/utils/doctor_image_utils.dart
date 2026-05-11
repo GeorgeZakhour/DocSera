@@ -167,7 +167,7 @@ DoctorImageResult resolveCenterImagePathAndWidget({
     }
   }
 
-  final avatarPath = imageUrl ?? 'assets/images/logo-placeholder.png';
+  final avatarPath = imageUrl ?? 'assets/images/logo-placeholder.webp';
 
   final widget = avatarPath.startsWith('http')
       ? CachedNetworkImage(
@@ -185,7 +185,7 @@ DoctorImageResult resolveCenterImagePathAndWidget({
       ),
     ),
     errorWidget: (_, __, ___) =>
-        Image.asset("assets/images/logo-placeholder.png",
+        Image.asset("assets/images/logo-placeholder.webp",
             width: width.w, height: height.h, fit: BoxFit.cover),
   )
       : Image.asset(

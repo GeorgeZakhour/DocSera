@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:docsera/app/const.dart';
 import 'package:docsera/app/text_styles.dart';
@@ -116,12 +117,11 @@ class OfferCoverCard extends StatelessWidget {
                                   children: [
                                     if (offer.partnerLogoUrl != null) ...[
                                       ClipOval(
-                                        child: Image.network(
-                                          offer.partnerLogoUrl!,
+                                        child: CachedNetworkImage(imageUrl: offer.partnerLogoUrl!,
                                           width: 16.w,
                                           height: 16.w,
                                           fit: BoxFit.cover,
-                                          errorBuilder: (_, __, ___) =>
+                                          errorWidget: (_, __, ___) =>
                                               Icon(Icons.store_rounded, size: 12.sp, color: Colors.grey[500]),
                                         ),
                                       ),
@@ -158,10 +158,9 @@ class OfferCoverCard extends StatelessWidget {
 
   Widget _buildCover(Color brand) {
     if (offer.imageUrl != null && offer.imageUrl!.isNotEmpty) {
-      return Image.network(
-        offer.imageUrl!,
+      return CachedNetworkImage(imageUrl: offer.imageUrl!,
         fit: BoxFit.cover,
-        errorBuilder: (_, __, ___) => _gradientFallback(brand),
+        errorWidget: (_, __, ___) => _gradientFallback(brand),
       );
     }
     return _gradientFallback(brand);

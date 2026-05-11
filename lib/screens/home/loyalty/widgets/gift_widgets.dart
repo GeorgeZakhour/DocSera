@@ -1,5 +1,6 @@
 import 'dart:ui';
 import 'package:flutter/material.dart';
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:qr_flutter/qr_flutter.dart';
@@ -373,12 +374,11 @@ class _GiftDoctorAvatar extends StatelessWidget {
     if (imageUrl != null && imageUrl!.isNotEmpty) {
       return ClipRRect(
         borderRadius: BorderRadius.circular(s / 2),
-        child: Image.network(
-          imageUrl!,
+        child: CachedNetworkImage(imageUrl: imageUrl!,
           width: s,
           height: s,
           fit: BoxFit.cover,
-          errorBuilder: (_, __, ___) => _placeholder(s, color, icon),
+          errorWidget: (_, __, ___) => _placeholder(s, color, icon),
         ),
       );
     }

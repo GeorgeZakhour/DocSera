@@ -156,7 +156,7 @@ class _WriteMessagePageState extends State<WriteMessagePage> {
                   ],
                 ),
                 SizedBox(height: 40.h),
-                Image.asset("assets/images/message.png", height: 80.h),
+                Image.asset("assets/images/message.webp", height: 80.h),
                 SizedBox(height: 40.h),
                 Text(
                   AppLocalizations.of(context)!.helpMessage1,

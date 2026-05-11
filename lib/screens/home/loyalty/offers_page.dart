@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
@@ -403,10 +404,9 @@ class _MegaCarouselCard extends StatelessWidget {
             fit: StackFit.expand,
             children: [
               if (offer.imageUrl != null)
-                Image.network(
-                  offer.imageUrl!,
+                CachedNetworkImage(imageUrl: offer.imageUrl!,
                   fit: BoxFit.cover,
-                  errorBuilder: (_, __, ___) => _gradient(brand),
+                  errorWidget: (_, __, ___) => _gradient(brand),
                 )
               else
                 _gradient(brand),

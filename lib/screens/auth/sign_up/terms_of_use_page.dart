@@ -67,7 +67,7 @@ class _TermsOfUsePageState extends State<TermsOfUsePage> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Center(child: Column(children: [
-              Image.asset('assets/images/terms_icon.png', height: 70.h),
+              Image.asset('assets/images/terms_icon.webp', height: 70.h),
               SizedBox(height: 10.h),
               Text(l.termsOfUseTitle,
                   style: AppTextStyles.getTitle1(context).copyWith(fontSize: 14.sp)),

@@ -145,8 +145,8 @@ class SharedPrefsService {
           String gender = (doctorData['gender'] ?? "male").toLowerCase();
           String title = (doctorData['title'] ?? "").toLowerCase();
           String defaultImage = (title == "dr.")
-              ? (gender == "female" ? "assets/images/female-doc.png" : "assets/images/male-doc.png")
-              : (gender == "female" ? "assets/images/female-phys.png" : "assets/images/male-phys.png");
+              ? (gender == "female" ? "assets/images/female-doc.webp" : "assets/images/male-doc.webp")
+              : (gender == "female" ? "assets/images/female-phys.webp" : "assets/images/male-phys.webp");
 
           // ✅ التأكد من أن `doctorImage` ليس فارغًا
           String doctorImage = doctorData['doctor_image'] != null && doctorData['doctor_image'].isNotEmpty

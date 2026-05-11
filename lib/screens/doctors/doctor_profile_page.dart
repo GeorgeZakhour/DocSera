@@ -403,8 +403,8 @@ class _DoctorProfilePageState extends State<DoctorProfilePage> {
                           },
                           child: ClipRRect(
                             borderRadius: BorderRadius.circular(10.r),
-                            child: Image.network(
-                              Supabase.instance.client.storage.from('doctor').getPublicUrl(imagePath),
+                            child: CachedNetworkImage(
+                              imageUrl: Supabase.instance.client.storage.from('doctor').getPublicUrl(imagePath),
                               fit: BoxFit.cover,
                             ),
                           ),
@@ -2079,8 +2079,8 @@ class _DoctorProfilePageState extends State<DoctorProfilePage> {
                       children: [
                         ClipRRect(
                           borderRadius: BorderRadius.circular(8.r),
-                          child: Image.network(
-                            Supabase.instance.client.storage.from('doctor').getPublicUrl(imagePath),
+                          child: CachedNetworkImage(
+                            imageUrl: Supabase.instance.client.storage.from('doctor').getPublicUrl(imagePath),
                             fit: BoxFit.cover,
                           ),
                         ),

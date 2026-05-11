@@ -382,7 +382,7 @@ class AppointmentConfirmedPage extends StatelessWidget {
                               doctorTitle: appointment["doctorTitle"] ?? appointment["doctor_title"] ?? "",
                               doctorGender: appointment["doctorGender"] ?? appointment["doctor_gender"] ?? "",
                               specialty: appointment["specialty"] ?? appointment["doctor_specialty"] ?? AppLocalizations.of(context)!.unknownSpecialty,
-                              image: appointment["doctor_image"] ?? appointment["doctorImage"] ?? "assets/images/male-doc.png",
+                              image: appointment["doctor_image"] ?? appointment["doctorImage"] ?? "assets/images/male-doc.webp",
                               clinicName: appointment['clinic'] ?? appointment['clinicName'] ?? AppLocalizations.of(context)!.clinicNotAvailable,
                               clinicAddress: appointment['clinicAddress'] ?? appointment['clinic_address'] ?? const {},
                               clinicLocation: appointment['clinicLocation'] ?? appointment['location'] ?? const {},

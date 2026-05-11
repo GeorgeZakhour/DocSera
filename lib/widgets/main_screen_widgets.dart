@@ -5,6 +5,7 @@ import 'package:docsera/screens/search_advanced_page.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:docsera/utils/page_transitions.dart';
 import 'package:flutter/material.dart';
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:docsera/app/const.dart';
 import 'package:docsera/utils/custom_clippers.dart';
 import 'package:flutter/services.dart';
@@ -523,12 +524,11 @@ class BannerCard extends StatelessWidget {
                     bottomLeft: Radius.circular(100.r),
                   ),
                   child: imagePath.startsWith('http') 
-                    ? Image.network(
-                        imagePath,
+                    ? CachedNetworkImage(imageUrl: imagePath,
                         width: screenWidth * 0.3,
                         height: screenWidth * 0.4,
                         fit: BoxFit.cover,
-                        errorBuilder: (context, error, stackTrace) {
+                        errorWidget: (context, error, stackTrace) {
                           return Container(
                             width: screenWidth * 0.3,
                             height: screenWidth * 0.4,
@@ -680,12 +680,11 @@ class _BannerLogoState extends State<BannerLogo> {
                   fit: BoxFit.contain,
                 ))
           : (isNetwork
-              ? Image.network(
-                  widget.path,
+              ? CachedNetworkImage(imageUrl: widget.path,
                   width: widget.size,
                   height: widget.size,
                   fit: BoxFit.contain,
-                  errorBuilder: (_, __, ___) => const SizedBox(),
+                  errorWidget: (_, __, ___) => const SizedBox(),
                 )
               : Image(
                   image: _imageProvider,
@@ -708,7 +707,7 @@ class FeaturesSection extends StatelessWidget {
       children: [
         _buildFeatureTile(
           context,
-          'assets/images/calander.png',
+          'assets/images/calander.webp',
           AppLocalizations.of(context)!.fasterAccess,
           AppLocalizations.of(context)!.fasterAccessDescription,
           width: 70.w,
@@ -716,7 +715,7 @@ class FeaturesSection extends StatelessWidget {
         ),
         _buildFeatureTile(
           context,
-          'assets/images/message.png',
+          'assets/images/message.webp',
           AppLocalizations.of(context)!.receiveCare,
           AppLocalizations.of(context)!.receiveCareDescription,
           width: 80.w,
@@ -724,7 +723,7 @@ class FeaturesSection extends StatelessWidget {
         ),
         _buildFeatureTile(
           context,
-          'assets/images/heart.png',
+          'assets/images/heart.webp',
           AppLocalizations.of(context)!.manageHealth,
           AppLocalizations.of(context)!.manageHealthDescription,
           width: 70.w,
@@ -859,11 +858,10 @@ class DecorativeImageCard extends StatelessWidget {
                              return SizedBox(
                                width: imageWidth,
                                height: imageHeight,
-                               child: Image.network(
-                                 cleanPath,
+                               child: CachedNetworkImage(imageUrl: cleanPath,
                                  fit: BoxFit.cover,
                                  alignment: Alignment.center,
-                                 errorBuilder: (context, error, stackTrace) {
+                                 errorWidget: (context, error, stackTrace) {
                                    return const Center(child: Icon(Icons.error));
                                  },
                                ),
@@ -1092,10 +1090,9 @@ class CompactDecorativeCard extends StatelessWidget {
                           builder: (context, constraints) {
                             final cleanPath = imagePath.trim();
                             if (cleanPath.startsWith('http')) {
-                               return Image.network(
-                                 cleanPath,
+                               return CachedNetworkImage(imageUrl: cleanPath,
                                  fit: BoxFit.cover,
-                                 errorBuilder: (context, error, stackTrace) =>
+                                 errorWidget: (context, error, stackTrace) =>
                                      const Center(child: Icon(Icons.error, size: 20)),
                                );
                             } else {

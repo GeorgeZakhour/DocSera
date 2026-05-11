@@ -384,7 +384,7 @@ class _AppointmentDetailsPageState extends State<AppointmentDetailsPage> {
                 Stack(
                   clipBehavior: Clip.none,
                   children: [
-                    Image.asset('assets/images/empty_calendar.png', height: 70, width: 70),
+                    Image.asset('assets/images/empty_calendar.webp', height: 70, width: 70),
                     const Positioned(
                       bottom: -10,
                       right: -10,
@@ -485,7 +485,7 @@ class _AppointmentDetailsPageState extends State<AppointmentDetailsPage> {
                             Stack(
                               clipBehavior: Clip.none,
                               children: [
-                                Image.asset('assets/images/empty_calendar.png',
+                                Image.asset('assets/images/empty_calendar.webp',
                                     height: 70, width: 70),
                                 Positioned(
                                   bottom: -10,
@@ -772,7 +772,7 @@ class _AppointmentDetailsPageState extends State<AppointmentDetailsPage> {
                 Stack(
                   clipBehavior: Clip.none,
                   children: [
-                    Image.asset('assets/images/empty_calendar.png', height: 70, width: 70),
+                    Image.asset('assets/images/empty_calendar.webp', height: 70, width: 70),
                     Positioned(
                       bottom: -10,
                       right: -10,
@@ -871,7 +871,7 @@ class _AppointmentDetailsPageState extends State<AppointmentDetailsPage> {
                           Stack(
                             clipBehavior: Clip.none,
                             children: [
-                              Image.asset('assets/images/empty_calendar.png', height: 70, width: 70),
+                              Image.asset('assets/images/empty_calendar.webp', height: 70, width: 70),
                               Positioned(
                                 bottom: -10,
                                 right: -10,

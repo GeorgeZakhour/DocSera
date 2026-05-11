@@ -226,7 +226,7 @@ import 'package:docsera/gen_l10n/app_localizations.dart';
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Image.asset("assets/images/empty_calendar.png", height: 100.h),
+            Image.asset("assets/images/empty_calendar.webp", height: 100.h),
             SizedBox(height: 20.h),
             Text(
               AppLocalizations.of(context)!.planAppointments,
@@ -262,7 +262,7 @@ import 'package:docsera/gen_l10n/app_localizations.dart';
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Image.asset("assets/images/empty_calendar.png", height: 100),
+            Image.asset("assets/images/empty_calendar.webp", height: 100),
             SizedBox(height: 20.h),
             Text(
               _selectedTab == 0

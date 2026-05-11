@@ -72,7 +72,7 @@ class DoctorDrawer extends StatelessWidget {
 
     String doctorName = "Doctor";
     String specialty = "Specialty";
-    ImageProvider<Object> avatarImage = const AssetImage("assets/images/male-doc.png");
+    ImageProvider<Object> avatarImage = const AssetImage("assets/images/male-doc.webp");
 
     if (doctorData != null) {
       // ✅ Get Name & Specialty Safely

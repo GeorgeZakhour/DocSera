@@ -120,7 +120,7 @@ import 'package:docsera/utils/doctor_image_utils.dart';
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Image.asset("assets/images/messages.png", height: 100.h),
+            Image.asset("assets/images/messages.webp", height: 100.h),
             SizedBox(height: 20.h),
             Text(
               AppLocalizations.of(context)!.sendMessageTitle,
@@ -160,7 +160,7 @@ import 'package:docsera/utils/doctor_image_utils.dart';
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Image.asset("assets/images/messages.png", height: 100.h),
+            Image.asset("assets/images/messages.webp", height: 100.h),
             SizedBox(height: 20.h),
             Text(
               AppLocalizations.of(context)!.sendMessageTitle,

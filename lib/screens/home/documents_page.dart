@@ -20,6 +20,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:docsera/Business_Logic/Documents_page/documents/documents_cubit.dart';
 import 'package:docsera/Business_Logic/Documents_page/documents/documents_state.dart';
 import 'package:flutter/material.dart';
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:docsera/gen_l10n/app_localizations.dart';
 import 'package:flutter_quill/flutter_quill.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
@@ -670,7 +671,7 @@ class _DocumentsPageState extends State<DocumentsPage> with AutomaticKeepAliveCl
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Image.asset("assets/images/documents.png", width: 100, height: 100),
+            Image.asset("assets/images/documents.webp", width: 100, height: 100),
             SizedBox(height: 20.h),
             Text(AppLocalizations.of(context)!.manageDocuments,
                 style: AppTextStyles.getTitle2(context).copyWith(color: AppColors.mainDark)),
@@ -1517,7 +1518,7 @@ class _DocumentsPageState extends State<DocumentsPage> with AutomaticKeepAliveCl
             return _buildEmptyState(
               AppLocalizations.of(context)!.takeNotesTitle,
               AppLocalizations.of(context)!.takeNotesDescription,
-              "assets/images/notes.png",
+              "assets/images/notes.webp",
               AppLocalizations.of(context)!.createNote,
             );
           }
@@ -1963,7 +1964,7 @@ class _DocumentsPageState extends State<DocumentsPage> with AutomaticKeepAliveCl
           // Illustration
           Center(
             child: Image.asset(
-              'assets/images/documents.png',
+              'assets/images/documents.webp',
               width: 140.w,
               height: 140.h,
             ),
@@ -2319,11 +2320,10 @@ class _DocumentGridItemState extends State<DocumentGridItem> {
                               );
                             } else if (data is String && data.isNotEmpty) {
                               // Image URL
-                               return Image.network(
-                                  data,
+                               return CachedNetworkImage(imageUrl: data,
                                   fit: BoxFit.cover,
                                   width: double.infinity,
-                                  errorBuilder: (_, __, ___) => _buildFallbackIcon(isPdf),
+                                  errorWidget: (_, __, ___) => _buildFallbackIcon(isPdf),
                                );
                             }
 

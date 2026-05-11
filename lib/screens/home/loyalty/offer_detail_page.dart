@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
@@ -107,10 +108,9 @@ class _OfferDetailPageState extends State<OfferDetailPage>
                         fit: StackFit.expand,
                         children: [
                           if (widget.offer.imageUrl != null)
-                            Image.network(
-                              widget.offer.imageUrl!,
+                            CachedNetworkImage(imageUrl: widget.offer.imageUrl!,
                               fit: BoxFit.cover,
-                              errorBuilder: (_, __, ___) => _heroFallback(brand),
+                              errorWidget: (_, __, ___) => _heroFallback(brand),
                             )
                           else
                             _heroFallback(brand),
@@ -272,10 +272,9 @@ class _OfferDetailPageState extends State<OfferDetailPage>
               ),
               child: ClipOval(
                 child: widget.offer.partnerLogoUrl != null
-                    ? Image.network(
-                        widget.offer.partnerLogoUrl!,
+                    ? CachedNetworkImage(imageUrl: widget.offer.partnerLogoUrl!,
                         fit: BoxFit.cover,
-                        errorBuilder: (_, __, ___) =>
+                        errorWidget: (_, __, ___) =>
                             const Icon(Icons.store_rounded, color: AppColors.main),
                       )
                     : const Icon(Icons.store_rounded, color: AppColors.main),

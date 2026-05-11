@@ -1,6 +1,7 @@
 import 'dart:ui';
 
 import 'package:flutter/material.dart';
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
@@ -130,10 +131,9 @@ class _PartnerProfileView extends StatelessWidget {
                         stops: [0.0, 0.55, 1.0],
                       ).createShader(rect),
                       child: state.partner.coverUrl != null
-                          ? Image.network(
-                              state.partner.coverUrl!,
+                          ? CachedNetworkImage(imageUrl: state.partner.coverUrl!,
                               fit: BoxFit.cover,
-                              errorBuilder: (_, __, ___) => _brandGradient(brand),
+                              errorWidget: (_, __, ___) => _brandGradient(brand),
                             )
                           : _brandGradient(brand),
                     ),
@@ -204,10 +204,9 @@ class _PartnerProfileView extends StatelessWidget {
                     padding: EdgeInsets.all(3.w),
                     child: ClipOval(
                       child: state.partner.logoUrl != null
-                          ? Image.network(
-                              state.partner.logoUrl!,
+                          ? CachedNetworkImage(imageUrl: state.partner.logoUrl!,
                               fit: BoxFit.cover,
-                              errorBuilder: (_, __, ___) =>
+                              errorWidget: (_, __, ___) =>
                                   Icon(Icons.store_rounded, color: brand),
                             )
                           : Icon(Icons.store_rounded, color: brand),

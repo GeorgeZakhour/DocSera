@@ -405,7 +405,7 @@ class _MainScreenState extends State<MainScreen> with AutomaticKeepAliveClientMi
                       "email": doctor["email"] ?? "",
                       "doctor_image": (doctor["doctor_image"] != null && doctor["doctor_image"] != "null")
                           ? doctor["doctor_image"]
-                          : "assets/images/male-doc.png",
+                          : "assets/images/male-doc.webp",
                     }, doctorId: doctor["id"],)),
                   );
 

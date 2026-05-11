@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import '../../app/const.dart';
 import 'package:docsera/models/popup_banner_model.dart';
@@ -72,12 +73,11 @@ class PopupBannerDialog extends StatelessWidget {
                           )
                         : ClipRRect(
                             borderRadius: BorderRadius.vertical(top: Radius.circular(20.r)),
-                            child: Image.network(
-                              banner.imageUrl!,
+                            child: CachedNetworkImage(imageUrl: banner.imageUrl!,
                               height: 130.h,
                               width: double.infinity,
                               fit: BoxFit.cover,
-                              errorBuilder: (_, __, ___) => Container(
+                              errorWidget: (_, __, ___) => Container(
                                 height: 130.h,
                                 color: Colors.grey[200],
                                 child: const Icon(Icons.broken_image, color: Colors.grey),
