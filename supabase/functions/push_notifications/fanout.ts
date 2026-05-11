@@ -26,11 +26,22 @@ export async function fanoutNotifications(
     return;
   }
 
-  const pushyApiKey = Deno.env.get("PUSHY_API_KEY");
+  // Pushy app keys are per-bundle-id, so the patient app and the Pro
+  // app each have their own Pushy app in the pushy.me dashboard with
+  // distinct API keys. Pick the right one based on recipient_app.
+  // Falls back to PUSHY_API_KEY for `docsera` (backward compat) and
+  // requires PUSHY_API_KEY_PRO for `docsera_pro`.
+  const pushyApiKey = intent.recipient_app === "docsera_pro"
+    ? Deno.env.get("PUSHY_API_KEY_PRO")
+    : Deno.env.get("PUSHY_API_KEY");
   if (!pushyApiKey) {
-    console.error("❌ PUSHY_API_KEY not configured");
+    const which = intent.recipient_app === "docsera_pro"
+      ? "PUSHY_API_KEY_PRO"
+      : "PUSHY_API_KEY";
+    console.error(`❌ ${which} not configured for ${intent.recipient_app}`);
     await markEvents(supabase, persisted, "failed", {
       reason: "pushy_key_missing",
+      missing_key: which,
     });
     return;
   }
