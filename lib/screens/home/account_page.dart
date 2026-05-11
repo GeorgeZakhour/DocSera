@@ -357,19 +357,6 @@ class _AccountScreenState extends State<AccountScreen> {
               AccountSectionTitle(title: AppLocalizations.of(context)!.settings),
               Divider(color: Colors.grey[200], height: 2.h),
 
-              // My doctor connections — surfaces every pending link
-              // request the user can act on (connect / merge). Sits
-              // first in Settings because actions on it can have
-              // medical-record consequences (a doctor's records
-              // merging into the account). The card keeps its
-              // distinctive glass + gradient styling — visually
-              // separates it from the standard AccountListTile rows
-              // that follow.
-              Padding(
-                padding: EdgeInsets.fromLTRB(0, 12.h, 0, 4.h),
-                child: const _ConnectionsAccountTile(),
-              ),
-
               // Language
               AccountListTile(
                 icon: Icons.language,
@@ -504,6 +491,15 @@ class _AccountScreenState extends State<AccountScreen> {
               Divider(color: Colors.grey[200], height: 2.h),
 
               SizedBox(height: 24.h),
+
+              // My doctor connections — opens the Connections Center
+              // where the user reviews pending connect / merge
+              // requests. Glass + teal-gradient card style matches
+              // the wizard replay card visually so both
+              // discoverable affordances share the same idiom.
+              const _ConnectionsAccountTile(),
+
+              SizedBox(height: 12.h),
 
               // Replay welcome wizard — standalone discoverable card
               Padding(
