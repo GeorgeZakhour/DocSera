@@ -5576,4 +5576,16 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get wizard_allset_body =>
       'Account ready, tools waiting, points starting now. Let\'s go.';
+
+  @override
+  String get searchDoctorPresenceOnly =>
+      'Profile only — no booking or messaging';
+
+  @override
+  String get doctorNotMessageable =>
+      'This doctor cannot receive messages at this time.';
+
+  @override
+  String get doctorNotBookable =>
+      'This doctor is not accepting bookings at this time.';
 }

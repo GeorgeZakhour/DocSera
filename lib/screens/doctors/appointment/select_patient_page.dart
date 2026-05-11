@@ -304,9 +304,35 @@ class _SelectPatientPageState extends State<SelectPatientPage> {
                 debugPrint(
                     "Selected Patient: $selectedPatientName, Gender: $selectedPatientGender, Age: $selectedPatientAge");
 
+                // 🛡️ Subscription gate: verify doctor still accepts bookings.
+                // Covers deep-link edge cases where the profile Book button gate
+                // was bypassed (e.g., stale navigation stack).
+                final supabase = Supabase.instance.client;
+                try {
+                  final doctorSubRow = await supabase
+                      .from('public_doctors')
+                      .select('is_bookable_subscription')
+                      .eq('id', widget.doctorId)
+                      .maybeSingle();
+
+                  if (doctorSubRow == null ||
+                      doctorSubRow['is_bookable_subscription'] != true) {
+                    if (!mounted) return;
+                    ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+                      content: Text(
+                        AppLocalizations.of(context)?.doctorNotBookable ??
+                            'This doctor is not accepting bookings at this time.',
+                      ),
+                    ));
+                    return;
+                  }
+                } catch (_) {
+                  // If the check fails, allow booking to proceed (network issue
+                  // — the server-side RLS and RPC guards are the final authority).
+                }
+
                 // 🚫 Check if this patient/relative is blocked before proceeding
                 final isRelative = selectedPatientId != userId;
-                final supabase = Supabase.instance.client;
 
                 try {
                   Map<String, dynamic>? blockRow;

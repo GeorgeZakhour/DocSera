@@ -10099,6 +10099,24 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Account ready, tools waiting, points starting now. Let\'s go.'**
   String get wizard_allset_body;
+
+  /// No description provided for @searchDoctorPresenceOnly.
+  ///
+  /// In en, this message translates to:
+  /// **'Profile only — no booking or messaging'**
+  String get searchDoctorPresenceOnly;
+
+  /// No description provided for @doctorNotMessageable.
+  ///
+  /// In en, this message translates to:
+  /// **'This doctor cannot receive messages at this time.'**
+  String get doctorNotMessageable;
+
+  /// No description provided for @doctorNotBookable.
+  ///
+  /// In en, this message translates to:
+  /// **'This doctor is not accepting bookings at this time.'**
+  String get doctorNotBookable;
 }
 
 class _AppLocalizationsDelegate

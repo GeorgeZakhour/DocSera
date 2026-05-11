@@ -199,6 +199,26 @@ class MessagesCubit extends Cubit<MessagesState> {
 
       if (accountHolderId == null) throw Exception("لا يوجد بيانت للمستخدم الحالي.");
 
+      // --------------------------------------------------------------
+      // -1) Verify doctor is messageable (defense-in-depth)
+      // The conversation-initiation picker is the primary gate. This guard
+      // covers deep-link and stale-cache edge cases.
+      // --------------------------------------------------------------
+      final doctorRow = await _supabase
+          .from('public_doctors')
+          .select('id, is_messageable_subscription')
+          .eq('id', doctorId)
+          .maybeSingle();
+
+      if (doctorRow == null) {
+        emit(MessagesError('doctor_not_found'));
+        return null;
+      }
+      if (doctorRow['is_messageable_subscription'] != true) {
+        emit(MessagesError('doctor_not_messageable'));
+        return null;
+      }
+
       final bool isRelative = accountHolderId != patientId;
       final String? relativeId = isRelative ? patientId : null;
 

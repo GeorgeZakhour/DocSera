@@ -5528,4 +5528,13 @@ class AppLocalizationsAr extends AppLocalizations {
   @override
   String get wizard_allset_body =>
       'حسابك مفعّل، أدواتك تنتظر، ونقاطك تبدأ من الآن. هيا نبدأ.';
+
+  @override
+  String get searchDoctorPresenceOnly => 'ملف شخصي فقط — لا حجوزات أو مراسلات';
+
+  @override
+  String get doctorNotMessageable => 'لا يمكن مراسلة هذا الطبيب حالياً.';
+
+  @override
+  String get doctorNotBookable => 'هذا الطبيب لا يستقبل حجوزات حالياً.';
 }

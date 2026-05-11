@@ -150,9 +150,18 @@ class _SearchPageState extends State<SearchPage> {
 
     final rawResults = await _searchService.searchUnified(q);
 
-    // 🛡️ Filter centers if in messaging mode
+    // 🛡️ Filter centers if in messaging mode; also filter out doctors whose
+    // subscription doesn't allow messaging (Presence/suspended/cancelled).
     final results = widget.mode == "message"
-        ? rawResults.where((r) => r['search_type'] != 'center').toList()
+        ? rawResults.where((r) {
+            if (r['search_type'] == 'center') return false;
+            // Keep the doctor only if is_messageable_subscription is true.
+            // Missing key (e.g. from the non-public_doctors path in extended
+            // search) is treated as false — fail-closed.
+            final messageable = r['is_messageable_subscription'];
+            if (messageable is bool) return messageable;
+            return false;
+          }).toList()
         : rawResults;
 
     // In message mode the per-doctor "is current user a patient?" query is
@@ -423,6 +432,10 @@ class _SearchPageState extends State<SearchPage> {
     final bool messagesEnabled = doctor['messages_enabled'] == true;
     final String access = doctor['messages_access'] ?? 'public';
 
+    // Subscription-aware feature gates (Phase 6 — Subscription V2)
+    final bool isBookable = (doctor['is_bookable_subscription'] as bool?) ?? false;
+    final bool isMessageable = (doctor['is_messageable_subscription'] as bool?) ?? false;
+
     // Pull patient status from the prefetched cache (populated in batch by
     // _prefetchPatientStatus during the search). Falls back to false in
     // search mode where we never need this value anyway.
@@ -436,6 +449,10 @@ class _SearchPageState extends State<SearchPage> {
       if (doctor['id'] == _userId) {
         isUnavailable = true;
         unavailableReason = local.ownProfileBadge;
+      } else if (!isMessageable) {
+        // Subscription gate: doctor's plan does not allow messaging
+        isUnavailable = true;
+        unavailableReason = local.searchDoctorPresenceOnly;
       } else if (!messagesEnabled) {
         isUnavailable = true;
         unavailableReason = local.messagesDisabled; // 🔹 "غير متاح للرسائل"
@@ -443,14 +460,22 @@ class _SearchPageState extends State<SearchPage> {
         isUnavailable = true;
         unavailableReason = local.patientsOnlyMessaging; // 🔹 "متاح فقط لمرضاه"
       }
+    } else if (widget.mode == "search" && !isBookable && !isMessageable) {
+      // Presence-only doctor: profile visible, but no booking or messaging
+      isUnavailable = true;
+      unavailableReason = local.searchDoctorPresenceOnly;
     }
 
     final tileOpacity = isUnavailable ? 0.6 : 1.0;
+    // In message mode, block the whole tile when unavailable (existing behaviour).
+    // In search mode, keep the tile tappable so the patient can still open the
+    // doctor's profile — only the "Profile only" badge communicates the limit.
+    final bool absorbTaps = isUnavailable && widget.mode == "message";
 
     return Opacity(
           opacity: tileOpacity,
-          child: AbsorbPointer( // يمنع الضغط لما يكون غير متاح
-            absorbing: isUnavailable,
+          child: AbsorbPointer( // يمنع الضغط لما يكون غير متاح (في وضع الرسائل فقط)
+            absorbing: absorbTaps,
             child: ListTile(
               contentPadding: const EdgeInsets.symmetric(vertical: 6, horizontal: 8),
               leading: CircleAvatar(

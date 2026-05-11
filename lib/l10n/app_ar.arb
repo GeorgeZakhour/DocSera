@@ -2206,5 +2206,9 @@
 
   "wizard_allset_title": "كلّ شيء جاهز، {firstName}",
   "@wizard_allset_title": { "placeholders": { "firstName": { "type": "String" } } },
-  "wizard_allset_body": "حسابك مفعّل، أدواتك تنتظر، ونقاطك تبدأ من الآن. هيا نبدأ."
+  "wizard_allset_body": "حسابك مفعّل، أدواتك تنتظر، ونقاطك تبدأ من الآن. هيا نبدأ.",
+
+  "searchDoctorPresenceOnly": "ملف شخصي فقط — لا حجوزات أو مراسلات",
+  "doctorNotMessageable": "لا يمكن مراسلة هذا الطبيب حالياً.",
+  "doctorNotBookable": "هذا الطبيب لا يستقبل حجوزات حالياً."
 }

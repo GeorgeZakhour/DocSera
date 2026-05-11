@@ -63,6 +63,23 @@ class _DoctorProfilePageState extends State<DoctorProfilePage> {
   Map<String, dynamic>? _doctorData;
   String? _userId;
 
+  // ---------------------------------------------------------------------------
+  // Subscription-aware feature gates (Phase 6 — Subscription V2)
+  // Fail-closed: missing/null column → false (no booking / no messaging).
+  // Both buttons are hidden during the initial load (_doctorData == null).
+  // ---------------------------------------------------------------------------
+  bool get _isBookable {
+    final v = _doctorData?['is_bookable_subscription'];
+    if (v is bool) return v;
+    return false;
+  }
+
+  bool get _isMessageable {
+    final v = _doctorData?['is_messageable_subscription'];
+    if (v is bool) return v;
+    return false;
+  }
+
   List<Map<String, dynamic>> _centerMemberships = [];
 
   bool _expandedImageOverlay = false;
@@ -3923,7 +3940,7 @@ $deepLink
                   child: Opacity(opacity: op, child: child),
                 );
               },
-              child: Container(
+              child: _isBookable ? Container(
                 decoration: BoxDecoration(
                   borderRadius: BorderRadius.circular(30.r),
                   gradient: const LinearGradient(
@@ -3988,7 +4005,7 @@ $deepLink
                     tapTargetSize: MaterialTapTargetSize.shrinkWrap,
                   ),
                 ),
-              ),
+              ) : const SizedBox.shrink(),
             ),
           ),
           Positioned(
@@ -4005,7 +4022,8 @@ $deepLink
                   child: Opacity(opacity: op, child: child),
                 );
               },
-              child: _userId == doctorId ? _buildOwnAccountBanner() : ElevatedButton.icon(
+              child: !_isBookable ? const SizedBox.shrink() :
+                _userId == doctorId ? _buildOwnAccountBanner() : ElevatedButton.icon(
                 onPressed: () async {
                   final user = Supabase.instance.client.auth.currentUser;
 

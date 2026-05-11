@@ -368,6 +368,29 @@ class _SelectPatientForMessagePageState extends State<SelectPatientForMessagePag
               onTap: selectedPatientId != null
                   ? () async {
 
+                // 🛡️ Defense-in-depth: verify doctor is still messageable at
+                // proceed time (the search-picker filter is the primary gate;
+                // this covers deep-link or stale-cache edge cases).
+                final doctorRow = await Supabase.instance.client
+                    .from('public_doctors')
+                    .select('is_messageable_subscription')
+                    .eq('id', widget.doctorId)
+                    .maybeSingle();
+
+                final doctorIsMessageable =
+                    (doctorRow?['is_messageable_subscription'] as bool?) ?? false;
+
+                if (!mounted) return;
+                if (!doctorIsMessageable) {
+                  ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+                    content: Text(
+                      AppLocalizations.of(context)?.doctorNotMessageable ??
+                          'This doctor cannot receive messages at this time.',
+                    ),
+                  ));
+                  return;
+                }
+
                 // ✅ أولاً: نتحقق هل المريض أو القريب محظور من الطبيب
                 final blockCheck = await Supabase.instance.client
                     .from('doctor_patient_blocks')

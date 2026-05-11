@@ -2223,5 +2223,9 @@
 
   "wizard_allset_title": "You're all set, {firstName}",
   "@wizard_allset_title": { "placeholders": { "firstName": { "type": "String" } } },
-  "wizard_allset_body": "Account ready, tools waiting, points starting now. Let's go."
+  "wizard_allset_body": "Account ready, tools waiting, points starting now. Let's go.",
+
+  "searchDoctorPresenceOnly": "Profile only — no booking or messaging",
+  "doctorNotMessageable": "This doctor cannot receive messages at this time.",
+  "doctorNotBookable": "This doctor is not accepting bookings at this time."
 }
