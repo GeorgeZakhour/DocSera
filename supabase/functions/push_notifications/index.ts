@@ -29,6 +29,7 @@ import type { NotificationIntent, WebhookPayload } from "./types.ts";
 import { handleMessages } from "./handlers/messages.ts";
 import { handleAppointments } from "./handlers/appointments.ts";
 import { handleProAppointments } from "./handlers/pro_appointments.ts";
+import { handleProTeam } from "./handlers/pro_team.ts";
 import { handleDocuments } from "./handlers/documents.ts";
 import { handleDocumentsDeletion } from "./handlers/documents_deletion.ts";
 import { handleConversations } from "./handlers/conversations.ts";
@@ -143,6 +144,12 @@ serve(async (req) => {
       case "todo_tasks":
         intent = await handleTodoTasks(supabase, payload);
         break;
+      case "center_invitations":
+      case "center_members": {
+        const teamIntents = await handleProTeam(supabase, payload);
+        if (teamIntents.length > 0) intents.push(...teamIntents);
+        break;
+      }
       default:
         return new Response(
           `Table ${payload.table} not handled`,
