@@ -106,13 +106,19 @@ async function fanoutOne(
   const deviceLocale = (devices[0].locale as string | null) ?? intent.locale ?? "ar";
   const { title, body } = pickLocalized(intent, deviceLocale);
 
-  // 4. Send.
+  // 4. Send. Notification row id + importance are echoed in the Pushy
+  // data dict so the client can post back a delivery confirmation
+  // and so the OS notification rendering knows whether to use the TS
+  // channel without a separate lookup.
   const result = await sendPushyNotification(
     pushyApiKey,
     tokens,
     title,
     body,
     intent.deep_link,
+    "default",
+    row.id,
+    intent.importance ?? "default",
   );
 
   console.log(
@@ -125,10 +131,13 @@ async function fanoutOne(
       device_count: tokens.length,
       locale: deviceLocale,
     });
-    await supabase
-      .from("notifications")
-      .update({ delivered_push_at: new Date().toISOString() })
-      .eq("id", row.id);
+    // NOTE: we used to stamp `delivered_push_at` here, which conflated
+    // "Pushy API accepted the request" with "device actually got the
+    // push". Those are different things, and a 200 from Pushy doesn't
+    // mean the OS notification ever appeared. The column is now
+    // stamped only by /functions/notification_received when the client
+    // SDK confirms delivery on-device. The `sent_push` event above is
+    // the durable record of the API call.
   } else {
     await markEvents(supabase, [row], "failed", {
       pushy_status: result.status,

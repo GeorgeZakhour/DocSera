@@ -15,10 +15,25 @@ export async function sendPushyNotification(
   body: string,
   payloadData: string,
   sound: string = "default",
+  // Our notification row id — echoed back to the client in the
+  // Pushy data dict so the client can POST a delivery confirmation
+  // to /functions/v1/notification_received with this id. Without
+  // this we have no way to correlate a Pushy delivery to one of
+  // our rows. Optional for backward compat.
+  notificationId?: string,
+  importance?: string,
 ): Promise<PushyResult> {
   const payload = {
     to: tokens,
-    data: { title, body, payload: payloadData, sound },
+    data: {
+      title,
+      body,
+      payload: payloadData,
+      sound,
+      // Custom fields the Pro/patient client reads from the push:
+      ...(notificationId ? { notification_id: notificationId } : {}),
+      ...(importance ? { importance } : {}),
+    },
     notification: { title, body, sound },
   };
 
