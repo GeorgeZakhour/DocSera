@@ -65,7 +65,44 @@ class SentryInit {
     }
   }
 
+  /// Exception types we drop on the floor — known-benign, self-recovering,
+  /// or so noisy they crowd out real signal. Keep this list short and
+  /// review periodically.
+  ///
+  /// `RealtimeSubscribeException(timedOut)` — the Supabase realtime client
+  /// times out subscribing when the network is weak. The client retries
+  /// automatically on the next emit; nothing for us to do.
+  ///
+  /// `List<Presence>` / `List<Map<String, dynamic>>` cast errors — known
+  /// bugs in older realtime_client versions when the presence payload is
+  /// empty. Cosmetic.
+  static const List<String> _droppedExceptionMarkers = [
+    'RealtimeSubscribeException',
+    "is not a subtype of type 'List<Presence>'",
+    "is not a subtype of type 'List<Map<String, dynamic>>'",
+  ];
+
   static FutureOr<SentryEvent?> _scrub(SentryEvent event, Hint hint) {
+    // Drop known-benign realtime noise BEFORE doing any PII work — no point
+    // scrubbing an event we're about to discard.
+    final exceptions = event.exceptions ?? const [];
+    for (final ex in exceptions) {
+      final blob = '${ex.type ?? ''} ${ex.value ?? ''}';
+      for (final marker in _droppedExceptionMarkers) {
+        if (blob.contains(marker)) {
+          return null; // drop entirely
+        }
+      }
+    }
+    // Also catch the case where the exception lands as a top-level message
+    // rather than an `exception` entry (e.g., reported via captureMessage).
+    final msg = event.message?.formatted ?? '';
+    for (final marker in _droppedExceptionMarkers) {
+      if (msg.contains(marker)) {
+        return null;
+      }
+    }
+
     // Drop user PII fields — we'll only keep an opaque user id elsewhere if set.
     final scrubbedUser = event.user?.copyWith(
             email: null,
