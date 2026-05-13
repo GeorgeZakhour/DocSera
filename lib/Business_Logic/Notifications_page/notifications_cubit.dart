@@ -17,12 +17,41 @@ class NotificationsCubit extends Cubit<NotificationsState> {
 
   final NotificationsService _service;
   RealtimeChannel? _channel;
+  String? _subscribedUserId;
 
-  /// Initial load + realtime subscribe. Idempotent — calling twice does
-  /// not double-subscribe.
+  /// Initial load + realtime subscribe. Idempotent for the same user.
+  /// When the signed-in user changes (logout + new login without an app
+  /// restart), the previous user's channel is torn down and a fresh
+  /// channel is subscribed for the new user — otherwise the old
+  /// `user_id=<previous>` filter would keep firing and the next user's
+  /// inbox / banner pipeline would never refresh.
   Future<void> start() async {
     await refresh();
-    _channel ??= _service.subscribe(_onRealtimeChange);
+    final currentUserId =
+        Supabase.instance.client.auth.currentUser?.id;
+    if (currentUserId == null) {
+      // No session — drop any leftover channel so the next login
+      // starts clean. _service.subscribe returns null without a user
+      // anyway, so there's nothing to subscribe right now.
+      if (_channel != null) {
+        await _channel?.unsubscribe();
+        _channel = null;
+        _subscribedUserId = null;
+      }
+      return;
+    }
+    if (_channel != null && _subscribedUserId == currentUserId) {
+      // Already subscribed for this user — nothing to do.
+      return;
+    }
+    // Either no channel yet, or the previous channel was bound to a
+    // different user_id. Tear down and resubscribe.
+    if (_channel != null) {
+      await _channel?.unsubscribe();
+      _channel = null;
+    }
+    _channel = _service.subscribe(_onRealtimeChange);
+    _subscribedUserId = _channel != null ? currentUserId : null;
   }
 
   Future<void> refresh() async {
@@ -145,6 +174,7 @@ class NotificationsCubit extends Cubit<NotificationsState> {
   Future<void> stop() async {
     await _channel?.unsubscribe();
     _channel = null;
+    _subscribedUserId = null;
     emit(const NotificationsInitial());
   }
 
@@ -152,6 +182,7 @@ class NotificationsCubit extends Cubit<NotificationsState> {
   Future<void> close() async {
     await _channel?.unsubscribe();
     _channel = null;
+    _subscribedUserId = null;
     return super.close();
   }
 }

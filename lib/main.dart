@@ -216,6 +216,18 @@ Future<void> _bootstrap() async {
               if (userState is UserLoaded) {
                 context.read<PatientSwitcherCubit>().switchToUser();
               }
+
+              // Re-bind the notifications inbox realtime channel to the
+              // new user. start() is idempotent for the same user, but
+              // on a user-switch (A logged out, B logged in without an
+              // app restart) it tears down A's stale subscription and
+              // resubscribes filtered by B's user_id. Without this, the
+              // singleton NotificationsCubit keeps A's channel alive.
+              unawaited(context.read<NotificationsCubit>().start());
+            } else if (state is custom_auth.AuthUnauthenticated) {
+              // Tear down realtime so the next sign-in starts clean.
+              // Pairs with the user-switch handling in start() above.
+              unawaited(context.read<NotificationsCubit>().stop());
             }
           },
           child: MyApp(
