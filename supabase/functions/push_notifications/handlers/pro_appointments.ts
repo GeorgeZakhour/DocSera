@@ -92,7 +92,22 @@ export async function handleProAppointments(
   // produces one row per element in user_ids[], so this is mostly
   // bookkeeping. We keep it as one batched intent to match the
   // existing engine contract.
-  const localized = renderCopy(evt.code, patientName, dateStr, time12);
+  // Old appointment time if this is a reschedule (so we can show
+  // "from <old> to <new>" instead of just the new slot).
+  const oldTs = record.rescheduled_from_timestamp ?? null;
+  const oldDateStr = oldTs
+    ? new Date(oldTs as string).toISOString().slice(0, 10)
+    : null;
+  const oldTime12 = oldTs ? format12hFromIso(oldTs as string) : null;
+
+  const localized = renderCopy(
+    evt.code,
+    patientName,
+    dateStr,
+    time12,
+    oldDateStr,
+    oldTime12,
+  );
 
   return [
     {
@@ -112,6 +127,15 @@ export async function handleProAppointments(
         appointment_date: dateStr,
         appointment_time: record.appointment_time,
         status: record.status ?? null,
+        // Reschedule lineage — surfaced in the detail pane via the
+        // metadata grid so the doctor sees "موعد سابق: <old>".
+        ...(record.rescheduled_from_id
+          ? {
+              rescheduled_from_id: record.rescheduled_from_id,
+              rescheduled_from_date: oldDateStr,
+              rescheduled_from_time: oldTime12?.ar,
+            }
+          : {}),
       },
       importance: evt.importance,
       dedup_key: `${evt.code}:${record.id}`,
@@ -130,6 +154,18 @@ function classify(
   old_record: Record<string, any> | null,
 ): { code: string; importance: "low" | "default" | "high" | "time_sensitive" } | null {
   if (type === "INSERT") {
+    // Reschedule lineage: the patient-side RPC sets these columns
+    // when the new row replaces an existing appointment. From the
+    // doctor's POV this is a reschedule, NOT a fresh booking — emit
+    // the correct event so the body reads "X rescheduled their
+    // appointment to <new time>" rather than "X requested a new
+    // appointment".
+    if (record.rescheduled_from_id) {
+      return {
+        code: "pro.appointment.rescheduled_by_patient",
+        importance: "high",
+      };
+    }
     if (record.is_confirmed === true) {
       return { code: "pro.appointment.booked_confirmed", importance: "default" };
     }
@@ -238,6 +274,8 @@ function renderCopy(
   patientName: string,
   dateStr: string,
   time12: { ar: string; en: string },
+  oldDateStr?: string | null,
+  oldTime12?: { ar: string; en: string } | null,
 ): { ar: { title: string; body: string }; en: { title: string; body: string } } {
   switch (eventCode) {
     case "pro.appointment.booked_pending":
@@ -273,7 +311,28 @@ function renderCopy(
           body: `${LTR}${patientName} cancelled their appointment on ${dateStr} at ${time12.en}.`,
         },
       };
-    case "pro.appointment.rescheduled_by_patient":
+    case "pro.appointment.rescheduled_by_patient": {
+      // Two flavors:
+      //   - We know the OLD slot (reschedule_from_timestamp present)
+      //     → render "from <old> to <new>" so the doctor sees both
+      //   - Old slot unknown (legacy UPDATE-only flow)
+      //     → just "rescheduled to <new>"
+      if (oldDateStr && oldTime12) {
+        return {
+          ar: {
+            title: `${LTR}🕒 تم تغيير الموعد`,
+            body:
+              `${LTR}${patientName} غيّر موعده من ${oldDateStr} الساعة ${oldTime12.ar} ` +
+              `إلى ${dateStr} الساعة ${time12.ar}.`,
+          },
+          en: {
+            title: `${LTR}🕒 Appointment rescheduled`,
+            body:
+              `${LTR}${patientName} moved their appointment from ${oldDateStr} at ${oldTime12.en} ` +
+              `to ${dateStr} at ${time12.en}.`,
+          },
+        };
+      }
       return {
         ar: {
           title: `${LTR}🕒 تم تغيير الموعد`,
@@ -284,6 +343,7 @@ function renderCopy(
           body: `${LTR}${patientName} rescheduled to ${dateStr} at ${time12.en}.`,
         },
       };
+    }
     case "pro.appointment.patient_arrived":
       return {
         ar: {
@@ -330,6 +390,26 @@ function format12h(rawTime: string | null | undefined): { ar: string; en: string
     ar: `${h}:${mm} ${isPm ? "م" : "ص"}`,
     en: `${h}:${mm} ${isPm ? "PM" : "AM"}`,
   };
+}
+
+/// Same shape as format12h but takes a full ISO timestamp instead of
+/// a HH:MM string. Used for reschedule lineage — the old row's
+/// timestamp is a timestamptz, not a time-of-day string.
+function format12hFromIso(iso: string): { ar: string; en: string } {
+  try {
+    const d = new Date(iso);
+    let h = d.getUTCHours();
+    const mm = d.getUTCMinutes().toString().padStart(2, "0");
+    const isPm = h >= 12;
+    if (h === 0) h = 12;
+    else if (h > 12) h -= 12;
+    return {
+      ar: `${h}:${mm} ${isPm ? "م" : "ص"}`,
+      en: `${h}:${mm} ${isPm ? "PM" : "AM"}`,
+    };
+  } catch (_) {
+    return { ar: "", en: "" };
+  }
 }
 
 function isAppointmentToday(record: Record<string, any>): boolean {

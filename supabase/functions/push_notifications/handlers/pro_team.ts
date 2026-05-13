@@ -129,7 +129,7 @@ async function handleInvitations(
             body: `${LTR}${inviteeName} joined the team.`,
           },
         },
-        deep_link: `account:team`,
+        deep_link: `team:`,
         data: { invitation_id: record.id, member_user_id: record.accepted_user_id },
         importance: "default",
         dedup_key: `pro.team.invitation_accepted:${record.id}`,
@@ -167,7 +167,7 @@ async function handleInvitations(
             body: `${LTR}${inviteeLabel} declined to join.`,
           },
         },
-        deep_link: `account:team`,
+        deep_link: `team:`,
         data: { invitation_id: record.id },
         importance: "default",
         dedup_key: `pro.team.invitation_declined:${record.id}`,
@@ -215,7 +215,7 @@ async function handleMembers(
               `${LTR}You joined ${centerName} as ${roleLabelEn(record.role)}.`,
           },
         },
-        deep_link: `account:team`,
+        deep_link: `team:`,
         data: { center_id: record.center_id, role: record.role },
         importance: "default",
         dedup_key: `pro.team.member_added:${record.id}`,
@@ -281,7 +281,7 @@ async function handleMembers(
             body: `${LTR}New role: ${rolesLabelEn(record.roles)}.`,
           },
         },
-        deep_link: `account:team`,
+        deep_link: `team:`,
         data: { center_id: record.center_id, roles: record.roles },
         importance: "default",
         dedup_key: `pro.team.role_changed:${record.id}:${(record.updated_at ?? "").toString()}`,
@@ -311,7 +311,7 @@ async function handleMembers(
             body: `${LTR}Your team permissions were updated.`,
           },
         },
-        deep_link: `account:team`,
+        deep_link: `team:`,
         data: { center_id: record.center_id },
         importance: "low",
         dedup_key:
@@ -352,7 +352,7 @@ async function handleMembers(
             body: `${LTR}Your assigned doctors were updated.`,
           },
         },
-        deep_link: `account:team`,
+        deep_link: `team:`,
         data: { center_id: record.center_id, assigned_doctor_ids: newAssigned },
         importance: "default",
         dedup_key:
@@ -387,7 +387,7 @@ async function handleMembers(
             body: `${LTR}${secretaryName} was assigned to assist you.`,
           },
         },
-        deep_link: `account:team`,
+        deep_link: `team:`,
         data: { center_id: record.center_id, secretary_user_id: record.user_id },
         importance: "default",
         dedup_key:
@@ -412,7 +412,12 @@ async function lookupAuthUserByPhoneOrEmail(
   email?: string | null,
 ): Promise<string | null> {
   // Prefer phone (it's the primary auth method in Syria). Fall back to email.
-  const tryColumn = async (column: "phone" | "email", value: string) => {
+  // NOTE: the users column is `phone_number`, not `phone` (the earlier
+  // version of this query silently returned no match every time).
+  const tryColumn = async (
+    column: "phone_number" | "email",
+    value: string,
+  ) => {
     const { data } = await supabase
       .from("users")
       .select("id")
@@ -422,7 +427,7 @@ async function lookupAuthUserByPhoneOrEmail(
     return data?.id ?? null;
   };
   if (phone) {
-    const id = await tryColumn("phone", phone);
+    const id = await tryColumn("phone_number", phone);
     if (id) return id;
   }
   if (email) {

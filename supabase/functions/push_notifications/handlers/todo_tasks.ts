@@ -150,9 +150,14 @@ async function lookupUserName(
   userId: string | null | undefined,
 ): Promise<string> {
   if (!userId) return "Someone";
+  // The patient users table column is `phone_number`, not `phone`.
+  // An earlier version of this function queried `phone` and silently
+  // failed (PostgREST returns null for the row when the column is
+  // unknown), which is what produced "✅ Someone" titles in
+  // production for every todo_task notification.
   const { data } = await supabase
     .from("users")
-    .select("first_name, last_name, phone, email")
+    .select("first_name, last_name, phone_number, email")
     .eq("id", userId)
     .maybeSingle();
   if (!data) return "Someone";
@@ -160,7 +165,7 @@ async function lookupUserName(
   const l = (data.last_name ?? "").toString().trim();
   const name = `${f} ${l}`.trim();
   if (name.length > 0) return name;
-  const phone = (data.phone ?? "").toString().trim();
+  const phone = (data.phone_number ?? "").toString().trim();
   if (phone.length > 0) return phone;
   const email = (data.email ?? "").toString().trim();
   if (email.length > 0) return email;

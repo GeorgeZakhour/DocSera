@@ -184,31 +184,50 @@ async function buildProVacationIntents(
   const endStr = String(r.end_date ?? "");
   const noteStr = (r.note as string | null)?.toString().trim() ?? "";
 
+  // Day-count phrasing: single day vs multi-day. Same-day vacation is
+  // common (full-day off, half-day later) so we phrase it differently.
+  // Future plan: hourly vacations — the schema will need extra
+  // start_time/end_time columns; until then the day range is all we
+  // can describe.
+  const isSameDay = startStr === endStr;
+  const arRange = isSameDay
+    ? `يوم ${startStr}`
+    : `من ${startStr} إلى ${endStr}`;
+  const enRange = isSameDay
+    ? `on ${startStr}`
+    : `from ${startStr} to ${endStr}`;
+
+  // Full sentences instead of "date → date · note" so the body reads
+  // as a complete thought in both languages. The note (if any) is
+  // surfaced as a parenthetical so it doesn't change the structure.
+  const arBody = noteStr.length > 0
+    ? `${LTR}أضاف ${arName} إجازة على التقويم ${arRange} (${noteStr}).`
+    : `${LTR}أضاف ${arName} إجازة على التقويم ${arRange}.`;
+  const enBody = noteStr.length > 0
+    ? `${LTR}${enName} added a vacation on the calendar ${enRange} (${noteStr}).`
+    : `${LTR}${enName} added a vacation on the calendar ${enRange}.`;
+
   return [
     {
       user_ids: Array.from(recipients),
       recipient_app: "docsera_pro",
       event_code: "pro.calendar.vacation_set",
       category: "clinic_ops",
-      title: `${LTR}🌴 إجازة ${arName}`,
-      body: noteStr.length > 0
-        ? `${LTR}${startStr} → ${endStr} · ${noteStr}`
-        : `${LTR}${startStr} → ${endStr}`,
+      title: `${LTR}🌴 إجازة جديدة على التقويم`,
+      body: arBody,
       localized: {
         ar: {
-          title: `${LTR}🌴 إجازة ${arName}`,
-          body: noteStr.length > 0
-            ? `${LTR}${startStr} → ${endStr} · ${noteStr}`
-            : `${LTR}${startStr} → ${endStr}`,
+          title: `${LTR}🌴 إجازة جديدة على التقويم`,
+          body: arBody,
         },
         en: {
-          title: `${LTR}🌴 ${enName} on vacation`,
-          body: noteStr.length > 0
-            ? `${LTR}${startStr} → ${endStr} · ${noteStr}`
-            : `${LTR}${startStr} → ${endStr}`,
+          title: `${LTR}🌴 New vacation on the calendar`,
+          body: enBody,
         },
       },
-      deep_link: "/calendar",
+      // Calendar focused on the vacation's start date. The router
+      // accepts `calendar:<yyyy-mm-dd>` and `calendar:` (no date).
+      deep_link: `calendar:${startStr}`,
       data: {
         doctor_id: doctorId,
         doctor_name: fullName,
