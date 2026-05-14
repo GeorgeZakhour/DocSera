@@ -442,16 +442,22 @@ async function lookupAuthName(
   userId: string | null | undefined,
 ): Promise<string> {
   if (!userId) return "شخص";
-  const { data } = await supabase
-    .from("users")
-    .select("first_name, last_name")
-    .eq("id", userId)
-    .maybeSingle();
-  if (!data) return "شخص";
-  const f = (data.first_name ?? "").toString();
-  const l = (data.last_name ?? "").toString();
-  const name = `${f} ${l}`.trim();
-  return name.length === 0 ? "شخص" : name;
+  // Use the shared fn_user_display_name RPC which walks doctors →
+  // team_profiles → users → phone/email. Previous direct query
+  // against public.users.first_name returned empty for every
+  // secretary (their names live in team_profiles), surfacing
+  // "شخص" / "Someone" on every team event.
+  try {
+    const { data } = await supabase.rpc("fn_user_display_name", {
+      p_user_id: userId,
+    });
+    if (typeof data === "string" && data.trim().length > 0) {
+      return data.trim();
+    }
+  } catch (e) {
+    console.warn("[pro_team] fn_user_display_name rpc failed:", e);
+  }
+  return "شخص";
 }
 
 async function lookupCenterName(

@@ -57,8 +57,22 @@ export async function handleTodoTasks(
   }
 
   if (type === "UPDATE" && old_record) {
-    // CASE B: Reassigned via UPDATE.
-    if (record.assigned_to && record.assigned_to !== old_record.assigned_to) {
+    // CASE B: Reassigned via UPDATE. Extra guards on top of the
+    // assigned_to-changed check:
+    //   - Skip if the new assignee IS the actor (self-reassignment
+    //     should never wake the assignee — they just did it).
+    //   - Skip if the new assignee is also the creator (you can't
+    //     "reassign a task to yourself" semantically).
+    // These two extra checks defend against weird UPDATE patterns
+    // where the same row gets edited multiple times in quick
+    // succession (e.g. the client retries on a network blip) —
+    // each genuine reassign still produces exactly one row, but
+    // toggle-back UPDATEs don't.
+    if (
+      record.assigned_to &&
+      record.assigned_to !== old_record.assigned_to &&
+      record.assigned_to !== record.created_by
+    ) {
       const assignerName = await lookupUserName(supabase, record.created_by);
       return {
         user_ids: [record.assigned_to],
@@ -139,35 +153,31 @@ export async function handleTodoTasks(
   return null;
 }
 
-/// Resolve a display name for an auth user via the `users` table,
-/// which is where first_name/last_name actually live. center_members
-/// only carries (user_id, doctor_id, role…) — no name columns — so
-/// the previous lookup against center_members silently returned null
-/// for every member. Falls back to phone/email/"Someone" so the body
-/// never ends up empty.
+/// Resolve a display name for any Pro team member. Names live in
+/// THREE places depending on the role:
+///   - Clinicians (doctor/owner/specialist) → public.doctors.first_name
+///   - Staff (secretary/admin) → public.team_profiles via center_members
+///   - Patient-side users → public.users.first_name
+/// Previous version only queried public.users, which is empty for
+/// almost every Pro member, so every secretary action surfaced as
+/// "Someone …" (the bug behind the iPhone notification storm).
+///
+/// The full chain lives server-side in fn_user_display_name(uuid)
+/// so handlers + SQL triggers share one source of truth.
 async function lookupUserName(
   supabase: SupabaseClient,
   userId: string | null | undefined,
 ): Promise<string> {
   if (!userId) return "Someone";
-  // The patient users table column is `phone_number`, not `phone`.
-  // An earlier version of this function queried `phone` and silently
-  // failed (PostgREST returns null for the row when the column is
-  // unknown), which is what produced "✅ Someone" titles in
-  // production for every todo_task notification.
-  const { data } = await supabase
-    .from("users")
-    .select("first_name, last_name, phone_number, email")
-    .eq("id", userId)
-    .maybeSingle();
-  if (!data) return "Someone";
-  const f = (data.first_name ?? "").toString().trim();
-  const l = (data.last_name ?? "").toString().trim();
-  const name = `${f} ${l}`.trim();
-  if (name.length > 0) return name;
-  const phone = (data.phone_number ?? "").toString().trim();
-  if (phone.length > 0) return phone;
-  const email = (data.email ?? "").toString().trim();
-  if (email.length > 0) return email;
+  try {
+    const { data } = await supabase.rpc("fn_user_display_name", {
+      p_user_id: userId,
+    });
+    if (typeof data === "string" && data.trim().length > 0) {
+      return data.trim();
+    }
+  } catch (e) {
+    console.warn("[todo_tasks] fn_user_display_name rpc failed:", e);
+  }
   return "Someone";
 }
