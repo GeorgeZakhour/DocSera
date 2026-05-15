@@ -135,7 +135,17 @@ export async function handleMessages(
       en: { title, body: bodyEn },
     },
     deep_link: `conversation:${conversationId}`,
-    data: { conversation_id: conversationId, message_id: record.id },
+    data: {
+      conversation_id: conversationId,
+      message_id: record.id,
+      // doctor_id is required by the Pro inbox to render the per-doctor
+      // pill and the doctor-scope filter chip. Always include it on the
+      // Pro side; harmless on the patient side (patient inbox ignores
+      // the field). Solo conversations (no convo.doctor_id) skip it.
+      ...(conversation.doctor_id
+        ? { doctor_id: conversation.doctor_id as string }
+        : {}),
+    },
     importance: "high",
     // Per-message dedup key — uses the message ID so retried webhooks don't
     // double-notify, but two separate messages aren't collapsed.
