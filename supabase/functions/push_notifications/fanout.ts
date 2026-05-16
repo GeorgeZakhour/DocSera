@@ -1,6 +1,7 @@
 // Fanout: takes the persisted notification rows and delivers them.
-// Phase 1 channel set: Pushy only. Email/SMS plug in alongside the
-// existing tokens fetch + send block.
+// Channel set: Pushy (legacy) + FCM (new), one-or-the-other per call
+// via the USE_FCM env var. Email/SMS would plug in here as additional
+// alternatives at the same level.
 //
 // Per-recipient enforcement order:
 //   1. shouldSendPush()  — pref + quiet-hours + DnD gating
@@ -8,12 +9,19 @@
 //   3. user_devices.locale → re-render title/body if intent has both
 //      AR + EN variants (handlers may attach a `localized` map; if not,
 //      we fall back to intent.title/body as-is)
-//   4. Pushy
+//   4. Pushy OR FCM (depending on USE_FCM flag)
+//
+// USE_FCM=true switches the send call to fcm.ts (Firebase Cloud
+// Messaging HTTP v1). Unset / "false" / anything else keeps the legacy
+// Pushy path. Pushy code stays in the repo as a fallback — flipping
+// the flag back to false instantly restores Pushy delivery without a
+// code change.
 
 import { SupabaseClient } from "https://esm.sh/@supabase/supabase-js@2.7.1";
 import type { NotificationIntent } from "./types.ts";
 import type { PersistedNotification } from "./persist.ts";
 import { sendPushyNotification } from "./pushy.ts";
+import { sendFcmNotification } from "./fcm.ts";
 import { shouldSendPush } from "./prefs.ts";
 
 export async function fanoutNotifications(
@@ -26,31 +34,41 @@ export async function fanoutNotifications(
     return;
   }
 
-  // Pushy app keys are per-bundle-id, so the patient app and the Pro
-  // app each have their own Pushy app in the pushy.me dashboard with
-  // distinct API keys. Pick the right one based on recipient_app.
-  // Falls back to PUSHY_API_KEY for `docsera` (backward compat) and
-  // requires PUSHY_API_KEY_PRO for `docsera_pro`.
-  const pushyApiKey = intent.recipient_app === "docsera_pro"
-    ? Deno.env.get("PUSHY_API_KEY_PRO")
-    : Deno.env.get("PUSHY_API_KEY");
-  if (!pushyApiKey) {
-    const which = intent.recipient_app === "docsera_pro"
-      ? "PUSHY_API_KEY_PRO"
-      : "PUSHY_API_KEY";
-    console.error(`❌ ${which} not configured for ${intent.recipient_app}`);
-    await markEvents(supabase, persisted, "failed", {
-      reason: "pushy_key_missing",
-      missing_key: which,
-    });
-    return;
+  // Provider switch. USE_FCM=true routes through fcm.ts; anything else
+  // keeps the legacy Pushy path. Pre-flight provider config checks differ:
+  //   - Pushy: per-app API keys (PUSHY_API_KEY / PUSHY_API_KEY_PRO)
+  //   - FCM:   one service account JSON for the whole project; the key
+  //            check happens inside fcm.ts on first send.
+  const useFcm = Deno.env.get("USE_FCM") === "true";
+
+  let pushyApiKey: string | undefined;
+  if (!useFcm) {
+    // Pushy app keys are per-bundle-id, so the patient app and the Pro
+    // app each have their own Pushy app in the pushy.me dashboard with
+    // distinct API keys. Pick the right one based on recipient_app.
+    // Falls back to PUSHY_API_KEY for `docsera` (backward compat) and
+    // requires PUSHY_API_KEY_PRO for `docsera_pro`.
+    pushyApiKey = intent.recipient_app === "docsera_pro"
+      ? Deno.env.get("PUSHY_API_KEY_PRO")
+      : Deno.env.get("PUSHY_API_KEY");
+    if (!pushyApiKey) {
+      const which = intent.recipient_app === "docsera_pro"
+        ? "PUSHY_API_KEY_PRO"
+        : "PUSHY_API_KEY";
+      console.error(`❌ ${which} not configured for ${intent.recipient_app}`);
+      await markEvents(supabase, persisted, "failed", {
+        reason: "pushy_key_missing",
+        missing_key: which,
+      });
+      return;
+    }
   }
 
   // Fan out per recipient — one user_id per persisted row, since prefs
   // and locale are per-user. This costs an extra query per recipient but
   // keeps gating logic uncomplicated.
   for (const row of persisted) {
-    await fanoutOne(supabase, intent, row, pushyApiKey);
+    await fanoutOne(supabase, intent, row, pushyApiKey, useFcm);
   }
 }
 
@@ -58,7 +76,8 @@ async function fanoutOne(
   supabase: SupabaseClient,
   intent: NotificationIntent,
   row: PersistedNotification,
-  pushyApiKey: string,
+  pushyApiKey: string | undefined,
+  useFcm: boolean,
 ): Promise<void> {
   // 1. Prefs gate.
   const decision = await shouldSendPush(
@@ -106,43 +125,84 @@ async function fanoutOne(
   const deviceLocale = (devices[0].locale as string | null) ?? intent.locale ?? "ar";
   const { title, body } = pickLocalized(intent, deviceLocale);
 
-  // 4. Send. Notification row id + importance are echoed in the Pushy
-  // data dict so the client can post back a delivery confirmation
-  // and so the OS notification rendering knows whether to use the TS
-  // channel without a separate lookup.
-  const result = await sendPushyNotification(
-    pushyApiKey,
-    tokens,
-    title,
-    body,
-    intent.deep_link,
-    "default",
-    row.id,
-    intent.importance ?? "default",
-  );
+  // 4. Send. Notification row id + importance are echoed in the data
+  // dict so the client can post back a delivery confirmation and so the
+  // OS notification rendering knows whether to use the TS channel
+  // without a separate lookup.
+  //
+  // NOTE on `delivered_push_at`: we used to stamp it here, which
+  // conflated "provider API accepted the request" with "device actually
+  // got the push". Those are different things, and a 200 from
+  // Pushy/FCM doesn't mean the OS notification ever appeared. The
+  // column is now stamped only by /functions/notification_received
+  // when the client SDK confirms delivery on-device. The `sent_push`
+  // event below is the durable record of the API call.
+  const providerLabel = useFcm ? "fcm" : "pushy";
+  let resultOk: boolean;
+  let resultStatus: number;
+  let successDetail: Record<string, unknown>;
+  let failureDetail: Record<string, unknown>;
 
-  console.log(
-    `📤 ${intent.event_code} → ${row.user_id} (locale=${deviceLocale}, devices=${tokens.length}, http=${result.status})`,
-  );
-
-  if (result.ok) {
-    await markEvents(supabase, [row], "sent_push", {
-      pushy_status: result.status,
+  if (useFcm) {
+    const fcm = await sendFcmNotification(
+      tokens,
+      title,
+      body,
+      intent.deep_link,
+      row.id,
+      intent.importance ?? "default",
+    );
+    resultOk = fcm.ok;
+    resultStatus = fcm.status;
+    successDetail = {
+      provider: "fcm",
+      fcm_status: fcm.status,
+      device_count: tokens.length,
+      sent: fcm.sent,
+      failed: fcm.failed,
+      locale: deviceLocale,
+    };
+    failureDetail = {
+      provider: "fcm",
+      fcm_status: fcm.status,
+      sent: fcm.sent,
+      failed: fcm.failed,
+      fcm_bodies: fcm.bodies,
+    };
+  } else {
+    const pushy = await sendPushyNotification(
+      pushyApiKey!,
+      tokens,
+      title,
+      body,
+      intent.deep_link,
+      "default",
+      row.id,
+      intent.importance ?? "default",
+    );
+    resultOk = pushy.ok;
+    resultStatus = pushy.status;
+    successDetail = {
+      provider: "pushy",
+      pushy_status: pushy.status,
       device_count: tokens.length,
       locale: deviceLocale,
-    });
-    // NOTE: we used to stamp `delivered_push_at` here, which conflated
-    // "Pushy API accepted the request" with "device actually got the
-    // push". Those are different things, and a 200 from Pushy doesn't
-    // mean the OS notification ever appeared. The column is now
-    // stamped only by /functions/notification_received when the client
-    // SDK confirms delivery on-device. The `sent_push` event above is
-    // the durable record of the API call.
+    };
+    failureDetail = {
+      provider: "pushy",
+      pushy_status: pushy.status,
+      pushy_body: pushy.body,
+    };
+  }
+
+  console.log(
+    `📤 ${intent.event_code} → ${row.user_id} (provider=${providerLabel}, locale=${deviceLocale}, devices=${tokens.length}, http=${resultStatus})`,
+  );
+
+  if (resultOk) {
+    await markEvents(supabase, [row], "sent_push", successDetail);
   } else {
-    await markEvents(supabase, [row], "failed", {
-      pushy_status: result.status,
-      pushy_body: result.body,
-    });
+    await markEvents(supabase, [row], "failed", failureDetail);
   }
 }
 
