@@ -301,7 +301,9 @@ class _WriteMessagePageState extends State<WriteMessagePage> {
               iconPath,
               width: 24.sp,
               height: 24.sp,
-              color: onTap == null ? Colors.grey : null,
+              colorFilter: onTap == null
+                  ? const ColorFilter.mode(Colors.grey, BlendMode.srcIn)
+                  : null,
             ),
           ),
           SizedBox(height: 6.h),

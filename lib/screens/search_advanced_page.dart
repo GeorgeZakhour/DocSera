@@ -998,7 +998,7 @@ class _SearchAdvancedPageState extends State<SearchAdvancedPage> {
                 ),
                 child: SvgPicture.asset(
                   'assets/icons/filter.svg',
-                  color: AppColors.main,
+                  colorFilter: const ColorFilter.mode(AppColors.main, BlendMode.srcIn),
                   width: 16.w,
                   height: 16.w,
                 ),
@@ -1335,7 +1335,7 @@ class _SearchAdvancedPageState extends State<SearchAdvancedPage> {
         ListTile(
           leading: SvgPicture.asset(
             'assets/icons/my-location.svg',
-            color: AppColors.main,
+            colorFilter: const ColorFilter.mode(AppColors.main, BlendMode.srcIn),
             width: 24,
             height: 24,
           ),
@@ -1350,7 +1350,7 @@ class _SearchAdvancedPageState extends State<SearchAdvancedPage> {
               (c) => ListTile(
             leading: SvgPicture.asset(
               'assets/icons/city-location.svg',
-              color: AppColors.grayMain,
+              colorFilter: const ColorFilter.mode(AppColors.grayMain, BlendMode.srcIn),
               width: 24,
               height: 24,
             ),

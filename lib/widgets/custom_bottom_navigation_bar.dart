@@ -559,7 +559,10 @@ class _CustomBottomNavigationBarState extends State<CustomBottomNavigationBar>
               isSelected
                   ? 'assets/icons/health-on.svg'
                   : 'assets/icons/health.svg',
-              color: isSelected ? AppColors.main : Colors.black,
+              colorFilter: ColorFilter.mode(
+                isSelected ? AppColors.main : Colors.black,
+                BlendMode.srcIn,
+              ),
               height: 22.h,
             ),
             if (showDot)
@@ -604,7 +607,10 @@ class _CustomBottomNavigationBarState extends State<CustomBottomNavigationBar>
               isSelected
                   ? 'assets/icons/conversation-on.svg'
                   : 'assets/icons/conversation.svg',
-              color: isSelected ? AppColors.main : Colors.black,
+              colorFilter: ColorFilter.mode(
+                isSelected ? AppColors.main : Colors.black,
+                BlendMode.srcIn,
+              ),
               height: 18.h,
             ),
             if (unreadCount > 0)
@@ -663,7 +669,10 @@ class _CustomBottomNavigationBarState extends State<CustomBottomNavigationBar>
           children: [
             SvgPicture.asset(
               iconPath,
-              color: isSelected ? AppColors.main : Colors.black,
+              colorFilter: ColorFilter.mode(
+                isSelected ? AppColors.main : Colors.black,
+                BlendMode.srcIn,
+              ),
               height: iconHeight,
             ),
             if (unreadCount > 0)
@@ -711,8 +720,10 @@ class _CustomBottomNavigationBarState extends State<CustomBottomNavigationBar>
     return BottomNavigationBarItem(
       icon: SvgPicture.asset(
         _currentIndex == index ? activeIconPath : iconPath,
-        color:
-        _currentIndex == index ? AppColors.main : Colors.black,
+        colorFilter: ColorFilter.mode(
+          _currentIndex == index ? AppColors.main : Colors.black,
+          BlendMode.srcIn,
+        ),
         height: height,
       ),
       label: label,

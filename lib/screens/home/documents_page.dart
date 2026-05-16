@@ -2401,7 +2401,7 @@ class _DocumentGridItemState extends State<DocumentGridItem> {
             'assets/icons/pdf-file.svg',
             width: 48.sp,
             height: 48.sp,
-            color: AppColors.red,
+            colorFilter: const ColorFilter.mode(AppColors.red, BlendMode.srcIn),
           ),
        );
      }

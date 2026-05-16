@@ -284,7 +284,7 @@ class _ImageOverlayViewerState extends State<ImageOverlayViewer> {
                       'assets/icons/add2document_white.svg',
                       width: 22.sp,
                       height: 22.sp,
-                      color: Colors.white,
+                      colorFilter: const ColorFilter.mode(Colors.white, BlendMode.srcIn),
                     ),
                   );
                 },
@@ -437,7 +437,7 @@ class _ImageOverlayViewerState extends State<ImageOverlayViewer> {
                       'assets/icons/add2document_white.svg',
                       width: 22.sp,
                       height: 22.sp,
-                      color: Colors.white,
+                      colorFilter: const ColorFilter.mode(Colors.white, BlendMode.srcIn),
                     ),
                   );
                 },

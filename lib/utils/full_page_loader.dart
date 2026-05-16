@@ -57,7 +57,7 @@ class _FullPageLoaderState extends State<FullPageLoader>
         'assets/images/DocSera-shape-main.svg',
         width: widget.size,
         height: widget.size,
-        color: AppColors.main,
+        colorFilter: const ColorFilter.mode(AppColors.main, BlendMode.srcIn),
       ),
     );
   }
