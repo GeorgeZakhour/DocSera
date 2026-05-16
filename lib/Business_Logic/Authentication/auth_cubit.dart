@@ -218,9 +218,43 @@ class AuthCubit extends Cubit<AppAuthState> {
     await _prefs.setString('userId', userId);
   }
 
+  /// SharedPreferences keys that must survive sign-out. Every other key in
+  /// SharedPreferences is wiped by [_clearLogin] — so any new pref added
+  /// elsewhere in the app is safe-by-default cleared on logout (a much
+  /// kinder failure mode than leaving PII on disk for the next user of a
+  /// shared device).
+  ///
+  /// Add a key here only if it represents a deliberate cross-session
+  /// device preference (UI choice, biometric opt-in, language). Never PII.
+  static const Set<String> _keysToPreserveOnLogout = {
+    // Biometric opt-in survives sign-out so the user can use Face ID /
+    // fingerprint on the next sign-in. The credentials themselves live
+    // in flutter_secure_storage (Keychain / EncryptedSharedPreferences),
+    // separate from regular SharedPreferences.
+    'enableFaceID',
+    'biometricType',
+    // UI language choice is a per-device preference, not session data.
+    'locale',
+    // UI position memory across tabs — no PII, mild UX win to keep.
+    'lastSelectedTab',
+    'selectedAppointmentsTab',
+    'selectedDocumentsTab',
+    // Banner dismissal history — UI noise, not session data.
+    'dismissed_banners',
+  };
+
   Future<void> _clearLogin() async {
+    // Snapshot the key set so we iterate over a stable view while removing.
+    final keysToRemove = _prefs
+        .getKeys()
+        .where((k) => !_keysToPreserveOnLogout.contains(k))
+        .toList(growable: false);
+    for (final key in keysToRemove) {
+      await _prefs.remove(key);
+    }
+    // Re-assert the unauthenticated marker explicitly. Some callers check
+    // `getBool('isLoggedIn')` for an explicit `false` rather than null.
     await _prefs.setBool('isLoggedIn', false);
-    await _prefs.remove('userId');
   }
 
   // ---------------------------------------------------------------------------
