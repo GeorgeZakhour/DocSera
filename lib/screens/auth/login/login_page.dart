@@ -7,11 +7,9 @@ import 'package:docsera/screens/auth/forgot_password/forgot_password_page.dart';
 import 'package:docsera/services/biometrics/biometric_storage.dart';
 import 'package:docsera/services/supabase/user/supabase_user_service.dart';
 import 'package:docsera/utils/text_direction_utils.dart';
-import 'package:crypto/crypto.dart'; // For hashing
 import 'package:docsera/app/const.dart';
 import 'package:docsera/screens/home/account/pending_deletion_page.dart';
 import 'package:docsera/widgets/custom_bottom_navigation_bar.dart';
-import 'dart:convert'; // For utf8 encoding
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -416,11 +414,6 @@ class _LogInPageState extends State<LogInPage> with SingleTickerProviderStateMix
     });
   }
 
-
-  /// **🔐 Hash the password using SHA-256**
-  String _hashPassword(String password) {
-    return sha256.convert(utf8.encode(password)).toString();
-  }
 
 /// ✅ الحصول على معرف الجهاز بطريقة آمنة تعمل على Android و iOS
   Future<String> getDeviceId() async {

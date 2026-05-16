@@ -100,30 +100,6 @@ class _FullMapResultsPageState extends State<FullMapResultsPage> with SingleTick
     return null;
   }
 
-  String _buildAddress(Map<String, dynamic> doctor) {
-    final addr = doctor['address'] as Map<String, dynamic>?;
-    if (addr == null) return '';
-    final parts = <String>[];
-    void add(dynamic v) {
-      final s = (v ?? '').toString().trim();
-      if (s.isNotEmpty) parts.add(s);
-    }
-
-    // ترتيب منطقي: شارع، بناء/طابق، مدينة
-    add(addr['street']);
-    add(addr['building']);
-    add(addr['floor']);
-    add(addr['city']);
-
-    return parts.join(' • ');
-  }
-
-  String _addressDetails(Map<String, dynamic> doctor) {
-    final addr = doctor['address'] as Map<String, dynamic>?;
-    final det = (addr?['details'] ?? '').toString().trim();
-    return det;
-  }
-
   Future<void> _initLocation() async {
     final serviceEnabled = await Geolocator.isLocationServiceEnabled();
     if (!serviceEnabled) return;

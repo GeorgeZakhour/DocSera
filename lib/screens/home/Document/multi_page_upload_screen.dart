@@ -41,16 +41,6 @@ class _MultiPageUploadScreenState extends State<MultiPageUploadScreen> {
     });
   }
 
-  Future<String?> _pickImageFile() async {
-    final picked = await FilePicker.platform.pickFiles(
-      type: FileType.image,
-      allowMultiple: false,
-    );
-    if (picked == null || picked.files.isEmpty) return null;
-    return picked.files.first.path;
-  }
-
-
   Widget _buildMiniFabOption({
     required IconData icon,
     required VoidCallback onPressed,

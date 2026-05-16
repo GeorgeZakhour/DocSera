@@ -57,7 +57,6 @@ class _MainScreenState extends State<MainScreen> with AutomaticKeepAliveClientMi
 
   StreamSubscription? _favoritesListener; // ✅ إضافة متغير لحفظ `listener`
   bool _isFirstLoad = true; // ✅ يظهر `Shimmer` فقط عند تشغيل التطبيق لأول مرة
-  final bool _didLoadFavoritesOnce = false;
 
 
 

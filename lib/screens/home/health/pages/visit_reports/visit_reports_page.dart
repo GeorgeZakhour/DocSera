@@ -224,24 +224,6 @@ class _VisitReportsPageState extends State<VisitReportsPage>
     );
   }
 
-  List<VisitReport> _applyFilters(
-      List<VisitReport> reports, {
-        required int? activeYear,
-        required int? activeMonth,
-        required String query,
-      }) {
-    query = query.trim().toLowerCase();
-
-    return reports.where((r) {
-      final matchesYear = activeYear == null || r.date.year == activeYear;
-      final matchesMonth = activeMonth == null || r.date.month == activeMonth;
-      final matchesSearch =
-          query.isEmpty || r.doctorName.toLowerCase().contains(query);
-
-      return matchesYear && matchesMonth && matchesSearch;
-    }).toList();
-  }
-
   List<_ReportListItem> _applyFiltersUnified(
       List<_ReportListItem> items, {
         required int? activeYear,
@@ -527,73 +509,4 @@ class _VisitReportsPageState extends State<VisitReportsPage>
     );
   }
 
-  Widget _buildList(BuildContext context, List<VisitReport> reports) {
-    final filtered = _filterReports(reports);
-
-    if (filtered.isEmpty) {
-      return Padding(
-        padding: const EdgeInsets.only(top: 60),
-        child: Text(
-          AppLocalizations.of(context)!.health_noReports,
-          style: TextStyle(
-            fontSize: 14,
-            color: AppColors.mainDark.withValues(alpha: 0.6),
-          ),
-        ),
-      );
-    }
-
-    return ListView.builder(
-      shrinkWrap: true,
-      physics: const NeverScrollableScrollPhysics(),
-      itemCount: filtered.length,
-      itemBuilder: (_, i) {
-        final r = filtered[i];
-        return ReportCardWidget(
-          report: r,
-          onTap: () {
-            Navigator.push(
-              context,
-              MaterialPageRoute(
-                builder: (_) => VisitReportDetailsPage(
-                  report: r,
-                  heroTag: "visit_${r.appointmentId}",
-                ),
-              ),
-            );
-          },
-        );
-      },
-    );
-  }
-
-  List<int> _extractYears(List<VisitReport> reports) {
-    return reports
-        .map((r) => r.date.year)
-        .toSet()
-        .toList()
-      ..sort((a, b) => b.compareTo(a)); // newest first
-  }
-
-  List<int> _extractMonthsForYear(List<VisitReport> reports, int year) {
-    return reports
-        .where((r) => r.date.year == year)
-        .map((r) => r.date.month)
-        .toSet()
-        .toList()
-      ..sort();
-  }
-
-  List<VisitReport> _filterReports(List<VisitReport> reports) {
-    return reports.where((r) {
-      final matchesSearch =
-          _search.isEmpty || r.doctorName.toLowerCase().contains(_search.toLowerCase());
-
-      final matchesYear = _selectedYear == null || r.date.year == _selectedYear;
-
-      final matchesMonth = _selectedMonth == null || r.date.month == _selectedMonth;
-
-      return matchesSearch && matchesYear && matchesMonth;
-    }).toList();
-  }
 }

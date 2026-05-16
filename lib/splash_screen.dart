@@ -39,7 +39,6 @@ class _SplashScreenState extends State<SplashScreen> with TickerProviderStateMix
   late AnimationController _backgroundShiftController;
   late AnimationController _bottomTextFadeController;
 
-  late Animation<double> _fadeInAnimation;
   late Animation<double> _rotationAnimation;
   late Animation<double> _sizeAnimation;
   late Animation<double> _shiftAnimation;
@@ -83,7 +82,6 @@ class _SplashScreenState extends State<SplashScreen> with TickerProviderStateMix
 
   void _initAnimations() {
     _fadeInController = AnimationController(duration: const Duration(milliseconds: 800), vsync: this);
-    _fadeInAnimation = Tween<double>(begin: 0, end: 1).animate(CurvedAnimation(parent: _fadeInController, curve: Curves.easeIn));
 
     _rotationController = AnimationController(duration: const Duration(seconds: 3), vsync: this);
     _rotationAnimation = Tween<double>(begin: 0, end: 2 * pi * 2).animate(CurvedAnimation(parent: _rotationController, curve: Curves.easeOut));

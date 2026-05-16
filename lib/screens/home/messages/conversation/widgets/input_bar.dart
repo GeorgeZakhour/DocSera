@@ -44,7 +44,6 @@ class _InputBarState extends State<InputBar> with TickerProviderStateMixin {
 
   late AnimationController _micScaleController;
   late AnimationController _lockAnimController;
-  late Animation<Offset> _lockSlideAnimation;
   late FocusNode _focusNode;
 
   @override
@@ -67,11 +66,6 @@ class _InputBarState extends State<InputBar> with TickerProviderStateMixin {
        vsync: this,
        duration: const Duration(milliseconds: 800), // Slower animation
     );
-
-    _lockSlideAnimation = Tween<Offset>(
-       begin: const Offset(0, 0),
-       end: const Offset(0, -50),
-    ).animate(CurvedAnimation(parent: _lockAnimController, curve: Curves.easeOut));
   }
 
   // ✅ New Permission Check

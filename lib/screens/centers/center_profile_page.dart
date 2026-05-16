@@ -2351,66 +2351,6 @@ class _CenterProfilePageState extends State<CenterProfilePage> {
     );
   }
 
-  Widget _contactRow(IconData icon, String label, String value) {
-    return Padding(
-      padding: EdgeInsets.only(bottom: 8.h),
-      child: Row(children: [
-        Icon(icon, size: 14.sp, color: AppColors.main),
-        SizedBox(width: 8.w),
-        Expanded(
-            child:
-                Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-          Text(label,
-              style: TextStyle(
-                  fontSize: 9.sp,
-                  color: Colors.grey,
-                  fontWeight: FontWeight.w600)),
-          SizedBox(height: 2.h),
-          Text(value,
-              style: AppTextStyles.getText2(context)
-                  .copyWith(fontWeight: FontWeight.w500),
-              textDirection: TextDirection.ltr),
-        ])),
-      ]),
-    );
-  }
-
-  Widget _infoRow(IconData icon, String label, String value) {
-    return Padding(
-      padding: EdgeInsets.only(bottom: 6.h),
-      child: Row(children: [
-        Icon(icon, size: 14.sp, color: AppColors.mainDark),
-        SizedBox(width: 6.w),
-        Text(label,
-            style: AppTextStyles.getText2(context)
-                .copyWith(fontWeight: FontWeight.w500)),
-      ]),
-    );
-  }
-
-  Widget _infoChip(IconData icon, String label, VoidCallback onTap) {
-    return GestureDetector(
-      onTap: onTap,
-      child: Container(
-        padding: EdgeInsets.symmetric(horizontal: 12.w, vertical: 8.h),
-        decoration: BoxDecoration(
-          color: AppColors.main.withValues(alpha: 0.08),
-          borderRadius: BorderRadius.circular(10.r),
-          border: Border.all(color: AppColors.main.withValues(alpha: 0.2)),
-        ),
-        child: Row(children: [
-          Icon(icon, size: 14.sp, color: AppColors.mainDark),
-          SizedBox(width: 6.w),
-          Expanded(
-              child: Text(label,
-                  style: AppTextStyles.getText2(context)
-                      .copyWith(fontWeight: FontWeight.w500))),
-          Icon(Icons.arrow_forward_ios, size: 12.sp, color: Colors.grey),
-        ]),
-      ),
-    );
-  }
-
   void _showOpeningHoursSheet(dynamic openingHours) {
     final l = AppLocalizations.of(context)!;
     final isArabic = Localizations.localeOf(context).languageCode == 'ar';

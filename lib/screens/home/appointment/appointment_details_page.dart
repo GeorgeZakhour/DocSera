@@ -136,7 +136,7 @@ class _AppointmentDetailsPageState extends State<AppointmentDetailsPage> {
   }
 
 
-  void _addToCalendar(BuildContext context, {int clinicOffsetMinutes = 180}) {
+  void _addToCalendar(BuildContext context) {
     final appt = widget.appointment;
 
     // 1) نقرأ الـ timestamp كـ UTC
@@ -273,18 +273,6 @@ class _AppointmentDetailsPageState extends State<AppointmentDetailsPage> {
         .maybeSingle();
     return (row?['cancellation_deadline_hours'] as int?) ?? 24;
   }
-
-  Future<(bool tooLate, bool shortNotice)> _computeRescheduleWindow() async {
-    final tsUtc = DateTime.parse(widget.appointment['timestamp'].toString()).toUtc();
-    final nowUtc = DocSeraTime.nowUtc();
-    final hours = await _fetchCancellationDeadlineHours(widget.appointment['doctor_id']);
-    final tooLate = nowUtc.isAfter(tsUtc.subtract(Duration(hours: hours)));
-    // تعبير “إشعار قصير” اختياري (ضعف المهلة كمثال)
-    final shortNotice = !tooLate && nowUtc.isAfter(tsUtc.subtract(Duration(hours: hours * 2)));
-    return (tooLate, shortNotice);
-  }
-
-
 
   bool _isTooLateToCancel({
     required DateTime tsUtc,

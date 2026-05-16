@@ -58,7 +58,6 @@ class LegalVersionsChecker {
   /// Cache the latest known manifest so we don't re-fetch on every check.
   /// Stale-while-revalidate: a stale cache is still used; we kick a refresh.
   List<LegalDocumentInfo>? _cached;
-  DateTime? _cachedAt;
   Future<List<LegalDocumentInfo>>? _inFlight;
 
   Future<List<LegalDocumentInfo>> _fetchManifest() async {
@@ -83,7 +82,6 @@ class LegalVersionsChecker {
           .whereType<LegalDocumentInfo>()
           .toList(growable: false);
       _cached = docs;
-      _cachedAt = DateTime.now();
       return docs;
     } catch (e) {
       if (kDebugMode) debugPrint('[Legal] versions fetch failed: $e');

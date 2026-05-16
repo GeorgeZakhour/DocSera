@@ -10,7 +10,6 @@ import 'messages_state.dart';
 import '../Authentication/auth_cubit.dart';
 import '../Authentication/auth_state.dart';
 import '../../models/conversation.dart';
-import 'dart:convert';
 import 'package:docsera/utils/error_handler.dart';
 import 'package:docsera/utils/time_utils.dart';
 import 'package:docsera/services/encryption/message_encryption_service.dart';
@@ -44,40 +43,6 @@ class MessagesCubit extends Cubit<MessagesState> {
 
     _fetchConversations(userId);
     _startRealtimeListener(userId);
-  }
-
-  // ---------------------------------------------------------------------------
-  // 🔹 استخراج نص آخر رسالة (نص أو مرفق)
-  // ---------------------------------------------------------------------------
-  String _resolveLastMessage(Map<String, dynamic> msg) {
-    final text = msg['text']?.toString().trim();
-
-    // لو في نص نرجعه
-    if (text != null && text.isNotEmpty) {
-      return text;
-    }
-
-    // attachments قد تأتي JSON أو String أو null
-    dynamic attachments = msg['attachments'];
-
-    // إذا كانت String → حلّلها
-    if (attachments is String) {
-      try {
-        attachments = jsonDecode(attachments);
-      } catch (_) {
-        return "📎 ملف مرفق";
-      }
-    }
-
-    if (attachments is List && attachments.isNotEmpty) {
-      final type = attachments.first['type'];
-
-      if (type == 'image') return "📷 صورة";
-      if (type == 'pdf') return "📄 ملف PDF";
-      return "📎 ملف مرفق";
-    }
-
-    return "";
   }
 
   // ---------------------------------------------------------------------------

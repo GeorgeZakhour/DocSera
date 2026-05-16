@@ -1,7 +1,6 @@
 import 'dart:async';
 import 'dart:io';
 import 'package:docsera/app/text_styles.dart';
-import 'package:docsera/services/supabase/supabase_otp_service.dart';
 import 'package:docsera/utils/keyboard_insets.dart';
 import 'package:docsera/utils/page_transitions.dart';
 import 'package:docsera/utils/text_direction_utils.dart';
@@ -33,7 +32,6 @@ class LoginOTPPage extends StatefulWidget {
 }
 
 class _LoginOTPPageState extends State<LoginOTPPage> with WidgetsBindingObserver {
-  final SupabaseOTPService _supabaseService = SupabaseOTPService();
   final TextEditingController _codeController = TextEditingController();
 
   String sentCode = '';

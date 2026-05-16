@@ -51,7 +51,12 @@ class _DocumentPreviewPageState extends State<DocumentPreviewPage> {
   double _progress = 0.0;
   bool _loading = true;
   File? _localPdfFile;
+  // Set by PDF onRender callback for a future page indicator (e.g. "Page 3 of 12");
+  // not yet rendered in the UI.
+  // ignore: unused_field
   int _totalPages = 0;
+  // Set by PDF onPageChanged callback; future page indicator.
+  // ignore: unused_field
   int _currentPage = 0;
   late bool isPdf;
   late bool isImage;

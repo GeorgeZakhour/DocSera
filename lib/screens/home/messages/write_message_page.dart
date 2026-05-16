@@ -58,13 +58,11 @@ class _WriteMessagePageState extends State<WriteMessagePage> {
   int charCount = 0;
   List<File> _selectedImageFiles = [];
   String? _pendingFileType;
-  final bool _showAllAttachments = false;
   UserDocument? _attachedDocument;
   File? _resolvedDocFile; // Local file for attached document preview
   bool _expandedImageOverlay = false;
   List<String> _expandedImageUrls = [];
   int _initialImageIndex = 0;
-  final bool _shouldAutoScroll = true;
   bool _isSending = false;
 
   @override

@@ -74,12 +74,6 @@ class _DoctorProfilePageState extends State<DoctorProfilePage> {
     return false;
   }
 
-  bool get _isMessageable {
-    final v = _doctorData?['is_messageable_subscription'];
-    if (v is bool) return v;
-    return false;
-  }
-
   List<Map<String, dynamic>> _centerMemberships = [];
 
   bool _expandedImageOverlay = false;
@@ -2530,19 +2524,6 @@ class _DoctorProfilePageState extends State<DoctorProfilePage> {
         );
       },
     );
-  }
-
-  /// تحويل رقم الهاتف إلى صيغة 09XXXXXXXX
-  String _displayPhone(String raw) {
-    if (raw.startsWith('00963')) {
-      final rest = raw.substring(5);
-      return '0$rest';
-    }
-    if (raw.startsWith('+963')) {
-      final rest = raw.substring(4);
-      return '0$rest';
-    }
-    return raw;
   }
 
   /// 🔹 Card for Contact Info + Opening Hours + Languages
@@ -5433,12 +5414,10 @@ class _ConfettiPainter extends CustomPainter {
 class _OfferStateBadge extends StatelessWidget {
   final String text;
   final Color color;
-  final bool dot;
 
   const _OfferStateBadge({
     required this.text,
     required this.color,
-    this.dot = false,
   });
 
   @override
@@ -5450,29 +5429,13 @@ class _OfferStateBadge extends StatelessWidget {
         borderRadius: BorderRadius.circular(6.r),
         border: Border.all(color: color.withValues(alpha: 0.35)),
       ),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          if (dot) ...[
-            Container(
-              width: 6.r,
-              height: 6.r,
-              decoration: BoxDecoration(
-                color: color,
-                shape: BoxShape.circle,
-              ),
-            ),
-            SizedBox(width: 4.w),
-          ],
-          Text(
-            text,
-            style: TextStyle(
-              fontSize: 8.5.sp,
-              fontWeight: FontWeight.w700,
-              color: color,
-            ),
-          ),
-        ],
+      child: Text(
+        text,
+        style: TextStyle(
+          fontSize: 8.5.sp,
+          fontWeight: FontWeight.w700,
+          color: color,
+        ),
       ),
     );
   }

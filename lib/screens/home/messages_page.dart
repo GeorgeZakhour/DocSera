@@ -418,28 +418,6 @@ import 'package:docsera/utils/doctor_image_utils.dart';
     }
 
 
-    Widget _buildYearHeader(int year) {
-      return Padding(
-        padding: EdgeInsets.only(bottom: 10.h, top: 10.h),
-        child: Row(
-          children: [
-            Text(
-              year.toString(),
-              style: AppTextStyles.getTitle1(context).copyWith(color: AppColors.grayMain, fontSize: 12.sp),
-            ),
-            SizedBox(width: 8.w),
-            const Expanded(
-              child: Divider(
-                color: AppColors.grayMain,
-                thickness: 1,
-                height: 1,
-              ),
-            ),
-          ],
-        ),
-      );
-    }
-
     Widget _buildConversationTile(BuildContext context, Conversation convo, {int? groupCount, bool showDoctorName = false}){
       final isClosed = convo.isClosed;
       DateTime? lastMessageTime = convo.messages.isNotEmpty

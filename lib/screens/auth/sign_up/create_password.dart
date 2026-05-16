@@ -21,6 +21,10 @@ class CreatePasswordPage extends StatefulWidget {
 class _CreatePasswordPageState extends State<CreatePasswordPage> {
   final TextEditingController _passwordController = TextEditingController();
   bool _isPasswordVisible = false;
+  // Computed from _checkPasswordStrength but the LinearProgressIndicator below
+  // binds to a hardcoded 0.65; intended consumer is missing (suspected bug —
+  // left as-is to preserve current behavior).
+  // ignore: unused_field
   double _strength = 0.0;
   String _strengthLabel = "";
   Color _strengthColor = Colors.transparent;

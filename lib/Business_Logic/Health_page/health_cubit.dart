@@ -3,7 +3,6 @@ import 'package:docsera/screens/home/health/models/health_models.dart';
 import 'package:docsera/screens/home/health/services/health_records_service.dart';
 import 'package:equatable/equatable.dart';
 import 'package:flutter/foundation.dart';
-import 'package:supabase_flutter/supabase_flutter.dart';
 
 class HealthState extends Equatable {
   final bool isLoading;
@@ -53,7 +52,6 @@ class HealthState extends Equatable {
 class HealthCubit extends Cubit<HealthState> {
   final String category;
   final HealthRecordsService service;
-  final SupabaseClient _client;
 
   /// Supports both user and relative records
   String? userId;
@@ -64,9 +62,7 @@ class HealthCubit extends Cubit<HealthState> {
     required this.service,
     required this.userId,
     required this.relativeId,
-    SupabaseClient? client,
-  })  : _client = client ?? Supabase.instance.client,
-        super(HealthState.initial());
+  })  : super(HealthState.initial());
 
   // --------------------------------------------------------------
   // LOAD RECORDS

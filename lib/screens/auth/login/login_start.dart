@@ -52,7 +52,6 @@ class _LoginPageState extends State<LoginPage>
 
   bool _inputEmpty = false;
   bool _passwordEmpty = false;
-  final bool _biometricAvailable = false;
   bool _isFaceID = false;
   bool _canUseBiometric = false;
 
@@ -68,6 +67,9 @@ class _LoginPageState extends State<LoginPage>
   late final FocusNode _phoneFocus;
   late final FocusNode _inputFocus;
   late final FocusNode _passwordFocus;
+  // Written by _onFocusChange to trigger setState rebuilds on focus transitions;
+  // kept in case future build() logic needs the value.
+  // ignore: unused_field
   bool _isInputFocused = false;
 
   bool _phoneEmpty = false;

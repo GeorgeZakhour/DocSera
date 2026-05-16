@@ -63,7 +63,6 @@ class _ConversationPageState extends State<ConversationPage> {
   final _textController = TextEditingController();
   final _scrollController = ScrollController();
 
-  final _picker = ImagePicker();
   final _compressor = ChatImageCompressor();
   late final ChatAttachmentsService _attachmentsService;
 

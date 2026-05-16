@@ -216,38 +216,6 @@ class VisitReportPdfGenerator {
     );
   }
 
-  static pw.Widget _doctorSilhouette(PdfColor color) {
-    return pw.Container(
-      width: 28,
-      height: 28,
-      decoration: pw.BoxDecoration(
-        color: const PdfColor.fromInt(0xFFE9F6F5),
-        borderRadius: pw.BorderRadius.circular(100),
-      ),
-      child: pw.Stack(
-        alignment: pw.Alignment.center,
-        children: [
-          pw.Positioned(
-            top: 5,
-            child: pw.Container(
-              width: 10,
-              height: 10,
-              decoration: pw.BoxDecoration(color: color, borderRadius: pw.BorderRadius.circular(50)),
-            ),
-          ),
-          pw.Positioned(
-            bottom: 4,
-            child: pw.Container(
-              width: 16,
-              height: 10,
-              decoration: pw.BoxDecoration(color: color, borderRadius: pw.BorderRadius.circular(6)),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
   // ========================== VISIT INFO =============================
 
   static pw.Widget _infoSection(

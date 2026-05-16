@@ -46,6 +46,9 @@ class ConfirmationPage extends StatefulWidget {
 class _ConfirmationPageState extends State<ConfirmationPage> {
   bool _submitting = false;
   String? _reasonLabel; // الاسم المقروء للسبب
+  // Flag-only state used to trigger setState rebuilds around the reason fetch;
+  // nothing reads it directly today.
+  // ignore: unused_field
   bool _loadingReason = false;
 
   @override
@@ -98,28 +101,6 @@ class _ConfirmationPageState extends State<ConfirmationPage> {
       if ((label ?? '').isNotEmpty) return label!;
     } catch (_) {}
     return reasonId; // آخر حل
-  }
-
-  Future<String> _ensureAccountName(String? userId, String currentName) async {
-    if ((currentName).trim().isNotEmpty) return currentName.trim();
-    if (userId == null || userId.isEmpty) return '';
-
-    try {
-      final supabase = Supabase.instance.client;
-      final row = await supabase
-          .from('users')
-          .select('full_name,name,username')
-          .eq('id', userId)
-          .maybeSingle();
-
-      final a = (row?['full_name'] as String?) ?? '';
-      final b = (row?['name'] as String?) ?? '';
-      final c = (row?['username'] as String?) ?? '';
-      final best = [a, b, c].firstWhere((s) => (s).trim().isNotEmpty, orElse: () => '');
-      return best.trim();
-    } catch (_) {
-      return '';
-    }
   }
 
   /// يحوّل clinicAddress الوارد من AppointmentDetails إلى Map جاهزة للحفظ كـ jsonb.
