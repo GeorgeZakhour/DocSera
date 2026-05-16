@@ -123,8 +123,9 @@ supabase/
 - Always wrap Supabase calls in try-catch
 
 ### Encryption
-- Chat messages use AES-256-GCM via `MessageEncryptionService`
-- Encrypted messages are prefixed with `"ENC:"`
+- Chat messages use AES-256-GCM (AEAD) via `MessageEncryptionService`. New ciphertexts use the `"ENCv2:"` prefix (base64-encoded nonce + ciphertext + 16-byte auth tag).
+- The service also decrypts legacy `"ENC:"` (AES-256-CBC + PKCS7) blobs for backward compat, but never produces them. The same dual-path applies to file bytes (new bytes carry an `ENCv2:` magic header; legacy bytes have a 16-byte CBC IV at offset 0).
+- The push-notification edge function (`supabase/functions/push_notifications/decrypt.ts`) mirrors this dual-path so notification previews keep rendering across the migration. **DocSera-Pro's `MessageEncryptionService` is wire-compatible — keep both in sync.**
 - Encryption key is fetched via RPC: `rpc_get_encryption_key()`
 - Always handle graceful degradation if encryption is unavailable
 

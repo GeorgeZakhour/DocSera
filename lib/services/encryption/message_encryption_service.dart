@@ -5,7 +5,20 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 
 /// ============================================================
 /// DocSera Message Encryption Service
-/// AES-256-GCM encryption for messages and media files
+///
+/// Encrypts new chat messages and file bytes with AES-256-GCM
+/// (AEAD — confidentiality + a 128-bit auth tag for integrity).
+///
+/// Also keeps a read-only decryption path for AES-256-CBC + PKCS7
+/// blobs written by earlier builds, so messages stored before the
+/// GCM migration stay readable. New writes always use GCM.
+///
+///   Text format:   "ENCv2:<base64(nonce(12) || ciphertext || tag(16))>"
+///   Bytes format:  [ascii("ENCv2:"), nonce(12), ciphertext, tag(16)]
+///   Legacy text:   "ENC:<base64(iv(16) || ciphertext)>"   (CBC, decrypt-only)
+///   Legacy bytes:  [iv(16), ciphertext]                    (CBC, decrypt-only)
+///
+/// Key material is fetched once from Supabase via `rpc_get_encryption_key`.
 /// ============================================================
 class MessageEncryptionService {
   static MessageEncryptionService? _instance;
@@ -19,8 +32,25 @@ class MessageEncryptionService {
   enc.Key? _key;
   bool _initialized = false;
 
-  /// Prefix added to encrypted text so we can distinguish from plain text
-  static const String _encPrefix = 'ENC:';
+  /// Current text-format prefix — GCM, versioned for future algorithm changes.
+  static const String _prefixV2 = 'ENCv2:';
+
+  /// Legacy text-format prefix — CBC. Decrypted but never produced.
+  static const String _prefixV1 = 'ENC:';
+
+  /// Magic header on new byte-encoded blobs. Mirrors the text prefix so any
+  /// payload not starting with these 6 ASCII bytes is treated as legacy CBC.
+  static final Uint8List _bytesMagicV2 =
+      Uint8List.fromList(utf8.encode(_prefixV2));
+
+  /// GCM uses a 12-byte (96-bit) nonce per NIST SP 800-38D guidance.
+  static const int _gcmNonceLength = 12;
+
+  /// GCM authentication tag length (128 bits — appended to ciphertext).
+  static const int _gcmTagLength = 16;
+
+  /// CBC IV length (one AES block).
+  static const int _cbcIvLength = 16;
 
   // ---------------------------------------------------------------------------
   // Initialization — fetch key from Supabase RPC (once)
@@ -36,20 +66,20 @@ class MessageEncryptionService {
         throw Exception('Encryption key is empty');
       }
 
-      // Convert hex string to 32 bytes (256 bits)
       final keyBytes = _hexToBytes(keyHex);
       _key = enc.Key(keyBytes);
       _initialized = true;
     } catch (e) {
-      // If encryption init fails, we degrade gracefully — messages
-      // will be sent/stored as plain text (same as before encryption).
+      // Fail-soft: messages flow as plain text rather than crashing the app.
       _initialized = false;
-      // ignore: avoid_print
-      print('[MessageEncryption] ⚠️ Failed to init: $e');
+      if (kDebugMode) {
+        // ignore: avoid_print
+        print('[MessageEncryption] Failed to init: $e');
+      }
     }
   }
 
-  /// Whether encryption is ready to use
+  /// Whether encryption is ready to use.
   bool get isReady => _initialized && _key != null;
 
   /// Test-only: directly inject a 32-byte key without going through Supabase.
@@ -76,86 +106,156 @@ class MessageEncryptionService {
   }
 
   // ---------------------------------------------------------------------------
-  // Text Encryption
+  // Text Encryption — always emits ENCv2: (GCM)
   // ---------------------------------------------------------------------------
 
-  /// Encrypts plain text → "ENC:<base64(iv + ciphertext)>"
-  /// Returns original text if encryption is not initialized.
+  /// Encrypts plain text → "ENCv2:<base64(nonce || ciphertext || tag)>".
+  /// Returns the original text untouched if encryption is unavailable.
   String encryptText(String plainText) {
     if (!isReady || plainText.isEmpty) return plainText;
 
     try {
-      final iv = enc.IV.fromSecureRandom(16); // 128-bit IV
-      final encrypter = enc.Encrypter(enc.AES(_key!, mode: enc.AESMode.cbc, padding: 'PKCS7'));
+      final iv = enc.IV.fromSecureRandom(_gcmNonceLength);
+      final encrypter = enc.Encrypter(enc.AES(_key!, mode: enc.AESMode.gcm));
       final encrypted = encrypter.encrypt(plainText, iv: iv);
 
-      // Combine IV + ciphertext for storage
-      final combined = Uint8List.fromList([...iv.bytes, ...encrypted.bytes]);
-      return '$_encPrefix${base64Encode(combined)}';
-    } catch (e) {
-      // Fallback: return plain text if encryption fails
+      // `encrypted.bytes` already includes the 16-byte GCM auth tag appended
+      // to the ciphertext — see package:encrypt's AES GCM implementation.
+      final combined =
+          Uint8List.fromList([...iv.bytes, ...encrypted.bytes]);
+      return '$_prefixV2${base64Encode(combined)}';
+    } catch (_) {
+      // Fail-soft: never block message send on a crypto error.
       return plainText;
     }
   }
 
-  /// Decrypts "ENC:<base64>" → plain text.
-  /// If text doesn't start with "ENC:", returns as-is (legacy plain text).
+  /// Decrypts an ENCv2: (GCM) blob or, for backward compat, an ENC: (CBC) blob.
+  /// Returns the input unchanged when the prefix is not recognised (treated
+  /// as legacy plain text), the service isn't initialised, or decryption fails.
   String decryptText(String cipherText) {
-    if (!isReady || !cipherText.startsWith(_encPrefix)) {
-      return cipherText; // Legacy plain text or encryption not ready
+    if (!isReady) return cipherText;
+
+    if (cipherText.startsWith(_prefixV2)) {
+      return _decryptTextGcm(cipherText);
     }
+    if (cipherText.startsWith(_prefixV1)) {
+      return _decryptTextCbcLegacy(cipherText);
+    }
+    return cipherText;
+  }
 
+  String _decryptTextGcm(String cipherText) {
     try {
-      final encoded = cipherText.substring(_encPrefix.length);
+      final encoded = cipherText.substring(_prefixV2.length);
       final combined = base64Decode(encoded);
+      if (combined.length < _gcmNonceLength + _gcmTagLength) {
+        return cipherText;
+      }
+      final iv = enc.IV(
+        Uint8List.fromList(combined.sublist(0, _gcmNonceLength)),
+      );
+      final cipherBytes = combined.sublist(_gcmNonceLength);
+      final encrypter = enc.Encrypter(enc.AES(_key!, mode: enc.AESMode.gcm));
+      return encrypter.decrypt(enc.Encrypted(cipherBytes), iv: iv);
+    } catch (_) {
+      return cipherText;
+    }
+  }
 
-      // First 16 bytes = IV, rest = ciphertext
-      final iv = enc.IV(Uint8List.fromList(combined.sublist(0, 16)));
-      final encryptedBytes = combined.sublist(16);
-
-      final encrypter = enc.Encrypter(enc.AES(_key!, mode: enc.AESMode.cbc, padding: 'PKCS7'));
-      final decrypted = encrypter.decrypt(enc.Encrypted(encryptedBytes), iv: iv);
-
-      return decrypted;
-    } catch (e) {
-      // If decryption fails, return raw text (could be corrupted or plain)
+  String _decryptTextCbcLegacy(String cipherText) {
+    try {
+      final encoded = cipherText.substring(_prefixV1.length);
+      final combined = base64Decode(encoded);
+      if (combined.length < _cbcIvLength) return cipherText;
+      final iv = enc.IV(
+        Uint8List.fromList(combined.sublist(0, _cbcIvLength)),
+      );
+      final cipherBytes = combined.sublist(_cbcIvLength);
+      final encrypter = enc.Encrypter(
+        enc.AES(_key!, mode: enc.AESMode.cbc, padding: 'PKCS7'),
+      );
+      return encrypter.decrypt(enc.Encrypted(cipherBytes), iv: iv);
+    } catch (_) {
       return cipherText;
     }
   }
 
   // ---------------------------------------------------------------------------
-  // File/Media Encryption
+  // File / Media Encryption — always emits ENCv2:-magic-prefixed GCM bytes
   // ---------------------------------------------------------------------------
 
-  /// Encrypts file bytes → encrypted bytes (IV prepended)
+  /// Encrypts file bytes.
+  ///   New layout: [magic("ENCv2:"), nonce(12), ciphertext, tag(16)]
+  /// Returns null when the service isn't initialised or encryption fails.
   Uint8List? encryptBytes(Uint8List plainBytes) {
     if (!isReady) return null;
 
     try {
-      final iv = enc.IV.fromSecureRandom(16);
-      final encrypter = enc.Encrypter(enc.AES(_key!, mode: enc.AESMode.cbc, padding: 'PKCS7'));
-      final encrypted = encrypter.encryptBytes(plainBytes.toList(), iv: iv);
+      final iv = enc.IV.fromSecureRandom(_gcmNonceLength);
+      final encrypter = enc.Encrypter(enc.AES(_key!, mode: enc.AESMode.gcm));
+      final encrypted =
+          encrypter.encryptBytes(plainBytes.toList(), iv: iv);
 
-      // Prepend IV to encrypted bytes
-      return Uint8List.fromList([...iv.bytes, ...encrypted.bytes]);
-    } catch (e) {
+      return Uint8List.fromList([
+        ..._bytesMagicV2,
+        ...iv.bytes,
+        ...encrypted.bytes,
+      ]);
+    } catch (_) {
       return null;
     }
   }
 
-  /// Decrypts encrypted bytes (with prepended IV) → original file bytes
+  /// Decrypts bytes. Dispatches by the magic header:
+  ///   * starts with "ENCv2:" → GCM path,
+  ///   * otherwise           → legacy CBC path (16-byte IV prepended).
+  /// Returns null on any failure (auth-tag mismatch, truncation, wrong key,
+  /// uninitialized service).
   Uint8List? decryptBytes(Uint8List encryptedBytes) {
-    if (!isReady || encryptedBytes.length < 17) return null;
+    if (!isReady) return null;
+
+    if (_startsWithBytes(encryptedBytes, _bytesMagicV2)) {
+      return _decryptBytesGcm(encryptedBytes);
+    }
+    return _decryptBytesCbcLegacy(encryptedBytes);
+  }
+
+  Uint8List? _decryptBytesGcm(Uint8List encryptedBytes) {
+    final headerEnd = _bytesMagicV2.length;
+    final minLen = headerEnd + _gcmNonceLength + _gcmTagLength;
+    if (encryptedBytes.length < minLen) return null;
 
     try {
-      final iv = enc.IV(Uint8List.fromList(encryptedBytes.sublist(0, 16)));
-      final cipherBytes = encryptedBytes.sublist(16);
-
-      final encrypter = enc.Encrypter(enc.AES(_key!, mode: enc.AESMode.cbc, padding: 'PKCS7'));
-      final decrypted = encrypter.decryptBytes(enc.Encrypted(cipherBytes), iv: iv);
-
+      final nonceEnd = headerEnd + _gcmNonceLength;
+      final iv = enc.IV(
+        Uint8List.fromList(encryptedBytes.sublist(headerEnd, nonceEnd)),
+      );
+      final cipherBytes = encryptedBytes.sublist(nonceEnd);
+      final encrypter = enc.Encrypter(enc.AES(_key!, mode: enc.AESMode.gcm));
+      final decrypted =
+          encrypter.decryptBytes(enc.Encrypted(cipherBytes), iv: iv);
       return Uint8List.fromList(decrypted);
-    } catch (e) {
+    } catch (_) {
+      return null;
+    }
+  }
+
+  Uint8List? _decryptBytesCbcLegacy(Uint8List encryptedBytes) {
+    if (encryptedBytes.length < _cbcIvLength + 1) return null;
+
+    try {
+      final iv = enc.IV(
+        Uint8List.fromList(encryptedBytes.sublist(0, _cbcIvLength)),
+      );
+      final cipherBytes = encryptedBytes.sublist(_cbcIvLength);
+      final encrypter = enc.Encrypter(
+        enc.AES(_key!, mode: enc.AESMode.cbc, padding: 'PKCS7'),
+      );
+      final decrypted =
+          encrypter.decryptBytes(enc.Encrypted(cipherBytes), iv: iv);
+      return Uint8List.fromList(decrypted);
+    } catch (_) {
       return null;
     }
   }
@@ -163,6 +263,14 @@ class MessageEncryptionService {
   // ---------------------------------------------------------------------------
   // Helpers
   // ---------------------------------------------------------------------------
+
+  static bool _startsWithBytes(Uint8List haystack, Uint8List needle) {
+    if (haystack.length < needle.length) return false;
+    for (var i = 0; i < needle.length; i++) {
+      if (haystack[i] != needle[i]) return false;
+    }
+    return true;
+  }
 
   Uint8List _hexToBytes(String hex) {
     final result = Uint8List(hex.length ~/ 2);
