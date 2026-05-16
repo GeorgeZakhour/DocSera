@@ -30,7 +30,7 @@ import 'package:docsera/screens/home/Document/document_preview_page.dart'; // �
 import '../../../app/text_styles.dart';
 import 'appointment_cancel_confirmation.dart' show AppointmentCancelledPage;
 import 'package:docsera/screens/home/health/pages/visit_reports/visit_report_model.dart'; // 👈
-import 'package:docsera/screens/home/health/pages/visit_reports/VisitReportDetailsPage.dart'; // 👈
+import 'package:docsera/screens/home/health/pages/visit_reports/visit_report_details_page.dart'; // 👈
 
 
 class AppointmentDetailsPage extends StatefulWidget {

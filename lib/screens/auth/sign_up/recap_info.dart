@@ -1,7 +1,7 @@
 import 'dart:io';
 
 import 'package:docsera/app/const.dart';
-import 'package:docsera/screens/auth/sign_up/WelcomePage.dart';
+import 'package:docsera/screens/auth/sign_up/welcome_page.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:docsera/widgets/base_scaffold.dart';

@@ -14,7 +14,7 @@ import 'visit_reports_cubit.dart';
 import 'visit_report_model.dart';
 import 'modular_report_model.dart';
 import 'modular_report_detail_page.dart';
-import 'VisitReportDetailsPage.dart';
+import 'visit_report_details_page.dart';
 
 class _ReportListItem {
   final VisitReport? legacy;

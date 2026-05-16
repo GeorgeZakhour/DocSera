@@ -38,7 +38,7 @@ import 'package:docsera/models/home_card_model.dart';
 import 'package:docsera/screens/misc/webview_page.dart';
 
 import '../../models/sign_up_info.dart';
-import '../auth/sign_up/WelcomePage.dart';
+import '../auth/sign_up/welcome_page.dart';
 
 
 class MainScreen extends StatefulWidget {
