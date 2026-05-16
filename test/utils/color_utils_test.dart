@@ -7,22 +7,22 @@ void main() {
     test('parses 6-digit hex with leading #', () {
       final c = colorFromHex('#FF8F00');
       // Alpha should be FF when not provided.
-      expect(c.alpha, 0xFF);
-      expect(c.red, 0xFF);
-      expect(c.green, 0x8F);
-      expect(c.blue, 0x00);
+      expect((c.a * 255.0).round() & 0xff, 0xFF);
+      expect((c.r * 255.0).round() & 0xff, 0xFF);
+      expect((c.g * 255.0).round() & 0xff, 0x8F);
+      expect((c.b * 255.0).round() & 0xff, 0x00);
     });
 
     test('parses 6-digit hex without leading #', () {
-      expect(colorFromHex('FF8F00').red, 0xFF);
+      expect((colorFromHex('FF8F00').r * 255.0).round() & 0xff, 0xFF);
     });
 
     test('parses 8-digit hex (with alpha)', () {
       final c = colorFromHex('#80112233');
-      expect(c.alpha, 0x80);
-      expect(c.red, 0x11);
-      expect(c.green, 0x22);
-      expect(c.blue, 0x33);
+      expect((c.a * 255.0).round() & 0xff, 0x80);
+      expect((c.r * 255.0).round() & 0xff, 0x11);
+      expect((c.g * 255.0).round() & 0xff, 0x22);
+      expect((c.b * 255.0).round() & 0xff, 0x33);
     });
 
     test('null returns fallback', () {
