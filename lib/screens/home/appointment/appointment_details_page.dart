@@ -185,13 +185,16 @@ class _AppointmentDetailsPageState extends State<AppointmentDetailsPage> {
     );
 
     // 8) الإضافة + إشعار
+    final messenger = ScaffoldMessenger.of(context);
+    final loc = AppLocalizations.of(context)!;
     Add2Calendar.addEvent2Cal(event).then((success) {
-      ScaffoldMessenger.of(context).showSnackBar(
+      if (!mounted) return;
+      messenger.showSnackBar(
         SnackBar(
           content: Text(
             success
-                ? AppLocalizations.of(context)!.appointmentAddedToCalendar
-                : AppLocalizations.of(context)!.appointmentFailedToAdd,
+                ? loc.appointmentAddedToCalendar
+                : loc.appointmentFailedToAdd,
           ),
         ),
       );
@@ -329,6 +332,7 @@ class _AppointmentDetailsPageState extends State<AppointmentDetailsPage> {
 
     final tsUtc = DateTime.parse(appt['timestamp'].toString()).toUtc();
     final deadlineHours = await fetchCancellationDeadlineHours(doctorId);
+    if (!context.mounted) return;
     final (isTooLate, isShortNotice) =
     computeFlags(apptUtc: tsUtc, deadlineHours: deadlineHours);
 
@@ -713,6 +717,7 @@ class _AppointmentDetailsPageState extends State<AppointmentDetailsPage> {
 
     // 1) اجلب مهلة الإلغاء من جدول الأطباء
     final deadlineHours = await _fetchCancellationDeadlineHours(doctorId);
+    if (!context.mounted) return;
 
     // 2) احسب على UTC
     final tsUtc = _tsUtc();
@@ -936,25 +941,27 @@ class _AppointmentDetailsPageState extends State<AppointmentDetailsPage> {
                               return;
                             }
 
-                            final currentContext = context;
+                            final navigator = Navigator.of(context);
+                            final messenger = ScaffoldMessenger.of(context);
+                            final loc = AppLocalizations.of(context)!;
                             try {
                               await _cancelAppointment(
-                                currentContext,
+                                context,
                                 appointmentId: apptId,
                                 doctorId: doctorId,
                                 cancelReason: reasonController.text.trim(),
                               );
-                              Navigator.pop(currentContext);
-
+                              if (!context.mounted) return;
+                              navigator.pop();
                               // ✅ الذهاب لصفحة تأكيد الإلغاء
-                              Navigator.pushReplacement(
-                                currentContext,
+                              navigator.pushReplacement(
                                 fadePageRoute(AppointmentCancelledPage(appointment: _appt)),
                               );
                             } catch (e) {
-                              ScaffoldMessenger.of(currentContext).showSnackBar(
+                              if (!context.mounted) return;
+                              messenger.showSnackBar(
                                 SnackBar(
-                                  content: Text(AppLocalizations.of(currentContext)!.somethingWentWrong),
+                                  content: Text(loc.somethingWentWrong),
                                   backgroundColor: Colors.red,
                                 ),
                               );
@@ -1129,6 +1136,9 @@ class _AppointmentDetailsPageState extends State<AppointmentDetailsPage> {
   }
 
   Future<void> _openAttachment(Map<String, dynamic> att) async {
+    final navigator = Navigator.of(context);
+    final messenger = ScaffoldMessenger.of(context);
+    final loc = AppLocalizations.of(context)!;
     try {
       final bucket = att['bucket'] ?? 'appointments-attachments';
       final paths = List<String>.from(att['paths'] ?? []);
@@ -1161,8 +1171,8 @@ class _AppointmentDetailsPageState extends State<AppointmentDetailsPage> {
       );
 
       // 3. فتح صفحة العرض الموحدة
-      Navigator.push(
-        context,
+      if (!context.mounted) return;
+      navigator.push(
         MaterialPageRoute(
           builder: (_) => DocumentPreviewPage(
             document: dummyDoc,
@@ -1172,14 +1182,15 @@ class _AppointmentDetailsPageState extends State<AppointmentDetailsPage> {
       );
     } catch (e) {
       debugPrint("❌ Error opening attachment: $e");
-      ScaffoldMessenger.of(context).showSnackBar(
-         SnackBar(content: Text(AppLocalizations.of(context)!.somethingWentWrong)),
+      messenger.showSnackBar(
+         SnackBar(content: Text(loc.somethingWentWrong)),
       );
     }
   }
 
   Future<void> _deleteAttachment(Map<String, dynamic> att) async {
     final local = AppLocalizations.of(context)!;
+    final messenger = ScaffoldMessenger.of(context);
     final confirm = await showDialog<bool>(
       context: context,
       builder: (ctx) => AlertDialog(
@@ -1258,13 +1269,12 @@ class _AppointmentDetailsPageState extends State<AppointmentDetailsPage> {
           .select()
           .eq("id", _appointmentId())
           .single();
-
+      if (!context.mounted) return;
       setState(() {
         widget.appointment.clear();
         widget.appointment.addAll(updated);
       });
-
-      ScaffoldMessenger.of(context).showSnackBar(
+      messenger.showSnackBar(
         SnackBar(
           content: Text(local.documentDeleted),
           backgroundColor: AppColors.red.withValues(alpha: 0.9), // ✅ Red with opacity
@@ -1275,11 +1285,9 @@ class _AppointmentDetailsPageState extends State<AppointmentDetailsPage> {
 
     } catch (e) {
       debugPrint("❌ Remove attachment error: $e");
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(AppLocalizations.of(context)!.commonErrorWithMessage('$e'))),
-        );
-      }
+      messenger.showSnackBar(
+        SnackBar(content: Text(local.commonErrorWithMessage('$e'))),
+      );
     }
   }
 
