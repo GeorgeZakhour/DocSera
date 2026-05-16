@@ -117,6 +117,9 @@ class _LogInPageState extends State<LogInPage> with SingleTickerProviderStateMix
   /// device isn't trusted yet.
   Future<void> _logInUserWithPhonePassword() async {
     setState(() { isLoading = true; errorMessage = null; });
+    // Cache navigator BEFORE the auth awaits so post-auth navigation
+    // doesn't rely on context after potential unmount.
+    final navigator = Navigator.of(context);
 
     try {
       final phone = getFormattedPhoneNumber(_phoneController.text.trim());
@@ -188,17 +191,16 @@ class _LogInPageState extends State<LogInPage> with SingleTickerProviderStateMix
       // phone+password path doesn't currently hit that RPC, so query
       // status directly post-auth.
       if (await _isInDeletionGraceWindow()) {
-        if (!mounted) return;
-        Navigator.pushAndRemoveUntil(
-          context,
+        if (!context.mounted) return;
+        navigator.pushAndRemoveUntil(
           fadePageRoute(const PendingDeletionPage()),
           (_) => false,
         );
         return;
       }
 
-      Navigator.pushAndRemoveUntil(
-        context,
+      if (!context.mounted) return;
+      navigator.pushAndRemoveUntil(
         fadePageRoute(CustomBottomNavigationBar()),
             (_) => false,
       );
@@ -452,6 +454,12 @@ class _LogInPageState extends State<LogInPage> with SingleTickerProviderStateMix
 
   Future<void> _logInUser() async {
     setState(() => isLoading = true);
+    // Cache cubit + navigator + localizations BEFORE the awaits so the
+    // post-auth navigation and error-message lookups don't read context
+    // after potential unmount.
+    final userCubit = context.read<UserCubit>();
+    final navigator = Navigator.of(context);
+    final loc = AppLocalizations.of(context)!;
 
     try {
       // ---------------------------------------------------------------------
@@ -648,21 +656,21 @@ class _LogInPageState extends State<LogInPage> with SingleTickerProviderStateMix
       // ---------------------------------------------------------------------
       debugPrint("✅ [NAVIGATION] Entering app");
 
-      context.read<UserCubit>().loadUserData(context: context);
+      // Use explicitUserId form so loadUserData doesn't read AuthCubit from
+      // context (which would re-introduce the use_build_context_synchronously
+      // finding after the auth + RPC awaits above).
+      userCubit.loadUserData(explicitUserId: supabaseUser.id);
 
-      if (!mounted) return;
-
+      if (!context.mounted) return;
       if (isInGraceWindow) {
-        Navigator.pushAndRemoveUntil(
-          context,
+        navigator.pushAndRemoveUntil(
           fadePageRoute(const PendingDeletionPage()),
           (_) => false,
         );
         return;
       }
 
-      Navigator.pushAndRemoveUntil(
-        context,
+      navigator.pushAndRemoveUntil(
         fadePageRoute(CustomBottomNavigationBar()),
             (_) => false,
       );
@@ -682,12 +690,12 @@ class _LogInPageState extends State<LogInPage> with SingleTickerProviderStateMix
         await _handleAuthFailureForLegacy(_inputController.text.trim());
         return;
       } else if (errorStr.contains('account_disabled')) {
-        message = AppLocalizations.of(context)!.accountDisabled;
+        message = loc.accountDisabled;
       } else if (errorStr.contains('user not found') ||
           errorStr.contains('not found')) {
-        message = AppLocalizations.of(context)!.errorUserNotFound;
+        message = loc.errorUserNotFound;
       } else {
-        message = AppLocalizations.of(context)!.errorGenericLogin;
+        message = loc.errorGenericLogin;
       }
 
       setState(() {
@@ -702,16 +710,16 @@ class _LogInPageState extends State<LogInPage> with SingleTickerProviderStateMix
 
 
   Future<void> _authenticateWithFaceID() async {
+    final messenger = ScaffoldMessenger.of(context);
+    final loc = AppLocalizations.of(context)!;
     try {
       // 🔐 Get credentials from Secure Storage
       final credentials = await BiometricStorage.getCredentials();
 
       if (credentials == null) {
-        ScaffoldMessenger.of(context).showSnackBar(
+        messenger.showSnackBar(
           SnackBar(
-            content: Text(
-              AppLocalizations.of(context)!.faceIdNoCredentials,
-            ),
+            content: Text(loc.faceIdNoCredentials),
           ),
         );
         return;
@@ -719,13 +727,13 @@ class _LogInPageState extends State<LogInPage> with SingleTickerProviderStateMix
 
       final email = credentials['email'];
       final password = credentials['password'];
-      
+
       if (email == null || password == null) return; // Should not happen if credentials != null
 
       final authenticated = await auth.authenticate(
-        localizedReason: biometricType == AppLocalizations.of(context)!.faceIdTitle
-            ? AppLocalizations.of(context)!.faceIdPrompt
-            : AppLocalizations.of(context)!.fingerprintPrompt,
+        localizedReason: biometricType == loc.faceIdTitle
+            ? loc.faceIdPrompt
+            : loc.fingerprintPrompt,
         options: const AuthenticationOptions(
           biometricOnly: true,
           stickyAuth: true,
@@ -769,9 +777,9 @@ class _LogInPageState extends State<LogInPage> with SingleTickerProviderStateMix
       await _logInUser();
     } catch (e) {
       debugPrint("❌ Biometric authentication error: $e");
-      ScaffoldMessenger.of(context).showSnackBar(
+      messenger.showSnackBar(
         SnackBar(
-          content: Text(AppLocalizations.of(context)!.faceIdFailed),
+          content: Text(loc.faceIdFailed),
         ),
       );
     }

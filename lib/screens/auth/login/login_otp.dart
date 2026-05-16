@@ -79,6 +79,10 @@ class _LoginOTPPageState extends State<LoginOTPPage> with WidgetsBindingObserver
     setState(() {
       isLoading = true;
     });
+    // Cache messenger + loc BEFORE the OTP-send await so the catch-arm
+    // snackbar doesn't read context after potential unmount.
+    final messenger = ScaffoldMessenger.of(context);
+    final loc = AppLocalizations.of(context)!;
 
     final channel = widget.email != null ? 'email' : 'phone';
     Analytics.instance.track(Events.otpRequested, {
@@ -137,12 +141,12 @@ class _LoginOTPPageState extends State<LoginOTPPage> with WidgetsBindingObserver
         'error_code': 'send_error',
       });
 
-      ScaffoldMessenger.of(context).showSnackBar(
+      messenger.showSnackBar(
         SnackBar(
-          content: Text(AppLocalizations.of(context)!.otpSendFailed),
+          content: Text(loc.otpSendFailed),
           backgroundColor: AppColors.red.withValues(alpha: 0.8),
           action: SnackBarAction(
-            label: AppLocalizations.of(context)!.tryAgain,
+            label: loc.tryAgain,
             textColor: Colors.white,
             onPressed: _sendOTP,
           ),
@@ -154,6 +158,12 @@ class _LoginOTPPageState extends State<LoginOTPPage> with WidgetsBindingObserver
 
   Future<void> _validateCode() async {
     setState(() => isLoading = true);
+    // Cache navigator + messenger + loc BEFORE the verify/trust awaits so
+    // post-verify navigation and error snackbars don't read context after
+    // potential unmount.
+    final navigator = Navigator.of(context);
+    final messenger = ScaffoldMessenger.of(context);
+    final loc = AppLocalizations.of(context)!;
     final channel = widget.email != null ? 'email' : 'phone';
 
     try {
@@ -202,8 +212,7 @@ class _LoginOTPPageState extends State<LoginOTPPage> with WidgetsBindingObserver
         'context': 'login',
       });
 
-      Navigator.pushAndRemoveUntil(
-        context,
+      navigator.pushAndRemoveUntil(
         fadePageRoute(CustomBottomNavigationBar()),
             (_) => false,
       );
@@ -213,9 +222,9 @@ class _LoginOTPPageState extends State<LoginOTPPage> with WidgetsBindingObserver
         'context': 'login_verify',
         'error_code': 'invalid_otp',
       });
-      ScaffoldMessenger.of(context).showSnackBar(
+      messenger.showSnackBar(
         SnackBar(
-          content: Text(AppLocalizations.of(context)!.invalidCode),
+          content: Text(loc.invalidCode),
           backgroundColor: AppColors.red,
         ),
       );
