@@ -63,6 +63,9 @@ class _SignUpFirstPageState extends State<SignUpFirstPage> {
     if (!isValid) return;
 
     setState(() => isChecking = true);
+    // Cache messenger + loc BEFORE the phone-context await.
+    final messenger = ScaffoldMessenger.of(context);
+    final loc = AppLocalizations.of(context)!;
 
     final formattedPhone = getFormattedPhoneNumber();
 
@@ -78,6 +81,10 @@ class _SignUpFirstPageState extends State<SignUpFirstPage> {
 
       if (ctx == 'in_docsera' || ctx == 'in_both') {
         setState(() => isChecking = false);
+        if (!context.mounted) return;
+        // Analyzer doesn't trace mounted-check through function-parameter
+        // passing; checked one line up.
+        // ignore: use_build_context_synchronously
         _showDuplicateDialog(context);
         return;
       }
@@ -89,9 +96,9 @@ class _SignUpFirstPageState extends State<SignUpFirstPage> {
     } catch (e) {
       setState(() => isChecking = false);
 
-      ScaffoldMessenger.of(context).showSnackBar(
+      messenger.showSnackBar(
         SnackBar(
-          content: Text(AppLocalizations.of(context)!.unexpectedError),
+          content: Text(loc.unexpectedError),
           backgroundColor: AppColors.red,
         ),
       );
@@ -100,6 +107,9 @@ class _SignUpFirstPageState extends State<SignUpFirstPage> {
 
   Future<void> _sendOtp() async {
     setState(() => _otpSending = true);
+    // Cache messenger + loc BEFORE the OTP send await.
+    final messenger = ScaffoldMessenger.of(context);
+    final loc = AppLocalizations.of(context)!;
     final formattedPhone = getFormattedPhoneNumber();
     try {
       await context.read<SupabaseUserService>().sendPhoneOtp(formattedPhone);
@@ -113,8 +123,8 @@ class _SignUpFirstPageState extends State<SignUpFirstPage> {
     } catch (e) {
       debugPrint("OTP Send Error: $e");
       setState(() => _otpSending = false);
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(AppLocalizations.of(context)!.unexpectedError)),
+      messenger.showSnackBar(
+        SnackBar(content: Text(loc.unexpectedError)),
       );
     }
   }

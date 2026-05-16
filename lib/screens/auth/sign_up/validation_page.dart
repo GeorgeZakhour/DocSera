@@ -51,6 +51,9 @@ class _ValidationPageState extends State<ValidationPage> {
     setState(() {
       isLoading = true;
     });
+    // Cache messenger + loc BEFORE the OTP-send awaits.
+    final messenger = ScaffoldMessenger.of(context);
+    final loc = AppLocalizations.of(context)!;
 
     try {
       // --------------------------------------------------
@@ -63,7 +66,7 @@ class _ValidationPageState extends State<ValidationPage> {
         debugPrint('Sent SMS OTP: $sentCode'); // Debug only
 
         // ✅ إظهار OTP في Snackbar (Debug فقط)
-        ScaffoldMessenger.of(context).showSnackBar(
+        messenger.showSnackBar(
           SnackBar(
             content: Text('OTP: $sentCode'),
             backgroundColor: AppColors.main.withValues(alpha: 0.9),
@@ -95,12 +98,9 @@ class _ValidationPageState extends State<ValidationPage> {
       // 🔒 Rate limit (OTP_TOO_FREQUENT)
       if (errorMessage.contains('429') ||
           errorMessage.contains('OTP_TOO_FREQUENT')) {
-        ScaffoldMessenger.of(context).showSnackBar(
+        messenger.showSnackBar(
           SnackBar(
-            content: Text(
-              AppLocalizations.of(context)!
-                  .pleaseWaitBeforeRequestingAnotherCode,
-            ),
+            content: Text(loc.pleaseWaitBeforeRequestingAnotherCode),
             backgroundColor: AppColors.red.withValues(alpha: 0.85),
           ),
         );
@@ -108,12 +108,12 @@ class _ValidationPageState extends State<ValidationPage> {
       }
 
       // ❌ Generic error
-      ScaffoldMessenger.of(context).showSnackBar(
+      messenger.showSnackBar(
         SnackBar(
-          content: Text(AppLocalizations.of(context)!.otpSendFailed),
+          content: Text(loc.otpSendFailed),
           backgroundColor: AppColors.red.withValues(alpha: 0.8),
           action: SnackBarAction(
-            label: AppLocalizations.of(context)!.tryAgain,
+            label: loc.tryAgain,
             textColor: Colors.white,
             onPressed: _sendOTP,
           ),
@@ -125,6 +125,14 @@ class _ValidationPageState extends State<ValidationPage> {
 
   /// Validate the entered OTP
   Future<void> _validateCode() async {
+    // Cache navigator + messenger + loc BEFORE the email-verify await so
+    // post-verify navigation and error snackbars don't read context after
+    // potential unmount. The SMS branch is sync (local compare) so it
+    // doesn't need the cache, but using the cached refs is harmless.
+    final navigator = Navigator.of(context);
+    final messenger = ScaffoldMessenger.of(context);
+    final loc = AppLocalizations.of(context)!;
+
     // --------------------------------------------------
     // 📱 SMS (كما هو – مقارنة محلية)
     // --------------------------------------------------
@@ -134,9 +142,9 @@ class _ValidationPageState extends State<ValidationPage> {
       });
 
       if (!isCodeValid) {
-        ScaffoldMessenger.of(context).showSnackBar(
+        messenger.showSnackBar(
           SnackBar(
-            content: Text(AppLocalizations.of(context)!.invalidCode),
+            content: Text(loc.invalidCode),
             backgroundColor: AppColors.red,
           ),
         );
@@ -145,8 +153,7 @@ class _ValidationPageState extends State<ValidationPage> {
 
       // SMS صحيح
       if (widget.signUpInfo.email == null) {
-        Navigator.push(
-          context,
+        navigator.push(
           fadePageRoute(
             RecapPage(
               signUpInfo: widget.signUpInfo..phoneVerified = true,
@@ -154,8 +161,7 @@ class _ValidationPageState extends State<ValidationPage> {
           ),
         );
       } else {
-        Navigator.push(
-          context,
+        navigator.push(
           fadePageRoute(
             ValidationPage(
               validationType: 'Email',
@@ -178,17 +184,16 @@ class _ValidationPageState extends State<ValidationPage> {
       );
 
       if (!isValid) {
-        ScaffoldMessenger.of(context).showSnackBar(
+        messenger.showSnackBar(
           SnackBar(
-            content: Text(AppLocalizations.of(context)!.invalidCode),
+            content: Text(loc.invalidCode),
             backgroundColor: AppColors.red,
           ),
         );
         return;
       }
 
-      Navigator.push(
-        context,
+      navigator.push(
         fadePageRoute(
           RecapPage(
             signUpInfo: widget.signUpInfo..emailVerified = true,

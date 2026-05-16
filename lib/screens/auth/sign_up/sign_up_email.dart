@@ -51,6 +51,10 @@ class _EnterEmailPageState extends State<EnterEmailPage> {
 
   Future<void> _sendOtp() async {
     setState(() => _otpSending = true);
+    // Cache messenger + loc BEFORE the OTP send so the catch-arm snackbar
+    // doesn't read context after potential unmount.
+    final messenger = ScaffoldMessenger.of(context);
+    final loc = AppLocalizations.of(context)!;
     final email = _emailController.text.trim().toLowerCase();
     try {
       // Note: We need a sendEmailOtp method in SupabaseUserService
@@ -65,8 +69,8 @@ class _EnterEmailPageState extends State<EnterEmailPage> {
     } catch (e) {
       debugPrint("Email OTP Send Error: $e");
       setState(() => _otpSending = false);
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(AppLocalizations.of(context)!.unexpectedError)),
+      messenger.showSnackBar(
+        SnackBar(content: Text(loc.unexpectedError)),
       );
     }
   }
@@ -133,6 +137,9 @@ class _EnterEmailPageState extends State<EnterEmailPage> {
     if (!isValid) return;
 
     setState(() => isChecking = true);
+    // Cache messenger + loc BEFORE the dup-check await.
+    final messenger = ScaffoldMessenger.of(context);
+    final loc = AppLocalizations.of(context)!;
 
     final email = _emailController.text.trim().toLowerCase();
 
@@ -158,9 +165,9 @@ class _EnterEmailPageState extends State<EnterEmailPage> {
     } catch (e) {
       setState(() => isChecking = false);
 
-      ScaffoldMessenger.of(context).showSnackBar(
+      messenger.showSnackBar(
         SnackBar(
-          content: Text(AppLocalizations.of(context)!.errorCheckingEmail),
+          content: Text(loc.errorCheckingEmail),
           backgroundColor: AppColors.red,
         ),
       );
