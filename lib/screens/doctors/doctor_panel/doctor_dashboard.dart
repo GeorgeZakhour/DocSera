@@ -11,9 +11,9 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 import '../../../utils/full_page_loader.dart';
 
 class DoctorDashboard extends StatefulWidget {
-  Map<String, dynamic>? doctorData;
+  final Map<String, dynamic>? doctorData;
 
-  DoctorDashboard({super.key,this.doctorData});
+  const DoctorDashboard({super.key, this.doctorData});
 
   @override
   State<DoctorDashboard> createState() => _DoctorDashboardState();

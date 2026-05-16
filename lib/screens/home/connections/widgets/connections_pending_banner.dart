@@ -149,12 +149,12 @@ class _BannerCard extends StatelessWidget {
                     height: 40.w,
                     decoration: BoxDecoration(
                       shape: BoxShape.circle,
-                      gradient: LinearGradient(
+                      gradient: const LinearGradient(
                         begin: Alignment.topLeft,
                         end: Alignment.bottomRight,
                         colors: [
                           AppColors.main,
-                          const Color(0xFF4DD0D2),
+                          Color(0xFF4DD0D2),
                         ],
                       ),
                       boxShadow: [

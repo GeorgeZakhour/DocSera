@@ -17,9 +17,13 @@ class ChatImageCompressor {
       int quality = 50;
       if (originalSize <= 500 * 1024) {
         quality = 75;
-      } else if (originalSize <= 1 * 1024 * 1024) quality = 50;
-      else if (originalSize <= 2 * 1024 * 1024) quality = 35;
-      else quality = 25;
+      } else if (originalSize <= 1 * 1024 * 1024) {
+        quality = 50;
+      } else if (originalSize <= 2 * 1024 * 1024) {
+        quality = 35;
+      } else {
+        quality = 25;
+      }
 
       final target = '${file.path}_compressed.jpg';
       final compressed = await FlutterImageCompress.compressAndGetFile(

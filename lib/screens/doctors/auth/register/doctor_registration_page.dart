@@ -195,7 +195,7 @@ class _DoctorRegistrationPageState extends State<DoctorRegistrationPage> {
         // ✅ التنقل إلى لوحة التحكم
         Navigator.pushAndRemoveUntil(
           context,
-          fadePageRoute(DoctorDashboard()),
+          fadePageRoute(const DoctorDashboard()),
               (route) => false,
         );
       } catch (e) {

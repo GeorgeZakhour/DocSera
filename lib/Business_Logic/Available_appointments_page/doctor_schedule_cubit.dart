@@ -40,7 +40,6 @@ class DoctorScheduleCubit extends Cubit<DoctorScheduleState> {
     }
   }
 
-  @override
   Future<void> fetchDoctorAppointments(
       String doctorId,
       BuildContext context, {

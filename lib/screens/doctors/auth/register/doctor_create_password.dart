@@ -52,7 +52,7 @@ class _DoctorCreatePasswordPageState extends State<DoctorCreatePasswordPage> {
         // ✅ Navigate directly to Doctor Dashboard
         Navigator.pushAndRemoveUntil(
           context,
-          fadePageRoute( DoctorDashboard()),
+          fadePageRoute(const DoctorDashboard()),
               (route) => false, // Remove all previous routes
         );
       } catch (e) {

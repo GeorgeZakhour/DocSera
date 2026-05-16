@@ -171,8 +171,9 @@ class AuthRepository {
     var p = input.trim();
     if (p.startsWith('+963')) {
       p = '00963${p.substring(4)}';
-    } else if (p.startsWith('09')) p = '00963${p.substring(1)}';
-    else if (p.startsWith('9') && !p.startsWith('00963') && !p.startsWith('963')) {
+    } else if (p.startsWith('09')) {
+      p = '00963${p.substring(1)}';
+    } else if (p.startsWith('9') && !p.startsWith('00963') && !p.startsWith('963')) {
       p = '00963$p';
     } else if (p.startsWith('963')) {
       p = '00$p';

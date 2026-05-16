@@ -72,6 +72,12 @@ dependencies:
   uuid: ^4.5.2
   webview_flutter: ^4.13.1
   encrypt: ^5.0.3
+  # Imported directly by various Cubits (was previously only transitive via
+  # flutter_bloc); declared here so `depend_on_referenced_packages` is happy.
+  bloc:
+  # Imported directly by lib/utils/doctor_image_utils.dart (transitive via
+  # cached_network_image); declared so the lint doesn't fire.
+  flutter_cache_manager:
 
 dev_dependencies:
   flutter_test:
