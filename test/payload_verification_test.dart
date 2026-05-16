@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'package:flutter/foundation.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 // -----------------------------------------------------------------------------
@@ -10,7 +11,7 @@ import 'package:flutter_test/flutter_test.dart';
 
 void main() {
   test('💰 COST VERIFICATION: Optimized vs Legacy Payload Size', () {
-    print('\n📊 --- SUPABASE PAYLOAD COST ANALYSIS ---');
+    debugPrint('\n📊 --- SUPABASE PAYLOAD COST ANALYSIS ---');
 
     // 1. SETUP: Create realistic dummy data keys
     // A single conversation row (Metadata only)
@@ -58,21 +59,21 @@ void main() {
     final legacyKB = legacyBytes / 1024;
 
     // 4. THE REPORT
-    print('--------------------------------------------------');
-    print('📥 SCENARIO: Loading a list of 20 Conversations');
-    print('--------------------------------------------------');
-    print('🔴 OLD WAY (Brute Force):');
-    print('   - Structure: 20 Convos + (20 * 50 Messages)');
-    print('   - Payload Size: ${legacyKB.toStringAsFixed(2)} KB');
-    print('--------------------------------------------------');
-    print('🟢 NEW WAY (Optimized):');
-    print('   - Structure: 20 Convos ONLY');
-    print('   - Payload Size: ${optimizedKB.toStringAsFixed(2)} KB');
-    print('--------------------------------------------------');
+    debugPrint('--------------------------------------------------');
+    debugPrint('📥 SCENARIO: Loading a list of 20 Conversations');
+    debugPrint('--------------------------------------------------');
+    debugPrint('🔴 OLD WAY (Brute Force):');
+    debugPrint('   - Structure: 20 Convos + (20 * 50 Messages)');
+    debugPrint('   - Payload Size: ${legacyKB.toStringAsFixed(2)} KB');
+    debugPrint('--------------------------------------------------');
+    debugPrint('🟢 NEW WAY (Optimized):');
+    debugPrint('   - Structure: 20 Convos ONLY');
+    debugPrint('   - Payload Size: ${optimizedKB.toStringAsFixed(2)} KB');
+    debugPrint('--------------------------------------------------');
     
     final reduction = ((legacyBytes - optimizedBytes) / legacyBytes) * 100;
-    print('🚀 EFFICIENCY GAIN: ${reduction.toStringAsFixed(1)}% Reduction');
-    print('--------------------------------------------------\n');
+    debugPrint('🚀 EFFICIENCY GAIN: ${reduction.toStringAsFixed(1)}% Reduction');
+    debugPrint('--------------------------------------------------\n');
 
     // Assertion: Ensure the optimization checks out mathematically
     expect(optimizedBytes, lessThan(legacyBytes / 10), reason: "Optimized payload should be at least 10x smaller");

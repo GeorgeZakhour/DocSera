@@ -1,4 +1,5 @@
 import 'package:audioplayers/audioplayers.dart';
+import 'package:flutter/foundation.dart';
 
 class AudioPlayerService {
   final AudioPlayer _audioPlayer = AudioPlayer();
@@ -18,7 +19,7 @@ class AudioPlayerService {
         await _audioPlayer.setSource(DeviceFileSource(url));
       }
     } catch (e) {
-      print("❌ AudioPlayer Error (setSource): $e");
+      debugPrint("❌ AudioPlayer Error (setSource): $e");
     }
   }
 
@@ -35,7 +36,7 @@ class AudioPlayerService {
         }
       }
     } catch (e) {
-      print("❌ AudioPlayer Error (play): $e");
+      debugPrint("❌ AudioPlayer Error (play): $e");
     }
   }
 
