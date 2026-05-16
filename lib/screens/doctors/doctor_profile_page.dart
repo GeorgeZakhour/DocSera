@@ -2264,13 +2264,11 @@ class _DoctorProfilePageState extends State<DoctorProfilePage> {
 
     // 🔹 Parse Profile Description (Check for v3)
     String plainTextSummary = '';
-    bool isV3 = false;
 
     if (profileDescription != null && profileDescription.isNotEmpty) {
       try {
         final decoded = jsonDecode(profileDescription);
          if (decoded is Map && decoded['version'] == 3 && decoded['parts'] is List) {
-           isV3 = true;
            final parts = decoded['parts'] as List;
            if (parts.isNotEmpty) {
              // Try to get text from the first part for the summary
@@ -2287,19 +2285,6 @@ class _DoctorProfilePageState extends State<DoctorProfilePage> {
          }
       } catch (e) {
          plainTextSummary = AppLocalizations.of(context)!.notProvided;
-      }
-    }
-
-
-    List<String> visibleSpecialties = [];
-    String moreSpecialties = '';
-
-    if (specialties != null && specialties.isNotEmpty) {
-      if (specialties.length > 3) {
-        visibleSpecialties = specialties.take(3).toList();
-        moreSpecialties = "+${specialties.length - 3}";
-      } else {
-        visibleSpecialties = specialties;
       }
     }
 
@@ -3581,18 +3566,12 @@ $deepLink
   @override
   Widget build(BuildContext context) {
     final doctor = _doctorData ?? {};
-    String gender = doctor['gender']?.toLowerCase() ?? 'male';
-    String title = doctor['title']?.toLowerCase() ?? '';
     Map<String, dynamic>? address = doctor['address'];
     String? street = address?['street'];
     String? buildingNr = address?['buildingNr']?.toString();
     String? city = address?['city'];
     String? country = address?['country'];
     String? addressDetails = address?['details'];
-    String? clinic = doctor['clinic'];
-    final String? Reason;
-    final String? ReasonId;
-    final Map<String, dynamic>? location;
 
 
     String? imagePath = doctor['doctor_image'];

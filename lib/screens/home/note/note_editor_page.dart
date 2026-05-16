@@ -57,7 +57,6 @@ class _NoteEditorPageState extends State<NoteEditorPage> {
   }
 
   void _saveNote() {
-    final locale = AppLocalizations.of(context)!;
     final title = _titleController.text.trim();
     final isContentEmpty =
         _contentController.document.toPlainText().trim().isEmpty;

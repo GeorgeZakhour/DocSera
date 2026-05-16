@@ -21,7 +21,6 @@ import 'package:mocktail/mocktail.dart';
 import 'package:docsera/Business_Logic/Documents_page/notes/notes_cubit.dart';
 import 'package:docsera/Business_Logic/Documents_page/notes/notes_service.dart';
 import 'package:docsera/Business_Logic/Documents_page/notes/notes_state.dart';
-import 'package:docsera/models/notes.dart';
 
 import '_helpers/fixtures.dart';
 import '_helpers/tz_init.dart';

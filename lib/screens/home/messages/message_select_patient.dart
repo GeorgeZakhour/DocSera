@@ -407,7 +407,6 @@ class _SelectPatientForMessagePageState extends State<SelectPatientForMessagePag
                     context: context,
                     barrierColor: Colors.black.withValues(alpha: 0.3),
                     builder: (_) {
-                      final isArabic = Localizations.localeOf(context).languageCode == 'ar';
                       return Center(
                         child: ClipRRect(
                           borderRadius: BorderRadius.circular(20),

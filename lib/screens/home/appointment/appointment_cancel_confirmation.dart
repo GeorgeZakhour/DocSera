@@ -22,7 +22,6 @@ class AppointmentCancelledPage extends StatelessWidget {
     final rawTimestamp = appointment['timestamp']?.toString();
     final appointmentDate =
     rawTimestamp != null ? DateTime.parse(rawTimestamp) : DocSeraTime.nowUtc();
-    final locale = Localizations.localeOf(context).languageCode;
     final formattedDate = TimezoneUtils.formatBusinessDate(context, appointment);
     final tsUtc = appointmentDate.toUtc();
     final formattedTime = TimezoneUtils.format12hLocalized(context, tsUtc);

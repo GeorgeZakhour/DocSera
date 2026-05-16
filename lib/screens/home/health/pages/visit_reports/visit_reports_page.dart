@@ -420,8 +420,6 @@ class _VisitReportsPageState extends State<VisitReportsPage>
   }
 
   Widget _buildHeader(BuildContext context) {
-    final rtl = Directionality.of(context) == TextDirection.rtl;
-
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 16),
       child: Row(

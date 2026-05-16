@@ -95,9 +95,6 @@ class _UserProfilePageState extends State<UserProfilePage> {
 
   @override
   Widget build(BuildContext context) {
-    final isArabic = Localizations.localeOf(context).languageCode == 'ar';
-
-
     return BlocBuilder<AccountProfileCubit, AccountProfileState>(
         builder: (context, state) {
           if (state is AccountProfileLoading) {

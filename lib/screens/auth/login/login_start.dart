@@ -723,9 +723,6 @@ class _LoginPageState extends State<LoginPage>
       final List trustedDevices =
           (securityState['trusted_devices'] as List?) ?? [];
 
-      final String? phone =
-      securityState['phone_number']?.toString();
-
       final deviceId = await getDeviceId();
 
       debugPrint("🛡️ [2FA] Enabled: $is2FAEnabled");

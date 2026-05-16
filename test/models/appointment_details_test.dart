@@ -1,5 +1,4 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:docsera/models/appointment_details.dart';
 
 import '../_helpers/fixtures.dart';
 

@@ -15,13 +15,8 @@ class AppointmentRepository {
   /// ✅ جلب مواعيد المستخدم مع تصنيفها (قادمة / سابقة)
   Future<Map<String, List<Map<String, dynamic>>>> getUserAppointments(String userId) async {
     try {
-      // ✅ جلب من الكاش أولًا
-      final cachedUpcoming = await _sharedPrefsService.loadData('upcomingAppointments') ?? [];
-      final cachedPast = await _sharedPrefsService.loadData('pastAppointments') ?? [];
-
-      // 🔹 DEPRECATED: Early return caused stale data issues.
-      // if (cachedUpcoming.isNotEmpty || cachedPast.isNotEmpty) { ... }
-
+      // 🔹 DEPRECATED: Early-return-from-cache caused stale data issues; SharedPrefs
+      //    read removed entirely. Always hit Supabase for freshness.
       final nowUtc = DocSeraTime.nowUtc().toIso8601String();
 
       // ✅ 1. Get Upcoming Appointments (Future -> Now)

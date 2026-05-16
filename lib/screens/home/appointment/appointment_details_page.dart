@@ -143,7 +143,6 @@ class _AppointmentDetailsPageState extends State<AppointmentDetailsPage> {
     final tsUtc = DateTime.parse(appt['timestamp'].toString()).toUtc();
 
     // 2) نحسب "الوقت الجداري" للعيادة (UTC + offset)، ثم نبني DateTime محلي (بدون تحويل منطقة الجهاز)
-    final clinicWall = tsUtc.add(Duration(minutes: clinicOffsetMinutes));
     final startLocal = TimezoneUtils.toDamascus(tsUtc);
 
 

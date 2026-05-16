@@ -39,8 +39,6 @@ class HealthYearStep extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final isArabic = Directionality.of(context) == TextDirection.rtl;
-
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [

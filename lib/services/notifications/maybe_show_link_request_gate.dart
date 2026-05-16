@@ -15,7 +15,6 @@
 //   * The fetch fails (best-effort surface — the inbox notification
 //     is still there as a fallback).
 
-import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 
 import 'package:docsera/screens/home/connections/link_request_review_page.dart';

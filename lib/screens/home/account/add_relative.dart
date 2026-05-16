@@ -575,10 +575,6 @@ class _AddRelativePageState extends State<AddRelativePage> {
   }) {
     final localizedLabel = isRequired ? '$labelText *' : labelText;
 
-    final isValid = controller.text.isEmpty
-        ? null
-        : RegExp(r'^\d{1,3}$').hasMatch(controller.text);
-
     return TextFormField(
       controller: controller,
       autovalidateMode: AutovalidateMode.onUserInteraction,

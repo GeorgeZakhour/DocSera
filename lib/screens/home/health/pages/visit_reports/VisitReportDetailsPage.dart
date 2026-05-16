@@ -25,7 +25,6 @@ class VisitReportDetailsPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final t = AppLocalizations.of(context)!;
-    final isRtl = Directionality.of(context) == TextDirection.rtl;
 
     final formattedDate =
         "${report.date.year}-${report.date.month.toString().padLeft(2, "0")}-${report.date.day.toString().padLeft(2, "0")}";
@@ -175,8 +174,6 @@ class VisitReportDetailsPage extends StatelessWidget {
               color: AppColors.mainDark,
             ),
             onPressed: () async {
-              final isArabic =
-                  Directionality.of(context) == TextDirection.rtl;
               final bytes = await VisitReportPdfGenerator.generatePdf(
                 report: report,
                 t: t,
@@ -199,8 +196,6 @@ class VisitReportDetailsPage extends StatelessWidget {
               color: AppColors.mainDark,
             ),
             onPressed: () async {
-              final isArabic =
-                  Directionality.of(context) == TextDirection.rtl;
               final bytes = await VisitReportPdfGenerator.generatePdf(
                 report: report,
                 t: t,

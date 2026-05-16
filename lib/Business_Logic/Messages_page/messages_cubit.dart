@@ -227,20 +227,9 @@ class MessagesCubit extends Cubit<MessagesState> {
       // --------------------------------------------------------------
       final List<Map<String, dynamic>> attachments = [];
 
-      // A. Upload Local Files
-      if (initialFiles != null && initialFiles.isNotEmpty) {
-        for (final file in initialFiles) {
-          final type = file.path.toLowerCase().endsWith('.pdf') ? 'pdf' : 'image';
-          final name = "${now.millisecondsSinceEpoch}_${file.path.split('/').last}";
-           // Temporary placeholder for conversationId in path. Will need to move/copy or upload with temp ID?
-           // Actually we need conversationId for the path usually: '$conversationId/$storageName'
-           // But we don't have conversationId yet for new convos!
-           // We can use accountHolderId as prefix or just upload to a 'pending' or 'temp' folder?
-           // OR: Create conversation first, then upload, then insert message.
-           // -> Let's do that. We can insert conversation row first if needed.
-           // However, if we reuse existing conversation, we have the ID.
-        }
-      }
+      // A. Upload of local files happens later in this function (after the
+      //    conversation row is in hand so the storage path can include the
+      //    conversation_id) — see the chat.attachments uploads below.
 
       // --------------------------------------------------------------
       // 1) Find existing or Create Conversation

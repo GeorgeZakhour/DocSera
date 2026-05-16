@@ -355,8 +355,6 @@ class _FullMapResultsPageState extends State<FullMapResultsPage> with SingleTick
 
   @override
   Widget build(BuildContext context) {
-    final t = AppLocalizations.of(context)!;
-
     final LatLng initialCenter = () {
       const fallback = LatLng(33.5138, 36.2765); // دمشق
       final first = widget.results.isNotEmpty ? _getPointFor(widget.results.first) : null;

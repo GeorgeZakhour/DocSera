@@ -255,7 +255,6 @@ class MessagesListView extends StatelessWidget {
 
         final showReason = isUser && !firstUserMessageFound;
         if (showReason) firstUserMessageFound = true;
-        final isArabic = _isArabicText(content);
 
         DateTime? currentDate =
         time != null ? DateTime(time.year, time.month, time.day) : null;

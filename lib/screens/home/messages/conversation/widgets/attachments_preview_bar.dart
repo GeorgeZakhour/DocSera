@@ -27,7 +27,6 @@ class AttachmentsPreviewBar extends StatelessWidget {
     if (files.isEmpty && loadingCount == 0) return const SizedBox();
 
     final isPdf = type == "pdf";
-    final local = Localizations.localeOf(context).languageCode;
 
     /// PDF Preview
     if (isPdf) {

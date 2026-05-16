@@ -242,7 +242,6 @@ class _WriteMessagePageState extends State<WriteMessagePage> {
                             .map((file) => File(file.path!))
                             .toList();
 
-                        final totalFiles = _selectedImageFiles.length + pickedFiles.length;
                         final available = 8 - _selectedImageFiles.length;
                         final filesToAdd = pickedFiles.take(available).toList();
 

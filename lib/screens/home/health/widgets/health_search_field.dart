@@ -16,8 +16,6 @@ class HealthSearchField extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final isArabic = Directionality.of(context) == TextDirection.rtl;
-
     return TextField(
       controller: controller,
       decoration: InputDecoration(

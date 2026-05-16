@@ -958,7 +958,6 @@ class _DocumentsPageState extends State<DocumentsPage> with AutomaticKeepAliveCl
   Widget _buildListView(List<Map<String, dynamic>> displayDocs) {
     final filteredDocs = _filterDocuments(displayDocs);
     final groupedDocs = _groupDocumentsByYear(filteredDocs);
-    final isRTL = Directionality.of(context) == ui.TextDirection.rtl;
 
     return CustomScrollView(
       physics: const BouncingScrollPhysics(),
@@ -1609,8 +1608,6 @@ class _DocumentsPageState extends State<DocumentsPage> with AutomaticKeepAliveCl
   }
 
   Widget _buildNoteListTile(Note note) {
-    final isArabic = Directionality.of(context) == ui.TextDirection.rtl;
-
     return InkWell(
       onTap: () {
         showModalBottomSheet(

@@ -77,7 +77,6 @@ class _AddMedicationBottomSheetState extends State<AddMedicationBottomSheet> {
   // SAVE MEDICATION RECORD
   // ------------------------------
   Future<void> _saveRecord() async {
-    final t = AppLocalizations.of(context)!;
     final cubit = context.read<HealthCubit>();
 
     if (_selectedMedication == null) return;

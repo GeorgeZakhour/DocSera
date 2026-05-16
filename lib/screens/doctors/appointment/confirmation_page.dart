@@ -164,7 +164,7 @@ class AppointmentConfirmedPage extends StatelessWidget {
     final bucket = att['bucket'];
 
     // ✅ Phase 2B: Use signed URL (bucket is now private)
-    final url = await Supabase.instance.client.storage
+    await Supabase.instance.client.storage
         .from(bucket)
         .createSignedUrl(path, 60 * 60); // 1 hour
 
