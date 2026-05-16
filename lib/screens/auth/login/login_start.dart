@@ -305,12 +305,12 @@ class _LoginPageState extends State<LoginPage>
       padding: EdgeInsets.all(4.w),
       clipBehavior: Clip.antiAlias,
       decoration: BoxDecoration(
-        color: Colors.white.withOpacity(0.1),
+        color: Colors.white.withValues(alpha: 0.1),
         borderRadius: BorderRadius.circular(100.r),
-        border: Border.all(color: Colors.white.withOpacity(0.1), width: 0.5),
+        border: Border.all(color: Colors.white.withValues(alpha: 0.1), width: 0.5),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.08),
+            color: Colors.black.withValues(alpha: 0.08),
             blurRadius: 10,
             offset: const Offset(0, 4),
           ),
@@ -331,7 +331,7 @@ class _LoginPageState extends State<LoginPage>
                   borderRadius: BorderRadius.circular(100.r),
                   boxShadow: [
                     BoxShadow(
-                      color: Colors.black.withOpacity(0.12),
+                      color: Colors.black.withValues(alpha: 0.12),
                       blurRadius: 8,
                       offset: const Offset(0, 4),
                     ),
@@ -359,14 +359,14 @@ class _LoginPageState extends State<LoginPage>
                           Icon(
                             Icons.phone_android_rounded,
                             size: 18.sp,
-                            color: _isPhoneMode ? AppColors.mainDark : AppColors.mainDark.withOpacity(0.4),
+                            color: _isPhoneMode ? AppColors.mainDark : AppColors.mainDark.withValues(alpha: 0.4),
                           ),
                           SizedBox(height: 2.h),
                           Text(
                             AppLocalizations.of(context)!.phoneLogin,
                             textAlign: TextAlign.center,
                             style: TextStyle(
-                              color: _isPhoneMode ? AppColors.mainDark : AppColors.mainDark.withOpacity(0.4),
+                              color: _isPhoneMode ? AppColors.mainDark : AppColors.mainDark.withValues(alpha: 0.4),
                               fontWeight: _isPhoneMode ? FontWeight.w600 : FontWeight.w500,
                               fontSize: 10.sp,
                             ),
@@ -394,14 +394,14 @@ class _LoginPageState extends State<LoginPage>
                           Icon(
                             Icons.email_outlined,
                             size: 18.sp,
-                            color: !_isPhoneMode ? AppColors.mainDark : AppColors.mainDark.withOpacity(0.4),
+                            color: !_isPhoneMode ? AppColors.mainDark : AppColors.mainDark.withValues(alpha: 0.4),
                           ),
                           SizedBox(height: 2.h),
                           Text(
                             AppLocalizations.of(context)!.emailLogin,
                             textAlign: TextAlign.center,
                             style: TextStyle(
-                              color: !_isPhoneMode ? AppColors.mainDark : AppColors.mainDark.withOpacity(0.4),
+                              color: !_isPhoneMode ? AppColors.mainDark : AppColors.mainDark.withValues(alpha: 0.4),
                               fontWeight: !_isPhoneMode ? FontWeight.w600 : FontWeight.w500,
                               fontSize: 10.sp,
                             ),
@@ -910,7 +910,7 @@ class _LoginPageState extends State<LoginPage>
                   Text(
                     AppLocalizations.of(context)!.logIn,
                     style: AppTextStyles.getTitle1(context).copyWith(
-                      color: Colors.white.withOpacity(keyboardOpen ? 0.9 : 0.7),
+                      color: Colors.white.withValues(alpha: keyboardOpen ? 0.9 : 0.7),
                       fontSize: keyboardOpen ? 14.sp : 11.sp,
                     ),
                   ),
@@ -919,7 +919,7 @@ class _LoginPageState extends State<LoginPage>
                     AppLocalizations.of(context)!.loginMethodDescription,
                     textAlign: TextAlign.center,
                     style: AppTextStyles.getText2(context).copyWith(
-                      color: Colors.white.withOpacity(0.85),
+                      color: Colors.white.withValues(alpha: 0.85),
                       height: 1.4,
                       fontSize: 10.sp,
                     ),
@@ -946,7 +946,7 @@ class _LoginPageState extends State<LoginPage>
                       decoration: InputDecoration(
                         prefixIcon: const Icon(Icons.phone_android, color: Colors.grey),
                         hintText: AppLocalizations.of(context)!.phoneNumber,
-                        hintStyle: TextStyle(fontSize: 12.sp, color: Colors.grey.withOpacity(0.5)),
+                        hintStyle: TextStyle(fontSize: 12.sp, color: Colors.grey.withValues(alpha: 0.5)),
                         filled: true,
                         fillColor: Colors.white,
                         contentPadding: EdgeInsets.symmetric(vertical: 10.h, horizontal: 12.w),
@@ -977,7 +977,7 @@ class _LoginPageState extends State<LoginPage>
                       style: TextStyle(fontSize: 12.sp),
                       decoration: InputDecoration(
                         hintText: AppLocalizations.of(context)!.password,
-                        hintStyle: TextStyle(fontSize: 12.sp, color: Colors.grey.withOpacity(0.5)),
+                        hintStyle: TextStyle(fontSize: 12.sp, color: Colors.grey.withValues(alpha: 0.5)),
                         filled: true,
                         fillColor: Colors.white,
                         contentPadding: EdgeInsets.symmetric(vertical: 10.h, horizontal: 12.w),
@@ -1038,7 +1038,7 @@ class _LoginPageState extends State<LoginPage>
                           child: Text(
                             AppLocalizations.of(context)!.forgotPassword,
                             style: TextStyle(
-                              color: Colors.white.withOpacity(0.8),
+                              color: Colors.white.withValues(alpha: 0.8),
                               fontSize: 10.sp,
                               fontWeight: FontWeight.w500,
                             ),
@@ -1085,7 +1085,7 @@ class _LoginPageState extends State<LoginPage>
                       decoration: InputDecoration(
                         prefixIcon: const Icon(Icons.email_outlined, color: Colors.grey),
                         hintText: AppLocalizations.of(context)!.email,
-                        hintStyle: TextStyle(fontSize: 12.sp, color: Colors.grey.withOpacity(0.5)),
+                        hintStyle: TextStyle(fontSize: 12.sp, color: Colors.grey.withValues(alpha: 0.5)),
                         filled: true,
                         fillColor: Colors.white,
                         contentPadding: EdgeInsets.symmetric(vertical: 10.h, horizontal: 12.w),
@@ -1108,7 +1108,7 @@ class _LoginPageState extends State<LoginPage>
                       style: TextStyle(fontSize: 12.sp),
                       decoration: InputDecoration(
                         hintText: AppLocalizations.of(context)!.password,
-                        hintStyle: TextStyle(fontSize: 12.sp, color: Colors.grey.withOpacity(0.5)),
+                        hintStyle: TextStyle(fontSize: 12.sp, color: Colors.grey.withValues(alpha: 0.5)),
                         filled: true,
                         fillColor: Colors.white,
                         contentPadding: EdgeInsets.symmetric(vertical: 10.h, horizontal: 12.w),
@@ -1158,7 +1158,7 @@ class _LoginPageState extends State<LoginPage>
                           child: Text(
                             AppLocalizations.of(context)!.forgotPassword,
                             style: TextStyle(
-                              color: Colors.white.withOpacity(0.8),
+                              color: Colors.white.withValues(alpha: 0.8),
                               fontSize: 10.sp, 
                               fontWeight: FontWeight.w500,
                             ),
@@ -1352,7 +1352,7 @@ class _AnimatedLogo {
                   boxShadow: [
                     BoxShadow(
                       blurRadius: blur,
-                      color: Colors.white.withOpacity(0.3),
+                      color: Colors.white.withValues(alpha: 0.3),
                       spreadRadius: 1,
                     )
                   ],
@@ -1362,7 +1362,7 @@ class _AnimatedLogo {
                   height: size.h,
                   width: size.w,
                   colorFilter: ColorFilter.mode(
-                    Colors.white.withOpacity(0.25),
+                    Colors.white.withValues(alpha: 0.25),
                     BlendMode.lighten,
                   ),
                 ),

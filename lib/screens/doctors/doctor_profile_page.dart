@@ -4662,7 +4662,14 @@ class _ClaimPromotionSheetState extends State<_ClaimPromotionSheet>
                               data: _activeCode!,
                               version: QrVersions.auto,
                               size: 160.w,
-                              foregroundColor: AppColors.mainDark,
+                              eyeStyle: const QrEyeStyle(
+                                eyeShape: QrEyeShape.square,
+                                color: AppColors.mainDark,
+                              ),
+                              dataModuleStyle: const QrDataModuleStyle(
+                                dataModuleShape: QrDataModuleShape.square,
+                                color: AppColors.mainDark,
+                              ),
                             ),
                           ),
                           SizedBox(height: 16.h),

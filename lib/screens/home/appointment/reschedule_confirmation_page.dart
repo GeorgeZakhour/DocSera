@@ -297,14 +297,15 @@ class RescheduleConfirmationPage extends StatelessWidget {
   Widget build(BuildContext context) {
     final isArabic = Localizations.localeOf(context).languageCode == 'ar';
 
-    return WillPopScope(
-      onWillPop: () async {
+    return PopScope(
+      canPop: false,
+      onPopInvokedWithResult: (didPop, _) {
+        if (didPop) return;
         Navigator.pushAndRemoveUntil(
           context,
           fadePageRoute(CustomBottomNavigationBar()),
               (route) => false,
         );
-        return false;
       },
       child: BaseScaffold(
         title: Text(

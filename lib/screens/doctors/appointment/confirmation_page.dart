@@ -206,14 +206,15 @@ class AppointmentConfirmedPage extends StatelessWidget {
     final imageProvider = imageResult.imageProvider;
     final attachments = appointmentAttachments();
 
-    return WillPopScope(
-      onWillPop: () async {
+    return PopScope(
+      canPop: false,
+      onPopInvokedWithResult: (didPop, _) {
+        if (didPop) return;
         Navigator.pushAndRemoveUntil(
           context,
           fadePageRoute(CustomBottomNavigationBar()),
               (route) => false,
         );
-        return false; // منع الرجوع
       },
       child: Scaffold(
         backgroundColor: AppColors.background3,

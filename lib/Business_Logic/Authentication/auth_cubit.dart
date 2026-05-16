@@ -84,7 +84,6 @@ class AuthCubit extends Cubit<AppAuthState> {
         break;
 
       case AuthChangeEvent.signedOut:
-      case AuthChangeEvent.userDeleted:
         onRealtimeStop?.call();
         emit(AuthUnauthenticated());
         await _clearLogin();

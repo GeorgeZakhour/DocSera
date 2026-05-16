@@ -33,7 +33,6 @@ class ConversationService {
         .stream(primaryKey: ['id'])
         .eq('conversation_id', conversationId)
         .order('timestamp', ascending: true)
-        .execute()
         .asyncMap((rows) async {
       final enc = MessageEncryptionService.instance;
       await enc.ensureReady(); // ✅ Defensive: ensure key is loaded
@@ -54,7 +53,6 @@ class ConversationService {
         .stream(primaryKey: ['id'])
         .eq('id', conversationId)
         .limit(1)
-        .execute()
         .asyncMap((rows) async {
       if (rows.isEmpty) return <String, dynamic>{};
       final m = Map<String, dynamic>.from(rows.first);

@@ -42,6 +42,11 @@ class _FullMapResultsPageState extends State<FullMapResultsPage> with SingleTick
   static const double _bottomCardHeight = 210;
 
   final bool _isDarkMode = false;
+  // Loaded once in initState and passed as GoogleMap.style. Null until the
+  // asset arrives; the map renders briefly with the default style, then
+  // setState() rebuilds with the custom one. Mirrors prior behavior, which
+  // used the deprecated setMapStyle from onMapCreated.
+  String? _mapStyle;
 
   // الموقع الحي + نبضة
   Position? _currentPosition;
@@ -62,6 +67,7 @@ class _FullMapResultsPageState extends State<FullMapResultsPage> with SingleTick
     _pageController = PageController(viewportFraction: 1.0, initialPage: _selectedIndex);
     _generatePinIcons();
     _initLocation();
+    _loadMapStyle();
 
     _pulseController = AnimationController(
       vsync: this,
@@ -111,7 +117,9 @@ class _FullMapResultsPageState extends State<FullMapResultsPage> with SingleTick
     if (permission == LocationPermission.deniedForever) return;
 
     try {
-      _currentPosition = await Geolocator.getCurrentPosition(desiredAccuracy: LocationAccuracy.high);
+      _currentPosition = await Geolocator.getCurrentPosition(
+        locationSettings: const LocationSettings(accuracy: LocationAccuracy.high),
+      );
       if (!mounted) return;
       setState(() {});
       _positionSub?.cancel();
@@ -173,7 +181,7 @@ class _FullMapResultsPageState extends State<FullMapResultsPage> with SingleTick
     final img = await picture.toImage(tp.width.toInt(), tp.height.toInt());
     final byteData = await img.toByteData(format: ui.ImageByteFormat.png);
 
-    return BitmapDescriptor.fromBytes(byteData!.buffer.asUint8List());
+    return BitmapDescriptor.bytes(byteData!.buffer.asUint8List());
   }
 
   Future<void> _generatePinIcons() async {
@@ -199,10 +207,11 @@ class _FullMapResultsPageState extends State<FullMapResultsPage> with SingleTick
     }
   }
 
-  Future<void> _applyMapStyle() async {
+  Future<void> _loadMapStyle() async {
     final stylePath = _isDarkMode ? 'assets/map_style_dark.json' : 'assets/map_style_light.json';
     final style = await rootBundle.loadString(stylePath);
-    await _gController?.setMapStyle(style);
+    if (!mounted) return;
+    setState(() => _mapStyle = style);
   }
 
   Future<void> _fitAllPins() async {
@@ -394,9 +403,9 @@ class _FullMapResultsPageState extends State<FullMapResultsPage> with SingleTick
                   target: initialCenter,
                   zoom: widget.fromDoctorProfile ? 16 : 12, // 👈 farther when from profile
                 ),
+                style: _mapStyle,
                 onMapCreated: (c) async {
                   _gController = c;
-                  await _applyMapStyle();
                   await _fitAllPins();
                 },
                 padding: EdgeInsets.only(bottom: hasCards ? (_bottomCardHeight + 24) : 0),

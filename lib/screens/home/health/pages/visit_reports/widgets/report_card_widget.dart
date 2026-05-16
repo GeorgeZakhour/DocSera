@@ -235,5 +235,5 @@ class ReportCardWidget extends StatelessWidget {
   }
 
   String _hex(Color c) =>
-      "#${c.value.toRadixString(16).substring(2).toUpperCase()}";
+      "#${c.toARGB32().toRadixString(16).substring(2).toUpperCase()}";
 }

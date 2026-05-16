@@ -13,7 +13,7 @@ class VisitReportPdfGenerator {
     required bool isArabic,
   }) async {
     final pdf = pw.Document();
-    final mainColor = PdfColor.fromInt(AppColors.main.value);
+    final mainColor = PdfColor.fromInt(AppColors.main.toARGB32());
 
     // ===== FONTS =====
     final fontRegularData =

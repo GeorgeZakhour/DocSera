@@ -18,6 +18,7 @@ import 'package:docsera/screens/home/main_screen.dart';
 import 'package:docsera/screens/home/notifications/widgets/notification_bell_button.dart';
 import 'package:docsera/utils/page_transitions.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:docsera/app/const.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -270,19 +271,24 @@ class _CustomBottomNavigationBarState extends State<CustomBottomNavigationBar>
     final bool isArabicLocale =
         Localizations.localeOf(context).languageCode == 'ar';
 
-    return WillPopScope(
-      onWillPop: () async {
+    return PopScope(
+      canPop: false,
+      onPopInvokedWithResult: (didPop, _) async {
+        if (didPop) return;
+
         if (_currentIndex != 0) {
           setState(() {
             _currentIndex = 0;
           });
-          return false;
+          return;
         }
 
         if (lastBackPressed != null &&
             DateTime.now().difference(lastBackPressed!) <
                 const Duration(seconds: 1)) {
-          return true;
+          // Double-tap back exits the app (Android only; no-op on iOS).
+          SystemNavigator.pop();
+          return;
         }
 
         lastBackPressed = DateTime.now();
@@ -363,7 +369,9 @@ class _CustomBottomNavigationBarState extends State<CustomBottomNavigationBar>
           },
         );
 
-        return shouldExit == true;
+        if (shouldExit == true) {
+          SystemNavigator.pop();
+        }
       },
       child: Theme(
         data: Theme.of(context).copyWith(
