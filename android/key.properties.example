@@ -1,0 +1,19 @@
+# Copy to `android/key.properties` and fill with real values BEFORE running
+# `flutter build appbundle --release` for Play Store submission.
+#
+# `android/key.properties` is gitignored. Never commit the real file.
+#
+# To generate the keystore (one-time, keep the .jks somewhere safe — losing it
+# means you can never update the app on Play Store again):
+#
+#   keytool -genkey -v \
+#     -keystore ~/docsera-upload-keystore.jks \
+#     -keyalg RSA -keysize 2048 -validity 10000 \
+#     -alias docsera-upload
+#
+# Then fill in below. `storeFile` is the absolute path to the .jks.
+
+storePassword=CHANGE_ME
+keyPassword=CHANGE_ME
+keyAlias=docsera-upload
+storeFile=/absolute/path/to/docsera-upload-keystore.jks
