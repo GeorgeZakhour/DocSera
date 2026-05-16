@@ -15,6 +15,7 @@ import 'package:docsera/utils/text_direction_utils.dart';
 import 'package:docsera/widgets/custom_bottom_navigation_bar.dart';
 import 'package:docsera/utils/custom_clippers.dart';
 import 'package:docsera/utils/page_transitions.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
@@ -695,14 +696,20 @@ class _LoginPageState extends State<LoginPage>
       debugPrint("✅ [LOGIN SUCCESS] userId = $userId");
 
       // ---------------------------------------------------------------------
-      // 4️⃣ Persist minimal auth data (biometric only)
+      // 4️⃣ Persist minimal auth data (NO plaintext password — biometric
+      //    credentials live in flutter_secure_storage via BiometricStorage)
       // ---------------------------------------------------------------------
       await prefs.setBool('isLoggedIn', true);
       await prefs.setString('userId', userId);
       await prefs.setString('userEmail', email);
-      await prefs.setString('userPassword', password);
 
-      debugPrint("💾 [PREFS] Saved auth credentials");
+      // Defense-in-depth: scrub any legacy plaintext password that may have
+      // been persisted by older builds before the security review.
+      if (prefs.containsKey('userPassword')) {
+        await prefs.remove('userPassword');
+      }
+
+      if (kDebugMode) debugPrint("💾 [PREFS] Auth data saved");
 
       // ---------------------------------------------------------------------
       // 5️⃣ POST-AUTH security state (RLS-safe, auth.uid)
