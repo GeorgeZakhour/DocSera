@@ -132,8 +132,12 @@ Future<void> _bootstrap() async {
   SystemChrome.setSystemUIOverlayStyle(
     const SystemUiOverlayStyle(
       statusBarColor: Colors.transparent,
+      statusBarIconBrightness: Brightness.dark,
       systemNavigationBarColor: Colors.transparent,
-      systemNavigationBarIconBrightness: Brightness.light,
+      systemNavigationBarIconBrightness: Brightness.dark,
+      // Suppresses the OS-drawn gray contrast scrim behind the gesture pill
+      // on Android 10+. Required for a fully edge-to-edge bottom on MIUI.
+      systemNavigationBarContrastEnforced: false,
     ),
   );
 
