@@ -86,7 +86,17 @@ export async function handleMessages(
 
   let rawBody = record.text as string | null | undefined;
 
-  if (rawBody && rawBody.startsWith("ENC:")) {
+  // Decrypt if the body uses either of our encryption prefixes:
+  //   "ENC:"   → AES-256-CBC (legacy, decrypt-only)
+  //   "ENCv2:" → AES-256-GCM (current format from MessageEncryptionService
+  //              after the 2026-05-13 migration in commit 1a76e28)
+  //
+  // decryptMessage() handles both formats internally; calling it on a
+  // plain-text rawBody is also safe — it returns the input unchanged.
+  // We still gate on a prefix check to avoid an unnecessary RPC call
+  // (rpc_get_encryption_key_service) for the plain-text path.
+  if (rawBody &&
+      (rawBody.startsWith("ENC:") || rawBody.startsWith("ENCv2:"))) {
     const decrypted = await decryptMessage(supabase, rawBody);
     rawBody = decrypted ?? null;
   }
