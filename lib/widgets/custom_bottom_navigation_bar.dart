@@ -60,10 +60,15 @@ class _CustomBottomNavigationBarState extends State<CustomBottomNavigationBar>
 
     _currentIndex = widget.initialIndex;
 
+    // Cubit refs captured here are safe to use after the microtask gap
+    // (cubits outlive the widget); the loadMessages context parameter is
+    // re-fetched from `this.context` at fire time, guarded by mounted.
+    final authCubit = context.read<AuthCubit>();
+    final messagesCubit = context.read<MessagesCubit>();
     Future.microtask(() {
-      final authState = context.read<AuthCubit>().state;
-      if (authState is AuthAuthenticated) {
-        context.read<MessagesCubit>().loadMessages(context);
+      if (!mounted) return;
+      if (authCubit.state is AuthAuthenticated) {
+        messagesCubit.loadMessages(context);
       }
     });
 
@@ -103,6 +108,11 @@ class _CustomBottomNavigationBarState extends State<CustomBottomNavigationBar>
 
   // --- Helpers ---
   Future<void> _logout(BuildContext context) async {
+    // Cached before any await so post-await navigation / messenger /
+    // localization reads don't touch a potentially-stale context.
+    final navigator = Navigator.of(context);
+    final messenger = ScaffoldMessenger.of(context);
+    final loc = AppLocalizations.of(context)!;
     try {
       // CRITICAL: drop this device's user_devices row BEFORE signing out
       // so notifications for the current user stop firing on this
@@ -120,18 +130,18 @@ class _CustomBottomNavigationBarState extends State<CustomBottomNavigationBar>
       await Supabase.instance.client.auth.signOut();
       SharedPreferences prefs = await SharedPreferences.getInstance();
       await prefs.setBool('isLoggedIn', false);
+      if (!mounted) return;
       setState(() {
         isLoggedIn = false;
         _currentIndex = 0;
       });
-      Navigator.pushAndRemoveUntil(
-        context,
+      navigator.pushAndRemoveUntil(
         fadePageRoute(CustomBottomNavigationBar()),
             (Route<dynamic> route) => false,
       );
     } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(AppLocalizations.of(context)!.commonLogoutFailed('$e'))),
+      messenger.showSnackBar(
+        SnackBar(content: Text(loc.commonLogoutFailed('$e'))),
       );
     }
   }

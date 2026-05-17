@@ -217,6 +217,7 @@ class _LoginPageState extends State<LoginPage>
         return;
       }
 
+      if (!mounted) return;
       Navigator.pushAndRemoveUntil(
         context,
         fadePageRoute(CustomBottomNavigationBar()),
@@ -530,8 +531,10 @@ class _LoginPageState extends State<LoginPage>
 
       if (email == null || password == null) return;
 
+      if (!mounted) return;
+      final biometricPrompt = AppLocalizations.of(context)!.biometricPrompt;
       final authenticated = await _localAuth.authenticate(
-        localizedReason: AppLocalizations.of(context)!.biometricPrompt,
+        localizedReason: biometricPrompt,
         options: const AuthenticationOptions(
           biometricOnly: true,
           stickyAuth: true,
@@ -763,9 +766,8 @@ class _LoginPageState extends State<LoginPage>
       // ---------------------------------------------------------------------
       debugPrint("✅ [NAVIGATION] Entering app");
 
-      context.read<UserCubit>().loadUserData(context: context);
-
       if (!mounted) return;
+      context.read<UserCubit>().loadUserData(context: context);
 
       Navigator.pushReplacement(
         context,
@@ -1228,6 +1230,7 @@ class _LoginPageState extends State<LoginPage>
             left: Directionality.of(context) == TextDirection.rtl ? 16.w : null,
             child: GestureDetector(
               onTap: () async {
+                final navigator = Navigator.of(context);
                 FocusScope.of(context).unfocus(); // إغلاق الكيبورد
                 await Future.delayed(const Duration(milliseconds: 150));
 
@@ -1241,8 +1244,7 @@ class _LoginPageState extends State<LoginPage>
                 }
 
                 if (!mounted) return;
-                Navigator.pushReplacement(
-                  context,
+                navigator.pushReplacement(
                   MaterialPageRoute(builder: (_) => CustomBottomNavigationBar()),
                 );
               },
