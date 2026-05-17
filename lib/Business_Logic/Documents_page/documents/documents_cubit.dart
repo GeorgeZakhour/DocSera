@@ -356,9 +356,11 @@ class DocumentsCubit extends Cubit<DocumentsState> {
       // حذف من التخزين
       await _service.deleteFiles(document.pages);
 
-      // إعادة تحميل البيانات — preserve current relative context
+      // إعادة تحميل البيانات — preserve current relative context.
+      // Pass explicitUserId only; the BuildContext from the caller may
+      // be stale after the awaits above. listenToDocuments uses
+      // explicitUserId as the auth resolution, no need to re-read.
       listenToDocuments(
-        context: context,
         explicitUserId: userId,
         relativeId: _loadedRelativeId,
         forceReload: true,

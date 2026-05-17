@@ -286,6 +286,7 @@ class _DocumentPreviewPageState extends State<DocumentPreviewPage> {
   Future<void> _savePdfToDocuments(BuildContext context) async {
     final local = AppLocalizations.of(context)!;
     final messenger = ScaffoldMessenger.of(context);
+    final navigator = Navigator.of(context);
 
     // Re-use the already-downloaded (and decrypted) temp file if available,
     // otherwise attempt to download it again.
@@ -321,8 +322,7 @@ class _DocumentPreviewPageState extends State<DocumentPreviewPage> {
 
     if (!mounted) return;
 
-    await Navigator.push(
-      context,
+    await navigator.push(
       MaterialPageRoute(
         builder: (_) => DocumentInfoScreen(
           images: [destFile.path],
@@ -426,6 +426,10 @@ class _DocumentPreviewPageState extends State<DocumentPreviewPage> {
 
     try {
       if (isPdf) {
+        // Compute the share-sheet origin from the current widget BEFORE any
+        // await so the box reference stays valid across the download gap.
+        final box = context.findRenderObject() as RenderBox?;
+        final screenSize = MediaQuery.of(context).size;
         File? file = _localPdfFile;
         if (file == null || !file.existsSync()) {
           final firstPage = widget.document.pages.isNotEmpty
@@ -433,14 +437,10 @@ class _DocumentPreviewPageState extends State<DocumentPreviewPage> {
               : widget.document.previewUrl;
           file = await _downloadPdf(firstPage);
         }
-        final box = context.findRenderObject() as RenderBox?;
         final origin = box != null
             ? (box.localToGlobal(Offset.zero) & box.size)
             : Rect.fromCenter(
-                center: Offset(
-                  MediaQuery.of(context).size.width / 2,
-                  MediaQuery.of(context).size.height / 2,
-                ),
+                center: Offset(screenSize.width / 2, screenSize.height / 2),
                 width: 1,
                 height: 1,
               );
@@ -481,6 +481,7 @@ class _DocumentPreviewPageState extends State<DocumentPreviewPage> {
   Future<void> _saveImagesToDocuments(BuildContext context) async {
     final local = AppLocalizations.of(context)!;
     final messenger = ScaffoldMessenger.of(context);
+    final navigator = Navigator.of(context);
 
     try {
       final dir = await getTemporaryDirectory();
@@ -495,8 +496,7 @@ class _DocumentPreviewPageState extends State<DocumentPreviewPage> {
 
       if (paths.isEmpty || !mounted) return;
 
-      await Navigator.push(
-        context,
+      await navigator.push(
         MaterialPageRoute(
           builder: (_) => DocumentInfoScreen(
             images: paths,

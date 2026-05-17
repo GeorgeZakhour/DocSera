@@ -1,5 +1,7 @@
 import 'dart:io';
 import 'dart:typed_data';
+import 'package:docsera/Business_Logic/Authentication/auth_cubit.dart';
+import 'package:docsera/Business_Logic/Authentication/auth_state.dart';
 import 'package:docsera/Business_Logic/Documents_page/documents/documents_cubit.dart';
 import 'package:docsera/Business_Logic/Storage/storage_quota_cubit.dart';
 import 'package:docsera/app/const.dart';
@@ -90,6 +92,8 @@ void showConversationPdfOptionsSheet(
               SvgPicture.asset('assets/icons/save2documents.svg', width: 20.w),
               local.addToDocuments,
               onTap: () async {
+                final navigator = Navigator.of(context);
+                final messenger = ScaffoldMessenger.of(context);
                 Navigator.pop(ctx);
 
                 final tempDir = await getTemporaryDirectory();
@@ -100,8 +104,7 @@ void showConversationPdfOptionsSheet(
                   final response = await http.get(Uri.parse(document.pages.first));
                   await tempFile.writeAsBytes(response.bodyBytes);
 
-                  Navigator.push(
-                    context,
+                  navigator.push(
                     MaterialPageRoute(
                       builder: (_) => DocumentInfoScreen(
                         images: [tempFile.path],
@@ -115,7 +118,7 @@ void showConversationPdfOptionsSheet(
                     ),
                   );
                 } catch (e) {
-                  ScaffoldMessenger.of(context).showSnackBar(
+                  messenger.showSnackBar(
                     SnackBar(
                       content: Text(local.uploadFailed),
                       backgroundColor: Colors.red,
@@ -238,6 +241,12 @@ void showDocumentOptionsSheet(
               Icons.info_outline,
               local.viewDetails,
               onTap: () {
+                // Cache the cubit + resolve the current userId BEFORE
+                // the push so the post-pop refresh doesn't touch a
+                // possibly-stale BuildContext.
+                final docsCubit = context.read<DocumentsCubit>();
+                final authState = context.read<AuthCubit>().state;
+                final cachedUserId = authState is AuthAuthenticated ? authState.user.id : null;
                 Navigator.pop(context);
                 Navigator.push<UserDocument?>(
                   context,
@@ -245,7 +254,9 @@ void showDocumentOptionsSheet(
                     builder: (_) => DocumentDetailsPage(document: document),
                   ),
                 ).then((_) => Future.delayed(const Duration(milliseconds: 50), () {
-                  context.read<DocumentsCubit>().listenToDocuments(context: context);
+                  if (cachedUserId != null) {
+                    docsCubit.listenToDocuments(explicitUserId: cachedUserId);
+                  }
                 }));
               },
             ),

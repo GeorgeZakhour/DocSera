@@ -316,8 +316,8 @@ class _MultiPageUploadScreenState extends State<MultiPageUploadScreen> {
                     // Continue
                     ElevatedButton(
                       onPressed: () async {
-                        final result = await Navigator.push(
-                          context,
+                        final navigator = Navigator.of(context);
+                        final result = await navigator.push(
                           MaterialPageRoute(
                             builder: (_) => DocumentInfoScreen(
                               images: _pages,
@@ -329,8 +329,8 @@ class _MultiPageUploadScreenState extends State<MultiPageUploadScreen> {
                           ),
                         );
 
-                        if (result == true) {
-                          if (mounted) Navigator.pop(context, true);
+                        if (result == true && mounted) {
+                          navigator.pop(true);
                         }
                       },
                       style: ElevatedButton.styleFrom(

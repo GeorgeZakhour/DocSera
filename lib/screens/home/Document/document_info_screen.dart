@@ -636,6 +636,8 @@ class _DocumentInfoScreenState extends State<DocumentInfoScreen> {
 
   void _submitDocument() async {
     final locale = AppLocalizations.of(context)!;
+    // Cached before any await so we don't reach across the gap.
+    final documentsCubit = context.read<DocumentsCubit>();
     setState(() => _isUploading = true);
 
     try {
@@ -734,8 +736,7 @@ class _DocumentInfoScreenState extends State<DocumentInfoScreen> {
       String previewUrl = uploadedUrls.first;
       if (isPdf) {
         debugPrint("🖼 Generating PDF thumbnail...");
-        final generated = await context
-            .read<DocumentsCubit>()
+        final generated = await documentsCubit
             .generatePdfThumbnail(
           widget.images.first,
           tempId,
@@ -820,6 +821,9 @@ class _DocumentInfoScreenState extends State<DocumentInfoScreen> {
   }
 
   Future<String> _generateAutoName(String userId) async {
+    // Captured before the await so we don't read context after the gap.
+    final locale = Localizations.localeOf(context).languageCode;
+
     final supabase = Supabase.instance.client;
 
     final response = await supabase
@@ -829,8 +833,6 @@ class _DocumentInfoScreenState extends State<DocumentInfoScreen> {
 
     final count = response.length;
     final nextNumber = count + 1;
-
-    final locale = Localizations.localeOf(context).languageCode;
     return locale == 'ar' ? ' ملف $nextNumber' : 'Document $nextNumber';
   }
 

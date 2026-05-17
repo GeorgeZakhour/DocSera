@@ -1484,13 +1484,17 @@ class _DocumentsPageState extends State<DocumentsPage> with AutomaticKeepAliveCl
   }
 
   void _handlePdfPicked(String pdfPath) async {
-    final fileName = path.basenameWithoutExtension(pdfPath);
-    final pageCount = await getPdfPageCount(pdfPath);
+    // Snapshot Navigator + the patient-switcher state BEFORE the await so the
+    // post-await navigation doesn't touch a stale context.
+    final navigator = Navigator.of(context);
     final switcher = context.read<PatientSwitcherCubit>().state;
     final currentPatientId = switcher.relativeId ?? switcher.userId;
 
-    Navigator.push(
-      context,
+    final fileName = path.basenameWithoutExtension(pdfPath);
+    final pageCount = await getPdfPageCount(pdfPath);
+
+    if (!mounted) return;
+    navigator.push(
       MaterialPageRoute(
         builder: (_) => DocumentInfoScreen(
           images: [pdfPath],
