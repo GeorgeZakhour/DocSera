@@ -4,6 +4,7 @@ import 'package:app_links/app_links.dart';
 import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:docsera/screens/doctors/doctor_profile_page.dart';
+import 'package:docsera/screens/centers/center_profile_page.dart';
 import 'package:docsera/services/navigation/app_lifecycle.dart';
 
 /// Validates a doctor public_token from a deep link before any DB query.
@@ -18,6 +19,18 @@ import 'package:docsera/services/navigation/app_lifecycle.dart';
 bool isValidDoctorToken(String token) {
   if (token.isEmpty || token.length > 64) return false;
   return RegExp(r'^[A-Za-z0-9_\-]+$').hasMatch(token);
+}
+
+/// Validates a center identifier from a deep link before any DB query.
+///
+/// Unlike doctors (which have short public_tokens), centers are
+/// addressed by their UUID `id`. We accept the same broad charset as
+/// the doctor validator (`[A-Za-z0-9_-]`, length 1..64) so the same
+/// boundary check protects both flows without separate test coverage
+/// per format. UUIDs always fit; anything else is malformed.
+bool isValidCenterId(String id) {
+  if (id.isEmpty || id.length > 64) return false;
+  return RegExp(r'^[A-Za-z0-9_\-]+$').hasMatch(id);
 }
 
 class DeepLinkService {
@@ -57,34 +70,50 @@ class DeepLinkService {
   }
 
   void _handleUri(Uri uri) {
-    String? doctorToken;
-
-    // docsera://doctor/<public_token>
-    if (uri.scheme == 'docsera') {
-      if (uri.host == 'doctor' && uri.pathSegments.isNotEmpty) {
-        doctorToken = uri.pathSegments.first;
+    // Two supported deep-link shapes, each works for both schemes:
+    //   docsera://doctor/<public_token>   →  https://docsera.app/doctor/<public_token>
+    //   docsera://center/<uuid>           →  https://docsera.app/center/<uuid>
+    final String? doctorToken = _extractSegment(uri, 'doctor');
+    if (doctorToken != null) {
+      if (!isValidDoctorToken(doctorToken)) {
+        log('⚠️ Rejected deep link with invalid doctor token shape');
+        return;
       }
-    }
-
-    // https://docsera.app/doctor/<public_token>
-    if (uri.scheme.startsWith('http')) {
-      if (uri.pathSegments.length >= 2 && uri.pathSegments.first == 'doctor') {
-        doctorToken = uri.pathSegments[1];
-      }
-    }
-
-    if (doctorToken == null || doctorToken.isEmpty) {
-      log('⚠️ Ignored deep link');
-      return;
-    }
-    // Defense: bound length and charset before issuing a DB query.
-    // See [isValidDoctorToken] for the canonical validator.
-    if (!isValidDoctorToken(doctorToken)) {
-      log('⚠️ Rejected deep link with invalid token shape');
+      _resolveDoctorByPublicToken(doctorToken);
       return;
     }
 
-    _resolveDoctorByPublicToken(doctorToken);
+    final String? centerId = _extractSegment(uri, 'center');
+    if (centerId != null) {
+      if (!isValidCenterId(centerId)) {
+        log('⚠️ Rejected deep link with invalid center id shape');
+        return;
+      }
+      _resolveCenterById(centerId);
+      return;
+    }
+
+    log('⚠️ Ignored deep link: $uri');
+  }
+
+  /// Returns the token / id after `<kind>` for either supported scheme:
+  ///   - `docsera://<kind>/<value>`    → uri.host == kind, pathSegments[0] = value
+  ///   - `https://docsera.app/<kind>/<value>` → pathSegments[0] = kind, [1] = value
+  /// Returns null when the URI doesn't match the `<kind>` shape.
+  String? _extractSegment(Uri uri, String kind) {
+    if (uri.scheme == 'docsera' &&
+        uri.host == kind &&
+        uri.pathSegments.isNotEmpty) {
+      final v = uri.pathSegments.first;
+      return v.isEmpty ? null : v;
+    }
+    if (uri.scheme.startsWith('http') &&
+        uri.pathSegments.length >= 2 &&
+        uri.pathSegments.first == kind) {
+      final v = uri.pathSegments[1];
+      return v.isEmpty ? null : v;
+    }
+    return null;
   }
 
   Future<void> _resolveDoctorByPublicToken(String token) async {
@@ -122,6 +151,45 @@ class DeepLinkService {
           builder: (_) => DoctorProfilePage(
             doctorId: doctorId,
           ),
+        ),
+      );
+    });
+  }
+
+  Future<void> _resolveCenterById(String centerId) async {
+    try {
+      // Validate the center exists and is publishable via public_centers
+      // (active centers only — RLS-safe view). Falls through silently if
+      // the link points at a deactivated or non-existent center.
+      final res = await _supabase
+          .from('public_centers')
+          .select('id')
+          .eq('id', centerId)
+          .maybeSingle();
+
+      if (res == null) {
+        log('❌ Invalid center id: $centerId');
+        return;
+      }
+
+      _navigateToCenter(res['id'] as String);
+    } catch (e) {
+      log('❌ Failed to resolve center id: $e');
+    }
+  }
+
+  void _navigateToCenter(String centerId) async {
+    // Same lifecycle guard as the doctor path — deep link may arrive
+    // during SplashScreen before the navigator is mounted.
+    await AppLifecycle.waitForAppReady();
+
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      final nav = navKey.currentState;
+      if (nav == null) return;
+
+      nav.push(
+        MaterialPageRoute(
+          builder: (_) => CenterProfilePage(centerId: centerId),
         ),
       );
     });

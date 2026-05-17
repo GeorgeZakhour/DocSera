@@ -273,7 +273,13 @@ class _CenterProfilePageState extends State<CenterProfilePage> {
     final isArabic = Localizations.localeOf(context).languageCode == 'ar';
     final token = _centerData?['public_token'] ?? widget.centerId;
     if (token == null || token.toString().isEmpty) return;
-    final deepLink = 'docsera://center/$token';
+    // Universal Link form — same rationale as the doctor Share/QR flow.
+    // The OS opens the app silently for installed users (via AASA +
+    // assetlinks + the center entry in the deep_link_service handler),
+    // and routes everyone else to the docsera.app/center/<id> landing
+    // page. Old docsera://center/<id> shares still work via the custom
+    // scheme branch of the same handler.
+    final deepLink = 'https://docsera.app/center/$token';
     final name = _centerData?['name'] ?? '';
     final text = isArabic
         ? '🏥 $name\n\nافتح ملف المركز مباشرة على تطبيق DocSera:\n$deepLink'
@@ -292,7 +298,8 @@ class _CenterProfilePageState extends State<CenterProfilePage> {
   void _showCenterQrSheet() {
     final token = _centerData?['public_token'] ?? widget.centerId;
     if (token == null || token.toString().isEmpty) return;
-    final deepLink = 'docsera://center/$token';
+    // See _shareCenterLink for the rationale on https vs docsera://.
+    final deepLink = 'https://docsera.app/center/$token';
     final l = AppLocalizations.of(context)!;
     showModalBottomSheet(
       context: context,
