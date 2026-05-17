@@ -52,32 +52,85 @@ serve(async (req) => {
     }
 
     // ------------------------------------------------------------
-    // DEV BYPASS — fake test emails (test*@docsera.dev and
-    // anything *@doctor.com / *@member.com / *@email.com) skip the
-    // Mailgun send and write a real OTP row hashed for code "123456".
+    // BYPASS PATHS — two independent mechanisms write a hashed OTP row
+    // and skip the Mailgun send. rpc_verify_email_otp looks up rows by
+    // hash, so we have to insert (not just return 200).
     //
-    // GATED on the ALLOW_TEST_OTP env var (must equal "true" — any
-    // other value, including unset, disables the bypass). Production
-    // edge functions MUST run without ALLOW_TEST_OTP set, otherwise
-    // public attackers can pick a test email + 123456 and authenticate.
+    // 1) Reviewer path: ALWAYS ON for the single configured email.
+    //    Set REVIEWER_EMAIL + REVIEWER_EMAIL_OTP on the VPS and hand
+    //    those credentials to App Store / Play Store reviewers in
+    //    their App Review Information field. No env-var toggle —
+    //    this works regardless of ALLOW_TEST_OTP.
     //
-    // Important: when active, we have to write the row, not just
-    // return success. rpc_verify_email_otp looks up email_otps by
-    // hash, so a no-row bypass would make every verify fail.
+    // 2) Dev-test path: gated on ALLOW_TEST_OTP. Three accepted forms,
+    //    backwards-compatible:
+    //      - empty or "false"          → off
+    //      - "true"                    → on (legacy, no auto-expiry)
+    //      - ISO timestamp e.g.        → on until that time
+    //        "2026-05-17T20:00:00Z"      (auto-expires; safest in prod)
+    //    The test OTP code (default "123456") and the email patterns
+    //    that qualify (default the legacy @doctor.com / @member.com /
+    //    @email.com set) can be overridden via env so prod operators
+    //    can rotate the OTP without code edits.
+    //
+    // Production: the dev-test path MUST be off (ALLOW_TEST_OTP unset
+    // or "false") most of the time. Flip it on briefly via timestamp
+    // when you need to test with a fake account, e.g.:
+    //
+    //    ALLOW_TEST_OTP="$(date -u -v+2H +%Y-%m-%dT%H:%M:%SZ)"
+    //    supabase functions deploy send_email_otp ...
+    //
+    // The bypass auto-disables once now > the timestamp, even if you
+    // forget to flip it back.
     // ------------------------------------------------------------
-    const allowTestOtp = Deno.env.get("ALLOW_TEST_OTP") === "true";
+
     const normalizedEmail = email.trim().toLowerCase();
-    const isTestEmail = allowTestOtp && (() => {
-      if (normalizedEmail.endsWith("@doctor.com")) return true;
-      if (normalizedEmail.endsWith("@member.com")) return true;
-      // email.com is a real public domain — narrower than the rest.
-      if (normalizedEmail.endsWith("@email.com")) return true;
-      if (/^test\d+@docsera\.dev$/.test(normalizedEmail)) return true;
-      return false;
-    })();
-    if (isTestEmail) {
-      const otpPurpose = (purpose as string | undefined) || "signup_email_verify";
-      const codeHash = await sha256Hex("123456");
+
+    const reviewerEmail = (Deno.env.get("REVIEWER_EMAIL") ?? "")
+      .trim()
+      .toLowerCase();
+    const reviewerOtp = (Deno.env.get("REVIEWER_EMAIL_OTP") ?? "").trim();
+    const isReviewer =
+      reviewerEmail !== "" &&
+      reviewerOtp !== "" &&
+      normalizedEmail === reviewerEmail;
+
+    const testOtpCode =
+      (Deno.env.get("TEST_EMAIL_OTP") ?? "").trim() || "123456";
+
+    // CSV of substrings the email must endsWith() to qualify; default
+    // is the legacy hardcoded set so existing test workflows still work.
+    const patternsCsv = (Deno.env.get("TEST_EMAIL_PATTERNS") ?? "").trim();
+    const testPatterns =
+      patternsCsv === ""
+        ? ["@doctor.com", "@member.com", "@email.com"]
+        : patternsCsv
+            .split(",")
+            .map((s) => s.trim().toLowerCase())
+            .filter((s) => s.length > 0);
+
+    const matchesDevTestPattern =
+      /^test\d+@docsera\.dev$/.test(normalizedEmail) ||
+      testPatterns.some((p) => normalizedEmail.endsWith(p));
+
+    const isDevTest = isDevTestOtpActive() && matchesDevTestPattern;
+
+    // Pick the bypass code, if any. Reviewer wins over dev-test in the
+    // unlikely overlap where the reviewer email matches a dev pattern.
+    let bypassCode: string | null = null;
+    let bypassReason = "";
+    if (isReviewer) {
+      bypassCode = reviewerOtp;
+      bypassReason = "reviewer";
+    } else if (isDevTest) {
+      bypassCode = testOtpCode;
+      bypassReason = "dev-test";
+    }
+
+    if (bypassCode !== null) {
+      const otpPurpose =
+        (purpose as string | undefined) || "signup_email_verify";
+      const codeHash = await sha256Hex(bypassCode);
       // Invalidate any prior unconsumed rows so the latest one wins.
       await supabase
         .from("email_otps")
@@ -95,20 +148,20 @@ serve(async (req) => {
         });
       if (insertErr) {
         console.error(
-          `[Dev bypass] send_email_otp insert failed for ${normalizedEmail}:`,
+          `[${bypassReason} bypass] send_email_otp insert failed for ${normalizedEmail}:`,
           insertErr,
         );
         return new Response(
           JSON.stringify({ error: "Failed to generate OTP" }),
-          { status: 500, headers: { "Content-Type": "application/json" } }
+          { status: 500, headers: { "Content-Type": "application/json" } },
         );
       }
       console.log(
-        `[Dev bypass] send_email_otp wrote row for ${normalizedEmail} (purpose=${otpPurpose})`,
+        `[${bypassReason} bypass] send_email_otp wrote row for ${normalizedEmail} (purpose=${otpPurpose})`,
       );
       return new Response(
         JSON.stringify({ success: true }),
-        { status: 200, headers: { "Content-Type": "application/json" } }
+        { status: 200, headers: { "Content-Type": "application/json" } },
       );
     }
 
@@ -447,7 +500,7 @@ ${html}
   }
 });
 
-// SHA-256 helper used by the dev-bypass path. Same shape as the helper
+// SHA-256 helper used by the bypass paths. Same shape as the helper
 // in Pro's send_doctor_otp so the hashed OTP row is in the exact format
 // the verify RPC (rpc_verify_email_otp) expects.
 async function sha256Hex(input: string): Promise<string> {
@@ -456,4 +509,23 @@ async function sha256Hex(input: string): Promise<string> {
   return Array.from(new Uint8Array(digest))
     .map((b) => b.toString(16).padStart(2, "0"))
     .join("");
+}
+
+/// Parse ALLOW_TEST_OTP. Returns true iff the dev-test bypass should
+/// be active right now. Backwards-compatible with the prior boolean
+/// form. Unrecognised input fails closed (returns false) so a typo
+/// can't accidentally leave the bypass open.
+///
+///   unset / ""              → false
+///   "false" (any case)      → false
+///   "true"  (any case)      → true  (legacy; no auto-expiry)
+///   "2026-05-17T20:00:00Z"  → true iff Date.now() < that time
+///   anything else           → false (safe failure)
+function isDevTestOtpActive(): boolean {
+  const v = (Deno.env.get("ALLOW_TEST_OTP") ?? "").trim();
+  if (v === "" || v.toLowerCase() === "false") return false;
+  if (v.toLowerCase() === "true") return true;
+  const expiry = Date.parse(v);
+  if (Number.isNaN(expiry)) return false;
+  return Date.now() < expiry;
 }
