@@ -3381,7 +3381,15 @@ class _DoctorProfilePageState extends State<DoctorProfilePage> {
     final token = _doctorData?['public_token'];
     if (token == null || token.isEmpty) return;
 
-    final deepLink = 'docsera://doctor/$token';
+    // Use the https Universal Link so the QR works for:
+    //   - users who already have the app installed (silently opens via
+    //     AASA + assetlinks site association)
+    //   - users without the app (lands on the docsera.app/doctor/<token>
+    //     web preview with a "Get the app" CTA — see docsera-landing).
+    // The existing docsera:// custom-scheme handler in
+    // services/navigation/deep_link_service.dart still works for any
+    // older QR codes / shares already in circulation.
+    final deepLink = 'https://docsera.app/doctor/$token';
     final l = AppLocalizations.of(context)!;
 
     showModalBottomSheet(
@@ -3495,7 +3503,8 @@ class _DoctorProfilePageState extends State<DoctorProfilePage> {
     final token = _doctorData?['public_token'];
     if (token == null || token.isEmpty) return;
 
-    final deepLink = 'docsera://doctor/$token';
+    // See _showDoctorQrSheet for the rationale on https vs docsera://.
+    final deepLink = 'https://docsera.app/doctor/$token';
 
     final doctorName =
     [

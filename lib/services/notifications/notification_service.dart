@@ -7,6 +7,11 @@ import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:timezone/timezone.dart' as tz;
 import 'package:timezone/data/latest_all.dart' as tz;
 import 'package:pushy_flutter/pushy_flutter.dart';
+// Firebase Cloud Messaging — preferred push provider where Google Play
+// Services is available. Pushy stays as the fallback for non-GMS devices
+// (Huawei post-2019, AOSP-only). See _initFcmOrPushy() below.
+import 'package:firebase_core/firebase_core.dart';
+import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:docsera/screens/home/messages/conversation/conversation_page.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -28,12 +33,34 @@ class NotificationService {
 
   final FlutterLocalNotificationsPlugin _fln = FlutterLocalNotificationsPlugin();
   bool _initialized = false;
-  String? _pushyDeviceToken;
 
-  /// Public read-only access to the cached Pushy token. Used by the
-  /// password-change "sign out other devices" flow to identify which
-  /// user_devices row to KEEP when the RPC deletes the rest.
-  String? get pushyDeviceToken => _pushyDeviceToken;
+  /// The cached push token for this device. Holds either an FCM token
+  /// or a Pushy token depending on which provider _initFcmOrPushy()
+  /// successfully registered with — see also [_deviceProvider].
+  String? _deviceToken;
+
+  /// Which push provider issued [_deviceToken]: 'fcm' or 'pushy'.
+  /// Set by _initFcmOrPushy() at app startup based on whether FCM
+  /// initialization succeeded. Mirrored to user_devices.provider so
+  /// the server-side fanout routes this device through the right API.
+  String _deviceProvider = 'pushy';
+
+  /// Public read-only access to the cached device token, regardless of
+  /// which provider issued it. Used by the password-change "sign out
+  /// other devices" flow to identify which user_devices row to KEEP
+  /// when the RPC deletes the rest.
+  String? get deviceToken => _deviceToken;
+
+  /// Backward-compatible alias for [deviceToken]. Pre-Stage-3 callers
+  /// referenced this name when the only provider was Pushy. New code
+  /// should prefer [deviceToken] — the cached value can be an FCM
+  /// token too. Kept as a getter to avoid touching every consumer file
+  /// in this single migration.
+  String? get pushyDeviceToken => _deviceToken;
+
+  /// Which provider registered this device's [deviceToken]. Useful for
+  /// callers that need to choose between Pushy- and FCM-specific APIs.
+  String get deviceProvider => _deviceProvider;
 
   static const AndroidNotificationChannel _defaultChannel = AndroidNotificationChannel(
     'docsera_default',
@@ -155,8 +182,13 @@ class NotificationService {
       }
     }
 
-    // 4) Pushy (مهم: تأكد من استدعاء Pushy.listen() في main.dart داخل initState)
-    await _initPushy();
+    // 4) Push provider — FCM-first with Pushy fallback. Tries to register
+    // with FirebaseMessaging; if that fails for any reason (no Google
+    // Play Services, network issue, permission denied, APNs slow on iOS),
+    // gracefully falls back to Pushy.register() within the same boot.
+    // The choice is mirrored to user_devices.provider so the edge
+    // function fanout routes this device through the right API.
+    await _initFcmOrPushy();
 
     // 5) Auth state listener — Pushy.register() runs at app boot, BEFORE
     // login. _saveDeviceTokenToSupabase short-circuits when there's no
@@ -228,13 +260,13 @@ class NotificationService {
             final oldRow = payload.oldRecord;
             final deletedToken = oldRow['token']?.toString();
             if (deletedToken == null) return;
-            if (deletedToken == _pushyDeviceToken) {
+            if (deletedToken == _deviceToken) {
               if (kDebugMode) {
                 debugPrint('🚪 user_devices row deleted remotely — '
                     'signing out');
               }
               try {
-                _pushyDeviceToken = null;
+                _deviceToken = null;
                 await Supabase.instance.client.auth.signOut();
               } catch (e) {
                 if (kDebugMode) debugPrint('⚠️ remote-signOut failed: $e');
@@ -418,6 +450,176 @@ class NotificationService {
     _foregroundTimers.clear();
   }
 
+  // ---------------------------------------------------------------------
+  // FCM-first / Pushy-fallback orchestration
+  // ---------------------------------------------------------------------
+  //
+  // _initFcmOrPushy() is called by init() instead of _initPushy() directly.
+  // It tries to register the device with Firebase Cloud Messaging; if that
+  // fails (no GMS on Huawei post-2019, network blip, permission denied),
+  // it gracefully falls back to Pushy.register(), which doesn't need GMS.
+  //
+  // The decision is per-device-per-install — once registered, the device
+  // sticks with whichever provider won. The choice is persisted to
+  // user_devices.provider so the server-side fanout (Stage 3 Gate 2)
+  // routes notifications through the right API for this specific device.
+
+  Future<void> _initFcmOrPushy() async {
+    String? token;
+    bool fcmWorked = false;
+
+    // 1. Try FCM. Wrap in a 5-second timeout — FCM init can hang on
+    // iOS when APNs is slow on first launch, or on Android while Google
+    // Play Services is updating. Falling back to Pushy is preferable
+    // to blocking the entire app boot.
+    try {
+      await Firebase.initializeApp();
+      final messaging = FirebaseMessaging.instance;
+
+      // Request notification permission. On iOS this triggers the OS
+      // dialog if not yet shown; on Android 13+ same. We already
+      // request POST_NOTIFICATIONS via flutter_local_notifications
+      // below, but doing it here keeps the dialog timing consistent
+      // with the legacy Pushy flow that fires on first launch.
+      await messaging.requestPermission(
+        alert: true,
+        badge: true,
+        sound: true,
+      );
+
+      // Fetch the FCM token. The 5s timeout protects boot-time hangs.
+      token = await messaging
+          .getToken()
+          .timeout(const Duration(seconds: 5));
+
+      if (token != null && token.isNotEmpty) {
+        fcmWorked = true;
+        await _setupFcmListeners(messaging);
+        debugPrint(
+          '✅ FCM registration success (token length=${token.length})',
+        );
+      } else {
+        debugPrint(
+          '⚠️ FCM returned null/empty token — falling back to Pushy',
+        );
+      }
+    } catch (e) {
+      // Most common cause on Huawei post-2019: Google Play Services
+      // missing or unreachable. Pushy works without GMS.
+      debugPrint('⚠️ FCM init failed, falling back to Pushy: $e');
+      fcmWorked = false;
+    }
+
+    if (fcmWorked && token != null) {
+      _deviceToken = token;
+      _deviceProvider = 'fcm';
+      await _saveDeviceTokenToSupabase(token, 'fcm');
+    } else {
+      // Pushy fallback — _initPushy sets _deviceToken via
+      // _saveDeviceTokenToSupabase, and _deviceProvider stays its
+      // default 'pushy' (or we set it explicitly inside _initPushy).
+      await _initPushy();
+    }
+  }
+
+  /// Wire up FCM listeners. Mirrors the listener wiring _initPushy()
+  /// does for Pushy: foreground messages, tap when app is backgrounded,
+  /// cold-start tap (app was killed), token rotation, and the
+  /// top-level background isolate handler.
+  Future<void> _setupFcmListeners(FirebaseMessaging messaging) async {
+    // Foreground messages
+    FirebaseMessaging.onMessage.listen(_handleFcmForegroundMessage);
+
+    // Notification tap when app is in background but not killed.
+    FirebaseMessaging.onMessageOpenedApp.listen((RemoteMessage message) {
+      final payload = message.data['payload']?.toString();
+      _handleNotificationTap(payload);
+    });
+
+    // Cold-start tap (app was killed when notification was tapped).
+    final initialMessage = await messaging.getInitialMessage();
+    if (initialMessage != null) {
+      final payload = initialMessage.data['payload']?.toString();
+      // Defer until navigator is ready — _handleNotificationTap
+      // already awaits AppLifecycle.waitForAppReady() internally.
+      unawaited(Future(() => _handleNotificationTap(payload)));
+    }
+
+    // Background isolate handler — must be a top-level function
+    // annotated @pragma('vm:entry-point'). See fcmBackgroundHandler
+    // below this class.
+    FirebaseMessaging.onBackgroundMessage(fcmBackgroundHandler);
+
+    // Token rotation. FCM rotates tokens occasionally (e.g. when Google
+    // Play Services updates). Persist the new one so we keep delivering
+    // after the rotation.
+    FirebaseMessaging.instance.onTokenRefresh.listen((newToken) async {
+      debugPrint('🔄 FCM token refreshed (length=${newToken.length})');
+      _deviceToken = newToken;
+      try {
+        await _saveDeviceTokenToSupabase(newToken, 'fcm');
+      } catch (e) {
+        debugPrint('❌ FCM token refresh upsert failed: $e');
+      }
+    });
+  }
+
+  /// Foreground FCM message handler. Mirrors what Pushy's
+  /// backgroundNotificationListener does when the app is in the
+  /// foreground: render the in-app banner (iOS) and ALWAYS write to
+  /// the system tray (otherwise nothing appears in the shade when
+  /// the user pulls down).
+  void _handleFcmForegroundMessage(RemoteMessage message) {
+    final title = (message.data['title']
+            ?? message.notification?.title
+            ?? 'DocSera')
+        .toString();
+    final body = (message.data['body']
+            ?? message.notification?.body
+            ?? '')
+        .toString();
+    final payload = (message.data['payload'] ?? '').toString();
+
+    // In-app glass banner — same pattern as Pushy on iOS. Skipped on
+    // Android because the heads-up notification covers the visual gap.
+    final ctx = navigatorKey?.currentContext;
+    if (ctx != null && ctx.mounted && Platform.isIOS) {
+      InAppNotificationBanner.show(
+        ctx,
+        title: title,
+        body: body,
+        payload: payload,
+      );
+    }
+
+    // System-tray entry. Without this, foreground notifications never
+    // appear in the pull-down shade. flutter_local_notifications.show()
+    // writes directly to the OS regardless of FCM's foreground
+    // suppression behavior.
+    try {
+      const androidDetails = AndroidNotificationDetails(
+        'docsera_default',
+        'General Notifications',
+        importance: Importance.high,
+        priority: Priority.high,
+      );
+      const iosDetails = DarwinNotificationDetails(
+        presentAlert: true,
+        presentBadge: true,
+        presentSound: true,
+      );
+      _fln.show(
+        DateTime.now().millisecondsSinceEpoch ~/ 1000,
+        title,
+        body,
+        const NotificationDetails(android: androidDetails, iOS: iosDetails),
+        payload: payload,
+      );
+    } catch (e) {
+      if (kDebugMode) debugPrint('⚠️ FCM foreground tray show failed: $e');
+    }
+  }
+
   Future<void> _initPushy() async {
     // Pushy's iOS SDK installs itself as the UNUserNotificationCenter
     // delegate. By default, that means foreground notifications are
@@ -451,7 +653,8 @@ class NotificationService {
       final token = await Pushy.register();
       // Don't log the device token — it's a credential that can be used to push to this device.
       debugPrint('✅ Pushy Registration Success (token length=${token.length})');
-      _pushyDeviceToken = token;
+      _deviceToken = token;
+      _deviceProvider = 'pushy';
 
       // بانر داخل التطبيق على iOS (اختياري)
       if (Platform.isIOS) {
@@ -460,7 +663,7 @@ class NotificationService {
         Pushy.clearBadge();
       }
 
-      await _saveDeviceTokenToSupabase(token);
+      await _saveDeviceTokenToSupabase(token, 'pushy');
     } catch (e) {
       // Unconditional log: failure to register is the most common
       // reason for "I'm logged in but never get pushes" reports, so
@@ -483,32 +686,51 @@ class NotificationService {
     final userId = session?.user.id;
     if (userId == null) return; // Without a session there's nothing to write.
 
-    var token = _pushyDeviceToken;
+    var token = _deviceToken;
     if (token == null || token.isEmpty) {
+      // Re-register with whichever provider was chosen at app start.
+      // We don't try to switch providers here — that decision belongs
+      // to _initFcmOrPushy(), which only runs at boot. Mid-session
+      // switching would invalidate the existing provider's token and
+      // create a stale user_devices row.
       try {
-        token = await Pushy.register();
-        debugPrint(
-          '✅ Pushy re-registration success (token length=${token.length})',
-        );
-        _pushyDeviceToken = token;
+        if (_deviceProvider == 'fcm') {
+          token = await FirebaseMessaging.instance.getToken();
+          if (token == null || token.isEmpty) {
+            debugPrint('⚠️ FCM re-registration returned null token');
+            return;
+          }
+          debugPrint(
+            '✅ FCM re-registration success (token length=${token.length})',
+          );
+        } else {
+          token = await Pushy.register();
+          debugPrint(
+            '✅ Pushy re-registration success (token length=${token.length})',
+          );
+        }
+        _deviceToken = token;
       } catch (e) {
-        debugPrint('❌ Pushy re-registration failed: $e');
+        debugPrint('❌ $_deviceProvider re-registration failed: $e');
         return;
       }
     }
 
     try {
-      await _saveDeviceTokenToSupabase(token);
+      await _saveDeviceTokenToSupabase(token, _deviceProvider);
     } catch (e) {
       debugPrint('⚠️ ensureDeviceRegistered upsert failed: $e');
     }
   }
 
-  Future<void> _saveDeviceTokenToSupabase(String token) async {
+  Future<void> _saveDeviceTokenToSupabase(
+    String token, [
+    String provider = 'pushy',
+  ]) async {
     final session = Supabase.instance.client.auth.currentSession;
     final userId = session?.user.id;
     if (userId == null) {
-      // No active session — orphan-clean any stale rows for THIS Pushy
+      // No active session — orphan-clean any stale rows for THIS
       // token so a previous user's notifications don't keep firing on
       // this device. RLS allows DELETE only on rows the current user
       // owns; without a session we can't clean directly here, so we
@@ -517,7 +739,7 @@ class NotificationService {
     }
 
     // Orphan defense: before upserting our own row, drop ANY other
-    // user_devices row for this Pushy token that points at a different
+    // user_devices row for this token that points at a different
     // user_id. RLS scopes the delete to rows the current session owns,
     // so we can only clean up tokens that belong to the current user
     // anyway — which catches the common bug (User A signs out without
@@ -542,12 +764,17 @@ class NotificationService {
         'token': token,
         'platform': Platform.isIOS ? 'ios' : 'android',
         'app': 'docsera',
+        // Provider drives per-device routing in fanout (Stage 3). Defaults
+        // to 'pushy' for backward compatibility with any legacy code path
+        // that calls this method without specifying.
+        'provider': provider,
         'locale': _currentLocale(),
         'last_seen_at': DateTime.now().toUtc().toIso8601String(),
       }, onConflict: 'user_id,token,app');
       // Visible in release builds — confirms the device row landed.
       debugPrint('✅ user_devices upsert ok '
-          '(platform=${Platform.isIOS ? 'ios' : 'android'}, '
+          '(provider=$provider, '
+          'platform=${Platform.isIOS ? 'ios' : 'android'}, '
           'user=${userId.substring(0, 8)}…)');
     } catch (e) {
       debugPrint('❌ user_devices upsert failed: $e');
@@ -574,7 +801,7 @@ class NotificationService {
   /// so the next push from the edge function fires in their language
   /// without waiting for them to restart the app.
   Future<void> updateDeviceLocale(String localeCode) async {
-    final token = _pushyDeviceToken;
+    final token = _deviceToken;
     final session = Supabase.instance.client.auth.currentSession;
     final userId = session?.user.id;
     if (token == null || userId == null) return;
@@ -594,7 +821,7 @@ class NotificationService {
   }
 
   Future<void> deleteToken() async {
-    final token = _pushyDeviceToken;
+    final token = _deviceToken;
     if (token == null) return;
 
     try {
@@ -604,10 +831,10 @@ class NotificationService {
           .eq('token', token)
           .eq('app', 'docsera');
 
-      if (kDebugMode) debugPrint('🗑️ Pushy Token deleted from Supabase');
-      _pushyDeviceToken = null;
+      if (kDebugMode) debugPrint('🗑️ Device token deleted from Supabase');
+      _deviceToken = null;
     } catch (e) {
-      debugPrint('❌ Error deleting Pushy token: $e');
+      debugPrint('❌ Error deleting device token: $e');
     }
   }
 
@@ -1141,20 +1368,34 @@ class NotificationService {
     }
   }
 
-  /// تفعيل/إيقاف استقبال إشعارات Pushy على هذا الجهاز
+  /// تفعيل/إيقاف استقبال الإشعارات على هذا الجهاز
+  ///
+  /// Pushy-specific: this calls Pushy.toggleNotifications(). For FCM-
+  /// registered devices, mute/unmute happens via the server-side
+  /// notification_preferences table (the edge function gates fanout on
+  /// those prefs). On FCM, this becomes a no-op rather than fight with
+  /// FCM topic management — the prefs system gives finer control anyway.
   Future<void> setPushEnabled(bool enabled) async {
+    if (_deviceProvider == 'fcm') {
+      if (kDebugMode) {
+        debugPrint(
+          '⏭️ setPushEnabled($enabled): device on FCM, use prefs instead',
+        );
+      }
+      return;
+    }
     try {
       // الطريقة الصحيحة في pushy_flutter هي toggleNotifications
       Pushy.toggleNotifications(enabled);
 
-      if (enabled && _pushyDeviceToken == null) {
+      if (enabled && _deviceToken == null) {
         final token = await Pushy.register();
-        _pushyDeviceToken = token;
-        await _saveDeviceTokenToSupabase(token);
+        _deviceToken = token;
+        await _saveDeviceTokenToSupabase(token, 'pushy');
       }
 
       if (!enabled) {
-        _pushyDeviceToken = null;
+        _deviceToken = null;
       }
     } catch (e) {
       debugPrint('setPushEnabled error: $e');
@@ -1289,5 +1530,103 @@ Future<void> backgroundNotificationListener(Map<String, dynamic> data) async {
     }
   } catch (e) {
     debugPrint("❌ Error in backgroundNotificationListener: $e");
+  }
+}
+
+// ---------------------------------------------------------------------------
+// FCM background message handler
+// ---------------------------------------------------------------------------
+//
+// Runs in a SEPARATE isolate from the main app — has no access to
+// NotificationService.instance state. Must be a top-level function
+// annotated with @pragma('vm:entry-point') so Flutter's tree-shaker
+// preserves it across compilation.
+//
+// Note on Android dual-display: FCM's documented behavior is that
+// when a message includes BOTH `notification` and `data` blocks (which
+// our edge function does), the SYSTEM displays the notification
+// automatically when the app is in the background, and this isolate
+// handler is NOT called. The handler only fires for data-only messages
+// or when the app is in the foreground (rare — onMessage handles that).
+//
+// On iOS, this handler fires only for messages with `content-available: 1`
+// (silent background data messages). Apple's notification block always
+// goes through the system display path; we don't call the data isolate
+// in that case.
+//
+// In other words: this handler is a defensive net for data-only paths
+// the edge function might use in future. Today it rarely fires; the
+// system-rendered notification is the primary background path.
+
+/// Dedup state for the FCM background isolate. Lives in its own
+/// isolate — does not share with Pushy's _recentNotifications map.
+final Map<String, int> _fcmRecentNotifications = {};
+
+@pragma('vm:entry-point')
+Future<void> fcmBackgroundHandler(RemoteMessage message) async {
+  try {
+    WidgetsFlutterBinding.ensureInitialized();
+    await Firebase.initializeApp();
+
+    final title = (message.data['title']
+            ?? message.notification?.title
+            ?? 'DocSera')
+        .toString();
+    final body = (message.data['body']
+            ?? message.notification?.body
+            ?? '')
+        .toString();
+    final payload = (message.data['payload'] ?? '').toString();
+
+    debugPrint('🔔 FCM background handler fired (title="$title")');
+
+    // Dedup against rapid duplicates from the same logical notification.
+    final dedupKey = '${title}_$payload';
+    final now = DateTime.now().millisecondsSinceEpoch;
+    final lastSeen = _fcmRecentNotifications[dedupKey];
+    if (lastSeen != null && (now - lastSeen < 5000)) {
+      debugPrint('🔕 Duplicate FCM Notification Prevented: $dedupKey');
+      return;
+    }
+    _fcmRecentNotifications[dedupKey] = now;
+    _fcmRecentNotifications.removeWhere((_, time) => now - time > 10000);
+
+    // Render via flutter_local_notifications so the OS shade picks it up
+    // even for data-only messages (the path where the system doesn't
+    // auto-show). Same channel + icon as our other notification surfaces
+    // for visual consistency.
+    final FlutterLocalNotificationsPlugin fln =
+        FlutterLocalNotificationsPlugin();
+
+    const androidInit = AndroidInitializationSettings('@drawable/ic_notify');
+    const iosInit = DarwinInitializationSettings(
+      requestAlertPermission: false,
+      requestBadgePermission: false,
+      requestSoundPermission: false,
+    );
+    const settings = InitializationSettings(android: androidInit, iOS: iosInit);
+    await fln.initialize(settings);
+
+    const androidDetails = AndroidNotificationDetails(
+      'docsera_default',
+      'General Notifications',
+      importance: Importance.high,
+      priority: Priority.high,
+    );
+    const iosDetails = DarwinNotificationDetails(
+      presentAlert: true,
+      presentBadge: true,
+      presentSound: true,
+    );
+
+    await fln.show(
+      DateTime.now().millisecondsSinceEpoch ~/ 1000,
+      title,
+      body,
+      const NotificationDetails(android: androidDetails, iOS: iosDetails),
+      payload: payload,
+    );
+  } catch (e) {
+    debugPrint('❌ FCM background handler error: $e');
   }
 }
