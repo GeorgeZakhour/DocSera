@@ -19,13 +19,16 @@ class MainScreenCubit extends Cubit<MainScreenState> {
 
   Future<void> loadMainScreen(BuildContext context) async {
     try {
+      // ✅ استخدم AuthCubit بدل prefs — cached before any await so the
+      // post-delay use doesn't trip use_build_context_synchronously.
+      final authCubit = context.read<AuthCubit>();
+
       if (!_hasLoadedOnce) {
         emit(MainScreenLoading());
         await Future.delayed(const Duration(milliseconds: 100));
       }
 
-      // ✅ استخدم AuthCubit بدل prefs
-      final authState = context.read<AuthCubit>().state;
+      final authState = authCubit.state;
 
       // ✅ Debug print: تأكيد أن AuthCubit هو المستخدم فعلاً
       debugPrint("🔐 AuthCubit State: $authState");

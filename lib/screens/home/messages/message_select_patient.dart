@@ -367,6 +367,11 @@ class _SelectPatientForMessagePageState extends State<SelectPatientForMessagePag
             GestureDetector(
               onTap: selectedPatientId != null
                   ? () async {
+                // Cached before any await so post-await snackbar / dialog /
+                // navigation reads don't trip use_build_context_synchronously.
+                final navigator = Navigator.of(context);
+                final messenger = ScaffoldMessenger.of(context);
+                final loc = AppLocalizations.of(context);
 
                 // 🛡️ Defense-in-depth: verify doctor is still messageable at
                 // proceed time (the search-picker filter is the primary gate;
@@ -382,9 +387,9 @@ class _SelectPatientForMessagePageState extends State<SelectPatientForMessagePag
 
                 if (!mounted) return;
                 if (!doctorIsMessageable) {
-                  ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+                  messenger.showSnackBar(SnackBar(
                     content: Text(
-                      AppLocalizations.of(context)?.doctorNotMessageable ??
+                      loc?.doctorNotMessageable ??
                           'This doctor cannot receive messages at this time.',
                     ),
                   ));
@@ -403,8 +408,9 @@ class _SelectPatientForMessagePageState extends State<SelectPatientForMessagePag
 
                 if (blockCheck != null) {
                   // ❌ المريض محظور
+                  if (!mounted) return;
                   showDialog(
-                    context: context,
+                    context: navigator.context,
                     barrierColor: Colors.black.withValues(alpha: 0.3),
                     builder: (_) {
                       return Center(
@@ -527,8 +533,8 @@ class _SelectPatientForMessagePageState extends State<SelectPatientForMessagePag
                   final docData = response;
                   final conversationId = docData['id'];
 
-                  Navigator.pushReplacement(
-                    context,
+                  if (!mounted) return;
+                  navigator.pushReplacement(
                     fadePageRoute(
                       BlocProvider(
                         create: (_) => ConversationCubit(ConversationService()),
@@ -558,8 +564,8 @@ class _SelectPatientForMessagePageState extends State<SelectPatientForMessagePag
                     reason: "",
                   );
 
-                  Navigator.push(
-                    context,
+                  if (!mounted) return;
+                  navigator.push(
                     fadePageRoute(
                       SelectMessageReasonPage(
                         doctorId: widget.doctorId,

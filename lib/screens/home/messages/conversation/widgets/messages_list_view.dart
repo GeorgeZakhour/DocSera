@@ -656,6 +656,10 @@ class MessagesListView extends StatelessWidget {
             else
               GestureDetector(
                 onTap: () async {
+                  // Cached before any await so the post-resolve push uses a
+                  // stable Navigator.
+                  final navigator = Navigator.of(context);
+
                   // Old style: file_url / fileUrl
                   String? url = (pdf['file_url'] ?? pdf['fileUrl'])?.toString();
                   String? localPath = pdf['localPath']?.toString();
@@ -699,8 +703,7 @@ class MessagesListView extends StatelessWidget {
                     encrypted: pdf['encrypted'] == true,
                   );
 
-                  Navigator.push(
-                    context,
+                  navigator.push(
                     MaterialPageRoute(
                       builder: (_) => DocumentPreviewPage(
                         document: userDoc,

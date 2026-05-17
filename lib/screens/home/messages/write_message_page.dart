@@ -641,6 +641,10 @@ class _WriteMessagePageState extends State<WriteMessagePage> {
                         onPressed: _isSending
                             ? null
                             : () async {
+                          // Cached before any await so the post-await
+                          // cubit + Navigator use is analyzer-clean.
+                          final navigator = Navigator.of(context);
+                          final messagesCubit = context.read<MessagesCubit>();
                           setState(() => _isSending = true);
 
                           final messageText = _controller.text.trim();
@@ -675,7 +679,7 @@ class _WriteMessagePageState extends State<WriteMessagePage> {
 
                           debugPrint("📸 doctorImageUrl before startConversation = ${widget.doctorImageUrl}");
 
-                          final conversationId = await context.read<MessagesCubit>().startConversation(
+                          final conversationId = await messagesCubit.startConversation(
                             patientId: patientId,
                             doctorId: doctorId,
                             message: messageText,
@@ -692,8 +696,8 @@ class _WriteMessagePageState extends State<WriteMessagePage> {
                           );
 
                           if (conversationId != null) {
-                            Navigator.pushAndRemoveUntil(
-                              context,
+                            if (!mounted) return;
+                            navigator.pushAndRemoveUntil(
                               MaterialPageRoute(
                                 builder: (_) => BlocProvider(
                                   create: (_) => ConversationCubit(ConversationService()),

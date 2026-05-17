@@ -310,12 +310,17 @@ class _ConversationPageState extends State<ConversationPage> {
   // ---------------------------------------------------------------------------
 
   Future<void> _pickImages() async {
+    // Cached before the async picker so post-await snackbar / localization
+    // reads stay safe across the gap.
+    final messenger = ScaffoldMessenger.of(context);
+    final loc = AppLocalizations.of(context)!;
+
     const int maxImages = 8;
     if (_pendingImages.length >= maxImages) {
-       ScaffoldMessenger.of(context).showSnackBar(
+       messenger.showSnackBar(
          SnackBar(
            content: Text(
-             AppLocalizations.of(context)!.chatMaxImagesError(maxImages),
+             loc.chatMaxImagesError(maxImages),
              style: const TextStyle(color: Colors.white),
            ),
            backgroundColor: Colors.red,
@@ -338,10 +343,10 @@ class _ConversationPageState extends State<ConversationPage> {
     if (_pendingImages.length + newFiles.length > maxImages) {
        final allowed = maxImages - _pendingImages.length;
        newFiles = newFiles.take(allowed).toList();
-       ScaffoldMessenger.of(context).showSnackBar(
+       messenger.showSnackBar(
          SnackBar(
            content: Text(
-             AppLocalizations.of(context)!.chatImageLimitReached(maxImages),
+             loc.chatImageLimitReached(maxImages),
              style: const TextStyle(color: Colors.white),
            ),
            backgroundColor: Colors.orange,
@@ -743,11 +748,11 @@ class _ConversationPageState extends State<ConversationPage> {
                                hasAttachments: _pendingImages.isNotEmpty || _pendingPdf != null,
                                onSend: _send,
                                onSendAudio: (path, duration) async {
-                                 final file = File(path);
-                                 if (!await file.exists()) return;
-                                 
                                  final cubit = context.read<ConversationCubit>();
                                  final service = cubit.service;
+
+                                 final file = File(path);
+                                 if (!await file.exists()) return;
                                  
                                  final name = "${DocSeraTime.nowUtc().millisecondsSinceEpoch}_audio.m4a";
                                  final uploaded = await service.uploadAttachmentFile(

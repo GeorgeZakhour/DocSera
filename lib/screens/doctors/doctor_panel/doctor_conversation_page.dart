@@ -157,12 +157,13 @@ class _DoctorConversationPageState extends State<DoctorConversationPage> {
             SizedBox(height: 16.h),
             ElevatedButton(
               onPressed: () async {
+                final navigator = Navigator.of(context);
                 await Supabase.instance.client
                     .from('conversations')
                     .update({'is_closed': true})
                     .eq('id', widget.conversationId);
 
-                Navigator.pop(context);
+                navigator.pop();
               },
               style: ElevatedButton.styleFrom(
                 backgroundColor: Colors.red,

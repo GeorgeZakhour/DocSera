@@ -459,6 +459,10 @@ import 'package:docsera/utils/doctor_image_utils.dart';
 
       return InkWell(
         onTap: () async {
+          // Cached so the post-pop loadMessages doesn't reach across the
+          // async gap into a possibly-stale context.
+          final messagesCubit = context.read<MessagesCubit>();
+          final outerContext = context;
           final imageResult = resolveDoctorImagePathAndWidget(
             doctor: {
               'doctor_image': convo.doctorImage,
@@ -487,7 +491,11 @@ import 'package:docsera/utils/doctor_image_utils.dart';
           );
 
 
-          context.read<MessagesCubit>().loadMessages(context); // ✅ reload after returning
+          // Re-pump the messages list; outerContext is mounted-checked by
+          // loadMessages internally via its own widget subscription.
+          if (outerContext.mounted) {
+            messagesCubit.loadMessages(outerContext);
+          }
         },
 
 
