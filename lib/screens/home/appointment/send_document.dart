@@ -182,11 +182,10 @@ class _SendDocumentToDoctorPageState extends State<SendDocumentToDoctorPage> {
                     onTap: () async {
                       Navigator.pop(context);
                       final pickedImage = await ImagePicker().pickImage(source: ImageSource.camera);
-                      if (pickedImage != null) {
-                        final safeFile = await _persistImage(pickedImage.path);
-                        _handleImagePicked(context, safeFile.path);
-                      }
-
+                      if (pickedImage == null) return;
+                      final safeFile = await _persistImage(pickedImage.path);
+                      if (!context.mounted) return;
+                      _handleImagePicked(context, safeFile.path);
                     },
                   ),
                   _buildIconAction(
@@ -196,11 +195,10 @@ class _SendDocumentToDoctorPageState extends State<SendDocumentToDoctorPage> {
                     onTap: () async {
                       Navigator.pop(context);
                       final result = await FilePicker.platform.pickFiles(type: FileType.image);
-                      if (result != null && result.files.isNotEmpty) {
-                        final safeFile = await _persistImage(result.files.first.path!);
-                        _handleImagePicked(context, safeFile.path);
-                      }
-
+                      if (result == null || result.files.isEmpty) return;
+                      final safeFile = await _persistImage(result.files.first.path!);
+                      if (!context.mounted) return;
+                      _handleImagePicked(context, safeFile.path);
                     },
                   ),
                   _buildIconAction(
@@ -213,9 +211,9 @@ class _SendDocumentToDoctorPageState extends State<SendDocumentToDoctorPage> {
                         type: FileType.custom,
                         allowedExtensions: ['pdf'],
                       );
-                      if (result != null && result.files.isNotEmpty) {
-                        _handlePdfPicked(context, result.files.first.path!);
-                      }
+                      if (result == null || result.files.isEmpty) return;
+                      if (!context.mounted) return;
+                      _handlePdfPicked(context, result.files.first.path!);
                     },
                   ),
                 ],
@@ -280,7 +278,9 @@ class _SendDocumentToDoctorPageState extends State<SendDocumentToDoctorPage> {
             final fixedFile = await _forceToJpg(imagePath);
             final safeFile = await _persistImage(fixedFile.path);
 
+            if (!context.mounted) return;
             Future.microtask(() {
+              if (!context.mounted) return;
               _goToMultiImageUploadFlow(context, safeFile.path);
             });
           },
@@ -293,8 +293,8 @@ class _SendDocumentToDoctorPageState extends State<SendDocumentToDoctorPage> {
 
 
   Future<void> _goToMultiImageUploadFlow(BuildContext context, String firstImagePath) async {
-    final result = await Navigator.push(
-      context,
+    final navigator = Navigator.of(context);
+    final result = await navigator.push(
       MaterialPageRoute(
         builder: (_) => MultiPageUploadScreen(
           images: [firstImagePath],
@@ -304,8 +304,9 @@ class _SendDocumentToDoctorPageState extends State<SendDocumentToDoctorPage> {
       ),
     );
 
+    if (!mounted) return;
     if (result == true) {
-      Navigator.pop(context, true);   // ⬅ يرجع إلى AppointmentDetailsPage
+      navigator.pop(true);   // ⬅ يرجع إلى AppointmentDetailsPage
     }
   }
 
@@ -314,8 +315,9 @@ class _SendDocumentToDoctorPageState extends State<SendDocumentToDoctorPage> {
     final fileName = path.basenameWithoutExtension(pdfPath);
     final pageCount = await getPdfPageCount(pdfPath);
 
-    final result = await Navigator.push(
-      context,
+    if (!context.mounted) return;
+    final navigator = Navigator.of(context);
+    final result = await navigator.push(
       MaterialPageRoute(
         builder: (_) => DocumentInfoScreen(
           images: [pdfPath],
@@ -328,8 +330,9 @@ class _SendDocumentToDoctorPageState extends State<SendDocumentToDoctorPage> {
     );
 
 
+    if (!mounted) return;
     if (result == true) {
-      Navigator.pop(context, true);  // ⬅ يرجع إلى AppointmentDetailsPage
+      navigator.pop(true);  // ⬅ يرجع إلى AppointmentDetailsPage
     }
   }
 

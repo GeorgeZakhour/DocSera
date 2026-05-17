@@ -131,6 +131,13 @@ class _ConfirmationPageState extends State<ConfirmationPage> {
     if (_submitting) return;
     setState(() => _submitting = true);
 
+    // Cached BEFORE any await so we can reach the Navigator / Messenger
+    // / localization safely on the post-await side without triggering
+    // use_build_context_synchronously on every context.* read below.
+    final navigator = Navigator.of(context);
+    final messenger = ScaffoldMessenger.of(context);
+    final loc = AppLocalizations.of(context)!;
+
     try {
       final supabase = Supabase.instance.client;
 
@@ -138,8 +145,8 @@ class _ConfirmationPageState extends State<ConfirmationPage> {
       final authUser = supabase.auth.currentUser;
       if (authUser == null) {
         if (!mounted) return;
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(AppLocalizations.of(context)!.loginFirst)),
+        messenger.showSnackBar(
+          SnackBar(content: Text(loc.loginFirst)),
         );
         return;
       }
@@ -197,8 +204,8 @@ class _ConfirmationPageState extends State<ConfirmationPage> {
 
       if (blockRow != null) {
         if (!mounted) return;
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(AppLocalizations.of(context)!.blockedFromBooking)),
+        messenger.showSnackBar(
+          SnackBar(content: Text(loc.blockedFromBooking)),
         );
         return;
       }
@@ -273,13 +280,11 @@ class _ConfirmationPageState extends State<ConfirmationPage> {
       final isConfirmed = row['is_confirmed'] as bool;
 
       if (isConfirmed) {
-        Navigator.pushReplacement(
-          context,
+        navigator.pushReplacement(
           fadePageRoute(AppointmentConfirmedPage(appointment: navPayload)),
         );
       } else {
-        Navigator.pushReplacement(
-          context,
+        navigator.pushReplacement(
           fadePageRoute(WaitingForConfirmationPage(appointment: navPayload)),
         );
       }
@@ -291,11 +296,11 @@ class _ConfirmationPageState extends State<ConfirmationPage> {
         'error_code': isDuplicate ? 'slot_already_booked' : 'rpc_error',
       });
       final msg = isDuplicate
-          ? AppLocalizations.of(context)!.slotAlreadyBooked
-          : '${AppLocalizations.of(context)!.errorBookingAppointment}: $e';
+          ? loc.slotAlreadyBooked
+          : '${loc.errorBookingAppointment}: $e';
 
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
+        messenger.showSnackBar(
           SnackBar(content: Text(msg)),
         );
       }

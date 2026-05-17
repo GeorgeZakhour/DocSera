@@ -304,6 +304,12 @@ class _SelectPatientPageState extends State<SelectPatientPage> {
                 debugPrint(
                     "Selected Patient: $selectedPatientName, Gender: $selectedPatientGender, Age: $selectedPatientAge");
 
+                // Cached before any await so post-await uses don't
+                // trigger use_build_context_synchronously.
+                final navigator = Navigator.of(context);
+                final messenger = ScaffoldMessenger.of(context);
+                final loc = AppLocalizations.of(context);
+
                 // 🛡️ Subscription gate: verify doctor still accepts bookings.
                 // Covers deep-link edge cases where the profile Book button gate
                 // was bypassed (e.g., stale navigation stack).
@@ -318,9 +324,9 @@ class _SelectPatientPageState extends State<SelectPatientPage> {
                   if (doctorSubRow == null ||
                       doctorSubRow['is_bookable_subscription'] != true) {
                     if (!mounted) return;
-                    ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+                    messenger.showSnackBar(SnackBar(
                       content: Text(
-                        AppLocalizations.of(context)?.doctorNotBookable ??
+                        loc?.doctorNotBookable ??
                             'This doctor is not accepting bookings at this time.',
                       ),
                     ));
@@ -357,7 +363,7 @@ class _SelectPatientPageState extends State<SelectPatientPage> {
                   if (blockRow != null) {
                     if (!mounted) return;
                     showDialog(
-                      context: context,
+                      context: navigator.context,
                       builder: (ctx) {
                         final isDark = Theme.of(ctx).brightness == Brightness.dark;
                         return Dialog(
@@ -385,7 +391,7 @@ class _SelectPatientPageState extends State<SelectPatientPage> {
                                 ),
                                 SizedBox(height: 20.h),
                                 Text(
-                                  AppLocalizations.of(context)!.blockedFromBooking,
+                                  loc?.blockedFromBooking ?? 'You are blocked from booking with this doctor.',
                                   textAlign: TextAlign.center,
                                   style: TextStyle(
                                     fontSize: 15.sp,
@@ -409,7 +415,7 @@ class _SelectPatientPageState extends State<SelectPatientPage> {
                                       elevation: 0,
                                     ),
                                     child: Text(
-                                      AppLocalizations.of(context)!.ok,
+                                      loc?.ok ?? 'OK',
                                       style: TextStyle(
                                         fontSize: 15.sp,
                                         fontWeight: FontWeight.w600,
@@ -430,8 +436,7 @@ class _SelectPatientPageState extends State<SelectPatientPage> {
                 }
 
                 if (!mounted) return;
-                Navigator.push(
-                  context,
+                navigator.push(
                   fadePageRoute(
                     VisitedDoctorPage(
                       patientProfile: PatientProfile(
