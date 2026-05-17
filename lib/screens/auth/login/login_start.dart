@@ -740,9 +740,11 @@ class _LoginPageState extends State<LoginPage>
       // ---------------------------------------------------------------------
       // 6️⃣ New Device Check (Email OTP)
       // ---------------------------------------------------------------------
-      // 🚨 BYPASS FOR APPLE REVIEWER
-      // This allows the demo account to log in without OTP even on new "simulated" devices.
-      final isDemoAccount = email == 'docsera.app@gmail.com';
+      // 🚨 BYPASS FOR APPLE / PLAY REVIEWER
+      // Skips the new-device email-OTP step-up for the single demo account
+      // we hand to App Store + Play reviewers. Must match REVIEWER_EMAIL on
+      // the VPS (see docs/launch/17-otp-test-bypass-gating.md §V2).
+      final isDemoAccount = email == 'review@docsera.app';
 
       if (!trustedDevices.contains(deviceId) && !isDemoAccount) {
         debugPrint("🚨 [SECURITY] New device detected ($deviceId). Redirecting to Email OTP.");
