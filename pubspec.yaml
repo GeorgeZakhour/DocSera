@@ -61,6 +61,12 @@ dependencies:
   device_info_plus: ^11.1.0
   geolocator: ^14.0.2
   pushy_flutter: ^2.0.38
+  # Firebase Cloud Messaging — primary push provider as of Stage 3 of the
+  # FCM migration. Pushy is preserved as a fallback for devices without
+  # Google Play Services (Huawei, etc.); the NotificationService picks
+  # at runtime which one to use per device. See user_devices.provider.
+  firebase_core: ^3.15.2
+  firebase_messaging: ^15.2.10
   flutter_local_notifications: ^19.4.0
   timezone: ^0.10.1
   animations: ^2.0.11

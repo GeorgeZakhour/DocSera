@@ -155,6 +155,23 @@
             android:name="me.pushy.sdk.services.PushyJobService"
             android:permission="android.permission.BIND_JOB_SERVICE"
             android:exported="true" />
+
+        <!-- ===================================================== -->
+        <!-- Firebase Cloud Messaging defaults. The FCM SDK auto-  -->
+        <!-- registers its own FirebaseMessagingService via         -->
+        <!-- manifest merging; we only need to tell it which       -->
+        <!-- notification channel + icon to use as defaults so it  -->
+        <!-- matches the look-and-feel of our other notifications.  -->
+        <!-- These channel/icon ids must match the ones declared    -->
+        <!-- in NotificationService._defaultChannel and used by     -->
+        <!-- _initPushy() above.                                    -->
+        <!-- ===================================================== -->
+        <meta-data
+            android:name="com.google.firebase.messaging.default_notification_channel_id"
+            android:value="docsera_default" />
+        <meta-data
+            android:name="com.google.firebase.messaging.default_notification_icon"
+            android:resource="@drawable/ic_notify" />
     </application>
 
     <!-- ✅ Update the <queries> section for URL Launcher -->

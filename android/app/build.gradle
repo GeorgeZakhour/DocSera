@@ -3,6 +3,10 @@ plugins {
     id "kotlin-android"
     // The Flutter Gradle Plugin must be applied after the Android and Kotlin Gradle plugins.
     id "dev.flutter.flutter-gradle-plugin"
+    // Firebase Cloud Messaging. Reads ./google-services.json at build time
+    // and generates the resource files the FCM SDK needs. Plugin version
+    // is declared in android/settings.gradle's pluginManagement block.
+    id "com.google.gms.google-services"
 }
 
 // Release signing: load from android/key.properties if present. Falls back to

@@ -1,0 +1,48 @@
+{
+  "project_info": {
+    "project_number": "109953973416",
+    "project_id": "docsera-prod",
+    "storage_bucket": "docsera-prod.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:109953973416:android:507ef75f6387595b8e169d",
+        "android_client_info": {
+          "package_name": "com.docsera.app"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAstSApBhcakIahiwPOCPHvW0MJq4qwr4A"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    },
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:109953973416:android:3cc8659e0e4576868e169d",
+        "android_client_info": {
+          "package_name": "com.docsera.pro"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAstSApBhcakIahiwPOCPHvW0MJq4qwr4A"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
