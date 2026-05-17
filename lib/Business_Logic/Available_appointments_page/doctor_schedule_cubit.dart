@@ -45,6 +45,9 @@ class DoctorScheduleCubit extends Cubit<DoctorScheduleState> {
       BuildContext context, {
         String? reasonId,
       }) async {
+    // Resolve the locale BEFORE the RPC await so the post-await grouping
+    // doesn't reach into a possibly-stale BuildContext.
+    final localeForGrouping = Localizations.localeOf(context).toString();
     emit(DoctorScheduleLoading());
     _dlog('=== fetchDoctorAppointments(RPC): doctorId=$doctorId, reasonId=${reasonId ?? "(none)"} ===');
     _dlog('=== fetchDoctorAppointments(RPC) ===');
@@ -92,7 +95,7 @@ class DoctorScheduleCubit extends Cubit<DoctorScheduleState> {
       }
 
       // تجميع حسب التاريخ المحلي القادم من الـ RPC (UTC+3)
-      final locale = Localizations.localeOf(context).toString();
+      final locale = localeForGrouping;
       final grouped = <String, List<Map<String, dynamic>>>{};
 
       final now = DocSeraTime.nowSyria();

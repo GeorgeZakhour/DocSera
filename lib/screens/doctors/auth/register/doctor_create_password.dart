@@ -32,6 +32,7 @@ class _DoctorCreatePasswordPageState extends State<DoctorCreatePasswordPage> {
 
   Future<void> _savePassword() async {
     if (_isPasswordValid) {
+      final navigator = Navigator.of(context);
       final hashedPassword = _hashPassword(_passwordController.text);
 
       try {
@@ -50,8 +51,7 @@ class _DoctorCreatePasswordPageState extends State<DoctorCreatePasswordPage> {
         debugPrint("✅ Doctor registered & logged in. ID: ${widget.doctorId}");
 
         // ✅ Navigate directly to Doctor Dashboard
-        Navigator.pushAndRemoveUntil(
-          context,
+        navigator.pushAndRemoveUntil(
           fadePageRoute(const DoctorDashboard()),
               (route) => false, // Remove all previous routes
         );

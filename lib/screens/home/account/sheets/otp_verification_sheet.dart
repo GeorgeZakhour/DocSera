@@ -57,6 +57,14 @@ class _OtpVerificationSheetState extends State<OtpVerificationSheet> {
 
     return BlocConsumer<AccountSecurityCubit, AccountSecurityState>(
       listener: (context, s) async {
+        // Cached up front so failure-branch reads after the success-branch
+        // await still resolve cleanly (the listener is async).
+        final navigator = Navigator.of(context);
+        final messenger = ScaffoldMessenger.of(context);
+        final errorText = (s is AccountSecurityError)
+            ? _mapSecurityError(context, s.message)
+            : '';
+
         // ✅ Verification Success
         if (s is AccountOtpVerified) {
           Navigator.pop(context);
@@ -85,16 +93,14 @@ class _OtpVerificationSheetState extends State<OtpVerificationSheet> {
               invalid = true;
             });
           } else {
-            Navigator.pop(context);
+            navigator.pop();
           }
 
-          ScaffoldMessenger.of(context)
+          messenger
             ..hideCurrentSnackBar()
             ..showSnackBar(
               SnackBar(
-                content: Text(
-                  _mapSecurityError(context, s.message),
-                ),
+                content: Text(errorText),
                 backgroundColor: AppColors.red,
               ),
             );

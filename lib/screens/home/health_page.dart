@@ -151,6 +151,7 @@ class _HealthAuthenticatedViewState extends State<HealthAuthenticatedView> {
                               child: CompleteProfileBanner(
                                 progress: 0.0, // decorative-only in v1
                                 onTap: () {
+                                  final profileCubit = context.read<AccountProfileCubit>();
                                   Navigator.of(context).push(
                                     MaterialPageRoute(
                                       builder: (_) => HealthProfileWizardPage(
@@ -160,7 +161,7 @@ class _HealthAuthenticatedViewState extends State<HealthAuthenticatedView> {
                                     ),
                                   ).then((_) {
                                     // Refresh on return so banner hides if completion happened.
-                                    context.read<AccountProfileCubit>().loadProfile();
+                                    profileCubit.loadProfile();
                                   });
                                 },
                               ),
@@ -438,6 +439,7 @@ class _HealthAuthenticatedViewState extends State<HealthAuthenticatedView> {
 
 
   void _openAddRelativeSheet(BuildContext context) async {
+    final relativesCubit = context.read<RelativesCubit>();
     final result = await showModalBottomSheet(
       context: context,
       isScrollControlled: true,
@@ -455,7 +457,7 @@ class _HealthAuthenticatedViewState extends State<HealthAuthenticatedView> {
     );
 
     if (result == true) {
-      context.read<RelativesCubit>().loadRelatives();
+      relativesCubit.loadRelatives();
     }
 
   }

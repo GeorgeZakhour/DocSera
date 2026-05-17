@@ -104,6 +104,7 @@ class RecapPage extends StatelessWidget {
         await Supabase.instance.client.auth.setSession(refreshToken);
       }
 
+      if (!context.mounted) return;
       await _postSignupSetup(context, userId);
     } on FunctionException catch (e) {
       final details = e.details;
@@ -273,6 +274,7 @@ class RecapPage extends StatelessWidget {
         throw Exception('Auth session not established');
       }
 
+      if (!context.mounted) return;
       await _postSignupSetup(context, userId);
     } catch (e, s) {
       debugPrint('❌ Registration failed: $e');

@@ -215,6 +215,9 @@ class _SearchAdvancedPageState extends State<SearchAdvancedPage> {
         return;
       }
 
+      // Captured BEFORE Future.wait so the post-await specialty rebuild
+      // doesn't reach into a possibly-stale context.
+      final localT = AppLocalizations.of(context)!;
       setState(() => _loadingSuggestions = true);
 
       // Fetch doctors and centers in parallel
@@ -228,7 +231,7 @@ class _SearchAdvancedPageState extends State<SearchAdvancedPage> {
           ? <Map<String, dynamic>>[]
           : results[1];
 
-      final List<_SpecialtyOption> localSpecs = _buildLocalSpecialties(AppLocalizations.of(context)!);
+      final List<_SpecialtyOption> localSpecs = _buildLocalSpecialties(localT);
       final specMatches = localSpecs
           .where((s) => s.name.toLowerCase().contains(q.toLowerCase()))
           .map((s) => _MixedSuggestion.specialty(s.name, s.asset, s.key))

@@ -133,10 +133,10 @@ class _TermsOfUsePageState extends State<TermsOfUsePage> {
             ElevatedButton(
               onPressed: _allAccepted
                   ? () async {
+                      final navigator = Navigator.of(context);
                       await _stagePendingConsents();
                       if (!mounted) return;
-                      Navigator.push(
-                        context,
+                      navigator.push(
                         fadePageRoute(MarketingPreferencesPage(
                           signUpInfo: widget.signUpInfo..termsAccepted = true,
                         )),

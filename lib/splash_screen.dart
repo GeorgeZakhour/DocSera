@@ -155,6 +155,7 @@ class _SplashScreenState extends State<SplashScreen> with TickerProviderStateMix
       return;
     }
 
+    if (!mounted) return;
     final authCubit = context.read<AuthCubit>();
     final state = authCubit.state;
     final biometricRequired = await _isBiometricRequired();

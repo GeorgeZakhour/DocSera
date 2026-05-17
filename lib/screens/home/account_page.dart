@@ -1023,10 +1023,10 @@ class _AuthenticatedAccountView extends StatelessWidget {
             }
 
             if (s is AccountDangerSuccess) {
+              final navigator = Navigator.of(context);
               await context.read<AuthCubit>().signOut();
 
-              Navigator.pushAndRemoveUntil(
-                context,
+              navigator.pushAndRemoveUntil(
                 fadePageRoute(const GoodbyePage()),
                     (_) => false,
               );

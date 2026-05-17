@@ -276,8 +276,11 @@ class SharedPrefsService {
           await prefs.setBool('isPhoneVerified', newPhoneVerified);
           await prefs.setBool('isEmailVerified', newEmailVerified);
 
-          // ✅ Trigger UI Update via UserCubit
-          userCubit.loadUserData(context: context);
+          // ✅ Trigger UI Update via UserCubit. Drop the BuildContext if
+          // the original listener's widget has unmounted across the awaits;
+          // loadUserData tolerates a null context (auth resolution falls
+          // back to its own state).
+          userCubit.loadUserData(context: context.mounted ? context : null);
         } else {
           debugPrint("🔹 Firestore listener detected NO actual changes, ignoring.");
         }

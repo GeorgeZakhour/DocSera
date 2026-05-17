@@ -1050,8 +1050,13 @@ class NotificationService {
              final patientName = parts[3];
              
              // 2. Switch Patient Context
+             // Re-read from navigatorKey on each invocation: context is fresh
+             // at the moment of use (no async gap from here to .read below),
+             // but the analyzer's heuristic can't see through the closure
+             // capture so we suppress the lint at the call site.
              final context = navigatorKey?.currentContext;
              if (context != null) {
+                 // ignore: use_build_context_synchronously
                  final switcher = context.read<PatientSwitcherCubit>();
                  
                  debugPrint("🔄 Switching patient context to: ${relativeId == 'null' ? 'Main User' : patientName}");

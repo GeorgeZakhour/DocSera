@@ -207,6 +207,7 @@ class _UserProfilePageState extends State<UserProfilePage> {
                     // ✅ Edit Button
                     InkWell(
                         onTap: () async {
+                          final profileCubit = context.read<AccountProfileCubit>();
                           final result = await showModalBottomSheet<bool>(
                             context: context,
                             isScrollControlled: true,
@@ -215,7 +216,7 @@ class _UserProfilePageState extends State<UserProfilePage> {
                           );
 
                           if (result == true) {
-                            context.read<AccountProfileCubit>().loadProfile();
+                            profileCubit.loadProfile();
                           }
 
                         },

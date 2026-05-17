@@ -78,8 +78,13 @@ class _AddMedicationBottomSheetState extends State<AddMedicationBottomSheet> {
   // ------------------------------
   Future<void> _saveRecord() async {
     final cubit = context.read<HealthCubit>();
+    final navigator = Navigator.of(context);
 
     if (_selectedMedication == null) return;
+
+    // Captured before the await so the post-add pop doesn't reach into a
+    // possibly-stale BuildContext.
+    final isRtl = Directionality.of(context) == TextDirection.rtl;
 
     setState(() => _loadingSave = true);
 
@@ -94,13 +99,13 @@ class _AddMedicationBottomSheetState extends State<AddMedicationBottomSheet> {
           : null,
 
       // خطوة ضرورية جداً
-      isArabicNotes: Directionality.of(context) == TextDirection.rtl,
+      isArabicNotes: isRtl,
     );
 
-
+    if (!mounted) return;
     setState(() => _loadingSave = false);
 
-    Navigator.pop(context);
+    navigator.pop();
   }
 
   @override

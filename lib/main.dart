@@ -201,6 +201,13 @@ Future<void> _bootstrap() async {
           },
           listener: (context, state) async {
             if (state is custom_auth.AuthAuthenticated) {
+              // Cached BEFORE the encryption init await so post-await
+              // cubit reads survive the async gap. Cubits outlive the
+              // BlocListener's BuildContext anyway.
+              final userCubit = context.read<UserCubit>();
+              final patientSwitcherCubit = context.read<PatientSwitcherCubit>();
+              final notificationsCubit = context.read<NotificationsCubit>();
+
               Analytics.instance.identify(state.user.id);
               Analytics.instance.track(Events.loginCompleted, {});
 
@@ -212,13 +219,13 @@ Future<void> _bootstrap() async {
               // ✅ Initialize message encryption on login (MUST await before loading data)
               await MessageEncryptionService.instance.init();
 
-              final userCubit = context.read<UserCubit>();
+              if (!context.mounted) return;
               userCubit.loadUserData(context: context, useCache: true);
               userCubit.startRealtimeUserListener(state.user.id);
 
               final userState = userCubit.state;
               if (userState is UserLoaded) {
-                context.read<PatientSwitcherCubit>().switchToUser();
+                patientSwitcherCubit.switchToUser();
               }
 
               // Re-bind the notifications inbox realtime channel to the
@@ -227,7 +234,7 @@ Future<void> _bootstrap() async {
               // app restart) it tears down A's stale subscription and
               // resubscribes filtered by B's user_id. Without this, the
               // singleton NotificationsCubit keeps A's channel alive.
-              unawaited(context.read<NotificationsCubit>().start());
+              unawaited(notificationsCubit.start());
             } else if (state is custom_auth.AuthUnauthenticated) {
               // Tear down realtime so the next sign-in starts clean.
               // Pairs with the user-switch handling in start() above.

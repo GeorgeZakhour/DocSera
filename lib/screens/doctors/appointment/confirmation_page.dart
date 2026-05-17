@@ -69,13 +69,17 @@ class AppointmentConfirmedPage extends StatelessWidget {
     );
 
     // 8) إضافة للتقويم
+    // Cache messenger + localized strings BEFORE the Future so the post-then
+    // snackbar doesn't reach back into a possibly-stale context.
+    final messenger = ScaffoldMessenger.of(context);
+    final loc = AppLocalizations.of(context)!;
     Add2Calendar.addEvent2Cal(event).then((success) {
-      ScaffoldMessenger.of(context).showSnackBar(
+      messenger.showSnackBar(
         SnackBar(
           content: Text(
             success
-                ? AppLocalizations.of(context)!.appointmentAddedToCalendar
-                : AppLocalizations.of(context)!.appointmentFailedToAdd,
+                ? loc.appointmentAddedToCalendar
+                : loc.appointmentFailedToAdd,
           ),
         ),
       );

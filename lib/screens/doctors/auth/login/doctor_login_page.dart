@@ -22,6 +22,7 @@ class _DoctorLoginPageState extends State<DoctorLoginPage> {
   String? errorMessage;
 
   Future<void> _logInDoctor() async {
+    final navigator = Navigator.of(context);
     try {
       final input = _inputController.text.trim();
       final password = _passwordController.text.trim();
@@ -47,8 +48,7 @@ class _DoctorLoginPageState extends State<DoctorLoginPage> {
       await prefs.setString('doctorEmail', doctorResponse['email'] ?? 'Not provided');
       await prefs.setString('doctorPhone', doctorResponse['phone_number'] ?? 'Not provided');
 
-      Navigator.pushAndRemoveUntil(
-        context,
+      navigator.pushAndRemoveUntil(
         fadePageRoute(DoctorDashboard(doctorData: doctorResponse)),
             (route) => false,
       );

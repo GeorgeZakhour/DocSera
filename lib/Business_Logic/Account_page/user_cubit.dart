@@ -237,8 +237,10 @@ class UserCubit extends Cubit<UserState> {
         await _prefs.setBool('isEmailVerified', isVerified ?? false);
       }
 
-      // Reload full profile after update
-      await loadUserData(context: context, useCache: false);
+      // Reload full profile after update. Drop the BuildContext —
+      // explicitUserId is sufficient for auth resolution after the awaits
+      // above, and avoids reaching back into a possibly-stale caller context.
+      await loadUserData(explicitUserId: userId, useCache: false);
     } catch (e) {
       emit(UserError("Failed to update $field: $e"));
     }

@@ -132,6 +132,7 @@ class _DoctorRegistrationPageState extends State<DoctorRegistrationPage> {
     String? fromTime = await _pickTime(context);
     if (fromTime == null) return;
 
+    if (!mounted) return;
     String? toTime = await _pickTime(context);
     if (toTime == null) return;
 
@@ -148,6 +149,9 @@ class _DoctorRegistrationPageState extends State<DoctorRegistrationPage> {
 
   Future<void> _registerDoctor() async {
     if (_formKey.currentState!.validate()) {
+      final navigator = Navigator.of(context);
+      final messenger = ScaffoldMessenger.of(context);
+      final loc = AppLocalizations.of(context)!;
       try {
         // ✅ إنشاء حساب باستخدام Supabase Auth
         final authResponse = await Supabase.instance.client.auth.signUp(
@@ -193,14 +197,13 @@ class _DoctorRegistrationPageState extends State<DoctorRegistrationPage> {
         await prefs.setString('doctorEmail', _emailController.text.trim());
 
         // ✅ التنقل إلى لوحة التحكم
-        Navigator.pushAndRemoveUntil(
-          context,
+        navigator.pushAndRemoveUntil(
           fadePageRoute(const DoctorDashboard()),
               (route) => false,
         );
       } catch (e) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(AppLocalizations.of(context)!.commonErrorWithMessage('$e'))),
+        messenger.showSnackBar(
+          SnackBar(content: Text(loc.commonErrorWithMessage('$e'))),
         );
       }
     }

@@ -302,6 +302,7 @@ class _FullMapResultsPageState extends State<FullMapResultsPage> with SingleTick
     if (options.length == 1) {
       await launchUrl(options.first.uri, mode: LaunchMode.externalApplication);
     } else {
+      if (!mounted) return;
       final chosen = await showModalBottomSheet<_MapLaunchOption>(
         context: context,
         backgroundColor: Colors.white,

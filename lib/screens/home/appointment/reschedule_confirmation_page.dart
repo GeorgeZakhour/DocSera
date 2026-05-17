@@ -137,6 +137,12 @@ class RescheduleConfirmationPage extends StatelessWidget {
   // }
 
   Future<void> _confirmReschedule(BuildContext context) async {
+    // Cached BEFORE the supabase RPC so post-await navigation + snackbar
+    // reads survive the gap without use_build_context_synchronously.
+    final navigator = Navigator.of(context);
+    final messenger = ScaffoldMessenger.of(context);
+    final loc = AppLocalizations.of(context)!;
+
     final supabase = Supabase.instance.client;
 
     try {
@@ -177,15 +183,13 @@ class RescheduleConfirmationPage extends StatelessWidget {
 
       // 🧭 التوجيه الصحيح
       if (isConfirmed) {
-        await Navigator.pushReplacement(
-          context,
+        await navigator.pushReplacement(
           fadePageRoute(
             AppointmentConfirmedPage(appointment: navPayload),
           ),
         );
       } else {
-        await Navigator.pushReplacement(
-          context,
+        await navigator.pushReplacement(
           fadePageRoute(
             WaitingForConfirmationPage(appointment: navPayload),
           ),
@@ -195,9 +199,9 @@ class RescheduleConfirmationPage extends StatelessWidget {
       debugPrint('❌ Reschedule failed: $e');
       debugPrint('$s');
 
-      ScaffoldMessenger.of(context).showSnackBar(
+      messenger.showSnackBar(
         SnackBar(
-          content: Text(AppLocalizations.of(context)!.somethingWentWrong),
+          content: Text(loc.somethingWentWrong),
         ),
       );
     }

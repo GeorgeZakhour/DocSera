@@ -49,12 +49,12 @@ class DoctorDrawer extends StatelessWidget {
             leading: const Icon(Icons.logout, color: AppColors.red),
             title: Text(AppLocalizations.of(context)!.logOut, style: const TextStyle(color: AppColors.red)),
             onTap: () async {
+              final navigator = Navigator.of(context);
               SharedPreferences prefs = await SharedPreferences.getInstance();
               await prefs.remove('doctorId'); // Clear saved doctor ID
               await prefs.setBool('isDoctorLoggedIn', false); // Mark doctor as logged out
 
-              Navigator.pushAndRemoveUntil(
-                context,
+              navigator.pushAndRemoveUntil(
                 fadePageRoute( CustomBottomNavigationBar()), // ✅ Navigate to home page
                     (route) => false, // Remove all previous routes
               );
