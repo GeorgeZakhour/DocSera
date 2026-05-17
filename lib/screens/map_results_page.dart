@@ -181,7 +181,17 @@ class _FullMapResultsPageState extends State<FullMapResultsPage> with SingleTick
     final img = await picture.toImage(tp.width.toInt(), tp.height.toInt());
     final byteData = await img.toByteData(format: ui.ImageByteFormat.png);
 
-    return BitmapDescriptor.bytes(byteData!.buffer.asUint8List());
+    // Preserve the visual size from the legacy BitmapDescriptor.fromBytes
+    // API. The old API treated the byte buffer as 1 byte-pixel = 1 device
+    // pixel; the new BitmapDescriptor.bytes API defaults to 1 byte-pixel
+    // = 1 logical pixel, which scales the marker by devicePixelRatio
+    // (looks ~3x larger on phones). Passing imagePixelRatio restores the
+    // pre-migration size.
+    final dpr = ui.PlatformDispatcher.instance.views.first.devicePixelRatio;
+    return BitmapDescriptor.bytes(
+      byteData!.buffer.asUint8List(),
+      imagePixelRatio: dpr,
+    );
   }
 
   Future<void> _generatePinIcons() async {
