@@ -193,6 +193,7 @@ class _MyRelativesPageState extends State<MyRelativesPage> {
                 ),
                 InkWell(
                   onTap: () async {
+                    final cubit = context.read<RelativesCubit>();
                     final result = await Navigator.push(
                       context,
                       fadePageRoute(
@@ -203,7 +204,7 @@ class _MyRelativesPageState extends State<MyRelativesPage> {
                       ),
                     );
                     if (result == true) {
-                      context.read<RelativesCubit>().loadRelatives();
+                      cubit.loadRelatives();
                     }
                   },
                   child: Row(
@@ -227,6 +228,7 @@ class _MyRelativesPageState extends State<MyRelativesPage> {
           Divider(height: 1.h),
           InkWell(
             onTap: () async {
+              final cubit = context.read<RelativesCubit>();
               final result = await Navigator.push(
                 context,
                 fadePageRoute(
@@ -237,7 +239,7 @@ class _MyRelativesPageState extends State<MyRelativesPage> {
                 ),
               );
               if (result == true) {
-                context.read<RelativesCubit>().loadRelatives();
+                cubit.loadRelatives();
               }
             },
             child: Padding(
@@ -328,12 +330,13 @@ class _MyRelativesPageState extends State<MyRelativesPage> {
         shape:
         RoundedRectangleBorder(borderRadius: BorderRadius.circular(25.r)),
         onPressed: () async {
+          final cubit = context.read<RelativesCubit>();
           final result = await Navigator.push(
             context,
             fadePageRoute(const AddRelativePage()),
           );
           if (result == true) {
-            context.read<RelativesCubit>().loadRelatives();
+            cubit.loadRelatives();
           }
         },
       ),

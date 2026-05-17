@@ -98,6 +98,12 @@ class _EditRelativePageState extends State<EditRelativePage> {
       return;
     }
 
+    // Cached before any await so post-await navigation / snackbar /
+    // localized messages don't trip use_build_context_synchronously.
+    final navigator = Navigator.of(context);
+    final messenger = ScaffoldMessenger.of(context);
+    final loc = AppLocalizations.of(context)!;
+
     final dobText = dateOfBirthController.text.trim();
     if (dobText.isEmpty) {
       throw Exception('DOB_EMPTY');
@@ -151,19 +157,20 @@ class _EditRelativePageState extends State<EditRelativePage> {
         },
       );
 
-      ScaffoldMessenger.of(context).showSnackBar(
+      if (!mounted) return;
+      messenger.showSnackBar(
         SnackBar(
-          content: Text(AppLocalizations.of(context)!.updateSuccess),
+          content: Text(loc.updateSuccess),
           backgroundColor: AppColors.main.withValues(alpha: 0.8),
         ),
       );
 
-      Navigator.pop(context, true);
+      navigator.pop(true);
     } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(
+      messenger.showSnackBar(
         SnackBar(
           content: Text(
-            AppLocalizations.of(context)!.updateFailed(e.toString()),
+            loc.updateFailed(e.toString()),
           ),
           backgroundColor: AppColors.red.withValues(alpha: 0.8),
         ),

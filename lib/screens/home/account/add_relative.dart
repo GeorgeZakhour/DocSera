@@ -82,6 +82,12 @@ class _AddRelativePageState extends State<AddRelativePage> {
       return;
     }
 
+    // Cached before any await so post-await navigation / snackbar /
+    // localized error messages don't trip use_build_context_synchronously.
+    final navigator = Navigator.of(context);
+    final messenger = ScaffoldMessenger.of(context);
+    final loc = AppLocalizations.of(context)!;
+
     // 🛑 تحقق العنوان
     if (buildingNrController.text.isNotEmpty &&
         (streetController.text.isEmpty ||
@@ -126,20 +132,20 @@ class _AddRelativePageState extends State<AddRelativePage> {
       });
 
 
-      ScaffoldMessenger.of(context).showSnackBar(
+      if (!mounted) return;
+      messenger.showSnackBar(
         SnackBar(
-          content:
-          Text(AppLocalizations.of(context)!.relativeAddedSuccess),
+          content: Text(loc.relativeAddedSuccess),
           backgroundColor: AppColors.main.withValues(alpha: 0.8),
         ),
       );
 
-      Navigator.pop(context, true);
+      navigator.pop(true);
     } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(
+      messenger.showSnackBar(
         SnackBar(
           content: Text(
-            AppLocalizations.of(context)!.relativeAddFailed(e.toString()),
+            loc.relativeAddFailed(e.toString()),
           ),
           backgroundColor: AppColors.red.withValues(alpha: 0.8),
         ),
