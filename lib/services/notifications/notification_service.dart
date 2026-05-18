@@ -487,10 +487,28 @@ class NotificationService {
         sound: true,
       );
 
-      // Fetch the FCM token. The 5s timeout protects boot-time hangs.
+      // iOS-specific: FCM token derivation requires Apple to deliver
+      // the APNs device token first, which can take 10-30 seconds on
+      // a cold first launch (post-permission-grant). Without an APNs
+      // token, getToken() hangs forever. Poll getAPNSToken with a
+      // 10s budget; bail to Pushy fallback if APNs is still silent.
+      // Subsequent launches reuse the cached APNs token and this loop
+      // returns immediately.
+      if (Platform.isIOS) {
+        for (int i = 0; i < 10; i++) {
+          final apns = await messaging.getAPNSToken();
+          if (apns != null) break;
+          await Future.delayed(const Duration(seconds: 1));
+        }
+      }
+
+      // Fetch the FCM token. 10s timeout — generous enough to cover
+      // a slow APNs derivation on iOS first launch, short enough that
+      // Pushy fallback kicks in within ~15s total on truly broken FCM
+      // environments (Huawei post-2019, network blip).
       token = await messaging
           .getToken()
-          .timeout(const Duration(seconds: 5));
+          .timeout(const Duration(seconds: 10));
 
       if (token != null && token.isNotEmpty) {
         fcmWorked = true;
