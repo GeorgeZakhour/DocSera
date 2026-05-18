@@ -1,6 +1,7 @@
 // lib/services/notifications/notification_service.dart
 import 'dart:async';
 import 'dart:io';
+import 'package:device_info_plus/device_info_plus.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
@@ -756,14 +757,26 @@ class NotificationService {
       return;
     }
 
+    // Per-physical-device fingerprint (iOS identifierForVendor / Android
+    // Settings.Secure.ANDROID_ID). Stable across reinstalls for the
+    // same vendor. Mirrors the pattern already used in DocSera-Pro's
+    // notification service. Two purposes:
+    //   - Same-device dedup (next block): drop the stale row left by
+    //     the old token (Pushy) when we register a fresh one (FCM).
+    //     Without this, the Pushy → FCM migration leaves stale rows
+    //     consuming Pushy free-tier slots until the 90-day prune.
+    //   - Future analytics: lets us count distinct physical devices
+    //     per user, deduped across reinstalls/token-rotation.
+    final fingerprint = await _deviceFingerprint();
+
     // Orphan defense: before upserting our own row, drop ANY other
     // user_devices row for this token that points at a different
     // user_id. RLS scopes the delete to rows the current session owns,
     // so we can only clean up tokens that belong to the current user
     // anyway — which catches the common bug (User A signs out without
     // cleanup, User B signs in on the same device, A's row would
-    // otherwise survive). Cross-account orphans need the operator-side
-    // 90-day prune to fully clean.
+    // otherwise survive). Cross-account orphans need the server-side
+    // dedup trigger (20260513230000) to fully clean.
     try {
       await Supabase.instance.client
           .from('user_devices')
@@ -773,6 +786,30 @@ class NotificationService {
     } catch (e) {
       if (kDebugMode) {
         debugPrint('⚠️ user_devices orphan cleanup failed: $e');
+      }
+    }
+
+    // Same-device dedup: when we know the device fingerprint, drop any
+    // OTHER row for this user on this app+device (stale token from a
+    // previous install — typically a Pushy row left over from the
+    // pre-FCM build). The partial unique index
+    // idx_user_devices_user_app_fingerprint would otherwise block the
+    // upsert below with a duplicate-key error. Requires the DELETE RLS
+    // policy on user_devices (added 2026-05-18 in
+    // 20260518030000_user_devices_delete_policy.sql).
+    if (fingerprint != null && fingerprint.isNotEmpty) {
+      try {
+        await Supabase.instance.client
+            .from('user_devices')
+            .delete()
+            .eq('user_id', userId)
+            .eq('app', 'docsera')
+            .eq('device_fingerprint', fingerprint)
+            .neq('token', token);
+      } catch (e) {
+        if (kDebugMode) {
+          debugPrint('⚠️ same-device stale-token cleanup failed: $e');
+        }
       }
     }
 
@@ -788,16 +825,42 @@ class NotificationService {
         'provider': provider,
         'locale': _currentLocale(),
         'last_seen_at': DateTime.now().toUtc().toIso8601String(),
+        if (fingerprint != null && fingerprint.isNotEmpty)
+          'device_fingerprint': fingerprint,
       }, onConflict: 'user_id,token,app');
       // Visible in release builds — confirms the device row landed.
       debugPrint('✅ user_devices upsert ok '
           '(provider=$provider, '
           'platform=${Platform.isIOS ? 'ios' : 'android'}, '
-          'user=${userId.substring(0, 8)}…)');
+          'user=${userId.substring(0, 8)}…, '
+          'fp=${fingerprint != null ? fingerprint.substring(0, 8) : 'null'})');
     } catch (e) {
       debugPrint('❌ user_devices upsert failed: $e');
       rethrow;
     }
+  }
+
+  /// Returns a stable per-device fingerprint. iOS uses
+  /// `identifierForVendor` (same across reinstalls of any app from
+  /// our team); Android uses `Settings.Secure.ANDROID_ID` (stable
+  /// until factory reset). Null on web (Patient app is mobile-only,
+  /// so practically only null when device_info_plus throws — rare,
+  /// sandboxed environments).
+  Future<String?> _deviceFingerprint() async {
+    try {
+      final info = DeviceInfoPlugin();
+      if (Platform.isIOS) {
+        final ios = await info.iosInfo;
+        return ios.identifierForVendor;
+      }
+      if (Platform.isAndroid) {
+        final android = await info.androidInfo;
+        return android.id;
+      }
+    } catch (e) {
+      if (kDebugMode) debugPrint('⚠️ device fingerprint read failed: $e');
+    }
+    return null;
   }
 
   /// Best-effort current locale read. Used by _saveDeviceTokenToSupabase
