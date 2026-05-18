@@ -1091,7 +1091,7 @@ abstract class AppLocalizations {
   /// No description provided for @authorizationStatement.
   ///
   /// In en, this message translates to:
-  /// **'I declare that I am the legal representative of my relative, or that I am authorized to use the Doctolib services to manage medical data on their behalf.'**
+  /// **'I declare that I am the legal representative of my relative, or that I am authorized to use the DocSera services to manage medical data on their behalf.'**
   String get authorizationStatement;
 
   /// No description provided for @add.

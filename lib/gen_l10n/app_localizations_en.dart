@@ -543,7 +543,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get authorizationStatement =>
-      'I declare that I am the legal representative of my relative, or that I am authorized to use the Doctolib services to manage medical data on their behalf.';
+      'I declare that I am the legal representative of my relative, or that I am authorized to use the DocSera services to manage medical data on their behalf.';
 
   @override
   String get add => 'Add';
